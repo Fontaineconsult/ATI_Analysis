@@ -3,20 +3,6 @@ from py2neo.ogm import GraphObject, Property, RelatedTo, RelatedFrom, Graph
 
 
 
-
-
-class Stakeholder(GraphObject):
-    __primarykey__ = 'name'
-
-    name = Property()
-    industry = Property()
-
-    goals = RelatedTo("Goal")
-    status = RelatedTo("Status")
-
-
-
-
 class Department(GraphObject):
     __primarykey__ = 'name'
 
