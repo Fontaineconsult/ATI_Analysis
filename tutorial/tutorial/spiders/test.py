@@ -5,7 +5,7 @@ from pydispatch import dispatcher
 import re,sys
 
 sys.path.append(r'C:\Users\913678186\IdeaProjects\ATI_Analysis')
-
+sys.path.append(r'C:\Users\DanielPC\Desktop\Servers\ATI_Analysis')
 
 from schema import get_connection, Webpage
 
