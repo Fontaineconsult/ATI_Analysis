@@ -45,7 +45,8 @@ class Goal(GraphObject):
     __primarykey__ = 'composite_key'
 
     goal_number = Property()
-    name = Property()
+    sub_committee = Property()
+
     success_indicator = Property()
     composite_key = Property()  # Combination of goal_number and ATISubCommittee name
 
@@ -54,7 +55,7 @@ class Goal(GraphObject):
 
     # Notes can be attached to goals
     notes = RelatedTo("GenericNote", "HAS_NOTE")
-
+    date_added = Property()
 
 class StatusLevel(GraphObject):
     __primarykey__ = 'status_level'
