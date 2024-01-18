@@ -72,12 +72,13 @@ class StatusLevel(StructuredNode):
     notes = RelationshipTo("GenericNote", "has_note")
 
 
-class YearStatusEvidence(StructuredNode):
+class YearSuccessEvidence(StructuredNode):
 
-    year_identifier = StringProperty(unique_index=True)  # A unique identifier combining Year and StatusLevel
+    year_identifier = StringProperty(unique_index=True)  # A unique identifier combining Year and SuccessIndicator name
     academic_year = RelationshipTo("AcademicYear", "status_in_year")
     status_level = RelationshipTo("StatusLevel", "status_is")
-    related_status_indicator = RelationshipTo("StatusIndicator", "goal_status")
+    related_success_indicator = RelationshipTo("SuccessIndicator", "success_indicator_is")
+    implemented_by = RelationshipTo("Person", "implemented_by")
 
     # New properties for tracking status level details
     documentation_status = StringProperty()
@@ -109,7 +110,7 @@ class AcademicYear(StructuredNode):
     name = StringProperty(unique_index=True)
     start_date = DateProperty()
     end_date = DateProperty()
-    year_status = RelationshipFrom("YearStatus", "has_academic_year")
+
 
 
 class Document(StructuredNode):
