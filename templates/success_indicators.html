@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Success Indicators Report</title>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid black;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+<h1>Success Indicators Report</h1>
+<table>
+    <thead>
+    <tr>
+        <th>Success Indicator</th>
+        <th>Composite Key</th>
+        <th>Goals</th>
+        <th>Year Success Evidences</th>
+        <th>Status Levels</th>
+    </tr>
+    </thead>
+    <tbody>
+    {% for indicator in success_indicators %}
+    <tr>
+        <td>{{ indicator.success_indicator }}</td>
+        <td>{{ indicator.composite_key }}</td>
+        <td>{{ indicator.goals | map(attribute='name') | join(', ') }}</td>
+        <td>{{ indicator.year_success_evidences | map(attribute='year_identifier') | join(', ') }}</td>
+        <td>{{ indicator.status_levels | map(attribute='status_level') | join(', ') }}</td>
+    </tr>
+    {% endfor %}
+    </tbody>
+</table>
+</body>
+</html>
