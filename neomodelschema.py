@@ -116,9 +116,10 @@ class AcademicYear(StructuredNode):
 class Document(StructuredNode):
 
 
-    uuid = StringProperty(unique_index=True)
+    hash = StringProperty(unique_index=True)
     name = StringProperty()
     file_path = StringProperty()
+    uri_path = StringProperty()
     is_administrative_review_documentation = StringProperty()
     is_milestone_and_measures_documentation = StringProperty()
 

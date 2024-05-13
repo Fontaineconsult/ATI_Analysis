@@ -1,0 +1,23 @@
+<table>
+  <thead>
+  <tr>
+    <th>Name</th>
+    <th>File Path</th>
+    <th>URI Path</th>
+    <th>Admin Review</th>
+    <th>Milestone</th>
+  </tr>
+  </thead>
+  <tbody>
+  {% for document in documents %}
+  <tr>
+    <td>{{ document.name }}</td>
+    <td>{{ document.file_path }}</td>
+    <td>{{ document.uri_path }}</td>
+    <td>{{ document.is_administrative_review_documentation }}</td>
+    <td>{{ document.is_milestone_and_measures_documentation }}</td>
+  </tr>
+  {% endfor %}
+  </tbody>
+</table>
+
