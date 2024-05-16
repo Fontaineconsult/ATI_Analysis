@@ -118,7 +118,7 @@ class Document(GraphObject):
     file_path = Property()
     is_administrative_review_documentation = Property()
     is_milestone_and_measures_documentation = Property()
-
+    version = Property()
     related_goals = RelatedFrom("Goal", "HAS_DOCUMENT")
     notes = RelatedTo("GenericNote", "HAS_NOTE")
 

@@ -1,0 +1,16 @@
+<table>
+    <thead>
+    <tr>
+        <th>URL</th>
+        <th>Title</th>
+    </tr>
+    </thead>
+    <tbody>
+    {% for vendor in vendors %}
+    <tr>
+        <td>{{ vendor.name }}</td>
+        <td>{{ vendor.industry }}</td>
+    </tr>
+    {% endfor %}
+    </tbody>
+</table>

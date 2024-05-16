@@ -1,0 +1,15 @@
+<table>
+    <thead>
+    <tr>
+        <th>Content</th>
+        <th>Title</th>
+    </tr>
+    </thead>
+    <tbody>
+    {% for note in notes %}
+    <tr>
+        <td>{{ notes.content }}</td>
+    </tr>
+    {% endfor %}
+    </tbody>
+</table>
