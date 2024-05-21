@@ -1,14 +1,23 @@
 from flask import Flask, request, jsonify, render_template, Blueprint
-from neomodel import config
 from neomodelschema import *
-from neomodel import config, db
+from neomodel import db
 app = Flask(__name__)
-
-# Configure your Neo4j database connection
-config.DATABASE_URL = 'bolt://neo4j:testtest@localhost:7687'
 
 
 page_endpoints = Blueprint('pages', __name__)
+
+
+@page_endpoints.route('/')
+def index():
+    return "Hello World"
+
+
+@page_endpoints.route('/indicator-explorer', methods=['GET'])
+def indicator_explorer():
+
+
+    return render_template('indicator_explorer.html')
+
 
 @page_endpoints.route('/goals', methods=['GET'])
 def get_goals():
@@ -16,7 +25,7 @@ def get_goals():
     print(goals)
     return jsonify([{"name":goal.name, "goal":goal.goal} for goal in goals])
 
-@page_endpoints.route('/success_indicators',  methods=['GET'])
+@page_endpoints.route('/success-indicators',  methods=['GET'])
 def get_success_indicators():
     try:
         query = """
@@ -105,7 +114,6 @@ def add_year_success():
             return jsonify({'status': 'error', 'message': str(e)})
 
     return render_template('add_year_success.html')
-
 
 
 @page_endpoints.route('/document', methods=['GET', 'POST'])
