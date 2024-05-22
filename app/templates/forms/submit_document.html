@@ -1,0 +1,17 @@
+<div x-data="{ open: false }">
+    <button @click="open = !open">Toggle Form</button>
+
+    <div id="add-document" hx-post="/add_document" hx-trigger="submit" hx-target="#documents_table" hx-swap="innerHTML" x-show="open">
+        <form>
+            <label for="year_identifier">Year Identifier:</label><br>
+            <input type="text" id="year_identifier" name="year_identifier"><br>
+            <label for="document_name">Document Name:</label><br>
+            <input type="text" id="document_name" name="document_name"><br>
+            <label for="file_path">File Path:</label><br>
+            <input type="text" id="file_path" name="file_path"><br>
+            <label for="uri_path">URI Path:</label><br>
+            <input type="text" id="uri_path" name="uri_path"><br>
+            <input type="submit" value="Submit">
+        </form>
+    </div>
+</div>

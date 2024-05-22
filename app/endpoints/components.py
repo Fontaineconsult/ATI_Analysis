@@ -72,7 +72,7 @@ def get_success_indicator_table(year, success_indicator, subcommittee):
 
 
 @component_endpoints.route('/documents/<string:year>/<string:success_indicator>/<string:subcommittee>', methods=['GET'])
-def get_documents(year, success_indicator, subcommittee):
+def documents(year, success_indicator, subcommittee):
 
     if request.method == 'GET':
 
@@ -96,6 +96,13 @@ def get_documents(year, success_indicator, subcommittee):
 
         return render_template('documents_table.html',
                                documents=responses)
+
+    if request.method == 'POST':
+        data = request.form
+        print(data)
+
+        return render_template('documents_table.html',
+                               documents=[])
 
 
 @component_endpoints.route('/websites/<string:year>/<string:success_indicator>/<string:subcommittee>', methods=['GET'])

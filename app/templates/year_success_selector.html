@@ -1,12 +1,13 @@
 
 <label for="year_success_evidence"></label>
-<select id="year_success_evidence" name="year_success_evidence"
-        hx-trigger="change from:body"
-        hx-get="/your-endpoint"
+<select id="year_success_evidence" name="success_indicator"
+        hx-trigger="change"
+        hx-get="/success-indicator"
         hx-swap="innerHTML"
-        hx-target="#success-indicator-evidence">
+        hx-target="#success-indicator-evidence"
+        hx-params="*">
     {% for item in year_success_evidence %}
-    <option value="{{ item.year_success_evidence }}" data-success-indicator="{{ item.academic_year }}/{{ item.composite_key.split('-')[0] }}/{{ item.composite_key.split('-')[1] }}">
+    <option value="{{ item.academic_year }}/{{ item.composite_key.split('-')[0] }}/{{ item.composite_key.split('-')[1] }}">
         {{ item.year_success_evidence }} - {{ item.success_indicator }}
     </option>
     {% endfor %}

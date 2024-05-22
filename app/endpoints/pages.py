@@ -15,7 +15,6 @@ def index():
 @page_endpoints.route('/indicator-explorer', methods=['GET'])
 def indicator_explorer():
 
-
     return render_template('indicator_explorer.html')
 
 
@@ -51,13 +50,27 @@ def get_success_indicators():
     except Exception as e:
         return str(e), 500
 
-
+@page_endpoints.route('/success-indicator', defaults={'year': None, 'success_indicator': None, 'subcommittee': None}, methods=['GET', 'POST'])
 @page_endpoints.route('/success-indicator/<string:year>/<string:success_indicator>/<string:subcommittee>', methods=['GET', 'POST'])
-def get_success_indicator(subcommittee, success_indicator, year):
+def get_success_indicator(year, success_indicator, subcommittee):
     if request.method == 'GET':
-        print(subcommittee, success_indicator, year)
-        composite_key = f"{success_indicator}-{subcommittee}"
+        if year is None and success_indicator is None and subcommittee is None:
+            # Extract parameters from query string
+            success_indicator = request.args.get('success_indicator')
+            print(success_indicator)
+            if success_indicator:
+                components = success_indicator.split('/')
+                year = components[0] if len(components) > 0 else None
+                success_indicator = components[1] if len(components) > 1 else None
+                subcommittee = components[2] if len(components) > 2 else None
+            else:
+                return "Missing parameters", 400
 
+        print(subcommittee, success_indicator, year)
+        if success_indicator and subcommittee and year:
+            composite_key = f"{success_indicator}-{subcommittee}"
+        else:
+            return 404
 
         query = (f'MATCH (si:SuccessIndicator)-[:is_a_success_indicator_of]->(g:Goal),'
                 f'(si)-[:success_indicator_is]-(yse:YearSuccessEvidence)'
