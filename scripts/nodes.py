@@ -1,5 +1,5 @@
 from neomodel import db
-from neomodelschema import YearSuccessEvidence, SuccessIndicator, AcademicYear
+from app.database.neomodelschema import YearSuccessEvidence, AcademicYear
 
 # Set up your database connection
 db.set_connection('bolt://neo4j:testtest@localhost:7687')
@@ -8,19 +8,20 @@ db.set_connection('bolt://neo4j:testtest@localhost:7687')
 
 def one():
 
-    all_year_success_evidence_nodes = SuccessIndicator.nodes.all()
+    all_year_success_evidence_nodes = YearSuccessEvidence.nodes.all()
 
     # Loop through each node
     for node in all_year_success_evidence_nodes:
 
-        lower = node.composite_key.lower()
+        lower = node.year_identifier.lower()
         names = lower.split("-")
-        name = f"{names[0]}-{names[1][:3]}"
+        name = f"{names[0].replace("/","-")}-{names[1]}-{names[2][:3]}"
         print(name)
 
 
-        node.composite_key = name
+        node.year_identifier = name
         # Save the changes to the database
+
         node.save()
 
     print("All YearSuccessEvidence nodes have been updated.")
@@ -38,4 +39,4 @@ def two():
         # Save the changes to the database
         node.save()
 
-two()
+one()

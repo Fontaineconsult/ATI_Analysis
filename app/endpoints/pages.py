@@ -1,5 +1,5 @@
 from flask import Flask, request, jsonify, render_template, Blueprint
-from neomodelschema import *
+from app.database.neomodelschema import *
 from neomodel import db
 app = Flask(__name__)
 
@@ -68,13 +68,13 @@ def get_success_indicator(year, success_indicator, subcommittee):
 
         print(subcommittee, success_indicator, year)
         if success_indicator and subcommittee and year:
-            composite_key = f"{success_indicator}-{subcommittee}"
+            year_identifier = f"{year}-{success_indicator}-{subcommittee}"
         else:
             return 404
 
         query = (f'MATCH (si:SuccessIndicator)-[:is_a_success_indicator_of]->(g:Goal),'
                 f'(si)-[:success_indicator_is]-(yse:YearSuccessEvidence)'
-                f'WHERE si.composite_key = "{composite_key}"'
+                f'WHERE yse.year_identifier = "{year_identifier}"'
                 f'MATCH (yse)-[:status_is]->(sl:StatusLevel)'
                 f'MATCH (yse)-[:status_in_year]->(ay:AcademicYear)'
                 f'OPTIONAL MATCH (yse)-[:implemented_by]->(p:Person)'
@@ -100,7 +100,11 @@ def get_success_indicator(year, success_indicator, subcommittee):
 
         return render_template('success_indicator.html',
                                success_indicator=responses,
-                               path=f"{year}/{success_indicator}/{subcommittee}")
+                               path=f"{year}/{success_indicator}/{subcommittee}",
+                               year_success_identifier=year_identifier)
+
+
+
 
 @page_endpoints.route('/add_year_success', methods=['GET', 'POST'])
 def add_year_success():

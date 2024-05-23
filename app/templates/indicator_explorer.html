@@ -4,8 +4,6 @@
     <meta charset="UTF-8">
     <script src="https://unpkg.com/htmx.org"></script>
     <script src="https://cdn.jsdelivr.net/gh/alpinejs/alpine@v2.x.x/dist/alpine.min.js" defer></script>
-
-
     <link rel="stylesheet" type="text/css" href="static/css/style.css">
 </head>
 <body>
@@ -32,39 +30,15 @@
 
 </body>
 <script>
-    // var selectElement = document.getElementById('year_success_evidence');
-    //
-    // selectElement.addEventListener('htmx:configRequest', function(evt) {
-    //     var selectedOption = selectElement.options[selectElement.selectedIndex];
-    //     var successIndicator = selectedOption.getAttribute('data-success-indicator');
-    //     var targetUrl = '/success-indicator/' + encodeURIComponent(successIndicator);
-    //
-    //     // Set the target URL dynamically
-    //     evt.detail.path = targetUrl;
-    // });
 
-
-    function updateSuccessIndicator() {
-        var selectElement = document.getElementById('year_success_evidence');
-        var selectedOption = selectElement.options[selectElement.selectedIndex];
-        var successIndicatorUrl = selectedOption.value;
-        var hiddenTrigger = document.getElementById('hidden-trigger');
-
-        // Set the hx-get attribute dynamically
-        hiddenTrigger.setAttribute('hx-get', successIndicatorUrl);
-
-        // Manually trigger the htmx request
-        htmx.trigger(hiddenTrigger, 'load');
-    }
-
-
-    // function selectedOption() {
-    //     var selectElement = document.getElementById('year_success_evidence');
-    //     console.log(selectElement)
-    //     return selectElement.options[selectElement.selectedIndex];
-    // }
-
+    document.body.addEventListener('htmx:beforeOnLoad', function(evt) {
+        // Check if the request is coming from the year-selector buttons
+        var yearSelector = document.getElementById('year-selector');
+        if (yearSelector && yearSelector.contains(evt.target)) {
+            // Clear the content of target-div before the new content loads
+            document.getElementById('success-indicator-evidence').innerHTML = '';
+        }
+    });
 
 </script>
-
 </html>

@@ -13,6 +13,14 @@ class Department(StructuredNode):
     location = StringProperty()
     employs = RelationshipFrom('Person', 'employs')
 
+    @property
+    def serialize(self):
+        return {
+            'name': self.name,
+            'location': self.location,
+            'employs': self.employs
+        }
+
 # Convert other classes similarly...
 
 # Conversion for Person Class
@@ -22,6 +30,15 @@ class Person(StructuredNode):
     works_for = RelationshipTo('Department', 'works_for')
     has_ati_role = RelationshipTo('ATIRole', 'has_ati_role')
 
+    @property
+    def serialize(self):
+        return {
+            'name': self.name,
+            'title': self.title,
+            'works_for': self.works_for,
+            'has_ati_role': self.has_ati_role
+        }
+
 # Conversion for ATIRole Class
 class ATIRole(StructuredNode):
     name = StringProperty(unique_index=True)
@@ -29,12 +46,28 @@ class ATIRole(StructuredNode):
     participates_in = RelationshipTo('ATISubCommittee', 'participates_in')
     job_description_with_ati_responsibilities = RelationshipTo('Document', 'ATI_JOB_DESCRIPTION')
 
+    @property
+    def serialize(self):
+        return {
+            'name': self.name,
+            'description': self.description,
+            'participates_in': self.participates_in,
+            'job_description_with_ati_responsibilities': self.job_description_with_ati_responsibilities
+        }
+
 class ATISubCommittee(StructuredNode):
     name = StringProperty(unique_index=True)
     description = StringProperty()
-
     # Relationship to Goals
     goals = Relationship("Goal", "is_a_subcommittee_goal")
+
+    @property
+    def serialize(self):
+        return {
+            'name': self.name,
+            'description': self.description,
+            'goals': self.goals
+        }
 
 
 class Goal(StructuredNode):
@@ -48,6 +81,19 @@ class Goal(StructuredNode):
     goal_number = IntegerProperty()
     date_added = DateProperty()
 
+    @property
+    def serialize(self):
+        return {
+            'name': self.name,
+            'part_of_atisubcommittee': self.part_of_atisubcommittee,
+            'success_indicators': self.success_indicators,
+            'removed': self.removed,
+            'goal': self.goal,
+            'notes': self.notes,
+            'goal_number': self.goal_number,
+            'date_added': self.date_added
+        }
+
 class SuccessIndicator(StructuredNode):
 
     number = IntegerProperty()
@@ -60,6 +106,19 @@ class SuccessIndicator(StructuredNode):
     notes = RelationshipTo("GenericNote", "has_note")
     date_added = DateProperty()
 
+    @property
+    def serialize(self):
+        return {
+            'number': self.number,
+            'associated_goal': self.associated_goal,
+            'success_indicator': self.success_indicator,
+            'composite_key': self.composite_key,
+            'removed': self.removed,
+            'notes': self.notes,
+            'date_added': self.date_added
+        }
+
+
 class StatusLevel(StructuredNode):
 
     status_level = StringProperty(unique_index=True)
@@ -70,6 +129,19 @@ class StatusLevel(StructuredNode):
     status_value = StringProperty()
     ati_report_evidence_column = StringProperty()
     notes = RelationshipTo("GenericNote", "has_note")
+
+    @property
+    def serialize(self):
+        return {
+            'status_level': self.status_level,
+            'description_of_procedures': self.description_of_procedures,
+            'description_of_documentation': self.description_of_documentation,
+            'description_of_documentation_evidence': self.description_of_documentation_evidence,
+            'description_of_resources': self.description_of_resources,
+            'status_value': self.status_value,
+            'ati_report_evidence_column': self.ati_report_evidence_column,
+            'notes': self.notes
+        }
 
 
 class YearSuccessEvidence(StructuredNode):
@@ -93,6 +165,27 @@ class YearSuccessEvidence(StructuredNode):
     has_emails = RelationshipTo("Email", "has_email")
     notes = RelationshipTo("GenericNote", "has_note")
 
+    @property
+    def serialize(self):
+        return {
+
+            'year_identifier': self.year_identifier,
+            'academic_year': self.academic_year,
+            'status_level': self.status_level,
+            'related_success_indicator': self.related_success_indicator,
+            'implemented_by': self.implemented_by,
+            'documentation_status': self.documentation_status,
+            'resources_status': self.resources_status,
+            'implementation_plan_status': self.implementation_plan_status,
+            'responsibility_for': self.responsibility_for,
+            'has_documents': self.has_documents,
+            'has_webpages': self.has_webpages,
+            'has_emails': self.has_emails,
+            'notes': self.notes
+        }
+
+
+
 
 class Accomplishment(StructuredNode):
     pass
@@ -105,11 +198,29 @@ class Plan(StructuredNode):
     related_goal = RelationshipFrom("Goal", "to_implement_goal")
     notes = RelationshipTo("GenericNote", "has_note")
 
+    @property
+    def serialize(self):
+        return {
+            'name': self.name,
+            'description': self.description,
+            'implementation_year': self.implementation_year,
+            'related_goal': self.related_goal,
+            'notes': self.notes
+        }
+
 class AcademicYear(StructuredNode):
 
     name = StringProperty(unique_index=True)
     start_date = DateProperty()
     end_date = DateProperty()
+
+    @property
+    def serialize(self):
+        return {
+            'name': self.name,
+            'start_date': self.start_date,
+            'end_date': self.end_date
+        }
 
 
 
@@ -126,12 +237,34 @@ class Document(StructuredNode):
     related_goals = RelationshipFrom("Goal", "HAS_DOCUMENT")
     notes = RelationshipTo("GenericNote", "HAS_NOTE")
 
+    @property
+    def serialize(self):
+        return {
+            'hash': self.hash,
+            'name': self.name,
+            'file_path': self.file_path,
+            'uri_path': self.uri_path,
+            'is_administrative_review_documentation': self.is_administrative_review_documentation,
+            'is_milestone_and_measures_documentation': self.is_milestone_and_measures_documentation,
+            'related_goals': self.related_goals,
+            'notes': self.notes
+        }
+
 class Webpage(StructuredNode):
 
     url = StringProperty(unique_index=True)
     title = StringProperty()
     related_goals = RelationshipFrom("Goal", "HAS_WEBPAGE")
     notes = RelationshipTo("GenericNote", "HAS_NOTE")
+
+    @property
+    def serialize(self):
+        return {
+            'url': self.url,
+            'title': self.title,
+            'related_goals': self.related_goals,
+            'notes': self.notes
+        }
 
 
 class Email(StructuredNode):
@@ -142,12 +275,30 @@ class Email(StructuredNode):
     related_goals = RelationshipFrom("Goal", "HAS_EMAIL")
     notes = RelationshipTo("GenericNote", "HAS_NOTE")
 
+    @property
+    def serialize(self):
+        return {
+            'uuid': self.uuid,
+            'subject': self.subject,
+            'content': self.content,
+            'related_goals': self.related_goals,
+            'notes': self.notes
+        }
+
 class GenericNote(StructuredNode):
     __primarykey__ = 'id'
 
     uuid = StringProperty()
     content = StringProperty()
     notates = RelationshipFrom(StructuredNode, "NOTATES")
+
+    @property
+    def serialize(self):
+        return {
+            'uuid': self.uuid,
+            'content': self.content,
+            'notates': self.notates
+        }
 
 
 class Vendor(StructuredNode):
@@ -158,6 +309,15 @@ class Vendor(StructuredNode):
 
     contracted_by = RelationshipFrom("Department", "works_with")
     works_with = RelationshipTo("Stakeholder", "works_with")
+
+    @property
+    def serialize(self):
+        return {
+            'name': self.name,
+            'industry': self.industry,
+            'contracted_by': self.contracted_by,
+            'works_with': self.works_with
+        }
 
 
 def set_connection():
