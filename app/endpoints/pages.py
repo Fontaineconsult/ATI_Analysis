@@ -1,6 +1,9 @@
 from flask import Flask, request, jsonify, render_template, Blueprint
 from app.database.neomodelschema import *
 from neomodel import db
+
+from app.database.queries.read import full_year_report
+
 app = Flask(__name__)
 
 
@@ -72,34 +75,40 @@ def get_success_indicator(year, success_indicator, subcommittee):
         else:
             return 404
 
-        query = (f'MATCH (si:SuccessIndicator)-[:is_a_success_indicator_of]->(g:Goal),'
-                f'(si)-[:success_indicator_is]-(yse:YearSuccessEvidence)'
-                f'WHERE yse.year_identifier = "{year_identifier}"'
-                f'MATCH (yse)-[:status_is]->(sl:StatusLevel)'
-                f'MATCH (yse)-[:status_in_year]->(ay:AcademicYear)'
-                f'OPTIONAL MATCH (yse)-[:implemented_by]->(p:Person)'
-                f'RETURN si AS SuccessIndicator, collect(g) AS Goals, collect(yse) AS YearSuccessEvidences, collect(sl) AS StatusLevels,'
-                f'ay AS AcademicYear, p AS Person')
 
-        print(query)
 
-        responses = []
-        results, meta = db.cypher_query(query)
-        print(meta)
-        for si, goals, yses, sls, ay, p in results:
-            response = {
-                'success_indicator': si['success_indicator'],
-                'composite_key': si['composite_key'],
-                'goals': [{'name': g['name']} for g in goals],
-                'year_success_evidences': [{'year_identifier': yse['year_identifier']} for yse in yses],
-                'status_levels': [{'status_level': sl['status_level']} for sl in sls],
-                'academic_year': ay['name'] if ay else None,
-                'person': p['name'] if p else None,
-            }
-            responses.append(response)
+
+        query = full_year_report(year_identifier)
+
+
+        # query = (f'MATCH (si:SuccessIndicator)-[:is_a_success_indicator_of]->(g:Goal),'
+        #         f'(si)-[:success_indicator_is]-(yse:YearSuccessEvidence)'
+        #         f'WHERE yse.year_identifier = "{year_identifier}"'
+        #         f'MATCH (yse)-[:status_is]->(sl:StatusLevel)'
+        #         f'MATCH (yse)-[:status_in_year]->(ay:AcademicYear)'
+        #         f'OPTIONAL MATCH (yse)-[:implemented_by]->(p:Person)'
+        #         f'RETURN si AS SuccessIndicator, collect(g) AS Goals, collect(yse) AS YearSuccessEvidences, collect(sl) AS StatusLevels,'
+        #         f'ay AS AcademicYear, p AS Person')
+        #
+        # print(query)
+        #
+        # responses = []
+        # results, meta = db.cypher_query(query)
+        # print(meta)
+        # for si, goals, yses, sls, ay, p in results:
+        #     response = {
+        #         'success_indicator': si['success_indicator'],
+        #         'composite_key': si['composite_key'],
+        #         'goals': [{'name': g['name']} for g in goals],
+        #         'year_success_evidence': [{'year_identifier': yse['year_identifier']} for yse in yses],
+        #         'status_levels': [{'status_level': sl['status_level']} for sl in sls],
+        #         'academic_year': ay['name'] if ay else None,
+        #         'person': p['name'] if p else None,
+        #     }
+        #     responses.append(response)
 
         return render_template('success_indicator.html',
-                               success_indicator=responses,
+                               success_indicator=query,
                                path=f"{year}/{success_indicator}/{subcommittee}",
                                year_success_identifier=year_identifier)
 

@@ -1,10 +1,10 @@
-<div x-data="{ open: false }">
+<div x-data="{ open: false, document_name: '', file_path: '', uri_path: '', year_identifier: '' }">
     <button @click="open = !open">Toggle Form</button>
 
-    <div id="add-document"  x-show="open" x-data="{ document_name: '', file_path: '', uri_path: '', year_identifier: '' }">
+    <div id="add-document" x-show="open">
         <form hx-post="/documents" hx-trigger="submit" hx-target="#documents_table" hx-swap="innerHTML" @submit.prevent="document_name = '', file_path = '', uri_path = '', year_identifier = ''">
             <label for="year_identifier">Year Identifier:</label><br>
-            <select id="year_identifier" name="year_identifier">
+            <select id="year_identifier" name="year_identifier" x-model="year_identifier">
                 <option value="2020-2021">2020-2021</option>
                 <option value="2021-2022">2021-2022</option>
                 <option value="2022-2023">2022-2023</option>
@@ -12,11 +12,11 @@
                 <option value="2024-2025">2024-2025</option>
             </select><br>
             <label for="document_name">Document Name:</label><br>
-            <input type="text" id="document_name" name="document_name"><br>
+            <input type="text" id="document_name" name="document_name" x-model="document_name"><br>
             <label for="file_path">File Path:</label><br>
-            <input type="text" id="file_path" name="file_path"><br>
+            <input type="text" id="file_path" name="file_path" x-model="file_path"><br>
             <label for="uri_path">URI Path:</label><br>
-            <input type="text" id="uri_path" name="uri_path"><br>
+            <input type="text" id="uri_path" name="uri_path" x-model="uri_path"><br>
             <input type="hidden" id="hiddenInput" name="year_success_identifier" value="{{year_success_identifier}}">
             <button type="submit">Add</button>
         </form>

@@ -9,14 +9,12 @@
     </tr>
     </thead>
     <tbody>
-    {% for indicator in success_indicator %}
     <tr>
-        <td>{{ indicator.success_indicator }}</td>
-        <td>{{ indicator.composite_key }}</td>
-        <td>{{ indicator.goals | map(attribute='name') | join(', ') }}</td>
-        <td>{{ indicator.year_success_evidences | map(attribute='year_identifier') | join(', ') }}</td>
-        <td>{{ indicator.status_levels | map(attribute='status_level') | join(', ') }}</td>
+        <td>{{ success_indicator.success_indicator.success_indicator }}</td>
+        <td>{{ success_indicator.composite_key }}</td>
+        <td>{{ success_indicator.goals | map(attribute='name') | join(', ') }}</td>
+        <td>{{ success_indicator.year_success_evidence.year_identifier }}</td>
+        <td>{{ success_indicator.status_level.status_level }}</td>
     </tr>
-    {% endfor %}
     </tbody>
 </table>

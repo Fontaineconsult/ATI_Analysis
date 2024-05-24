@@ -3,6 +3,8 @@ from flask import Blueprint, render_template
 from neomodel import db
 
 from app.database.neomodelschema import Document, YearSuccessEvidence
+from app.database.queries.create import add_document_to_year_success_evidence
+from app.database.queries.read import get_documents_by_yse
 
 component_endpoints = Blueprint('components', __name__)
 
@@ -99,56 +101,36 @@ def documents(year, success_indicator, subcommittee):
         responses = []
         results, meta = db.cypher_query(query)
 
+
         for d in results:
+
             response = {
                 'document_name': d['name'],
                 'document_path': d['file_path']
             }
             responses.append(response)
+
         return render_template('documents_table.html',
                                documents=responses)
 
     if request.method == 'POST':
 
 
-
-        data = request.form
-        print(data)
-
         document_name = request.form['document_name']
         file_path = request.form['file_path']
         uri_path = request.form['uri_path']
 
 
+        if request.form.get('year_success_identifier'):
+            add_document_to_year_success_evidence(request.form['year_success_identifier'],
+                                                  document_name, file_path, uri_path)
 
 
+        documents = get_documents_by_yse(request.form['year_success_identifier'])
 
 
-        evidence_node = YearSuccessEvidence.nodes.get(year_identifier=request.form['year_success_identifier'])
-        new_document = Document(
-            name=document_name,
-            file_path=file_path,
-            uri_path=uri_path
-        )
-        new_document.save()
-        evidence_node.has_documents.connect(new_document)
-
-
-        query = (f'MATCH (yse:YearSuccessEvidence)-[:has_documents]->(d:Document)'
-                     f'WHERE yse.year_identifier = "{request.form['year_success_identifier']}"'
-                     f'RETURN d')
-
-        responses = []
-        results, meta = db.cypher_query(query)
-
-        for d in results:
-            response = {
-                'document_name': d['name'],
-                'document_path': d['file_path']
-            }
-            responses.append(response)
         return render_template('documents_table.html',
-                               documents=responses)
+                               documents=documents)
 
 
 

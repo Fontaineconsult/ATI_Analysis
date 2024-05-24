@@ -7,7 +7,6 @@ from neomodel import (StructuredNode, StringProperty,
 
 
 
-# Example Conversion for Department Class
 class Department(StructuredNode):
     name = StringProperty(unique_index=True)
     location = StringProperty()
@@ -21,9 +20,7 @@ class Department(StructuredNode):
             'employs': self.employs
         }
 
-# Convert other classes similarly...
 
-# Conversion for Person Class
 class Person(StructuredNode):
     name = StringProperty(unique_index=True)
     title = StringProperty()
@@ -39,7 +36,7 @@ class Person(StructuredNode):
             'has_ati_role': self.has_ati_role
         }
 
-# Conversion for ATIRole Class
+
 class ATIRole(StructuredNode):
     name = StringProperty(unique_index=True)
     description = StringProperty()
@@ -197,6 +194,8 @@ class Plan(StructuredNode):
     implementation_year = RelationshipTo("AcademicYear", "implementation_year")
     related_goal = RelationshipFrom("Goal", "to_implement_goal")
     notes = RelationshipTo("GenericNote", "has_note")
+    supporting_document = RelationshipTo("Document", "supporting_document")
+    supporting_webpage = RelationshipTo("Webpage", "supporting_webpage")
 
     @property
     def serialize(self):
@@ -207,6 +206,8 @@ class Plan(StructuredNode):
             'related_goal': self.related_goal,
             'notes': self.notes
         }
+
+
 
 class AcademicYear(StructuredNode):
 
@@ -299,6 +300,62 @@ class GenericNote(StructuredNode):
             'content': self.content,
             'notates': self.notates
         }
+
+
+class Law(StructuredNode):
+    __primarykey__ = 'title'
+    title = StringProperty(unique_index=True, required=True)
+    description = StringProperty()
+    effective_date = DateProperty()
+    last_updated = DateProperty()
+    relevant_sections = StringProperty()
+    compliance_requirements = StringProperty()
+    notes = RelationshipTo("GenericNote", "has_note")
+    directs_success_indicator = RelationshipTo("SuccessIndicator", "directs_success_indicator")
+    supporting_documents = RelationshipTo("Document", "supporting_document")
+    supporting_websites = RelationshipTo("Webpage", "supporting_website")
+
+
+    @property
+    def serialize(self):
+        return {
+            'title': self.title,
+            'description': self.description,
+            'effective_date': self.effective_date,
+            'last_updated': self.last_updated,
+            'relevant_sections': self.relevant_sections,
+            'compliance_requirements': self.compliance_requirements,
+            'notes': self.notes,
+            'directs_success_indicator': self.directs_success_indicator
+        }
+
+
+class Policy(StructuredNode):
+    __primarykey__ = 'title'
+    title = StringProperty(unique_index=True, required=True)
+    description = StringProperty()
+    effective_date = DateProperty()
+    last_updated = DateProperty()
+    supporting_documents = RelationshipTo("Document", "supporting_document")
+    supporting_websites = RelationshipTo("Webpage", "supporting_website")
+    supports_success_indicator = RelationshipTo("SuccessIndicator", "supports_success_indicator")
+    notes = RelationshipTo("GenericNote", "has_note")
+
+
+    @property
+    def serialize(self):
+        return {
+            'title': self.title,
+            'description': self.description,
+            'effective_date': self.effective_date,
+            'last_updated': self.last_updated,
+            'supporting_documents': self.supporting_documents,
+            'supporting_websites': self.supporting_websites,
+            'supports_success_indicator': self.supports_success_indicator,
+            'directs_success_indicator': self.directs_success_indicator,
+            'notes': self.notes
+        }
+
 
 
 class Vendor(StructuredNode):
