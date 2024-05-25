@@ -4,6 +4,7 @@ from neomodel import db
 
 from app.database.neomodelschema import Document, YearSuccessEvidence
 from app.database.queries.create import add_document_to_year_success_evidence
+from app.database.queries.delete import delete_document_by_element_id
 from app.database.queries.read import get_documents_by_yse
 
 component_endpoints = Blueprint('components', __name__)
@@ -79,7 +80,8 @@ from flask import request
 
 @component_endpoints.route('/documents', defaults={'year': None, 'success_indicator': None, 'subcommittee': None}, methods=['GET', 'POST'])
 @component_endpoints.route('/documents/<string:year>/<string:success_indicator>/<string:subcommittee>', methods=['GET', 'POST'])
-def documents(year, success_indicator, subcommittee):
+@component_endpoints.route('/documents', methods=['DELETE'])
+def documents(year=None, success_indicator=None, subcommittee=None):
     if request.method == 'GET':
         if year is None and success_indicator is None and subcommittee is None:
             # Extract parameters from query string
@@ -115,22 +117,31 @@ def documents(year, success_indicator, subcommittee):
 
     if request.method == 'POST':
 
-
         document_name = request.form['document_name']
         file_path = request.form['file_path']
         uri_path = request.form['uri_path']
-
 
         if request.form.get('year_success_identifier'):
             add_document_to_year_success_evidence(request.form['year_success_identifier'],
                                                   document_name, file_path, uri_path)
 
+            documents = get_documents_by_yse(request.form['year_success_identifier'])
+            return render_template('documents_table.html',
+                                   documents=documents,
+                                   query_params={'year_success_identifier': request.form['year_success_identifier']})
 
-        documents = get_documents_by_yse(request.form['year_success_identifier'])
+
+    if request.method == 'DELETE':
+        hash = request.args.get("hash")
+        if hash:
+            delete_document_by_element_id(hash)
+        if request.args.get("year_success_identifier"):
+            documents = get_documents_by_yse(request.args.get("year_success_identifier"))
+            return render_template('documents_table.html',
+                                   documents=documents)
 
 
-        return render_template('documents_table.html',
-                               documents=documents)
+
 
 
 

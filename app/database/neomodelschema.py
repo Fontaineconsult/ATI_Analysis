@@ -1,3 +1,4 @@
+import uuid
 from neomodel import (StructuredNode, StringProperty,
                       IntegerProperty, RelationshipTo,
                       RelationshipFrom, UniqueIdProperty,
@@ -226,7 +227,6 @@ class AcademicYear(StructuredNode):
 
 
 class Document(StructuredNode):
-
 
     hash = StringProperty(unique_index=True)
     name = StringProperty()

@@ -54,3 +54,4 @@ def get_documents_by_yse(year_identifier: str) -> list:
     return d_nodes
 
 
+print(get_documents_by_yse("2020-2021-5.2-pro"))

@@ -1,10 +1,9 @@
 from flask import Flask, request, jsonify, render_template, Blueprint
 from app.database.neomodelschema import *
 from neomodel import db
-
+from jinja2 import Environment, FileSystemLoader
 from app.database.queries.read import full_year_report
 
-app = Flask(__name__)
 
 
 page_endpoints = Blueprint('pages', __name__)

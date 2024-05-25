@@ -1,5 +1,6 @@
 <div id="documents_table">
 {{ documents }}
+{{ query_params }}
 <table>
   <thead>
   <tr>
@@ -8,6 +9,7 @@
     <th>URI Path</th>
     <th>Admin Review</th>
     <th>Milestone</th>
+    <th>Actions</th>
   </tr>
   </thead>
   <tbody>
@@ -18,6 +20,9 @@
     <td>{{ document.uri_path }}</td>
     <td>{{ document.is_administrative_review_documentation }}</td>
     <td>{{ document.is_milestone_and_measures_documentation }}</td>
+    <td>
+        <button hx-swap="outerHTML" hx-trigger="click" hx-delete="/documents?hash={{ document.hash }}&{{ query_params | urlencode }}" hx-target="#documents_table">Delete</button>
+    </td>
   </tr>
   {% endfor %}
   </tbody>

@@ -1,13 +1,27 @@
 # app/__init__.py
 from flask import Flask
+from jinja2 import Environment, FileSystemLoader
+
 from app.config import Config
 from neomodel import config, db
-from flask_debugtoolbar import DebugToolbarExtension
+# from flask_debugtoolbar import DebugToolbarExtension
+
+from urllib.parse import urlencode
+def merge_query_params(*dict1):
+    print(dict1)
+    return urlencode(dict1)
+
+
+
+
 
 def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
-    print(app.config)
+    # env = Environment(loader=FileSystemLoader('templates'))
+    app.jinja_env.filters['merge_query_params'] = merge_query_params
+
+
     # Set up database connection
     config.DATABASE_URL = app.config['DATABASE_URL']
     app.config['SECRET_KEY'] = 'accessibility'

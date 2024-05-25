@@ -2,7 +2,7 @@
 {% include 'success_indicator_table.html' %}
 <h2>Documents</h2>
 
-{% with documents=success_indicator.documents %}
+{% with documents=success_indicator.documents, query_params=({ "year_success_identifier":year_success_identifier}) %}
 {% include 'documents_table.html' %}
 {% endwith %}
 {% include 'forms/submit_document.html' %}

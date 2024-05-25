@@ -15,7 +15,7 @@ def one():
 
         lower = node.year_identifier.lower()
         names = lower.split("-")
-        name = f"{names[0].replace("/","-")}-{names[1]}-{names[2][:3]}"
+        name = f"{names[0].replace('/','-')}-{names[1]}-{names[2][:3]}"
         print(name)
 
 
@@ -39,4 +39,4 @@ def two():
         # Save the changes to the database
         node.save()
 
-one()
+two()
