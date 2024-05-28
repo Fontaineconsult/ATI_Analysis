@@ -1,20 +1,36 @@
 <h2>Success Indicator</h2>
 {% include 'success_indicator_table.html' %}
 <h2>Documents</h2>
-
+{{  success_indicator }}
 {% with documents=success_indicator.documents, query_params=({ "year_success_identifier":year_success_identifier}) %}
 {% include 'documents_table.html' %}
 {% endwith %}
 {% include 'forms/submit_document.html' %}
 <h2>Websites</h2>
 {% with websites=success_indicator.websites %}
-{% include 'websites_table.html' %}
+    {% include 'websites_table.html' %}
 {% endwith %}
 <h2>Notes</h2>
 {% with notes=success_indicator.notes %}
-{% include 'notes_table.html' %}
+    {% include 'notes_table.html' %}
 {% endwith %}
 <h2>Vendors</h2>
-{% with notes=success_indicator.vendors %}
-{% include 'vendors_table.html' %}
+{% with vendors=success_indicator.vendors %}
+    {% include 'vendors_table.html' %}
+{% endwith %}
+<h2>Laws</h2>
+{% with laws=success_indicator.laws %}
+    {% include 'laws_table.html' %}
+{% endwith %}
+<h2>Policies</h2>
+{% with policies=success_indicator.policies %}
+    {% include 'policies_table.html' %}
+{% endwith %}
+<h2>Projects</h2>
+{% with projects=success_indicator.projects %}
+    {% include 'projects_table.html' %}
+{% endwith %}
+<h2>Goals</h2>
+{% with goals=success_indicator.goals %}
+    {% include 'goals_table.html' %}
 {% endwith %}

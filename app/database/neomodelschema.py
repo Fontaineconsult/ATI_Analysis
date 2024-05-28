@@ -42,7 +42,8 @@ class ATIRole(StructuredNode):
     name = StringProperty(unique_index=True)
     description = StringProperty()
     participates_in = RelationshipTo('ATISubCommittee', 'participates_in')
-    job_description_with_ati_responsibilities = RelationshipTo('Document', 'ATI_JOB_DESCRIPTION')
+    job_description_with_ati_responsibilities = RelationshipTo('Document', 'documents_role_responsibilities')
+    implements_year_success_evidence = RelationshipTo('YearSuccessEvidence', 'implements')
 
     @property
     def serialize(self):
@@ -72,9 +73,10 @@ class Goal(StructuredNode):
 
     name = StringProperty(unique_index=True)
     part_of_atisubcommittee = Relationship(ATISubCommittee, "managed_by_subcommittee")
-    success_indicators = RelationshipTo("SuccessIndicator", "is_a_success_indicator_for")
+    success_indicators = RelationshipFrom("SuccessIndicator", "informs_goal")
+    achieved = BooleanProperty(default=False)
     removed = BooleanProperty(default=False)
-    goal = StringProperty()
+    description = StringProperty()
     notes = RelationshipTo("GenericNote", "has_note")
     goal_number = IntegerProperty()
     date_added = DateProperty()
@@ -95,7 +97,6 @@ class Goal(StructuredNode):
 class SuccessIndicator(StructuredNode):
 
     number = IntegerProperty()
-    associated_goal = RelationshipTo(Goal, "is_a_success_indicator_of")
     success_indicator = StringProperty()
     composite_key = StringProperty(unique_index=True)  # Combination of goal_number and ATISubCommittee name
     removed = BooleanProperty(default=False)
@@ -103,17 +104,21 @@ class SuccessIndicator(StructuredNode):
     # Notes can be attached to goals
     notes = RelationshipTo("GenericNote", "has_note")
     date_added = DateProperty()
+    guiding_laws = RelationshipFrom("Law", "guides_success_indicator")
+    supporting_policies = RelationshipFrom("Policy", "supports_success_indicator")
+    goals = RelationshipTo("Goal", "informs_goal")
 
     @property
     def serialize(self):
         return {
             'number': self.number,
-            'associated_goal': self.associated_goal,
+            'associated_goals': self.associated_goals,
             'success_indicator': self.success_indicator,
             'composite_key': self.composite_key,
             'removed': self.removed,
             'notes': self.notes,
-            'date_added': self.date_added
+            'date_added': self.date_added,
+            'guiding_laws': self.guiding_laws
         }
 
 
@@ -148,7 +153,8 @@ class YearSuccessEvidence(StructuredNode):
     academic_year = RelationshipTo("AcademicYear", "status_in_year")
     status_level = RelationshipTo("StatusLevel", "status_is")
     related_success_indicator = RelationshipTo("SuccessIndicator", "success_indicator_is")
-    implemented_by = RelationshipTo("Person", "implemented_by")
+    implemented_by = RelationshipFrom("ATIRole", "implements")
+    related_projects = RelationshipFrom("Project", "implements_year_success_evidence")
 
     # New properties for tracking status level details
     documentation_status = StringProperty()
@@ -161,7 +167,11 @@ class YearSuccessEvidence(StructuredNode):
     has_documents = RelationshipTo("Document", "has_document")
     has_webpages = RelationshipTo("Webpage", "has_webpage")
     has_emails = RelationshipTo("Email", "has_email")
+    supporting_vendors = RelationshipTo("Vendor", "services")
     notes = RelationshipTo("GenericNote", "has_note")
+
+
+
 
     @property
     def serialize(self):
@@ -185,6 +195,21 @@ class YearSuccessEvidence(StructuredNode):
 
 
 
+
+class Project(StructuredNode):
+
+    name = StringProperty(unique_index=True)
+    description = StringProperty()
+    status = StringProperty()
+    implements_year_success_evidence = RelationshipTo("YearSuccessEvidence", "implements_year_success_evidence")
+    implements_plan = RelationshipTo("Plan", "implements_plan")
+    has_documents = RelationshipTo("Document", "has_document")
+    has_webpages = RelationshipTo("Webpage", "has_webpage")
+    has_emails = RelationshipTo("Email", "has_email")
+    supporting_vendors = RelationshipTo("Vendor", "services")
+    notes = RelationshipTo("GenericNote", "has_note")
+
+
 class Accomplishment(StructuredNode):
     pass
 
@@ -195,8 +220,9 @@ class Plan(StructuredNode):
     implementation_year = RelationshipTo("AcademicYear", "implementation_year")
     related_goal = RelationshipFrom("Goal", "to_implement_goal")
     notes = RelationshipTo("GenericNote", "has_note")
-    supporting_document = RelationshipTo("Document", "supporting_document")
+    supporting_document = RelationshipTo("Document", "has_document")
     supporting_webpage = RelationshipTo("Webpage", "supporting_webpage")
+    implementing_projects = RelationshipFrom("Project", "implements_plan")
 
     @property
     def serialize(self):
@@ -311,9 +337,9 @@ class Law(StructuredNode):
     relevant_sections = StringProperty()
     compliance_requirements = StringProperty()
     notes = RelationshipTo("GenericNote", "has_note")
-    directs_success_indicator = RelationshipTo("SuccessIndicator", "directs_success_indicator")
-    supporting_documents = RelationshipTo("Document", "supporting_document")
-    supporting_websites = RelationshipTo("Webpage", "supporting_website")
+    guides_success_indicator = RelationshipTo("SuccessIndicator", "guides_success_indicator")
+    supporting_documents = RelationshipTo("Document", "has_document")
+    supporting_websites = RelationshipTo("Webpage", "has_website")
 
 
     @property
@@ -336,8 +362,8 @@ class Policy(StructuredNode):
     description = StringProperty()
     effective_date = DateProperty()
     last_updated = DateProperty()
-    supporting_documents = RelationshipTo("Document", "supporting_document")
-    supporting_websites = RelationshipTo("Webpage", "supporting_website")
+    supporting_documents = RelationshipTo("Document", "has_document")
+    supporting_websites = RelationshipTo("Webpage", "has_website")
     supports_success_indicator = RelationshipTo("SuccessIndicator", "supports_success_indicator")
     notes = RelationshipTo("GenericNote", "has_note")
 
@@ -363,9 +389,12 @@ class Vendor(StructuredNode):
 
     name = StringProperty()
     industry = StringProperty()
-
+    contact_person  = StringProperty()
     contracted_by = RelationshipFrom("Department", "works_with")
     works_with = RelationshipTo("Stakeholder", "works_with")
+    supporting_year_success_evidence = RelationshipTo("YearSuccessEvidence", "supports_year_success_evidence")
+    notes = RelationshipTo("GenericNote", "has_note")
+
 
     @property
     def serialize(self):

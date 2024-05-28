@@ -1,0 +1,22 @@
+<div id="projects_table">
+<table>
+    <thead>
+    <tr>
+        <th>Content</th>
+        <th>Title</th>
+        <th>Actions</th>
+    </tr>
+    </thead>
+    <tbody>
+    {% for note in notes %}
+        <tr>
+            <td>{{ notes.title }}</td>
+            <td>{{ notes.content }}</td>
+            <td>
+                <button hx-swap="outerHTML" hx-trigger="click" hx-delete="/notes?hash={{ document.hash }}&{{ query_params | urlencode }}" hx-target="#documents_table">Delete</button>
+            </td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+</div>

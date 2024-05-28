@@ -78,42 +78,21 @@ def get_success_indicator_table(year, success_indicator, subcommittee):
 
 from flask import request
 
-@component_endpoints.route('/documents', defaults={'year': None, 'success_indicator': None, 'subcommittee': None}, methods=['GET', 'POST'])
-@component_endpoints.route('/documents/<string:year>/<string:success_indicator>/<string:subcommittee>', methods=['GET', 'POST'])
+@component_endpoints.route('/documents', methods=['GET', 'POST'])
+@component_endpoints.route('/documents/<string:hash>', methods=['GET', 'POST'])
 @component_endpoints.route('/documents', methods=['DELETE'])
-def documents(year=None, success_indicator=None, subcommittee=None):
+def documents(hash=None):
     if request.method == 'GET':
-        if year is None and success_indicator is None and subcommittee is None:
-            # Extract parameters from query string
-            success_indicator = request.args.get('success_indicator')
-            if success_indicator:
-                components = success_indicator.split('/')
-                year = components[0] if len(components) > 0 else None
-                success_indicator = components[1] if len(components) > 1 else None
-                subcommittee = components[2] if len(components) > 2 else None
-            else:
-                return "Missing parameters", 400
+
+
+
 
         year_success_identifier = f"{year}-{success_indicator}-{subcommittee}"
 
-        query = (f'MATCH (yse:YearSuccessEvidence)-[:has_documents]->(d:Document)'
-                 f'WHERE yse.year_identifier = "{year_success_identifier}"'
-                 f'RETURN d')
-
-        responses = []
-        results, meta = db.cypher_query(query)
-
-
-        for d in results:
-
-            response = {
-                'document_name': d['name'],
-                'document_path': d['file_path']
-            }
-            responses.append(response)
+        documents = get_documents_by_yse(year_success_identifier)
 
         return render_template('documents_table.html',
-                               documents=responses)
+                               documents=documents)
 
     if request.method == 'POST':
 
