@@ -23,7 +23,8 @@ class Department(StructuredNode):
 
 
 class Person(StructuredNode):
-    name = StringProperty(unique_index=True)
+    name = StringProperty()
+    employee_id = StringProperty(unique_index=True)
     title = StringProperty()
     works_for = RelationshipTo('Department', 'works_for')
     has_ati_role = RelationshipTo('ATIRole', 'has_ati_role')
@@ -72,6 +73,7 @@ class ATISubCommittee(StructuredNode):
 class Goal(StructuredNode):
 
     name = StringProperty(unique_index=True)
+    uuid = StringProperty(unique_index=True)
     part_of_atisubcommittee = Relationship(ATISubCommittee, "managed_by_subcommittee")
     success_indicators = RelationshipFrom("SuccessIndicator", "informs_goal")
     achieved = BooleanProperty(default=False)
@@ -199,6 +201,7 @@ class YearSuccessEvidence(StructuredNode):
 class Project(StructuredNode):
 
     name = StringProperty(unique_index=True)
+    uuid = StringProperty(unique_index=True)
     description = StringProperty()
     status = StringProperty()
     implements_year_success_evidence = RelationshipTo("YearSuccessEvidence", "implements_year_success_evidence")
@@ -216,6 +219,7 @@ class Accomplishment(StructuredNode):
 class Plan(StructuredNode):
 
     name = StringProperty(unique_index=True)
+    uuid = StringProperty(unique_index=True)
     description = StringProperty()
     implementation_year = RelationshipTo("AcademicYear", "implementation_year")
     related_goal = RelationshipFrom("Goal", "to_implement_goal")
@@ -254,7 +258,7 @@ class AcademicYear(StructuredNode):
 
 class Document(StructuredNode):
 
-    hash = StringProperty(unique_index=True)
+    uuid = StringProperty(unique_index=True)
     name = StringProperty()
     file_path = StringProperty()
     uri_path = StringProperty()
