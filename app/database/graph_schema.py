@@ -1,0 +1,751 @@
+import uuid
+from neomodel import (StructuredNode, StringProperty,
+                      IntegerProperty, RelationshipTo,
+                      RelationshipFrom, UniqueIdProperty,
+                      StructuredRel,Relationship, DateProperty,
+                      install_all_labels, BooleanProperty, IntegerProperty)
+
+"""
+Governance
+
+Governance encompasses the formal rules, policies, directives, and guidelines that provide the framework for
+ensuring accessibility within an institution. This category includes laws, policies, directives, memos,
+and guidelines that establish the standards and requirements for accessibility. Governance documents
+guide and inform the implementation of accessibility initiatives, ensuring that all actions comply with legal
+and institutional mandates.
+
+Relationships:
+
+- Governance informs Indicators
+- Governance is documented by Documents, Webpages, Notes, and Messages
+
+
+"""
+
+class Law(StructuredNode):
+
+    """    Class representing a law node.
+
+    A Law in the context of the Accessible Technology Initiative (ATI) represents a formal and
+     enforceable rule established by legislative authorities to ensure equal access
+      and non-discrimination for individuals with disabilities.
+      These laws provide the legal framework and mandate for accessibility practices and policies within
+       institutions, such as the Americans with Disabilities Act (ADA) and Section 508 of the Rehabilitation Act.
+
+     """
+
+    title = StringProperty(unique_index=True, required=True)
+    description = StringProperty()
+    effective_date = DateProperty()
+    last_updated = DateProperty()
+    relevant_sections = StringProperty()
+    legislative_authority = StringProperty()
+    informed_goals = RelationshipTo("Goal", "informs")
+    supporting_documents = RelationshipTo("Document", "is_documented_by")
+    supporting_websites = RelationshipTo("Webpage", "is_documented_by")
+    supporting_notes = RelationshipTo("Note", "is_documented_by")
+    supporting_messages = RelationshipTo("Message", "is_documented_by")
+
+
+
+
+class Case(StructuredNode):
+
+    """    Class representing a case node.
+
+     A legal decision or
+     ruling that interprets or applies laws related to accessibility. Cases provide judicial precedents
+        and clarifications on how laws such as the ADA and Section 508 should be implemented and enforced.
+       These cases can influence policy-making and the development of procedures within institutions to
+        ensure compliance with accessibility standards.
+
+     """
+
+    title = StringProperty(unique_index=True, required=True)
+    description = StringProperty()
+    effective_date = DateProperty()
+    ruling = StringProperty()
+    legislative_authority = StringProperty()
+    informed_goals = RelationshipTo("Goal", "informs")
+    supporting_documents = RelationshipTo("Document", "is_documented_by")
+    supporting_websites = RelationshipTo("Webpage", "is_documented_by")
+    supporting_notes = RelationshipTo("Note", "is_documented_by")
+    supporting_messages = RelationshipTo("Message", "is_documented_by")
+
+
+class Directive(StructuredNode):
+
+    """    Class representing a directive node.
+
+    An official instruction or order issued by an authority, such as an executive body or regulatory agency,
+    to guide the implementation of accessibility policies and procedures. Directives provide specific guidance
+    on how to achieve compliance with laws and policies, ensuring that institutions follow standardized practices
+    to enhance accessibility and remove barriers for individuals with disabilities.
+
+     """
+
+    title = StringProperty(unique_index=True, required=True)
+    description = StringProperty()
+    effective_date = DateProperty()
+    last_updated = DateProperty()
+    source_institution = StringProperty()
+    informed_goals = RelationshipTo("Goal", "informs")
+    supporting_documents = RelationshipTo("Document", "is_documented_by")
+    supporting_websites = RelationshipTo("Webpage", "is_documented_by")
+    supporting_notes = RelationshipTo("Note", "is_documented_by")
+    supporting_messages = RelationshipTo("Message", "is_documented_by")
+
+
+class Policy(StructuredNode):
+
+    """    Class representing a policy node.
+
+
+    A set of principles and guidelines adopted by an organization to govern decisions and actions related
+    to accessibility. Policies are designed to ensure compliance with relevant laws and directives,
+    providing a framework for making technology, programs, and services accessible to all individuals,
+    including those with disabilities. These policies outline the organization's commitment to accessibility
+    and detail the procedures for implementing accessibility standards.
+
+     """
+
+    title = StringProperty(unique_index=True, required=True)
+    description = StringProperty()
+    effective_date = DateProperty()
+    last_updated = DateProperty()
+    informed_goals = RelationshipTo("Goal", "informs")
+    supporting_documents = RelationshipTo("Document", "is_documented_by")
+    supporting_websites = RelationshipTo("Webpage", "is_documented_by")
+    supporting_notes = RelationshipTo("Note", "is_documented_by")
+    supporting_messages = RelationshipTo("Message", "is_documented_by")
+
+
+
+class Memo(StructuredNode):
+
+    """    Class representing a memo node.
+
+    A written communication, typically used for internal purposes, that provides information, updates, or
+    instructions related to accessibility. Memos can outline changes in policy, highlight important
+    accessibility initiatives, or convey decisions made by leadership regarding the implementation of
+    accessibility practices. They are essential for keeping stakeholders informed and ensuring that all
+    members of the organization are aware of their roles and responsibilities in maintaining accessibility standards.
+
+     """
+
+    title = StringProperty(unique_index=True, required=True)
+    description = StringProperty()
+    authored_date = DateProperty()
+    informed_goals = RelationshipTo("Goal", "informs")
+    supporting_documents = RelationshipTo("Document", "is_documented_by")
+    supporting_websites = RelationshipTo("Webpage", "is_documented_by")
+    supporting_notes = RelationshipTo("Note", "is_documented_by")
+    supporting_messages = RelationshipTo("Message", "is_documented_by")
+
+
+class Guideline(StructuredNode):
+
+    """    Class representing a guideline node.
+
+    A set of recommended practices and standards designed to help organizations achieve and maintain accessibility.
+    Guidelines, such as the Web Content Accessibility Guidelines (WCAG), provide detailed criteria for
+    making digital content accessible to individuals with disabilities. They serve as a benchmark for
+    evaluating and improving accessibility across various platforms and services, ensuring consistency and
+    compliance with broader accessibility laws and policies. Guidelines help institutions implement effective
+    and user-friendly accessibility solutions.
+
+
+     """
+
+    title = StringProperty(unique_index=True, required=True)
+    description = StringProperty()
+    effective_date = DateProperty()
+    last_updated = DateProperty()
+    informed_goals = RelationshipTo("Goal", "informs")
+    supporting_documents = RelationshipTo("Document", "is_documented_by")
+    supporting_websites = RelationshipTo("Webpage", "is_documented_by")
+    supporting_notes = RelationshipTo("Note", "is_documented_by")
+    supporting_messages = RelationshipTo("Message", "is_documented_by")
+
+
+"""
+Indicators
+
+Indicators represent the metrics and benchmarks used to measure progress toward achieving accessibility goals.
+This category includes success indicators that provide clear criteria for evaluating the effectiveness of
+accessibility initiatives. Indicators help monitor performance, identify areas for improvement, and ensure
+continuous progress in implementing accessibility standards and practices.
+
+Relationships
+
+- Goals are supported by Indicators
+- Indicators direct Plans, Processes, Projects, Procedures, and Services
+
+"""
+
+
+class Goal(StructuredNode):
+
+    """    Class representing a goal node.
+
+    A measurable objective that an organization aims to achieve to enhance accessibility. Goals are set to drive
+    improvements in accessibility practices, ensuring that the organization meets legal and policy requirements.
+    Each goal is supported by success indicators and is aligned with broader strategic plans to create an inclusive
+    environment for individuals with disabilities. Goals guide the implementation of accessibility initiatives
+    and help track progress over time.
+
+     """
+
+
+    title = StringProperty()
+    description = StringProperty()
+    supporting_success_indicators = RelationshipTo("SuccessIndicator", "supported_by")
+    goal = StringProperty()
+    goal_number = IntegerProperty()
+    date_added = DateProperty()
+    removed = BooleanProperty(default=False)
+
+
+
+
+
+class SuccessIndicator(StructuredNode):
+
+    """    Class representing a success indicator node.
+
+    A Success Indicator in the context of the Accessible Technology Initiative (ATI) represents a specific metric
+    or benchmark used to measure progress toward achieving a goal. Success indicators provide clear criteria for
+    evaluating the effectiveness of accessibility initiatives and activities. They describe the processes,
+    procedures, and outcomes that need to be accomplished to meet the defined goals. These indicators help
+    organizations monitor their performance, identify areas for improvement, and ensure continuous progress
+    in implementing accessibility standards and practices.
+
+
+     """
+
+    number = IntegerProperty()
+    success_indicator = StringProperty()
+    composite_key = StringProperty(unique_index=True)  # Combination of goal_number and ATISubCommittee name
+    removed = BooleanProperty(default=False)
+    notes = RelationshipTo("GenericNote", "has_note")
+    date_added = DateProperty()
+    directed_plans = RelationshipTo("Plan", "directs")
+    directed_processes = RelationshipTo("Process", "directs")
+    directed_projects = RelationshipTo("Project", "directs")
+    directed_procedures = RelationshipTo("Procedure", "directs")
+    directed_services = RelationshipTo("Service", "directs")
+
+
+"""
+Implementation
+
+
+Implementation encompasses the specific actions, strategies, and plans developed to achieve accessibility goals.
+This category includes goals, plans, processes, projects, procedures, and services that detail the steps and
+resources needed to implement accessibility initiatives. Implementation elements provide a structured approach
+to applying the standards and requirements outlined in governance documents, ensuring practical and effective execution.
+
+Relationships
+
+- Plans, Processes, Projects, Procedures, and Services are detailed by Plans
+- Plans, Processes, Projects, Procedures, and Services are supported by Documents, Webpages, Notes, and Messages
+- Plans, Processes, Projects, Procedures, and Services are evidenced by YearSuccessEvidence
+
+
+"""
+
+class Plan(StructuredNode):
+
+    """    Class representing a plan node.
+
+    A Plan in the context of the Accessible Technology Initiative (ATI) represents a detailed strategy or roadmap
+    outlining the specific steps (the campus plan), resources, and timelines needed to achieve accessibility goals.
+    Plans include the identification of success indicators, allocation of responsibilities, and the scheduling of
+    activities aimed at improving accessibility. For example, the ATI Campus Plan involves prioritizing tasks based
+    on impact, integrating efforts across various committees, and securing necessary resources.
+    These plans guide the implementation of policies, processes, and projects, ensuring a structured and
+    systematic approach to enhancing accessibility within the organization. Plans are reviewed and updated
+    regularly by the ATI Executive Sponsor and Steering Committee to reflect progress and adapt to new
+    challenges or changes in technology.
+
+    """
+
+    title = StringProperty(unique_index=True, required=True)
+    description = StringProperty()
+    supporting_documents = RelationshipTo("Document", "is_documented_by")
+    supporting_websites = RelationshipTo("Webpage", "is_documented_by")
+    supporting_notes = RelationshipTo("Note", "is_documented_by")
+    supporting_messages = RelationshipTo("Message", "is_documented_by")
+    detailed_processes = RelationshipTo("Process", "details")
+    detailed_projects = RelationshipTo("Project", "details")
+    detailed_procedures = RelationshipTo("Procedure", "details")
+    detailed_services = RelationshipTo("Service", "details")
+
+
+class Process(StructuredNode):
+
+    """    Class representing a process node.
+
+    Represents a series of actions or steps taken to achieve a specific goal or outcome related to accessibility.
+    Processes are essential for systematically implementing accessibility policies, plans, and guidelines.
+    These processes ensure continuous quality improvement, prioritize accessibility tasks, and document progress
+    through annual reports. Each process involves collaboration among various stakeholders, adherence
+    to timelines, and regular monitoring to address challenges and track achievements
+
+     """
+
+    title = StringProperty(unique_index=True, required=True)
+    description = StringProperty()
+    supporting_documents = RelationshipTo("Document", "is_documented_by")
+    supporting_websites = RelationshipTo("Webpage", "is_documented_by")
+    supporting_notes = RelationshipTo("Note", "is_documented_by")
+    supporting_messages = RelationshipTo("Message", "is_documented_by")
+    evidenced_yses = RelationshipTo("YearSuccessEvidence", "is_evidence_for")
+
+
+class Project(StructuredNode):
+
+    """    Class representing a project node.
+
+
+    Represents a temporary and focused effort undertaken to create a specific product, service, or result that
+    enhances accessibility. Projects are designed to implement specific aspects of the ATI, such as the development
+    of new accessible websites, the procurement of accessible technology, or the creation of training programs
+    for staff and faculty. Each project has defined objectives, timelines, and resources, and contributes
+    to the overall goals of the ATI. Projects are managed through structured plans, and their progress
+    is monitored and documented to ensure alignment with the broader accessibility initiatives and continuous
+    improvement efforts outlined in the ATI Campus Plan.
+
+    """
+
+    title = StringProperty(unique_index=True, required=True)
+    description = StringProperty()
+    supporting_documents = RelationshipTo("Document", "is_documented_by")
+    supporting_websites = RelationshipTo("Webpage", "is_documented_by")
+    supporting_notes = RelationshipTo("Note", "is_documented_by")
+    supporting_messages = RelationshipTo("Message", "is_documented_by")
+    evidenced_yses = RelationshipTo("YearSuccessEvidence", "is_evidence_for")
+
+
+class Procedure(StructuredNode):
+
+    """    Class representing a procedure node.
+
+    represents a detailed set of instructions or steps that must be followed to perform a specific task or achieve
+    a particular objective related to accessibility. Procedures ensure consistency and compliance with accessibility
+    standards by providing clear guidelines on how to implement policies and processes. These procedures help
+    standardize actions across the organization, ensuring that all activities align with the ATI goals and success
+    indicators. They are regularly reviewed and updated to reflect best practices and changes in technology
+
+    """
+
+    title = StringProperty(unique_index=True, required=True)
+    description = StringProperty()
+    supporting_documents = RelationshipTo("Document", "is_documented_by")
+    supporting_websites = RelationshipTo("Webpage", "is_documented_by")
+    supporting_notes = RelationshipTo("Note", "is_documented_by")
+    supporting_messages = RelationshipTo("Message", "is_documented_by")
+    evidenced_yses = RelationshipTo("YearSuccessEvidence", "is_evidence_for")
+
+
+class Service(StructuredNode):
+
+    """    Class representing a service node.
+
+    A Service in the context of the Accessible Technology Initiative (ATI) represents an ongoing support or
+    assistance provided to ensure accessibility for individuals with disabilities. Services are designed to
+    facilitate access to programs, activities, and resources within the institution. Services are integral to
+    implementing ATI policies and goals, ensuring that accessibility is embedded in the daily operations
+    and offerings of the institution.
+
+    """
+
+    title = StringProperty(unique_index=True, required=True)
+    description = StringProperty()
+    supporting_documents = RelationshipTo("Document", "is_documented_by")
+    supporting_websites = RelationshipTo("Webpage", "is_documented_by")
+    supporting_notes = RelationshipTo("Note", "is_documented_by")
+    supporting_messages = RelationshipTo("Message", "is_documented_by")
+    evidenced_yses = RelationshipTo("YearSuccessEvidence", "is_evidence_for")
+
+
+
+class Guidance(StructuredNode):
+
+    """    Class representing a Guidance node.
+
+    Represents straightforward, practical information designed to help users navigate accessibility resources,
+    understand procedures, or take necessary actions. This category includes tips, instructions, FAQs,
+    and other forms of guidance that provide clear and concise directions to ensure users can effectively
+    access and utilize accessibility-related services and resources. Guidance helps bridge the gap between
+    complex policies and everyday practice, making it easier for individuals to comply with accessibility
+    standards and best practices.
+
+    """
+
+    title = StringProperty(unique_index=True, required=True)
+    description = StringProperty()
+    supporting_documents = RelationshipTo("Document", "is_documented_by")
+    supporting_websites = RelationshipTo("Webpage", "is_documented_by")
+    supporting_notes = RelationshipTo("Note", "is_documented_by")
+    supporting_messages = RelationshipTo("Message", "is_documented_by")
+    evidenced_yses = RelationshipTo("YearSuccessEvidence", "is_evidence_for")
+
+
+"""
+Evidence
+
+
+Evidence consists of the documented proof and records that demonstrate progress and compliance with accessibility
+initiatives. This category includes documents, webpages, notes, messages, and other records that provide
+verifiable information about the implementation and effectiveness of accessibility efforts.
+Evidence supports audits, assessments, and reporting, ensuring transparency and accountability.
+
+Relationships
+
+- YearSuccessEvidence is tracked yearly by AcademicYear
+- YearSuccessEvidence is tracked by StatusLevel
+
+
+"""
+
+class AcademicYear(StructuredNode):
+
+    """    Class representing an academic year node.
+
+    An Academic Year in the context of the Accessible Technology Initiative (ATI) represents the annual cycle
+    of academic instruction and administrative operations within an institution. It includes specific start
+    and end dates that define the period during which academic activities, such as classes, evaluations,
+    and progress tracking, occur.
+
+    """
+
+    name = StringProperty(unique_index=True, required=True)
+    start_date = DateProperty()
+    end_date = DateProperty()
+
+
+class StatusLevel(StructuredNode):
+
+    """    Class representing a status level node.
+
+    Represents a specific stage or degree of progress made towards achieving accessibility goals and success indicators.
+    Status levels provide a standardized way to evaluate and report the implementation and effectiveness of
+    accessibility initiatives. They are used to document and audit the current state of compliance with
+    accessibility standards, as outlined in the ATI plans. Examples of status levels include "Not Started,"
+    "Initiated," "Defined," "Established," "Managed," and "Optimized." Each status level has specific criteria
+     and evidence requirements that must be met to accurately reflect the institution's progress and ongoing efforts
+    to remove accessibility barriers
+
+    """
+
+    status_level = StringProperty(unique_index=True)
+    description_of_procedures = StringProperty()
+    description_of_documentation = StringProperty()
+    description_of_documentation_evidence = StringProperty()
+    description_of_resources = StringProperty()
+    status_value = StringProperty()
+    ati_report_evidence_column = StringProperty()
+    notes = RelationshipTo("GenericNote", "has_note")
+
+
+class YearSuccessEvidence(StructuredNode):
+
+    """    Class representing a year success evidence node.
+
+    Represents the documented proof of progress and achievements related to accessibility goals and success indicators
+    for a specific academic year. This evidence includes data and reports on the implementation of accessibility
+    initiatives, the status of success indicators, and any improvements made during the year. It is used to assess
+    the effectiveness of ATI activities, ensure accountability, and support audits by providing verifiable
+    information. Year Success Evidence helps track annual progress, identify areas for improvement, and plan
+    future actions to enhance accessibility across the institution.
+
+    Implementation nodes point to YSE nodes, which in turn point to the success indicator nodes. Evidence is generated
+    by working backward from YSE nodes through evidence nodes to retrieve their evidence documents.
+
+    """
+
+
+    year_identifier = StringProperty(unique_index=True)  # A unique identifier combining Year and SuccessIndicator name
+    academic_year = RelationshipTo("AcademicYear", "evidence_in_year")
+    status_level = RelationshipTo("StatusLevel", "status_is")
+    related_success_indicator = RelationshipTo("SuccessIndicator", "success_indicator_is")
+
+    # New properties for tracking status level details
+    documentation_status = StringProperty()
+    resources_status = StringProperty()
+    implementation_plan_status = StringProperty()
+    notes = RelationshipTo("GenericNote", "has_note")
+
+
+"""
+Committees
+
+Committees are specialized groups responsible for overseeing and guiding the implementation of accessibility
+initiatives. This category includes ATI Working Groups and other committees that focus on specific aspects
+of the ATI, such as web accessibility, instructional materials, and procurement. Committees ensure coordinated
+efforts, collaboration, and effective decision-making across the institution.
+
+Relationships
+
+- Committees are responsible for Goals
+- Committees implement Processes, Projects, Procedures, and Services
+
+
+"""
+
+class ATIWorkingGroup(StructuredNode):
+
+    """    Class representing an ATI Working Group node. One of Web, Instructional Materials, or Procurement.
+
+    An ATI Working Group in the context of the Accessible Technology Initiative (ATI) represents a specialized team
+    responsible for overseeing and implementing specific aspects of the ATI within an institution.
+    These working groups focus on key priority areas such as web accessibility, instructional materials,
+    and procurement. Each working group is comprised of members with relevant expertise and experience,
+    and they work collaboratively to achieve the ATI goals and success indicators. The ATI Working Group is
+    instrumental in developing and executing detailed plans, conducting regular meetings, monitoring progress,
+    and ensuring that all accessibility initiatives are effectively implemented and aligned with the overall
+    ATI strategy
+
+    """
+
+    name = StringProperty(unique_index=True, required=True)
+    description = StringProperty()
+    responsible_for = RelationshipTo("Goal", "responsible_for")
+    implements_process = RelationshipTo("Process", "implements")
+    implements_project = RelationshipTo("Project", "implements")
+    implements_procedure = RelationshipTo("Procedure", "implements")
+    implements_service = RelationshipTo("Service", "implements")
+
+
+"""
+Individuals
+
+Individuals represent the people involved in the implementation and support of accessibility initiatives.
+This category includes all roles such as ATI Executive Sponsors, members of ATI Working Groups,
+faculty, staff, and students. Individuals are crucial for executing plans, providing expertise, and ensuring
+compliance with accessibility standards.
+
+Relationships
+
+- Individuals participate in ATI Working Groups
+- Individuals implement Processes, Projects, Procedures, and Services
+
+"""
+
+class Person(StructuredNode):
+
+    """    Class representing a person.
+
+    Represents an individual involved in the implementation and support of accessibility initiatives within the
+    institution. This includes roles such as ATI Executive Sponsors, members of ATI Working Groups, faculty, staff,
+    and students. Each person may have specific responsibilities, such as participating in accessibility planning,
+    providing technical support, or ensuring compliance with accessibility policies and procedures.
+    The Person node helps track the involvement and contributions of individuals to ATI-related activities,
+    fostering collaboration and accountability within the initiative
+
+
+    """
+
+    name = StringProperty(unique_index=True, required=True)
+    email = StringProperty()
+    employee_id = StringProperty()
+    title = StringProperty()
+    in_ati_working_group = RelationshipTo('ATIWorkingGroup', 'participates_in')
+    implements_process = RelationshipTo("Process", "implements")
+    implements_project = RelationshipTo("Project", "implements")
+    implements_procedure = RelationshipTo("Procedure", "implements")
+    implements_service = RelationshipTo("Service", "implements")
+
+
+
+"""
+Organizational Units
+
+Organizational Units refer to the various divisions and departments within an institution that play a role in
+implementing and supporting accessibility initiatives. This category includes departments, colleges,
+and vendors. Organizational units are responsible for integrating accessibility into their operations,
+collaborating with other units, and contributing to the overall goals of the ATI.
+
+Relationships
+
+- Departments, Colleges, and Vendors employ Individuals
+- Departments, Colleges, and Vendors implement Processes, Projects, Procedures, and Services
+
+"""
+
+
+class Department(StructuredNode):
+
+    """    Class representing a Department.
+
+
+    A Department in the context of the Accessible Technology Initiative (ATI) represents an organizational unit
+    within the institution that plays a role in implementing and supporting accessibility initiatives.
+    Departments can include academic units, administrative offices, and support services,
+    each contributing to various aspects of the ATI. Responsibilities may include ensuring departmental compliance
+    with accessibility policies, integrating accessibility into departmental processes and services,
+    and collaborating with other units and working groups to achieve ATI goals. The Department node helps
+    to organize and coordinate the efforts of different parts of the institution, ensuring a comprehensive and
+    unified approach to accessibility.
+
+
+    """
+
+
+
+    name = StringProperty(unique_index=True)
+    location = StringProperty()
+    employs = RelationshipTo("Person", "employs")
+    implements_process = RelationshipTo("Process", "implements")
+    implements_project = RelationshipTo("Project", "implements")
+    implements_procedure = RelationshipTo("Procedure", "implements")
+    implements_service = RelationshipTo("Service", "implements")
+
+
+
+
+class College(StructuredNode):
+
+
+    """    Class representing a College.
+
+    A College in the context of the Accessible Technology Initiative (ATI) represents a major academic division
+    within the institution, typically encompassing multiple departments and programs. Each college is responsible
+    for integrating accessibility into its curricula, research, and administrative practices.
+
+    """
+
+
+    name = StringProperty(unique_index=True)
+    location = StringProperty()
+    employs = RelationshipTo("Person", "employs")
+    implements_process = RelationshipTo("Process", "implements")
+    implements_project = RelationshipTo("Project", "implements")
+    implements_procedure = RelationshipTo("Procedure", "implements")
+    implements_service = RelationshipTo("Service", "implements")
+
+
+class Vendor(StructuredNode):
+
+    """    Class representing a Vendor.
+
+    A Vendor in the context of the Accessible Technology Initiative (ATI) represents an external organization or
+    company that provides goods, services, or technology to the institution. Vendors play a crucial role in the
+    procurement of accessible products and services, ensuring that any purchased technology meets the accessibility
+    standards and requirements outlined by the ATI. The Vendor node helps track and manage relationships with external
+    suppliers, ensuring that they comply with accessibility criteria and contribute to the institution's overall
+    accessibility goals. This includes working with vendors to improve product accessibility and ensuring that
+    all procurement processes adhere to Section 508 requirements
+
+    """
+
+
+    name = StringProperty(unique_index=True)
+    location = StringProperty()
+    employs = RelationshipTo("Person", "employs")
+    implements_process = RelationshipTo("Process", "implements")
+    implements_project = RelationshipTo("Project", "implements")
+    implements_procedure = RelationshipTo("Procedure", "implements")
+    implements_service = RelationshipTo("Service", "implements")
+
+
+"""
+Documentation
+"""
+
+class Document(StructuredNode):
+
+    """    Class representing a Document node.
+
+    A Document in the context of the Accessible Technology Initiative (ATI) represents any written or electronic
+    record that provides information, evidence, or support related to accessibility initiatives. Documents can
+    include policies, guidelines, reports, plans, meeting minutes, instructional materials, and any other
+    relevant files. These documents are crucial for demonstrating compliance with accessibility standards,
+    recording progress towards goals, and providing guidance for implementing accessibility practices. The Document
+     node helps organize and link various types of documents within the ATI framework, ensuring that all
+    necessary information is readily accessible and systematically maintained.
+
+    """
+
+    hash = StringProperty(unique_index=True)
+    name = StringProperty()
+    file_path = StringProperty()
+    uri_path = StringProperty()
+    is_administrative_review_documentation = StringProperty()
+    is_milestone_and_measures_documentation = StringProperty()
+    notes = RelationshipTo("GenericNote", "has_note")
+
+
+class Webpage(StructuredNode):
+
+    """    Class representing a Webpage node.
+
+    A Webpage in the context of the Accessible Technology Initiative (ATI) represents an individual online page
+    that provides information, resources, or support related to accessibility initiatives. Webpages can include
+    sections of the institution's website, instructional content, digital services, and other online materials.
+
+    """
+
+
+    url = StringProperty(unique_index=True)
+    title = StringProperty()
+    description = StringProperty()
+    notes = RelationshipTo("GenericNote", "has_note")
+
+
+class Note(StructuredNode):
+
+    """    Class representing a Note node.
+
+    A Note in the context of the Accessible Technology Initiative (ATI) represents an annotation or comment that
+    provides additional information, insights, or clarifications related to various aspects of the ATI.
+    Notes can be used to document observations, feedback, meeting highlights, or important points that support
+    the understanding and implementation of accessibility initiatives. They help in recording informal yet
+    valuable information that might not be captured in formal documents or reports. The Note node helps to
+    organize and contextualize these annotations, ensuring that they are accessible and linked to relevant
+    documents, guidelines, and activities within the ATI framework.
+
+
+    """
+
+
+    uuid = StringProperty(unique_index=True)
+    date_created = DateProperty()
+    content = StringProperty()
+
+
+class Message(StructuredNode):
+
+    """    Class representing a Message node.
+
+    A Message in the context of the Accessible Technology Initiative (ATI) represents a communication,
+    such as an email, memo, or announcement, that conveys information related to accessibility initiatives.
+    Messages are used to inform stakeholders about updates, changes, instructions, or decisions regarding the
+    implementation of ATI policies and procedures. They can include directives from leadership, reminders of
+    compliance requirements, or notifications of upcoming events and training sessions. The Message node helps
+    track and manage these communications, ensuring that all relevant parties are kept informed and that the
+    information is documented and accessible within the ATI framework
+
+
+    """
+    uuid = StringProperty(unique_index=True)
+    content = StringProperty()
+    date_created = StringProperty
+    type = StringProperty()
+
+
+
+
+def set_connection():
+
+    from neomodel import config
+
+    config.DATABASE_URL = 'bolt://neo4j:accessibility@localhost:7687'
+    config.DATABASE_USERNAME = 'neo4j'
+    config.DATABASE_PASSWORD = 'accessibility'
+
+
+if __name__=="__main__":
+    set_connection()
+    install_all_labels()
