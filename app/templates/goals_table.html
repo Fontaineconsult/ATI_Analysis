@@ -1,0 +1,26 @@
+<div id="goals_table">
+    <table>
+        <thead>
+        <tr>
+            <th>Name</th>
+            <th>Description</th>
+            <th>Date Added</th>
+            <th>Achieved</th>
+            <th>Actions</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for goal in goals %}
+            <tr>
+                <td>{{ goal.name }}</td>
+                <td>{{ goal.description }}</td>
+                <td>{{ goal.date_added }}</td>
+                <td>{{ goal.achieved }}</td>
+                <td>
+                    <button hx-swap="outerHTML" hx-trigger="click" hx-delete="/goals?hash={{ goal.hash }}&{{ query_params | urlencode }}" hx-target="#goals_table">Delete</button>
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>

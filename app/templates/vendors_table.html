@@ -3,6 +3,7 @@
     <tr>
         <th>URL</th>
         <th>Title</th>
+        <th>Actions</th>
     </tr>
     </thead>
     <tbody>
@@ -10,6 +11,9 @@
     <tr>
         <td>{{ vendor.name }}</td>
         <td>{{ vendor.industry }}</td>
+        <td>
+            <button hx-swap="outerHTML" hx-trigger="click" hx-delete="/documents?hash={{ document.hash }}&{{ query_params | urlencode }}" hx-target="#documents_table">Delete</button>
+        </td>
     </tr>
     {% endfor %}
     </tbody>

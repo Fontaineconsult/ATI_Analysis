@@ -1,8 +1,10 @@
+<div id="websites_table">
 <table>
   <thead>
   <tr>
     <th>URL</th>
     <th>Title</th>
+      <th>Actions</th>
   </tr>
   </thead>
   <tbody>
@@ -10,8 +12,11 @@
   <tr>
     <td>{{ website.website_url }}</td>
     <td>{{ website.website_url }}</td>
+  <td>
+      <button hx-swap="outerHTML" hx-trigger="click" hx-delete="/websites?hash={{ document.hash }}&{{ query_params | urlencode }}" hx-target="#documents_table">Delete</button>
+  </td>
   </tr>
   {% endfor %}
   </tbody>
 </table>
-
+</div>
