@@ -331,7 +331,7 @@ class Procedure(StructuredNode):
 
     """    Class representing a procedure node.
 
-    represents a detailed set of instructions or steps that must be followed to perform a specific task or achieve
+    Represents a detailed set of instructions or steps that must be followed to perform a specific task or achieve
     a particular objective related to accessibility. Procedures ensure consistency and compliance with accessibility
     standards by providing clear guidelines on how to implement policies and processes. These procedures help
     standardize actions across the organization, ensuring that all activities align with the ATI goals and success
@@ -436,6 +436,12 @@ class StatusLevel(StructuredNode):
     "Initiated," "Defined," "Established," "Managed," and "Optimized." Each status level has specific criteria
      and evidence requirements that must be met to accurately reflect the institution's progress and ongoing efforts
     to remove accessibility barriers
+
+    Established: 1
+    Managed: 2
+    Optimized: 3
+
+    Require evidence.
 
     """
 

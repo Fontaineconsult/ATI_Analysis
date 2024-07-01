@@ -1,0 +1,3 @@
+#
+# INDICATOR READ QUERIES
+#
