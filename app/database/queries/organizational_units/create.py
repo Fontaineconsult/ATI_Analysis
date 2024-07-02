@@ -40,3 +40,23 @@ def add_vendor(name: str, location: str) -> bool:
     except Exception as e:
         print(e)
         return False
+
+
+def add_college(name: str, location: str) -> bool:
+    """
+    Adds a college node to the graph
+    :param name: Name of the college
+    :param location: Location of the college
+    :return: True if the college node is added successfully, False otherwise
+    """
+    try:
+        new_college = College(
+            name=name,
+            location=location
+        )
+        new_college.save()
+        print("Added college")
+        return True
+    except Exception as e:
+        print(e)
+        return False

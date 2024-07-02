@@ -24,7 +24,7 @@ def add_person(name: str,
             title=title
         )
         new_person.save()
-        print("added person")
+        print(f" {name} added")
         return True
     except Exception as e:
         print(e)
