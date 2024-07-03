@@ -22,6 +22,8 @@ Relationships:
 
 """
 
+
+
 class Law(StructuredNode):
 
     """    Class representing a law node.
@@ -751,6 +753,8 @@ def set_connection():
     config.DATABASE_USERNAME = 'neo4j'
     config.DATABASE_PASSWORD = 'accessibility'
 
+
+set_connection()
 
 if __name__=="__main__":
     set_connection()
