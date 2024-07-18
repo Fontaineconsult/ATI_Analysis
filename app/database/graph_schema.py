@@ -4,6 +4,11 @@ from neomodel import (StructuredNode, StringProperty,
                       RelationshipFrom, UniqueIdProperty,
                       StructuredRel,Relationship, DateProperty,
                       install_all_labels, BooleanProperty, IntegerProperty)
+from dotenv import load_dotenv
+import os
+
+dotenv_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'app', '.env')
+load_dotenv(dotenv_path)
 
 """
 Governance
@@ -229,8 +234,9 @@ class SuccessIndicator(StructuredNode):
     success_indicator = StringProperty()
     composite_key = StringProperty(unique_index=True)  # Combination of goal_number and ATISubCommittee name
     removed = BooleanProperty(default=False)
-    notes = RelationshipTo("GenericNote", "has_note")
+    notes = RelationshipTo("Note", "has_note")
     date_added = DateProperty()
+    tracked_by = RelationshipFrom("SuccessIndicator", "tracks")
     directed_plans = RelationshipTo("Plan", "directs")
     directed_processes = RelationshipTo("Process", "directs")
     directed_projects = RelationshipTo("Project", "directs")
@@ -425,6 +431,7 @@ class AcademicYear(StructuredNode):
     name = StringProperty(unique_index=True, required=True)
     start_date = DateProperty()
     end_date = DateProperty()
+    year_success_evidences = RelationshipFrom("YearSuccessEvidence", "evidence_in_year")
 
 
 class StatusLevel(StructuredNode):
@@ -454,7 +461,7 @@ class StatusLevel(StructuredNode):
     description_of_resources = StringProperty()
     status_value = StringProperty()
     ati_report_evidence_column = StringProperty()
-    notes = RelationshipTo("GenericNote", "has_note")
+    notes = RelationshipTo("Note", "has_note")
 
 
 class YearSuccessEvidence(StructuredNode):
@@ -477,13 +484,13 @@ class YearSuccessEvidence(StructuredNode):
     year_identifier = StringProperty(unique_index=True)  # A unique identifier combining Year and SuccessIndicator name
     academic_year = RelationshipTo("AcademicYear", "evidence_in_year")
     status_level = RelationshipTo("StatusLevel", "status_is")
-    related_success_indicator = RelationshipTo("SuccessIndicator", "success_indicator_is")
+    tracks_success_indicator = RelationshipTo("SuccessIndicator", "tracks")
 
     # New properties for tracking status level details
     documentation_status = StringProperty()
     resources_status = StringProperty()
     implementation_plan_status = StringProperty()
-    notes = RelationshipTo("GenericNote", "has_note")
+    notes = RelationshipTo("Note", "has_note")
 
 
 """
@@ -682,7 +689,7 @@ class Document(StructuredNode):
     uri_path = StringProperty()
     is_administrative_review_documentation = StringProperty()
     is_milestone_and_measures_documentation = StringProperty()
-    notes = RelationshipTo("GenericNote", "has_note")
+    notes = RelationshipTo("Note", "has_note")
 
 
 class Webpage(StructuredNode):
@@ -699,7 +706,7 @@ class Webpage(StructuredNode):
     url = StringProperty(unique_index=True)
     title = StringProperty()
     description = StringProperty()
-    notes = RelationshipTo("GenericNote", "has_note")
+    notes = RelationshipTo("Note", "has_note")
 
 
 class Note(StructuredNode):
@@ -749,13 +756,14 @@ def set_connection():
 
     from neomodel import config
 
-    config.DATABASE_URL = 'bolt://neo4j:accessibility@localhost:7687'
-    config.DATABASE_USERNAME = 'neo4j'
-    config.DATABASE_PASSWORD = 'accessibility'
+    config.DATABASE_URL = os.environ.get('database_url')
 
 
 set_connection()
 
 if __name__=="__main__":
+
+    dotenv_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), '.env')
+    load_dotenv(dotenv_path)
     set_connection()
     install_all_labels()
