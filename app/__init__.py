@@ -21,7 +21,7 @@ def create_app():
     # env = Environment(loader=FileSystemLoader('templates'))
     app.jinja_env.filters['merge_query_params'] = merge_query_params
 
-
+    print(app.config['DATABASE_URL'])
     # Set up database connection
     config.DATABASE_URL = app.config['DATABASE_URL']
     app.config['SECRET_KEY'] = 'accessibility'

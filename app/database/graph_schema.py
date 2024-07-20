@@ -755,9 +755,7 @@ class Message(StructuredNode):
 def set_connection():
 
     from neomodel import config
-
     config.DATABASE_URL = os.environ.get('database_url')
-
 
 set_connection()
 

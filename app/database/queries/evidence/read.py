@@ -13,6 +13,11 @@ def get_all_academic_years() -> list:
     return AcademicYear.nodes.all()
 
 
+
+
+
+
+
 def find_year_success_evidence_by_academic_year(academic_year_name):
     """
     Finds all YearSuccessEvidence nodes that relate to the specified AcademicYear through the 'academic_year' relationship
@@ -35,4 +40,5 @@ def find_year_success_evidence_by_academic_year(academic_year_name):
         results.append({"year_identifier": yse.year_identifier, "success_indicator": success_indicators.success_indicator})
 
     return results
+
 

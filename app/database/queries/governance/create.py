@@ -2,11 +2,11 @@
 # GOVERNANCE CREATE QUERIES
 #
 from app.database.graph_schema import *
-
+from datetime import date, datetime
 def add_law(title: str,
             description: str,
-            effective_date: str,
-            last_updated: str,
+            effective_date: date,
+            last_updated: date,
             relevant_sections: str,
             legislative_authority: str) -> bool:
     """
@@ -34,6 +34,8 @@ def add_law(title: str,
     except Exception as e:
         print(e)
         return False
+
+
 
 
 def add_policy(title: str,
