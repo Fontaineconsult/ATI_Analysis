@@ -3,7 +3,7 @@
 #
 from app.database.graph_schema import *
 
-def assign_implementation_to_success_indicator(year_success_identifier: str,
+def assign_implementation_to_year_success_indicator(year_success_identifier: str,
                                               implementation_type: str,
                                               implementation_title:str) -> bool:
 
@@ -20,3 +20,8 @@ def assign_implementation_to_success_indicator(year_success_identifier: str,
         year_success_evidence.implements.connect(implementation_node)
         print("Implementation assigned to success indicator")
         return True
+    except Exception as e:
+        print(e)
+        return False
+
+
