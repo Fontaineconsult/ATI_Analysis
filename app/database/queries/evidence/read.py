@@ -37,3 +37,26 @@ def find_year_success_evidence_by_academic_year(academic_year_name):
     return results
 
 
+def get_yse_by_year_and_implemenation(academic_year, implementation_type, implementation_title):
+    """
+    Finds a YearSuccessEvidence node that relates to the specified AcademicYear and Implementation node.
+
+    :param academic_year: The name of the AcademicYear to filter by.
+    :param implementation_type: The type of the implementation node.
+    :param implementation_title: The title of the implementation node.
+    :return: The YearSuccessEvidence node if found, otherwise None.
+    """
+    # Find the AcademicYear node by name
+    academic_year_node = AcademicYear.nodes.get(name=academic_year)
+
+    # Get the Implementation node by type and title
+    implementation = {"process": Process,
+                      "project": Project,
+                      "procedure": Procedure,
+                      "service": Service,
+                      "guideline": Guideline}
+
+    implementation_class = implementation[implementation_type]
+    implementation_node = implementation_class.nodes.get(title=implementation_title)
+
+    # get all year success evidence nodes

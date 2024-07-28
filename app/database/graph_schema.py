@@ -213,9 +213,6 @@ class Goal(StructuredNode):
     removed = BooleanProperty(default=False)
 
 
-
-
-
 class SuccessIndicator(StructuredNode):
 
     """    Class representing a success indicator node.
@@ -308,7 +305,7 @@ class Process(StructuredNode):
     supporting_websites = RelationshipTo("Webpage", "is_documented_by")
     supporting_notes = RelationshipTo("Note", "is_documented_by")
     supporting_messages = RelationshipTo("Message", "is_documented_by")
-    evidenced_yses = RelationshipTo("YearSuccessEvidence", "is_evidence_for")
+    is_evidence_for = RelationshipTo("YearSuccessEvidence", "is_evidence_for")
 
 
 class Project(StructuredNode):
@@ -332,7 +329,7 @@ class Project(StructuredNode):
     supporting_websites = RelationshipTo("Webpage", "is_documented_by")
     supporting_notes = RelationshipTo("Note", "is_documented_by")
     supporting_messages = RelationshipTo("Message", "is_documented_by")
-    evidenced_yses = RelationshipTo("YearSuccessEvidence", "is_evidence_for")
+    is_evidence_for = RelationshipTo("YearSuccessEvidence", "is_evidence_for")
 
 
 class Procedure(StructuredNode):
@@ -353,7 +350,7 @@ class Procedure(StructuredNode):
     supporting_websites = RelationshipTo("Webpage", "is_documented_by")
     supporting_notes = RelationshipTo("Note", "is_documented_by")
     supporting_messages = RelationshipTo("Message", "is_documented_by")
-    evidenced_yses = RelationshipTo("YearSuccessEvidence", "is_evidence_for")
+    is_evidence_for = RelationshipTo("YearSuccessEvidence", "is_evidence_for")
 
 
 class Service(StructuredNode):
@@ -374,7 +371,7 @@ class Service(StructuredNode):
     supporting_websites = RelationshipTo("Webpage", "is_documented_by")
     supporting_notes = RelationshipTo("Note", "is_documented_by")
     supporting_messages = RelationshipTo("Message", "is_documented_by")
-    evidenced_yses = RelationshipTo("YearSuccessEvidence", "is_evidence_for")
+    is_evidence_for = RelationshipTo("YearSuccessEvidence", "is_evidence_for")
 
 
 
@@ -397,7 +394,7 @@ class Guidance(StructuredNode):
     supporting_websites = RelationshipTo("Webpage", "is_documented_by")
     supporting_notes = RelationshipTo("Note", "is_documented_by")
     supporting_messages = RelationshipTo("Message", "is_documented_by")
-    evidenced_yses = RelationshipTo("YearSuccessEvidence", "is_evidence_for")
+    is_evidence_for = RelationshipTo("YearSuccessEvidence", "is_evidence_for")
 
 
 """

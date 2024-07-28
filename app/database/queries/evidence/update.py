@@ -16,9 +16,9 @@ def assign_implementation_to_year_success_indicator(year_success_identifier: str
     try:
         year_success_evidence = YearSuccessEvidence.nodes.get(year_identifier=year_success_identifier)
         implementation_class = implementation[implementation_type]
-        implementation_node = implementation_class(title=implementation_title).save()
-        year_success_evidence.implements.connect(implementation_node)
-        print("Implementation assigned to success indicator")
+        implementation_node = implementation_class.nodes.get(title=implementation_title)
+        implementation_node.is_evidence_for.connect(year_success_evidence)
+        print(f"Implementation {implementation_title} assigned to success indicator {year_success_identifier}")
         return True
     except Exception as e:
         print(e)
