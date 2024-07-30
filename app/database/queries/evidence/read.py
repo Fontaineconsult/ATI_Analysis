@@ -33,22 +33,19 @@ def find_year_success_evidence_by_academic_year(academic_year_name):
         # Get the related SuccessIndicator node
         success_indicators = yse.tracks_success_indicator.single()
         results.append({"year_identifier": yse.year_identifier, "success_indicator": success_indicators.success_indicator})
-
+        results.sort(key=lambda x: float(x["year_identifier"].split('-')[2]))
     return results
 
 
-def get_yse_by_year_and_implemenation(academic_year, implementation_type, implementation_title):
+def get_yses_by_year_and_implementation(academic_year, implementation_type, implementation_title):
     """
-    Finds a YearSuccessEvidence node that relates to the specified AcademicYear and Implementation node.
+    Finds YearSuccessEvidence nodes that relate to the specified AcademicYear and Implementation node.
 
     :param academic_year: The name of the AcademicYear to filter by.
     :param implementation_type: The type of the implementation node.
     :param implementation_title: The title of the implementation node.
-    :return: The YearSuccessEvidence node if found, otherwise None.
+    :return: List of YearSuccessEvidence nodes that match the criteria.
     """
-    # Find the AcademicYear node by name
-    academic_year_node = AcademicYear.nodes.get(name=academic_year)
-
     # Get the Implementation node by type and title
     implementation = {"process": Process,
                       "project": Project,
@@ -59,4 +56,29 @@ def get_yse_by_year_and_implemenation(academic_year, implementation_type, implem
     implementation_class = implementation[implementation_type]
     implementation_node = implementation_class.nodes.get(title=implementation_title)
 
-    # get all year success evidence nodes
+    # Get all YearSuccessEvidence nodes related to the Implementation node
+    year_success_evidences = implementation_node.is_evidence_for.all()
+
+    # Filter the YearSuccessEvidence nodes to find those that are also related to the specified AcademicYear node
+    matching_yses = [yse for yse in year_success_evidences if academic_year in [ay.name for ay in yse.academic_year.all()]]
+
+    results = []
+    for yse in matching_yses:
+        # Get the StatusLevel node for each YearSuccessEvidence node
+        status_level = yse.status_level.single()
+        results.append({"year_identifier": yse.year_identifier, "status_level": status_level.status_level})
+
+    # Sort results by the numerical part of the year_identifier
+    results.sort(key=lambda x: float(x["year_identifier"].split('-')[2]))
+
+    return results
+
+
+# print(get_yses_by_year_and_implementation("2020-2021", "process", "Web Accessibility Process V1"))
+
+def get_all_status_level_nodes():
+    """
+    Get all StatusLevel nodes from the graph
+    :return: List of StatusLevel nodes
+    """
+    return StatusLevel.nodes.all()

@@ -568,7 +568,7 @@ class Person(StructuredNode):
     implements_project = RelationshipTo("Project", "implements")
     implements_procedure = RelationshipTo("Procedure", "implements")
     implements_service = RelationshipTo("Service", "implements")
-
+    implements_guideline = RelationshipTo("Guideline", "implements")
 
 
 """
