@@ -25,11 +25,12 @@ documentation_relationships = {
     "note": "supporting_messages"
 }
 
+
 implementor_classes = {
-    "process":"implements_process",
-    "project":"implements_project",
+    "process": "implements_process",
+    "project": "implements_project",
     "procedure": "implements_procedure",
-    "service":"implements_service",
-    "guideline":"implements_guideline"
+    "service": "implements_service",
+    "guideline": "implements_guideline"
 
 }

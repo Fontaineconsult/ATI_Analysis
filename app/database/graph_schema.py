@@ -564,11 +564,8 @@ class Person(StructuredNode):
     employee_id = StringProperty()
     title = StringProperty()
     in_ati_working_group = RelationshipTo('ATIWorkingGroup', 'participates_in')
-    implements_process = RelationshipTo("Process", "implements")
-    implements_project = RelationshipTo("Project", "implements")
-    implements_procedure = RelationshipTo("Procedure", "implements")
-    implements_service = RelationshipTo("Service", "implements")
-    implements_guideline = RelationshipTo("Guideline", "implements")
+    implements_yse = RelationshipTo("YearSuccessEvidence", "implements")
+
 
 
 """

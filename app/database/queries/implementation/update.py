@@ -35,16 +35,21 @@ def assign_documentation_to_implementation(implementation_title,
 
     return True
 
-assign_documentation_to_implementation("Web Accessibility Process V1",
-                                       "process",
-                                       "document",
-                                       "Web Accessibility Process Document")
 
+def assign_person_as_implementor(employee_name, year_identifier):
+    # Retrieve the Person node
+    try:
+        person_node = Person.nodes.get(name=employee_name)
+    except Person.DoesNotExist:
+        raise ValueError(f"No Person node found with name: {employee_name}")
 
-def assign_person_as_implementor(employee_id,
-                                   implementation_type,
-                                   implementation_title):
+    # Retrieve the YearSuccessEvidence node
+    try:
+        year_success_evidence_node = YearSuccessEvidence.nodes.get(year_identifier=year_identifier)
+    except YearSuccessEvidence.DoesNotExist:
+        raise ValueError(f"No YearSuccessEvidence node found with year_identifier: {year_identifier}")
 
-    implementation_class = implementation_classes[implementation_type]
-    implementation_node = implementation_class.nodes.get(title=implementation_title)
+    # Establish a relationship between the Person node and the YearSuccessEvidence node
+    person_node.implements_yse.connect(year_success_evidence_node)
 
+    return True
