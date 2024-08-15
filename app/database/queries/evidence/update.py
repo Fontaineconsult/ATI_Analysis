@@ -48,3 +48,22 @@ def assign_status_to_yse(year_success_identifier: str, status: str) -> bool:
     except Exception as e:
         print(e)
         return False
+
+
+def assign_person_to_yse(year_success_identifier: str, person_name: str) -> bool:
+    try:
+        year_success_evidence = YearSuccessEvidence.nodes.get(year_identifier=year_success_identifier)
+        person = Person.nodes.get(name=person_name)
+
+        # Check if the relationship already exists
+        if person.implements_yse.is_connected(year_success_evidence):
+            raise Exception(f"Person {person_name} is already assigned to success indicator {year_success_identifier}")
+            return False
+
+        person.implements_yse.connect(year_success_evidence)
+        print(f"Person {person_name} assigned to success indicator {year_success_identifier}")
+        return True
+    except Exception as e:
+        print(e)
+        return False
+
