@@ -278,7 +278,7 @@ class Plan(StructuredNode):
     title = StringProperty(unique_index=True, required=True)
     description = StringProperty()
     supporting_documents = RelationshipTo("Document", "is_documented_by")
-    supporting_websites = RelationshipTo("Webpage", "is_documented_by")
+    supporting_webpages = RelationshipTo("Webpage", "is_documented_by")
     supporting_notes = RelationshipTo("Note", "is_documented_by")
     supporting_messages = RelationshipTo("Message", "is_documented_by")
     detailed_processes = RelationshipTo("Process", "details")
@@ -302,7 +302,7 @@ class Process(StructuredNode):
     title = StringProperty(unique_index=True, required=True)
     description = StringProperty()
     supporting_documents = RelationshipTo("Document", "is_documented_by")
-    supporting_websites = RelationshipTo("Webpage", "is_documented_by")
+    supporting_webpages = RelationshipTo("Webpage", "is_documented_by")
     supporting_notes = RelationshipTo("Note", "is_documented_by")
     supporting_messages = RelationshipTo("Message", "is_documented_by")
     is_evidence_for = RelationshipTo("YearSuccessEvidence", "is_evidence_for")
@@ -326,7 +326,7 @@ class Project(StructuredNode):
     title = StringProperty(unique_index=True, required=True)
     description = StringProperty()
     supporting_documents = RelationshipTo("Document", "is_documented_by")
-    supporting_websites = RelationshipTo("Webpage", "is_documented_by")
+    supporting_webpages = RelationshipTo("Webpage", "is_documented_by")
     supporting_notes = RelationshipTo("Note", "is_documented_by")
     supporting_messages = RelationshipTo("Message", "is_documented_by")
     is_evidence_for = RelationshipTo("YearSuccessEvidence", "is_evidence_for")
@@ -347,7 +347,7 @@ class Procedure(StructuredNode):
     title = StringProperty(unique_index=True, required=True)
     description = StringProperty()
     supporting_documents = RelationshipTo("Document", "is_documented_by")
-    supporting_websites = RelationshipTo("Webpage", "is_documented_by")
+    supporting_webpages = RelationshipTo("Webpage", "is_documented_by")
     supporting_notes = RelationshipTo("Note", "is_documented_by")
     supporting_messages = RelationshipTo("Message", "is_documented_by")
     is_evidence_for = RelationshipTo("YearSuccessEvidence", "is_evidence_for")
@@ -368,7 +368,7 @@ class Service(StructuredNode):
     title = StringProperty(unique_index=True, required=True)
     description = StringProperty()
     supporting_documents = RelationshipTo("Document", "is_documented_by")
-    supporting_websites = RelationshipTo("Webpage", "is_documented_by")
+    supporting_webpages = RelationshipTo("Webpage", "is_documented_by")
     supporting_notes = RelationshipTo("Note", "is_documented_by")
     supporting_messages = RelationshipTo("Message", "is_documented_by")
     is_evidence_for = RelationshipTo("YearSuccessEvidence", "is_evidence_for")
@@ -391,7 +391,7 @@ class Guidance(StructuredNode):
     title = StringProperty(unique_index=True, required=True)
     description = StringProperty()
     supporting_documents = RelationshipTo("Document", "is_documented_by")
-    supporting_websites = RelationshipTo("Webpage", "is_documented_by")
+    supporting_webpages = RelationshipTo("Webpage", "is_documented_by")
     supporting_notes = RelationshipTo("Note", "is_documented_by")
     supporting_messages = RelationshipTo("Message", "is_documented_by")
     is_evidence_for = RelationshipTo("YearSuccessEvidence", "is_evidence_for")
@@ -488,6 +488,17 @@ class YearSuccessEvidence(StructuredNode):
     resources_status = StringProperty()
     implementation_plan_status = StringProperty()
     notes = RelationshipTo("Note", "has_note")
+
+    # Relationships from implementation nodes
+    processes_that_evidence = RelationshipFrom("Process", "is_evidence_for")
+    projects_that_evidence = RelationshipFrom("Project", "is_evidence_for")
+    procedures_that_evidence = RelationshipFrom("Procedure", "is_evidence_for")
+    services_that_evidence = RelationshipFrom("Service", "is_evidence_for")
+    guidance_that_evidence = RelationshipFrom("Guidance", "is_evidence_for")
+
+    # Relationships from person nodes
+    persons_that_implement = RelationshipFrom("Person", "implements")
+
 
 
 """
