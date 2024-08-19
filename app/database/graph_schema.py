@@ -696,6 +696,21 @@ class Document(StructuredNode):
     is_milestone_and_measures_documentation = StringProperty()
     notes = RelationshipTo("Note", "has_note")
 
+    def serialize(self):
+        """
+        Serializes the Document object to a dictionary format, making it suitable for JSON representation,
+        storage, or API response.
+        """
+        return {
+            "hash": self.hash,
+            "name": self.name,
+            "file_path": self.file_path,
+            "uri_path": self.uri_path,
+            "is_administrative_review_documentation": self.is_administrative_review_documentation,
+            "is_milestone_and_measures_documentation": self.is_milestone_and_measures_documentation,
+
+        }
+
 
 class Webpage(StructuredNode):
 
@@ -712,6 +727,18 @@ class Webpage(StructuredNode):
     title = StringProperty()
     description = StringProperty()
     notes = RelationshipTo("Note", "has_note")
+
+    def serialize(self):
+        """
+        Serializes the Webpage object to a dictionary format, making it suitable for JSON representation,
+        storage, or API response.
+        """
+        return {
+            "url": self.url,
+            "title": self.title,
+            "description": self.description,
+
+        }
 
 
 class Note(StructuredNode):
@@ -734,6 +761,18 @@ class Note(StructuredNode):
     date_created = DateProperty()
     content = StringProperty()
 
+    def serialize(self):
+        """
+        Serializes the Message object to a dictionary format, making it suitable for JSON representation,
+        storage, or API response.
+        """
+        return {
+            "uuid": self.uuid,
+            "content": self.content,
+            "dateCreated": self.date_created,
+            "type": self.type
+        }
+
 
 class Message(StructuredNode):
 
@@ -754,6 +793,17 @@ class Message(StructuredNode):
     date_created = StringProperty
     type = StringProperty()
 
+    def serialize(self):
+        """
+        Serializes the Message object to a dictionary format, making it suitable for JSON representation,
+        storage, or API response.
+        """
+        return {
+            "uuid": self.uuid,
+            "content": self.content,
+            "dateCreated": self.date_created,
+            "type": self.type
+        }
 
 
 
