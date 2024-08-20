@@ -535,10 +535,10 @@ class ATIWorkingGroup(StructuredNode):
     name = StringProperty(unique_index=True, required=True)
     description = StringProperty()
     responsible_for = RelationshipTo("Goal", "responsible_for")
-    implements_process = RelationshipTo("Process", "implements")
-    implements_project = RelationshipTo("Project", "implements")
-    implements_procedure = RelationshipTo("Procedure", "implements")
-    implements_service = RelationshipTo("Service", "implements")
+    # implements_process = RelationshipTo("Process", "implements")
+    # implements_project = RelationshipTo("Project", "implements")
+    # implements_procedure = RelationshipTo("Procedure", "implements")
+    # implements_service = RelationshipTo("Service", "implements")
 
 
 """
@@ -617,10 +617,7 @@ class Department(StructuredNode):
     name = StringProperty(unique_index=True)
     location = StringProperty()
     employs = RelationshipTo("Person", "employs")
-    implements_process = RelationshipTo("Process", "implements")
-    implements_project = RelationshipTo("Project", "implements")
-    implements_procedure = RelationshipTo("Procedure", "implements")
-    implements_service = RelationshipTo("Service", "implements")
+    implements_yse = RelationshipTo("YearSuccessEvidence", "implements")
 
 
 
@@ -640,10 +637,7 @@ class College(StructuredNode):
     name = StringProperty(unique_index=True)
     location = StringProperty()
     employs = RelationshipTo("Person", "employs")
-    implements_process = RelationshipTo("Process", "implements")
-    implements_project = RelationshipTo("Project", "implements")
-    implements_procedure = RelationshipTo("Procedure", "implements")
-    implements_service = RelationshipTo("Service", "implements")
+    implements_yse = RelationshipTo("YearSuccessEvidence", "implements")
 
 
 class Vendor(StructuredNode):
@@ -664,10 +658,7 @@ class Vendor(StructuredNode):
     name = StringProperty(unique_index=True)
     location = StringProperty()
     employs = RelationshipTo("Person", "employs")
-    implements_process = RelationshipTo("Process", "implements")
-    implements_project = RelationshipTo("Project", "implements")
-    implements_procedure = RelationshipTo("Procedure", "implements")
-    implements_service = RelationshipTo("Service", "implements")
+    implements_yse = RelationshipTo("YearSuccessEvidence", "implements")
 
 
 """

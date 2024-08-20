@@ -67,3 +67,56 @@ def assign_person_to_yse(year_success_identifier: str, person_name: str) -> bool
         print(e)
         return False
 
+def assign_department_to_yse(year_success_identifier: str, department_name: str) -> bool:
+    try:
+        year_success_evidence = YearSuccessEvidence.nodes.get(year_identifier=year_success_identifier)
+        department = Department.nodes.get(name=department_name)
+
+        # Check if the relationship already exists
+        if department.implements_yse.is_connected(year_success_evidence):
+            raise Exception(f"Department {department_name} is already assigned to success indicator {year_success_identifier}")
+            return False
+
+        department.implements_yse.connect(year_success_evidence)
+        print(f"Department {department_name} assigned to success indicator {year_success_identifier}")
+        return True
+    except Exception as e:
+        print(e)
+        return False
+
+def assign_vendor_to_yse(year_success_identifier: str, vendor_name: str) -> bool:
+    try:
+        year_success_evidence = YearSuccessEvidence.nodes.get(year_identifier=year_success_identifier)
+        vendor = Vendor.nodes.get(name=vendor_name)
+
+        # Check if the relationship already exists
+        if vendor.implements_yse.is_connected(year_success_evidence):
+            raise Exception(f"Vendor {vendor_name} is already assigned to success indicator {year_success_identifier}")
+            return False
+
+        vendor.implements_yse.connect(year_success_evidence)
+        print(f"Vendor {vendor_name} assigned to success indicator {year_success_identifier}")
+        return True
+    except Exception as e:
+        print(e)
+        return False
+
+
+def assign_college_to_yse(year_success_identifier: str, college_name: str) -> bool:
+    try:
+        year_success_evidence = YearSuccessEvidence.nodes.get(year_identifier=year_success_identifier)
+        college = College.nodes.get(name=college_name)
+
+        # Check if the relationship already exists
+        if college.implements_yse.is_connected(year_success_evidence):
+            raise Exception(f"College {college_name} is already assigned to success indicator {year_success_identifier}")
+            return False
+
+        college.implements_yse.connect(year_success_evidence)
+        print(f"College {college_name} assigned to success indicator {year_success_identifier}")
+        return True
+    except Exception as e:
+        print(e)
+        return False
+
+
