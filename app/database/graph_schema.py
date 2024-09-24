@@ -282,6 +282,7 @@ class Plan(StructuredNode):
 
     title = StringProperty(unique_index=True, required=True)
     description = StringProperty()
+    is_campus_plan = BooleanProperty()
     supporting_documents = RelationshipTo("Document", "is_documented_by")
     supporting_webpages = RelationshipTo("Webpage", "is_documented_by")
     supporting_notes = RelationshipTo("Note", "is_documented_by")

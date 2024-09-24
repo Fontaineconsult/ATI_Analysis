@@ -110,3 +110,24 @@ def add_service(title: str, description: str) -> bool:
     except Exception as e:
         print(e)
         return False
+
+def add_plan(title: str, description: str, is_campus_plan:bool) -> bool:
+    """
+    Adds a plan node to the graph
+    :param title: Title of the plan
+    :param description: Description of the plan
+    :param is_campus_plan: True if the plan is a campus plan, False otherwise
+    :return: True if the plan node is added successfully, False otherwise
+    """
+    try:
+        new_plan = Plan(
+            title=title,
+            description=description,
+            is_campus_plan=is_campus_plan
+        )
+        new_plan.save()
+        print("Added plan")
+        return True
+    except Exception as e:
+        print(e)
+        return False

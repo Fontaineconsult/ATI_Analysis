@@ -51,7 +51,8 @@ def get_yses_by_year_and_implementation(academic_year, implementation_type, impl
                       "project": Project,
                       "procedure": Procedure,
                       "service": Service,
-                      "guideline": Guideline}
+                      "guideline": Guideline,
+                      "plan": Plan}
 
     implementation_class = implementation[implementation_type]
     implementation_node = implementation_class.nodes.get(title=implementation_title)

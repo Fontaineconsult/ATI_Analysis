@@ -50,8 +50,9 @@ def create_success_indicator(number,
     # **New Code Starts Here**
 
     # Check if a SuccessIndicator with the same composite_key already exists
-    existing_indicator = SuccessIndicator.nodes.filter(composite_key=composite_key).first()
-    if existing_indicator:
+
+    existing_indicator = SuccessIndicator.nodes.filter(composite_key=composite_key).all()
+    if len(existing_indicator) > 0:
         raise ValueError(f'SuccessIndicator with composite_key "{composite_key}" already exists.')
 
     # **New Code Ends Here**
@@ -68,3 +69,4 @@ def create_success_indicator(number,
 
     # Connect the SuccessIndicator to the Goal
     goal_node.supporting_success_indicators.connect(indicator)
+

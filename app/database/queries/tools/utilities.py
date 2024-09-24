@@ -1,6 +1,13 @@
 from app.database.graph_schema import YearSuccessEvidence
-from app.database.queries.implementation.read import get_all_processes, get_all_projects, get_all_procedures, get_all_services, get_all_guidelines
+from app.database.queries.implementation.read import (get_all_processes,
+                                                      get_all_projects,
+                                                      get_all_procedures,
+                                                      get_all_services,
+                                                      get_all_guidelines,
+                                                      get_all_plans)
 from neomodel import db
+
+
 def get_all_implementations(implementation_type):
     """
     Get all implementation nodes from the graph based on the implementation type
@@ -12,7 +19,8 @@ def get_all_implementations(implementation_type):
         "project": get_all_projects,
         "procedure": get_all_procedures,
         "service": get_all_services,
-        "guideline": get_all_guidelines
+        "guideline": get_all_guidelines,
+        "plan": get_all_plans
     }
 
     if implementation_type in implementation_functions:

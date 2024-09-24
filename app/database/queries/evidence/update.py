@@ -11,7 +11,7 @@ def assign_implementation_to_year_success_indicator(year_success_identifier: str
                       "project": Project,
                       "procedure": Procedure,
                       "service": Service,
-                      "guideline": Guideline}
+                      "guideline": Guideline,}
 
     try:
         year_success_evidence = YearSuccessEvidence.nodes.get(year_identifier=year_success_identifier)

@@ -69,3 +69,31 @@ def unassign_college_from_yse(year_success_identifier: str, college_name: str) -
     except Exception as e:
         print(e)
         return False
+
+def unassign_implementation_from_yse(year_success_identifier: str,
+                                                        implementation_type: str,
+                                                        implementation_title: str) -> bool:
+    implementation = {
+        "process": Process,
+        "project": Project,
+        "procedure": Procedure,
+        "service": Service,
+        "guideline": Guideline,
+    }
+
+    try:
+        year_success_evidence = YearSuccessEvidence.nodes.get(year_identifier=year_success_identifier)
+        implementation_class = implementation[implementation_type]
+        implementation_node = implementation_class.nodes.get(title=implementation_title)
+
+        # Check if the relationship exists
+        if not implementation_node.is_evidence_for.is_connected(year_success_evidence):
+            raise Exception(f"Implementation '{implementation_title}' is not assigned to success indicator '{year_success_identifier}'")
+
+
+        implementation_node.is_evidence_for.disconnect(year_success_evidence)
+        print(f"Implementation '{implementation_title}' unassigned from success indicator '{year_success_identifier}'")
+        return True
+    except Exception as e:
+        print(e)
+        return False

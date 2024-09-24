@@ -43,5 +43,10 @@ def get_all_services():
     """
     return Service.nodes.all()
 
-
+def get_all_plans():
+    """
+    Get all Plan nodes from the graph
+    :return: List of Plan nodes
+    """
+    return Plan.nodes.all()
 
