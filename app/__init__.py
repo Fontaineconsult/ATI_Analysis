@@ -2,7 +2,7 @@
 from flask import Flask
 from jinja2 import Environment, FileSystemLoader
 
-from app.config import Config
+from app.web_config import Config
 from neomodel import config, db
 # from flask_debugtoolbar import DebugToolbarExtension
 

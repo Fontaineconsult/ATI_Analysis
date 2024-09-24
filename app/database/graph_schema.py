@@ -213,6 +213,11 @@ class Goal(StructuredNode):
     removed = BooleanProperty(default=False)
 
 
+class HasGoalRel(StructuredRel):
+    pass
+
+
+
 class SuccessIndicator(StructuredNode):
 
     """    Class representing a success indicator node.
@@ -534,7 +539,7 @@ class ATIWorkingGroup(StructuredNode):
 
     name = StringProperty(unique_index=True, required=True)
     description = StringProperty()
-    responsible_for = RelationshipTo("Goal", "responsible_for")
+    responsible_for = RelationshipTo("Goal", "responsible_for", model=HasGoalRel)
     # implements_process = RelationshipTo("Process", "implements")
     # implements_project = RelationshipTo("Project", "implements")
     # implements_procedure = RelationshipTo("Procedure", "implements")

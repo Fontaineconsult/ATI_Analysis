@@ -1,7 +1,6 @@
-from flask import Flask, request, jsonify, render_template, Blueprint
-from app.database.neomodelschema import *
+from flask import request, jsonify, render_template, Blueprint
+from app.database.tools.neomodelschema import *
 from neomodel import db
-from jinja2 import Environment, FileSystemLoader
 from app.database.queries.read import full_year_report
 
 

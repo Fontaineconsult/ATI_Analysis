@@ -1,5 +1,5 @@
 from neomodel import db
-from app.database.neomodelschema import YearSuccessEvidence, AcademicYear
+from app.database.tools.neomodelschema import YearSuccessEvidence, AcademicYear
 
 # Set up your database connection
 db.set_connection('bolt://neo4j:testtest@localhost:7687')
