@@ -23,8 +23,8 @@ def build_yse_report(year_success_evidence):
     # query for the services_that_evidence
     services = yse.services_that_evidence.all()
 
-    # query for the guidelines_that_evidence
-    guidance = yse.guidance_that_evidence.all()
+    # query for the guideances_that_evidence
+    guidances = yse.guidance_that_evidence.all()
 
     # query for the persons_that_implement
     persons = yse.persons_that_implement.all()
@@ -78,16 +78,16 @@ def build_yse_report(year_success_evidence):
             }
         } for service in services],
 
-        "guidelines": [{
-            "title": guideline.title,
-            "description": guideline.description,
+        "guidances": [{
+            "title": guidance.title,
+            "description": guidance.description,
             "documentation": {
-                "documents": [doc.serialize() for doc in guideline.supporting_documents.all()],
-                "webpages": [web.serialize() for web in guideline.supporting_webpages.all()],
-                "notes": [note.serialize() for note in guideline.supporting_notes.all()],
-                "messages": [message.serialize() for message in guideline.supporting_messages.all()]
+                "documents": [doc.serialize() for doc in guidance.supporting_documents.all()],
+                "webpages": [web.serialize() for web in guidance.supporting_webpages.all()],
+                "notes": [note.serialize() for note in guidance.supporting_notes.all()],
+                "messages": [message.serialize() for message in guidance.supporting_messages.all()]
             }
-        } for guideline in guidance],
+        } for guidance in guidances],
 
         "persons": [person.name for person in persons]
     }

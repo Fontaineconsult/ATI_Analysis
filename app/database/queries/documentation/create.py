@@ -45,12 +45,168 @@ def add_document(name, file_path=None, uri_path=None, is_administrative_review_d
         return False
 
 
+def add_webpage(url: str, name: str, no_longer_exists:bool, description: str) -> bool:
+    """
+    Adds a webpage node to the graph.
+
+    :param url: URL of the webpage.
+    :param name: Name of the webpage.
+    :param no_longer_exists: Indicates if the webpage no longer exists.
+    :param description: Description of the webpage.
+    :return: True if the webpage node is added successfully, False otherwise.
+    """
+    try:
+        # Check if a webpage with the same URL already exists
+        existing_webpage = Webpage.nodes.get_or_none(url=url)
+        if existing_webpage:
+            print("A webpage with the same URL already exists.")
+            return False
+
+        # Create and save the new webpage node
+        new_webpage = Webpage(
+            url=url,
+            name=name,
+            no_longer_exists=no_longer_exists,
+            description=description
+        )
+        new_webpage.save()
+        print("Webpage added successfully.")
+        return True
+    except Exception as e:
+        print(f"Failed to add webpage: {e}")
+        return False
 
 
+def add_note(uuid: str, name: str, date_created: str, content: str) -> bool:
+    """
+    Adds a note node to the graph.
+
+    :param uuid: Unique identifier for the note.
+    :param name: Name of the note.
+    :param date_created: Date when the note was created.
+    :param content: Content of the note.
+    :return: True if the note node is added successfully, False otherwise.
+    """
+    try:
+        # Check if a note with the same UUID already exists
+        existing_note = Note.nodes.get_or_none(uuid=uuid)
+        if existing_note:
+            print("A note with the same UUID already exists.")
+            return False
+
+        # Create and save the new note node
+        new_note = Note(
+            uuid=uuid,
+            name=name,
+            date_created=date_created,
+            content=content
+        )
+        new_note.save()
+        print("Note added successfully.")
+        return True
+    except Exception as e:
+        print(f"Failed to add note: {e}")
+        return False
 
 
+def add_memo(title: str, description: str, authored_date: str) -> bool:
+    """
+    Adds a memo node to the graph.
+import sys
+sys.path.append(r"C:\\Users\\Fonta\\IdeaProjects\\ATI_Analysis")
+sys.path.append(r"C:\\Users\\913678186\\IdeaProjects\\ATI_Analysis")
 
+import ipywidgets as widgets
+from IPython.display import display
+from app.database.queries.documentation.create import add_note
 
+# Create form widgets
+note_name = widgets.Text(value='', placeholder='Enter note name', description='Name:', disabled=False)
+note_content = widgets.Textarea(value='', placeholder='Enter note content', description='Content:', disabled=False)
+note_date_created = widgets.DatePicker(description='Date Created:', disabled=False)
+submit_button = widgets.Button(description='Submit', disabled=False, button_style='', tooltip='Click to submit', icon='check')
+output = widgets.Output()
+
+# Define the event handler for the submit button
+def on_button_click(b):
+    with output:
+        output.clear_output()
+        success = add_note(
+            name=note_name.value,
+            content=note_content.value,
+            date_created=note_date_created.value
+        )
+        if success:
+            print('Note added successfully')
+        else:
+            print('Failed to add note')
+
+# Attach the event handler to the button
+submit_button.on_click(on_button_click)
+
+# Display the form
+form_items = [note_name, note_content, note_date_created, submit_button, output]
+form = widgets.VBox(form_items)
+display(form)import sys
+sys.path.append(r"C:\\Users\\Fonta\\IdeaProjects\\ATI_Analysis")
+sys.path.append(r"C:\\Users\\913678186\\IdeaProjects\\ATI_Analysis")
+
+import ipywidgets as widgets
+from IPython.display import display
+from app.database.queries.documentation.create import add_note
+
+# Create form widgets
+note_name = widgets.Text(value='', placeholder='Enter note name', description='Name:', disabled=False)
+note_content = widgets.Textarea(value='', placeholder='Enter note content', description='Content:', disabled=False)
+note_date_created = widgets.DatePicker(description='Date Created:', disabled=False)
+submit_button = widgets.Button(description='Submit', disabled=False, button_style='', tooltip='Click to submit', icon='check')
+output = widgets.Output()
+
+# Define the event handler for the submit button
+def on_button_click(b):
+    with output:
+        output.clear_output()
+        success = add_note(
+            name=note_name.value,
+            content=note_content.value,
+            date_created=note_date_created.value
+        )
+        if success:
+            print('Note added successfully')
+        else:
+            print('Failed to add note')
+
+# Attach the event handler to the button
+submit_button.on_click(on_button_click)
+
+# Display the form
+form_items = [note_name, note_content, note_date_created, submit_button, output]
+form = widgets.VBox(form_items)
+display(form)
+    :param title: Title of the memo.
+    :param description: Description of the memo.
+    :param authored_date: Date when the memo was authored.
+    :return: True if the memo node is added successfully, False otherwise.
+    """
+    try:
+        # Check if a memo with the same title already exists
+        existing_memo = Memo.nodes.get_or_none(title=title)
+        if existing_memo:
+            print("A memo with the same title already exists.")
+            return False
+
+        # Create and save the new memo node
+        new_memo = Memo(
+            title=title,
+            description=description,
+            authored_date=authored_date
+        )
+        new_memo.save()
+        print("Memo added successfully.")
+        return True
+    except Exception as e:
+        print(f"Failed to add memo: {e}")
+        return False
 
 
 

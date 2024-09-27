@@ -2,7 +2,7 @@
 # EVIDENCE READ QUERIES
 #
 from app.database.graph_schema import *
-
+from app.database.class_factory import implementation_classes
 
 
 def get_all_academic_years() -> list:
@@ -47,14 +47,9 @@ def get_yses_by_year_and_implementation(academic_year, implementation_type, impl
     :return: List of YearSuccessEvidence nodes that match the criteria.
     """
     # Get the Implementation node by type and title
-    implementation = {"process": Process,
-                      "project": Project,
-                      "procedure": Procedure,
-                      "service": Service,
-                      "guideline": Guideline,
-                      "plan": Plan}
 
-    implementation_class = implementation[implementation_type]
+
+    implementation_class = implementation_classes[implementation_type]
     implementation_node = implementation_class.nodes.get(title=implementation_title)
 
     # Get all YearSuccessEvidence nodes related to the Implementation node

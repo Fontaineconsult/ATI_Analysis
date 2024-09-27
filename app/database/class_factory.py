@@ -1,15 +1,21 @@
-from graph_schema import *
+import sys
+sys.path.append(r"C:\Users\Fonta\IdeaProjects\ATI_Analysis")
+sys.path.append(r"C:\Users\913678186\IdeaProjects\ATI_Analysis")
+from app.database.graph_schema import *
 
+implementation_types = ["process", "project", "procedure", "service", "guidance"]
 
 implementation_classes = {
     "process": Process,
     "project": Project,
     "procedure": Procedure,
     "service": Service,
-    "guideline": Guideline
+    "guidance": Guidance
 }
 
 # Mapping of documentation types to their corresponding classes
+documentation_types = ["document", "webpage", "memo", "note"]
+
 documentation_classes = {
     "document": Document,
     "webpage": Webpage,
@@ -20,7 +26,7 @@ documentation_classes = {
 # Mapping of documentation types to their corresponding relationships
 documentation_relationships = {
     "document": "supporting_documents",
-    "webpage": "supporting_websites",
+    "webpage": "supporting_webpages",
     "memo": "supporting_notes",
     "note": "supporting_messages"
 }
@@ -31,6 +37,6 @@ implementor_classes = {
     "project": "implements_project",
     "procedure": "implements_procedure",
     "service": "implements_service",
-    "guideline": "implements_guideline"
+    "guidance": "implements_guidance"
 
 }

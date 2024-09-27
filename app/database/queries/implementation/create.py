@@ -26,7 +26,7 @@ def add_process(title: str, description: str) -> bool:
         print(e)
         return False
 
-def add_guidance(title: str, description: str, effective_date: str, last_updated: str) -> bool:
+def add_guidance(title: str, description: str) -> bool:
     """
     Adds a guidance node to the graph
     :param title: Title of the guidance
@@ -39,8 +39,6 @@ def add_guidance(title: str, description: str, effective_date: str, last_updated
         new_guidance = Guidance(
             title=title,
             description=description,
-            effective_date=datetime.strptime(effective_date, "%Y-%m-%d"),
-            last_updated=datetime.strptime(last_updated, "%Y-%m-%d")
         )
         new_guidance.save()
         print("Added guidance")

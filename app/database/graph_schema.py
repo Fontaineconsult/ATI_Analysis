@@ -721,8 +721,9 @@ class Webpage(StructuredNode):
 
 
     url = StringProperty(unique_index=True)
-    title = StringProperty()
+    name = StringProperty()
     description = StringProperty()
+    no_longer_exists = BooleanProperty()
     notes = RelationshipTo("Note", "has_note")
 
     def serialize(self):
@@ -755,6 +756,7 @@ class Note(StructuredNode):
 
 
     uuid = StringProperty(unique_index=True)
+    name = StringProperty()
     date_created = DateProperty()
     content = StringProperty()
 
@@ -786,6 +788,7 @@ class Message(StructuredNode):
 
     """
     uuid = StringProperty(unique_index=True)
+    name = StringProperty()
     content = StringProperty()
     date_created = StringProperty
     type = StringProperty()

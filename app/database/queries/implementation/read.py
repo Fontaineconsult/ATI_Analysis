@@ -4,12 +4,12 @@
 from app.database.graph_schema import *
 
 
-def get_all_guidelines():
+def get_all_guidances():
     """
-    Get all Guideline nodes from the graph
+    Get all Guidance nodes from the graph
     :return: List of Guideline nodes
     """
-    return Guideline.nodes.all()
+    return Guidance.nodes.all()
 
 
 def get_all_processes():
