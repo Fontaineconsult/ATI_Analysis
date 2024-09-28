@@ -26,8 +26,13 @@ def build_yse_report(year_success_evidence):
     # query for the guideances_that_evidence
     guidances = yse.guidance_that_evidence.all()
 
+    # query for the trackings_that_evidence
+    trackings = yse.trackings_that_evidence.all()
+
     # query for the persons_that_implement
     persons = yse.persons_that_implement.all()
+
+
 
     # combine each query into a dictionary
     report = {
@@ -88,6 +93,17 @@ def build_yse_report(year_success_evidence):
                 "messages": [message.serialize() for message in guidance.supporting_messages.all()]
             }
         } for guidance in guidances],
+
+        "tracking": [{
+            "title": tracking.title,
+            "description": tracking.description,
+            "documentation": {
+                "documents": [doc.serialize() for doc in tracking.supporting_documents.all()],
+                "webpages": [web.serialize() for web in tracking.supporting_webpages.all()],
+                "notes": [note.serialize() for note in tracking.supporting_notes.all()],
+                "messages": [message.serialize() for message in tracking.supporting_messages.all()]
+            }
+        } for tracking in trackings],
 
         "persons": [person.name for person in persons]
     }

@@ -3,14 +3,15 @@ sys.path.append(r"C:\Users\Fonta\IdeaProjects\ATI_Analysis")
 sys.path.append(r"C:\Users\913678186\IdeaProjects\ATI_Analysis")
 from app.database.graph_schema import *
 
-implementation_types = ["process", "project", "procedure", "service", "guidance"]
+implementation_types = ["process", "project", "procedure", "service", "guidance", "tracking"]
 
 implementation_classes = {
     "process": Process,
     "project": Project,
     "procedure": Procedure,
     "service": Service,
-    "guidance": Guidance
+    "guidance": Guidance,
+    "tracking": Tracking
 }
 
 # Mapping of documentation types to their corresponding classes

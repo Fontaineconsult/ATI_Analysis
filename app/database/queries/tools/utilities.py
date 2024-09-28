@@ -4,6 +4,7 @@ from app.database.queries.implementation.read import (get_all_processes,
                                                       get_all_procedures,
                                                       get_all_services,
                                                       get_all_guidances,
+                                                      get_all_trackings,
                                                       get_all_plans)
 from neomodel import db
 
@@ -11,7 +12,7 @@ from neomodel import db
 def get_all_implementations(implementation_type):
     """
     Get all implementation nodes from the graph based on the implementation type
-    :param implementation_type: Type of the implementation ("process", "project", "procedure", "service", "guideline")
+    :param implementation_type: Type of the implementation ("process", "project", "procedure", "service", "guidance", "tracking")
     :return: List of implementation nodes
     """
     implementation_functions = {
@@ -20,6 +21,7 @@ def get_all_implementations(implementation_type):
         "procedure": get_all_procedures,
         "service": get_all_services,
         "guidance": get_all_guidances,
+        "tracking": get_all_trackings,
 
     }
 
@@ -28,6 +30,7 @@ def get_all_implementations(implementation_type):
     else:
         raise ValueError(f"Invalid implementation type: {implementation_type}."
                          f" Expected one of: {list(implementation_functions.keys())}")
+
 
 
 def assign_year_success_evidence_to_academic_year_node(academic_year_name: str) -> bool:

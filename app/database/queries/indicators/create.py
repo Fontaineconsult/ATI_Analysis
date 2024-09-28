@@ -2,6 +2,8 @@
 # INDICATOR CREATE QUERIES
 #
 from datetime import datetime as dt
+from os import removedirs
+
 from neomodel import db
 from app.database.graph_schema import *
 from app.data_config import working_group_names
@@ -18,7 +20,7 @@ def create_success_indicator(number,
     try:
         working_group = working_group_names[sub_committee]
     except KeyError:
-        raise ValueError('Invalid sub-committee name')
+        raise ValueError('Invalid sub-committee name. One of: pro, web, ins')
 
     # Create composite_key
     composite_key = f'{number}-{sub_committee}'
@@ -70,3 +72,67 @@ def create_success_indicator(number,
     # Connect the SuccessIndicator to the Goal
     goal_node.supporting_success_indicators.connect(indicator)
 
+# create_success_indicator(4.4,
+#                          "pro",
+#                          "Established a process to ensure that accommodations were provided.",
+#                          removed=True)
+
+
+def add_goal(goal, goal_number, name, removed, working_group):
+    # Validate working_group
+    try:
+        working_group = working_group_names[working_group]
+    except KeyError:
+        raise ValueError('Invalid working group name. One of: pro, web, ins')
+
+    # Parameters for the query
+    params = {
+        'wg_name': working_group,
+        'goal_number': goal_number
+    }
+
+    # Cypher query to find the ATIWorkingGroup node
+    query = """
+    MATCH (wg:ATIWorkingGroup {name: $wg_name})
+    RETURN wg
+    """
+
+    # Execute the query
+    results, _ = db.cypher_query(query, params)
+    if not results:
+        error_text = f'ATIWorkingGroup with name {params["wg_name"]} does not exist.'
+        raise ValueError(error_text)
+
+    # Inflate the ATIWorkingGroup node
+    working_group_node = ATIWorkingGroup.inflate(results[0][0])
+
+    # Cypher query to find the Goal node connected to the ATIWorkingGroup
+    query = """
+    MATCH (wg:ATIWorkingGroup {name: $wg_name})-[:responsible_for]->(goal:Goal {goal_number: $goal_number})
+    RETURN goal
+    """
+
+    # Execute the query
+    results, _ = db.cypher_query(query, params)
+    if results:
+        error_text = f'Goal with number {params["goal_number"]} already exists in {params["wg_name"]}'
+        raise ValueError(error_text)
+
+
+    # Create and save the Goal node
+    goal = Goal(
+        goal=goal,
+        goal_number=goal_number,
+        name=name,
+        removed=removed
+    )
+    goal.save()
+
+    # Connect the Goal to the ATIWorkingGroup
+    working_group_node.responsible_for.connect(goal)
+
+# add_goal("ATI procurement team is fully staffed with clearly defined roles for processing E&IT procurements.",
+#          2,
+#          "Staffing or role definition",
+#          True,
+#          'pro')

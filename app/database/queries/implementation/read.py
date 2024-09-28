@@ -50,3 +50,9 @@ def get_all_plans():
     """
     return Plan.nodes.all()
 
+def get_all_trackings():
+    """
+    Get all Tracking nodes from the graph
+    :return: List of Tracking nodes
+    """
+    return Tracking.nodes.all()

@@ -129,3 +129,22 @@ def add_plan(title: str, description: str, is_campus_plan:bool) -> bool:
     except Exception as e:
         print(e)
         return False
+
+def add_tracking(title: str, description: str) -> bool:
+    """
+    Adds a tracking node to the graph
+    :param title: Title of the tracking
+    :param description: Description of the tracking
+    :return: True if the tracking node is added successfully, False otherwise
+    """
+    try:
+        new_tracking = Tracking(
+            title=title,
+            description=description
+        )
+        new_tracking.save()
+        print("Added tracking")
+        return True
+    except Exception as e:
+        print(e)
+        return False

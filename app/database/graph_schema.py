@@ -204,7 +204,7 @@ class Goal(StructuredNode):
      """
 
 
-    title = StringProperty()
+    name = StringProperty()
     description = StringProperty()
     supporting_success_indicators = RelationshipTo("SuccessIndicator", "supported_by")
     goal = StringProperty()
@@ -403,6 +403,22 @@ class Guidance(StructuredNode):
     is_evidence_for = RelationshipTo("YearSuccessEvidence", "is_evidence_for")
 
 
+class Tracking(StructuredNode):
+
+    """    Class representing a tracking node.
+
+    Represents a tracking node to track the progress of the implementation of the accessibility initiatives.
+
+    """
+
+    title = StringProperty(unique_index=True, required=True)
+    description = StringProperty()
+    supporting_documents = RelationshipTo("Document", "is_documented_by")
+    supporting_webpages = RelationshipTo("Webpage", "is_documented_by")
+    supporting_notes = RelationshipTo("Note", "is_documented_by")
+    supporting_messages = RelationshipTo("Message", "is_documented_by")
+    is_evidence_for = RelationshipTo("YearSuccessEvidence", "is_evidence_for")
+
 """
 Evidence
 
@@ -501,6 +517,7 @@ class YearSuccessEvidence(StructuredNode):
     procedures_that_evidence = RelationshipFrom("Procedure", "is_evidence_for")
     services_that_evidence = RelationshipFrom("Service", "is_evidence_for")
     guidance_that_evidence = RelationshipFrom("Guidance", "is_evidence_for")
+    trackings_that_evidence = RelationshipFrom("Tracking", "is_evidence_for")
 
     # Relationships from person nodes
     persons_that_implement = RelationshipFrom("Person", "implements")
@@ -733,7 +750,7 @@ class Webpage(StructuredNode):
         """
         return {
             "url": self.url,
-            "title": self.title,
+            "name": self.name,
             "description": self.description,
 
         }
@@ -767,9 +784,10 @@ class Note(StructuredNode):
         """
         return {
             "uuid": self.uuid,
+            "name": self.name,
             "content": self.content,
             "dateCreated": self.date_created,
-            "type": self.type
+
         }
 
 
@@ -800,6 +818,7 @@ class Message(StructuredNode):
         """
         return {
             "uuid": self.uuid,
+            "name": self.name,
             "content": self.content,
             "dateCreated": self.date_created,
             "type": self.type

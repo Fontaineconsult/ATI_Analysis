@@ -22,6 +22,8 @@ def create_year_success_evidence_node(academic_year, success_indicator_composite
     yse_node.tracks_success_indicator.connect(success_indicator)
     yse_node.status_level.connect(status_level)
 
-
-
+#
+# create_year_success_evidence_node('2020-2021',
+#                                   "4.4-pro",
+#                                   "Established")
 
