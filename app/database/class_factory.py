@@ -41,3 +41,5 @@ implementor_classes = {
     "guidance": "implements_guidance"
 
 }
+
+status_levels = ["Not Started", "Initiated", "Defined", "Managed", "Optimizing"]

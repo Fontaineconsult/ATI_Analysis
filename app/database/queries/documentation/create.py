@@ -1,6 +1,8 @@
 #
 # DOCUMENTATION CREATE QUERIES
 #
+from datetime import datetime
+
 from app.database.graph_schema import *
 from app.database.tools.support_functions import get_file_hash
 
@@ -77,28 +79,24 @@ def add_webpage(url: str, name: str, no_longer_exists:bool, description: str) ->
         return False
 
 
-def add_note(uuid: str, name: str, date_created: str, content: str) -> bool:
+def add_note(name: str, content: str) -> bool:
     """
     Adds a note node to the graph.
-
-    :param uuid: Unique identifier for the note.
     :param name: Name of the note.
-    :param date_created: Date when the note was created.
     :param content: Content of the note.
     :return: True if the note node is added successfully, False otherwise.
     """
     try:
-        # Check if a note with the same UUID already exists
-        existing_note = Note.nodes.get_or_none(uuid=uuid)
+        # Check if a note with the same name already exists
+        existing_note = Note.nodes.get_or_none(name=name)
         if existing_note:
-            print("A note with the same UUID already exists.")
+            print("A note with the same name already exists.")
             return False
 
         # Create and save the new note node
         new_note = Note(
-            uuid=uuid,
             name=name,
-            date_created=date_created,
+            date_created=datetime.now().date(),
             content=content
         )
         new_note.save()

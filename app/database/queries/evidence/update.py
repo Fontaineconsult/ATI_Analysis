@@ -35,9 +35,9 @@ def assign_status_to_yse(year_success_identifier: str, status: str) -> bool:
         status_level = StatusLevel.nodes.get(status_level=status)
 
         # Disconnect any existing status level
-        if year_success_evidence.status_level.is_connected():
-            year_success_evidence.status_level.disconnect_all()
 
+
+        year_success_evidence.status_level.disconnect_all()
         # Connect the new status level
         year_success_evidence.status_level.connect(status_level)
 
@@ -46,6 +46,7 @@ def assign_status_to_yse(year_success_identifier: str, status: str) -> bool:
     except Exception as e:
         print(e)
         return False
+
 
 
 def assign_person_to_yse(year_success_identifier: str, person_name: str) -> bool:
@@ -118,3 +119,18 @@ def assign_college_to_yse(year_success_identifier: str, college_name: str) -> bo
         return False
 
 
+def assign_note_to_yse(year_success_identifier: str, note_name: str) -> bool:
+    try:
+        year_success_evidence = YearSuccessEvidence.nodes.get(year_identifier=year_success_identifier)
+        note = Note.nodes.get(name=note_name)
+
+        # Check if the relationship already exists
+        if year_success_evidence.notes.is_connected(note):
+            raise Exception(f"YSE {year_success_identifier} is already has note {note_name}")
+
+        year_success_evidence.notes.connect(note)
+        print(f"Note {note_name} assigned to success indicator {year_success_identifier}")
+        return True
+    except Exception as e:
+        print(e)
+        return False

@@ -53,3 +53,31 @@ def assign_person_as_implementor(employee_name, year_identifier):
     person_node.implements_yse.connect(year_success_evidence_node)
 
     return True
+
+
+def assign_note_to_implementation(implementation_title,
+                                  implementation_type,
+                                  note_title):
+
+
+    # Validate the implementation_type
+    if implementation_type not in implementation_classes:
+        raise ValueError(f"Invalid implementation_type: {implementation_type}")
+
+    # Retrieve the implementation node
+    implementation_class = implementation_classes[implementation_type]
+    try:
+        implementation_node = implementation_class.nodes.get(title=implementation_title)
+    except implementation_class.DoesNotExist:
+        raise ValueError(f"No implementation node found with title: {implementation_title}")
+
+    # Retrieve the note node
+    try:
+        note = Note.nodes.get(title=note_title)
+    except Note.DoesNotExist:
+        raise ValueError(f"No note node found with title: {note_title}")
+
+    # Establish a relationship between the implementation node and the Note node
+    implementation_node.supporting_notes.connect(note)
+
+    return True

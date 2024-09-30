@@ -771,9 +771,7 @@ class Note(StructuredNode):
 
     """
 
-
-    uuid = StringProperty(unique_index=True)
-    name = StringProperty()
+    name = StringProperty(unique_index=True)
     date_created = DateProperty()
     content = StringProperty()
 
@@ -783,7 +781,7 @@ class Note(StructuredNode):
         storage, or API response.
         """
         return {
-            "uuid": self.uuid,
+
             "name": self.name,
             "content": self.content,
             "dateCreated": self.date_created,
@@ -805,8 +803,7 @@ class Message(StructuredNode):
 
 
     """
-    uuid = StringProperty(unique_index=True)
-    name = StringProperty()
+    name = StringProperty(unique_index=True)
     content = StringProperty()
     date_created = StringProperty
     type = StringProperty()
@@ -817,7 +814,7 @@ class Message(StructuredNode):
         storage, or API response.
         """
         return {
-            "uuid": self.uuid,
+
             "name": self.name,
             "content": self.content,
             "dateCreated": self.date_created,

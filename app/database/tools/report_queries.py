@@ -32,6 +32,8 @@ def build_yse_report(year_success_evidence):
     # query for the persons_that_implement
     persons = yse.persons_that_implement.all()
 
+    # query for the supporting notes
+    notes = yse.notes.all()
 
 
     # combine each query into a dictionary
@@ -105,7 +107,8 @@ def build_yse_report(year_success_evidence):
             }
         } for tracking in trackings],
 
-        "persons": [person.name for person in persons]
+        "persons": [person.name for person in persons],
+        "notes": [note.serialize() for note in notes]
     }
 
     return report
