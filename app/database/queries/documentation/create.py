@@ -107,95 +107,19 @@ def add_note(name: str, content: str) -> bool:
         return False
 
 
-def add_memo(title: str, description: str, authored_date: str) -> bool:
-    """
-    Adds a memo node to the graph.
-import sys
-sys.path.append(r"C:\\Users\\Fonta\\IdeaProjects\\ATI_Analysis")
-sys.path.append(r"C:\\Users\\913678186\\IdeaProjects\\ATI_Analysis")
+def add_memo(name: str, description: str, authored_date: str) -> bool:
 
-import ipywidgets as widgets
-from IPython.display import display
-from app.database.queries.documentation.create import add_note
 
-# Create form widgets
-note_name = widgets.Text(value='', placeholder='Enter note name', description='Name:', disabled=False)
-note_content = widgets.Textarea(value='', placeholder='Enter note content', description='Content:', disabled=False)
-note_date_created = widgets.DatePicker(description='Date Created:', disabled=False)
-submit_button = widgets.Button(description='Submit', disabled=False, button_style='', tooltip='Click to submit', icon='check')
-output = widgets.Output()
-
-# Define the event handler for the submit button
-def on_button_click(b):
-    with output:
-        output.clear_output()
-        success = add_note(
-            name=note_name.value,
-            content=note_content.value,
-            date_created=note_date_created.value
-        )
-        if success:
-            print('Note added successfully')
-        else:
-            print('Failed to add note')
-
-# Attach the event handler to the button
-submit_button.on_click(on_button_click)
-
-# Display the form
-form_items = [note_name, note_content, note_date_created, submit_button, output]
-form = widgets.VBox(form_items)
-display(form)import sys
-sys.path.append(r"C:\\Users\\Fonta\\IdeaProjects\\ATI_Analysis")
-sys.path.append(r"C:\\Users\\913678186\\IdeaProjects\\ATI_Analysis")
-
-import ipywidgets as widgets
-from IPython.display import display
-from app.database.queries.documentation.create import add_note
-
-# Create form widgets
-note_name = widgets.Text(value='', placeholder='Enter note name', description='Name:', disabled=False)
-note_content = widgets.Textarea(value='', placeholder='Enter note content', description='Content:', disabled=False)
-note_date_created = widgets.DatePicker(description='Date Created:', disabled=False)
-submit_button = widgets.Button(description='Submit', disabled=False, button_style='', tooltip='Click to submit', icon='check')
-output = widgets.Output()
-
-# Define the event handler for the submit button
-def on_button_click(b):
-    with output:
-        output.clear_output()
-        success = add_note(
-            name=note_name.value,
-            content=note_content.value,
-            date_created=note_date_created.value
-        )
-        if success:
-            print('Note added successfully')
-        else:
-            print('Failed to add note')
-
-# Attach the event handler to the button
-submit_button.on_click(on_button_click)
-
-# Display the form
-form_items = [note_name, note_content, note_date_created, submit_button, output]
-form = widgets.VBox(form_items)
-display(form)
-    :param title: Title of the memo.
-    :param description: Description of the memo.
-    :param authored_date: Date when the memo was authored.
-    :return: True if the memo node is added successfully, False otherwise.
-    """
     try:
         # Check if a memo with the same title already exists
-        existing_memo = Memo.nodes.get_or_none(title=title)
+        existing_memo = Memo.nodes.get_or_none(name=name)
         if existing_memo:
             print("A memo with the same title already exists.")
             return False
 
         # Create and save the new memo node
         new_memo = Memo(
-            title=title,
+            name=name,
             description=description,
             authored_date=authored_date
         )
@@ -207,37 +131,33 @@ display(form)
         return False
 
 
+def add_metric(name:str, description:str, data_dict:dict, academic_year:str):
 
 
-# def add_document_to_year_success_evidence(year_identifier: str,
-#                                           document_name: str,
-#                                           file_path: str,
-#                                           uri_path: str,
-#                                           document_hash: str = None,
-#                                           ) -> bool:
-#     """
-#     Adds a document to a year success evidence node
-#     :param year_identifier:
-#     :param document_name:
-#     :param file_path:
-#     :param uri_path:
-#     :return:
-#     """
-#     if not document_hash:
-#         document_hash = str(uuid.uuid4())
-#
-#     try:
-#         year_status = YearSuccessEvidence.nodes.get(year_identifier=year_identifier)
-#         new_document = Document(
-#             hash=document_hash,
-#             name=document_name,
-#             file_path=file_path,
-#             uri_path=uri_path
-#
-#         )
-#         new_document.save()
-#         year_status.has_documents.connect(new_document)
-#
-#         return True
-#     except Exception as e:
-#         return False
+        academic_year_node = AcademicYear.nodes.get_or_none(name=academic_year)
+        if not academic_year_node:
+            raise ValueError(f"No academic year found with name: {academic_year}")
+
+        try:
+            # Check if a metric with the same name already exists
+            existing_metric = Metric.nodes.get_or_none(name=name)
+            if existing_metric:
+                print("A metric with the same name already exists.")
+                return False
+
+            # Create and save the new metric node
+            new_metric = Metric(
+                name=name,
+                description=description,
+                data_dict=data_dict
+            )
+            new_metric.save()
+
+            # Connect the metric to the academic year
+            new_metric.academic_year.connect(academic_year_node)
+            print("Metric added successfully.")
+            return True
+        except Exception as e:
+            print(f"Failed to add metric: {e}")
+            return False
+

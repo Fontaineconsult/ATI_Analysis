@@ -1,9 +1,10 @@
+import json
 import uuid
 from neomodel import (StructuredNode, StringProperty,
                       IntegerProperty, RelationshipTo,
                       RelationshipFrom, UniqueIdProperty,
-                      StructuredRel,Relationship, DateProperty,
-                      install_all_labels, BooleanProperty, IntegerProperty)
+                      StructuredRel, Relationship, DateProperty,
+                      install_all_labels, BooleanProperty, IntegerProperty, JSONProperty)
 from dotenv import load_dotenv
 import os
 
@@ -311,6 +312,7 @@ class Process(StructuredNode):
     supporting_webpages = RelationshipTo("Webpage", "is_documented_by")
     supporting_notes = RelationshipTo("Note", "is_documented_by")
     supporting_messages = RelationshipTo("Message", "is_documented_by")
+    supporting_metrics = RelationshipTo("Metric", "has_metric")
     is_evidence_for = RelationshipTo("YearSuccessEvidence", "is_evidence_for")
 
 
@@ -335,6 +337,7 @@ class Project(StructuredNode):
     supporting_webpages = RelationshipTo("Webpage", "is_documented_by")
     supporting_notes = RelationshipTo("Note", "is_documented_by")
     supporting_messages = RelationshipTo("Message", "is_documented_by")
+    supporting_metrics = RelationshipTo("Metric", "has_metric")
     is_evidence_for = RelationshipTo("YearSuccessEvidence", "is_evidence_for")
 
 
@@ -356,6 +359,7 @@ class Procedure(StructuredNode):
     supporting_webpages = RelationshipTo("Webpage", "is_documented_by")
     supporting_notes = RelationshipTo("Note", "is_documented_by")
     supporting_messages = RelationshipTo("Message", "is_documented_by")
+    supporting_metrics = RelationshipTo("Metric", "has_metric")
     is_evidence_for = RelationshipTo("YearSuccessEvidence", "is_evidence_for")
 
 
@@ -377,6 +381,7 @@ class Service(StructuredNode):
     supporting_webpages = RelationshipTo("Webpage", "is_documented_by")
     supporting_notes = RelationshipTo("Note", "is_documented_by")
     supporting_messages = RelationshipTo("Message", "is_documented_by")
+    supporting_metrics = RelationshipTo("Metric", "has_metric")
     is_evidence_for = RelationshipTo("YearSuccessEvidence", "is_evidence_for")
 
 
@@ -400,6 +405,7 @@ class Guidance(StructuredNode):
     supporting_webpages = RelationshipTo("Webpage", "is_documented_by")
     supporting_notes = RelationshipTo("Note", "is_documented_by")
     supporting_messages = RelationshipTo("Message", "is_documented_by")
+    supporting_metrics = RelationshipTo("Metric", "has_metric")
     is_evidence_for = RelationshipTo("YearSuccessEvidence", "is_evidence_for")
 
 
@@ -417,7 +423,9 @@ class Tracking(StructuredNode):
     supporting_webpages = RelationshipTo("Webpage", "is_documented_by")
     supporting_notes = RelationshipTo("Note", "is_documented_by")
     supporting_messages = RelationshipTo("Message", "is_documented_by")
+    supporting_metrics = RelationshipTo("Metric", "has_metric")
     is_evidence_for = RelationshipTo("YearSuccessEvidence", "is_evidence_for")
+
 
 """
 Evidence
@@ -510,6 +518,7 @@ class YearSuccessEvidence(StructuredNode):
     resources_status = StringProperty()
     implementation_plan_status = StringProperty()
     notes = RelationshipTo("Note", "has_note")
+    metrics = RelationshipTo("Metric", "has_metric")
 
     # Relationships from implementation nodes
     processes_that_evidence = RelationshipFrom("Process", "is_evidence_for")
@@ -821,6 +830,52 @@ class Message(StructuredNode):
             "type": self.type
         }
 
+
+class Metric(StructuredNode):
+
+    """
+    A Metric in the context of the Accessible Technology Initiative (ATI) represents a specific quantitative measurement
+    or benchmark used to evaluate the performance, progress, or success of accessibility-related activities.
+    Metrics provide concrete data points that support the evaluation of success indicators and goals, offering a
+    standardized way to track progress over time.
+
+    Metrics are often derived from processes, procedures, and projects, and they serve as evidence of implementation
+     and effectiveness. For example, a metric might include the number of accessible websites launched, the percentage
+     of compliance with Web Content Accessibility Guidelines (WCAG), or the response time to accessibility requests.
+
+    These metrics are documented and referenced in reports to ensure accountability, support decision-making, and
+    guide continuous improvement in accessibility efforts. Metrics play a crucial role in ensuring that institutions
+    meet their accessibility goals by providing measurable criteria that can be regularly monitored and analyzed.
+
+    """
+
+    name = StringProperty(unique_index=True)
+    description = StringProperty()
+    single_value = StringProperty()
+    value_dict = JSONProperty()
+    comment = StringProperty()
+    notes = RelationshipTo("Note", "has_note")
+    academic_year = RelationshipTo("AcademicYear", "measured_in_year")
+
+    def set_data(self, data_dict):
+        self.data = json.dumps(data_dict)
+
+    def get_data(self):
+        return json.loads(self.data)
+
+    def serialize(self):
+        """
+        Serializes the Message object to a dictionary format, making it suitable for JSON representation,
+        storage, or API response.
+
+        """
+        return {
+
+            "name": self.name,
+            "description": self.description,
+            "data": self.get_data()
+
+        }
 
 
 def set_connection():

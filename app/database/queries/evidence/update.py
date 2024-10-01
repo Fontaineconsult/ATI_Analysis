@@ -134,3 +134,20 @@ def assign_note_to_yse(year_success_identifier: str, note_name: str) -> bool:
     except Exception as e:
         print(e)
         return False
+
+
+def assign_metric_to_yse(year_success_identifier: str, metric_name: str) -> bool:
+    try:
+        year_success_evidence = YearSuccessEvidence.nodes.get(year_identifier=year_success_identifier)
+        metric = Metric.nodes.get(name=metric_name)
+
+        # Check if the relationship already exists
+        if year_success_evidence.metrics.is_connected(metric):
+            raise Exception(f"YSE {year_success_identifier} is already has metric {metric_name}")
+
+        year_success_evidence.metrics.connect(metric)
+        print(f"Metric {metric_name} assigned to success indicator {year_success_identifier}")
+        return True
+    except Exception as e:
+        print(e)
+        return False

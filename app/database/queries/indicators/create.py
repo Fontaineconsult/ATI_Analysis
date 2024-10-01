@@ -22,8 +22,8 @@ def create_success_indicator(number,
     except KeyError:
         raise ValueError('Invalid sub-committee name. One of: pro, web, ins')
 
-    # Create composite_key
-    composite_key = f'{number}-{sub_committee}'
+    # Create composite_key and keep second decimal
+    composite_key = f'{number:.2f}-{sub_committee}'
 
     # Extract goal_number from number
     goal_number = int(str(number).split('.')[0])
@@ -72,10 +72,10 @@ def create_success_indicator(number,
     # Connect the SuccessIndicator to the Goal
     goal_node.supporting_success_indicators.connect(indicator)
 
-# create_success_indicator(4.4,
+# create_success_indicator(8.10,
 #                          "pro",
-#                          "Established a process to ensure that accommodations were provided.",
-#                          removed=True)
+#                          "Total number of EEAAPs completed",
+#                          removed=False)
 
 
 def add_goal(goal, goal_number, name, removed, working_group):
@@ -130,9 +130,9 @@ def add_goal(goal, goal_number, name, removed, working_group):
 
     # Connect the Goal to the ATIWorkingGroup
     working_group_node.responsible_for.connect(goal)
-
-# add_goal("ATI procurement team is fully staffed with clearly defined roles for processing E&IT procurements.",
-#          2,
-#          "Staffing or role definition",
-#          True,
+#
+# add_goal("Experience/Implementation",
+#          8,
+#          "Campuses have sufficient experience and expertise in completing ICT procurements.",
+#          False,
 #          'pro')
