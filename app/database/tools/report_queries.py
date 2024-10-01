@@ -35,12 +35,15 @@ def build_yse_report(year_success_evidence):
     # query for the supporting notes
     notes = yse.notes.all()
 
+    #query for all yse metrics
+    metrics = yse.metrics.all()
 
     # combine each query into a dictionary
     report = {
         "year_identifier": yse.year_identifier,
         "status": status.status_level,
         "success_indicator": success_indicator.success_indicator,
+        "metrics": [metric.serialize() for metric in metrics],
         "processes": [{
             "title": process.title,
             "description": process.description,

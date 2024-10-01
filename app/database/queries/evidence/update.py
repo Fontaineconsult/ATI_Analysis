@@ -136,18 +136,20 @@ def assign_note_to_yse(year_success_identifier: str, note_name: str) -> bool:
         return False
 
 
-def assign_metric_to_yse(year_success_identifier: str, metric_name: str) -> bool:
+def assign_metric_to_yse(year_success_identifier: str, metric_composite_key: str) -> bool:
     try:
         year_success_evidence = YearSuccessEvidence.nodes.get(year_identifier=year_success_identifier)
-        metric = Metric.nodes.get(name=metric_name)
+        metric = Metric.nodes.get(composite_key=metric_composite_key)
 
         # Check if the relationship already exists
         if year_success_evidence.metrics.is_connected(metric):
-            raise Exception(f"YSE {year_success_identifier} is already has metric {metric_name}")
+            raise Exception(f"YSE {year_success_identifier} is already has metric {metric_composite_key}")
 
         year_success_evidence.metrics.connect(metric)
-        print(f"Metric {metric_name} assigned to success indicator {year_success_identifier}")
+        print(f"Metric {metric_composite_key} assigned to success indicator {year_success_identifier}")
         return True
     except Exception as e:
         print(e)
         return False
+#
+# assign_metric_to_yse("2020-2021-8.10-pro","What is the total percentage of EEAAP’s-2020-2021")

@@ -131,7 +131,13 @@ def add_memo(name: str, description: str, authored_date: str) -> bool:
         return False
 
 
-def add_metric(name:str, description:str, data_dict:dict, academic_year:str):
+def add_metric(name:str,
+               academic_year:str,
+               description:str=None,
+               single_value:str=None,
+               comment:str=None,
+               value_dict:dict=None
+               ) -> bool:
 
 
         academic_year_node = AcademicYear.nodes.get_or_none(name=academic_year)
@@ -148,8 +154,11 @@ def add_metric(name:str, description:str, data_dict:dict, academic_year:str):
             # Create and save the new metric node
             new_metric = Metric(
                 name=name,
+                composite_key=f"{name}-{academic_year}",
                 description=description,
-                data_dict=data_dict
+                single_value=single_value,
+                comment=comment,
+                value_dict=Metric.set_data(value_dict) if value_dict is not None else None,
             )
             new_metric.save()
 
@@ -161,3 +170,9 @@ def add_metric(name:str, description:str, data_dict:dict, academic_year:str):
             print(f"Failed to add metric: {e}")
             return False
 
+# add_metric("What is the total percentage of EEAAP’s",
+#            "2020-2021",
+#            "",
+#            single_value="996",
+#            # comment="18 EEAAPs",
+#            value_dict=None)

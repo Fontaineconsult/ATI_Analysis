@@ -849,7 +849,8 @@ class Metric(StructuredNode):
 
     """
 
-    name = StringProperty(unique_index=True)
+    name = StringProperty()
+    composite_key = StringProperty(unique_index=True)
     description = StringProperty()
     single_value = StringProperty()
     value_dict = JSONProperty()
@@ -857,11 +858,12 @@ class Metric(StructuredNode):
     notes = RelationshipTo("Note", "has_note")
     academic_year = RelationshipTo("AcademicYear", "measured_in_year")
 
-    def set_data(self, data_dict):
-        self.data = json.dumps(data_dict)
+    @staticmethod
+    def set_data(self, data):
+        self.value_dict = json.dumps(data)
 
     def get_data(self):
-        return json.loads(self.data)
+        return json.loads(self.value_dict)
 
     def serialize(self):
         """
@@ -873,7 +875,9 @@ class Metric(StructuredNode):
 
             "name": self.name,
             "description": self.description,
-            "data": self.get_data()
+            "single_value": self.single_value,
+            "comment": self.comment,
+            "data": self.get_data() if self.value_dict else None
 
         }
 
