@@ -23,7 +23,7 @@ def create_year_success_evidence_node(academic_year, success_indicator_composite
     yse_node.status_level.connect(status_level)
 
 
-# create_year_success_evidence_node('2020-2021',
-#                                   "8.10-pro",
-#                                   "Managed")
+create_year_success_evidence_node('2020-2021',
+                                  "1.18-web",
+                                  "Established")
 

@@ -79,29 +79,34 @@ def add_webpage(url: str, name: str, no_longer_exists:bool, description: str) ->
         return False
 
 
-def add_note(name: str, content: str) -> bool:
+def add_note(name: str, content: str, use_existing=False) -> bool:
     """
     Adds a note node to the graph.
     :param name: Name of the note.
     :param content: Content of the note.
-    :return: True if the note node is added successfully, False otherwise.
+    :param use_existing: If True, use the existing note if one exists.
+    :return: True if the note node is added successfully or already exists and use_existing is True, False otherwise.
     """
     try:
         # Check if a note with the same name already exists
         existing_note = Note.nodes.get_or_none(name=name)
         if existing_note:
-            print("A note with the same name already exists.")
-            return False
-
-        # Create and save the new note node
-        new_note = Note(
-            name=name,
-            date_created=datetime.now().date(),
-            content=content
-        )
-        new_note.save()
-        print("Note added successfully.")
-        return True
+            if not use_existing:
+                print("A note with the same name already exists. Not Creating")
+                return False
+            else:
+                print("A note with the same name already exists. Using existing note.")
+                return True
+        else:
+            # Create and save the new note node
+            new_note = Note(
+                name=name,
+                date_created=datetime.now().date(),
+                content=content
+            )
+            new_note.save()
+            print("Note added successfully.")
+            return True
     except Exception as e:
         print(f"Failed to add note: {e}")
         return False

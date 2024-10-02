@@ -23,7 +23,7 @@ def create_success_indicator(number,
         raise ValueError('Invalid sub-committee name. One of: pro, web, ins')
 
     # Create composite_key and keep second decimal
-    composite_key = f'{number:.2f}-{sub_committee}'
+    composite_key = f'{number}-{sub_committee}'
 
     # Extract goal_number from number
     goal_number = int(str(number).split('.')[0])
@@ -72,10 +72,10 @@ def create_success_indicator(number,
     # Connect the SuccessIndicator to the Goal
     goal_node.supporting_success_indicators.connect(indicator)
 
-# create_success_indicator(8.10,
-#                          "pro",
-#                          "Total number of EEAAPs completed",
-#                          removed=False)
+# create_success_indicator(1.18,
+#                          "web",
+#                          "Established a procedure to distribute evaluation results to vendors responsible for website maintenance.",
+#                          removed=True)
 
 
 def add_goal(goal, goal_number, name, removed, working_group):
