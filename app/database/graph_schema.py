@@ -104,7 +104,7 @@ class Directive(StructuredNode):
     supporting_messages = RelationshipTo("Message", "is_documented_by")
 
 
-class Policy(StructuredNode):
+class ExternalPolicy(StructuredNode):
 
     """    Class representing a policy node.
 
@@ -292,6 +292,31 @@ class Plan(StructuredNode):
     detailed_projects = RelationshipTo("Project", "details")
     detailed_procedures = RelationshipTo("Procedure", "details")
     detailed_services = RelationshipTo("Service", "details")
+
+
+class InternalPolicy(StructuredNode):
+
+    """    Class representing an internal policy node.
+
+    An Internal Policy in the context of the Accessible Technology Initiative (ATI) represents a set of rules,
+    procedures, and guidelines developed by an organization to ensure compliance with accessibility standards.
+    Internal policies are tailored to the specific needs and requirements of the institution, providing detailed
+    instructions on how to implement accessibility practices and procedures. These policies help align the
+    organization's activities with broader accessibility goals and ensure that all members of the institution
+    are aware of their roles and responsibilities in maintaining accessibility standards.
+
+    """
+
+    title = StringProperty(unique_index=True, required=True)
+    description = StringProperty()
+    effective_date = DateProperty()
+    last_updated = DateProperty()
+    supporting_documents = RelationshipTo("Document", "is_documented_by")
+    supporting_webpages = RelationshipTo("Webpage", "is_documented_by")
+    supporting_notes = RelationshipTo("Note", "is_documented_by")
+    supporting_messages = RelationshipTo("Message", "is_documented_by")
+    is_evidence_for = RelationshipTo("YearSuccessEvidence", "is_evidence_for")
+
 
 
 class Process(StructuredNode):
@@ -717,6 +742,8 @@ class Document(StructuredNode):
     uri_path = StringProperty()
     is_administrative_review_documentation = StringProperty()
     is_milestone_and_measures_documentation = StringProperty()
+    depreciated = BooleanProperty()
+    depreciated_date = DateProperty()
     notes = RelationshipTo("Note", "has_note")
 
     def serialize(self):
@@ -750,6 +777,8 @@ class Webpage(StructuredNode):
     name = StringProperty()
     description = StringProperty()
     no_longer_exists = BooleanProperty()
+    depreciated = BooleanProperty()
+    depreciated_date = DateProperty()
     notes = RelationshipTo("Note", "has_note")
 
     def serialize(self):
@@ -783,6 +812,8 @@ class Note(StructuredNode):
     name = StringProperty(unique_index=True)
     date_created = DateProperty()
     content = StringProperty()
+    depreciated = BooleanProperty()
+    depreciated_date = DateProperty()
 
     def serialize(self):
         """
@@ -816,6 +847,7 @@ class Message(StructuredNode):
     content = StringProperty()
     date_created = StringProperty
     type = StringProperty()
+    depreciated = BooleanProperty()
 
     def serialize(self):
         """

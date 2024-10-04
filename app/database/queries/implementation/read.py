@@ -56,3 +56,10 @@ def get_all_trackings():
     :return: List of Tracking nodes
     """
     return Tracking.nodes.all()
+
+def get_all_internal_policies():
+    """
+    Get all InternalPolicy nodes from the graph
+    :return: List of InternalPolicy nodes
+    """
+    return InternalPolicy.nodes.all()

@@ -25,6 +25,9 @@ def create_success_indicator(number,
     # Create composite_key and keep second decimal
     composite_key = f'{number}-{sub_committee}'
 
+    # use if 0 in si number
+    # composite_key = f'{number:.2f}-{sub_committee}'
+
     # Extract goal_number from number
     goal_number = int(str(number).split('.')[0])
 
@@ -72,10 +75,10 @@ def create_success_indicator(number,
     # Connect the SuccessIndicator to the Goal
     goal_node.supporting_success_indicators.connect(indicator)
 
-# create_success_indicator(1.18,
-#                          "web",
-#                          "Established a procedure to distribute evaluation results to vendors responsible for website maintenance.",
-#                          removed=True)
+create_success_indicator(7.2,
+                         "web",
+                         "Established a procedure to update and revise the Web Accessibility Plan as necessary.",
+                         removed=True)
 
 
 def add_goal(goal, goal_number, name, removed, working_group):
