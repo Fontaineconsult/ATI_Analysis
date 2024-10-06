@@ -66,6 +66,7 @@ implementor_classes = {
 status_levels = ["Not Started",
                  "Initiated",
                  "Defined",
+                 "Established",
                  "Managed",
                  "Optimizing"]
 

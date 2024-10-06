@@ -59,7 +59,7 @@ def add_webpage(url: str,
                 name: str,
                 no_longer_exists:bool,
                 depreciated:bool,
-                depreciated_date: str,
+                depreciated_year: str,
                 description: str) -> bool:
     """
     Adds a webpage node to the graph.
@@ -84,7 +84,7 @@ def add_webpage(url: str,
             url=url,
             name=name,
             depreciated=depreciated,
-            depreciated_date=datetime.strptime(depreciated_date, "%Y-%m-%d").year if depreciated_date else None,
+            depreciated_date=datetime.strptime(depreciated_year, "%Y-%m-%d").year if depreciated_year else None,
             no_longer_exists=no_longer_exists,
             description=description
         )

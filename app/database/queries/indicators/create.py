@@ -75,10 +75,10 @@ def create_success_indicator(number,
     # Connect the SuccessIndicator to the Goal
     goal_node.supporting_success_indicators.connect(indicator)
 
-create_success_indicator(1.5,
-                         "ins",
-                         "Campus has established a process to distribute performance reports regarding timely adoptions to campus administration at least annually.",
-                         removed=True)
+# create_success_indicator(2.4,
+#                          "ins",
+#                          "Campus has established a process to distribute performance reports regarding timely, late-hire adoptions to campus administration at least annually",
+#                          removed=True)
 
 
 def add_goal(goal, goal_number, name, removed, working_group):
@@ -133,9 +133,9 @@ def add_goal(goal, goal_number, name, removed, working_group):
 
     # Connect the Goal to the ATIWorkingGroup
     working_group_node.responsible_for.connect(goal)
-#
-# add_goal("Experience/Implementation",
-#          8,
-#          "Campuses have sufficient experience and expertise in completing ICT procurements.",
-#          False,
-#          'pro')
+
+# add_goal("Identification of IM for Late-Hire Faculty",
+#          2,
+#          "The campus has implemented a comprehensive plan to ensure that textbooks have been identified for courses with late-hire faculty.",
+#          True,
+#          'ins')
