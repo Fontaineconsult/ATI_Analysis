@@ -1,25 +1,48 @@
+from app.database.graph_schema import *
 from neomodel import db
-
 
 def duplicate_year_success_evidence(old_year, new_year):
     query = """
-    MATCH (e:YearSuccessEvidence)-[r:evidence_in_year]->(year:AcademicYear {name: $old_year})
-    WITH e, r, year
-    CALL {
-        WITH e
-        CREATE (e2:YearSuccessEvidence)
-        SET e2 = e {.*, year_identifier: replace(e.year_identifier, $old_year, $new_year) }
+            MATCH (e:YearSuccessEvidence)-[:evidence_in_year]->(oldYear:AcademicYear {name: $old_year})
+            WITH e
+            CALL {
+                WITH e
+                // Extract the rest of the identifier after the old year
+                WITH e, substring(e.year_identifier, 9) AS rest_of_identifier
+                // Duplicate the YearSuccessEvidence node
+                CREATE (e2:YearSuccessEvidence)
+                // Construct the new year_identifier by combining new academic year with the rest
+                SET e2 = e {.*, year_identifier: $new_year + rest_of_identifier }
+            
+                // Copy outgoing relationships (excluding 'evidence_in_year')
+                WITH e, e2
+                MATCH (e)-[rel_out]->(n)
+                WHERE type(rel_out) <> 'evidence_in_year'
+                CALL apoc.create.relationship(e2, type(rel_out), properties(rel_out), n) YIELD rel AS newRel
+            
+                // Copy incoming relationships (excluding 'evidence_in_year')
+                WITH e, e2
+                MATCH (n)-[rel_in]->(e)
+                WHERE type(rel_in) <> 'evidence_in_year'
+                CALL apoc.create.relationship(n, type(rel_in), properties(rel_in), e2) YIELD rel AS newRel
+            
+                RETURN e2
+            }
+            WITH e2
+            MATCH (newYear:AcademicYear {name: $new_year})
+            MERGE (e2)-[:evidence_in_year]->(newYear)
+            RETURN e2
 
-        WITH e, e2
-        MATCH (e)-[rel]->(n)
-        CREATE (e2)-[newRel:type(rel)]->(n)
-    }
-    RETURN e2
-    """
+            """
 
+
+
+    # Execute the query with the provided old and new year values
     results, meta = db.cypher_query(query, {'old_year': old_year, 'new_year': new_year})
 
-    # Return the results (the duplicated nodes)
+    # Return the duplicated nodes (e2)
     return results
 
-duplicate_year_success_evidence('2020-2021', '2022-2023')
+# Example usage:
+# duplicate_year_success_evidence('2020-2021', '2022-2023')
+
