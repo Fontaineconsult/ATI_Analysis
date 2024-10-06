@@ -24,6 +24,6 @@ def create_year_success_evidence_node(academic_year, success_indicator_composite
 
 
 create_year_success_evidence_node('2020-2021',
-                                  "7.2-web",
+                                  "1.5-ins",
                                   "Established")
 

@@ -14,3 +14,6 @@ def get_all_notes():
 
 def get_all_messages():
     return Message.nodes.all()
+
+def get_all_metrics():
+    return Metric.nodes.all()

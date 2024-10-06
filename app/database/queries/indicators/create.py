@@ -75,9 +75,9 @@ def create_success_indicator(number,
     # Connect the SuccessIndicator to the Goal
     goal_node.supporting_success_indicators.connect(indicator)
 
-create_success_indicator(7.2,
-                         "web",
-                         "Established a procedure to update and revise the Web Accessibility Plan as necessary.",
+create_success_indicator(1.5,
+                         "ins",
+                         "Campus has established a process to distribute performance reports regarding timely adoptions to campus administration at least annually.",
                          removed=True)
 
 

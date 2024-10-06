@@ -315,6 +315,7 @@ class InternalPolicy(StructuredNode):
     supporting_webpages = RelationshipTo("Webpage", "is_documented_by")
     supporting_notes = RelationshipTo("Note", "is_documented_by")
     supporting_messages = RelationshipTo("Message", "is_documented_by")
+    supporting_metrics = RelationshipTo("Metric", "has_metric")
     is_evidence_for = RelationshipTo("YearSuccessEvidence", "is_evidence_for")
 
 
@@ -552,6 +553,7 @@ class YearSuccessEvidence(StructuredNode):
     services_that_evidence = RelationshipFrom("Service", "is_evidence_for")
     guidance_that_evidence = RelationshipFrom("Guidance", "is_evidence_for")
     trackings_that_evidence = RelationshipFrom("Tracking", "is_evidence_for")
+    internal_policies_that_evidence = RelationshipFrom("InternalPolicy", "is_evidence_for")
 
     # Relationships from person nodes
     persons_that_implement = RelationshipFrom("Person", "implements")
@@ -845,6 +847,8 @@ class Message(StructuredNode):
     """
     name = StringProperty(unique_index=True)
     content = StringProperty()
+    file_path = StringProperty()
+    uri_path = StringProperty()
     date_created = StringProperty
     type = StringProperty()
     depreciated = BooleanProperty()
@@ -883,12 +887,16 @@ class Metric(StructuredNode):
 
     name = StringProperty()
     composite_key = StringProperty(unique_index=True)
+    metric_type = StringProperty()
+    file_path = StringProperty()
+    uri_path = StringProperty()
     description = StringProperty()
     single_value = StringProperty()
     value_dict = JSONProperty()
     comment = StringProperty()
     notes = RelationshipTo("Note", "has_note")
     academic_year = RelationshipTo("AcademicYear", "measured_in_year")
+
 
     @staticmethod
     def set_data(self, data):

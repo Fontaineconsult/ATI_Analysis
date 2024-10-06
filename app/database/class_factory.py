@@ -3,6 +3,14 @@ sys.path.append(r"C:\Users\Fonta\IdeaProjects\ATI_Analysis")
 sys.path.append(r"C:\Users\913678186\IdeaProjects\ATI_Analysis")
 from app.database.graph_schema import *
 
+academic_years = ["2019-2020",
+                  "2020-2021",
+                  "2021-2022",
+                  "2022-2023",
+                  "2023-2024",
+                  "2024-2025",]
+
+
 implementation_types = ["process",
                         "project",
                         "procedure",
@@ -22,12 +30,16 @@ implementation_classes = {
 }
 
 # Mapping of documentation types to their corresponding classes
-documentation_types = ["document", "webpage", "memo", "note", "metric"]
+documentation_types = ["document",
+                       "webpage",
+                       "message",
+                       "note",
+                       "metric"]
 
 documentation_classes = {
     "document": Document,
     "webpage": Webpage,
-    "memo": Memo,
+    "message": Message,
     "note": Note,
     "metric": Metric
 }
@@ -36,9 +48,9 @@ documentation_classes = {
 documentation_relationships = {
     "document": "supporting_documents",
     "webpage": "supporting_webpages",
-    "memo": "supporting_notes",
-    "note": "supporting_messages",
-    "metrics": "has_metric"
+    "message": "supporting_messages",
+    "note": "supporting_notes",
+    "metric": "supporting_metrics"
 }
 
 
@@ -51,4 +63,18 @@ implementor_classes = {
 
 }
 
-status_levels = ["Not Started", "Initiated", "Defined", "Managed", "Optimizing"]
+status_levels = ["Not Started",
+                 "Initiated",
+                 "Defined",
+                 "Managed",
+                 "Optimizing"]
+
+message_types = ["e-mail",
+                 "voice mail",
+                 "text message",
+                 "letter",
+                 "memo"]
+
+metric_types = ["tabular",
+                "graphical",
+                "descriptive"]

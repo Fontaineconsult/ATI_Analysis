@@ -5,6 +5,7 @@ from app.database.queries.implementation.read import (get_all_processes,
                                                       get_all_services,
                                                       get_all_guidances,
                                                       get_all_trackings,
+                                                      get_all_internal_policies,
                                                       get_all_plans)
 from neomodel import db
 
@@ -22,7 +23,7 @@ def get_all_implementations(implementation_type):
         "service": get_all_services,
         "guidance": get_all_guidances,
         "tracking": get_all_trackings,
-        "internal_policy": get_all_internalpolicies()
+        "internal_policy": get_all_internal_policies
 
     }
 

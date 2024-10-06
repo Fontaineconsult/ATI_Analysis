@@ -29,6 +29,10 @@ def build_yse_report(year_success_evidence):
     # query for the trackings_that_evidence
     trackings = yse.trackings_that_evidence.all()
 
+    # query for the internal_policies_that_evidence
+    internal_policies = yse.internal_policies_that_evidence.all()
+
+
     # query for the persons_that_implement
     persons = yse.persons_that_implement.all()
 
@@ -109,6 +113,17 @@ def build_yse_report(year_success_evidence):
                 "messages": [message.serialize() for message in tracking.supporting_messages.all()]
             }
         } for tracking in trackings],
+
+        "internal_policies": [{
+            "title": policy.title,
+            "description": policy.description,
+            "documentation": {
+                "documents": [doc.serialize() for doc in policy.supporting_documents.all()],
+                "webpages": [web.serialize() for web in policy.supporting_webpages.all()],
+                "notes": [note.serialize() for note in policy.supporting_notes.all()],
+                "messages": [message.serialize() for message in policy.supporting_messages.all()]
+            }
+        } for policy in internal_policies],
 
         "persons": [person.name for person in persons],
         "notes": [note.serialize() for note in notes]

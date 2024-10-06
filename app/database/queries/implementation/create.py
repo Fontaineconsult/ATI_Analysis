@@ -148,3 +148,22 @@ def add_tracking(title: str, description: str) -> bool:
     except Exception as e:
         print(e)
         return False
+
+def add_internal_policy(title: str, description: str) -> bool:
+    """
+    Adds a internal policy node to the graph
+    :param title: Title of the internal policy
+    :param description: Description of the internal policy
+    :return: True if the internal policy node is added successfully, False otherwise
+    """
+    try:
+        new_internal_policy = InternalPolicy(
+            title=title,
+            description=description
+        )
+        new_internal_policy.save()
+        print("Added internal policy")
+        return True
+    except Exception as e:
+        print(e)
+        return False

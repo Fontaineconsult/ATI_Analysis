@@ -7,7 +7,13 @@ from app.database.graph_schema import *
 from app.database.tools.support_functions import get_file_hash
 
 
-def add_document(name, file_path=None, uri_path=None, is_administrative_review_documentation=False, is_milestone_and_measures_documentation=False) -> bool:
+def add_document(name,
+                 file_path=None,
+                 uri_path=None,
+                 depreciated=False,
+                 depreciated_date=None,
+                 is_administrative_review_documentation=False,
+                 is_milestone_and_measures_documentation=False) -> bool:
     """
     Adds a document node to the graph.
 
@@ -36,6 +42,8 @@ def add_document(name, file_path=None, uri_path=None, is_administrative_review_d
             name=name,
             file_path=file_path,
             uri_path=uri_path,
+            depreciated=depreciated,
+            depreciated_date=datetime.strptime(depreciated_date, "%Y-%m-%d").year if depreciated_date else None,
             is_administrative_review_documentation=is_administrative_review_documentation,
             is_milestone_and_measures_documentation=is_milestone_and_measures_documentation
         )
@@ -47,13 +55,20 @@ def add_document(name, file_path=None, uri_path=None, is_administrative_review_d
         return False
 
 
-def add_webpage(url: str, name: str, no_longer_exists:bool, description: str) -> bool:
+def add_webpage(url: str,
+                name: str,
+                no_longer_exists:bool,
+                depreciated:bool,
+                depreciated_date: str,
+                description: str) -> bool:
     """
     Adds a webpage node to the graph.
 
     :param url: URL of the webpage.
     :param name: Name of the webpage.
     :param no_longer_exists: Indicates if the webpage no longer exists.
+    :param depreciated: Indicates if the webpage is depreciated and no longer relevant as evidence documentaiton.
+    :param depreciated_date: Date the webpage was depreciated.
     :param description: Description of the webpage.
     :return: True if the webpage node is added successfully, False otherwise.
     """
@@ -68,6 +83,8 @@ def add_webpage(url: str, name: str, no_longer_exists:bool, description: str) ->
         new_webpage = Webpage(
             url=url,
             name=name,
+            depreciated=depreciated,
+            depreciated_date=datetime.strptime(depreciated_date, "%Y-%m-%d").year if depreciated_date else None,
             no_longer_exists=no_longer_exists,
             description=description
         )
@@ -112,20 +129,29 @@ def add_note(name: str, content: str, use_existing=False) -> bool:
         return False
 
 
-def add_memo(name: str, description: str, authored_date: str) -> bool:
+def add_message(name: str,
+                message_type: str,
+                authored_date: str,
+                content: str=None,
+                file_path: str=None,
+                uri_path: str=None,
+                ) -> bool:
 
 
     try:
         # Check if a memo with the same title already exists
-        existing_memo = Memo.nodes.get_or_none(name=name)
+        existing_memo = Message.nodes.get_or_none(name=name)
         if existing_memo:
             print("A memo with the same title already exists.")
             return False
 
         # Create and save the new memo node
-        new_memo = Memo(
+        new_memo = Message(
             name=name,
-            description=description,
+            uri_path=uri_path,
+            file_path=file_path,
+            content=content,
+            message_type=message_type,
             authored_date=authored_date
         )
         new_memo.save()
@@ -139,10 +165,17 @@ def add_memo(name: str, description: str, authored_date: str) -> bool:
 def add_metric(name:str,
                academic_year:str,
                description:str=None,
+               metric_type:str=None,
+               file_path:str=None,
+               uri_path:str=None,
                single_value:str=None,
                comment:str=None,
                value_dict:dict=None
                ) -> bool:
+
+        print("DSDFSDFDSFSDF", value_dict, type(value_dict))
+        if isinstance(value_dict, dict):
+            value_dict = Metric.set_data(value_dict)
 
 
         academic_year_node = AcademicYear.nodes.get_or_none(name=academic_year)
@@ -161,9 +194,12 @@ def add_metric(name:str,
                 name=name,
                 composite_key=f"{name}-{academic_year}",
                 description=description,
+                metric_type = metric_type,
+                file_path = file_path,
+                uri_path = uri_path,
                 single_value=single_value,
                 comment=comment,
-                value_dict=Metric.set_data(value_dict) if value_dict is not None else None,
+                value_dict=value_dict,
             )
             new_metric.save()
 
