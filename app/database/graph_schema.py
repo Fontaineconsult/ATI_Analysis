@@ -283,7 +283,7 @@ class Accomplishment(StructuredNode):
     supporting_metrics = RelationshipTo("Metric", "has_metric")
     academic_year = RelationshipTo("AcademicYear", "in_academic_year")
     advanced_goals = RelationshipTo("Goal", "advances_goal")
-    advanced_year_success_indicators = RelationshipTo("YearSuccessIndicator", "advances_yse")
+    advanced_year_success_indicators = RelationshipTo("YearSuccessEvidence", "advances_yse")
 
 
 class Plan(StructuredNode):
@@ -302,13 +302,15 @@ class Plan(StructuredNode):
 
     """
 
-    title = StringProperty()
+    name = StringProperty()
     academic_year = RelationshipTo("AcademicYear", "in_academic_year")
-    furthered_goals = RelationshipTo("Goal", "furtheres_goal")
-    furthered_year_success_indicators = RelationshipTo("YearSuccessIndicator", "furtheres_yse")
-    is_key_plan = BooleanProperty()
-    is_campus_plan = BooleanProperty()
+    furthered_goals = RelationshipTo("Goal", "furthers_goal")
+    furthered_year_success_indicators = RelationshipTo("YearSuccessEvidence", "furthers_yse")
+    is_key_plan = BooleanProperty(default=False)
+    is_campus_plan = BooleanProperty(default=False)
     plan_description = StringProperty(unique_index=True, required=True)
+    abandoned = BooleanProperty(default=False)
+    abandoned_notes = StringProperty()
     supporting_documents = RelationshipTo("Document", "is_documented_by")
     supporting_webpages = RelationshipTo("Webpage", "is_documented_by")
     supporting_notes = RelationshipTo("Note", "is_documented_by")

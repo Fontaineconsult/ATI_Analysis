@@ -132,8 +132,9 @@ def add_accomplishment(name: str,
         ).save()
 
         accomplishment.academic_year.connect(academic_year)
+
         if advanced_goal_number and working_group:
-            accomplishment.furthered_goals.connect(furthered_goal)
+            accomplishment.advanced_goals.connect(furthered_goal)
         if furthered_yse_identifier:
             accomplishment.furthered_year_success_indicators.connect(furthered_yse)
 
@@ -143,34 +144,67 @@ def add_accomplishment(name: str,
         print(e)
         return False
 
-def add_plan(title: str,
+# add_accomplishment("Accomplishment 1",
+#                    "Two co-executive sponsors volunteered to help steer the ATI at SF State",
+#                    "2022-2023",
+#                    7,
+#                    "web")
+
+def add_plan(name: str,
              plan_description: str,
              academic_year_name: str,
-             furthered_goal_name: str,
-             furthered_yse_identifier: str,
-             is_key_plan: bool,
-             is_campus_plan: bool) -> bool:
+             is_key_plan: bool=False,
+             is_campus_plan: bool=False,
+             furthered_goal_number: int=None,
+             furthered_working_group: str=None,
+             furthered_yse_identifier: str=None) -> bool:
     try:
+        # Retrieve the AcademicYear node
         academic_year = AcademicYear.nodes.get(name=academic_year_name)
-        furthered_goal = Goal.nodes.get(name=furthered_goal_name)
-        furthered_yse = YearSuccessEvidence.nodes.get(year_identifier=furthered_yse_identifier)
 
+        # Retrieve the Goal node if furthered_goal_number and working_group are provided
+        furthered_goal = None
+        if furthered_goal_number and furthered_working_group:
+            furthered_goal = get_goal_node(furthered_goal_number, furthered_working_group)
+
+        # Retrieve the YearSuccessEvidence node if furthered_yse_identifier is provided
+        furthered_yse = None
+        if furthered_yse_identifier:
+            furthered_yse = YearSuccessEvidence.nodes.get(year_identifier=furthered_yse_identifier)
+
+        # Create and save the Plan node
         plan = Plan(
-            title=title,
+            name=name,
             plan_description=plan_description,
             is_key_plan=is_key_plan,
             is_campus_plan=is_campus_plan
         ).save()
 
+        # Connect the plan to the academic year
         plan.academic_year.connect(academic_year)
-        plan.furthered_goals.connect(furthered_goal)
-        plan.furthered_year_success_indicators.connect(furthered_yse)
 
-        print(f"Plan '{title}' added successfully")
+        # Connect the plan to the goal if it was provided
+        if furthered_goal:
+            plan.furthered_goals.connect(furthered_goal)
+
+        # Connect the plan to the YearSuccessEvidence if it was provided
+        if furthered_yse:
+            plan.furthered_year_success_indicators.connect(furthered_yse)
+
+        print(f"Plan '{name}' added successfully")
         return True
     except Exception as e:
         print(e)
         return False
+
+
+add_plan("Plan 1",
+         "We will continue to work to re-establish regular web subcommittee meetings.",
+         "2022-2023",
+         True,
+         False,
+         7,
+         "web")
 
 def add_tracking(title: str, description: str) -> bool:
     """
