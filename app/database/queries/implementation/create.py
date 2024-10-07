@@ -6,6 +6,8 @@ from datetime import datetime
 from app.database.graph_schema import *
 
 from app.database.graph_schema import Process
+from app.database.queries.implementation.read import get_goal_node
+
 
 def add_process(title: str, description: str) -> bool:
     """
@@ -109,22 +111,62 @@ def add_service(title: str, description: str) -> bool:
         print(e)
         return False
 
-def add_plan(title: str, description: str, is_campus_plan:bool) -> bool:
-    """
-    Adds a plan node to the graph
-    :param title: Title of the plan
-    :param description: Description of the plan
-    :param is_campus_plan: True if the plan is a campus plan, False otherwise
-    :return: True if the plan node is added successfully, False otherwise
-    """
+
+def add_accomplishment(name: str,
+                       accomplishment_description: str,
+                       academic_year: str,
+                       advanced_goal_number: str=None,
+                       working_group: str=None,
+                       furthered_yse_identifier: str=None,
+            ) -> bool:
     try:
-        new_plan = Plan(
+        academic_year = AcademicYear.nodes.get(name=academic_year)
+        if advanced_goal_number and working_group:
+            furthered_goal = get_goal_node(advanced_goal_number, working_group)
+        if furthered_yse_identifier:
+            furthered_yse = YearSuccessEvidence.nodes.get(year_identifier=furthered_yse_identifier)
+
+        accomplishment = Accomplishment(
+            name=name,
+            accomplishment_description=accomplishment_description,
+        ).save()
+
+        accomplishment.academic_year.connect(academic_year)
+        if advanced_goal_number and working_group:
+            accomplishment.furthered_goals.connect(furthered_goal)
+        if furthered_yse_identifier:
+            accomplishment.furthered_year_success_indicators.connect(furthered_yse)
+
+        print(f"Plan '{name}' added successfully")
+        return True
+    except Exception as e:
+        print(e)
+        return False
+
+def add_plan(title: str,
+             plan_description: str,
+             academic_year_name: str,
+             furthered_goal_name: str,
+             furthered_yse_identifier: str,
+             is_key_plan: bool,
+             is_campus_plan: bool) -> bool:
+    try:
+        academic_year = AcademicYear.nodes.get(name=academic_year_name)
+        furthered_goal = Goal.nodes.get(name=furthered_goal_name)
+        furthered_yse = YearSuccessEvidence.nodes.get(year_identifier=furthered_yse_identifier)
+
+        plan = Plan(
             title=title,
-            description=description,
+            plan_description=plan_description,
+            is_key_plan=is_key_plan,
             is_campus_plan=is_campus_plan
-        )
-        new_plan.save()
-        print("Added plan")
+        ).save()
+
+        plan.academic_year.connect(academic_year)
+        plan.furthered_goals.connect(furthered_goal)
+        plan.furthered_year_success_indicators.connect(furthered_yse)
+
+        print(f"Plan '{title}' added successfully")
         return True
     except Exception as e:
         print(e)

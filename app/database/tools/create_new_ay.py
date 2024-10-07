@@ -37,10 +37,6 @@ def duplicate_year_success_evidence(old_year, new_year):
         MATCH (newYear:AcademicYear {name: $new_year})
         MERGE (e2)-[:evidence_in_year]->(newYear)
         RETURN e2
-
-
-
-
             """
 
     # Execute the query with the provided old and new year values

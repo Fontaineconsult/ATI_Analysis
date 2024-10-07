@@ -207,6 +207,7 @@ class Goal(StructuredNode):
 
     name = StringProperty()
     description = StringProperty()
+    status = RelationshipTo("StatusLevel", "status_is")
     supporting_success_indicators = RelationshipTo("SuccessIndicator", "supported_by")
     goal = StringProperty()
     goal_number = IntegerProperty()
@@ -265,6 +266,26 @@ Relationships
 
 """
 
+class Accomplishment(StructuredNode):
+
+    """    Class representing an accomplishment node.
+
+    Represents an accomplishment node to track the progress of the implementation of the accessibility initiatives.
+
+    """
+
+    name = StringProperty()
+    accomplishment_description = StringProperty(unique_index=True, required=True)
+    supporting_documents = RelationshipTo("Document", "is_documented_by")
+    supporting_webpages = RelationshipTo("Webpage", "is_documented_by")
+    supporting_notes = RelationshipTo("Note", "is_documented_by")
+    supporting_messages = RelationshipTo("Message", "is_documented_by")
+    supporting_metrics = RelationshipTo("Metric", "has_metric")
+    academic_year = RelationshipTo("AcademicYear", "in_academic_year")
+    advanced_goals = RelationshipTo("Goal", "advances_goal")
+    advanced_year_success_indicators = RelationshipTo("YearSuccessIndicator", "advances_yse")
+
+
 class Plan(StructuredNode):
 
     """    Class representing a plan node.
@@ -281,17 +302,18 @@ class Plan(StructuredNode):
 
     """
 
-    title = StringProperty(unique_index=True, required=True)
-    description = StringProperty()
+    title = StringProperty()
+    academic_year = RelationshipTo("AcademicYear", "in_academic_year")
+    furthered_goals = RelationshipTo("Goal", "furtheres_goal")
+    furthered_year_success_indicators = RelationshipTo("YearSuccessIndicator", "furtheres_yse")
+    is_key_plan = BooleanProperty()
     is_campus_plan = BooleanProperty()
+    plan_description = StringProperty(unique_index=True, required=True)
     supporting_documents = RelationshipTo("Document", "is_documented_by")
     supporting_webpages = RelationshipTo("Webpage", "is_documented_by")
     supporting_notes = RelationshipTo("Note", "is_documented_by")
     supporting_messages = RelationshipTo("Message", "is_documented_by")
-    detailed_processes = RelationshipTo("Process", "details")
-    detailed_projects = RelationshipTo("Project", "details")
-    detailed_procedures = RelationshipTo("Procedure", "details")
-    detailed_services = RelationshipTo("Service", "details")
+
 
 
 class InternalPolicy(StructuredNode):
