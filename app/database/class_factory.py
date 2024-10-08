@@ -1,4 +1,7 @@
 import sys
+
+from app.data_config import working_group_names
+
 sys.path.append(r"C:\Users\Fonta\IdeaProjects\ATI_Analysis")
 sys.path.append(r"C:\Users\913678186\IdeaProjects\ATI_Analysis")
 from app.database.graph_schema import *
@@ -79,3 +82,11 @@ message_types = ["e-mail",
 metric_types = ["tabular",
                 "graphical",
                 "descriptive"]
+
+working_group_names_web_query = {
+
+    "web": "Web",
+    "instructional-materials": "Instructional Materials",
+    "procurement": "Procurement",
+
+}

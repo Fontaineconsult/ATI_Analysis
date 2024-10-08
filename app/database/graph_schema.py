@@ -212,7 +212,19 @@ class Goal(StructuredNode):
     goal = StringProperty()
     goal_number = IntegerProperty()
     date_added = DateProperty()
+    advanced_by = RelationshipFrom("Accomplishment", "advances_goal")
+    furthered_by = RelationshipFrom("Plan", "furthers_goal")
     removed = BooleanProperty(default=False)
+
+    #serialize
+    def serialize(self):
+        return {
+            'name': self.name,
+            'description': self.description,
+            'goal_number': self.goal_number,
+            'date_added': self.date_added,
+            'removed': self.removed
+        }
 
 
 class HasGoalRel(StructuredRel):
@@ -247,6 +259,16 @@ class SuccessIndicator(StructuredNode):
     directed_procedures = RelationshipTo("Procedure", "directs")
     directed_services = RelationshipTo("Service", "directs")
 
+    #serialize
+    def serialize(self):
+        return {
+            'number': self.number,
+            'success_indicator': self.success_indicator,
+            'composite_key': self.composite_key,
+            'removed': self.removed,
+            'date_added': self.date_added
+        }
+
 
 """
 Implementation
@@ -275,7 +297,7 @@ class Accomplishment(StructuredNode):
     """
 
     name = StringProperty()
-    accomplishment_description = StringProperty(unique_index=True, required=True)
+    description = StringProperty(unique_index=True, required=True)
     supporting_documents = RelationshipTo("Document", "is_documented_by")
     supporting_webpages = RelationshipTo("Webpage", "is_documented_by")
     supporting_notes = RelationshipTo("Note", "is_documented_by")
@@ -284,6 +306,13 @@ class Accomplishment(StructuredNode):
     academic_year = RelationshipTo("AcademicYear", "in_academic_year")
     advanced_goals = RelationshipTo("Goal", "advances_goal")
     advanced_year_success_indicators = RelationshipTo("YearSuccessEvidence", "advances_yse")
+
+    #serialize
+    def serialize(self):
+        return {
+            'name': self.name,
+            'accomplishment_description': self.accomplishment_description
+        }
 
 
 class Plan(StructuredNode):
@@ -308,13 +337,24 @@ class Plan(StructuredNode):
     furthered_year_success_indicators = RelationshipTo("YearSuccessEvidence", "furthers_yse")
     is_key_plan = BooleanProperty(default=False)
     is_campus_plan = BooleanProperty(default=False)
-    plan_description = StringProperty(unique_index=True, required=True)
+    description = StringProperty(unique_index=True, required=True)
     abandoned = BooleanProperty(default=False)
     abandoned_notes = StringProperty()
     supporting_documents = RelationshipTo("Document", "is_documented_by")
     supporting_webpages = RelationshipTo("Webpage", "is_documented_by")
     supporting_notes = RelationshipTo("Note", "is_documented_by")
     supporting_messages = RelationshipTo("Message", "is_documented_by")
+
+    #serialize
+    def serialize(self):
+        return {
+            'name': self.name,
+            'plan_description': self.plan_description,
+            'is_key_plan': self.is_key_plan,
+            'is_campus_plan': self.is_campus_plan,
+            'abandoned': self.abandoned,
+            'abandoned_notes': self.abandoned_notes
+        }
 
 
 
@@ -342,6 +382,15 @@ class InternalPolicy(StructuredNode):
     supporting_metrics = RelationshipTo("Metric", "has_metric")
     is_evidence_for = RelationshipTo("YearSuccessEvidence", "is_evidence_for")
 
+    #serialize
+    def serialize(self):
+        return {
+            'title': self.title,
+            'description': self.description,
+            'effective_date': self.effective_date,
+            'last_updated': self.last_updated
+        }
+
 
 
 class Process(StructuredNode):
@@ -364,6 +413,13 @@ class Process(StructuredNode):
     supporting_messages = RelationshipTo("Message", "is_documented_by")
     supporting_metrics = RelationshipTo("Metric", "has_metric")
     is_evidence_for = RelationshipTo("YearSuccessEvidence", "is_evidence_for")
+
+    #serialize
+    def serialize(self):
+        return {
+            'title': self.title,
+            'description': self.description
+        }
 
 
 class Project(StructuredNode):
@@ -390,6 +446,13 @@ class Project(StructuredNode):
     supporting_metrics = RelationshipTo("Metric", "has_metric")
     is_evidence_for = RelationshipTo("YearSuccessEvidence", "is_evidence_for")
 
+    #serialize
+    def serialize(self):
+        return {
+            'title': self.title,
+            'description': self.description
+        }
+
 
 class Procedure(StructuredNode):
 
@@ -412,6 +475,13 @@ class Procedure(StructuredNode):
     supporting_metrics = RelationshipTo("Metric", "has_metric")
     is_evidence_for = RelationshipTo("YearSuccessEvidence", "is_evidence_for")
 
+    #serialize
+    def serialize(self):
+        return {
+            'title': self.title,
+            'description': self.description
+        }
+
 
 class Service(StructuredNode):
 
@@ -433,6 +503,13 @@ class Service(StructuredNode):
     supporting_messages = RelationshipTo("Message", "is_documented_by")
     supporting_metrics = RelationshipTo("Metric", "has_metric")
     is_evidence_for = RelationshipTo("YearSuccessEvidence", "is_evidence_for")
+
+    #serialize
+    def serialize(self):
+        return {
+            'title': self.title,
+            'description': self.description
+        }
 
 
 
@@ -458,6 +535,13 @@ class Guidance(StructuredNode):
     supporting_metrics = RelationshipTo("Metric", "has_metric")
     is_evidence_for = RelationshipTo("YearSuccessEvidence", "is_evidence_for")
 
+    #serialize
+    def serialize(self):
+        return {
+            'title': self.title,
+            'description': self.description
+        }
+
 
 class Tracking(StructuredNode):
 
@@ -475,6 +559,13 @@ class Tracking(StructuredNode):
     supporting_messages = RelationshipTo("Message", "is_documented_by")
     supporting_metrics = RelationshipTo("Metric", "has_metric")
     is_evidence_for = RelationshipTo("YearSuccessEvidence", "is_evidence_for")
+
+    #serialize
+    def serialize(self):
+        return {
+            'title': self.title,
+            'description': self.description
+        }
 
 
 """
@@ -509,6 +600,14 @@ class AcademicYear(StructuredNode):
     start_date = DateProperty()
     end_date = DateProperty()
     year_success_evidences = RelationshipFrom("YearSuccessEvidence", "evidence_in_year")
+
+    #serialize
+    def serialize(self):
+        return {
+            'name': self.name,
+            'start_date': self.start_date,
+            'end_date': self.end_date
+        }
 
 
 class StatusLevel(StructuredNode):
@@ -581,6 +680,15 @@ class YearSuccessEvidence(StructuredNode):
 
     # Relationships from person nodes
     persons_that_implement = RelationshipFrom("Person", "implements")
+
+    #serialize
+    def serialize(self):
+        return {
+            'year_identifier': self.year_identifier,
+            'documentation_status': self.documentation_status,
+            'resources_status': self.resources_status,
+            'implementation_plan_status': self.implementation_plan_status
+        }
 
 
 
@@ -659,6 +767,15 @@ class Person(StructuredNode):
     title = StringProperty()
     in_ati_working_group = RelationshipTo('ATIWorkingGroup', 'participates_in')
     implements_yse = RelationshipTo("YearSuccessEvidence", "implements")
+
+    #serialize
+    def serialize(self):
+        return {
+            'name': self.name,
+            'email': self.email,
+            'employee_id': self.employee_id,
+            'title': self.title
+        }
 
 
 
@@ -813,9 +930,13 @@ class Webpage(StructuredNode):
         storage, or API response.
         """
         return {
+
             "url": self.url,
             "name": self.name,
             "description": self.description,
+            "no_longer_exists": self.no_longer_exists,
+            "depreciated": self.depreciated,
+            "depreciated_date": self.depreciated_date
 
         }
 
@@ -851,6 +972,8 @@ class Note(StructuredNode):
             "name": self.name,
             "content": self.content,
             "dateCreated": self.date_created,
+            "depreciated": self.depreciated,
+            "depreciated_date": self.depreciated_date
 
         }
 
@@ -884,10 +1007,14 @@ class Message(StructuredNode):
         """
         return {
 
-            "name": self.name,
-            "content": self.content,
-            "dateCreated": self.date_created,
-            "type": self.type
+                "name": self.name,
+                "content": self.content,
+                "file_path": self.file_path,
+                "uri_path": self.uri_path,
+                "date_created": self.date_created,
+                "type": self.type,
+                "depreciated": self.depreciated
+
         }
 
 
@@ -936,12 +1063,16 @@ class Metric(StructuredNode):
 
         """
         return {
-
             "name": self.name,
+            "composite_key": self.composite_key,
+            "metric_type": self.metric_type,
+            "file_path": self.file_path,
+            "uri_path": self.uri_path,
             "description": self.description,
             "single_value": self.single_value,
             "comment": self.comment,
             "data": self.get_data() if self.value_dict else None
+
 
         }
 
