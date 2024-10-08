@@ -198,13 +198,13 @@ def add_plan(name: str,
         return False
 
 
-add_plan("Plan 1",
-         "We will continue to work to re-establish regular web subcommittee meetings.",
-         "2022-2023",
-         True,
-         False,
-         7,
-         "web")
+# add_plan("Plan 1",
+#          "We will continue to work to re-establish regular web subcommittee meetings.",
+#          "2022-2023",
+#          True,
+#          False,
+#          7,
+#          "web")
 
 def add_tracking(title: str, description: str) -> bool:
     """

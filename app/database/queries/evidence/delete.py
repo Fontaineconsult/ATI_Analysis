@@ -95,9 +95,12 @@ def unassign_implementation_from_yse(year_success_identifier: str,
 def delete_year_success_evidence(year_success_identifier: str) -> bool:
     try:
         year_success_evidence = YearSuccessEvidence.nodes.get(year_identifier=year_success_identifier)
-        year_success_evidence.delete(detach=True)
+        year_success_evidence.delete()
         print(f"Year Success Evidence '{year_success_identifier}' deleted successfully")
         return True
     except Exception as e:
         print(e)
         return False
+
+
+# delete_year_success_evidence("2022-2023-6.6-web")
