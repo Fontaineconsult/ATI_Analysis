@@ -1,6 +1,7 @@
 import React, { useContext } from 'react';
 import { Routes, Route, Link } from 'react-router-dom';
-import './App.css';
+import { ChakraProvider } from '@chakra-ui/react'
+import './styles/App.css';
 import Home from './components/Home';
 import About from './components/About';
 import Dashboard from './components/Dashboard';
@@ -10,6 +11,7 @@ function App() {
     const { user } = useContext(UserContext); // Access context (just as a placeholder)
 
     return (
+        <ChakraProvider>
         <div className="App">
             <header className="App-header">
                 <nav>
@@ -20,15 +22,6 @@ function App() {
                     </ul>
                 </nav>
 
-                {/* Placeholder for user logic (can be implemented later) */}
-                <div>
-                    {user ? (
-                        <p>Welcome, {user.name}</p>
-                    ) : (
-                        <p>User is not logged in</p>
-                    )}
-                </div>
-
                 <Routes>
                     <Route path="/" element={<Home />} />
                     <Route path="/about" element={<About />} />
@@ -36,6 +29,7 @@ function App() {
                 </Routes>
             </header>
         </div>
+        </ChakraProvider>
     );
 }
 
