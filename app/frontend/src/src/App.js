@@ -1,69 +1,59 @@
-import React, { useContext } from 'react';
+import React from 'react';
+import { ChakraProvider, Box, Flex, Heading, Button, Spacer, Container } from '@chakra-ui/react';
 import { Routes, Route, Link } from 'react-router-dom';
-import { ChakraProvider, Box, Flex, Heading, Button, Spacer, Container } from '@chakra-ui/react'; // Import Chakra components
-import './styles/App.css'; // Import your custom styles
-import Home from './components/Home';
-import About from './components/About';
-import Dashboard from './components/Dashboard';
+import { DataProvider } from './context/DataContext';  // Import the DataProvider
+import { useData } from './hooks/useData';             // Hook to access data
 import AtiExplorer from './components/AtiExplorer';
-import { UserContext } from './context/UserContext';
-import {DataProvider} from "./context/DataContext"; // Import UserContext
+import Dashboard from './components/Dashboard';
+import About from './components/About';
+import SubNavbar from './components/SubNavbar';        // Import the SubNavbar
+import './styles/App.css';
 
 function App() {
-    const { user } = useContext(UserContext); // Access context (just as a placeholder)
-
     return (
         <ChakraProvider>
             <DataProvider>
                 <Box className="App">
-                {/* Navigation Bar */}
-                <Flex
-                    className="App-header"
-                    as="nav"
-                    bg="#231161"  /* Background color with good contrast */
-                    p={4}
-                    color="white"
-                    alignItems="center"
-                    aria-label="Main Navigation"  // ARIA label for screen readers
-                >
-                    <Flex alignItems="center">
-                        <Heading as="h1" size="lg" aria-label="ATI App" mr={8}>
-                            ATI App
-                        </Heading>
-
-                        {/* Navigation Buttons - Start */}
-                        <Flex>
-                            {/* ATI Explorer Button */}
-                            <Button border={"#26547C"} color={"#C99700"} variant="solid" mr={4}>
+                    {/* Main Navigation Bar */}
+                    <Flex
+                        className="App-header"
+                        as="nav"
+                        bg="teal.600"
+                        p={4}
+                        color="white"
+                        alignItems="center"
+                        aria-label="Main Navigation"
+                    >
+                        <Flex alignItems="center">
+                            <Heading as="h1" size="lg" aria-label="ATI App" mr={8}>
+                                SF State ATI Knowledge Graph
+                            </Heading>
+                            {/* Main Navigation Buttons */}
+                            <Button colorScheme="teal" variant="solid" mr={4}>
                                 <Link to="/ati-explorer">ATI Explorer</Link>
                             </Button>
-
-                            {/* Add new navigation buttons below (Example: Dashboard) */}
-                            <Button color={"#C99700"} variant="solid" mr={4}>
+                            <Button colorScheme="teal" variant="solid" mr={4}>
                                 <Link to="/dashboard">Dashboard</Link>
                             </Button>
-
-                            {/* Add more buttons as needed here */}
-                            <Button color={"#C99700"} variant="solid" mr={4}>
+                            <Button colorScheme="teal" variant="solid" mr={4}>
                                 <Link to="/about">About</Link>
                             </Button>
                         </Flex>
-                        {/* Navigation Buttons - End */}
+                        <Spacer />
                     </Flex>
 
-                    <Spacer /> {/* This ensures the buttons are aligned to the left */}
-                </Flex>
+                    {/* Sub Navbar */}
+                    <SubNavbar /> {/* Always displayed under the main navigation bar */}
 
-                {/* Main content area with max-width and horizontally centered layout */}
-                <Container as="main" className="App-content" p={4} maxW="1200px" centerContent>
-                    <Routes>
-                        <Route path="/ati-explorer" element={<AtiExplorer />} />
-                        <Route path="/dashboard" element={<Dashboard />} />
-                        <Route path="/" element={<Home />} />
-                        <Route path="/about" element={<About />} />
-                    </Routes>
-                </Container>
-            </Box>
+                    {/* Main Content */}
+                    <Container as="main" className="App-content" p={4} maxW="1200px" centerContent>
+                        <Routes>
+                            <Route path="/ati-explorer/*" element={<AtiExplorer />} />
+                            <Route path="/dashboard/*" element={<Dashboard />} />
+                            <Route path="/about/*" element={<About />} />
+                        </Routes>
+                    </Container>
+                </Box>
             </DataProvider>
         </ChakraProvider>
     );

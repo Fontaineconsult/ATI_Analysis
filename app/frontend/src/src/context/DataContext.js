@@ -1,30 +1,31 @@
 import React, { createContext, useState, useEffect } from 'react';
-import { fetchPrimaryData } from '../services/api/get';  // Import the API function
+import { fetchPrimaryData } from '../services/api/get';
 
 // Create a context
 export const DataContext = createContext();
 
 // DataProvider component to wrap the app
 export const DataProvider = ({ children }) => {
-    // Store results from multiple endpoints in a structured state
+    // Store results for different working groups and years
     const [data, setData] = useState({
         web: null,
         instructionalMaterials: null,
         procurement: null,
     });
-
     const [loading, setLoading] = useState(true); // Loading state
     const [error, setError] = useState(null);     // Error state
+    const [selectedYear, setSelectedYear] = useState('2022-2023');  // Default year
 
-    // Fetch data when the component mounts (on app load)
+    // Fetch data when the component mounts or when the year is updated
     useEffect(() => {
         const loadData = async () => {
             try {
-                // Fetch data for all 3 endpoints concurrently
+                setLoading(true);
+                // Fetch data for the selected year
                 const [webData, instructionalMaterialsData, procurementData] = await Promise.all([
-                    fetchPrimaryData("web", "2022-2023"),
-                    fetchPrimaryData("instructional-materials", "2022-2023"),
-                    fetchPrimaryData("procurement", "2022-2023"),
+                    fetchPrimaryData("web", selectedYear),
+                    fetchPrimaryData("instructional-materials", selectedYear),
+                    fetchPrimaryData("procurement", selectedYear),
                 ]);
 
                 // Set the data in the state under their respective keys
@@ -41,10 +42,15 @@ export const DataProvider = ({ children }) => {
         };
 
         loadData();
-    }, []);  // Empty dependency array ensures this only runs on mount
+    }, [selectedYear]);  // Re-run effect when selectedYear changes
+
+    // Function to update the selected year
+    const updateYear = (newYear) => {
+        setSelectedYear(newYear);
+    };
 
     return (
-        <DataContext.Provider value={{ data, loading, error }}>
+        <DataContext.Provider value={{ data, loading, error, selectedYear, updateYear }}>
             {children}
         </DataContext.Provider>
     );
