@@ -13,7 +13,7 @@ function InstructionalMaterialsData({ instructionalMaterialsData }) {
             </Heading>
 
             {/* Loop through the goals and pass each goal, along with its plans and accomplishments, to the Goal component */}
-            {instructionalMaterialsData.goals.map((goalWrapper, index) => (
+            {instructionalMaterialsData.goals.slice().reverse().map((goalWrapper, index) => (
                 <Goal
                     key={index}
                     goalData={goalWrapper.goal}

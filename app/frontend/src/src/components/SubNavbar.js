@@ -1,11 +1,13 @@
 import React from 'react';
 import { Flex, Button, Box } from '@chakra-ui/react';
 import { useLocation, Link } from 'react-router-dom';
-import { useData } from '../hooks/useData';  // Import the useData hook to access DataContext
+import { useSettings } from '../context/SettingsContext';
+import {useData} from "../hooks/useData";  // Import the useSettings hook
 
 function SubNavbar() {
     const location = useLocation();
-    const { updateYear } = useData(); // Function to update the year in DataContext for ATI Explorer
+    const { updateCurrentAcademicYear } = useSettings(); // Function to update the academic year globally
+    const { updateYear } = useData();
 
     // Define sub-nav items based on the current main component
     let subNavItems;
@@ -42,13 +44,16 @@ function SubNavbar() {
         <Box bg="gray.100" py={2} boxShadow="md"> {/* Sub-navbar styling */}
             <Flex justify="center" gap={4}>
                 {subNavItems.map((item) => (
-                    // If we are in ATI Explorer, use `onClick` to update the year
+                    // If we are in ATI Explorer, use onClick to update the year in global state
                     location.pathname === '/ati-explorer' ? (
                         <Button
                             key={item.label}
                             colorScheme="teal"
                             variant="ghost"
-                            onClick={() => updateYear(item.year)}  // Call updateYear for ATI Explorer
+                            onClick={() => {
+                                updateCurrentAcademicYear(item.year);  // Update the global academic year
+                                updateYear(item.year);  // Fetch new data for the selected year
+                            }} // Call updateCurrentAcademicYear for ATI Explorer
                         >
                             {item.label}
                         </Button>
@@ -57,7 +62,7 @@ function SubNavbar() {
                         <Button
                             key={item.label}
                             as={Link}
-                            to={item.path}  // Use `to` for navigation
+                            to={item.path}  // Use to for navigation
                             colorScheme="teal"
                             variant="ghost"
                         >

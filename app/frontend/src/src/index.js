@@ -6,19 +6,22 @@ import reportWebVitals from './reportWebVitals';
 import {BrowserRouter} from 'react-router-dom';
 import {UserProvider} from './context/UserContext';
 import {DevSupport} from "@react-buddy/ide-toolbox";
-import {ComponentPreviews, useInitial} from "./dev"; // Import UserProvider
+import {ComponentPreviews, useInitial} from "./dev";
+import {SettingsProvider} from "./context/SettingsContext"; // Import UserProvider
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
     <React.StrictMode>
         <BrowserRouter>
-            <UserProvider>  {/* Wrap the app with UserProvider */}
-                <DevSupport ComponentPreviews={ComponentPreviews}
-                            useInitialHook={useInitial}
-                >
-                    <App/>
-                </DevSupport>
-            </UserProvider>
+            <SettingsProvider>
+                <UserProvider>  {/* Wrap the app with UserProvider */}
+                    <DevSupport ComponentPreviews={ComponentPreviews}
+                                useInitialHook={useInitial}
+                    >
+                        <App/>
+                    </DevSupport>
+                </UserProvider>
+            </SettingsProvider>
         </BrowserRouter>
     </React.StrictMode>
 );

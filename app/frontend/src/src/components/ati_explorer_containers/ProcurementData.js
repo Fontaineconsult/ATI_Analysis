@@ -12,7 +12,7 @@ function ProcurementData({ procurementData }) {
             </Heading>
 
             {/* Loop through the goals and pass each goal, along with its plans and accomplishments, to the Goal component */}
-            {procurementData.goals.map((goalWrapper, index) => (
+            {procurementData.goals.slice().reverse().map((goalWrapper, index) => (
                 <Goal
                     key={index}
                     goalData={goalWrapper.goal}

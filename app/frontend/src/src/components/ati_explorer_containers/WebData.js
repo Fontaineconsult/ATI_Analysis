@@ -13,7 +13,7 @@ function WebData({ webData }) {
             </Heading>
 
             {/* Loop through the goals and pass each goal, along with its plans and accomplishments, to the Goal component */}
-            {webData.goals.map((goalWrapper, index) => (
+            {webData.goals.slice().reverse().map((goalWrapper, index) => (
                 <Goal
                     key={index}
                     goalData={goalWrapper.goal}

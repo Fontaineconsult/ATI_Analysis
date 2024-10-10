@@ -22,7 +22,13 @@ def fetch_evidence_for_working_group(working_group, academic_year):
         
         // Match evidence types and their documentation
         OPTIONAL MATCH (evidence)<-[:is_evidence_for]-(evidenceType)
-        WHERE evidenceType:InternalPolicy OR evidenceType:Process OR evidenceType:Project OR evidenceType:Procedure OR evidenceType:Service OR evidenceType:Guidance OR evidenceType:Tracking
+        WHERE evidenceType:InternalPolicy OR
+              evidenceType:Process OR
+              evidenceType:Project OR
+              evidenceType:Procedure OR
+              evidenceType:Service OR
+              evidenceType:Guidance OR
+              evidenceType:Tracking
         
         OPTIONAL MATCH (evidenceType)-[:is_documented_by]->(doc:Document)
         OPTIONAL MATCH (evidenceType)-[:is_documented_by]->(web:Webpage)
@@ -78,17 +84,21 @@ def fetch_evidence_for_working_group(working_group, academic_year):
         // Collect all indicators under each goal
         WITH wg, goal, collect(indicatorData) AS indicators
         
-        // Match accomplishments and plans for each goal
-        OPTIONAL MATCH (goal)<-[:advances_goal]-(accomplishment:Accomplishment)
-        OPTIONAL MATCH (goal)<-[:furthers_goal]-(plan:Plan)
+        // Match accomplishments for each goal in the specified academic year
+        OPTIONAL MATCH (goal)<-[:advances_goal]-(accomplishment:Accomplishment)-[:in_academic_year]->(accomplishmentYear:AcademicYear)
+        WHERE accomplishmentYear.name = $academic_year
         
-        // Aggregate accomplishments and plans under each goal
-        WITH wg, goal, indicators,
+        // Match plans for each goal in the specified academic year
+        OPTIONAL MATCH (goal)<-[:furthers_goal]-(plan:Plan)-[:in_academic_year]->(planYear:AcademicYear)
+        WHERE planYear.name = $academic_year
+        
+        // Collect accomplishments and plans per goal
+        WITH wg.name AS workingGroupName, goal, indicators,
              collect(DISTINCT accomplishment) AS accomplishments,
              collect(DISTINCT plan) AS plans
         
         // Create a map for each goal with its indicators, accomplishments, and plans
-        WITH wg.name AS workingGroupName,
+        WITH workingGroupName,
              {
                goal: goal,
                indicators: indicators,
