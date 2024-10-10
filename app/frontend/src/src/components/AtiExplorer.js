@@ -1,21 +1,16 @@
 import React from 'react';
-import { Box, Heading, Text } from '@chakra-ui/react';
+import { Box, Heading } from '@chakra-ui/react';
+import WorkingGroupMasterContainer from './ati_explorer_containers/WorkingGroupMasterContainer';  // Import the container
 
 function AtiExplorer() {
     return (
-        <Box maxW="800px" mx="auto" p={4} textAlign="center"> {/* Horizontally centered content */}
-            <Heading as="h2" size="xl" mb={6}>
+        <Box maxW="1200px" mx="auto" p={4}>
+            <Heading as="h2" size="xl" mb={6} textAlign="center">
                 ATI Explorer
             </Heading>
-            <Text fontSize="lg">
-                Explore ATI Data and insights...
-            </Text>
-            <Text fontSize="lg" wordBreak="break-word">
-                asddddddddddddddddddhsdkfjhsdkfhsdklfjhfsdkjfhfsdjlkfhfsd
-                sdlfhsdjfhjsdkfhfsdkjfhfsdkjfhsdkjfsdkjfjhsd
-                sdjfhsdkjfhkjsdhfkjsdhfjksdhhfksdjhhfsdkjfhfsdkjfhsdfsdkjfhfd
-                dshfjshfkshfukurebvsalkvblrakjvbskjlgvbr
-            </Text>
+
+            {/* Render the WorkingGroupMasterContainer inside ATI Explorer */}
+            <WorkingGroupMasterContainer />
         </Box>
     );
 }

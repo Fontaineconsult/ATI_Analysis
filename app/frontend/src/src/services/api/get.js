@@ -1,9 +1,11 @@
 import axios from 'axios';
 
 // Function to fetch primary data from API
-export const fetchPrimaryData = async () => {
+export const fetchPrimaryData = async (wg, ay) => {
+    const apiUrl = process.env.REACT_APP_API_URL;  // Pull API URL from environment
+
     try {
-        const response = await axios.get('http://127.0.0.1:5000/data-api/v1/working-group/web/2022-2023');
+        const response = await axios.get(`${apiUrl}working-group/${wg}/${ay}`);
         return response.data;
     } catch (error) {
         throw new Error('Failed to fetch data');

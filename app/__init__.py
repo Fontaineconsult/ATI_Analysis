@@ -39,7 +39,7 @@ def create_app():
 
     # Register your API blueprints
     app.register_blueprint(data_api, url_prefix='/data-api/v1')
-    app.register_blueprint(react_pages, url_prefix='/ati-explorer')
+    app.register_blueprint(react_pages, url_prefix='/')
 
     # Serve React App for non-API routes under /ati-explorer
 
