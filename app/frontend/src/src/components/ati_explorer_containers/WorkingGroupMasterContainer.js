@@ -7,13 +7,11 @@ import WebData from './WebData';
 import InstructionalMaterialsData from './InstructionalMaterialsData';
 import ProcurementData from './ProcurementData';
 
+
 function WorkingGroupMasterContainer() {
-    const { data, loading, error } = useData();  // Access the data from DataContext
+    const { data, loading, error } = useData();  // Access data from context
 
-    // Show loading spinner while fetching data
     if (loading) return <Spinner size="xl" />;
-
-    // Show error message if there was an issue fetching data
     if (error) return <Text color="red.500">Error: {error}</Text>;
 
     return (
@@ -22,13 +20,13 @@ function WorkingGroupMasterContainer() {
                 Working Group Data Overview
             </Heading>
 
-            {/* Render Web Data subcomponent */}
+            {/* Render Web Data */}
             <WebData webData={data.web} />
 
-            {/* Render Instructional Materials Data subcomponent */}
-            <InstructionalMaterialsData instructionalData={data.instructionalMaterials} />
+            {/* Render Instructional Materials Data */}
+            <InstructionalMaterialsData instructionalMaterialsData={data.instructionalMaterials} />
 
-            {/* Render Procurement Data subcomponent */}
+            {/* Render Procurement Data */}
             <ProcurementData procurementData={data.procurement} />
         </Box>
     );
