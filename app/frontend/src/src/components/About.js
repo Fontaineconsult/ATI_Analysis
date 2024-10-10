@@ -3,11 +3,11 @@ import { Box, Heading } from '@chakra-ui/react';
 
 function About() {
     return (
-        <Box textAlign="center"> {/* Center the content inside the component */}
+        <Box maxW="800px" mx="auto" p={4} textAlign="center"> {/* Horizontally centered content */}
             <Heading as="h2" size="xl" mb={6}>
-                About the SF State ATI Explorer
+                Dashboard
             </Heading>
-            <p>About about about...</p>
+            <p>Here’s your personalized dashboard...</p>
         </Box>
     );
 }

@@ -6,19 +6,21 @@ import Home from './components/Home';
 import About from './components/About';
 import Dashboard from './components/Dashboard';
 import AtiExplorer from './components/AtiExplorer';
-import { UserContext } from './context/UserContext'; // Import UserContext
+import { UserContext } from './context/UserContext';
+import {DataProvider} from "./context/DataContext"; // Import UserContext
 
 function App() {
     const { user } = useContext(UserContext); // Access context (just as a placeholder)
 
     return (
         <ChakraProvider>
-            <Box className="App">
+            <DataProvider>
+                <Box className="App">
                 {/* Navigation Bar */}
                 <Flex
                     className="App-header"
                     as="nav"
-                    bg="teal.600"  /* Background color with good contrast */
+                    bg="#231161"  /* Background color with good contrast */
                     p={4}
                     color="white"
                     alignItems="center"
@@ -32,17 +34,17 @@ function App() {
                         {/* Navigation Buttons - Start */}
                         <Flex>
                             {/* ATI Explorer Button */}
-                            <Button colorScheme="teal" variant="solid" mr={4}>
+                            <Button border={"#26547C"} color={"#C99700"} variant="solid" mr={4}>
                                 <Link to="/ati-explorer">ATI Explorer</Link>
                             </Button>
 
                             {/* Add new navigation buttons below (Example: Dashboard) */}
-                            <Button colorScheme="teal" variant="solid" mr={4}>
+                            <Button color={"#C99700"} variant="solid" mr={4}>
                                 <Link to="/dashboard">Dashboard</Link>
                             </Button>
 
                             {/* Add more buttons as needed here */}
-                            <Button colorScheme="teal" variant="solid" mr={4}>
+                            <Button color={"#C99700"} variant="solid" mr={4}>
                                 <Link to="/about">About</Link>
                             </Button>
                         </Flex>
@@ -62,6 +64,7 @@ function App() {
                     </Routes>
                 </Container>
             </Box>
+            </DataProvider>
         </ChakraProvider>
     );
 }
