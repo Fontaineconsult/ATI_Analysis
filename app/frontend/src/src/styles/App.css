@@ -30,21 +30,18 @@ button:focus, a:focus {
   outline-offset: 2px;
 }
 
-/* Style the navigation buttons (default Chakra UI styles should cover this, but adding a custom hover) */
-button, .App-header a {
-  text-decoration: none;
-  color: white;  /* Ensure text color is always visible */
-}
-
-button:hover, .App-header a:hover {
-  background-color: #285e61;  /* Darken background on hover */
-}
-
 /* Content area */
 .App-content {
   flex: 1;
   padding: 2rem;
-  background-color: #fff;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  max-width: 1200px;
+  margin: 0 auto; /* Horizontally center the content */
+}
+
+/* Media query for smaller screens */
+@media (max-width: 768px) {
+  .App-content {
+    padding: 1rem;
+    max-width: 100%;  /* Ensure the content fills smaller screens */
+  }
 }

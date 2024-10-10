@@ -1,6 +1,6 @@
 import React, { useContext } from 'react';
 import { Routes, Route, Link } from 'react-router-dom';
-import { ChakraProvider, Box, Flex, Heading, Button, Spacer } from '@chakra-ui/react'; // Import Chakra components
+import { ChakraProvider, Box, Flex, Heading, Button, Spacer, Container } from '@chakra-ui/react'; // Import Chakra components
 import './styles/App.css'; // Import your custom styles
 import Home from './components/Home';
 import About from './components/About';
@@ -52,15 +52,15 @@ function App() {
                     <Spacer /> {/* This ensures the buttons are aligned to the left */}
                 </Flex>
 
-                {/* Main content area */}
-                <Box as="main" className="App-content" p={4} aria-live="polite" aria-atomic="true">
+                {/* Main content area with max-width and horizontally centered layout */}
+                <Container as="main" className="App-content" p={4} maxW="1200px" centerContent>
                     <Routes>
                         <Route path="/ati-explorer" element={<AtiExplorer />} />
                         <Route path="/dashboard" element={<Dashboard />} />
                         <Route path="/" element={<Home />} />
                         <Route path="/about" element={<About />} />
                     </Routes>
-                </Box>
+                </Container>
             </Box>
         </ChakraProvider>
     );

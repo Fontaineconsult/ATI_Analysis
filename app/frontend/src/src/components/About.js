@@ -1,11 +1,14 @@
 import React from 'react';
+import { Box, Heading } from '@chakra-ui/react';
 
 function About() {
     return (
-        <div>
-            <h1>About Page</h1>
-            <p>This is the about page of the app.</p>
-        </div>
+        <Box textAlign="center"> {/* Center the content inside the component */}
+            <Heading as="h2" size="xl" mb={6}>
+                About the SF State ATI Explorer
+            </Heading>
+            <p>About about about...</p>
+        </Box>
     );
 }
 
