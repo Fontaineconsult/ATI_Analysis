@@ -7,7 +7,7 @@ function ProcurementData({ procurementData }) {
             <Heading as="h3" size="lg" mb={4}>
                 Procurement Data
             </Heading>
-            <Text fontSize="md">{JSON.stringify(procurementData, null, 2)}</Text> {/* Render procurement data */}
+            {/*<Text fontSize="md">{JSON.stringify(procurementData, null, 2)}</Text> /!* Render procurement data *!/*/}
         </Box>
     );
 }
