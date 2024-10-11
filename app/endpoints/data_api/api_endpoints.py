@@ -4,6 +4,7 @@ from app.database.class_factory import working_group_names_web_query, status_lev
 from app.database.queries.compound_queries.get_all_by_working_group import fetch_evidence_for_working_group
 from app.database.queries.evidence.read import get_all_status_level_nodes
 from app.database.queries.evidence.update import assign_status_to_yse
+from app.database.queries.individuals.read import get_person_by_employee_id, get_all_persons
 from app.database.tools.report_queries import build_yse_report
 
 
@@ -60,3 +61,19 @@ def get_or_update_status_level():
             return jsonify({'error': str(e)}), 500  # Return HTTP 500 for any server error
 
     return jsonify({'error': 'Method not allowed'}), 405  # Handle invalid methods with HTTP 405
+
+
+
+@data_api.route('/persons', methods=['GET'])
+def get_persons():
+    employee_id = request.args.get('employee_id')
+    if not employee_id:
+        all_persons = get_all_persons()
+        serialized = [person.serialize() for person in all_persons]
+        return jsonify({'persons': serialized})
+
+    person = get_person_by_employee_id(employee_id)
+    if person:
+        return jsonify({'person': person.serialize()})
+    else:
+        return jsonify({'error': 'Person not found'}), 404

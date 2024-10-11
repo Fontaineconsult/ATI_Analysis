@@ -22,3 +22,17 @@ export const fetchStatusLevels = async () => {
         throw error;
     }
 };
+
+
+
+
+// Fetch user data by employee_id
+export const fetchUserByEmployeeId = async (employeeId) => {
+    try {
+        const response = await axios.get(`${process.env.REACT_APP_API_URL}/persons?employee_id=${employeeId}`);
+        return response.data.person;  // Assuming the response contains the "person" object
+    } catch (error) {
+        console.error('Error fetching user:', error);
+        throw error;
+    }
+};
