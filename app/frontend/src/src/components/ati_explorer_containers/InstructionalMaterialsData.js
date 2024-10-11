@@ -19,6 +19,7 @@ function InstructionalMaterialsData({ instructionalMaterialsData }) {
                     goalData={goalWrapper.goal}
                     plans={goalWrapper.plans}
                     accomplishments={goalWrapper.accomplishments}
+                    indicators={goalWrapper.indicators}
                 />
             ))}
         </Box>

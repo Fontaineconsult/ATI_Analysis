@@ -18,6 +18,7 @@ function ProcurementData({ procurementData }) {
                     goalData={goalWrapper.goal}
                     plans={goalWrapper.plans}
                     accomplishments={goalWrapper.accomplishments}
+                    indicators={goalWrapper.indicators}
                 />
             ))}
         </Box>

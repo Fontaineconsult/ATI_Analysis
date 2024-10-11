@@ -1,10 +1,9 @@
 import React from 'react';
 import { Box, Heading, Text } from '@chakra-ui/react';
-import Accomplishment from '../../graph_components/implementation/Accomplishment';  // Import Accomplishment component
-import Plan from '../../graph_components/implementation/Plan';
-import GoalDetails from "../implementation/GoalDetails";  // Import Plan component
+import GoalDetails from "../implementation/GoalDetails";
+import EvidenceMasterContainer from "../../ati_explorer_containers/EvidenceMasterContainer";  // Import EvidenceMasterContainer
 
-function Goal({ goalData, plans, accomplishments }) {
+function Goal({ goalData, plans, accomplishments, indicators }) {  // Pass indicators as prop
     if (!goalData) return null; // If no goal data is passed, return nothing
 
     const { goal_number, name, goal, date_added } = goalData.properties;
@@ -19,6 +18,9 @@ function Goal({ goalData, plans, accomplishments }) {
 
             {/* Render the grouped Plans and Accomplishments using GoalDetails */}
             <GoalDetails plans={plans} accomplishments={accomplishments} />
+
+            {/* Render the EvidenceMasterContainer for Success Indicators */}
+            <EvidenceMasterContainer indicators={indicators} />
         </Box>
     );
 }
