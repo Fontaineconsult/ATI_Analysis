@@ -30,12 +30,13 @@ def get_all_yse_by_working_group(working_group, academic_year):
 
 from flask import request, jsonify
 
-@data_api.route('/status-level', methods=['GET', 'PUT'])
+@data_api.route('/status-levels', methods=['GET', 'PUT'])
 def get_or_update_status_level():
     if request.method == 'GET':
         # Handle GET request: Retrieve all status level nodes
         all_nodes = get_all_status_level_nodes()
-        return jsonify({'status_levels': all_nodes}), 200  # Return status levels with HTTP 200
+        serialized = [node.serialize() for node in all_nodes]
+        return ({'status_levels': serialized}), 200  # Return status levels with HTTP 200
 
     elif request.method == 'PUT':
         # Handle PUT request: Update status level for a given YearSuccessEvidence (YSE)

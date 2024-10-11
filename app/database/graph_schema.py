@@ -639,6 +639,16 @@ class StatusLevel(StructuredNode):
     ati_report_evidence_column = StringProperty()
     notes = RelationshipTo("Note", "has_note")
 
+    def serialize(self):
+        return {
+            'status_level': self.status_level,
+            'description_of_procedures': self.description_of_procedures,
+            'description_of_documentation': self.description_of_documentation,
+            'description_of_documentation_evidence': self.description_of_documentation_evidence,
+            'description_of_resources': self.description_of_resources,
+            'status_value': self.status_value,
+            'ati_report_evidence_column': self.ati_report_evidence_column}
+
 
 class YearSuccessEvidence(StructuredNode):
 
