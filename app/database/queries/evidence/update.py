@@ -1,6 +1,8 @@
 #
 # EVIDENCE UPDATE QUERIES
 #
+from datetime import datetime
+
 from app.database.class_factory import implementation_classes
 from app.database.graph_schema import *
 
@@ -151,5 +153,28 @@ def assign_metric_to_yse(year_success_identifier: str, metric_composite_key: str
     except Exception as e:
         print(e)
         return False
+
+
+
+def assign_approver_to_yse(year_success_identifier: str, employee_id: str) -> bool:
+    try:
+        year_success_evidence = YearSuccessEvidence.nodes.get(year_identifier=year_success_identifier)
+        person = Person.nodes.get(employee_id=employee_id)
+
+        # Check if the relationship already exists
+        if year_success_evidence.administrative_review_completed_by.is_connected(person):
+            raise Exception(f"Approver {employee_id} is already assigned to success indicator {year_success_identifier}")
+
+        year_success_evidence.administrative_review_completed_by.connect(person)
+        year_success_evidence.administrative_review_completed = True
+        year_success_evidence.administrative_review_completed_date = datetime.now().date()
+        year_success_evidence.save()
+        print(f"Approver {employee_id} assigned to success indicator {year_success_identifier}")
+        return True
+    except Exception as e:
+        print(e)
+        return False
+
+
 #
 # assign_metric_to_yse("2020-2021-8.10-pro","What is the total percentage of EEAAP’s-2020-2021")

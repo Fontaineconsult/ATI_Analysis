@@ -1,5 +1,7 @@
 import json
 import uuid
+from email.policy import default
+
 from neomodel import (StructuredNode, StringProperty,
                       IntegerProperty, RelationshipTo,
                       RelationshipFrom, UniqueIdProperty,
@@ -778,6 +780,7 @@ class Person(StructuredNode):
     email = StringProperty()
     employee_id = StringProperty()
     title = StringProperty()
+    can_approve_yse = BooleanProperty(default=False)
     in_ati_working_group = RelationshipTo('ATIWorkingGroup', 'participates_in')
     implements_yse = RelationshipTo("YearSuccessEvidence", "implements")
 

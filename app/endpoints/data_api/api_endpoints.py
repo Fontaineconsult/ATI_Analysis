@@ -3,7 +3,7 @@ from flask import Blueprint, jsonify
 from app.database.class_factory import working_group_names_web_query, status_levels
 from app.database.queries.compound_queries.get_all_by_working_group import fetch_evidence_for_working_group
 from app.database.queries.evidence.read import get_all_status_level_nodes
-from app.database.queries.evidence.update import assign_status_to_yse
+from app.database.queries.evidence.update import assign_status_to_yse, assign_approver_to_yse
 from app.database.queries.individuals.read import get_person_by_employee_id, get_all_persons
 from app.database.tools.report_queries import build_yse_report
 
@@ -77,3 +77,24 @@ def get_persons():
         return jsonify({'person': person.serialize()})
     else:
         return jsonify({'error': 'Person not found'}), 404
+
+@data_api.route('/assign-approver', methods=['PUT'])
+def assign_approver():
+    data = request.get_json()
+    yse = data.get('yse')
+    employee_id = data.get('employee_id')
+
+    if not yse or not employee_id:
+        return jsonify({'error': 'Missing yse or employee_id in request'}), 400
+
+    person = get_person_by_employee_id(employee_id)
+    if not person:
+        return jsonify({'error': 'Person not found'}), 404
+
+    try:
+        assign_approver_to_yse(yse, employee_id)
+        return jsonify({'message': 'Approver assigned successfully'}), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
