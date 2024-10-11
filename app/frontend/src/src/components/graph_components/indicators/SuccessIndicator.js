@@ -1,5 +1,7 @@
 import React from 'react';
 import { Box, Flex, Heading, Text } from '@chakra-ui/react';
+import DropdownSelect from '../../functional_components/DropdownSelect';
+import { useStatusLevels } from '../../../hooks/useStatusLevels';
 
 // StatusLevel Component
 function StatusLevel({ statusLevelDetails }) {
@@ -13,13 +15,18 @@ function StatusLevel({ statusLevelDetails }) {
 }
 
 // SuccessIndicator Component
-function SuccessIndicator({ indicatorData, statusLevel }) {
-    if (!indicatorData) return null;
 
+
+function SuccessIndicator({ indicatorData, evidenceData }) {
+    console.log("DSFDSFDSF",evidenceData)
+    const { statusLevels, updateStatus } = useStatusLevels();  // Access status levels and update function
     const { success_indicator, date_added, composite_key } = indicatorData.properties;
-
-    // Access the status level details from the statusLevel object
-    const statusLevelDetails = statusLevel?.properties || {};
+    const {year_identifier} = evidenceData.evidence.properties;
+    const {status_level} = evidenceData.statusLevel.properties;
+    const handleStatusChange = (newStatus) => {
+        // Call the context method to update the status level in the backend
+        updateStatus(year_identifier, newStatus);
+    };
 
     return (
         <Box mb={4} p={4} border="1px solid teal" borderRadius="md" bg="gray.50">
@@ -30,8 +37,12 @@ function SuccessIndicator({ indicatorData, statusLevel }) {
                     Indicator: {composite_key}
                 </Heading>
 
-                {/* Status Level on the Right */}
-                {statusLevel && <StatusLevel statusLevelDetails={statusLevelDetails} />}
+                {/* Status Level Dropdown on the Right */}
+                <DropdownSelect
+                    options={statusLevels.map((level) => level.status_level)}  // Provide status levels as options
+                    initialValue={status_level}  // Initial status level
+                    onChange={handleStatusChange}  // Handle status change
+                />
             </Flex>
 
             {/* Indicator Details */}
@@ -42,3 +53,4 @@ function SuccessIndicator({ indicatorData, statusLevel }) {
 }
 
 export default SuccessIndicator;
+

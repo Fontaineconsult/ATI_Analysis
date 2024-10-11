@@ -9,7 +9,8 @@ import About from './components/About';
 import SubNavbar from './components/SubNavbar';        // Import the SubNavbar
 import './styles/App.css';
 import {SettingsProvider} from "./context/SettingsContext";
-import {useSettings} from "./context/SettingsContext";  // Import the useSettings hook
+import {useSettings} from "./context/SettingsContext";
+import {StatusLevelProvider} from "./context/StatusLevelContext";  // Import the useSettings hook
 function App() {
     // Access the current academic year using the useSettings hook
     const { currentAcademicYear } = useSettings();
@@ -17,7 +18,7 @@ function App() {
     return (
         <ChakraProvider>
             <DataProvider>
-
+                <StatusLevelProvider>
                     <Box className="App">
                         {/* Main Navigation Bar */}
                         <Flex
@@ -66,6 +67,7 @@ function App() {
                             </Routes>
                         </Container>
                     </Box>
+                </StatusLevelProvider>
 
             </DataProvider>
         </ChakraProvider>
