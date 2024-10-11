@@ -81,7 +81,7 @@ def get_persons():
 @data_api.route('/assign-approver', methods=['PUT'])
 def assign_approver():
     data = request.get_json()
-    yse = data.get('yse')
+    yse = data.get('year_success_evidence')
     employee_id = data.get('employee_id')
 
     if not yse or not employee_id:

@@ -11,3 +11,17 @@ export const updateStatusLevel = async (yse, statusLevel) => {
         throw error;
     }
 };
+
+
+export const assignApprover = async (employeeId, yearSuccessEvidence) => {
+    try {
+        const response = await axios.put(`${process.env.REACT_APP_API_URL}/assign-approver`, {
+            employee_id: employeeId,
+            year_success_evidence: yearSuccessEvidence,
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error assigning approver:', error);
+        throw error;
+    }
+};

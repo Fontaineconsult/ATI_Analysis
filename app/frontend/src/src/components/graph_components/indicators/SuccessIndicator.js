@@ -2,28 +2,23 @@ import React, { useContext } from 'react';
 import { Box, Flex, Heading, Text, Button } from '@chakra-ui/react';
 import DropdownSelect from '../../functional_components/DropdownSelect';
 import { useStatusLevels } from '../../../hooks/useStatusLevels';
-import { UserContext } from '../../../context/UserContext';  // Import UserContext
+import { UserContext } from '../../../context/UserContext';
+import {assignApprover} from "../../../services/api/put";
+import {fetchPrimaryData} from "../../../services/api/get";
+import {SettingsContext} from "../../../context/SettingsContext";  // Import UserContext
 
-// StatusLevel Component
-function StatusLevel({ statusLevelDetails }) {
-    return (
-        <Box>
-            <Text textAlign="right">
-                <strong>Status Level:</strong> {statusLevelDetails.status_level}
-            </Text>
-        </Box>
-    );
-}
+
 
 // SuccessIndicator Component
-function SuccessIndicator({ indicatorData, evidenceData }) {
+function SuccessIndicator({ indicatorData, evidenceData, workingGroup, onSuccessRefresh }) {
     const { statusLevels, updateStatus } = useStatusLevels();  // Access status levels and update function
     const { user } = useContext(UserContext);  // Access the current user from the context
+    const { currentAcademicYear } = useContext(SettingsContext);  // Access the current year from SettingsContext
     const { success_indicator, date_added, composite_key } = indicatorData.properties;
     const { year_identifier } = evidenceData.evidence.properties;
     const { status_level } = evidenceData.statusLevel.properties;
 
-    const adminReviewer = evidenceData.adminReviewer; // Access adminReviewer
+    const adminReviewer = evidenceData.adminReviewers; // Access adminReviewer
     const currentUserId = user?.employee_id || null;  // Get current user's employee ID
 
     // Handle status level change
@@ -31,12 +26,19 @@ function SuccessIndicator({ indicatorData, evidenceData }) {
         updateStatus(year_identifier, newStatus);  // Update status level via context
     };
 
-    // Handle approve action
-    const handleApprove = () => {
+    // Handle approve action and refresh
+    const handleApprove = async () => {
         if (currentUserId) {
-            // Call the backend API to set the current user as AdminReviewer
-            // You should implement this in your API call logic
-            console.log(`Setting ${currentUserId} as admin reviewer for ${year_identifier}`);
+            try {
+                // Assign the approver by hitting the backend API
+                await assignApprover(currentUserId, year_identifier);
+
+                // After assigning approver, refresh the data
+                const refreshedData = await fetchPrimaryData(workingGroup, currentAcademicYear);
+                onSuccessRefresh(refreshedData);  // Call parent function to refresh data
+            } catch (error) {
+                console.error('Error approving success indicator:', error);
+            }
         }
     };
 
@@ -45,7 +47,7 @@ function SuccessIndicator({ indicatorData, evidenceData }) {
     let approveButtonColor = 'yellow';
     let isButtonDisabled = !user;  // Disable button if no user is logged in
 
-    if (adminReviewer && adminReviewer.some((reviewer) => reviewer.employee_id === currentUserId)) {
+    if (adminReviewer?.some((reviewer) => reviewer.properties.employee_id === currentUserId)) {
         approveButtonText = 'Approved';
         approveButtonColor = 'green';
         isButtonDisabled = true;  // Disable the button if already approved by the current user
