@@ -666,6 +666,9 @@ class YearSuccessEvidence(StructuredNode):
     documentation_status = StringProperty()
     resources_status = StringProperty()
     implementation_plan_status = StringProperty()
+    administrative_review_complete = BooleanProperty(default=False)
+    administrative_review_completed_date = DateProperty()
+    administrative_review_completed_by = RelationshipTo("Person", "admin_review_completed_by")
     notes = RelationshipTo("Note", "has_note")
     metrics = RelationshipTo("Metric", "has_metric")
 

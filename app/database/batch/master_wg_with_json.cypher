@@ -13,11 +13,17 @@ OPTIONAL MATCH (indicator)<-[:tracks]-(evidence:YearSuccessEvidence)
 WITH wg, goal, indicator, evidence
   WHERE evidence IS NOT NULL
 
+// Match status level of the evidence
+OPTIONAL MATCH (evidence)-[:status_is]->(statusLevel:StatusLevel)
+
 // Match persons implementing the evidence
 OPTIONAL MATCH (evidence)<-[:implements]-(person:Person)
 
-// Collect persons per evidence
-WITH wg, goal, indicator, evidence,
+// Match admin reviewers
+OPTIONAL MATCH (evidence)-[:admin_review_completed_by]->(adminReviewer:Person)
+
+// Collect persons implementing the evidence
+WITH wg, goal, indicator, evidence, statusLevel, adminReviewer,
      collect(DISTINCT person) AS persons
 
 // Match evidence types and their documentation
@@ -30,6 +36,7 @@ OPTIONAL MATCH (evidence)<-[:is_evidence_for]-(evidenceType)
   evidenceType:Guidance OR
   evidenceType:Tracking
 
+// Match documentation and metrics
 OPTIONAL MATCH (evidenceType)-[:is_documented_by]->(doc:Document)
 OPTIONAL MATCH (evidenceType)-[:is_documented_by]->(web:Webpage)
 OPTIONAL MATCH (evidenceType)-[:is_documented_by]->(note:Note)
@@ -37,7 +44,7 @@ OPTIONAL MATCH (evidenceType)-[:is_documented_by]->(msg:Message)
 OPTIONAL MATCH (evidenceType)-[:has_metric]->(metric:Metric)
 
 // Aggregate documentation and metrics under each evidence type
-WITH wg, goal, indicator, evidence, persons, evidenceType,
+WITH wg, goal, indicator, evidence, statusLevel, adminReviewer, persons, evidenceType,
      collect(DISTINCT doc) AS docs,
      collect(DISTINCT web) AS webs,
      collect(DISTINCT note) AS notes,
@@ -45,7 +52,7 @@ WITH wg, goal, indicator, evidence, persons, evidenceType,
      collect(DISTINCT metric) AS metrics
 
 // Create a map for each evidence type with its documentation and metrics
-WITH wg, goal, indicator, evidence, persons,
+WITH wg, goal, indicator, evidence, statusLevel, adminReviewer, persons, evidenceType, docs, webs, notes, msgs, metrics,
      {
        type: labels(evidenceType)[0],
        evidenceType: evidenceType,
@@ -57,25 +64,27 @@ WITH wg, goal, indicator, evidence, persons,
      } AS evidenceTypeData
 
 // Collect all evidence types under each evidence
-WITH wg, goal, indicator, evidence, persons,
+WITH wg, goal, indicator, evidence, statusLevel, adminReviewer, persons,
      collect(evidenceTypeData) AS evidenceTypes
 
-// Create a map for each evidence with its evidence types and persons
-WITH wg, goal, indicator,
+// Create a map for each evidence with its evidence types, persons, statusLevel, and adminReviewer
+WITH wg, goal, indicator, evidence, statusLevel, adminReviewer, persons, evidenceTypes,
      {
        evidence: evidence,
+       statusLevel: statusLevel,
        evidenceTypes: evidenceTypes,
-       persons: persons
+       persons: persons,
+       adminReviewer: adminReviewer
      } AS evidenceData
 
 // Collect all evidences under each indicator
 WITH wg, goal, indicator, collect(evidenceData) AS evidences
 
-// **Filter out indicators without evidences**
+// Filter out indicators without evidences
   WHERE size(evidences) > 0
 
 // Create a map for each indicator with its evidences
-WITH wg, goal,
+WITH wg, goal, indicator, evidences,
      {
        indicator: indicator,
        evidences: evidences
@@ -100,7 +109,7 @@ WITH wg.name AS workingGroupName, goal, indicators,
      collect(DISTINCT plan) AS plans
 
 // Create a map for each goal with its indicators, accomplishments, and plans
-WITH workingGroupName,
+WITH workingGroupName, goal, indicators, accomplishments, plans,
      {
        goal: goal,
        indicators: indicators,
