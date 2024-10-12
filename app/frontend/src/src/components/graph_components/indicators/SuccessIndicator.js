@@ -68,7 +68,7 @@ function SuccessIndicator({ indicatorData, evidenceData, workingGroup, onSuccess
             />
             <IndicatorDetails
                 description={success_indicator}
-                dateAdded={date_added}
+                persons={evidenceData.persons}
             />
             <ImplementationMasterContainer evidenceData={evidenceData} />
         </Box>
@@ -115,13 +115,37 @@ function IndicatorHeader({
 }
 
 // IndicatorDetails Component
-function IndicatorDetails({ description, dateAdded }) {
+function IndicatorDetails({ description, persons }) {
     return (
         <>
             <Text><strong>Description:</strong> {description}</Text>
-            <Text><strong>Date Added:</strong> {new Date(dateAdded).toLocaleDateString()}</Text>
+            <ResponsiblePersons persons={persons} />
         </>
     );
 }
+
+
+function ResponsiblePersons({ persons }) {
+    if (!persons || persons.length === 0) {
+        return <Text>No responsible persons assigned.</Text>;
+    }
+
+    return (
+        <Box mt={4}>
+            <Heading as="h6" size="sm" mb={2}>
+                Responsible Persons:
+            </Heading>
+        <Flex wrap="wrap" gap={4}>
+            {persons.map((person) => (
+                <Box key={person.id} as="span">
+                    <Text fontSize="sm"><strong>Name:</strong> {person.properties.name}</Text>
+                    <Text fontSize="sm"><strong>Title:</strong> {person.properties.title}</Text>
+                </Box>
+            ))}
+        </Flex>
+</Box>
+);
+}
+
 
 export default SuccessIndicator;

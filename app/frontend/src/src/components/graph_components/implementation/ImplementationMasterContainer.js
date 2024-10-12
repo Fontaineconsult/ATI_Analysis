@@ -1,10 +1,13 @@
-import React, { useState } from 'react';
-import { Box, Button, Flex, Heading, Collapse } from '@chakra-ui/react';
+import React, { useState, useEffect } from 'react';
+import { Box, Button, Flex, Heading, Collapse, Text } from '@chakra-ui/react';
+import EvidenceTypeMasterList from '../evidence/EvidenceTypeMasterList';
 
 function ImplementationMasterContainer({ evidenceData = {}, initialImplementationType = 'Tracker' }) {
-    // Local state for managing which implementation type is selected
+    // Destructure evidenceTypes or use an empty array if none are present
     const { evidenceTypes = [] } = evidenceData;
-    const [selectedImplementationType, setSelectedImplementationType] = useState(initialImplementationType);
+
+    // Local state for managing which implementation type is selected
+    const [selectedImplementationType, setSelectedImplementationType] = useState(null);
 
     // Local state for handling whether the container is expanded or collapsed
     const [isExpanded, setIsExpanded] = useState(false);
@@ -20,6 +23,25 @@ function ImplementationMasterContainer({ evidenceData = {}, initialImplementatio
         'Service'
     ];
 
+    // Effect to reset selectedImplementationType when no evidenceTypes match or when container is collapsed
+    useEffect(() => {
+        if (!evidenceTypes.length) {
+            setSelectedImplementationType(null);  // No evidence, clear the selection
+        } else if (!isTypeAvailable(selectedImplementationType)) {
+            setSelectedImplementationType(null);  // Selected type is invalid, clear the selection
+        }
+    }, [evidenceTypes, selectedImplementationType]);
+
+    // Automatically select the first available implementation type when expanded
+    useEffect(() => {
+        if (isExpanded && evidenceTypes.length && !selectedImplementationType) {
+            const firstAvailableType = implementationTypes.find(isTypeAvailable);
+            if (firstAvailableType) {
+                setSelectedImplementationType(firstAvailableType);  // Set the first available type
+            }
+        }
+    }, [isExpanded, evidenceTypes]);
+
     // Toggle the expanded/collapsed state
     const toggleExpand = () => {
         setIsExpanded(!isExpanded);
@@ -27,7 +49,6 @@ function ImplementationMasterContainer({ evidenceData = {}, initialImplementatio
 
     // Check if the implementation type exists in the evidenceTypes array
     const isTypeAvailable = (type) => {
-
         return evidenceTypes.some(evidenceType => {
             // Check both the direct `type` and the nested `evidenceType.type` for a match
             const directTypeMatch = evidenceType.type && evidenceType.type === type;
@@ -35,6 +56,13 @@ function ImplementationMasterContainer({ evidenceData = {}, initialImplementatio
             return directTypeMatch || nestedTypeMatch;
         });
     };
+
+    // Filter the evidenceTypes based on the currently selected implementation type
+    const filteredEvidence = evidenceTypes.filter(evidenceType => {
+        const directTypeMatch = evidenceType.type && evidenceType.type === selectedImplementationType;
+        const nestedTypeMatch = evidenceType.evidenceType?.properties?.title === selectedImplementationType;
+        return directTypeMatch || nestedTypeMatch;
+    });
 
     return (
         <Box mt={6} border="1px solid teal" borderRadius="md">
@@ -50,30 +78,41 @@ function ImplementationMasterContainer({ evidenceData = {}, initialImplementatio
             <Collapse in={isExpanded} animateOpacity>
                 <Box p={4}>
                     {/* Implementation type selection buttons */}
-                    <Flex wrap="wrap" gap={4} mb={4}>
-                        {implementationTypes.map((type) => (
-                            <Button
-                                key={type}
-                                onClick={() => setSelectedImplementationType(type)}  // Set local state
-                                colorScheme={selectedImplementationType === type ? 'teal' : 'gray'}
-                                aria-pressed={selectedImplementationType === type ? 'true' : 'false'}
-                                variant={selectedImplementationType === type ? 'solid' : 'outline'}
-                                isDisabled={!isTypeAvailable(type)}  // Disable if the type is not in evidenceTypes
-                            >
-                                {type}
-                            </Button>
-                        ))}
-                    </Flex>
+                    {evidenceTypes.length > 0 ? (
+                        <Flex wrap="wrap" gap={4} mb={4}>
+                            {implementationTypes.map((type) => (
+                                <Button
+                                    key={type}
+                                    onClick={() => setSelectedImplementationType(type)}  // Set local state
+                                    colorScheme={selectedImplementationType === type ? 'teal' : 'gray'}
+                                    aria-pressed={selectedImplementationType === type ? 'true' : 'false'}
+                                    variant={selectedImplementationType === type ? 'solid' : 'outline'}
+                                    isDisabled={!isTypeAvailable(type)}  // Disable if the type is not in evidenceTypes
+                                >
+                                    {type}
+                                </Button>
+                            ))}
+                        </Flex>
+                    ) : (
+                        <Text>No Implementation Types Available</Text>
+                    )}
 
                     {/* Render the current selected implementation type */}
-                    <Heading as="h6" size="sm" mb={2}>
-                        Currently Viewing: {selectedImplementationType}
-                    </Heading>
+                    {selectedImplementationType ? (
+                        <Heading as="h6" size="sm" mb={2}>
+                            Currently Viewing: {selectedImplementationType}
+                        </Heading>
+                    ) : (
+                        <Text>No Implementation Type Selected</Text>
+                    )}
 
-                    {/* Placeholder for rendering evidence based on selected type */}
+                    {/* Render filtered evidence data based on selected type, or fallback if no evidence */}
                     <Box>
-                        {/* Conditionally render content based on selected type */}
-                        <p>Content for {selectedImplementationType} will go here.</p>
+                        {filteredEvidence.length > 0 ? (
+                            <EvidenceTypeMasterList evidence={filteredEvidence} />
+                        ) : (
+                            <Text>No Implementation Assigned to this Success Indicator</Text>  // Fallback message
+                        )}
                     </Box>
                 </Box>
             </Collapse>
