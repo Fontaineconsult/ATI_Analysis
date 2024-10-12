@@ -1,13 +1,40 @@
-import React from 'react';
-import { Box, Button, Flex, Text } from '@chakra-ui/react';
+import React, { useState, useEffect } from 'react';
+import { Box, Button, Flex, Text, Modal, ModalOverlay, ModalContent, ModalHeader, ModalBody, ModalCloseButton, useDisclosure } from '@chakra-ui/react';
+import DocumentationMasterViewer from "../documentation/DocumentationMasterContainer";
 
 function EvidenceTypeMasterList({ evidence }) {
-    if (!evidence || evidence.length === 0) {
+    const { isOpen, onOpen, onClose } = useDisclosure();  // Chakra UI hook for modal control
+    const [selectedEvidence, setSelectedEvidence] = useState(null);  // State to track the currently selected evidence
+
+    // Handle opening the modal and setting the selected evidence
+    const handleViewDocumentation = (evidenceItem) => {
+        setSelectedEvidence(evidenceItem);
+        onOpen();  // Open the modal
+    };
+
+    // Count the number of evidence items
+    const evidenceCount = evidence?.length || 0;
+
+    // Inform screen readers of the list summary when it is focused
+    useEffect(() => {
+        if (evidenceCount === 0) return;
+        const listBox = document.getElementById('evidence-list');
+        listBox.setAttribute('aria-label', `Evidence list with ${evidenceCount} items`);
+    }, [evidenceCount]);
+
+    if (evidenceCount === 0) {
         return <Text>No evidence available for this type.</Text>;
     }
 
     return (
-        <Box mt={4} aria-label="Evidence Type List" role="list">
+        <Box
+            mt={4}
+            id="evidence-list"
+            tabIndex={0}  // Make the container focusable for keyboard users
+            role="list"
+            aria-live="polite"  // Update screen readers about changes in the list
+        >
+
             {/* Render each evidence item */}
             {evidence.map((evidenceItem, index) => (
                 <Flex
@@ -20,8 +47,7 @@ function EvidenceTypeMasterList({ evidence }) {
                     mb={3}  // Add margin between items
                     boxShadow="sm"  // Add shadow for slight elevation effect
                     role="listitem"
-
-                    aria-label={`Evidence item ${index + 1}`}
+                    aria-label={`Evidence item ${index + 1} of ${evidenceCount}`}
                 >
                     {/* Evidence type */}
                     <Text flex="1" fontWeight="bold" aria-label="Evidence Type">
@@ -33,7 +59,7 @@ function EvidenceTypeMasterList({ evidence }) {
                         {evidenceItem.evidenceType?.properties?.title || 'Untitled Evidence'}
                     </Text>
 
-                    <Text flex="3" aria-label="Evidence Title">
+                    <Text flex="3" aria-label="Documentation">
                         Documentation:
                     </Text>
 
@@ -41,12 +67,26 @@ function EvidenceTypeMasterList({ evidence }) {
                     <Button
                         colorScheme="teal"
                         size="sm"
-                        aria-label={`View Documentation ${evidenceItem.evidenceType?.properties?.title || 'Untitled Evidence'}`}
+                        onClick={() => handleViewDocumentation(evidenceItem)}  // Handle button click to open modal
+                        aria-label={`View Documentation for ${evidenceItem.evidenceType?.properties?.title || 'Untitled Evidence'}`}
                     >
                         View Documentation
                     </Button>
                 </Flex>
             ))}
+
+            {/* Modal for viewing documentation */}
+            <Modal isOpen={isOpen} onClose={onClose} size="xl">
+                <ModalOverlay />
+                <ModalContent>
+                    <ModalHeader>Documentation Viewer</ModalHeader>
+                    <ModalCloseButton />
+                    <ModalBody>
+                        {/* Pass the selected evidence to the DocumentationMasterViewer */}
+                        <DocumentationMasterViewer documentation={selectedEvidence} />
+                    </ModalBody>
+                </ModalContent>
+            </Modal>
         </Box>
     );
 }

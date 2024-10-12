@@ -1,15 +1,14 @@
 import React from 'react';
 import { Box, Heading } from '@chakra-ui/react';
-import SuccessIndicator from '../graph_components/indicators/SuccessIndicator';  // Import Indicator component
-
+import SuccessIndicator from '../graph_components/indicators/SuccessIndicator';
 
 function EvidenceMasterContainer({ indicators }) {
     if (!indicators || indicators.length === 0) return null;
 
     return (
-        <Box mt={6}>
+        <Box mt={6} aria-live="polite" role="region" aria-label={`(${indicators.length}) Success Indicators Listed`}>
             <Heading as="h5" size="md" mb={4}>
-                Success Indicators
+                Success Indicators ({indicators.length})
             </Heading>
 
             {indicators
@@ -31,5 +30,3 @@ function EvidenceMasterContainer({ indicators }) {
     );
 }
 export default EvidenceMasterContainer;
-
-

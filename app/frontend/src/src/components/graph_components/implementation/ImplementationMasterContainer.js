@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Box, Button, Flex, Heading, Collapse, Text } from '@chakra-ui/react';
 import EvidenceTypeMasterList from '../evidence/EvidenceTypeMasterList';
 
-function ImplementationMasterContainer({ evidenceData = {}, initialImplementationType = 'Tracker' }) {
+function ImplementationMasterContainer({ evidenceData = {},
+                                           compositeKey}) {
     // Destructure evidenceTypes or use an empty array if none are present
     const { evidenceTypes = [] } = evidenceData;
 
@@ -65,17 +66,41 @@ function ImplementationMasterContainer({ evidenceData = {}, initialImplementatio
     });
 
     return (
-        <Box mt={6} border="1px solid teal" borderRadius="md">
+        <Box
+            tabIndex={0}
+            role="region" // Define this as a region for screen readers
+            aria-labelledby="implementation-container-heading"
+            aria-expanded={isExpanded} // Let the screen reader know whether it is expanded
+            border="1px solid teal"
+            borderRadius="md"
+            mt={6}
+        >
             {/* Header with a button to expand/collapse the ImplementationMasterContainer */}
             <Flex justify="space-between" align="center" bg="teal.600" color="white" p={4} borderTopRadius="md">
-                <Heading as="h5" size="md" textAlign="center" flex="1">Implementation Details</Heading>
-                <Button size="sm" onClick={toggleExpand} colorScheme="whiteAlpha" variant="outline" ml={4}>
+                <Heading
+                    as="h5"
+                    size="md"
+                    textAlign="center"
+                    flex="1"
+                    id="implementation-container-heading"
+                >
+                    Implementation Details for {compositeKey}
+                </Heading>
+                <Button
+                    size="sm"
+                    onClick={toggleExpand}
+                    colorScheme="whiteAlpha"
+                    variant="outline"
+                    aria-controls="implementation-content" // Controls the collapse/expand content
+                    aria-expanded={isExpanded} // Reflect the expanded/collapsed state
+                    ml={4}
+                >
                     {isExpanded ? 'Collapse' : 'Expand'}
                 </Button>
             </Flex>
 
             {/* Collapse content when not expanded */}
-            <Collapse in={isExpanded} animateOpacity>
+            <Collapse in={isExpanded} animateOpacity id="implementation-content">
                 <Box p={4}>
                     {/* Implementation type selection buttons */}
                     {evidenceTypes.length > 0 ? (
@@ -121,3 +146,4 @@ function ImplementationMasterContainer({ evidenceData = {}, initialImplementatio
 }
 
 export default ImplementationMasterContainer;
+

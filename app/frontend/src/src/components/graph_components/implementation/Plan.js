@@ -7,7 +7,7 @@ function Plan({ planData }) {
     const { name, plan_description, is_key_plan } = planData.properties;
 
     return (
-        <Box mb={4} border="1px solid teal" p={3} borderRadius="md" bg="gray.50">
+        <Box tabIndex={0} mb={4} border="1px solid teal" p={3} borderRadius="md" bg="gray.50">
             <Heading as="h5" size="sm" mb={2}>
                 Plan: {name}
             </Heading>

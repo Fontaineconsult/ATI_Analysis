@@ -1,5 +1,6 @@
 import React from 'react';
-import { ChakraProvider, Box, Flex, Heading, Button, Spacer, Container, Text } from '@chakra-ui/react';
+import { ChakraProvider, Box, Flex, Heading, Button, Spacer, Container, Text, Menu, MenuButton, MenuList, MenuItem } from '@chakra-ui/react';
+import { ChevronDownIcon } from '@chakra-ui/icons';
 import { Routes, Route, Link as RouterLink } from 'react-router-dom';  // Use RouterLink to avoid nested links
 import { DataProvider } from './context/DataContext';
 import { useData } from './hooks/useData';
@@ -14,15 +15,30 @@ import { UserProvider, UserContext } from './context/UserContext';
 
 function App() {
     // Access the current academic year using the useSettings hook
-    const { currentAcademicYear } = useSettings();
+    const { currentAcademicYear, updateCurrentAcademicYear } = useSettings();
+    const { updateYear } = useData();  // Access the updateYear method to fetch new data
 
     // Access the current user using the UserContext
     const { user } = React.useContext(UserContext);
 
+    // Year options for the dropdown
+    const yearOptions = [
+        '2020-2021',
+        '2021-2022',
+        '2022-2023',
+        '2023-2024',
+        '2024-2025',
+    ];
+
+    const handleYearChange = (year) => {
+        updateCurrentAcademicYear(year);  // Update global year state
+        updateYear(year);  // Fetch new data for the selected year
+    };
+
     return (
         <ChakraProvider>
             <UserProvider>
-                <DataProvider>
+
                     <StatusLevelProvider>
                         <Box className="App">
                             {/* Main Navigation Bar */}
@@ -53,13 +69,26 @@ function App() {
 
                                 <Spacer />
 
-                                {/* Display the current academic year and user name on the right */}
-                                <Flex direction="column" alignItems="flex-end">
-                                    <Text fontSize="md" fontWeight="bold" aria-label="Current Academic Year">
-                                        Current Year: {currentAcademicYear}
-                                    </Text>
+                                {/* Year Dropdown Menu */}
+                                <Menu>
+                                    <MenuButton as={Button} rightIcon={<ChevronDownIcon />} colorScheme="teal">
+                                        {currentAcademicYear || 'Select Year'}
+                                    </MenuButton>
+                                    <MenuList>
+                                        {yearOptions.map((year) => (
+                                            <MenuItem
+                                                key={year}
+                                                onClick={() => handleYearChange(year)}
+                                            >
+                                                {year}
+                                            </MenuItem>
+                                        ))}
+                                    </MenuList>
+                                </Menu>
+
+                                {/* Display the current user name on the right */}
+                                <Flex direction="column" alignItems="flex-end" ml={4}>
                                     <Text fontSize="md" fontWeight="bold" aria-label="Current User">
-                                        {/* Show the current user's name or fallback if not available */}
                                         {user ? `Notating as: ${user.name}` : 'No Active User'}
                                     </Text>
                                 </Flex>
@@ -78,7 +107,7 @@ function App() {
                             </Container>
                         </Box>
                     </StatusLevelProvider>
-                </DataProvider>
+
             </UserProvider>
         </ChakraProvider>
     );

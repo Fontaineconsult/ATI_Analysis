@@ -10,12 +10,10 @@ function Goal({ goalData, plans, accomplishments, indicators }) {  // Pass indic
 
     return (
         <Box as={"section"} mb={6} border="1px solid teal" p={4} borderRadius="md" bg="gray.50" aria-label={`Goal ${goal_number}: ${name}`}>
-            <Heading as="h4" size="md" mb={4}>
+            <Heading tabIndex={0} as="h4" size="md" mb={4}>
                 Goal {goal_number}: {name}
             </Heading>
-            <Text><strong>Goal:</strong> {goal}</Text>
-            <Text><strong>Date Added:</strong> {new Date(date_added).toLocaleDateString()}</Text>
-
+            <Text tabIndex={0} mb={4}><strong>Goal:</strong> {goal}</Text>
             {/* Render the grouped Plans and Accomplishments using GoalDetails */}
             <GoalDetails plans={plans} accomplishments={accomplishments} />
 

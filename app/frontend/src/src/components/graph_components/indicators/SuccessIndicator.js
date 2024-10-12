@@ -55,7 +55,17 @@ function SuccessIndicator({ indicatorData, evidenceData, workingGroup, onSuccess
     }
 
     return (
-        <Box as={"section"} mb={4} p={4} border="1px solid teal" borderRadius="md" bg="gray.50" aria-label={`Indicator: ${composite_key}`} >
+        <Box
+            as={"section"}
+            mb={4}
+            p={4}
+            border="1px solid teal"
+            borderRadius="md"
+            bg="gray.50"
+            tabIndex={0}  // Make this box focusable by keyboard
+            aria-labelledby={`indicator-${composite_key}`}  // Associate the heading with the entire section
+            aria-describedby={`indicator-details-${composite_key}`}  // Describes the section's content
+        >
             <IndicatorHeader
                 compositeKey={composite_key}
                 statusLevels={statusLevels}
@@ -69,8 +79,9 @@ function SuccessIndicator({ indicatorData, evidenceData, workingGroup, onSuccess
             <IndicatorDetails
                 description={success_indicator}
                 persons={evidenceData.persons}
+                compositeKey={composite_key}  // Pass composite key to match aria-describedby
             />
-            <ImplementationMasterContainer evidenceData={evidenceData} />
+            <ImplementationMasterContainer evidenceData={evidenceData} compositeKey={composite_key} />
         </Box>
     );
 }
@@ -89,7 +100,7 @@ function IndicatorHeader({
     return (
         <Flex justify="space-between" align="center" mb={2}>
             {/* Indicator Heading on the Left */}
-            <Heading as="h6" size="sm">
+            <Heading as="h6" size="sm" id={`indicator-${compositeKey}`}>
                 Indicator: {compositeKey}
             </Heading>
 
@@ -115,37 +126,36 @@ function IndicatorHeader({
 }
 
 // IndicatorDetails Component
-function IndicatorDetails({ description, persons }) {
+function IndicatorDetails({ description, persons, compositeKey }) {
     return (
         <>
-            <Text><strong>Description:</strong> {description}</Text>
-            <ResponsiblePersons persons={persons} />
+            <Text id={`indicator-details-${compositeKey}`}><strong>Description:</strong> {description}</Text>
+            <ResponsiblePersons persons={persons} compositeKey={compositeKey} />
         </>
     );
 }
 
-
-function ResponsiblePersons({ persons }) {
+// ResponsiblePersons Component
+function ResponsiblePersons({ persons, compositeKey }) {
     if (!persons || persons.length === 0) {
-        return <Text>No responsible persons assigned.</Text>;
+        return <Text color="red.500" fontWeight="bold" mt={4}>No responsible persons assigned.</Text>;
     }
 
     return (
-        <Box mt={4}>
-            <Heading as="h6" size="sm" mb={2}>
+        <Box mt={4} aria-labelledby={`responsible-persons-heading-${compositeKey}`}>
+            <Heading as="h6" size="sm" mb={2} id={`responsible-persons-heading-${compositeKey}`}>
                 Responsible Persons:
             </Heading>
-        <Flex wrap="wrap" gap={4}>
-            {persons.map((person) => (
-                <Box key={person.id} as="span">
-                    <Text fontSize="sm"><strong>Name:</strong> {person.properties.name}</Text>
-                    <Text fontSize="sm"><strong>Title:</strong> {person.properties.title}</Text>
-                </Box>
-            ))}
-        </Flex>
-</Box>
-);
+            <Flex wrap="wrap" gap={4} aria-label="List of responsible persons">
+                {persons.map((person) => (
+                    <Box key={person.id} as="span" aria-labelledby={`person-${person.id}`}>
+                        <Text id={`person-name-${person.id}`} fontSize="sm"><strong>Name:</strong> {person.properties.name}</Text>
+                        <Text id={`person-title-${person.id}`} fontSize="sm"><strong>Title:</strong> {person.properties.title}</Text>
+                    </Box>
+                ))}
+            </Flex>
+        </Box>
+    );
 }
-
 
 export default SuccessIndicator;
