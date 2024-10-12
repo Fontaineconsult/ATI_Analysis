@@ -55,7 +55,7 @@ function SuccessIndicator({ indicatorData, evidenceData, workingGroup, onSuccess
     }
 
     return (
-        <Box mb={4} p={4} border="1px solid teal" borderRadius="md" bg="gray.50">
+        <Box as={"section"} mb={4} p={4} border="1px solid teal" borderRadius="md" bg="gray.50" aria-label={`Indicator: ${composite_key}`} >
             <IndicatorHeader
                 compositeKey={composite_key}
                 statusLevels={statusLevels}

@@ -1,26 +1,24 @@
 import React, { useState } from 'react';
-import { Select, Box } from '@chakra-ui/react';
+import {Select, Box, FormControl, FormLabel} from '@chakra-ui/react';
 
-const DropdownSelect = ({ options, initialValue, onChange }) => {
-    const [selectedValue, setSelectedValue] = useState(initialValue);
-
-    const handleChange = (event) => {
-        const newValue = event.target.value;
-        setSelectedValue(newValue);
-        onChange(newValue);  // Call parent-provided function to handle the update
-    };
-
+function DropdownSelect({ options, initialValue, onChange }) {
     return (
-        <Box>
-            <Select value={selectedValue} onChange={handleChange}>
-                {options.map((option) => (
-                    <option key={option} value={option}>
+        <FormControl>
+            <Select
+                id="status-select"
+                value={initialValue}
+                onChange={(e) => onChange(e.target.value)}
+                title="Select Status Level"  // Adds a tooltip-like label
+            >
+                {options.map((option, index) => (
+                    <option key={index} value={option}>
                         {option}
                     </option>
                 ))}
             </Select>
-        </Box>
+
+        </FormControl>
     );
-};
+}
 
 export default DropdownSelect;

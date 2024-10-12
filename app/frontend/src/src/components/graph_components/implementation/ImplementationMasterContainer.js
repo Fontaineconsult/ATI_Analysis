@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { Box, Button, Flex, Heading, Collapse } from '@chakra-ui/react';
 
-function ImplementationMasterContainer({ initialImplementationType = 'Tracker' }) {
+function ImplementationMasterContainer({ evidenceData = {}, initialImplementationType = 'Tracker' }) {
     // Local state for managing which implementation type is selected
+    const { evidenceTypes = [] } = evidenceData;
     const [selectedImplementationType, setSelectedImplementationType] = useState(initialImplementationType);
 
     // Local state for handling whether the container is expanded or collapsed
@@ -22,6 +23,17 @@ function ImplementationMasterContainer({ initialImplementationType = 'Tracker' }
     // Toggle the expanded/collapsed state
     const toggleExpand = () => {
         setIsExpanded(!isExpanded);
+    };
+
+    // Check if the implementation type exists in the evidenceTypes array
+    const isTypeAvailable = (type) => {
+
+        return evidenceTypes.some(evidenceType => {
+            // Check both the direct `type` and the nested `evidenceType.type` for a match
+            const directTypeMatch = evidenceType.type && evidenceType.type === type;
+            const nestedTypeMatch = evidenceType.evidenceType?.properties?.title === type;
+            return directTypeMatch || nestedTypeMatch;
+        });
     };
 
     return (
@@ -46,6 +58,7 @@ function ImplementationMasterContainer({ initialImplementationType = 'Tracker' }
                                 colorScheme={selectedImplementationType === type ? 'teal' : 'gray'}
                                 aria-pressed={selectedImplementationType === type ? 'true' : 'false'}
                                 variant={selectedImplementationType === type ? 'solid' : 'outline'}
+                                isDisabled={!isTypeAvailable(type)}  // Disable if the type is not in evidenceTypes
                             >
                                 {type}
                             </Button>

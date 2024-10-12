@@ -1,16 +1,16 @@
 import React from 'react';
 import { ChakraProvider, Box, Flex, Heading, Button, Spacer, Container, Text } from '@chakra-ui/react';
-import { Routes, Route, Link } from 'react-router-dom';
-import { DataProvider } from './context/DataContext';  // Import the DataProvider
-import { useData } from './hooks/useData';             // Hook to access data
+import { Routes, Route, Link as RouterLink } from 'react-router-dom';  // Use RouterLink to avoid nested links
+import { DataProvider } from './context/DataContext';
+import { useData } from './hooks/useData';
 import AtiExplorer from './components/AtiExplorer';
 import Dashboard from './components/Dashboard';
 import About from './components/About';
-import SubNavbar from './components/SubNavbar';        // Import the SubNavbar
+import SubNavbar from './components/SubNavbar';
 import './styles/App.css';
-import { SettingsProvider, useSettings } from "./context/SettingsContext"; // Import useSettings hook
+import { SettingsProvider, useSettings } from "./context/SettingsContext";
 import { StatusLevelProvider } from "./context/StatusLevelContext";
-import { UserProvider, UserContext } from './context/UserContext';  // Import the UserProvider and UserContext
+import { UserProvider, UserContext } from './context/UserContext';
 
 function App() {
     // Access the current academic year using the useSettings hook
@@ -21,7 +21,7 @@ function App() {
 
     return (
         <ChakraProvider>
-            <UserProvider>  {/* Wrap the app in UserProvider */}
+            <UserProvider>
                 <DataProvider>
                     <StatusLevelProvider>
                         <Box className="App">
@@ -40,14 +40,14 @@ function App() {
                                         SF State ATI Knowledge Graph
                                     </Heading>
                                     {/* Main Navigation Buttons */}
-                                    <Button colorScheme="teal" variant="solid" mr={4}>
-                                        <Link to="/ati-explorer">ATI Explorer</Link>
+                                    <Button as={RouterLink} to="/ati-explorer" colorScheme="teal" variant="solid" mr={4}>
+                                        ATI Explorer
                                     </Button>
-                                    <Button colorScheme="teal" variant="solid" mr={4}>
-                                        <Link to="/dashboard">Dashboard</Link>
+                                    <Button as={RouterLink} to="/dashboard" colorScheme="teal" variant="solid" mr={4}>
+                                        Dashboard
                                     </Button>
-                                    <Button colorScheme="teal" variant="solid" mr={4}>
-                                        <Link to="/about">About</Link>
+                                    <Button as={RouterLink} to="/about" colorScheme="teal" variant="solid" mr={4}>
+                                        About
                                     </Button>
                                 </Flex>
 

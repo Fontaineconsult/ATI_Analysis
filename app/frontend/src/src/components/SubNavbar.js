@@ -41,7 +41,7 @@ function SubNavbar() {
     }
 
     return (
-        <Box bg="gray.100" py={2} boxShadow="md"> {/* Sub-navbar styling */}
+        <Box as={"nav"} bg="gray.100" py={2} boxShadow="md"> {/* Sub-navbar styling */}
             <Flex justify="center" gap={4}>
                 {subNavItems.map((item) => (
                     // If we are in ATI Explorer, use onClick to update the year in global state

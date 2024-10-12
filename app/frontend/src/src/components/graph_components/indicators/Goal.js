@@ -9,7 +9,7 @@ function Goal({ goalData, plans, accomplishments, indicators }) {  // Pass indic
     const { goal_number, name, goal, date_added } = goalData.properties;
 
     return (
-        <Box mb={6} border="1px solid teal" p={4} borderRadius="md" bg="gray.50">
+        <Box as={"section"} mb={6} border="1px solid teal" p={4} borderRadius="md" bg="gray.50" aria-label={`Goal ${goal_number}: ${name}`}>
             <Heading as="h4" size="md" mb={4}>
                 Goal {goal_number}: {name}
             </Heading>
