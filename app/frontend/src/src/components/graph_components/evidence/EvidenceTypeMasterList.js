@@ -76,7 +76,7 @@ function EvidenceTypeMasterList({ evidence }) {
             ))}
 
             {/* Modal for viewing documentation */}
-            <Modal isOpen={isOpen} onClose={onClose} size="xl">
+            <Modal isOpen={isOpen} onClose={onClose} size="4xl">
                 <ModalOverlay />
                 <ModalContent>
                     <ModalHeader>Documentation Viewer</ModalHeader>

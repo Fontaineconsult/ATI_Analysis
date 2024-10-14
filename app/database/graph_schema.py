@@ -903,6 +903,7 @@ class Document(StructuredNode):
     is_milestone_and_measures_documentation = StringProperty()
     depreciated = BooleanProperty()
     depreciated_date = DateProperty()
+    include_in_report = BooleanProperty(default=True)
     notes = RelationshipTo("Note", "has_note")
 
     def serialize(self):
@@ -915,6 +916,7 @@ class Document(StructuredNode):
             "name": self.name,
             "file_path": self.file_path,
             "uri_path": self.uri_path,
+            "include_in_report": self.include_in_report,
             "is_administrative_review_documentation": self.is_administrative_review_documentation,
             "is_milestone_and_measures_documentation": self.is_milestone_and_measures_documentation,
 
@@ -938,6 +940,7 @@ class Webpage(StructuredNode):
     no_longer_exists = BooleanProperty()
     depreciated = BooleanProperty()
     depreciated_date = DateProperty()
+    include_in_report = BooleanProperty(default=True)
     notes = RelationshipTo("Note", "has_note")
 
     def serialize(self):
@@ -977,6 +980,8 @@ class Note(StructuredNode):
     content = StringProperty()
     depreciated = BooleanProperty()
     depreciated_date = DateProperty()
+    created_by = RelationshipTo("Person", "created_by")
+    include_in_report = BooleanProperty(default=True)
 
     def serialize(self):
         """
@@ -989,7 +994,8 @@ class Note(StructuredNode):
             "content": self.content,
             "dateCreated": self.date_created,
             "depreciated": self.depreciated,
-            "depreciated_date": self.depreciated_date
+            "depreciated_date": self.depreciated_date,
+            "include_in_report": self.include_in_report
 
         }
 
@@ -1015,6 +1021,8 @@ class Message(StructuredNode):
     date_created = StringProperty
     type = StringProperty()
     depreciated = BooleanProperty()
+    include_in_report = BooleanProperty(default=True)
+
 
     def serialize(self):
         """
@@ -1029,7 +1037,8 @@ class Message(StructuredNode):
                 "uri_path": self.uri_path,
                 "date_created": self.date_created,
                 "type": self.type,
-                "depreciated": self.depreciated
+                "depreciated": self.depreciated,
+                "include_in_report": self.include_in_report
 
         }
 
@@ -1063,6 +1072,7 @@ class Metric(StructuredNode):
     comment = StringProperty()
     notes = RelationshipTo("Note", "has_note")
     academic_year = RelationshipTo("AcademicYear", "measured_in_year")
+    include_in_report = BooleanProperty(default=True)
 
 
     @staticmethod
@@ -1087,7 +1097,8 @@ class Metric(StructuredNode):
             "description": self.description,
             "single_value": self.single_value,
             "comment": self.comment,
-            "data": self.get_data() if self.value_dict else None
+            "data": self.get_data() if self.value_dict else None,
+            "include_in_report": self.include_in_report
 
 
         }

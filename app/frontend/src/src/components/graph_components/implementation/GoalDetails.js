@@ -5,7 +5,7 @@ import Accomplishment from './Accomplishment';  // Import Accomplishment compone
 
 function GoalDetails({ plans, accomplishments }) {
     return (
-    <Box>
+    <Box tabIndex={0}>
         <h2>Plans and Accomplishments</h2>
         <Accordion allowToggle>
             {/* Accordion for Plans */}
