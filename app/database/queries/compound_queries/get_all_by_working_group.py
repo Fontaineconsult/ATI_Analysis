@@ -15,12 +15,19 @@ def fetch_evidence_for_working_group(working_group, academic_year):
         
         // Match evidences linked to the indicators for the specified academic year
         OPTIONAL MATCH (indicator)<-[:tracks]-(evidence:YearSuccessEvidence)
-                               -[:evidence_in_year]->(year:AcademicYear)
+                                   -[:evidence_in_year]->(year:AcademicYear)
         WHERE year.name = $academic_year
         
         // Filter out indicators without evidence
         WITH wg, goal, indicator, evidence
         WHERE evidence IS NOT NULL
+        
+        // Match notes connected to the evidence
+        OPTIONAL MATCH (evidence)-[:has_note]->(evidenceNote:Note)
+        
+        // Collect the notes per evidence
+        WITH wg, goal, indicator, evidence,
+             collect(DISTINCT evidenceNote) AS evidenceNotes
         
         // Match status level of the evidence
         OPTIONAL MATCH (evidence)-[:status_is]->(statusLevel:StatusLevel)
@@ -32,7 +39,7 @@ def fetch_evidence_for_working_group(working_group, academic_year):
         OPTIONAL MATCH (evidence)-[:admin_review_completed_by]->(adminReviewer:Person)
         
         // Collect persons and admin reviewers
-        WITH wg, goal, indicator, evidence, statusLevel,
+        WITH wg, goal, indicator, evidence, evidenceNotes, statusLevel,
              collect(DISTINCT person) AS persons,
              collect(DISTINCT adminReviewer) AS adminReviewers
         
@@ -54,7 +61,7 @@ def fetch_evidence_for_working_group(working_group, academic_year):
         OPTIONAL MATCH (evidenceType)-[:has_metric]->(metric:Metric)
         
         // Aggregate documentation and metrics under each evidence type
-        WITH wg, goal, indicator, evidence, statusLevel, adminReviewers, persons, evidenceType,
+        WITH wg, goal, indicator, evidence, evidenceNotes, statusLevel, adminReviewers, persons, evidenceType,
              collect(DISTINCT doc) AS docs,
              collect(DISTINCT web) AS webs,
              collect(DISTINCT note) AS notes,
@@ -62,7 +69,7 @@ def fetch_evidence_for_working_group(working_group, academic_year):
              collect(DISTINCT metric) AS metrics
         
         // Create a map for each evidence type with its documentation and metrics
-        WITH wg, goal, indicator, evidence, statusLevel, adminReviewers, persons,
+        WITH wg, goal, indicator, evidence, evidenceNotes, statusLevel, adminReviewers, persons,
              {
                type: labels(evidenceType)[0],
                evidenceType: evidenceType,
@@ -74,17 +81,18 @@ def fetch_evidence_for_working_group(working_group, academic_year):
              } AS evidenceTypeData
         
         // Collect all evidence types under each evidence
-        WITH wg, goal, indicator, evidence, statusLevel, adminReviewers, persons,
+        WITH wg, goal, indicator, evidence, evidenceNotes, statusLevel, adminReviewers, persons,
              collect(evidenceTypeData) AS evidenceTypes
         
-        // Create a map for each evidence with its evidence types, persons, statusLevel, and adminReviewers
-        WITH wg, goal, indicator, evidence, statusLevel, adminReviewers, persons, evidenceTypes,
+        // Create a map for each evidence with its evidence types, persons, statusLevel, adminReviewers, and has_notes
+        WITH wg, goal, indicator, evidence, evidenceNotes, statusLevel, adminReviewers, persons, evidenceTypes,
              {
                evidence: evidence,
                statusLevel: statusLevel,
                evidenceTypes: evidenceTypes,
                persons: persons,
-               adminReviewers: adminReviewers
+               adminReviewers: adminReviewers,
+               has_notes: evidenceNotes  // Include evidence notes under each evidence
              } AS evidenceData
         
         // Collect all evidences under each indicator

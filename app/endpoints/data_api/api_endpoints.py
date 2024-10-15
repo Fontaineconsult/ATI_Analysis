@@ -97,4 +97,10 @@ def assign_approver():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+@data_api.route('/notes', methods=['POST','PUT'])
+def add_or_update_notes():
+    data = request.get_json()
+    yse = data.get('year_success_evidence')
+    notes_object = data.get('note')
+    created_by = data.get('created_by')
 

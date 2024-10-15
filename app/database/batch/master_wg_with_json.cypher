@@ -22,9 +22,10 @@ OPTIONAL MATCH (evidence)<-[:implements]-(person:Person)
 // Match admin reviewers
 OPTIONAL MATCH (evidence)-[:admin_review_completed_by]->(adminReviewer:Person)
 
-// Collect persons implementing the evidence
-WITH wg, goal, indicator, evidence, statusLevel, adminReviewer,
-     collect(DISTINCT person) AS persons
+// Collect persons and admin reviewers
+WITH wg, goal, indicator, evidence, statusLevel,
+     collect(DISTINCT person) AS persons,
+     collect(DISTINCT adminReviewer) AS adminReviewers
 
 // Match evidence types and their documentation
 OPTIONAL MATCH (evidence)<-[:is_evidence_for]-(evidenceType)
@@ -44,7 +45,7 @@ OPTIONAL MATCH (evidenceType)-[:is_documented_by]->(msg:Message)
 OPTIONAL MATCH (evidenceType)-[:has_metric]->(metric:Metric)
 
 // Aggregate documentation and metrics under each evidence type
-WITH wg, goal, indicator, evidence, statusLevel, adminReviewer, persons, evidenceType,
+WITH wg, goal, indicator, evidence, statusLevel, adminReviewers, persons, evidenceType,
      collect(DISTINCT doc) AS docs,
      collect(DISTINCT web) AS webs,
      collect(DISTINCT note) AS notes,
@@ -52,7 +53,7 @@ WITH wg, goal, indicator, evidence, statusLevel, adminReviewer, persons, evidenc
      collect(DISTINCT metric) AS metrics
 
 // Create a map for each evidence type with its documentation and metrics
-WITH wg, goal, indicator, evidence, statusLevel, adminReviewer, persons, evidenceType, docs, webs, notes, msgs, metrics,
+WITH wg, goal, indicator, evidence, statusLevel, adminReviewers, persons,
      {
        type: labels(evidenceType)[0],
        evidenceType: evidenceType,
@@ -64,17 +65,17 @@ WITH wg, goal, indicator, evidence, statusLevel, adminReviewer, persons, evidenc
      } AS evidenceTypeData
 
 // Collect all evidence types under each evidence
-WITH wg, goal, indicator, evidence, statusLevel, adminReviewer, persons,
+WITH wg, goal, indicator, evidence, statusLevel, adminReviewers, persons,
      collect(evidenceTypeData) AS evidenceTypes
 
-// Create a map for each evidence with its evidence types, persons, statusLevel, and adminReviewer
-WITH wg, goal, indicator, evidence, statusLevel, adminReviewer, persons, evidenceTypes,
+// Create a map for each evidence with its evidence types, persons, statusLevel, and adminReviewers
+WITH wg, goal, indicator, evidence, statusLevel, adminReviewers, persons, evidenceTypes,
      {
        evidence: evidence,
        statusLevel: statusLevel,
        evidenceTypes: evidenceTypes,
        persons: persons,
-       adminReviewer: adminReviewer
+       adminReviewers: adminReviewers
      } AS evidenceData
 
 // Collect all evidences under each indicator

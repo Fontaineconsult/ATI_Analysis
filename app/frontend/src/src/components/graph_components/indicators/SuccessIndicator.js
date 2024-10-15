@@ -1,5 +1,5 @@
 import React, { useContext } from 'react';
-import { Box, Flex, Heading, Text, Button } from '@chakra-ui/react';
+import { Box, Flex, Heading, Text, Button, Modal, ModalOverlay, ModalContent, ModalHeader, ModalBody, ModalCloseButton, useDisclosure } from '@chakra-ui/react';
 import DropdownSelect from '../../functional_components/DropdownSelect';
 import { useStatusLevels } from '../../../hooks/useStatusLevels';
 import { UserContext } from '../../../context/UserContext';
@@ -7,51 +7,48 @@ import { assignApprover } from '../../../services/api/put';
 import { fetchPrimaryData } from '../../../services/api/get';
 import { SettingsContext } from '../../../context/SettingsContext';
 import ImplementationMasterContainer from "../implementation/ImplementationMasterContainer";
+import YSENoteMasterContainer from "../documentation/YSENoteMasterContainer";
+
 
 // Main SuccessIndicator Component
-function SuccessIndicator({ indicatorData, evidenceData, workingGroup, onSuccessRefresh }) {
-    const { statusLevels, updateStatus } = useStatusLevels();  // Access status levels and update function
-    const { user } = useContext(UserContext);  // Access the current user from the context
-    const { currentAcademicYear } = useContext(SettingsContext);  // Access the current year from SettingsContext
+function SuccessIndicator({ indicatorData, evidenceData, workingGroup, onSuccessRefresh, bgColor }) {
+    const { statusLevels, updateStatus } = useStatusLevels();
+    const { user } = useContext(UserContext);
+    const { currentAcademicYear } = useContext(SettingsContext);
 
-    // Destructure properties from indicatorData and evidenceData
     const { success_indicator, date_added, composite_key } = indicatorData.properties;
     const { year_identifier } = evidenceData.evidence.properties;
     const { status_level } = evidenceData.statusLevel.properties;
 
-    const adminReviewers = evidenceData.adminReviewers; // Access adminReviewers (note the plural)
-    const currentUserId = user?.employee_id || null;  // Get current user's employee ID
+    const adminReviewers = evidenceData.adminReviewers;
+    const currentUserId = user?.employee_id || null;
 
     // Handle status level change
     const handleStatusChange = (newStatus) => {
-        updateStatus(year_identifier, newStatus);  // Update status level via context
+        updateStatus(year_identifier, newStatus);
     };
 
     // Handle approve action and refresh
     const handleApprove = async () => {
         if (currentUserId) {
             try {
-                // Assign the approver by hitting the backend API
                 await assignApprover(currentUserId, year_identifier);
-
-                // After assigning approver, refresh the data
                 const refreshedData = await fetchPrimaryData(workingGroup, currentAcademicYear);
-                onSuccessRefresh(refreshedData);  // Call parent function to refresh data
+                onSuccessRefresh(refreshedData);
             } catch (error) {
                 console.error('Error approving success indicator:', error);
             }
         }
     };
 
-    // Determine button label and state based on adminReviewers
     let approveButtonText = 'Approve';
     let approveButtonColor = 'yellow';
-    let isButtonDisabled = !user;  // Disable button if no user is logged in
+    let isButtonDisabled = !user;
 
     if (adminReviewers?.some((reviewer) => reviewer.properties.employee_id === currentUserId)) {
         approveButtonText = 'Approved';
         approveButtonColor = 'green';
-        isButtonDisabled = true;  // Disable the button if already approved by the current user
+        isButtonDisabled = true;
     }
 
     return (
@@ -61,10 +58,10 @@ function SuccessIndicator({ indicatorData, evidenceData, workingGroup, onSuccess
             p={4}
             border="1px solid teal"
             borderRadius="md"
-            bg="gray.50"
-            tabIndex={0}  // Make this box focusable by keyboard
-            aria-labelledby={`indicator-${composite_key}`}  // Associate the heading with the entire section
-            aria-describedby={`indicator-details-${composite_key}`}  // Describes the section's content
+            bg={bgColor}  // Apply the background color passed as a prop
+            tabIndex={0}
+            aria-labelledby={`indicator-${composite_key}`}
+            aria-describedby={`indicator-details-${composite_key}`}
         >
             <IndicatorHeader
                 compositeKey={composite_key}
@@ -75,16 +72,18 @@ function SuccessIndicator({ indicatorData, evidenceData, workingGroup, onSuccess
                 approveButtonColor={approveButtonColor}
                 isButtonDisabled={isButtonDisabled}
                 onApprove={handleApprove}
+                notes={evidenceData.has_notes}
             />
             <IndicatorDetails
                 description={success_indicator}
                 persons={evidenceData.persons}
-                compositeKey={composite_key}  // Pass composite key to match aria-describedby
+                compositeKey={composite_key}
             />
             <ImplementationMasterContainer evidenceData={evidenceData} compositeKey={composite_key} />
         </Box>
     );
 }
+
 
 // IndicatorHeader Component
 function IndicatorHeader({
@@ -96,7 +95,10 @@ function IndicatorHeader({
                              approveButtonColor,
                              isButtonDisabled,
                              onApprove,
+                             notes,
                          }) {
+    const { isOpen, onOpen, onClose } = useDisclosure();  // Control modal state
+
     return (
         <Flex justify="space-between" align="center" mb={2}>
             {/* Indicator Heading on the Left */}
@@ -106,21 +108,51 @@ function IndicatorHeader({
 
             {/* Status Level Dropdown and Approve Button on the Right */}
             <Flex align="center">
-                <DropdownSelect
-                    options={statusLevels.map((level) => level.status_level)}  // Provide status levels as options
-                    initialValue={statusLevel}  // Initial status level
-                    onChange={onStatusChange}  // Handle status change
-                />
+                {/* View Notes Button */}
+                <Button
+                    mr={4}
+                    onClick={onOpen}
+                    colorScheme="teal"
+                    aria-label="View Notes"
+                    padding={"15px"}
+                >
+                    View Notes
+                </Button>
+
+                {/* Status Level Dropdown */}
+                <Box width={"170px"} >
+                    <DropdownSelect
+                        options={statusLevels.map((level) => level.status_level)}  // Provide status levels as options
+                        initialValue={statusLevel}  // Initial status level
+                        onChange={onStatusChange}  // Handle status change
+                         // Set dropdown width to half the button width
+                    />
+
+                </Box>
+
                 {/* Approve Button */}
                 <Button
                     ml={4}
                     colorScheme={approveButtonColor}
                     onClick={onApprove}
                     isDisabled={isButtonDisabled}  // Disable the button based on user and approval status
+
                 >
                     {approveButtonText}
                 </Button>
             </Flex>
+
+            {/* Modal for Viewing Notes */}
+            <Modal isOpen={isOpen} onClose={onClose} size="xl">
+                <ModalOverlay />
+                <ModalContent>
+                    <ModalHeader>Notes Viewer</ModalHeader>
+                    <ModalCloseButton />
+                    <ModalBody>
+                        <YSENoteMasterContainer hasNotes={notes} />  {/* Pass the notes to the modal */}
+                    </ModalBody>
+                </ModalContent>
+            </Modal>
         </Flex>
     );
 }

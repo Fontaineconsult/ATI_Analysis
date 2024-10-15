@@ -18,15 +18,20 @@ function EvidenceMasterContainer({ indicators }) {
                     return numA - numB;
                 })
                 .map((indicatorWrapper, index) => {
+                    // Determine background color based on whether the index is odd or even
+                    const bgColor = index % 2 === 0 ? 'gray.50' : 'gray.100';
+
                     return (
                         <SuccessIndicator
                             key={index}
-                            indicatorData={indicatorWrapper?.indicator}  // Safely access indicator
-                            evidenceData={indicatorWrapper?.evidences[0]}   // Safely access evidences
+                            indicatorData={indicatorWrapper?.indicator}
+                            evidenceData={indicatorWrapper?.evidences[0]}
+                            bgColor={bgColor}  // Pass the background color as a prop
                         />
                     );
                 })}
         </Box>
     );
 }
+
 export default EvidenceMasterContainer;
