@@ -1,7 +1,7 @@
 #
 # DOCUMENTATION CREATE QUERIES
 #
-from datetime import datetime
+from datetime import datetime, date
 
 from app.database.graph_schema import *
 from app.database.tools.support_functions import get_file_hash
@@ -96,37 +96,80 @@ def add_webpage(url: str,
         return False
 
 
-def add_note(name: str, content: str, use_existing=False) -> bool:
+def add_note(year_success_evidence: str, note_dict: dict, created_by: str = None) -> bool:
     """
-    Adds a note node to the graph.
-    :param name: Name of the note.
-    :param content: Content of the note.
-    :param use_existing: If True, use the existing note if one exists.
-    :return: True if the note node is added successfully or already exists and use_existing is True, False otherwise.
+    Add a new note for a YearSuccessEvidence node, ensuring no duplicate names exist.
+
+    :param year_success_evidence: str: The year identifier for the YearSuccessEvidence node.
+    :param note_dict: dict: A dictionary containing the fields for the note.
+    :param created_by: str or None: The employee ID of the person who created the note (optional).
+    :return: bool: Returns True if the note was successfully added, otherwise False.
     """
+    # Validate input: ensure required fields are present
+    required_fields = ['name', 'content']
+    for field in required_fields:
+        if field not in note_dict:
+            print(f"Missing required field: {field}")
+            return False
+
     try:
         # Check if a note with the same name already exists
-        existing_note = Note.nodes.get_or_none(name=name)
-        if existing_note:
-            if not use_existing:
-                print("A note with the same name already exists. Not Creating")
-                return False
-            else:
-                print("A note with the same name already exists. Using existing note.")
-                return True
-        else:
-            # Create and save the new note node
-            new_note = Note(
-                name=name,
-                date_created=datetime.now().date(),
-                content=content
-            )
-            new_note.save()
-            print("Note added successfully.")
-            return True
+        if Note.nodes.get(name=note_dict.get('name')):
+            print("A note with this name already exists.")
+            return False
+    except Note.DoesNotExist:
+        pass  # If the note doesn't exist, proceed with creation
     except Exception as e:
-        print(f"Failed to add note: {e}")
+        print(f"Error checking for existing note: {e}")
         return False
+
+    try:
+        # Fetch the YearSuccessEvidence node by year_identifier
+        yse = YearSuccessEvidence.nodes.get(year_identifier=year_success_evidence)
+    except YearSuccessEvidence.DoesNotExist:
+        print("YearSuccessEvidence not found.")
+        return False
+    except Exception as e:
+        print(f"Failed to get YearSuccessEvidence: {e}")
+        return False
+
+    person = None
+    if created_by:
+        try:
+            # Fetch the Person node by employee ID, if created_by is provided
+            person = Person.nodes.get(employee_id=created_by)
+        except Person.DoesNotExist:
+            print(f"Person with employee_id {created_by} not found.")
+            return False
+        except Exception as e:
+            print(f"Failed to get Person: {e}")
+            return False
+
+    # Start the note creation process
+    try:
+        # Create the new note
+        note = Note(
+            name=note_dict['name'],
+            content=note_dict['content'],
+            depreciated=note_dict.get('depreciated', False),
+            depreciated_date=date.fromisoformat(note_dict.get('depreciated_date')) if note_dict.get('depreciated_date') else None,
+            include_in_report=note_dict.get('include_in_report', True),
+        )
+        note.save()
+
+        # Handle the `created_by` relationship, if person exists
+        if person:
+            note.created_by.connect(person)
+
+        # Connect the new note to the YearSuccessEvidence node
+        yse.notes.connect(note)
+
+        return True
+
+    except Exception as e:
+        print(f"Error during note creation: {e}")
+        return False
+
 
 
 def add_message(name: str,

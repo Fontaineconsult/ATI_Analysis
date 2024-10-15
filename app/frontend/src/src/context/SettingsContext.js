@@ -14,16 +14,27 @@ export const useSettings = () => {
 
 // SettingsProvider component that wraps the app
 export const SettingsProvider = ({ children }) => {
-    // Global settings state (e.g., current academic year)
+    // Global settings state for current academic year and working group
     const [currentAcademicYear, setCurrentAcademicYear] = useState('2022-2023');  // Default year
+    const [currentWorkingGroup, setCurrentWorkingGroup] = useState('web');  // Default working group
 
     // Function to update the current academic year
     const updateCurrentAcademicYear = (newYear) => {
         setCurrentAcademicYear(newYear);
     };
 
+    // Function to update the current working group
+    const updateCurrentWorkingGroup = (newWorkingGroup) => {
+        setCurrentWorkingGroup(newWorkingGroup);
+    };
+
     return (
-        <SettingsContext.Provider value={{ currentAcademicYear, updateCurrentAcademicYear }}>
+        <SettingsContext.Provider value={{
+            currentAcademicYear,
+            updateCurrentAcademicYear,
+            currentWorkingGroup,
+            updateCurrentWorkingGroup
+        }}>
             {children}
         </SettingsContext.Provider>
     );

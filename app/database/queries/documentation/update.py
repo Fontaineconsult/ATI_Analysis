@@ -28,13 +28,13 @@ def unassign_note_from_yse(note_name, year_success_evidence):
 
 
 
-def update_note(year_success_evidence: str, note_dict: dict, created_by: str) -> bool:
+def update_note(year_success_evidence: str, note_dict: dict, created_by: str = None) -> bool:
     """
     Update an existing note for a YearSuccessEvidence node.
 
     :param year_success_evidence: str: The year identifier for the YearSuccessEvidence node.
     :param note_dict: dict: A dictionary containing the updated fields for the note.
-    :param created_by: str: The employee ID of the person who created the note.
+    :param created_by: str or None: The employee ID of the person who created the note (optional).
     :return: bool: Returns True if the update was successful, otherwise False.
     """
     # Validate input: ensure required fields are present
@@ -64,15 +64,16 @@ def update_note(year_success_evidence: str, note_dict: dict, created_by: str) ->
         print(f"Failed to get YearSuccessEvidence: {e}")
         return False
 
-    try:
-        # Fetch the Person node by employee ID
-        person = Person.nodes.get(employee_id=created_by)
-    except Person.DoesNotExist:
-        print("Person not found.")
-        return False
-    except Exception as e:
-        print(f"Failed to get Person: {e}")
-        return False
+    person = None
+    if created_by:
+        try:
+            # Fetch the Person node by employee ID, if created_by is provided
+            person = Person.nodes.get(employee_id=created_by)
+        except Person.DoesNotExist:
+            print(f"Person with employee_id {created_by} not found. Proceeding without person update.")
+        except Exception as e:
+            print(f"Failed to get Person: {e}")
+            return False
 
     # Start the update process
     try:
@@ -91,23 +92,26 @@ def update_note(year_success_evidence: str, note_dict: dict, created_by: str) ->
         if note.include_in_report != note_dict.get('include_in_report', note.include_in_report):
             note.include_in_report = note_dict['include_in_report']
 
-        # Handle the `created_by` relationship: update only if needed
-        if not note.created_by.is_connected(person):
-            note.created_by.disconnect_all()  # Remove old relationships
-            note.created_by.connect(person)   # Connect new person
+        # Handle the `created_by` relationship:
+        if person:
+            # If there is a person, update the `created_by` relationship
+            if not note.created_by.is_connected(person):
+                note.created_by.disconnect_all()  # Remove old relationships
+                note.created_by.connect(person)   # Connect the new person
 
         # Save the updated note
         note.save()
 
         # Ensure the note is connected to the YearSuccessEvidence
-        if not yse.has_notes.is_connected(note):
-            yse.has_notes.connect(note)
+        if not yse.notes.is_connected(note):
+            yse.notes.connect(note)
 
         return True
 
     except Exception as e:
         print(f"Error during note update: {e}")
         return False
+
 
 
 

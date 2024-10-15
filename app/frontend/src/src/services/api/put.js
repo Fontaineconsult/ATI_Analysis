@@ -25,3 +25,18 @@ export const assignApprover = async (employeeId, yearSuccessEvidence) => {
         throw error;
     }
 };
+
+
+export const updateNote = async (year_success_evidence, note_dict, created_by) => {
+    try {
+        const response = await axios.put(`${process.env.REACT_APP_API_URL}/notes`, {
+            year_success_evidence,
+            note_dict,
+            created_by,
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error updating note:', error);
+        throw error;
+    }
+}

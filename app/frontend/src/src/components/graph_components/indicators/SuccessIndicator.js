@@ -73,6 +73,7 @@ function SuccessIndicator({ indicatorData, evidenceData, workingGroup, onSuccess
                 isButtonDisabled={isButtonDisabled}
                 onApprove={handleApprove}
                 notes={evidenceData.has_notes}
+                year_identifier={year_identifier}
             />
             <IndicatorDetails
                 description={success_indicator}
@@ -96,6 +97,7 @@ function IndicatorHeader({
                              isButtonDisabled,
                              onApprove,
                              notes,
+                             year_identifier
                          }) {
     const { isOpen, onOpen, onClose } = useDisclosure();  // Control modal state
 
@@ -149,7 +151,7 @@ function IndicatorHeader({
                     <ModalHeader>Notes Viewer</ModalHeader>
                     <ModalCloseButton />
                     <ModalBody>
-                        <YSENoteMasterContainer hasNotes={notes} />  {/* Pass the notes to the modal */}
+                        <YSENoteMasterContainer hasNotes={notes} year_identifier={year_identifier}/>  {/* Pass the notes to the modal */}
                     </ModalBody>
                 </ModalContent>
             </Modal>
