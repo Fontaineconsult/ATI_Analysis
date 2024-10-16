@@ -96,16 +96,19 @@ def add_webpage(url: str,
         return False
 
 
-def add_note(year_success_evidence: str, note_dict: dict, created_by: str = None) -> bool:
+from neomodel import db
+from datetime import date
+
+def add_note(year_success_evidence: str, note_dict: dict) -> bool:
     """
     Add a new note for a YearSuccessEvidence node, ensuring no duplicate names exist.
 
     :param year_success_evidence: str: The year identifier for the YearSuccessEvidence node.
-    :param note_dict: dict: A dictionary containing the fields for the note.
-    :param created_by: str or None: The employee ID of the person who created the note (optional).
+    :param note_dict: dict: A dictionary containing the fields for the note, including 'created_by' data.
     :return: bool: Returns True if the note was successfully added, otherwise False.
     """
     # Validate input: ensure required fields are present
+    print(year_success_evidence, note_dict)
     required_fields = ['name', 'content']
     for field in required_fields:
         if field not in note_dict:
@@ -134,15 +137,27 @@ def add_note(year_success_evidence: str, note_dict: dict, created_by: str = None
         return False
 
     person = None
-    if created_by:
-        try:
-            # Fetch the Person node by employee ID, if created_by is provided
-            person = Person.nodes.get(employee_id=created_by)
-        except Person.DoesNotExist:
-            print(f"Person with employee_id {created_by} not found.")
-            return False
-        except Exception as e:
-            print(f"Failed to get Person: {e}")
+    if 'created_by' in note_dict:
+        created_by_data = note_dict['created_by']
+        employee_id = created_by_data.get('employee_id')
+        if employee_id:
+            try:
+                # Try to fetch the Person node by employee ID
+                person = Person.nodes.get(employee_id=employee_id)
+            except Person.DoesNotExist:
+                # If Person does not exist, create a new Person node
+                person = Person(
+                    name=created_by_data.get('name'),
+                    email=created_by_data.get('email'),
+                    employee_id=employee_id,
+                    title=created_by_data.get('title')
+                )
+                person.save()
+            except Exception as e:
+                print(f"Failed to get or create Person: {e}")
+                return False
+        else:
+            print("Employee ID is missing in 'created_by' data.")
             return False
 
     # Start the note creation process
@@ -152,13 +167,15 @@ def add_note(year_success_evidence: str, note_dict: dict, created_by: str = None
             name=note_dict['name'],
             content=note_dict['content'],
             depreciated=note_dict.get('depreciated', False),
-            depreciated_date=date.fromisoformat(note_dict.get('depreciated_date')) if note_dict.get('depreciated_date') else None,
+            depreciated_date=date.fromisoformat(note_dict['depreciated_date']) if note_dict.get('depreciated_date') else None,
             include_in_report=note_dict.get('include_in_report', True),
+            date_created=date.fromisoformat(note_dict['date_created']) if note_dict.get('date_created') else None
         )
         note.save()
 
         # Handle the `created_by` relationship, if person exists
         if person:
+            print("Connecting note to person.")
             note.created_by.connect(person)
 
         # Connect the new note to the YearSuccessEvidence node
@@ -172,37 +189,98 @@ def add_note(year_success_evidence: str, note_dict: dict, created_by: str = None
 
 
 
-def add_message(name: str,
-                message_type: str,
-                authored_date: str,
-                content: str=None,
-                file_path: str=None,
-                uri_path: str=None,
-                ) -> bool:
 
+def add_message(year_success_evidence: str, message_dict: dict) -> bool:
+    """
+    Add a new message for a YearSuccessEvidence node, ensuring no duplicate names exist.
 
-    try:
-        # Check if a memo with the same title already exists
-        existing_memo = Message.nodes.get_or_none(name=name)
-        if existing_memo:
-            print("A memo with the same title already exists.")
+    :param year_success_evidence: str: The year identifier for the YearSuccessEvidence node.
+    :param message_dict: dict: A dictionary containing the fields for the message, including 'created_by' data.
+    :return: bool: Returns True if the message was successfully added, otherwise False.
+    """
+    # Validate input: ensure required fields are present
+    print(year_success_evidence, message_dict)
+    required_fields = ['name', 'message_type', 'date_created']
+    for field in required_fields:
+        if field not in message_dict:
+            print(f"Missing required field: {field}")
             return False
 
-        # Create and save the new memo node
-        new_memo = Message(
-            name=name,
-            uri_path=uri_path,
-            file_path=file_path,
-            content=content,
-            message_type=message_type,
-            authored_date=authored_date
-        )
-        new_memo.save()
-        print("Memo added successfully.")
-        return True
+    try:
+        # Check if a message with the same name already exists
+        if Message.nodes.get(name=message_dict.get('name')):
+            print("A message with this name already exists.")
+            return False
+    except Message.DoesNotExist:
+        pass  # If the message doesn't exist, proceed with creation
     except Exception as e:
-        print(f"Failed to add memo: {e}")
+        print(f"Error checking for existing message: {e}")
         return False
+
+    try:
+        # Fetch the YearSuccessEvidence node by year_identifier
+        yse = YearSuccessEvidence.nodes.get(year_identifier=year_success_evidence)
+    except YearSuccessEvidence.DoesNotExist:
+        print("YearSuccessEvidence not found.")
+        return False
+    except Exception as e:
+        print(f"Failed to get YearSuccessEvidence: {e}")
+        return False
+
+    person = None
+    if 'created_by' in message_dict:
+        created_by_data = message_dict['created_by']
+        employee_id = created_by_data.get('employee_id')
+        if employee_id:
+            try:
+                # Try to fetch the Person node by employee ID
+                person = Person.nodes.get(employee_id=employee_id)
+            except Person.DoesNotExist:
+                # If Person does not exist, create a new Person node
+                person = Person(
+                    name=created_by_data.get('name'),
+                    email=created_by_data.get('email'),
+                    employee_id=employee_id,
+                    title=created_by_data.get('title')
+                )
+                person.save()
+            except Exception as e:
+                print(f"Failed to get or create Person: {e}")
+                return False
+        else:
+            print("Employee ID is missing in 'created_by' data.")
+            return False
+
+    # Start the message creation process
+    try:
+        # Create the new message
+        message = Message(
+            name=message_dict['name'],
+            message_type=message_dict['message_type'],
+            authored_date=message_dict['date_created'],
+            content=message_dict.get('content'),
+            file_path=message_dict.get('file_path'),
+            uri_path=message_dict.get('uri_path'),
+            depreciated=message_dict.get('depreciated', False),
+            depreciated_date=date.fromisoformat(message_dict['depreciated_date']) if message_dict.get('depreciated_date') else None,
+            include_in_report=message_dict.get('include_in_report', True),
+        )
+        message.save()
+
+        # Handle the `created_by` relationship, if person exists
+        if person:
+            print("Connecting message to person.")
+            message.created_by.connect(person)
+
+        # Connect the new message to the YearSuccessEvidence node
+        yse.messages.connect(message)
+
+        return True
+
+    except Exception as e:
+        print(f"Error during message creation: {e}")
+        return False
+
 
 
 def add_metric(name:str,
@@ -260,3 +338,23 @@ def add_metric(name:str,
 #            single_value="996",
 #            # comment="18 EEAAPs",
 #            value_dict=None)
+
+
+
+# year_success_evidence = "2022-2023-1.4-web"
+# created_by = "913678186"
+# note_dict = {
+#     "name": "Progress Update",
+#     "content": "We have completed 75% of the project ttessssssttttt milestones.",
+#     # Optional fields
+#     "depreciated": False,
+#     "depreciated_date": None,
+#     "include_in_report": True,
+# }
+#
+# set_connection()
+# result = add_note(
+#     year_success_evidence=year_success_evidence,
+#     note_dict=note_dict,
+#     created_by=created_by
+# )

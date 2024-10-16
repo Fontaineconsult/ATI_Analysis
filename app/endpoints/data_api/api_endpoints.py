@@ -2,8 +2,8 @@ from flask import Blueprint, jsonify
 
 from app.database.class_factory import working_group_names_web_query, status_levels
 from app.database.queries.compound_queries.get_all_by_working_group import fetch_evidence_for_working_group
-from app.database.queries.documentation.create import add_note
-from app.database.queries.documentation.update import update_note
+from app.database.queries.documentation.create import add_note, add_message
+from app.database.queries.documentation.update import update_note, update_message
 from app.database.queries.evidence.read import get_all_status_level_nodes
 from app.database.queries.evidence.update import assign_status_to_yse, assign_approver_to_yse
 from app.database.queries.individuals.read import get_person_by_employee_id, get_all_persons
@@ -118,14 +118,43 @@ def add_or_update_notes():
         data = request.get_json()
         yse = data.get('year_success_evidence')
         notes_object = data.get('note_dict')
-        created_by = data.get('created_by')
 
-        update = add_note(yse, notes_object, created_by)
+
+        update = add_note(yse, notes_object)
         if update:
             return jsonify({'message': 'Note updated successfully'}), 201
         else:
             return jsonify({'error': 'Failed to update note'}), 500
 
 
+
+
+
+@data_api.route('/messages', methods=['POST', 'PUT'])
+def add_or_update_messages():
+    if request.method == 'PUT':
+        data = request.get_json()
+        yse = data.get('year_success_evidence')
+        message_object = data.get('message_dict')
+
+
+        update = update_message(yse, message_object)
+        if update:
+            return jsonify({'message': 'Message updated successfully'}), 200
+        else:
+            return jsonify({'error': 'Failed to update message'}), 500
+
+    if request.method == 'POST':
+
+        data = request.get_json()
+        print(data)
+        yse = data.get('year_success_evidence')
+        message_object = data.get('message_dict')
+
+        update = add_message(yse, message_object)
+        if update:
+            return jsonify({'message': 'Message updated successfully'}), 201
+        else:
+            return jsonify({'error': 'Failed to update message'}), 500
 
 

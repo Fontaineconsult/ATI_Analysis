@@ -54,7 +54,7 @@ function NoteViewer({ notes, onSubmit, yearSuccessEvidence, createdBy }) {
                     <NoteForm
                         note={null}  // Pass null for a new note
                         onSubmit={(noteData) => handleFormSubmit(null, noteData, true)}  // Pass true to indicate new note
-                        createdBy={user?.properties || null}  // Pass user data or null
+                        createdBy={user?.properties || user}  // Pass user data or null
                     />
                 </Box>
             ) : (
@@ -139,10 +139,10 @@ function NoteForm({ note, onSubmit, createdBy }) {
             </FormControl>
 
             {/* Display created_by person details */}
-            {noteData.created_by?.name ? (
+            {createdBy?.name ? (
                 <Box mb={4}>
                     <Text fontSize="sm" color="gray.600">
-                        Created by: {noteData.created_by.name} ({noteData.created_by.title || 'Unknown Title'})
+                        Created by: {createdBy.name} ({createdBy.title || 'Unknown Title'})
                     </Text>
                 </Box>
             ) : (

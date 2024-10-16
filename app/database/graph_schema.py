@@ -682,6 +682,7 @@ class YearSuccessEvidence(StructuredNode):
     administrative_review_completed_date = DateProperty()
     administrative_review_completed_by = RelationshipTo("Person", "admin_review_completed_by")
     notes = RelationshipTo("Note", "has_note")
+    messages = RelationshipTo("Message", "has_message")
     metrics = RelationshipTo("Metric", "has_metric")
 
     # Relationships from implementation nodes
@@ -1018,9 +1019,10 @@ class Message(StructuredNode):
     content = StringProperty()
     file_path = StringProperty()
     uri_path = StringProperty()
-    date_created = StringProperty
+    date_created = DateProperty()
     type = StringProperty()
     depreciated = BooleanProperty()
+    created_by = RelationshipTo("Person", "created_by")
     include_in_report = BooleanProperty(default=True)
 
 
@@ -1070,6 +1072,7 @@ class Metric(StructuredNode):
     single_value = StringProperty()
     value_dict = JSONProperty()
     comment = StringProperty()
+    created_by = RelationshipTo("Person", "created_by")
     notes = RelationshipTo("Note", "has_note")
     academic_year = RelationshipTo("AcademicYear", "measured_in_year")
     include_in_report = BooleanProperty(default=True)

@@ -40,3 +40,17 @@ export const updateNote = async (year_success_evidence, note_dict, created_by) =
         throw error;
     }
 }
+
+export const updateMessage = async (year_success_evidence, message_dict, created_by) => {
+    try {
+        const response = await axios.put(`${process.env.REACT_APP_API_URL}/messages`, {
+            year_success_evidence,
+            message_dict,
+            created_by,
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error updating message:', error);
+        throw error;
+    }
+}

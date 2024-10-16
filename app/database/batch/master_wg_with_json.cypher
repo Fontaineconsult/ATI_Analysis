@@ -16,9 +16,15 @@ WITH wg, goal, indicator, evidence
 // Match notes connected to the evidence
 OPTIONAL MATCH (evidence)-[:has_note]->(evidenceNote:Note)
 
-// Collect the notes per evidence
+// Match the creator of each evidenceNote
+OPTIONAL MATCH (evidenceNote)-[:created_by]->(creator:Person)
+
+// Collect the notes and their creators per evidence
 WITH wg, goal, indicator, evidence,
-     collect(DISTINCT evidenceNote) AS evidenceNotes
+     collect(DISTINCT {
+       note: evidenceNote,
+       created_by: creator
+     }) AS evidenceNotes
 
 // Match status level of the evidence
 OPTIONAL MATCH (evidence)-[:status_is]->(statusLevel:StatusLevel)
@@ -83,7 +89,7 @@ WITH wg, goal, indicator, evidence, evidenceNotes, statusLevel, adminReviewers, 
        evidenceTypes: evidenceTypes,
        persons: persons,
        adminReviewers: adminReviewers,
-       has_notes: evidenceNotes  // Include evidence notes under each evidence
+       has_notes: evidenceNotes  // Include evidence notes with creators under each evidence
      } AS evidenceData
 
 // Collect all evidences under each indicator

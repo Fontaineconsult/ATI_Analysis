@@ -73,6 +73,8 @@ function SuccessIndicator({ indicatorData, evidenceData, workingGroup, onSuccess
                 isButtonDisabled={isButtonDisabled}
                 onApprove={handleApprove}
                 notes={evidenceData.has_notes}
+                messages={evidenceData.has_messages}
+                metrics={evidenceData.has_metrics}
                 year_identifier={year_identifier}
             />
             <IndicatorDetails
@@ -97,6 +99,8 @@ function IndicatorHeader({
                              isButtonDisabled,
                              onApprove,
                              notes,
+                             messages,
+                             metrics,
                              year_identifier
                          }) {
     const { isOpen, onOpen, onClose } = useDisclosure();  // Control modal state
@@ -118,7 +122,7 @@ function IndicatorHeader({
                     aria-label="View Notes"
                     padding={"15px"}
                 >
-                    View Notes
+                    Annotations
                 </Button>
 
                 {/* Status Level Dropdown */}
@@ -151,7 +155,8 @@ function IndicatorHeader({
                     <ModalHeader>Notes Viewer</ModalHeader>
                     <ModalCloseButton />
                     <ModalBody>
-                        <YSENoteMasterContainer hasNotes={notes} year_identifier={year_identifier}/>  {/* Pass the notes to the modal */}
+                        <Text>A Note in the Accessible Technology Initiative (ATI) represents an annotation that provides additional insights, observations, or feedback related to ATI efforts. Notes added here apply directly to this academic year success indicator.</Text>
+                        <YSENoteMasterContainer hasNotes={notes} hasMessages={messages} hasMetrics={metrics} year_identifier={year_identifier}/>  {/* Pass the notes to the modal */}
                     </ModalBody>
                 </ModalContent>
             </Modal>

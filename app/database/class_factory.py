@@ -77,7 +77,11 @@ message_types = ["e-mail",
                  "voice mail",
                  "text message",
                  "letter",
-                 "memo"]
+                 "memo",
+                 "report",
+                 "meeting minutes",
+                 "presentation",
+                 ]
 
 metric_types = ["tabular",
                 "graphical",
