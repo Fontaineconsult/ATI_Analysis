@@ -3,12 +3,10 @@ import { Box, Flex, Heading, Text, Button, Modal, ModalOverlay, ModalContent, Mo
 import DropdownSelect from '../../functional_components/DropdownSelect';
 import { useStatusLevels } from '../../../hooks/useStatusLevels';
 import { UserContext } from '../../../context/UserContext';
-import { assignApprover } from '../../../services/api/put';
-import { fetchPrimaryData } from '../../../services/api/get';
 import { SettingsContext } from '../../../context/SettingsContext';
 import ImplementationMasterContainer from "../implementation/ImplementationMasterContainer";
 import YSENoteMasterContainer from "../documentation/YSENoteMasterContainer";
-
+import ApprovalMasterContainer from "../../ati_explorer_containers/ApprovalMasterContainer";  // Import the new ApprovalMasterContainer
 
 // Main SuccessIndicator Component
 function SuccessIndicator({ indicatorData, evidenceData, workingGroup, onSuccessRefresh, bgColor }) {
@@ -28,20 +26,7 @@ function SuccessIndicator({ indicatorData, evidenceData, workingGroup, onSuccess
         updateStatus(year_identifier, newStatus);
     };
 
-    // Handle approve action and refresh
-    const handleApprove = async () => {
-        if (currentUserId) {
-            try {
-                await assignApprover(currentUserId, year_identifier);
-                const refreshedData = await fetchPrimaryData(workingGroup, currentAcademicYear);
-                onSuccessRefresh(refreshedData);
-            } catch (error) {
-                console.error('Error approving success indicator:', error);
-            }
-        }
-    };
-
-    let approveButtonText = 'Approve';
+    let approveButtonText = 'Review';
     let approveButtonColor = 'yellow';
     let isButtonDisabled = !user;
 
@@ -58,7 +43,7 @@ function SuccessIndicator({ indicatorData, evidenceData, workingGroup, onSuccess
             p={4}
             border="1px solid teal"
             borderRadius="md"
-            bg={bgColor}  // Apply the background color passed as a prop
+            bg={bgColor}
             tabIndex={0}
             aria-labelledby={`indicator-${composite_key}`}
             aria-describedby={`indicator-details-${composite_key}`}
@@ -71,11 +56,13 @@ function SuccessIndicator({ indicatorData, evidenceData, workingGroup, onSuccess
                 approveButtonText={approveButtonText}
                 approveButtonColor={approveButtonColor}
                 isButtonDisabled={isButtonDisabled}
-                onApprove={handleApprove}
                 notes={evidenceData.has_notes}
                 messages={evidenceData.has_messages}
                 metrics={evidenceData.has_metrics}
                 year_identifier={year_identifier}
+                workingGroup={workingGroup}  // Pass down working group
+                evidenceData={evidenceData}  // Pass evidence data to the header for approval
+                onSuccessRefresh={onSuccessRefresh}  // Pass the refresh callback
             />
             <IndicatorDetails
                 description={success_indicator}
@@ -87,7 +74,6 @@ function SuccessIndicator({ indicatorData, evidenceData, workingGroup, onSuccess
     );
 }
 
-
 // IndicatorHeader Component
 function IndicatorHeader({
                              compositeKey,
@@ -97,13 +83,16 @@ function IndicatorHeader({
                              approveButtonText,
                              approveButtonColor,
                              isButtonDisabled,
-                             onApprove,
                              notes,
                              messages,
                              metrics,
-                             year_identifier
+                             year_identifier,
+                             workingGroup,
+                             evidenceData,
+                             onSuccessRefresh
                          }) {
-    const { isOpen, onOpen, onClose } = useDisclosure();  // Control modal state
+    const { isOpen: isNotesOpen, onOpen: onNotesOpen, onClose: onNotesClose } = useDisclosure();  // Control modal state for notes
+    const { isOpen: isApprovalOpen, onOpen: onApprovalOpen, onClose: onApprovalClose } = useDisclosure();  // Control modal state for approval
 
     return (
         <Flex justify="space-between" align="center" mb={2}>
@@ -117,7 +106,7 @@ function IndicatorHeader({
                 {/* View Notes Button */}
                 <Button
                     mr={4}
-                    onClick={onOpen}
+                    onClick={onNotesOpen}
                     colorScheme="teal"
                     aria-label="View Notes"
                     padding={"15px"}
@@ -126,37 +115,50 @@ function IndicatorHeader({
                 </Button>
 
                 {/* Status Level Dropdown */}
-                <Box width={"170px"} >
+                <Box width={"170px"}>
                     <DropdownSelect
-                        options={statusLevels.map((level) => level.status_level)}  // Provide status levels as options
-                        initialValue={statusLevel}  // Initial status level
-                        onChange={onStatusChange}  // Handle status change
-                         // Set dropdown width to half the button width
+                        options={statusLevels.map((level) => level.status_level)}
+                        initialValue={statusLevel}
+                        onChange={onStatusChange}
                     />
-
                 </Box>
 
-                {/* Approve Button */}
+                {/* Approve Button - Opens the Approval Modal */}
                 <Button
                     ml={4}
                     colorScheme={approveButtonColor}
-                    onClick={onApprove}
-                    isDisabled={isButtonDisabled}  // Disable the button based on user and approval status
-
+                    onClick={onApprovalOpen}
+                    isDisabled={isButtonDisabled}
                 >
                     {approveButtonText}
                 </Button>
             </Flex>
 
             {/* Modal for Viewing Notes */}
-            <Modal isOpen={isOpen} onClose={onClose} size="xl">
+            <Modal isOpen={isNotesOpen} onClose={onNotesClose} size="xl">
                 <ModalOverlay />
                 <ModalContent>
                     <ModalHeader>Notes Viewer</ModalHeader>
                     <ModalCloseButton />
                     <ModalBody>
                         <Text>A Note in the Accessible Technology Initiative (ATI) represents an annotation that provides additional insights, observations, or feedback related to ATI efforts. Notes added here apply directly to this academic year success indicator.</Text>
-                        <YSENoteMasterContainer hasNotes={notes} hasMessages={messages} hasMetrics={metrics} year_identifier={year_identifier}/>  {/* Pass the notes to the modal */}
+                        <YSENoteMasterContainer hasNotes={notes} hasMessages={messages} hasMetrics={metrics} year_identifier={year_identifier}/>
+                    </ModalBody>
+                </ModalContent>
+            </Modal>
+
+            {/* Modal for Approving Success Indicator */}
+            <Modal isOpen={isApprovalOpen} onClose={onApprovalClose} size="2xl">
+                <ModalOverlay />
+                <ModalContent>
+                    <ModalHeader>Approval Process</ModalHeader>
+                    <ModalCloseButton />
+                    <ModalBody>
+                        <ApprovalMasterContainer
+                            evidenceData={evidenceData}
+                            workingGroup={workingGroup}
+                            onSuccessRefresh={onSuccessRefresh}
+                        />
                     </ModalBody>
                 </ModalContent>
             </Modal>
@@ -196,5 +198,6 @@ function ResponsiblePersons({ persons, compositeKey }) {
         </Box>
     );
 }
+
 
 export default SuccessIndicator;

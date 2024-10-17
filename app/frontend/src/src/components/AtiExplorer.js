@@ -2,7 +2,7 @@ import React from 'react';
 import { Box, Heading, Text, Spinner } from '@chakra-ui/react';
 import WorkingGroupMasterContainer from './ati_explorer_containers/WorkingGroupMasterContainer';
 import { useData } from '../hooks/useData';
-import { useLocation } from "react-router-dom";
+import {Router, useLocation} from "react-router-dom";
 
 function AtiExplorer() {
     const location = useLocation();
@@ -45,7 +45,9 @@ function AtiExplorer() {
             {location.pathname === '/ati-explorer' && <AtiExplorerLanding />}
 
             {/* Render the WorkingGroupMasterContainer */}
+
             <WorkingGroupMasterContainer />
+
 
             {/* Show a subtle spinner if background updates are happening */}
             {updating && (

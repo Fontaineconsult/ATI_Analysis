@@ -1,19 +1,17 @@
-import React, { useContext } from 'react';
+import React from 'react';
 import { Flex, Button, Box } from '@chakra-ui/react';
 import { useLocation, Link } from 'react-router-dom';
-import { useSettings } from '../context/SettingsContext';  // Import the useSettings hook
 
 function SubNavbar() {
-    const location = useLocation();
-    const { currentWorkingGroup, updateCurrentWorkingGroup } = useSettings();  // Get working group from context
+    const location = useLocation();  // Get the current location
 
-    // Define sub-nav items based on the current main component
+    // Define sub-nav items based on the current main component (path)
     let subNavItems;
     if (location.pathname.includes('/ati-explorer')) {
         subNavItems = [
-            { label: 'Web', path: '/ati-explorer/web', group: 'web' },
-            { label: 'Instructional Materials', path: '/ati-explorer/instructional-materials', group: 'instructional-materials' },
-            { label: 'Procurement', path: '/ati-explorer/procurement', group: 'procurement' },
+            { label: 'Web', path: '/ati-explorer/web' },
+            { label: 'Instructional Materials', path: '/ati-explorer/instructional-materials' },
+            { label: 'Procurement', path: '/ati-explorer/procurement' },
         ];
     } else if (location.pathname.includes('/dashboard')) {
         subNavItems = [
@@ -31,10 +29,6 @@ function SubNavbar() {
         subNavItems = [];
     }
 
-    const handleGroupChange = (group) => {
-        updateCurrentWorkingGroup(group);  // Update the working group state
-    };
-
     return (
         <Box as="nav" bg="gray.100" py={2} boxShadow="md"> {/* Sub-navbar styling */}
             <Flex justify="center" gap={4}>
@@ -43,12 +37,11 @@ function SubNavbar() {
                         key={item.label}
                         as={Link}
                         to={item.path}
-                        colorScheme={currentWorkingGroup === item.group ? 'teal' : 'gray'}  // Highlight active group
-                        variant={currentWorkingGroup === item.group ? 'solid' : 'ghost'}  // Solid for active group, ghost for inactive
+                        colorScheme={location.pathname === item.path ? 'teal' : 'gray'}  // Highlight if current path matches
+                        variant={location.pathname === item.path ? 'solid' : 'ghost'}  // Solid for active, ghost for inactive
                         size="md"
-                        fontWeight={currentWorkingGroup === item.group ? 'bold' : 'normal'}
+                        fontWeight={location.pathname === item.path ? 'bold' : 'normal'}  // Bold for active
                         _hover={{ textDecoration: 'none', bg: 'teal.100' }}  // Hover effect
-                        onClick={() => handleGroupChange(item.group)}  // Handle group change on click
                     >
                         {item.label}
                     </Button>

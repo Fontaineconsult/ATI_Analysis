@@ -3,12 +3,10 @@ import {
     Box,
     Button,
     Input,
-    Textarea,
     Switch,
     FormControl,
     FormLabel,
     Text,
-    Link,
     Flex,
     Collapse
 } from '@chakra-ui/react';
