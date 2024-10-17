@@ -17,9 +17,9 @@ function SubNavbar() {
         ];
     } else if (location.pathname.includes('/dashboard')) {
         subNavItems = [
-            { label: 'User Stats', path: '/dashboard/user-stats' },
-            { label: 'System Health', path: '/dashboard/system-health' },
-            { label: 'Activity Logs', path: '/dashboard/activity-logs' },
+            { label: 'Report Overview', path: '/dashboard/report-overview' },
+            { label: 'Implementations', path: '/dashboard/implementations' },
+            { label: 'Settings', path: '/dashboard/settings' },
         ];
     } else if (location.pathname.includes('/about')) {
         subNavItems = [
