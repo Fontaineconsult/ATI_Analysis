@@ -33,6 +33,8 @@ function ATIOverview() {
                     </AccordionButton>
                     <AccordionPanel pb={4}>
                         <Text>
+                            FIRST PRINCIPLAS!~!
+
                             This internal enterprise knowledge graph system is designed to manage and structure large datasets
                             related to business processes, making data more accessible, searchable, and linked across departments.
                             It helps streamline workflows and provides valuable insights into company operations.

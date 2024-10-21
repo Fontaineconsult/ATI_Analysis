@@ -1,33 +1,10 @@
 import React, { useState } from 'react';
 import { Box, Flex, Button, Heading, useBreakpointValue } from '@chakra-ui/react';
+import Members from "./Memebers";
+import SuccessIndicators from "./SuccessIndicators";
+import StatusLevels from "./StatusLevelsControls";
 
-// Placeholder Components for different settings areas
-function AccountSettings() {
-    return (
-        <Box>
-            <Heading size="md" mb={4}>Account Settings</Heading>
-            <p>Manage your account information here.</p>
-        </Box>
-    );
-}
 
-function NotificationSettings() {
-    return (
-        <Box>
-            <Heading size="md" mb={4}>Notification Settings</Heading>
-            <p>Manage your notification preferences here.</p>
-        </Box>
-    );
-}
-
-function SystemSettings() {
-    return (
-        <Box>
-            <Heading size="md" mb={4}>System Settings</Heading>
-            <p>Configure system-wide settings and preferences here.</p>
-        </Box>
-    );
-}
 
 function SettingsMasterContainer() {
     const [activeSetting, setActiveSetting] = useState('account'); // Manage the active setting
@@ -35,12 +12,12 @@ function SettingsMasterContainer() {
     // Function to render the appropriate content based on the active setting
     const renderContent = () => {
         switch (activeSetting) {
-            case 'account':
-                return <AccountSettings />;
-            case 'notifications':
-                return <NotificationSettings />;
-            case 'system':
-                return <SystemSettings />;
+            case 'status-levels':
+                return <StatusLevels />;
+            case 'success-indicators':
+                return <SuccessIndicators />;
+            case 'members':
+                return <Members />;
             default:
                 return (
                     <Box>
@@ -84,31 +61,31 @@ function SettingsMasterContainer() {
                     <Button
                         w="100%"
                         mb={2} // Space between buttons
-                        onClick={() => setActiveSetting('account')}
+                        onClick={() => setActiveSetting('status-levels')}
                         colorScheme={activeSetting === 'account' ? 'teal' : 'gray'}
                         variant={activeSetting === 'account' ? 'solid' : 'ghost'}
                         size="sm"
                     >
-                        Account Settings
+                        Status Levels
                     </Button>
                     <Button
                         w="100%"
                         mb={2} // Space between buttons
-                        onClick={() => setActiveSetting('notifications')}
+                        onClick={() => setActiveSetting('success-indicators')}
                         colorScheme={activeSetting === 'notifications' ? 'teal' : 'gray'}
                         variant={activeSetting === 'notifications' ? 'solid' : 'ghost'}
                         size="sm"
                     >
-                        Notification Settings
+                        Success Indicators
                     </Button>
                     <Button
                         w="100%"
-                        onClick={() => setActiveSetting('system')}
+                        onClick={() => setActiveSetting('members')}
                         colorScheme={activeSetting === 'system' ? 'teal' : 'gray'}
                         variant={activeSetting === 'system' ? 'solid' : 'ghost'}
                         size="sm"
                     >
-                        System Settings
+                        Members
                     </Button>
                 </Box>
 
