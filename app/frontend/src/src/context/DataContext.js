@@ -1,12 +1,12 @@
 import React, { createContext, useState, useEffect } from 'react';
 import { fetchPrimaryData } from '../services/api/get';
+import { useToast } from '@chakra-ui/react'; // Import useToast from Chakra UI
 
 // Create a context
 export const DataContext = createContext();
 
 // DataProvider component to wrap the app
 export const DataProvider = ({ children }) => {
-    // Store results for different working groups and years
     const [data, setData] = useState({
         web: null,
         instructionalMaterials: null,
@@ -16,6 +16,8 @@ export const DataProvider = ({ children }) => {
     const [updating, setUpdating] = useState(false);  // Updating state for background updates
     const [error, setError] = useState(null);      // Error state
     const [selectedYear, setSelectedYear] = useState('2022-2023');  // Default year
+
+    const toast = useToast(); // Chakra UI toast hook
 
     useEffect(() => {
         loadData();  // Load data when the component mounts or the selected year changes
@@ -38,8 +40,17 @@ export const DataProvider = ({ children }) => {
                 instructionalMaterials: instructionalMaterialsData,
                 procurement: procurementData,
             });
+
         } catch (err) {
             setError(err.message);
+            // Show error toast notification
+            toast({
+                title: "Error loading data.",
+                description: err.message,
+                status: "error",
+                duration: 3000,
+                isClosable: true,
+            });
         } finally {
             setLoading(false);  // Stop initial loading
         }
@@ -56,8 +67,17 @@ export const DataProvider = ({ children }) => {
                 ...prevData,
                 [workingGroup]: groupData,
             }));
+
         } catch (err) {
             setError(err.message);
+            // Show error toast notification
+            toast({
+                title: `Error updating ${workingGroup} data.`,
+                description: err.message,
+                status: "error",
+                duration: 3000,
+                isClosable: true,
+            });
         } finally {
             setUpdating(false);  // Stop background updating
         }
@@ -66,6 +86,13 @@ export const DataProvider = ({ children }) => {
     // Function to update the selected year
     const updateYear = (newYear) => {
         setSelectedYear(newYear);
+        // Show notification for changing the year
+        toast({
+            title: `Year changed to ${newYear}`,
+            status: "info",
+            duration: 2000,
+            isClosable: true,
+        });
     };
 
     return (
