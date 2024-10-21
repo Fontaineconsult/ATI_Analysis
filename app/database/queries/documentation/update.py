@@ -3,81 +3,55 @@
 #
 from app.database.graph_schema import *
 from datetime import date
+from app.endpoints.data_api.errors.custom_exceptions import NotFoundError, CrudError
 
 def unassign_note_from_yse(note_name, year_success_evidence):
-
     try:
         yse = YearSuccessEvidence.nodes.get(year_identifier=year_success_evidence)
+    except YearSuccessEvidence.DoesNotExist:
+        raise NotFoundError(f"YearSuccessEvidence with identifier {year_success_evidence} not found.")
     except Exception as e:
-        print(f"Failed to get YearSuccessEvidence: {e}")
-        return False
+        raise CrudError(f"Failed to get YearSuccessEvidence: {e}")
 
     try:
         note = Note.nodes.get(name=note_name)
+    except Note.DoesNotExist:
+        raise NotFoundError(f"Note with name {note_name} not found.")
     except Exception as e:
-        print(f"Failed to get Note: {e}")
-        return False
+        raise CrudError(f"Failed to get Note: {e}")
 
     try:
         yse.notes.disconnect(note)
+        return True
     except Exception as e:
-        print(f"Failed to disconnect Note from YearSuccessEvidence: {e}")
-        return False
-    print(f"Successfully disconnected Note from YearSuccessEvidence")
-    return True
-
+        raise CrudError(f"Failed to disconnect Note from YearSuccessEvidence: {e}")
 
 
 def update_note(year_success_evidence: str, note_dict: dict, created_by: str = None) -> bool:
-    """
-    Update an existing note for a YearSuccessEvidence node.
-
-    :param year_success_evidence: str: The year identifier for the YearSuccessEvidence node.
-    :param note_dict: dict: A dictionary containing the updated fields for the note.
-    :param created_by: str or None: The employee ID of the person who created the note (optional).
-    :return: bool: Returns True if the update was successful, otherwise False.
-    """
-    # Validate input: ensure required fields are present
-    required_fields = ['name', 'content']
-    for field in required_fields:
-        if field not in note_dict:
-            print(f"Missing required field: {field}")
-            return False
-
     try:
-        # Fetch the note by its unique name
         note = Note.nodes.get(name=note_dict.get('name'))
     except Note.DoesNotExist:
-        print("Note not found.")
-        return False
+        raise NotFoundError(f"Note with name {note_dict.get('name')} not found.")
     except Exception as e:
-        print(f"Failed to get Note: {e}")
-        return False
+        raise CrudError(f"Failed to get Note: {e}")
 
     try:
-        # Fetch the YearSuccessEvidence node by year_identifier
         yse = YearSuccessEvidence.nodes.get(year_identifier=year_success_evidence)
     except YearSuccessEvidence.DoesNotExist:
-        print("YearSuccessEvidence not found.")
-        return False
+        raise NotFoundError(f"YearSuccessEvidence with identifier {year_success_evidence} not found.")
     except Exception as e:
-        print(f"Failed to get YearSuccessEvidence: {e}")
-        return False
+        raise CrudError(f"Failed to get YearSuccessEvidence: {e}")
 
     person = None
     if created_by:
         try:
-            # Fetch the Person node by employee ID, if created_by is provided
             person = Person.nodes.get(employee_id=created_by)
         except Person.DoesNotExist:
-            print(f"Person with employee_id {created_by} not found. Proceeding without person update.")
+            raise NotFoundError(f"Person with employee_id {created_by} not found.")
         except Exception as e:
-            print(f"Failed to get Person: {e}")
-            return False
+            raise CrudError(f"Failed to get Person: {e}")
 
-    # Start the update process
     try:
-        # Update fields only if different from the existing values
         if note.content != note_dict.get('content', note.content):
             note.content = note_dict['content']
 
@@ -92,77 +66,46 @@ def update_note(year_success_evidence: str, note_dict: dict, created_by: str = N
         if note.include_in_report != note_dict.get('include_in_report', note.include_in_report):
             note.include_in_report = note_dict['include_in_report']
 
-        # Handle the `created_by` relationship:
-        if person:
-            # If there is a person, update the `created_by` relationship
-            if not note.created_by.is_connected(person):
-                note.created_by.disconnect_all()  # Remove old relationships
-                note.created_by.connect(person)   # Connect the new person
+        if person and not note.created_by.is_connected(person):
+            note.created_by.disconnect_all()
+            note.created_by.connect(person)
 
-        # Save the updated note
         note.save()
 
-        # Ensure the note is connected to the YearSuccessEvidence
         if not yse.notes.is_connected(note):
             yse.notes.connect(note)
 
         return True
 
     except Exception as e:
-        print(f"Error during note update: {e}")
-        return False
+        raise CrudError(f"Error during note update: {e}")
 
 
 def update_message(year_success_evidence: str, message_dict: dict, created_by: str = None) -> bool:
-    """
-    Update an existing message for a YearSuccessEvidence node.
-
-    :param year_success_evidence: str: The year identifier for the YearSuccessEvidence node.
-    :param message_dict: dict: A dictionary containing the updated fields for the message.
-    :param created_by: str or None: The employee ID of the person who created the message (optional).
-    :return: bool: Returns True if the update was successful, otherwise False.
-    """
-    # Validate input: ensure required fields are present
-    required_fields = ['name', 'message_type', 'authored_date']
-    for field in required_fields:
-        if field not in message_dict:
-            print(f"Missing required field: {field}")
-            return False
-
     try:
-        # Fetch the message by its unique name
         message = Message.nodes.get(name=message_dict.get('name'))
     except Message.DoesNotExist:
-        print("Message not found.")
-        return False
+        raise NotFoundError(f"Message with name {message_dict.get('name')} not found.")
     except Exception as e:
-        print(f"Failed to get Message: {e}")
-        return False
+        raise CrudError(f"Failed to get Message: {e}")
 
     try:
-        # Fetch the YearSuccessEvidence node by year_identifier
         yse = YearSuccessEvidence.nodes.get(year_identifier=year_success_evidence)
     except YearSuccessEvidence.DoesNotExist:
-        print("YearSuccessEvidence not found.")
-        return False
+        raise NotFoundError(f"YearSuccessEvidence with identifier {year_success_evidence} not found.")
     except Exception as e:
-        print(f"Failed to get YearSuccessEvidence: {e}")
-        return False
+        raise CrudError(f"Failed to get YearSuccessEvidence: {e}")
 
     person = None
     if created_by:
         try:
-            # Fetch the Person node by employee ID, if created_by is provided
             person = Person.nodes.get(employee_id=created_by)
         except Person.DoesNotExist:
-            print(f"Person with employee_id {created_by} not found. Proceeding without person update.")
+            raise NotFoundError(f"Person with employee_id {created_by} not found.")
         except Exception as e:
-            print(f"Failed to get Person: {e}")
-            return False
+            raise CrudError(f"Failed to get Person: {e}")
 
-    # Start the update process
     try:
-        # Update fields only if different from the existing values
         if message.content != message_dict.get('content', message.content):
             message.content = message_dict['content']
 
@@ -183,29 +126,19 @@ def update_message(year_success_evidence: str, message_dict: dict, created_by: s
         if message.include_in_report != message_dict.get('include_in_report', message.include_in_report):
             message.include_in_report = message_dict['include_in_report']
 
-        # Handle the `created_by` relationship:
-        if person:
-            # If there is a person, update the `created_by` relationship
-            if not message.created_by.is_connected(person):
-                message.created_by.disconnect_all()  # Remove old relationships
-                message.created_by.connect(person)   # Connect the new person
+        if person and not message.created_by.is_connected(person):
+            message.created_by.disconnect_all()
+            message.created_by.connect(person)
 
-        # Save the updated message
         message.save()
 
-        # Ensure the message is connected to the YearSuccessEvidence
         if not yse.messages.is_connected(message):
             yse.messages.connect(message)
 
         return True
 
     except Exception as e:
-        print(f"Error during message update: {e}")
-        return False
-
-
-
-
+        raise CrudError(f"Error during message update: {e}")
 
 
 

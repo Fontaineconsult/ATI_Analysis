@@ -4,10 +4,11 @@
 from datetime import datetime
 
 from app.database.graph_schema import *
-
 from app.database.graph_schema import Process
 from app.database.queries.implementation.read import get_goal_node
 
+
+from app.endpoints.data_api.errors.custom_exceptions import CrudError
 
 def add_process(title: str, description: str) -> bool:
     """
@@ -25,16 +26,14 @@ def add_process(title: str, description: str) -> bool:
         print("Added process")
         return True
     except Exception as e:
-        print(e)
-        return False
+        raise CrudError(f"Failed to add process: {e}")
+
 
 def add_guidance(title: str, description: str) -> bool:
     """
     Adds a guidance node to the graph
     :param title: Title of the guidance
     :param description: Description of the guidance
-    :param effective_date: Effective date of the guidance
-    :param last_updated: Last updated date of the guidance
     :return: True if the guidance node is added successfully, False otherwise
     """
     try:
@@ -46,9 +45,7 @@ def add_guidance(title: str, description: str) -> bool:
         print("Added guidance")
         return True
     except Exception as e:
-        print(e)
-        return False
-
+        raise CrudError(f"Failed to add guidance: {e}")
 
 
 def add_project(title: str, description: str) -> bool:
@@ -67,9 +64,7 @@ def add_project(title: str, description: str) -> bool:
         print("Added project")
         return True
     except Exception as e:
-        print(e)
-        return False
-
+        raise CrudError(f"Failed to add project: {e}")
 
 
 def add_procedure(title: str, description: str) -> bool:
@@ -88,8 +83,7 @@ def add_procedure(title: str, description: str) -> bool:
         print("Added procedure")
         return True
     except Exception as e:
-        print(e)
-        return False
+        raise CrudError(f"Failed to add procedure: {e}")
 
 
 def add_service(title: str, description: str) -> bool:
@@ -108,8 +102,7 @@ def add_service(title: str, description: str) -> bool:
         print("Added service")
         return True
     except Exception as e:
-        print(e)
-        return False
+        raise CrudError(f"Failed to add service: {e}")
 
 
 def add_accomplishment(name: str,
@@ -118,7 +111,7 @@ def add_accomplishment(name: str,
                        advanced_goal_number: str=None,
                        working_group: str=None,
                        furthered_yse_identifier: str=None,
-            ) -> bool:
+                       ) -> bool:
     try:
         academic_year = AcademicYear.nodes.get(name=academic_year)
         if advanced_goal_number and working_group:
@@ -141,14 +134,8 @@ def add_accomplishment(name: str,
         print(f"Plan '{name}' added successfully")
         return True
     except Exception as e:
-        print(e)
-        return False
+        raise CrudError(f"Failed to add accomplishment: {e}")
 
-# add_accomplishment("Accomplishment 1",
-#                    "Two co-executive sponsors volunteered to help steer the ATI at SF State",
-#                    "2022-2023",
-#                    7,
-#                    "web")
 
 def add_plan(name: str,
              plan_description: str,
@@ -159,20 +146,16 @@ def add_plan(name: str,
              furthered_working_group: str=None,
              furthered_yse_identifier: str=None) -> bool:
     try:
-        # Retrieve the AcademicYear node
         academic_year = AcademicYear.nodes.get(name=academic_year_name)
 
-        # Retrieve the Goal node if furthered_goal_number and working_group are provided
         furthered_goal = None
         if furthered_goal_number and furthered_working_group:
             furthered_goal = get_goal_node(furthered_goal_number, furthered_working_group)
 
-        # Retrieve the YearSuccessEvidence node if furthered_yse_identifier is provided
         furthered_yse = None
         if furthered_yse_identifier:
             furthered_yse = YearSuccessEvidence.nodes.get(year_identifier=furthered_yse_identifier)
 
-        # Create and save the Plan node
         plan = Plan(
             name=name,
             plan_description=plan_description,
@@ -180,31 +163,19 @@ def add_plan(name: str,
             is_campus_plan=is_campus_plan
         ).save()
 
-        # Connect the plan to the academic year
         plan.academic_year.connect(academic_year)
 
-        # Connect the plan to the goal if it was provided
         if furthered_goal:
             plan.furthered_goals.connect(furthered_goal)
 
-        # Connect the plan to the YearSuccessEvidence if it was provided
         if furthered_yse:
             plan.furthered_year_success_indicators.connect(furthered_yse)
 
         print(f"Plan '{name}' added successfully")
         return True
     except Exception as e:
-        print(e)
-        return False
+        raise CrudError(f"Failed to add plan: {e}")
 
-
-# add_plan("Plan 1",
-#          "We will continue to work to re-establish regular web subcommittee meetings.",
-#          "2022-2023",
-#          True,
-#          False,
-#          7,
-#          "web")
 
 def add_tracking(title: str, description: str) -> bool:
     """
@@ -222,12 +193,12 @@ def add_tracking(title: str, description: str) -> bool:
         print("Added tracking")
         return True
     except Exception as e:
-        print(e)
-        return False
+        raise CrudError(f"Failed to add tracking: {e}")
+
 
 def add_internal_policy(title: str, description: str) -> bool:
     """
-    Adds a internal policy node to the graph
+    Adds an internal policy node to the graph
     :param title: Title of the internal policy
     :param description: Description of the internal policy
     :return: True if the internal policy node is added successfully, False otherwise
@@ -241,5 +212,4 @@ def add_internal_policy(title: str, description: str) -> bool:
         print("Added internal policy")
         return True
     except Exception as e:
-        print(e)
-        return False
+        raise CrudError(f"Failed to add internal policy: {e}")

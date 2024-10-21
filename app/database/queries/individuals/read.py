@@ -2,7 +2,7 @@
 # INDIVIDUAL READ QUERIES
 #
 from app.database.graph_schema import *
-
+from app.endpoints.data_api.errors.custom_exceptions import NotFoundError
 
 def get_all_persons() -> list:
     """
@@ -17,4 +17,7 @@ def get_person_by_employee_id(employee_id: str) -> Person:
     :param employee_id: Employee ID of the person
     :return: Person node
     """
-    return Person.nodes.get_or_none(employee_id=employee_id)
+    person = Person.nodes.get_or_none(employee_id=employee_id)
+    if not person:
+        raise NotFoundError(f"Person with employee_id {employee_id} does not exist.")
+    return person
