@@ -1,5 +1,17 @@
 import React from 'react';
-import { ChakraProvider, Box, Flex, Heading, Button, Spacer, Container, Text, Menu, MenuButton, MenuList, MenuItem } from '@chakra-ui/react';
+import {
+    ChakraProvider,
+    Box,
+    Flex,
+    Heading,
+    Button,
+    Container,
+    Text,
+    Menu,
+    MenuButton,
+    MenuList,
+    MenuItem,
+} from '@chakra-ui/react';
 import { ChevronDownIcon } from '@chakra-ui/icons';
 import { Routes, Route, Link as RouterLink } from 'react-router-dom';  // Use RouterLink to avoid nested links
 import { DataProvider } from './context/DataContext';
@@ -38,67 +50,107 @@ function App() {
     return (
         <ChakraProvider>
             <UserProvider>
-
-                    <StatusLevelProvider>
-                        <Box className="App">
+                <StatusLevelProvider>
+                    <Box className="App" minHeight="100vh" bg="gray.50">
+                        {/* Fixed Header containing Main Navigation */}
+                        <Box
+                            position="fixed"
+                            top="0"
+                            left="0"
+                            right="0"
+                            bg="gray.75"
+                            zIndex="1000"
+                        >
                             {/* Main Navigation Bar */}
                             <Flex
-                                className="App-header"
                                 as="nav"
                                 bg="teal.600"
                                 p={4}
                                 color="white"
                                 alignItems="center"
                                 aria-label="Main Navigation"
+                                justifyContent="space-between"
+                                height="60px" // Fixed height
                             >
                                 <Flex alignItems="center">
                                     <Heading as="h1" size="lg" aria-label="ATI App" mr={8}>
                                         SF State ATI Knowledge Graph
                                     </Heading>
                                     {/* Main Navigation Buttons */}
-                                    <Button as={RouterLink} to="/ati-explorer" colorScheme="teal" variant="solid" mr={4}>
+                                    <Button
+                                        as={RouterLink}
+                                        to="/ati-explorer"
+                                        colorScheme="teal"
+                                        variant="solid"
+                                        mr={4}
+                                    >
                                         ATI Explorer
                                     </Button>
-                                    <Button as={RouterLink} to="/dashboard" colorScheme="teal" variant="solid" mr={4}>
+                                    <Button
+                                        as={RouterLink}
+                                        to="/dashboard"
+                                        colorScheme="teal"
+                                        variant="solid"
+                                        mr={4}
+                                    >
                                         Dashboard
                                     </Button>
-                                    <Button as={RouterLink} to="/about" colorScheme="teal" variant="solid" mr={4}>
+                                    <Button
+                                        as={RouterLink}
+                                        to="/about"
+                                        colorScheme="teal"
+                                        variant="solid"
+                                        mr={4}
+                                    >
                                         About
                                     </Button>
                                 </Flex>
 
-                                <Spacer />
+                                <Flex alignItems="center">
+                                    {/* Year Dropdown Menu */}
+                                    <Menu>
+                                        <MenuButton
+                                            as={Button}
+                                            rightIcon={<ChevronDownIcon />}
+                                            colorScheme="teal"
+                                        >
+                                            {currentAcademicYear || 'Select Year'}
+                                        </MenuButton>
+                                        <MenuList>
+                                            {yearOptions.map((year) => (
+                                                <MenuItem
+                                                    key={year}
+                                                    onClick={() => handleYearChange(year)}
+                                                >
+                                                    {year}
+                                                </MenuItem>
+                                            ))}
+                                        </MenuList>
+                                    </Menu>
 
-                                {/* Year Dropdown Menu */}
-                                <Menu>
-                                    <MenuButton as={Button} rightIcon={<ChevronDownIcon />} colorScheme="teal">
-                                        {currentAcademicYear || 'Select Year'}
-                                    </MenuButton>
-                                    <MenuList>
-                                        {yearOptions.map((year) => (
-                                            <MenuItem
-                                                key={year}
-                                                onClick={() => handleYearChange(year)}
-                                            >
-                                                {year}
-                                            </MenuItem>
-                                        ))}
-                                    </MenuList>
-                                </Menu>
-
-                                {/* Display the current user name on the right */}
-                                <Flex direction="column" alignItems="flex-end" ml={4}>
-                                    <Text fontSize="md" fontWeight="bold" aria-label="Current User">
-                                        {user ? `Notating as: ${user.name}` : 'No Active User'}
-                                    </Text>
+                                    {/* Display the current user name on the right */}
+                                    <Flex direction="column" alignItems="flex-end" ml={4}>
+                                        <Text fontSize="md" fontWeight="bold" aria-label="Current User">
+                                            {user ? `Notating as: ${user.name}` : 'No Active User'}
+                                        </Text>
+                                    </Flex>
                                 </Flex>
                             </Flex>
 
                             {/* Sub Navbar */}
-                            <SubNavbar /> {/* Always displayed under the main navigation bar */}
+                            <SubNavbar />
+                        </Box>
 
+                        {/* Wrapper Box with padding-top to offset fixed header height */}
+                        <Box pt="112px"> {/* 60px Main Nav + 52px SubNavbar = 112px */}
                             {/* Main Content */}
-                            <Container as="main" className="App-content" p={4} maxW="1200px" centerContent>
+                            <Container
+                                as="main"
+                                className="App-content"
+                                p={4}
+                                maxW="1200px"
+                                centerContent
+                            >
                                 <Routes>
                                     <Route path="/ati-explorer/*" element={<AtiExplorer />} />
                                     <Route path="/dashboard/*" element={<Dashboard />} />
@@ -106,8 +158,8 @@ function App() {
                                 </Routes>
                             </Container>
                         </Box>
-                    </StatusLevelProvider>
-
+                    </Box>
+                </StatusLevelProvider>
             </UserProvider>
         </ChakraProvider>
     );

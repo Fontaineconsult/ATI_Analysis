@@ -21,17 +21,24 @@ function SubNavbar() {
         ];
     } else if (location.pathname.includes('/about')) {
         subNavItems = [
-            { label: 'Team', path: '/about/team' },
-            { label: 'Contact', path: '/about/contact' },
-            { label: 'History', path: '/about/history' },
+            { label: 'ATI Working Group', path: '/about/ati-working-group' },
+            { label: 'SF State ATI Overview', path: '/about/sf-state-ati-overview' },
+            // { label: 'History', path: '/about/history' },
         ];
     } else {
         subNavItems = [];
     }
 
     return (
-        <Box as="nav" bg="gray.100" py={2} boxShadow="md"> {/* Sub-navbar styling */}
-            <Flex justify="center" gap={4}>
+        <Box
+            as="nav"
+            bg="gray.100"
+            py={2}
+            boxShadow="md"
+            position="relative"
+            height="52px" // Fixed height
+        > {/* Sub-navbar styling */}
+            <Flex justify="center" align="center" height="100%">
                 {subNavItems.map((item) => (
                     <Button
                         key={item.label}
@@ -42,6 +49,7 @@ function SubNavbar() {
                         size="md"
                         fontWeight={location.pathname === item.path ? 'bold' : 'normal'}  // Bold for active
                         _hover={{ textDecoration: 'none', bg: 'teal.100' }}  // Hover effect
+                        mx={2} // Margin between buttons
                     >
                         {item.label}
                     </Button>
