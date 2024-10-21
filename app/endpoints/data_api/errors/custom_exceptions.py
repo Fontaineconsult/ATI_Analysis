@@ -6,6 +6,7 @@ class DatabaseError(Exception):
         super().__init__(message)
         self.original_exception = original_exception
 
+
 class NotFoundError(DatabaseError):
     """Raised when a requested resource is not found in the database."""
     pass
