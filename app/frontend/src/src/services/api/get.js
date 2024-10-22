@@ -36,3 +36,14 @@ export const fetchUserByEmployeeId = async (employeeId) => {
         throw error;
     }
 };
+
+// Fetch current year indicator data
+export const fetchCurrentYearIndicator = async (currentYear) => {
+    try {
+        const response = await axios.get(`${process.env.REACT_APP_API_URL}/indicators?academic_year=${currentYear}`);
+        return response.data;  // Expected response is a list of three objects
+    } catch (error) {
+        console.error('Error fetching current year indicator:', error);
+        throw error;
+    }
+};

@@ -1,12 +1,9 @@
-# app/__init__.py
-from flask import Flask
-from jinja2 import Environment, FileSystemLoader
 
-from app.endpoints.data_api.api_endpoints import data_api
+
+from app.endpoints.data_api import data_api
 from app.endpoints.react_endpoints import react_pages
 from app.web_config import Config
 from neomodel import config, db
-
 
 from urllib.parse import urlencode
 def merge_query_params(*dict1):

@@ -1,5 +1,5 @@
 import React, { createContext, useState, useEffect } from 'react';
-import { fetchPrimaryData } from '../services/api/get';
+import { fetchPrimaryData, fetchCurrentYearIndicator } from '../services/api/get'; // Import fetchCurrentYearIndicator
 import { useToast } from '@chakra-ui/react'; // Import useToast from Chakra UI
 
 // Create a context
@@ -11,6 +11,7 @@ export const DataProvider = ({ children }) => {
         web: null,
         instructionalMaterials: null,
         procurement: null,
+        indicators: null,  // Add indicators state
     });
     const [loading, setLoading] = useState(true);  // Loading state for initial data
     const [updating, setUpdating] = useState(false);  // Updating state for background updates
@@ -23,15 +24,16 @@ export const DataProvider = ({ children }) => {
         loadData();  // Load data when the component mounts or the selected year changes
     }, [selectedYear]);
 
-    // Function to fetch data for all working groups
+    // Function to fetch data for all working groups and indicators
     const loadData = async () => {
         try {
             setLoading(true);  // Show initial loading spinner
             // Fetch data for all working groups for the selected year
-            const [webData, instructionalMaterialsData, procurementData] = await Promise.all([
+            const [webData, instructionalMaterialsData, procurementData, indicatorsData] = await Promise.all([
                 fetchPrimaryData("web", selectedYear),
                 fetchPrimaryData("instructional-materials", selectedYear),
                 fetchPrimaryData("procurement", selectedYear),
+                fetchCurrentYearIndicator(selectedYear),  // Fetch indicators data
             ]);
 
             // Set the data in the state under their respective keys
@@ -39,6 +41,7 @@ export const DataProvider = ({ children }) => {
                 web: webData,
                 instructionalMaterials: instructionalMaterialsData,
                 procurement: procurementData,
+                indicators: indicatorsData,  // Store indicators data
             });
 
         } catch (err) {
@@ -83,6 +86,31 @@ export const DataProvider = ({ children }) => {
         }
     };
 
+    // Function to refresh only the indicators data
+    const refreshIndicators = async () => {
+        try {
+            setUpdating(true);  // Trigger background updating state for indicators refresh
+            const indicatorsData = await fetchCurrentYearIndicator(selectedYear);  // Fetch indicators data
+
+            // Update only the indicators data in the state
+            setData((prevData) => ({
+                ...prevData,
+                indicators: indicatorsData,  // Update only indicators
+            }));
+        } catch (err) {
+            toast({
+                title: "Error refreshing indicators data.",
+                description: err.message,
+                status: "error",
+                duration: 3000,
+                isClosable: true,
+            });
+        } finally {
+            setUpdating(false);  // Stop background updating after refresh
+        }
+    };
+
+
     // Function to update the selected year
     const updateYear = (newYear) => {
         setSelectedYear(newYear);
@@ -96,7 +124,14 @@ export const DataProvider = ({ children }) => {
     };
 
     return (
-        <DataContext.Provider value={{ data, loading, updating, error, selectedYear, updateYear, loadSingleWorkingGroupData }}>
+        <DataContext.Provider value={{ data,
+            loading,
+            updating,
+            error,
+            selectedYear,
+            updateYear,
+            loadSingleWorkingGroupData,
+            refreshIndicators}}>
             {children}
         </DataContext.Provider>
     );
