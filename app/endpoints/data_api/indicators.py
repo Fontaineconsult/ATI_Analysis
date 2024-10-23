@@ -1,170 +1,120 @@
-# app/endpoints/data_api/api_endpoints.py
+import json
 
-from flask import request, jsonify
+from flask import request, jsonify, Response
 from flask.views import MethodView
 from datetime import datetime as dt  # Added import
 
 from app.database.queries.evidence.delete import delete_year_success_evidence
-from app.database.queries.indicators.create import create_success_indicator
+from app.database.queries.indicators.create import create_success_indicator, add_goal
 from app.database.queries.indicators.read import fetch_success_indicators_for_working_group
 from app.database.queries.indicators.update import set_removed_status_for_success_indicator
 
 from app.endpoints.data_api.errors.custom_exceptions import NotFoundError, ValidationError, CrudError
 
-from . import data_api
+from . import data_api_endpoints
+from .util.response import make_response
+
 
 class IndicatorsAPI(MethodView):
-    def get(self):
+    def get(self, academic_year):
         """
-        Handle GET requests to fetch success indicators for a specific academic year.
+        Handle GET requests to fetch success indicators for a specific academic year from the URL.
         """
         try:
-            # Extract 'academic_year' from query parameters
-            academic_year = request.args.get('academic_year')
             if not academic_year:
-                return jsonify({'error': 'The "academic_year" query parameter is required.'}), 400
+                return make_response(status='error', error='The "academic_year" parameter is required.'), 400
 
             # Fetch success indicators using the service function
             indicators_data = fetch_success_indicators_for_working_group(academic_year)
-            return jsonify(indicators_data[0][0]), 200
+
+            return make_response(status='success', data=json.loads(indicators_data[0][0])), 200
+
 
         except NotFoundError as e:
             # Custom error when no data is found
-            return jsonify({'error': str(e)}), 404
+            return make_response(status='error', error=str(e)), 404
 
         except Exception as e:
             # General exception handler
-            return jsonify({'error': 'An unexpected error occurred.', 'details': str(e)}), 500
+            return make_response(status='error', error=str(e)), 500
 
     def post(self):
         """
         Handle POST requests to create a new success indicator.
         """
         try:
-            # Extract JSON data from the request body
             data = request.get_json()
-            if not data:
-                return jsonify({'error': 'Invalid JSON payload.'}), 400
+            action = data.get('action')
 
-            # Extract required fields
-            number = data.get('number')
-            sub_committee = data.get('sub_committee')
-            success_indicator_text = data.get('success_indicator_text')
-            date_added = data.get('date_added')  # Optional
-            removed = data.get('removed', False)  # Optional, defaults to False
+            if not action:
+                return make_response(status="error", error="The 'action' field is required."), 400
 
-            # Validate required fields
-            if not all([number, sub_committee, success_indicator_text]):
-                return jsonify({
-                    'error': 'Missing required fields. "number", "sub_committee", and "success_indicator_text" are required.'
-                }), 400
+            # Dynamically call the function based on the action
+            if action == 'create_success_indicator':
 
-            # Convert 'date_added' to datetime if provided
-            if date_added:
-                try:
-                    date_added = dt.fromisoformat(date_added)
-                except ValueError:
-                    return jsonify({'error': 'Invalid date format for "date_added". Use ISO format.'}), 400
+                required_keys = ["number", "sub_committee", "success_indicator_text", "date_added", "removed"]
+                if not all(key in data for key in required_keys):
+                    return make_response(status="error", error="Missing required fields"), 400
+                indicator_data = {key: data.get(key) for key in required_keys}
+                if create_success_indicator(**indicator_data):
+                    return make_response(status="Success Indicator created successfully."), 201
 
-            # Call the service function to create a success indicator
-            create_success_indicator(
-                number=number,
-                sub_committee=sub_committee,
-                success_indicator_text=success_indicator_text,
-                date_added=date_added,
-                removed=removed
-            )
+            if action == 'add_goal':
 
-            return jsonify({'message': 'Success indicator created successfully.'}), 201
+                required_keys = ["goal", "goal_number", "name", "removed", "working_group"]
+                if not all(key in data for key in required_keys):
+                    return make_response(status="error", error="Missing required fields"), 400
+                goal_data = {key: data.get(key) for key in required_keys}
+                if add_goal(**goal_data):
+                    return make_response(status="Goal created successfully."), 201
 
-        except ValidationError as ve:
-            # Handle validation errors
-            return jsonify({'error': str(ve)}), 400
+            else:
+                return make_response(status="error", error=f"Unknown action: {action}"), 400
 
-        except NotFoundError as ne:
-            # Handle not found errors
-            return jsonify({'error': str(ne)}), 404
-
-        except CrudError as ce:
-            # Handle CRUD operation errors
-            return jsonify({'error': str(ce)}), 500
-
+        except ValidationError as e:
+            return make_response(status='error', error=str(e)), 400
+        except CrudError as e:
+            return make_response(status='error', error=str(e)), 500
         except Exception as e:
-            # Handle any other unexpected errors
-            return jsonify({'error': 'An unexpected error occurred.', 'details': str(e)}), 500
+            return make_response(status='error', error=f"An unexpected error occurred: {str(e)}"), 500
 
     def put(self):
         """
         Handle PUT requests to update the 'removed' status of a success indicator.
         """
         try:
-            # Extract JSON data from the request body
+            # Get the request data
             data = request.get_json()
-            if not data:
-                return jsonify({'error': 'Invalid JSON payload.'}), 400
-
             composite_key = data.get('composite_key')
             removed = data.get('removed')
 
-            # Validate required fields
+            # Validate input
             if composite_key is None or removed is None:
-                return jsonify({
-                    'error': 'Missing required fields. "composite_key" and "removed" are required.'
-                }), 400
+                return make_response(status="error", error="Both 'composite_key' and 'removed' are required."), 400
 
-            # Call the service function to set removed status
-            success = set_removed_status_for_success_indicator(composite_key=composite_key, removed=removed)
+            # Call the function to update the 'removed' status
+            updated = set_removed_status_for_success_indicator(composite_key, removed)
 
-            if success:
-                return jsonify({'message': 'Removed status updated successfully.'}), 200
+            if updated:
+                return make_response(status="success", data=f"SuccessIndicator {composite_key} updated successfully."), 200
             else:
-                return jsonify({'error': 'Failed to update removed status.'}), 500
+                return make_response(status="error", error="Failed to update success indicator."), 500
 
-        except ValidationError as ve:
-            return jsonify({'error': str(ve)}), 400
-
-        except NotFoundError as ne:
-            return jsonify({'error': str(ne)}), 404
-
-        except CrudError as ce:
-            return jsonify({'error': str(ce)}), 500
-
+        except NotFoundError as e:
+            return make_response(status="error", error=str(e)), 404
+        except CrudError as e:
+            return make_response(status="error", error=str(e)), 500
         except Exception as e:
-            return jsonify({'error': 'An unexpected error occurred.', 'details': str(e)}), 500
+            return make_response(status="error", error=f"An unexpected error occurred: {str(e)}"), 500
 
     def delete(self):
         """
         Handle DELETE requests to delete a YearSuccessEvidence node.
         """
-        try:
-            # Extract 'year_success_identifier' from query parameters or JSON body
-            year_success_identifier = request.args.get('year_success_identifier')
-            if not year_success_identifier:
-                data = request.get_json()
-                if not data:
-                    return jsonify({'error': 'The "year_success_identifier" is required.'}), 400
-                year_success_identifier = data.get('year_success_identifier')
-                if not year_success_identifier:
-                    return jsonify({'error': 'The "year_success_identifier" field is required.'}), 400
-
-            # Call the service function to delete YearSuccessEvidence
-            success = delete_year_success_evidence(year_success_identifier=year_success_identifier)
-
-            if success:
-                return jsonify({'message': f'YearSuccessEvidence "{year_success_identifier}" deleted successfully.'}), 200
-            else:
-                return jsonify({'error': 'Failed to delete YearSuccessEvidence.'}), 500
-
-        except NotFoundError as ne:
-            return jsonify({'error': str(ne)}), 404
-
-        except CrudError as ce:
-            return jsonify({'error': str(ce)}), 500
-
-        except Exception as e:
-            return jsonify({'error': 'An unexpected error occurred.', 'details': str(e)}), 500
+        return make_response(status="error", error="Not Implemented"), 405
 
 
 # Register the view with the Blueprint
 indicators_view = IndicatorsAPI.as_view('indicators_api')
-data_api.add_url_rule('/indicators', view_func=indicators_view, methods=['GET', 'POST', 'PUT', 'DELETE'])
+data_api_endpoints.add_url_rule('/indicators/<string:academic_year>', view_func=indicators_view, methods=['GET'])
+data_api_endpoints.add_url_rule('/indicators', view_func=indicators_view, methods=['PUT', 'POST'])

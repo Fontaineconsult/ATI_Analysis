@@ -58,6 +58,7 @@ def create_success_indicator(number,
         )
         indicator.save()
         goal_node.supporting_success_indicators.connect(indicator)
+        return True
     except Exception as e:
         raise CrudError(f"Failed to create SuccessIndicator: {str(e)}")
 
@@ -107,5 +108,6 @@ def add_goal(goal, goal_number, name, removed, working_group):
         )
         goal_node.save()
         working_group_node.responsible_for.connect(goal_node)
+        return True
     except Exception as e:
         raise CrudError(f"Failed to create goal: {str(e)}")

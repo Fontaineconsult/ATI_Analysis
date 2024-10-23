@@ -217,3 +217,7 @@ def add_webpage(url, name, no_longer_exists, depreciated, depreciated_year, desc
     except Exception as e:
         print(f"Failed to add webpage: {e}")
         raise CrudError("Failed to add webpage", e)
+
+
+def add_metric():
+    return None

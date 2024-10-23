@@ -3,7 +3,7 @@ from flask.views import MethodView
 from datetime import datetime as dt
 
 
-from . import data_api
+from . import data_api_endpoints
 
 class OrganizationalUnitsAPI(MethodView):
     def get(self):
@@ -16,4 +16,4 @@ class OrganizationalUnitsAPI(MethodView):
         pass
 
 organizational_units_view = OrganizationalUnitsAPI.as_view('organizational_units_view')
-data_api.add_url_rule('/organizational-units', view_func=organizational_units_view, methods=['GET', 'POST', 'PUT', 'DELETE'])
+data_api_endpoints.add_url_rule('/organizational-units', view_func=organizational_units_view, methods=['GET', 'POST', 'PUT', 'DELETE'])

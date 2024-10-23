@@ -155,3 +155,5 @@ def update_message(year_success_evidence: str, message_dict: dict, created_by: s
 
 #
 # unassign_note_from_yse("Measures of success: Stored in compliance sheriff", "2022-2023-1.6-web")
+def update_metric():
+    return None
