@@ -46,3 +46,39 @@ function createWebpagePayload(url, name, noLongerExists, depreciated, depreciate
         description: description
     };
 }
+
+function updateNotePayload(yearSuccessEvidence, noteName, content = null, includeInReport = true, depreciated = false, depreciatedDate = null) {
+    return {
+        action: "update_note",
+        year_success_evidence: yearSuccessEvidence,
+        note_dict: {
+            name: noteName,
+            content: content,
+            include_in_report: includeInReport,
+            depreciated: depreciated,
+            depreciated_date: depreciatedDate
+        }
+    };
+}
+
+function updateMessagePayload(yearSuccessEvidence, messageName, content = null, filePath = null, uriPath = null, depreciated = false, depreciatedDate = null) {
+    return {
+        action: "update_message",
+        year_success_evidence: yearSuccessEvidence,
+        message_dict: {
+            name: messageName,
+            content: content,
+            file_path: filePath,
+            uri_path: uriPath,
+            depreciated: depreciated,
+            depreciated_date: depreciatedDate
+        }
+    };
+}
+
+
+function updateMetricPayload() {
+    return {
+        action: "update_metric"
+    };
+}

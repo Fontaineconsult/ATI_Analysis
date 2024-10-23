@@ -3,6 +3,7 @@ from flask.views import MethodView
 
 from . import data_api_endpoints
 from app.database.queries.documentation.create import add_note, add_message, add_document, add_webpage
+from app.database.queries.documentation.update import update_note, update_message, update_metric
 from app.database.queries.documentation.read import get_all_notes, get_all_messages, get_all_metrics, get_all_documents, get_all_webpages
 from app.endpoints.data_api.util.response import make_response
 from .errors.custom_exceptions import NotFoundError, CrudError, ValidationError
@@ -97,9 +98,48 @@ class DocumentsAPI(MethodView):
 
     def put(self, document_type):
         """
-        Handles PUT requests to update documents based on the document type.
+        Handle PUT requests to update documents based on the document type.
         """
-        return make_response(status="error", error="Not Implemented"), 405
+        try:
+            data = request.get_json()
+
+            action = data.get('action')
+            if not action:
+                return make_response(status="error", error="The 'action' field is required."), 400
+
+            # Dynamically call the appropriate function based on the action
+            if action == 'update_note':
+                required_fields = ['year_success_evidence', 'note_dict']
+                if not all(field in data for field in required_fields):
+                    return make_response(status="error", error="Missing required fields for note update."), 400
+                if update_note(data['year_success_evidence'], data['note_dict'], data.get('created_by')):
+                    return make_response(status="success", data="Note updated successfully."), 200
+
+            elif action == 'update_message':
+                required_fields = ['year_success_evidence', 'message_dict']
+                if not all(field in data for field in required_fields):
+                    return make_response(status="error", error="Missing required fields for message update."), 400
+                if update_message(data['year_success_evidence'], data['message_dict'], data.get('created_by')):
+                    return make_response(status="success", data="Message updated successfully."), 200
+
+            elif action == 'update_metric':
+                # Placeholder for updating a metric
+                if update_metric():
+                    return make_response(status="success", data="Metric updated successfully."), 200
+                else:
+                    return make_response(status="error", error="Failed to update metric."), 500
+
+            else:
+                return make_response(status="error", error=f'Unknown action: {action}'), 400
+
+        except ValidationError as e:
+            return make_response(status='error', error=str(e)), 400
+        except NotFoundError as e:
+            return make_response(status='error', error=str(e)), 404
+        except CrudError as e:
+            return make_response(status='error', error=str(e)), 500
+        except Exception as e:
+            return make_response(status='error', error=f"An unexpected error occurred: {str(e)}"), 500
 
     def delete(self, document_type):
         """
@@ -110,5 +150,5 @@ class DocumentsAPI(MethodView):
 
 # Register the view for different document types
 documents_view = DocumentsAPI.as_view('documents_api')
-data_api_endpoints.add_url_rule('/documents/<string:document_type>', view_func=documents_view, methods=['GET'])
+data_api_endpoints.add_url_rule('/documents/<string:document_type>', view_func=documents_view, methods=['GET', 'PUT'])
 data_api_endpoints.add_url_rule('/documents', view_func=documents_view, methods=['POST', 'PUT'])
