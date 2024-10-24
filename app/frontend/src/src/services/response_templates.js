@@ -82,3 +82,12 @@ function updateMetricPayload() {
         action: "update_metric"
     };
 }
+
+
+function generateUpdateStatusLevelPayload(yearSuccessEvidence, statusLevel) {
+    return {
+        yse: yearSuccessEvidence,  // year success evidence identifier
+        status_level: statusLevel  // new status level
+    };
+}
+

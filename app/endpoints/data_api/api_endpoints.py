@@ -46,34 +46,34 @@ def get_yse(yse):
 #     except Exception as e:
 #         return jsonify({'error': str(e)}), 500
 
-@data_api.route('/status-levels', methods=['GET', 'PUT'])
-def get_or_update_status_level():
-    if request.method == 'GET':
-        try:
-            all_nodes = get_all_status_level_nodes()
-            serialized = [node.serialize() for node in all_nodes]
-            return jsonify({'status_levels': serialized}), 200
-        except Exception as e:
-            return jsonify({'error': str(e)}), 500
-
-    elif request.method == 'PUT':
-        data = request.get_json()
-        yse = data.get('yse')
-        status_level = data.get('status_level')
-
-        if not yse or not status_level:
-            return jsonify({'error': 'Missing yse or status_level in request'}), 400
-
-        if status_level not in status_levels:
-            return jsonify({'error': f'Invalid status level. One of {status_levels}'}), 400
-
-        try:
-            assign_status_to_yse(yse, status_level)
-            return jsonify({'message': 'Status level updated successfully'}), 200
-        except Exception as e:
-            return jsonify({'error': str(e)}), 500
-
-    return jsonify({'error': 'Method not allowed'}), 405
+# @data_api.route('/status-levels', methods=['GET', 'PUT'])
+# def get_or_update_status_level():
+#     if request.method == 'GET':
+#         try:
+#             all_nodes = get_all_status_level_nodes()
+#             serialized = [node.serialize() for node in all_nodes]
+#             return jsonify({'status_levels': serialized}), 200
+#         except Exception as e:
+#             return jsonify({'error': str(e)}), 500
+#
+#     elif request.method == 'PUT':
+#         data = request.get_json()
+#         yse = data.get('yse')
+#         status_level = data.get('status_level')
+#
+#         if not yse or not status_level:
+#             return jsonify({'error': 'Missing yse or status_level in request'}), 400
+#
+#         if status_level not in status_levels:
+#             return jsonify({'error': f'Invalid status level. One of {status_levels}'}), 400
+#
+#         try:
+#             assign_status_to_yse(yse, status_level)
+#             return jsonify({'message': 'Status level updated successfully'}), 200
+#         except Exception as e:
+#             return jsonify({'error': str(e)}), 500
+#
+#     return jsonify({'error': 'Method not allowed'}), 405
 
 @data_api.route('/persons', methods=['GET'])
 def get_persons():
