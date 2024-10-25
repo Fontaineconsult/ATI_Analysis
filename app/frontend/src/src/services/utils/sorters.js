@@ -28,3 +28,19 @@ export function sortSuccessIndicators(a, b) {
 
     return keyA.localeCompare(keyB, undefined, { numeric: true, sensitivity: 'base' });
 }
+
+
+/**
+ * Comparator function to sort goals based on their goal_number.
+ * It ensures that goals are sorted numerically (e.g., Goal 2 before Goal 10).
+ *
+ * @param {Object} a - First goal object to compare.
+ * @param {Object} b - Second goal object to compare.
+ * @returns {number} - Negative number if a < b, positive if a > b, zero if equal.
+ */
+export function sortGoals(a, b) {
+    const goalNumberA = a.goal_number || 0;
+    const goalNumberB = b.goal_number || 0;
+
+    return goalNumberA - goalNumberB;
+}

@@ -97,3 +97,15 @@ export function updateIndicatorRemovedStatus(composite_key, removed) {
         removed: removed  // bool
     };
 }
+
+export function createSuccessIndicatorPayload(number, goalNumber, subCommittee, successIndicatorText, dateAdded, removed) {
+    return {
+        action: "create_success_indicator",
+        number: number,
+        goal_number: goalNumber,
+        sub_committee: subCommittee,
+        success_indicator_text: successIndicatorText,
+        date_added: dateAdded,
+        removed: removed
+    };
+}

@@ -4,80 +4,82 @@ import {
     Heading,
     Button,
     Select,
-    Tooltip,
-    Modal,
-    ModalOverlay,
-    ModalContent,
-    ModalHeader,
-    ModalBody,
-    ModalFooter,
-    ModalCloseButton,
     useDisclosure,
 } from '@chakra-ui/react';
 import { useTable } from 'react-table';
 import { DataContext } from '../../../context/DataContext';
 import { useColorModeValue } from '@chakra-ui/react';
 import { updateRemovedStatus, attachYearSuccessEvidence, detachYearSuccessEvidence } from '../../../services/api/put';
-import {sortSuccessIndicators} from "../../../services/utils/sorters";
-
+import { sortGoals, sortSuccessIndicators } from "../../../services/utils/sorters";
+import AddIndicator from './AddIndicator';  // Import the AddIndicator component
 
 const SuccessIndicators = () => {
     const { data, refreshIndicators } = useContext(DataContext);
     const { indicators } = data;
 
-    const { isOpen, onOpen, onClose } = useDisclosure();
+    const [openModals, setOpenModals] = useState({});
     const [selectedIndicator, setSelectedIndicator] = useState(null);
     const [actionType, setActionType] = useState('');
     const [isLoading, setIsLoading] = useState(false);
 
-    // Optimistically update the "removed" status on the Status dropdown
+    // Open modal for adding an indicator to a specific category
+    const onAddOpen = (categoryName) => {
+        setOpenModals((prev) => ({ ...prev, [categoryName]: true }));
+    };
+
+    // Close modal for adding an indicator to a specific category
+    const onAddClose = (categoryName) => {
+        setOpenModals((prev) => ({ ...prev, [categoryName]: false }));
+    };
+
     const handleStatusChange = async (indicator, newStatus) => {
         const originalRemovedStatus = indicator.removed;
         const newRemovedStatus = newStatus === 'Removed';
 
         indicator.removed = newRemovedStatus;
-        refreshIndicators(); // Update the view optimistically
+        refreshIndicators();
 
         try {
             setIsLoading(true);
             await updateRemovedStatus(indicator.composite_key, newRemovedStatus);
-            refreshIndicators(); // Confirm changes with fresh data on success
+            refreshIndicators();
         } catch (error) {
             console.error("Failed to update status:", error);
-            indicator.removed = originalRemovedStatus; // Revert change on error
+            indicator.removed = originalRemovedStatus;
             refreshIndicators();
         } finally {
             setIsLoading(false);
         }
     };
 
-    // Attach or Detach YSE node based on current state
     const toggleYearSuccessEvidence = async (indicator) => {
         const action = indicator.yearSuccessIndicators.length > 0 ? "detach" : "attach";
         setIsLoading(true);
 
         try {
             if (action === "attach") {
-                await attachYearSuccessEvidence(indicator.composite_key); // API to attach YSE node
+                await attachYearSuccessEvidence(indicator.composite_key);
             } else {
-                await detachYearSuccessEvidence(indicator.composite_key); // API to detach YSE node
+                await detachYearSuccessEvidence(indicator.composite_key);
             }
-            refreshIndicators(); // Refresh indicators to reflect new YSE state
+            refreshIndicators();
         } catch (error) {
             console.error(`Failed to ${action} year success evidence:`, error);
         } finally {
             setIsLoading(false);
-            onClose();
             setSelectedIndicator(null);
             setActionType('');
         }
     };
 
-    // Handle Attach/Detach button action
     const handleActionClick = (indicator) => {
         setSelectedIndicator(indicator);
         setActionType(indicator.yearSuccessIndicators.length > 0 ? 'Detach YSE' : 'Attach YSE');
-        onOpen();
+    };
+
+    const handleAddIndicatorSubmit = (indicatorData) => {
+        console.log("New indicator data:", indicatorData);
+        // Add API call to save the indicator data
     };
 
     const columns = React.useMemo(
@@ -138,68 +140,45 @@ const SuccessIndicators = () => {
         <Box>
             <Heading size="md" mb={4}>Success Indicators</Heading>
 
-            {indicators.map((category) => (
-                <Box key={category.name} mb={8}>
-                    <Heading size="md" mb={4}>{category.name}</Heading>
+            {indicators
+                .sort(sortGoals)
+                .map((category) => (
+                    <Box key={category.name} mb={8}>
+                        <Heading size="md" mb={4}>{category.name}</Heading>
 
-                    {category.goals && category.goals.length > 0 ? (
-                        category.goals.map((goal) => (
-                            <Box key={goal.goal_number} mb={6}>
-                                <Heading size="sm" mb={2}>{`Goal ${goal.goal_number}: ${goal.goal}`}</Heading>
-                                <p>{goal.name}</p>
+                        <AddIndicator
+                            indicators={category}
+                            wg={category.name}
+                            isOpen={openModals[category.name] || false}
+                            onClose={() => onAddClose(category.name)}
+                            onSubmit={handleAddIndicatorSubmit}
+                        />
 
-                                {goal.successIndicators && goal.successIndicators.length > 0 ? (
-                                    <SuccessIndicatorTable
-                                        data={goal.successIndicators.sort(sortSuccessIndicators)}
-                                        columns={columns}
-                                    />
-                                ) : (
-                                    <Box>No success indicators available.</Box>
-                                )}
-                            </Box>
-                        ))
-                    ) : (
-                        <Box>No goals available for {category.name}.</Box>
-                    )}
-                </Box>
-            ))}
+                        <Button colorScheme="blue" onClick={() => onAddOpen(category.name)} mb={4}>Add Indicator</Button>
 
-            <Modal isOpen={isOpen} onClose={() => { onClose(); setSelectedIndicator(null); setActionType(''); }} isCentered>
-                <ModalOverlay />
-                <ModalContent>
-                    <ModalHeader>Confirm {actionType}</ModalHeader>
-                    <ModalCloseButton />
-                    <ModalBody>
-                        {selectedIndicator && (
-                            <Box>
-                                {actionType === 'Detach YSE' ? (
-                                    <>
-                                        <Heading size="sm" mb={2}>{selectedIndicator.success_indicator}</Heading>
-                                        <Box>Are you sure you want to detach this evidence node from the success indicator? This action cannot be undone.</Box>
-                                    </>
-                                ) : (
-                                    <>
-                                        <Heading size="sm" mb={2}>{selectedIndicator.success_indicator}</Heading>
-                                        <Box>Are you sure you want to attach an evidence node to this success indicator?</Box>
-                                    </>
-                                )}
-                            </Box>
+                        {category.goals && category.goals.length > 0 ? (
+                            category.goals
+                                .sort(sortGoals)
+                                .map((goal) => (
+                                    <Box key={goal.goal_number} mb={6}>
+                                        <Heading size="sm" mb={2}>{`Goal ${goal.goal_number}: ${goal.goal}`}</Heading>
+                                        <p>{goal.name}</p>
+
+                                        {goal.successIndicators && goal.successIndicators.length > 0 ? (
+                                            <SuccessIndicatorTable
+                                                data={goal.successIndicators.sort(sortSuccessIndicators)}
+                                                columns={columns}
+                                            />
+                                        ) : (
+                                            <Box>No success indicators available.</Box>
+                                        )}
+                                    </Box>
+                                ))
+                        ) : (
+                            <Box>No goals available for {category.name}.</Box>
                         )}
-                    </ModalBody>
-                    <ModalFooter>
-                        <Button variant="ghost" mr={3} onClick={() => { onClose(); setSelectedIndicator(null); setActionType(''); }}>
-                            Cancel
-                        </Button>
-                        <Button
-                            colorScheme={actionType === 'Detach YSE' ? 'red' : 'green'}
-                            onClick={() => toggleYearSuccessEvidence(selectedIndicator)}
-                            isLoading={isLoading}
-                        >
-                            Confirm
-                        </Button>
-                    </ModalFooter>
-                </ModalContent>
-            </Modal>
+                    </Box>
+                ))}
         </Box>
     );
 };

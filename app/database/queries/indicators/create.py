@@ -6,29 +6,37 @@ from os import removedirs
 
 from neomodel import db
 from app.database.graph_schema import *
-from app.data_config import working_group_names
+from app.data_config import working_group_names, compsite_key_wg_names
 
 from app.endpoints.data_api.errors.custom_exceptions import NotFoundError, ValidationError, CrudError
 
+from datetime import datetime as dt
+from dateutil.parser import parse as parse_date
+
 def create_success_indicator(number,
+                             goal_number,  # number
                              sub_committee,
                              success_indicator_text,
                              date_added=None,
                              removed=False):
     if date_added is None:
-        date_added = dt.now()
+        date_added = dt.now().strftime('%Y-%m-%d')
+    elif isinstance(date_added, str):
+        try:
+            date_added = parse_date(date_added)
+        except ValueError:
+            raise ValidationError("date_added must be in a valid 'YYYY-MM-DD' format if provided as a string.")
 
     try:
         working_group = working_group_names[sub_committee]
     except KeyError:
         raise ValidationError('Invalid sub-committee name. One of: pro, web, ins')
 
-    composite_key = f'{number}-{sub_committee}'
-    goal_number = int(str(number).split('.')[0])
+    composite_key = f'{goal_number}.{number}-{compsite_key_wg_names[sub_committee]}'
 
     params = {
         'wg_name': working_group,
-        'goal_number': goal_number
+        'goal_number': int(goal_number)
     }
 
     query = """
@@ -61,6 +69,7 @@ def create_success_indicator(number,
         return True
     except Exception as e:
         raise CrudError(f"Failed to create SuccessIndicator: {str(e)}")
+
 
 
 def add_goal(goal, goal_number, name, removed, working_group):

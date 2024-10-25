@@ -52,7 +52,7 @@ class IndicatorsAPI(MethodView):
             # Dynamically call the function based on the action
             if action == 'create_success_indicator':
 
-                required_keys = ["number", "sub_committee", "success_indicator_text", "date_added", "removed"]
+                required_keys = ["number", "goal_number", "sub_committee", "success_indicator_text", "date_added", "removed"]
                 if not all(key in data for key in required_keys):
                     return make_response(status="error", error="Missing required fields"), 400
                 indicator_data = {key: data.get(key) for key in required_keys}

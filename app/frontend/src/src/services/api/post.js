@@ -1,5 +1,5 @@
 import axios from "axios";
-import {createMessagePayload, createNotePayload} from "../response_templates";
+import {createMessagePayload, createNotePayload, createSuccessIndicatorPayload} from "../response_templates";
 
 
 export const addNewNote = async (year_success_evidence, note_dict, created_by) => {
@@ -15,7 +15,7 @@ export const addNewNote = async (year_success_evidence, note_dict, created_by) =
 
 // Function to add a new message using the wrapped payload
 export const addNewMessage = async (yearSuccessEvidence, messageContent, created_by) => {
-    console.log("SDFDSFSDFDEWEEQQQQQ", messageContent)
+
     try {
 
         // Send the POST request with the payload
@@ -28,3 +28,14 @@ export const addNewMessage = async (yearSuccessEvidence, messageContent, created
         throw error;
     }
 };
+
+export const createSuccessIndicator = async (indicator_number, goal_number, sub_committee, success_indicator_text, date_added, removed) => {
+    try {
+        const response = await axios.post(`${process.env.REACT_APP_API_URL}/indicators`,
+            createSuccessIndicatorPayload(indicator_number, goal_number, sub_committee, success_indicator_text, date_added, removed));
+        return response.data;
+    } catch (error) {
+        console.error('Error creating success indicator:', error);
+        throw error;
+    }
+}
