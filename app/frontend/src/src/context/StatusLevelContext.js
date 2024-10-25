@@ -15,7 +15,7 @@ export const StatusLevelProvider = ({ children }) => {
             setLoading(true);
             try {
                 const levels = await fetchStatusLevels();
-                setStatusLevels(levels);
+                setStatusLevels(levels.data);
             } catch (error) {
                 setError('Failed to fetch status levels');
             } finally {

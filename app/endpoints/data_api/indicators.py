@@ -80,25 +80,35 @@ class IndicatorsAPI(MethodView):
 
     def put(self):
         """
-        Handle PUT requests to update the 'removed' status of a success indicator.
+        Handle PUT requests to update data based on the action parameter.
         """
         try:
             # Get the request data
             data = request.get_json()
-            composite_key = data.get('composite_key')
-            removed = data.get('removed')
+            action = data.get('action')
 
-            # Validate input
-            if composite_key is None or removed is None:
-                return make_response(status="error", error="Both 'composite_key' and 'removed' are required."), 400
+            if not action:
+                return make_response(status="error", error="The 'action' field is required."), 400
 
-            # Call the function to update the 'removed' status
-            updated = set_removed_status_for_success_indicator(composite_key, removed)
+            # Dynamically handle the update based on the action
+            if action == 'update_removed_status':
+                # Required fields for updating removed status
+                required_keys = ['composite_key', 'removed']
+                if not all(key in data for key in required_keys):
+                    return make_response(status="error", error="Missing required fields for updating removed status."), 400
 
-            if updated:
-                return make_response(status="success", data=f"SuccessIndicator {composite_key} updated successfully."), 200
+                # Call the function to update the removed status
+                if set_removed_status_for_success_indicator(data['composite_key'], data['removed']):
+                    return make_response(status="success", data=f"SuccessIndicator {data['composite_key']} updated successfully."), 200
+
+            # Additional actions can be added here with similar structure, such as 'update_indicator_status' or 'modify_goal'
+            # elif action == 'another_action':
+            #     required_keys = ['required_field_1', 'required_field_2']
+            #     # Validate fields and call the appropriate function
+            #     pass
+
             else:
-                return make_response(status="error", error="Failed to update success indicator."), 500
+                return make_response(status="error", error=f"Unknown action: {action}"), 400
 
         except NotFoundError as e:
             return make_response(status="error", error=str(e)), 404
@@ -106,6 +116,7 @@ class IndicatorsAPI(MethodView):
             return make_response(status="error", error=str(e)), 500
         except Exception as e:
             return make_response(status="error", error=f"An unexpected error occurred: {str(e)}"), 500
+
 
     def delete(self):
         """

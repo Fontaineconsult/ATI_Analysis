@@ -1,4 +1,5 @@
 import axios from "axios";
+import {updateIndicatorRemovedStatus} from "../response_templates";
 
 export const updateStatusLevel = async (yse, statusLevel) => {
     try {
@@ -53,4 +54,21 @@ export const updateMessage = async (year_success_evidence, message_dict, created
         console.error('Error updating message:', error);
         throw error;
     }
+}
+
+export const updateRemovedStatus = async (composite_key, removed) => {
+    try {
+        await axios.put(`${process.env.REACT_APP_API_URL}/indicators`,
+            updateIndicatorRemovedStatus(composite_key, removed)
+        );
+    } catch (error) {
+        console.error('Error updating removed status:', error);
+        throw error;
+    }
+}
+
+export class attachYearSuccessEvidence {
+}
+
+export class detachYearSuccessEvidence {
 }

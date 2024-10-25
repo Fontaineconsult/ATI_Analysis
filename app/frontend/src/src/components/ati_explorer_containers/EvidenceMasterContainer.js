@@ -1,9 +1,17 @@
 import React from 'react';
-import { Box, Heading } from '@chakra-ui/react';
+import { Box, Heading, Text } from '@chakra-ui/react';
 import SuccessIndicator from '../graph_components/indicators/SuccessIndicator';
+import {sortCompositeKeys} from "../../services/utils/sorters";
 
 function EvidenceMasterContainer({ indicators }) {
     if (!indicators || indicators.length === 0) return null;
+
+    // Inline fallback component
+    const IndicatorFallback = () => (
+        <Box padding={4} bg="red.50" border="1px solid" borderColor="red.200" borderRadius="md">
+            <Text color="red.700" fontWeight="bold">Indicator data is unavailable.</Text>
+        </Box>
+    );
 
     return (
         <Box mt={6} aria-live="polite" role="region" aria-label={`(${indicators.length}) Success Indicators Listed`}>
@@ -12,22 +20,19 @@ function EvidenceMasterContainer({ indicators }) {
             </Heading>
 
             {indicators
-                .sort((a, b) => {
-                    const numA = parseFloat(a.indicator.properties.composite_key.split('-')[0]);
-                    const numB = parseFloat(b.indicator.properties.composite_key.split('-')[0]);
-                    return numA - numB;
-                })
+                .sort(sortCompositeKeys) // Use the imported sorting function
                 .map((indicatorWrapper, index) => {
-                    // Determine background color based on whether the index is odd or even
                     const bgColor = index % 2 === 0 ? 'gray.50' : 'gray.100';
 
-                    return (
+                    return indicatorWrapper?.indicator ? (
                         <SuccessIndicator
                             key={index}
-                            indicatorData={indicatorWrapper?.indicator}
-                            evidenceData={indicatorWrapper?.evidences[0]}
-                            bgColor={bgColor}  // Pass the background color as a prop
+                            indicatorData={indicatorWrapper.indicator}
+                            evidenceData={indicatorWrapper.evidences[0]}
+                            bgColor={bgColor}
                         />
+                    ) : (
+                        <IndicatorFallback key={index} />  // Render fallback if indicator is null
                     );
                 })}
         </Box>

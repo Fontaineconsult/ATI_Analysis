@@ -26,9 +26,13 @@ function MessageViewer({ messages, onSubmit, yearSuccessEvidence, createdBy }) {
             if (isNew) {
                 // If adding a new message, set date_created to now
                 messageData.date_created = new Date().toISOString().split('T')[0];  // Format as YYYY-MM-DD
-                await addNewMessage(yearSuccessEvidence, messageData, createdBy);
+                await addNewMessage(yearSuccessEvidence,
+                    messageData,
+                    createdBy);
             } else {
-                await updateMessage(yearSuccessEvidence, messageData, createdBy);
+                await updateMessage(yearSuccessEvidence,
+                    messageData,
+                    createdBy);
             }
             loadSingleWorkingGroupData(currentWorkingGroup); // Refresh data
             setExpandedIndex(null);

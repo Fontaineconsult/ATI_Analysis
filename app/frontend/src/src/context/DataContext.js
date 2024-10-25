@@ -38,10 +38,10 @@ export const DataProvider = ({ children }) => {
 
             // Set the data in the state under their respective keys
             setData({
-                web: webData,
-                instructionalMaterials: instructionalMaterialsData,
-                procurement: procurementData,
-                indicators: indicatorsData,  // Store indicators data
+                web: webData.data,
+                instructionalMaterials: instructionalMaterialsData.data,
+                procurement: procurementData.data,
+                indicators: indicatorsData.data,  // Store indicators data
             });
 
         } catch (err) {
@@ -68,7 +68,7 @@ export const DataProvider = ({ children }) => {
             // Update only the specific working group data in the state
             setData((prevData) => ({
                 ...prevData,
-                [workingGroup]: groupData,
+                [workingGroup]: groupData.data,
             }));
 
         } catch (err) {
@@ -95,7 +95,7 @@ export const DataProvider = ({ children }) => {
             // Update only the indicators data in the state
             setData((prevData) => ({
                 ...prevData,
-                indicators: indicatorsData,  // Update only indicators
+                indicators: indicatorsData.data,  // Update only indicators
             }));
         } catch (err) {
             toast({

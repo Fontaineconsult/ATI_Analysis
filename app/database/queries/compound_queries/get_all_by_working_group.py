@@ -7,20 +7,23 @@ from neomodel import db
 def fetch_evidence_for_working_group(working_group, academic_year):
 
     query = """
-      MATCH (wg:ATIWorkingGroup)-[:responsible_for]->(goal:Goal)
-        WHERE wg.name = $working_group
+        MATCH (wg:ATIWorkingGroup)-[:responsible_for]->(goal:Goal)
+          WHERE wg.name = $working_group
         
         // Match indicators supported by the goal
         OPTIONAL MATCH (goal)-[:supported_by]->(indicator:SuccessIndicator)
         
+        // Filter out indicators where 'removed' is true
+        WITH wg, goal, indicator
+          WHERE indicator.removed IS NULL OR indicator.removed = false
+        
         // Match evidences linked to the indicators for the specified academic year
         OPTIONAL MATCH (indicator)<-[:tracks]-(evidence:YearSuccessEvidence)
-                                   -[:evidence_in_year]->(year:AcademicYear)
-        WHERE year.name = $academic_year
+                         -[:evidence_in_year]->(year:AcademicYear)
+          WHERE year.name = $academic_year
         
-        // Filter out indicators without evidence
+        // Proceed even if evidence is NULL (to include indicators without evidence)
         WITH wg, goal, indicator, evidence
-        WHERE evidence IS NOT NULL
         
         // Match notes connected to the evidence and their creators
         OPTIONAL MATCH (evidence)-[:has_note]->(evidenceNote:Note)
@@ -79,13 +82,13 @@ def fetch_evidence_for_working_group(working_group, academic_year):
         
         // Match evidence types and their documentation
         OPTIONAL MATCH (evidence)<-[:is_evidence_for]-(evidenceType)
-        WHERE evidenceType:InternalPolicy OR
-              evidenceType:Process OR
-              evidenceType:Project OR
-              evidenceType:Procedure OR
-              evidenceType:Service OR
-              evidenceType:Guidance OR
-              evidenceType:Tracking
+          WHERE evidenceType:InternalPolicy OR
+                evidenceType:Process OR
+                evidenceType:Project OR
+                evidenceType:Procedure OR
+                evidenceType:Service OR
+                evidenceType:Guidance OR
+                evidenceType:Tracking
         
         // Match documentation and metrics associated with evidence types
         OPTIONAL MATCH (evidenceType)-[:is_documented_by]->(doc:Document)
@@ -134,8 +137,7 @@ def fetch_evidence_for_working_group(working_group, academic_year):
         // Collect all evidences under each indicator
         WITH wg, goal, indicator, collect(evidenceData) AS evidences
         
-        // Filter out indicators without evidences
-        WHERE size(evidences) > 0
+        // Note: We no longer filter out indicators without evidences
         
         // Create a map for each indicator with its evidences
         WITH wg, goal, indicator, evidences,
@@ -149,13 +151,13 @@ def fetch_evidence_for_working_group(working_group, academic_year):
         
         // Match accomplishments for each goal in the specified academic year
         OPTIONAL MATCH (goal)<-[:advances_goal]-(accomplishment:Accomplishment)
-                                   -[:in_academic_year]->(accomplishmentYear:AcademicYear)
-        WHERE accomplishmentYear.name = $academic_year
+                         -[:in_academic_year]->(accomplishmentYear:AcademicYear)
+          WHERE accomplishmentYear.name = $academic_year
         
         // Match plans for each goal in the specified academic year
         OPTIONAL MATCH (goal)<-[:furthers_goal]-(plan:Plan)
-                                   -[:in_academic_year]->(planYear:AcademicYear)
-        WHERE planYear.name = $academic_year
+                         -[:in_academic_year]->(planYear:AcademicYear)
+          WHERE planYear.name = $academic_year
         
         // Collect accomplishments and plans per goal
         WITH wg.name AS workingGroupName, goal, indicators,

@@ -1,12 +1,11 @@
 import axios from "axios";
+import {createMessagePayload, createNotePayload} from "../response_templates";
+
 
 export const addNewNote = async (year_success_evidence, note_dict, created_by) => {
     try {
-        const response = await axios.post(`${process.env.REACT_APP_API_URL}/notes`, {
-            year_success_evidence,
-            note_dict,
-            created_by,
-        });
+        const response = await axios.post(`${process.env.REACT_APP_API_URL}/documents`,
+            createNotePayload(year_success_evidence, note_dict, created_by));
         return response.data;
     } catch (error) {
         console.error('Error adding new note:', error);
@@ -14,16 +13,18 @@ export const addNewNote = async (year_success_evidence, note_dict, created_by) =
     }
 }
 
-export const addNewMessage = async (year_success_evidence, message_dict, created_by) => {
+// Function to add a new message using the wrapped payload
+export const addNewMessage = async (yearSuccessEvidence, messageContent, created_by) => {
+    console.log("SDFDSFSDFDEWEEQQQQQ", messageContent)
     try {
-        const response = await axios.post(`${process.env.REACT_APP_API_URL}/messages`, {
-            year_success_evidence,
-            message_dict,
-            created_by,
-        });
+
+        // Send the POST request with the payload
+        const response = await axios.post(`${process.env.REACT_APP_API_URL}/documents`,
+            createMessagePayload(yearSuccessEvidence, messageContent, created_by));
+
         return response.data;
     } catch (error) {
         console.error('Error adding new message:', error);
         throw error;
     }
-}
+};

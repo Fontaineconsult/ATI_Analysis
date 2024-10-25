@@ -4,27 +4,58 @@ MATCH (wg:ATIWorkingGroup)-[:responsible_for]->(goal:Goal)
 // Match indicators supported by the goal
 OPTIONAL MATCH (goal)-[:supported_by]->(indicator:SuccessIndicator)
 
+// Filter out indicators where 'removed' is true
+WITH wg, goal, indicator
+  WHERE indicator.removed IS NULL OR indicator.removed = false
+
 // Match evidences linked to the indicators for the specified academic year
 OPTIONAL MATCH (indicator)<-[:tracks]-(evidence:YearSuccessEvidence)
                  -[:evidence_in_year]->(year:AcademicYear)
   WHERE year.name = $academic_year
 
-// Filter out indicators without evidence
+// Proceed even if evidence is NULL (to include indicators without evidence)
 WITH wg, goal, indicator, evidence
-  WHERE evidence IS NOT NULL
 
-// Match notes connected to the evidence
+// Match notes connected to the evidence and their creators
 OPTIONAL MATCH (evidence)-[:has_note]->(evidenceNote:Note)
-
-// Match the creator of each evidenceNote
-OPTIONAL MATCH (evidenceNote)-[:created_by]->(creator:Person)
+OPTIONAL MATCH (evidenceNote)-[:created_by]->(noteCreator:Person)
 
 // Collect the notes and their creators per evidence
 WITH wg, goal, indicator, evidence,
      collect(DISTINCT {
        note: evidenceNote,
-       created_by: creator
+       created_by: noteCreator
      }) AS evidenceNotes
+
+// Match messages connected to the evidence and their creators
+OPTIONAL MATCH (evidence)-[:has_message]->(evidenceMessage:Message)
+OPTIONAL MATCH (evidenceMessage)-[:created_by]->(messageCreator:Person)
+
+// Collect the messages and their creators per evidence
+WITH wg, goal, indicator, evidence, evidenceNotes,
+     collect(DISTINCT {
+       message: evidenceMessage,
+       created_by: messageCreator
+     }) AS evidenceMessages
+
+// Filter out null messages
+WITH wg, goal, indicator, evidence, evidenceNotes,
+     [msg IN evidenceMessages WHERE msg.message IS NOT NULL] AS evidenceMessages
+
+// Match metrics connected to the evidence and their creators
+OPTIONAL MATCH (evidence)-[:has_metric]->(evidenceMetric:Metric)
+OPTIONAL MATCH (evidenceMetric)-[:created_by]->(metricCreator:Person)
+
+// Collect the metrics and their creators per evidence
+WITH wg, goal, indicator, evidence, evidenceNotes, evidenceMessages,
+     collect(DISTINCT {
+       metric: evidenceMetric,
+       created_by: metricCreator
+     }) AS evidenceMetrics
+
+// Filter out null metrics
+WITH wg, goal, indicator, evidence, evidenceNotes, evidenceMessages,
+     [met IN evidenceMetrics WHERE met.metric IS NOT NULL] AS evidenceMetrics
 
 // Match status level of the evidence
 OPTIONAL MATCH (evidence)-[:status_is]->(statusLevel:StatusLevel)
@@ -36,7 +67,7 @@ OPTIONAL MATCH (evidence)<-[:implements]-(person:Person)
 OPTIONAL MATCH (evidence)-[:admin_review_completed_by]->(adminReviewer:Person)
 
 // Collect persons and admin reviewers
-WITH wg, goal, indicator, evidence, evidenceNotes, statusLevel,
+WITH wg, goal, indicator, evidence, evidenceNotes, evidenceMessages, evidenceMetrics, statusLevel,
      collect(DISTINCT person) AS persons,
      collect(DISTINCT adminReviewer) AS adminReviewers
 
@@ -50,23 +81,23 @@ OPTIONAL MATCH (evidence)<-[:is_evidence_for]-(evidenceType)
   evidenceType:Guidance OR
   evidenceType:Tracking
 
-// Match documentation and metrics
+// Match documentation and metrics associated with evidence types
 OPTIONAL MATCH (evidenceType)-[:is_documented_by]->(doc:Document)
 OPTIONAL MATCH (evidenceType)-[:is_documented_by]->(web:Webpage)
-OPTIONAL MATCH (evidenceType)-[:is_documented_by]->(note:Note)
-OPTIONAL MATCH (evidenceType)-[:is_documented_by]->(msg:Message)
-OPTIONAL MATCH (evidenceType)-[:has_metric]->(metric:Metric)
+OPTIONAL MATCH (evidenceType)-[:is_documented_by]->(etNote:Note)
+OPTIONAL MATCH (evidenceType)-[:is_documented_by]->(etMsg:Message)
+OPTIONAL MATCH (evidenceType)-[:has_metric]->(etMetric:Metric)
 
 // Aggregate documentation and metrics under each evidence type
-WITH wg, goal, indicator, evidence, evidenceNotes, statusLevel, adminReviewers, persons, evidenceType,
+WITH wg, goal, indicator, evidence, evidenceNotes, evidenceMessages, evidenceMetrics, statusLevel, adminReviewers, persons, evidenceType,
      collect(DISTINCT doc) AS docs,
      collect(DISTINCT web) AS webs,
-     collect(DISTINCT note) AS notes,
-     collect(DISTINCT msg) AS msgs,
-     collect(DISTINCT metric) AS metrics
+     collect(DISTINCT etNote) AS notes,
+     collect(DISTINCT etMsg) AS msgs,
+     collect(DISTINCT etMetric) AS metrics
 
 // Create a map for each evidence type with its documentation and metrics
-WITH wg, goal, indicator, evidence, evidenceNotes, statusLevel, adminReviewers, persons,
+WITH wg, goal, indicator, evidence, evidenceNotes, evidenceMessages, evidenceMetrics, statusLevel, adminReviewers, persons,
      {
        type: labels(evidenceType)[0],
        evidenceType: evidenceType,
@@ -78,25 +109,26 @@ WITH wg, goal, indicator, evidence, evidenceNotes, statusLevel, adminReviewers, 
      } AS evidenceTypeData
 
 // Collect all evidence types under each evidence
-WITH wg, goal, indicator, evidence, evidenceNotes, statusLevel, adminReviewers, persons,
+WITH wg, goal, indicator, evidence, evidenceNotes, evidenceMessages, evidenceMetrics, statusLevel, adminReviewers, persons,
      collect(evidenceTypeData) AS evidenceTypes
 
-// Create a map for each evidence with its evidence types, persons, statusLevel, adminReviewers, and has_notes
-WITH wg, goal, indicator, evidence, evidenceNotes, statusLevel, adminReviewers, persons, evidenceTypes,
+// Create a map for each evidence with its data
+WITH wg, goal, indicator, statusLevel, adminReviewers, persons, evidenceTypes, evidence, evidenceNotes, evidenceMessages, evidenceMetrics,
      {
        evidence: evidence,
        statusLevel: statusLevel,
        evidenceTypes: evidenceTypes,
        persons: persons,
        adminReviewers: adminReviewers,
-       has_notes: evidenceNotes  // Include evidence notes with creators under each evidence
+       has_notes: evidenceNotes,
+       has_messages: evidenceMessages,
+       has_metrics: evidenceMetrics
      } AS evidenceData
 
 // Collect all evidences under each indicator
 WITH wg, goal, indicator, collect(evidenceData) AS evidences
 
-// Filter out indicators without evidences
-  WHERE size(evidences) > 0
+// Note: We no longer filter out indicators without evidences
 
 // Create a map for each indicator with its evidences
 WITH wg, goal, indicator, evidences,

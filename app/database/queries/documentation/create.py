@@ -84,7 +84,7 @@ def add_message(year_success_evidence: str, message_dict: dict) -> bool:
     """
     try:
         # Ensure required fields are present
-        required_fields = ['name', 'message_type', 'date_created']
+        required_fields = ['name']
         for field in required_fields:
             if field not in message_dict:
                 raise ValidationError(f"Missing required field: {field}")
@@ -102,8 +102,8 @@ def add_message(year_success_evidence: str, message_dict: dict) -> bool:
         # Create and save the message
         message = Message(
             name=message_dict['name'],
-            message_type=message_dict['message_type'],
-            authored_date=message_dict['date_created'],
+            message_type=message_dict.get('message_type'),
+            authored_date=message_dict.get('date_created'),
             content=message_dict.get('content'),
             file_path=message_dict.get('file_path'),
             uri_path=message_dict.get('uri_path'),

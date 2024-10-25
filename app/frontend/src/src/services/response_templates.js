@@ -1,30 +1,27 @@
-function createNotePayload(yearSuccessEvidence, noteName, noteContent, dateCreated) {
+export function createNotePayload(yearSuccessEvidence, noteContent, created_by) {
     return {
         action: "add_note",
         year_success_evidence: yearSuccessEvidence,
-        note_dict: {
-            name: noteName,
-            content: noteContent,
-            date_created: dateCreated
-        }
+        note_dict: noteContent,
+        created_by:created_by
+
     };
 }
 
 
-function createMessagePayload(yearSuccessEvidence, messageName, messageType, dateCreated, content) {
+
+export function createMessagePayload(yearSuccessEvidence, messageContent, created_by) {
+    console.log(messageContent)
     return {
         action: "add_message",
         year_success_evidence: yearSuccessEvidence,
-        message_dict: {
-            name: messageName,
-            message_type: messageType,
-            date_created: dateCreated,
-            content: content
-        }
+        message_dict: messageContent,
+        created_by: created_by,
+
     };
 }
 
-function createDocumentPayload(name, filePath = null, uriPath = null, depreciated = false) {
+export function createDocumentPayload(name, filePath = null, uriPath = null, depreciated = false) {
     return {
         action: "add_document",
         name: name,
@@ -91,3 +88,12 @@ function generateUpdateStatusLevelPayload(yearSuccessEvidence, statusLevel) {
     };
 }
 
+
+
+export function updateIndicatorRemovedStatus(composite_key, removed) {
+    return {
+        action:"update_removed_status",
+        composite_key: composite_key,  // indicator identifier
+        removed: removed  // bool
+    };
+}

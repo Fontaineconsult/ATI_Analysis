@@ -13,7 +13,7 @@ function SuccessIndicator({ indicatorData, evidenceData, workingGroup, onSuccess
     const { statusLevels, updateStatus } = useStatusLevels();
     const { user } = useContext(UserContext);
     const { currentAcademicYear } = useContext(SettingsContext);
-
+    console.log("DSFDSFDF", indicatorData)
     const { success_indicator, date_added, composite_key } = indicatorData.properties;
     const { year_identifier } = evidenceData.evidence.properties;
     const { status_level } = evidenceData.statusLevel.properties;

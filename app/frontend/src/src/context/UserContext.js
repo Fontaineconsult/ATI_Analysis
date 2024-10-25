@@ -24,7 +24,7 @@ export const UserProvider = ({ children }) => {
             if (employeeId) {
                 try {
                     const person = await fetchUserByEmployeeId(employeeId);
-                    setUser(person);  // Set the user data
+                    setUser(person.data.person);  // Set the user data
                 } catch (error) {
                     setError('Failed to fetch user data');
                 } finally {
