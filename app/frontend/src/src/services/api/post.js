@@ -1,5 +1,10 @@
 import axios from "axios";
-import {createMessagePayload, createNotePayload, createSuccessIndicatorPayload} from "../response_templates";
+import {
+    create_year_success_evidence_node,
+    createMessagePayload,
+    createNotePayload,
+    createSuccessIndicatorPayload
+} from "../response_templates";
 
 
 export const addNewNote = async (year_success_evidence, note_dict, created_by) => {
@@ -36,6 +41,18 @@ export const createSuccessIndicator = async (indicator_number, goal_number, sub_
         return response.data;
     } catch (error) {
         console.error('Error creating success indicator:', error);
+        throw error;
+    }
+}
+
+export const createYearSuccessEvidence = async (academic_year, composite_key) => {
+    try {
+        const response = await axios.post(`${process.env.REACT_APP_API_URL}/evidence`,
+            create_year_success_evidence_node(academic_year, composite_key)
+        );
+        return response.data;
+    } catch (error) {
+        console.error('Error creating year success evidence:', error);
         throw error;
     }
 }

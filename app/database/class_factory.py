@@ -94,3 +94,5 @@ working_group_names_web_query = {
     "procurement": "Procurement",
 
 }
+
+working_groups = ["Web", "Procurement", "Instructional Materials"]

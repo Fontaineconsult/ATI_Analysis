@@ -109,3 +109,14 @@ export function createSuccessIndicatorPayload(number, goalNumber, subCommittee, 
         removed: removed
     };
 }
+
+export function create_year_success_evidence_node(academic_year,
+                                             success_indicator_composite_key,
+                                             ) {
+    return {
+        action:"create_year_success_evidence_node",
+        academic_year: academic_year,
+        success_indicator_composite_key: success_indicator_composite_key,
+        status_level: "Not Started" //defaulting
+    };
+}

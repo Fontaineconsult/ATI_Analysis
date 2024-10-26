@@ -1,11 +1,16 @@
-
+from app.database.class_factory import working_groups
 from app.database.graph_schema import *
+from app.endpoints.data_api.errors.custom_exceptions import NotFoundError, CrudError, ValidationError
+
 set_connection()
 from neomodel import db
 
-# Define the function that executes the query and returns a dictionary of results
 def fetch_evidence_for_working_group(working_group, academic_year):
+    # Validate working group
 
+    if working_group not in working_groups:
+        raise ValidationError(f"Invalid working group '{working_group}'.")
+    # Prepare the query
     query = """
         MATCH (wg:ATIWorkingGroup)-[:responsible_for]->(goal:Goal)
           WHERE wg.name = $working_group
@@ -181,14 +186,13 @@ def fetch_evidence_for_working_group(working_group, academic_year):
           workingGroup: workingGroupName,
           goals: goals
         }) AS jsonResults
+    """
 
-
-            """
-
-    results, meta = db.cypher_query(query, {'working_group': working_group, 'academic_year': academic_year})
-    if len(results) == 0:
-        return None
-    # Return the duplicated nodes (e2)
-    return results
-
+    try:
+        results, meta = db.cypher_query(query, {'working_group': working_group, 'academic_year': academic_year})
+        if not results:
+            raise NotFoundError(f"No data found for the working group '{working_group}' and academic year '{academic_year}'.")
+        return json.loads(results[0][0])
+    except Exception as e:
+        raise CrudError(f"Failed to fetch evidence: {str(e)}")
 

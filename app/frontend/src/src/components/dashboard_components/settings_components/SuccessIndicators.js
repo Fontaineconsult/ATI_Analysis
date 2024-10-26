@@ -10,13 +10,15 @@ import { useTable } from 'react-table';
 import { DataContext } from '../../../context/DataContext';
 import { useColorModeValue } from '@chakra-ui/react';
 import { updateRemovedStatus, attachYearSuccessEvidence, detachYearSuccessEvidence } from '../../../services/api/put';
+import { createYearSuccessEvidence } from '../../../services/api/post'; // Import API call
 import { sortGoals, sortSuccessIndicators } from "../../../services/utils/sorters";
-import AddIndicator from './AddIndicator';  // Import the AddIndicator component
+import AddIndicator from './AddIndicator';
+import {SettingsContext} from "../../../context/SettingsContext";  // Import the AddIndicator component
 
 const SuccessIndicators = () => {
     const { data, refreshIndicators } = useContext(DataContext);
     const { indicators } = data;
-
+    const { currentAcademicYear } = useContext(SettingsContext);
     const [openModals, setOpenModals] = useState({});
     const [selectedIndicator, setSelectedIndicator] = useState(null);
     const [actionType, setActionType] = useState('');
@@ -52,17 +54,20 @@ const SuccessIndicators = () => {
         }
     };
 
-    const toggleYearSuccessEvidence = async (indicator) => {
+    const toggleYearSuccessEvidence = async (indicator, academicYear) => {
         const action = indicator.yearSuccessIndicators.length > 0 ? "detach" : "attach";
         setIsLoading(true);
 
         try {
             if (action === "attach") {
-                await attachYearSuccessEvidence(indicator.composite_key);
+                // Call the API to create a YearSuccessEvidence node
+
+                await createYearSuccessEvidence(academicYear, indicator.composite_key);
             } else {
-                await detachYearSuccessEvidence(indicator.composite_key);
+                // Call the detach API for detaching YearSuccessEvidence if required
+                await detachYearSuccessEvidence(indicator.composite_key); // Assuming detach API exists
             }
-            refreshIndicators();
+            refreshIndicators(); // Refresh indicators to reflect new YSE state
         } catch (error) {
             console.error(`Failed to ${action} year success evidence:`, error);
         } finally {
@@ -75,6 +80,7 @@ const SuccessIndicators = () => {
     const handleActionClick = (indicator) => {
         setSelectedIndicator(indicator);
         setActionType(indicator.yearSuccessIndicators.length > 0 ? 'Detach YSE' : 'Attach YSE');
+        toggleYearSuccessEvidence(indicator, currentAcademicYear); // Trigger the toggle action with academicYear
     };
 
     const handleAddIndicatorSubmit = (indicatorData) => {
@@ -120,7 +126,7 @@ const SuccessIndicators = () => {
                     return (
                         <Button
                             size="sm"
-                            onClick={() => handleActionClick(row.original)}
+                            onClick={() => handleActionClick(row.original)} // Connect toggle action to button
                             colorScheme={row.original.yearSuccessIndicators.length > 0 ? 'red' : 'green'}
                         >
                             {buttonLabel}
@@ -129,7 +135,7 @@ const SuccessIndicators = () => {
                 },
             },
         ],
-        [refreshIndicators]
+        [refreshIndicators, currentAcademicYear]
     );
 
     if (!indicators) {

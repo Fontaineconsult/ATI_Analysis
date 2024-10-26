@@ -6,31 +6,43 @@ import { UserContext } from '../../../context/UserContext';
 import { SettingsContext } from '../../../context/SettingsContext';
 import ImplementationMasterContainer from "../implementation/ImplementationMasterContainer";
 import YSENoteMasterContainer from "../documentation/YSENoteMasterContainer";
-import ApprovalMasterContainer from "../../ati_explorer_containers/ApprovalMasterContainer";  // Import the new ApprovalMasterContainer
+import ApprovalMasterContainer from "../../ati_explorer_containers/ApprovalMasterContainer";
 
 // Main SuccessIndicator Component
 function SuccessIndicator({ indicatorData, evidenceData, workingGroup, onSuccessRefresh, bgColor }) {
     const { statusLevels, updateStatus } = useStatusLevels();
     const { user } = useContext(UserContext);
     const { currentAcademicYear } = useContext(SettingsContext);
-    console.log("DSFDSFDF", indicatorData)
-    const { success_indicator, date_added, composite_key } = indicatorData.properties;
-    const { year_identifier } = evidenceData.evidence.properties;
-    const { status_level } = evidenceData.statusLevel.properties;
+    const { success_indicator, date_added, composite_key } = indicatorData?.properties || {};
 
-    const adminReviewers = evidenceData.adminReviewers;
+    // Check if evidenceData and its properties exist
+    const yearIdentifier = evidenceData?.evidence?.properties?.year_identifier;
+    const statusLevel = evidenceData?.statusLevel?.properties?.status_level;
+    const adminReviewers = evidenceData?.adminReviewers || [];
     const currentUserId = user?.employee_id || null;
 
     // Handle status level change
     const handleStatusChange = (newStatus) => {
-        updateStatus(year_identifier, newStatus);
+        updateStatus(yearIdentifier, newStatus);
     };
 
+    // Fallback for when there is no YearSuccessEvidence attached
+    if (!yearIdentifier) {
+        return (
+            <Box padding={4} bg="red.50" border="1px solid" borderColor="red.200" borderRadius="md">
+                <Text color="red.700" fontWeight="bold">
+                    No YearSuccessEvidence node attached for {success_indicator}
+                </Text>
+            </Box>
+        );
+    }
+
+    // Determine button states based on reviewer status
     let approveButtonText = 'Review';
     let approveButtonColor = 'yellow';
     let isButtonDisabled = !user;
 
-    if (adminReviewers?.some((reviewer) => reviewer.properties.employee_id === currentUserId)) {
+    if (adminReviewers.some((reviewer) => reviewer.properties.employee_id === currentUserId)) {
         approveButtonText = 'Approved';
         approveButtonColor = 'green';
         isButtonDisabled = true;
@@ -51,7 +63,7 @@ function SuccessIndicator({ indicatorData, evidenceData, workingGroup, onSuccess
             <IndicatorHeader
                 compositeKey={composite_key}
                 statusLevels={statusLevels}
-                statusLevel={status_level}
+                statusLevel={statusLevel}
                 onStatusChange={handleStatusChange}
                 approveButtonText={approveButtonText}
                 approveButtonColor={approveButtonColor}
@@ -59,10 +71,10 @@ function SuccessIndicator({ indicatorData, evidenceData, workingGroup, onSuccess
                 notes={evidenceData.has_notes}
                 messages={evidenceData.has_messages}
                 metrics={evidenceData.has_metrics}
-                year_identifier={year_identifier}
-                workingGroup={workingGroup}  // Pass down working group
-                evidenceData={evidenceData}  // Pass evidence data to the header for approval
-                onSuccessRefresh={onSuccessRefresh}  // Pass the refresh callback
+                yearIdentifier={yearIdentifier}
+                workingGroup={workingGroup}
+                evidenceData={evidenceData}
+                onSuccessRefresh={onSuccessRefresh}
             />
             <IndicatorDetails
                 description={success_indicator}
@@ -86,13 +98,13 @@ function IndicatorHeader({
                              notes,
                              messages,
                              metrics,
-                             year_identifier,
+                             yearIdentifier,
                              workingGroup,
                              evidenceData,
                              onSuccessRefresh
                          }) {
-    const { isOpen: isNotesOpen, onOpen: onNotesOpen, onClose: onNotesClose } = useDisclosure();  // Control modal state for notes
-    const { isOpen: isApprovalOpen, onOpen: onApprovalOpen, onClose: onApprovalClose } = useDisclosure();  // Control modal state for approval
+    const { isOpen: isNotesOpen, onOpen: onNotesOpen, onClose: onNotesClose } = useDisclosure();
+    const { isOpen: isApprovalOpen, onOpen: onApprovalOpen, onClose: onApprovalClose } = useDisclosure();
 
     return (
         <Flex justify="space-between" align="center" mb={2}>
@@ -103,7 +115,6 @@ function IndicatorHeader({
 
             {/* Status Level Dropdown and Approve Button on the Right */}
             <Flex align="center">
-                {/* View Notes Button */}
                 <Button
                     mr={4}
                     onClick={onNotesOpen}
@@ -114,7 +125,6 @@ function IndicatorHeader({
                     Annotations
                 </Button>
 
-                {/* Status Level Dropdown */}
                 <Box width={"170px"}>
                     <DropdownSelect
                         options={statusLevels.map((level) => level.status_level)}
@@ -123,7 +133,6 @@ function IndicatorHeader({
                     />
                 </Box>
 
-                {/* Approve Button - Opens the Approval Modal */}
                 <Button
                     ml={4}
                     colorScheme={approveButtonColor}
@@ -141,8 +150,10 @@ function IndicatorHeader({
                     <ModalHeader>Notes Viewer</ModalHeader>
                     <ModalCloseButton />
                     <ModalBody>
-                        <Text>A Note in the Accessible Technology Initiative (ATI) represents an annotation that provides additional insights, observations, or feedback related to ATI efforts. Notes added here apply directly to this academic year success indicator.</Text>
-                        <YSENoteMasterContainer hasNotes={notes} hasMessages={messages} hasMetrics={metrics} year_identifier={year_identifier}/>
+                        <Text>
+                            A Note in the Accessible Technology Initiative (ATI) represents an annotation that provides additional insights, observations, or feedback related to ATI efforts. Notes added here apply directly to this academic year success indicator.
+                        </Text>
+                        <YSENoteMasterContainer hasNotes={notes} hasMessages={messages} hasMetrics={metrics} year_identifier={yearIdentifier}/>
                     </ModalBody>
                 </ModalContent>
             </Modal>
@@ -198,6 +209,5 @@ function ResponsiblePersons({ persons, compositeKey }) {
         </Box>
     );
 }
-
 
 export default SuccessIndicator;
