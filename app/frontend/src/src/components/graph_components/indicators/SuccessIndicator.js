@@ -1,20 +1,36 @@
-import React, { useContext } from 'react';
-import { Box, Flex, Heading, Text, Button, Modal, ModalOverlay, ModalContent, ModalHeader, ModalBody, ModalCloseButton, useDisclosure } from '@chakra-ui/react';
+import React, {useContext, useEffect, useState} from 'react';
+import {
+    Box,
+    Flex,
+    Heading,
+    Text,
+    Button,
+    Modal,
+    ModalOverlay,
+    ModalContent,
+    ModalHeader,
+    ModalBody,
+    ModalCloseButton,
+    useDisclosure,
+    useToast
+} from '@chakra-ui/react';
 import DropdownSelect from '../../functional_components/DropdownSelect';
 import { useStatusLevels } from '../../../hooks/useStatusLevels';
 import { UserContext } from '../../../context/UserContext';
-import { SettingsContext } from '../../../context/SettingsContext';
+import {SettingsContext, useSettings} from '../../../context/SettingsContext';
 import ImplementationMasterContainer from "../implementation/ImplementationMasterContainer";
 import YSENoteMasterContainer from "../documentation/YSENoteMasterContainer";
 import ApprovalMasterContainer from "../../ati_explorer_containers/ApprovalMasterContainer";
+import {updateStatusLevel} from "../../../services/api/put";
+import {DataContext} from "../../../context/DataContext";
 
 // Main SuccessIndicator Component
-function SuccessIndicator({ indicatorData, evidenceData, workingGroup, onSuccessRefresh, bgColor }) {
+function SuccessIndicator({ indicatorData, evidenceData, bgColor }) {
     const { statusLevels, updateStatus } = useStatusLevels();
     const { user } = useContext(UserContext);
     const { currentAcademicYear } = useContext(SettingsContext);
     const { success_indicator, date_added, composite_key } = indicatorData?.properties || {};
-
+    const { currentWorkingGroup } = useSettings();
     // Check if evidenceData and its properties exist
     const yearIdentifier = evidenceData?.evidence?.properties?.year_identifier;
     const statusLevel = evidenceData?.statusLevel?.properties?.status_level;
@@ -24,6 +40,7 @@ function SuccessIndicator({ indicatorData, evidenceData, workingGroup, onSuccess
     // Handle status level change
     const handleStatusChange = (newStatus) => {
         updateStatus(yearIdentifier, newStatus);
+
     };
 
     // Fallback for when there is no YearSuccessEvidence attached
@@ -72,9 +89,8 @@ function SuccessIndicator({ indicatorData, evidenceData, workingGroup, onSuccess
                 messages={evidenceData.has_messages}
                 metrics={evidenceData.has_metrics}
                 yearIdentifier={yearIdentifier}
-                workingGroup={workingGroup}
+                currentWorkingGroup={currentWorkingGroup}
                 evidenceData={evidenceData}
-                onSuccessRefresh={onSuccessRefresh}
             />
             <IndicatorDetails
                 description={success_indicator}
@@ -86,11 +102,10 @@ function SuccessIndicator({ indicatorData, evidenceData, workingGroup, onSuccess
     );
 }
 
-// IndicatorHeader Component
 function IndicatorHeader({
                              compositeKey,
                              statusLevels,
-                             statusLevel,
+                             statusLevel: initialStatusLevel, // use initialStatusLevel for the current state
                              onStatusChange,
                              approveButtonText,
                              approveButtonColor,
@@ -99,12 +114,47 @@ function IndicatorHeader({
                              messages,
                              metrics,
                              yearIdentifier,
-                             workingGroup,
+                             currentWorkingGroup,
                              evidenceData,
-                             onSuccessRefresh
+
                          }) {
     const { isOpen: isNotesOpen, onOpen: onNotesOpen, onClose: onNotesClose } = useDisclosure();
     const { isOpen: isApprovalOpen, onOpen: onApprovalOpen, onClose: onApprovalClose } = useDisclosure();
+    const [localStatusLevel, setLocalStatusLevel] = useState(initialStatusLevel); // Local state for status level
+    const toast = useToast();
+    const { loadSingleWorkingGroupData } = useContext(DataContext);
+
+
+    useEffect(() => {
+        setLocalStatusLevel(initialStatusLevel); // Update local state when the status level changes externally
+    }, [initialStatusLevel]);
+
+    const handleStatusChange = async (newStatus) => {
+        setLocalStatusLevel(newStatus); // Update the dropdown immediately
+
+        try {
+            await updateStatusLevel(yearIdentifier, newStatus); // API call to update the status level
+            toast({
+                title: "Status updated.",
+                description: "The status level was updated successfully.",
+                status: "success",
+                duration: 3000,
+                isClosable: true,
+            });
+            onStatusChange(newStatus); // Call the parent component's status update handler
+            loadSingleWorkingGroupData(currentWorkingGroup); // Refresh the data by loading it again
+        } catch (error) {
+
+            toast({
+                title: "Error updating status.",
+                description: "There was an error updating the status level. Please try again.",
+                status: "error",
+                duration: 3000,
+                isClosable: true,
+            });
+            setLocalStatusLevel(initialStatusLevel); // Revert back to the original status level in case of error
+        }
+    };
 
     return (
         <Flex justify="space-between" align="center" mb={2}>
@@ -128,8 +178,8 @@ function IndicatorHeader({
                 <Box width={"170px"}>
                     <DropdownSelect
                         options={statusLevels.map((level) => level.status_level)}
-                        initialValue={statusLevel}
-                        onChange={onStatusChange}
+                        initialValue={localStatusLevel} // Use local state for the dropdown
+                        onChange={handleStatusChange} // Handle the dropdown change
                     />
                 </Box>
 
@@ -167,8 +217,7 @@ function IndicatorHeader({
                     <ModalBody>
                         <ApprovalMasterContainer
                             evidenceData={evidenceData}
-                            workingGroup={workingGroup}
-                            onSuccessRefresh={onSuccessRefresh}
+                            currentWorkingGroup={currentWorkingGroup}
                         />
                     </ModalBody>
                 </ModalContent>
@@ -176,6 +225,7 @@ function IndicatorHeader({
         </Flex>
     );
 }
+
 
 // IndicatorDetails Component
 function IndicatorDetails({ description, persons, compositeKey }) {

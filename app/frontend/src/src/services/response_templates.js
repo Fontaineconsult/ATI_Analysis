@@ -81,8 +81,9 @@ function updateMetricPayload() {
 }
 
 
-function generateUpdateStatusLevelPayload(yearSuccessEvidence, statusLevel) {
+export function generateUpdateStatusLevelPayload(yearSuccessEvidence, statusLevel) {
     return {
+        action: "update_status_level",
         yse: yearSuccessEvidence,  // year success evidence identifier
         status_level: statusLevel  // new status level
     };
@@ -118,5 +119,13 @@ export function create_year_success_evidence_node(academic_year,
         academic_year: academic_year,
         success_indicator_composite_key: success_indicator_composite_key,
         status_level: "Not Started" //defaulting
+    };
+}
+
+export function assignApproverPayload(employeeId, yearSuccessEvidence) {
+    return {
+        action: "assign_approver",
+        employee_id: employeeId,
+        year_success_evidence: yearSuccessEvidence
     };
 }

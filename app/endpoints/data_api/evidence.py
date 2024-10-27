@@ -3,7 +3,7 @@ from flask import request
 from flask.views import MethodView
 from app.database.queries.compound_queries.get_all_by_working_group import fetch_evidence_for_working_group
 from app.database.queries.evidence.read import get_all_status_level_nodes
-from app.database.queries.evidence.update import assign_status_to_yse
+from app.database.queries.evidence.update import assign_status_to_yse, assign_approver_to_yse
 from . import data_api_endpoints
 from ...database.class_factory import working_group_names_web_query, status_levels
 from app.endpoints.data_api.util.response import make_response
@@ -36,13 +36,6 @@ class EvidenceAPI(MethodView):
     def post(self):
         """
         Handle different actions in the POST request.
-        Example POST body:
-        {
-            "action": "create_year_success_evidence_node",
-            "academic_year": "2023-2024",
-            "success_indicator_composite_key": "1.2-ins",
-            "status_level": "InProgress"
-        }
         """
         data = request.get_json()
 
@@ -57,6 +50,50 @@ class EvidenceAPI(MethodView):
             return self.handle_create_year_success_evidence(data)
         else:
             return make_response(status="error", error=f"Unknown action '{action}' in request."), 400
+
+    def put(self):
+        """
+        Handle different actions in the PUT request.
+        """
+        data = request.get_json()
+
+        # Extract the action from the request
+        action = data.get('action')
+
+        if not action:
+            return make_response(status="error", error="Missing 'action' field in request."), 400
+
+        # Handle the assign_approver action
+        if action == "assign_approver":
+            return self.handle_assign_approver(data)
+        else:
+            return make_response(status="error", error=f"Unknown action '{action}' in request."), 400
+
+    def handle_assign_approver(self, data):
+        """
+        Assign an approver to a YearSuccessEvidence node.
+        Example PUT request body:
+        {
+            "action": "assign_approver_to_yse",
+            "year_success_evidence": "2023-2024-1.2-ins",
+            "employee_id": "12345"
+        }
+        """
+        yse = data.get('year_success_evidence')
+        employee_id = data.get('employee_id')
+
+        # Validate that both 'yse' and 'employee_id' are provided
+        if not yse or not employee_id:
+            return make_response(status="error", error="Missing 'year_success_evidence' or 'employee_id' in request."), 400
+
+        try:
+            # Assign the approver to the YSE using the provided function
+            assign_approver_to_yse(yse, employee_id)
+            return make_response(status="success", data="Approver assigned successfully."), 200
+        except NotFoundError as e:
+            return make_response(status="error", error=str(e)), 404
+        except CrudError as e:
+            return make_response(status="error", error=str(e)), 500
 
     def handle_create_year_success_evidence(self, data):
         """
@@ -97,26 +134,40 @@ class StatusLevelAPI(MethodView):
 
     def put(self):
         """
-        Updates the status level of a YearSuccessEvidence node.
+        Updates the status level of a YearSuccessEvidence node based on a structured payload.
         """
         data = request.get_json()
-        yse = data.get('yse')
-        status_level = data.get('status_level')
+        action = data.get('action')  # Ensure the action is "update_status_level"
+        yse = data.get('yse')  # year success evidence identifier
+        status_level = data.get('status_level')  # new status level
 
+        # Ensure that the action matches what we expect
+        if action != "update_status_level":
+            raise ValidationError(
+                message="Invalid action. Expected 'update_status_level'."
+            )
+
+        # Ensure both yse and status_level are present
         if not yse or not status_level:
             raise ValidationError(
                 message="Missing 'yse' or 'status_level' in the request."
             )
 
+        # Call the helper method to update the status level
         return self.update_status_level(yse, status_level)
 
     def update_status_level(self, yse, status_level):
+        """
+        Helper method to update the status level of the given YearSuccessEvidence node.
+        """
+        # Ensure the status level is valid
         if status_level not in status_levels:
             raise ValidationError(
                 message=f"Invalid status level. Valid levels: {status_levels}"
             )
 
         try:
+            # Assign the new status level to the YearSuccessEvidence node
             assign_status_to_yse(yse, status_level)
             return make_response(status='success', data="Status level updated successfully"), 200
         except CrudError as e:
@@ -136,7 +187,7 @@ data_api_endpoints.add_url_rule(
 data_api_endpoints.add_url_rule(
     '/evidence',
     view_func=evidence_view,
-    methods=['POST']
+    methods=['POST', 'PUT']
 )
 
 

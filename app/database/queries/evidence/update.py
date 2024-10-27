@@ -134,17 +134,36 @@ def assign_metric_to_yse(year_success_identifier: str, metric_composite_key: str
 
 def assign_approver_to_yse(year_success_identifier: str, employee_id: str) -> bool:
     try:
-        year_success_evidence = YearSuccessEvidence.nodes.get(year_identifier=year_success_identifier)
-        person = Person.nodes.get(employee_id=employee_id)
+        # Attempt to get the YearSuccessEvidence node by year_identifier
+        try:
+            year_success_evidence = YearSuccessEvidence.nodes.get(year_identifier=year_success_identifier)
+        except YearSuccessEvidence.DoesNotExist:
+            raise NotFoundError(f"YearSuccessEvidence with identifier '{year_success_identifier}' not found.")
 
+        # Attempt to get the Person node by employee_id
+        try:
+            person = Person.nodes.get(employee_id=employee_id)
+        except Person.DoesNotExist:
+            raise NotFoundError(f"Person with employee_id '{employee_id}' not found.")
+
+        # Check if the person is already assigned as an approver
         if year_success_evidence.administrative_review_completed_by.is_connected(person):
             raise CrudError(f"Approver {employee_id} is already assigned to success indicator {year_success_identifier}")
 
+        # Assign the approver
         year_success_evidence.administrative_review_completed_by.connect(person)
         year_success_evidence.administrative_review_completed = True
         year_success_evidence.administrative_review_completed_date = datetime.now().date()
         year_success_evidence.save()
+
         print(f"Approver {employee_id} assigned to success indicator {year_success_identifier}")
         return True
+
+    except NotFoundError as e:
+        # Reraise NotFoundError to be caught by the calling function for proper error handling
+        raise e
+
     except Exception as e:
+        # Catch any other exceptions and raise them as a CrudError
         raise CrudError(f"Error assigning approver {employee_id} to success indicator {year_success_identifier}: {e}")
+

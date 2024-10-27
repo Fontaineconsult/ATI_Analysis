@@ -791,7 +791,8 @@ class Person(StructuredNode):
             'name': self.name,
             'email': self.email,
             'employee_id': self.employee_id,
-            'title': self.title
+            'title': self.title,
+            "can_approve_yse": self.can_approve_yse
         }
 
 

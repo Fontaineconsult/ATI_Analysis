@@ -1,12 +1,12 @@
 import axios from "axios";
-import {updateIndicatorRemovedStatus} from "../response_templates";
+import {assignApproverPayload, updateIndicatorRemovedStatus, generateUpdateStatusLevelPayload} from "../response_templates";
 
 export const updateStatusLevel = async (yse, statusLevel) => {
     try {
-        await axios.put(`${process.env.REACT_APP_API_URL}/status-levels`, {
-            yse,
-            status_level: statusLevel
-        });
+        await axios.put(`${process.env.REACT_APP_API_URL}/evidence/status-levels`,
+            generateUpdateStatusLevelPayload(yse, statusLevel)
+
+        );
     } catch (error) {
         console.error('Error updating status level:', error);
         throw error;
@@ -16,10 +16,9 @@ export const updateStatusLevel = async (yse, statusLevel) => {
 
 export const assignApprover = async (employeeId, yearSuccessEvidence) => {
     try {
-        const response = await axios.put(`${process.env.REACT_APP_API_URL}/assign-approver`, {
-            employee_id: employeeId,
-            year_success_evidence: yearSuccessEvidence,
-        });
+        const response = await axios.put(`${process.env.REACT_APP_API_URL}/evidence`,
+            assignApproverPayload(employeeId, yearSuccessEvidence)
+        );
         return response.data;
     } catch (error) {
         console.error('Error assigning approver:', error);
