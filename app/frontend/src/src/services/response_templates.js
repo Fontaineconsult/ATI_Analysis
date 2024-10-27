@@ -129,3 +129,10 @@ export function assignApproverPayload(employeeId, yearSuccessEvidence) {
         year_success_evidence: yearSuccessEvidence
     };
 }
+
+export function updateIndividualPayload(individual) {
+    return {
+        action: "update_person_by_employee_id",
+        ...individual
+    };
+}

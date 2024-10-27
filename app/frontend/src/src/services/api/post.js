@@ -56,3 +56,6 @@ export const createYearSuccessEvidence = async (academic_year, composite_key) =>
         throw error;
     }
 }
+
+export class createIndividual {
+}

@@ -773,15 +773,15 @@ class Person(StructuredNode):
     providing technical support, or ensuring compliance with accessibility policies and procedures.
     The Person node helps track the involvement and contributions of individuals to ATI-related activities,
     fostering collaboration and accountability within the initiative
-
-
     """
 
     name = StringProperty(unique_index=True, required=True)
     email = StringProperty()
     employee_id = StringProperty()
     title = StringProperty()
+    active = BooleanProperty(default=True)
     can_approve_yse = BooleanProperty(default=False)
+    ati_role = StringProperty()
     in_ati_working_group = RelationshipTo('ATIWorkingGroup', 'participates_in')
     implements_yse = RelationshipTo("YearSuccessEvidence", "implements")
 
@@ -792,7 +792,9 @@ class Person(StructuredNode):
             'email': self.email,
             'employee_id': self.employee_id,
             'title': self.title,
-            "can_approve_yse": self.can_approve_yse
+            "can_approve_yse": self.can_approve_yse,
+            "active": self.active,
+            "ati_role": self.ati_role,
         }
 
 

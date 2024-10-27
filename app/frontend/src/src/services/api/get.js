@@ -65,3 +65,18 @@ export const fetchCurrentYearIndicator = async (currentYear) => {
         throw error;
     }
 };
+
+export const fetchAllIndividuals = async () => {
+    try {
+        const response = await axios.get(`${process.env.REACT_APP_API_URL}/individuals`);
+
+        if (response.status === 200) {
+            return response.data;  // Return the entire response data
+        } else {
+            throw new Error(`Failed to fetch individuals: ${response.data.error}`);
+        }
+    } catch (error) {
+        console.error('Error fetching individuals:', error.message);
+        throw error;
+    }
+}

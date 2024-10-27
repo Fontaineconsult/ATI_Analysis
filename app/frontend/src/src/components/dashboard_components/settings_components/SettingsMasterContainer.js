@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Box, Flex, Button, Heading, useBreakpointValue } from '@chakra-ui/react';
-import Members from "./Memebers";
+import Members from "./Members";
 import SuccessIndicators from "./SuccessIndicators";
 import StatusLevels from "./StatusLevelsControls";
 
@@ -41,12 +41,12 @@ function SettingsMasterContainer() {
             {/* Container with max width */}
             <Flex
                 direction={isVertical ? 'column' : 'row'} // Column on small screens, row on larger
-                maxW="1200px" // Maximum total width including sidebar and main content
+
                 width="100%"
-                mx="auto" // Center the container horizontally
-                p={4} // Padding around the container
+                mx="0" // Remove horizontal margin
+                p="0" // Remove padding around the container
                 flex="1" // Allow the container to grow and fill available space
-            >
+                >
                 {/* Sidebar (Aside) */}
                 <Box
                     as="aside"
@@ -95,10 +95,9 @@ function SettingsMasterContainer() {
                     p={6} // Padding around the main content area
                     justifyContent="center" // Center the content horizontally within main area
                     alignItems="flex-start" // Align content to the top vertically
+                    minW={"800px"} // Minimum width for the main content area
                 >
                     <Box
-                        width={{ base: "100%", md: "900px" }} // Responsive width up to 900px
-                        maxW="900px" // Ensure main content does not exceed 900px
                         bg="white"
                         border="1px solid #e2e8f0" // Subtle border around the main content
                         borderRadius="md" // Rounded corners for main content

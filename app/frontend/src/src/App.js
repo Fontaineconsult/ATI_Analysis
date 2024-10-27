@@ -148,7 +148,7 @@ function App() {
                                 as="main"
                                 className="App-content"
                                 p={4}
-                                maxW="1200px"
+                                maxW="1400px"
                                 centerContent
                             >
                                 <Routes>

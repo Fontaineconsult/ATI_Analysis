@@ -7,7 +7,7 @@ import SettingsMasterContainer from './dashboard_components/settings_components/
 
 function Dashboard() {
     return (
-        <Box maxW="1200px" mx="auto" p={4} textAlign="center">
+        <Box maxW="1400px" mx="0" p={4} textAlign="center">
             <Routes>
                 <Route path="report-overview" element={<ReportOverviewMasterContainer />} />
                 <Route path="implementations" element={<ImplementationsMasterContainer />} />

@@ -1,5 +1,5 @@
 import React, { createContext, useState, useEffect } from 'react';
-import { fetchPrimaryData, fetchCurrentYearIndicator } from '../services/api/get'; // Import fetchCurrentYearIndicator
+import { fetchPrimaryData, fetchCurrentYearIndicator, fetchAllIndividuals } from '../services/api/get'; // Import fetchAllIndividuals
 import { useToast } from '@chakra-ui/react'; // Import useToast from Chakra UI
 
 // Create a context
@@ -11,7 +11,8 @@ export const DataProvider = ({ children }) => {
         web: null,
         instructionalMaterials: null,
         procurement: null,
-        indicators: null,  // Add indicators state
+        indicators: null,
+        individuals: null,  // Add individuals state
     });
     const [loading, setLoading] = useState(true);  // Loading state for initial data
     const [updating, setUpdating] = useState(false);  // Updating state for background updates
@@ -37,12 +38,13 @@ export const DataProvider = ({ children }) => {
             ]);
 
             // Set the data in the state under their respective keys
-            setData({
+            setData((prevData) => ({
+                ...prevData,
                 web: webData.data,
                 instructionalMaterials: instructionalMaterialsData.data,
                 procurement: procurementData.data,
                 indicators: indicatorsData.data,  // Store indicators data
-            });
+            }));
 
         } catch (err) {
             setError(err.message);
@@ -110,6 +112,30 @@ export const DataProvider = ({ children }) => {
         }
     };
 
+    // Function to load all individuals and store them in the context
+    const loadAllIndividuals = async () => {
+        try {
+            setUpdating(true);  // Trigger background updating state
+            const individualsData = await fetchAllIndividuals();  // Fetch all individuals
+
+            // Update the individuals data in the state
+            setData((prevData) => ({
+                ...prevData,
+                individuals: individualsData.data.persons,  // Store individuals data
+            }));
+
+        } catch (err) {
+            toast({
+                title: "Error loading individuals data.",
+                description: err.message,
+                status: "error",
+                duration: 3000,
+                isClosable: true,
+            });
+        } finally {
+            setUpdating(false);  // Stop background updating after refresh
+        }
+    };
 
     // Function to update the selected year
     const updateYear = (newYear) => {
@@ -124,14 +150,17 @@ export const DataProvider = ({ children }) => {
     };
 
     return (
-        <DataContext.Provider value={{ data,
+        <DataContext.Provider value={{
+            data,
             loading,
             updating,
             error,
             selectedYear,
             updateYear,
             loadSingleWorkingGroupData,
-            refreshIndicators}}>
+            refreshIndicators,
+            loadAllIndividuals,  // Add loadAllIndividuals to the context
+        }}>
             {children}
         </DataContext.Provider>
     );

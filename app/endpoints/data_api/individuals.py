@@ -1,10 +1,14 @@
+import json
+from tarfile import data_filter
+
 from flask import request
 from flask.views import MethodView
 
 from . import data_api_endpoints
 from app.database.queries.individuals.read import get_all_persons, get_person_by_employee_id
+from app.database.queries.individuals.update import update_person_by_employee_id  # Import the update function
 from app.endpoints.data_api.util.response import make_response
-from app.endpoints.data_api.errors.custom_exceptions import NotFoundError
+from app.endpoints.data_api.errors.custom_exceptions import NotFoundError, ValidationError, CrudError
 
 
 class IndividualsAPI(MethodView):
@@ -19,8 +23,8 @@ class IndividualsAPI(MethodView):
             # If no employee_id is provided, fetch all persons
             if not employee_id:
                 all_persons = get_all_persons()
-                serialized = [person.serialize() for person in all_persons]
-                return make_response(status='success', data={'persons': serialized}), 200
+
+                return make_response(status='success', data={'persons': json.loads(all_persons[0][0])}), 200
 
             # Fetch person by employee_id
             person = get_person_by_employee_id(employee_id)
@@ -39,9 +43,31 @@ class IndividualsAPI(MethodView):
 
     def put(self):
         """
-        Placeholder for PUT requests.
+        Handle PUT requests to update an individual's information.
         """
-        return make_response(status="error", error="Not Implemented"), 405
+        try:
+            # Parse the incoming request data
+            data = request.get_json()
+            print(data)
+            if data['action'] == 'update_person_by_employee_id':
+                # Ensure 'employee_id' is provided in the request data
+                employee_id = data.get('employee_id')
+                if not employee_id:
+                    raise ValidationError("Missing 'employee_id' in the request body.")
+
+                # Call the update function to update the person and their working groups
+                updated_person = update_person_by_employee_id(data)
+
+                return make_response(status="success", data={'person': updated_person.serialize()}), 200
+
+        except ValidationError as e:
+            return make_response(status='error', error=str(e)), 400
+        except NotFoundError as e:
+            return make_response(status='error', error=str(e)), 404
+        except CrudError as e:
+            return make_response(status='error', error=str(e)), 500
+        except Exception as e:
+            return make_response(status='error', error=f"An unexpected error occurred: {str(e)}"), 500
 
     def delete(self):
         """

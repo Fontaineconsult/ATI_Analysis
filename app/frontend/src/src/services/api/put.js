@@ -1,5 +1,10 @@
 import axios from "axios";
-import {assignApproverPayload, updateIndicatorRemovedStatus, generateUpdateStatusLevelPayload} from "../response_templates";
+import {
+    assignApproverPayload,
+    updateIndicatorRemovedStatus,
+    generateUpdateStatusLevelPayload,
+    updateIndividualPayload
+} from "../response_templates";
 
 export const updateStatusLevel = async (yse, statusLevel) => {
     try {
@@ -71,3 +76,14 @@ export class attachYearSuccessEvidence {
 
 export class detachYearSuccessEvidence {
 }
+
+
+export const updateIndividual = async (individual) => {
+    try {
+        await axios.put(`${process.env.REACT_APP_API_URL}/individuals`, updateIndividualPayload(individual));
+    } catch (error) {
+        console.error('Error updating individual:', error);
+        throw error;
+    }
+}
+
