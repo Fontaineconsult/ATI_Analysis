@@ -1,6 +1,6 @@
 import axios from "axios";
 import {
-    create_year_success_evidence_node,
+    create_year_success_evidence_node, createIndividualPayload,
     createMessagePayload,
     createNotePayload,
     createSuccessIndicatorPayload
@@ -57,5 +57,23 @@ export const createYearSuccessEvidence = async (academic_year, composite_key) =>
     }
 }
 
-export class createIndividual {
+
+export const createIndividual = async (formData) => {
+    try {
+        const response = await axios.post(`${process.env.REACT_APP_API_URL}/individuals`, createIndividualPayload(formData));
+        return response.data;
+    } catch (error) {
+        console.error('Error creating individual:', error);
+        throw error;
+    }
+}
+
+export const createPlan = async (formData) => {
+    try {
+        const response = await axios.post(`${process.env.REACT_APP_API_URL}/implementations/plans`, formData);
+        return response.data;
+    } catch (error) {
+        console.error('Error creating plan:', error);
+        throw error;
+    }
 }

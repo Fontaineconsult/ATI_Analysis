@@ -15,7 +15,7 @@ function Goal({ goalData, plans, accomplishments, indicators }) {  // Pass indic
             </Heading>
             <Text tabIndex={0} mb={4}><strong>Goal:</strong> {goal}</Text>
             {/* Render the grouped Plans and Accomplishments using GoalDetails */}
-            <GoalDetails plans={plans} accomplishments={accomplishments} />
+            <GoalDetails plans={plans} accomplishments={accomplishments} indicators={indicators}/>
 
             {/* Render the EvidenceMasterContainer for Success Indicators */}
             <EvidenceMasterContainer indicators={indicators} />

@@ -88,6 +88,7 @@ function SuccessIndicator({ indicatorData, evidenceData, bgColor }) {
                 notes={evidenceData.has_notes}
                 messages={evidenceData.has_messages}
                 metrics={evidenceData.has_metrics}
+                plans={evidenceData.plans}
                 yearIdentifier={yearIdentifier}
                 currentWorkingGroup={currentWorkingGroup}
                 evidenceData={evidenceData}
@@ -113,6 +114,7 @@ function IndicatorHeader({
                              notes,
                              messages,
                              metrics,
+                             plans,
                              yearIdentifier,
                              currentWorkingGroup,
                              evidenceData,
@@ -203,7 +205,11 @@ function IndicatorHeader({
                         <Text>
                             A Note in the Accessible Technology Initiative (ATI) represents an annotation that provides additional insights, observations, or feedback related to ATI efforts. Notes added here apply directly to this academic year success indicator.
                         </Text>
-                        <YSENoteMasterContainer hasNotes={notes} hasMessages={messages} hasMetrics={metrics} year_identifier={yearIdentifier}/>
+                        <YSENoteMasterContainer hasNotes={notes}
+                                                hasMessages={messages}
+                                                hasMetrics={metrics}
+                                                plans={plans}
+                                                year_identifier={yearIdentifier}/>
                     </ModalBody>
                 </ModalContent>
             </Modal>

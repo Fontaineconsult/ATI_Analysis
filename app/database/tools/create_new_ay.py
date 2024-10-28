@@ -45,6 +45,7 @@ def duplicate_year_success_evidence(old_year, new_year):
     # Return the duplicated nodes (e2)
     return results
 
-# Example usage:
-# duplicate_year_success_evidence('2020-2021', '2022-2023')
+if __name__ == '__main__':
+    set_connection()
+    duplicate_year_success_evidence('2022-2023', '2023-2024')
 

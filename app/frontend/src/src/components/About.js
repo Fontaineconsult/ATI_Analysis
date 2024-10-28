@@ -2,7 +2,7 @@ import React from 'react';
 import { Box, Heading } from '@chakra-ui/react';
 import {Route, Routes} from "react-router-dom";
 import ReportOverviewMasterContainer from "./dashboard_components/report_components/ReportOverviewMasterContainer";
-import AtiOverview from "./dashboard_components/report_components/about_components/AtiOverview";
+import AtiOverview from "./dashboard_components/about_components/AtiOverview";
 
 
 function About() {

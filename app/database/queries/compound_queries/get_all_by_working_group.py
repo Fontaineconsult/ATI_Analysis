@@ -85,6 +85,13 @@ def fetch_evidence_for_working_group(working_group, academic_year):
              collect(DISTINCT person) AS persons,
              collect(DISTINCT adminReviewer) AS adminReviewers
         
+        // **Match plans connected to the evidence**
+        OPTIONAL MATCH (evidence)<-[:furthers_yse]-(evidencePlan:Plan)
+        
+        // **Collect the plans per evidence**
+        WITH wg, goal, indicator, evidence, evidenceNotes, evidenceMessages, evidenceMetrics, statusLevel, adminReviewers, persons,
+             collect(DISTINCT evidencePlan) AS plans
+        
         // Match evidence types and their documentation
         OPTIONAL MATCH (evidence)<-[:is_evidence_for]-(evidenceType)
           WHERE evidenceType:InternalPolicy OR
@@ -103,7 +110,7 @@ def fetch_evidence_for_working_group(working_group, academic_year):
         OPTIONAL MATCH (evidenceType)-[:has_metric]->(etMetric:Metric)
         
         // Aggregate documentation and metrics under each evidence type
-        WITH wg, goal, indicator, evidence, evidenceNotes, evidenceMessages, evidenceMetrics, statusLevel, adminReviewers, persons, evidenceType,
+        WITH wg, goal, indicator, evidence, evidenceNotes, evidenceMessages, evidenceMetrics, statusLevel, adminReviewers, persons, plans, evidenceType,
              collect(DISTINCT doc) AS docs,
              collect(DISTINCT web) AS webs,
              collect(DISTINCT etNote) AS notes,
@@ -111,7 +118,7 @@ def fetch_evidence_for_working_group(working_group, academic_year):
              collect(DISTINCT etMetric) AS metrics
         
         // Create a map for each evidence type with its documentation and metrics
-        WITH wg, goal, indicator, evidence, evidenceNotes, evidenceMessages, evidenceMetrics, statusLevel, adminReviewers, persons,
+        WITH wg, goal, indicator, evidence, evidenceNotes, evidenceMessages, evidenceMetrics, statusLevel, adminReviewers, persons, plans,
              {
                type: labels(evidenceType)[0],
                evidenceType: evidenceType,
@@ -123,11 +130,11 @@ def fetch_evidence_for_working_group(working_group, academic_year):
              } AS evidenceTypeData
         
         // Collect all evidence types under each evidence
-        WITH wg, goal, indicator, evidence, evidenceNotes, evidenceMessages, evidenceMetrics, statusLevel, adminReviewers, persons,
+        WITH wg, goal, indicator, evidence, evidenceNotes, evidenceMessages, evidenceMetrics, statusLevel, adminReviewers, persons, plans,
              collect(evidenceTypeData) AS evidenceTypes
         
-        // Create a map for each evidence with its data
-        WITH wg, goal, indicator, statusLevel, adminReviewers, persons, evidenceTypes, evidence, evidenceNotes, evidenceMessages, evidenceMetrics,
+        // **Create a map for each evidence with its data, including plans**
+        WITH wg, goal, indicator, statusLevel, adminReviewers, persons, plans, evidenceTypes, evidence, evidenceNotes, evidenceMessages, evidenceMetrics,
              {
                evidence: evidence,
                statusLevel: statusLevel,
@@ -136,13 +143,12 @@ def fetch_evidence_for_working_group(working_group, academic_year):
                adminReviewers: adminReviewers,
                has_notes: evidenceNotes,
                has_messages: evidenceMessages,
-               has_metrics: evidenceMetrics
+               has_metrics: evidenceMetrics,
+               plans: plans
              } AS evidenceData
         
         // Collect all evidences under each indicator
         WITH wg, goal, indicator, collect(evidenceData) AS evidences
-        
-        // Note: We no longer filter out indicators without evidences
         
         // Create a map for each indicator with its evidences
         WITH wg, goal, indicator, evidences,
@@ -156,12 +162,12 @@ def fetch_evidence_for_working_group(working_group, academic_year):
         
         // Match accomplishments for each goal in the specified academic year
         OPTIONAL MATCH (goal)<-[:advances_goal]-(accomplishment:Accomplishment)
-                         -[:in_academic_year]->(accomplishmentYear:AcademicYear)
+                             -[:in_academic_year]->(accomplishmentYear:AcademicYear)
           WHERE accomplishmentYear.name = $academic_year
         
         // Match plans for each goal in the specified academic year
         OPTIONAL MATCH (goal)<-[:furthers_goal]-(plan:Plan)
-                         -[:in_academic_year]->(planYear:AcademicYear)
+                             -[:in_academic_year]->(planYear:AcademicYear)
           WHERE planYear.name = $academic_year
         
         // Collect accomplishments and plans per goal
@@ -186,6 +192,7 @@ def fetch_evidence_for_working_group(working_group, academic_year):
           workingGroup: workingGroupName,
           goals: goals
         }) AS jsonResults
+
     """
 
     try:

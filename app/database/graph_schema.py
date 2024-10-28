@@ -342,6 +342,8 @@ class Plan(StructuredNode):
     description = StringProperty(unique_index=True, required=True)
     abandoned = BooleanProperty(default=False)
     abandoned_notes = StringProperty()
+    plan_status = StringProperty()
+    completed_year = RelationshipTo("AcademicYear", "completed_in_year")
     supporting_documents = RelationshipTo("Document", "is_documented_by")
     supporting_webpages = RelationshipTo("Webpage", "is_documented_by")
     supporting_notes = RelationshipTo("Note", "is_documented_by")
@@ -355,7 +357,9 @@ class Plan(StructuredNode):
             'is_key_plan': self.is_key_plan,
             'is_campus_plan': self.is_campus_plan,
             'abandoned': self.abandoned,
-            'abandoned_notes': self.abandoned_notes
+            'abandoned_notes': self.abandoned_notes,
+            'plan_status': self.plan_status,
+            'description': self.description
         }
 
 
@@ -684,6 +688,8 @@ class YearSuccessEvidence(StructuredNode):
     notes = RelationshipTo("Note", "has_note")
     messages = RelationshipTo("Message", "has_message")
     metrics = RelationshipTo("Metric", "has_metric")
+    worked_on_in_current_year = BooleanProperty(default=False)
+    will_work_on_next_year = BooleanProperty(default=False)
 
     # Relationships from implementation nodes
     processes_that_evidence = RelationshipFrom("Process", "is_evidence_for")

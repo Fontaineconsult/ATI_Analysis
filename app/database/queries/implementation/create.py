@@ -8,7 +8,8 @@ from app.database.graph_schema import Process
 from app.database.queries.implementation.read import get_goal_node
 
 
-from app.endpoints.data_api.errors.custom_exceptions import CrudError
+from app.endpoints.data_api.errors.custom_exceptions import CrudError, ValidationError
+
 
 def add_process(title: str, description: str) -> bool:
     """
@@ -137,44 +138,82 @@ def add_accomplishment(name: str,
         raise CrudError(f"Failed to add accomplishment: {e}")
 
 
-def add_plan(name: str,
-             plan_description: str,
-             academic_year_name: str,
-             is_key_plan: bool=False,
-             is_campus_plan: bool=False,
-             furthered_goal_number: int=None,
-             furthered_working_group: str=None,
-             furthered_yse_identifier: str=None) -> bool:
+def add_plan(plan_data: dict) -> bool:
+    """
+    Adds a new Plan node based on the provided data in the form of a dictionary.
+
+    :param plan_data: Dictionary containing plan details.
+    :return: bool indicating success or failure.
+    """
     try:
+        # Unpack dictionary values with default fallbacks
+        name = plan_data.get('name')
+        description = plan_data.get('description')
+        academic_year_name = plan_data.get('academic_year_name')
+        is_key_plan = plan_data.get('is_key_plan', False)
+        is_campus_plan = plan_data.get('is_campus_plan', False)
+        plan_status = plan_data.get('plan_status', None)
+        abandoned = plan_data.get('abandoned', False)
+        abandoned_notes = plan_data.get('abandoned_notes', None)
+        completed_year_name = plan_data.get('completed_year_name', None)
+        furthered_goal_number = plan_data.get('furthered_goal_number', None)
+        furthered_working_group = plan_data.get('furthered_working_group', None)
+        furthered_yse_identifier = plan_data.get('furthered_yse_identifier', None)
+
+        # Validate that at least one of the furthering fields is provided
+        if not (furthered_goal_number or furthered_working_group or furthered_yse_identifier):
+            raise ValidationError("At least one of 'furthered_goal_number', 'furthered_working_group', or 'furthered_yse_identifier' must be specified.")
+
+        # Get or create the academic year node
         academic_year = AcademicYear.nodes.get(name=academic_year_name)
 
+        # Find the goal node if a furthered goal is specified
         furthered_goal = None
         if furthered_goal_number and furthered_working_group:
             furthered_goal = get_goal_node(furthered_goal_number, furthered_working_group)
 
+        # Find the YearSuccessEvidence node if a furthered YSE is specified
         furthered_yse = None
         if furthered_yse_identifier:
             furthered_yse = YearSuccessEvidence.nodes.get(year_identifier=furthered_yse_identifier)
 
+        # Create a new plan node with the updated fields
         plan = Plan(
             name=name,
-            plan_description=plan_description,
+            description=description,              # Using "description" from dict
             is_key_plan=is_key_plan,
-            is_campus_plan=is_campus_plan
+            is_campus_plan=is_campus_plan,
+            plan_status=plan_status,              # Optional plan status
+            abandoned=abandoned,                 # Optional abandoned status
+            abandoned_notes=abandoned_notes       # Optional abandoned notes
         ).save()
 
+        # Connect the plan to the academic year
         plan.academic_year.connect(academic_year)
 
+        # If a goal is specified, connect the plan to the furthered goal
         if furthered_goal:
             plan.furthered_goals.connect(furthered_goal)
 
+        # If a YSE is specified, connect the plan to the furthered YearSuccessEvidence
         if furthered_yse:
             plan.furthered_year_success_indicators.connect(furthered_yse)
 
+        # If a completed year is specified, establish a relationship with the completed year
+        if completed_year_name:
+            completed_year = AcademicYear.nodes.get(name=completed_year_name)
+            plan.completed_year.connect(completed_year)
+
         print(f"Plan '{name}' added successfully")
         return True
+
+    except ValidationError as e:
+        print(f"Validation error: {e}")
+        raise e
     except Exception as e:
         raise CrudError(f"Failed to add plan: {e}")
+
+
 
 
 def add_tracking(title: str, description: str) -> bool:

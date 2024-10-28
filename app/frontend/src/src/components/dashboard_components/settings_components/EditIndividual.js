@@ -12,13 +12,11 @@ import {
     FormLabel,
     Input,
     Checkbox,
-    Select,
     VStack,
-    HStack,
-    useToast,
+    useToast, CheckboxGroup,
 } from '@chakra-ui/react';
 import { updateIndividual } from '../../../services/api/put';
-import {createIndividual} from "../../../services/api/post";
+import { createIndividual } from '../../../services/api/post';
 
 const EditIndividual = ({ isOpen, onClose, individualData, onSave }) => {
     const [formData, setFormData] = useState({
@@ -69,17 +67,24 @@ const EditIndividual = ({ isOpen, onClose, individualData, onSave }) => {
         }
     };
 
-    const handleWorkingGroupChange = (wgName) => {
+    const handleWorkingGroupChange = (wgName, isChecked) => {
         setFormData((prev) => {
-            const isMember = prev.workingGroups.some((wg) => wg.name === wgName);
+            console.log(wgName, isChecked)
+            const prevWorkingGroups = Array.isArray(prev.workingGroups) ? prev.workingGroups : [];
+
             let updatedWorkingGroups;
-            if (isMember) {
-                // Remove working group
-                updatedWorkingGroups = prev.workingGroups.filter((wg) => wg.name !== wgName);
+            if (isChecked) {
+                // Add working group if not already present
+                if (!prevWorkingGroups.some((wg) => wg.name === wgName)) {
+                    updatedWorkingGroups = [...prevWorkingGroups, { name: wgName }];
+                } else {
+                    updatedWorkingGroups = prevWorkingGroups;
+                }
             } else {
-                // Add working group
-                updatedWorkingGroups = [...prev.workingGroups, { name: wgName }];
+                // Remove working group
+                updatedWorkingGroups = prevWorkingGroups.filter((wg) => wg.name !== wgName);
             }
+
             return { ...prev, workingGroups: updatedWorkingGroups };
         });
     };
@@ -198,29 +203,29 @@ const EditIndividual = ({ isOpen, onClose, individualData, onSave }) => {
                             </Checkbox>
                         </FormControl>
 
-                        <FormControl>
+                        <CheckboxGroup>
                             <FormLabel>Working Groups</FormLabel>
-                            <HStack>
-                                <Checkbox
-                                    isChecked={formData.workingGroups.some((wg) => wg.name === 'Web')}
-                                    onChange={() => handleWorkingGroupChange('Web')}
-                                >
-                                    Web
-                                </Checkbox>
+                            <VStack align="start" spacing={2}>
                                 <Checkbox
                                     isChecked={formData.workingGroups.some((wg) => wg.name === 'Instructional Materials')}
-                                    onChange={() => handleWorkingGroupChange('Instructional Materials')}
+                                    onChange={(e) => handleWorkingGroupChange('Instructional Materials', e.target.checked)}
                                 >
                                     Instructional Materials
                                 </Checkbox>
                                 <Checkbox
                                     isChecked={formData.workingGroups.some((wg) => wg.name === 'Procurement')}
-                                    onChange={() => handleWorkingGroupChange('Procurement')}
+                                    onChange={(e) => handleWorkingGroupChange('Procurement', e.target.checked)}
                                 >
                                     Procurement
                                 </Checkbox>
-                            </HStack>
-                        </FormControl>
+                                <Checkbox
+                                    isChecked={formData.workingGroups.some((wg) => wg.name === 'Web')}
+                                    onChange={(e) => handleWorkingGroupChange('Web', e.target.checked)}
+                                >
+                                    Web
+                                </Checkbox>
+                            </VStack>
+                        </CheckboxGroup>
                     </VStack>
                 </ModalBody>
 

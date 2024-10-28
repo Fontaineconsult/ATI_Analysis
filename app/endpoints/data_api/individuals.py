@@ -9,6 +9,7 @@ from app.database.queries.individuals.read import get_all_persons, get_person_by
 from app.database.queries.individuals.update import update_person_by_employee_id  # Import the update function
 from app.endpoints.data_api.util.response import make_response
 from app.endpoints.data_api.errors.custom_exceptions import NotFoundError, ValidationError, CrudError
+from ...database.queries.individuals.create import add_person
 
 
 class IndividualsAPI(MethodView):
@@ -37,9 +38,28 @@ class IndividualsAPI(MethodView):
 
     def post(self):
         """
-        Placeholder for POST requests.
+        Handle POST requests to add a new individual.
         """
-        return make_response(status="error", error="Not Implemented"), 405
+        try:
+            # Parse the incoming request data
+            data = request.get_json()
+            if not data:
+                raise ValidationError("Request body must be JSON.")
+
+            if data['action'] == 'add_person':
+
+                # Call the add_person function to create a new person
+                new_person = add_person(data)
+
+                return make_response(status="success", data={'person': new_person.serialize()}), 201
+
+        except ValidationError as e:
+            return make_response(status='error', error=str(e)), 400
+        except CrudError as e:
+            return make_response(status='error', error=str(e)), 500
+        except Exception as e:
+            return make_response(status='error', error=f"An unexpected error occurred: {str(e)}"), 500
+
 
     def put(self):
         """

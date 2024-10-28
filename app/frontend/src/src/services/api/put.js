@@ -3,7 +3,7 @@ import {
     assignApproverPayload,
     updateIndicatorRemovedStatus,
     generateUpdateStatusLevelPayload,
-    updateIndividualPayload
+    updateIndividualPayload, updatePlanPayload, updateNotePayload, updateMessagePayload
 } from "../response_templates";
 
 export const updateStatusLevel = async (yse, statusLevel) => {
@@ -34,11 +34,7 @@ export const assignApprover = async (employeeId, yearSuccessEvidence) => {
 
 export const updateNote = async (year_success_evidence, note_dict, created_by) => {
     try {
-        const response = await axios.put(`${process.env.REACT_APP_API_URL}/notes`, {
-            year_success_evidence,
-            note_dict,
-            created_by,
-        });
+        const response = await axios.put(`${process.env.REACT_APP_API_URL}/documents/notes`, updateNotePayload(year_success_evidence, note_dict, created_by));
         return response.data;
     } catch (error) {
         console.error('Error updating note:', error);
@@ -48,11 +44,7 @@ export const updateNote = async (year_success_evidence, note_dict, created_by) =
 
 export const updateMessage = async (year_success_evidence, message_dict, created_by) => {
     try {
-        const response = await axios.put(`${process.env.REACT_APP_API_URL}/messages`, {
-            year_success_evidence,
-            message_dict,
-            created_by,
-        });
+        const response = await axios.put(`${process.env.REACT_APP_API_URL}/documents/messages`, updateMessagePayload(year_success_evidence, message_dict, created_by));
         return response.data;
     } catch (error) {
         console.error('Error updating message:', error);
@@ -87,3 +79,11 @@ export const updateIndividual = async (individual) => {
     }
 }
 
+export const updatePlan = async (formData) => {
+    try {
+        await axios.put(`${process.env.REACT_APP_API_URL}/implementations/plans`, updatePlanPayload(formData));
+    } catch (error) {
+        console.error('Error updating plan:', error);
+        throw error;
+    }
+}

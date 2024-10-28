@@ -15,7 +15,7 @@ export const useSettings = () => {
 // SettingsProvider component that wraps the app
 export const SettingsProvider = ({ children }) => {
     // Global settings state for current academic year and working group
-    const [currentAcademicYear, setCurrentAcademicYear] = useState('2022-2023');  // Default year
+    const [currentAcademicYear, setCurrentAcademicYear] = useState('2023-2024');  // Default year
     const [currentWorkingGroup, setCurrentWorkingGroup] = useState('web');  // Default working group
 
     // Function to update the current academic year

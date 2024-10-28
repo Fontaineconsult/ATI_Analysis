@@ -44,33 +44,24 @@ function createWebpagePayload(url, name, noLongerExists, depreciated, depreciate
     };
 }
 
-function updateNotePayload(yearSuccessEvidence, noteName, content = null, includeInReport = true, depreciated = false, depreciatedDate = null) {
+export function updateNotePayload(yearSuccessEvidence, note_dict, created_by) {
     return {
         action: "update_note",
         year_success_evidence: yearSuccessEvidence,
-        note_dict: {
-            name: noteName,
-            content: content,
-            include_in_report: includeInReport,
-            depreciated: depreciated,
-            depreciated_date: depreciatedDate
+        note_dict: note_dict,
+        created_by:created_by
         }
-    };
+
 }
 
-function updateMessagePayload(yearSuccessEvidence, messageName, content = null, filePath = null, uriPath = null, depreciated = false, depreciatedDate = null) {
+export function updateMessagePayload(yearSuccessEvidence, note_dict, created_by) {
     return {
         action: "update_message",
         year_success_evidence: yearSuccessEvidence,
-        message_dict: {
-            name: messageName,
-            content: content,
-            file_path: filePath,
-            uri_path: uriPath,
-            depreciated: depreciated,
-            depreciated_date: depreciatedDate
-        }
-    };
+        message_dict: note_dict,
+        created_by:created_by
+    }
+
 }
 
 
@@ -134,5 +125,26 @@ export function updateIndividualPayload(individual) {
     return {
         action: "update_person_by_employee_id",
         ...individual
+    };
+}
+
+export function createIndividualPayload(individual) {
+    return {
+        action: "add_person",
+        ...individual
+    };
+}
+
+export function createPlanPayload(plan) {
+    return {
+        action: "add_plan",
+        ...plan
+    };
+}
+
+export function updatePlanPayload(plan) {
+    return {
+        action: "update_plan",
+        ...plan
     };
 }

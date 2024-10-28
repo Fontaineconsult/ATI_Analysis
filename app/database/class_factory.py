@@ -96,3 +96,9 @@ working_group_names_web_query = {
 }
 
 working_groups = ["Web", "Procurement", "Instructional Materials"]
+
+plan_statuses = ["Not Started",
+                 "In Progress",
+                 "Complete",
+                 "On Hold",
+                 "Abandoned"]
