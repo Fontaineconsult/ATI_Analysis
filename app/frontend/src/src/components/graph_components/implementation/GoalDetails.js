@@ -12,19 +12,19 @@ function GoalDetails({ plans, accomplishments, indicators }) {
     const totalPlansCount = goalPlansCount + indicatorPlansCount;
 
     return (
-        <Box tabIndex={0}>
+        <Box tabIndex={0} className="goal-details-wrapper">
             <h2>Plans and Accomplishments</h2>
             <Accordion allowToggle>
                 {/* Accordion for Plans */}
                 <AccordionItem>
                     <h2>
                         <AccordionButton>
-                            <Box flex="1" textAlign="left">
+                            <Box className="goal-details-accordion-button">
                                 Plans ({totalPlansCount})
                             </Box>
                         </AccordionButton>
                     </h2>
-                    <AccordionPanel pb={4}>
+                    <AccordionPanel className="goal-details-panel">
                         {totalPlansCount > 0 ? (
                             <>
                                 {/* Render each goalPlan */}
@@ -42,7 +42,7 @@ function GoalDetails({ plans, accomplishments, indicators }) {
                                 ))}
                             </>
                         ) : (
-                            <Text>No plans available for this goal.</Text>
+                            <Text className="no-content-text">No plans available for this goal.</Text>
                         )}
                     </AccordionPanel>
                 </AccordionItem>
@@ -51,18 +51,18 @@ function GoalDetails({ plans, accomplishments, indicators }) {
                 <AccordionItem>
                     <h2>
                         <AccordionButton>
-                            <Box flex="1" textAlign="left">
+                            <Box className="goal-details-accordion-button">
                                 Accomplishments ({accomplishments?.length || 0})
                             </Box>
                         </AccordionButton>
                     </h2>
-                    <AccordionPanel pb={4}>
+                    <AccordionPanel className="goal-details-panel">
                         {accomplishments && accomplishments.length > 0 ? (
                             accomplishments.map((accomplishment, index) => (
                                 <Accomplishment key={index} accomplishmentData={accomplishment} />
                             ))
                         ) : (
-                            <Text>No accomplishments available for this goal.</Text>
+                            <Text className="no-content-text">No accomplishments available for this goal.</Text>
                         )}
                     </AccordionPanel>
                 </AccordionItem>

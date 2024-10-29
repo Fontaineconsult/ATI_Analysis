@@ -15,7 +15,6 @@ root.render(
     <React.StrictMode>
         <BrowserRouter>
             <SettingsProvider>
-
                     <DataProvider>
                 <UserProvider>  {/* Wrap the app with UserProvider */}
                     <DevSupport ComponentPreviews={ComponentPreviews}

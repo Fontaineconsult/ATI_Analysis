@@ -96,7 +96,7 @@ class DocumentsAPI(MethodView):
         except Exception as e:
             return make_response(status='error', error=f"An unexpected error occurred: {str(e)}"), 500
 
-    def put(self):
+    def put(self, document_type):
         """
         Handle PUT requests to update documents based on the document type.
         """
@@ -112,19 +112,40 @@ class DocumentsAPI(MethodView):
                 required_fields = ['year_success_evidence', 'note_dict']
                 if not all(field in data for field in required_fields):
                     return make_response(status="error", error="Missing required fields for note update."), 400
-                if update_note(data['year_success_evidence'], data['note_dict'], data.get('created_by')):
+
+                note_dict = data['note_dict']
+                if 'unique_id' not in note_dict:
+                    return make_response(status="error", error="The 'unique_id' field is required in 'note_dict'."), 400
+
+                if update_note(data['year_success_evidence'], note_dict, data.get('created_by')):
                     return make_response(status="success", data="Note updated successfully."), 200
+                else:
+                    return make_response(status="error", error="Failed to update note."), 500
 
             elif action == 'update_message':
                 required_fields = ['year_success_evidence', 'message_dict']
                 if not all(field in data for field in required_fields):
                     return make_response(status="error", error="Missing required fields for message update."), 400
-                if update_message(data['year_success_evidence'], data['message_dict'], data.get('created_by')):
+
+                message_dict = data['message_dict']
+                if 'unique_id' not in message_dict:
+                    return make_response(status="error", error="The 'unique_id' field is required in 'message_dict'."), 400
+
+                if update_message(data['year_success_evidence'], message_dict, data.get('created_by')):
                     return make_response(status="success", data="Message updated successfully."), 200
+                else:
+                    return make_response(status="error", error="Failed to update message."), 500
 
             elif action == 'update_metric':
-                # Placeholder for updating a metric
-                if update_metric():
+                required_fields = ['year_success_evidence', 'metric_dict']
+                if not all(field in data for field in required_fields):
+                    return make_response(status="error", error="Missing required fields for metric update."), 400
+
+                metric_dict = data['metric_dict']
+                if 'unique_id' not in metric_dict:
+                    return make_response(status="error", error="The 'unique_id' field is required in 'metric_dict'."), 400
+
+                if update_metric(data['year_success_evidence'], metric_dict, data.get('created_by')):
                     return make_response(status="success", data="Metric updated successfully."), 200
                 else:
                     return make_response(status="error", error="Failed to update metric."), 500
@@ -141,7 +162,8 @@ class DocumentsAPI(MethodView):
         except Exception as e:
             return make_response(status='error', error=f"An unexpected error occurred: {str(e)}"), 500
 
-    def delete(self, document_type):
+
+    def delete(self):
         """
         Handles DELETE requests to delete documents based on the document type.
         """
@@ -151,4 +173,4 @@ class DocumentsAPI(MethodView):
 # Register the view for different document types
 documents_view = DocumentsAPI.as_view('documents_api')
 data_api_endpoints.add_url_rule('/documents/<string:document_type>', view_func=documents_view, methods=['GET', 'PUT'])
-data_api_endpoints.add_url_rule('/documents', view_func=documents_view, methods=['POST', 'PUT'])
+data_api_endpoints.add_url_rule('/documents', view_func=documents_view, methods=['POST'])

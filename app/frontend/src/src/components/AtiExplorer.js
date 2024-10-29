@@ -1,59 +1,51 @@
 import React from 'react';
-import { Box, Heading, Text, Spinner } from '@chakra-ui/react';
+import { Box, Spinner } from '@chakra-ui/react';
 import WorkingGroupMasterContainer from './ati_explorer_containers/WorkingGroupMasterContainer';
 import { useData } from '../hooks/useData';
-import {Router, useLocation} from "react-router-dom";
+import { useLocation } from 'react-router-dom';
+import '../styles/App.css'; // Import the CSS file
 
 function AtiExplorer() {
     const location = useLocation();
-    const { data, loading, updating, error, selectedYear } = useData();  // Access data, loading, updating, and error states
+    const { data, loading, updating, error, selectedYear } = useData();
 
     // Check if all data fields are null, indicating an empty state
     const isDataEmpty = !data.web && !data.instructionalMaterials && !data.procurement;
 
-    // Render initial loading spinner when loading for the first time
     if (loading) {
         return (
-            <Box maxW="1200px" mx="auto" p={4} textAlign="center">
+            <Box className="centered-container">
                 <Spinner size="xl" />
-                <Text>Loading data for {selectedYear}...</Text>
+                <p className="ati-explorer-text">Loading data for {selectedYear}...</p>
             </Box>
         );
     }
 
-    // Render fallback message when data is empty and loading is complete
     if (!loading && isDataEmpty) {
         return (
-            <Box maxW="1200px" mx="auto" p={4}>
-                <Heading as="h2" size="xl" mb={6} textAlign="center">
-                    Data Not Available
-                </Heading>
-                <Text textAlign="center">
+            <Box className="centered-container">
+                <h2 className="ati-explorer-heading">Data Not Available</h2>
+                <p className="ati-explorer-text">
                     There is no data available for the selected year. Please select a different year.
-                </Text>
+                </p>
             </Box>
         );
     }
 
-    // Render error message if there was an error fetching data
     if (error) {
-        return <Text color="red.500" textAlign="center">Error: {error}</Text>;
+        return <p className="ati-explorer-text" style={{ color: 'red' }}>Error: {error}</p>;
     }
 
     return (
         <Box maxW="1200px" mx="auto" p={4}>
             {location.pathname === '/ati-explorer' && <AtiExplorerLanding />}
 
-            {/* Render the WorkingGroupMasterContainer */}
-
             <WorkingGroupMasterContainer />
 
-
-            {/* Show a subtle spinner if background updates are happening */}
             {updating && (
-                <Box textAlign="center" mt={4}>
+                <Box className="update-spinner">
                     <Spinner size="sm" />
-                    <Text>Updating data in the background...</Text>
+                    <p className="ati-explorer-text">Updating data in the background...</p>
                 </Box>
             )}
         </Box>
@@ -62,13 +54,11 @@ function AtiExplorer() {
 
 function AtiExplorerLanding() {
     return (
-        <Box maxW="1200px" mx="auto" p={4}>
-            <Heading as="h2" size="xl" mb={6} textAlign="center">
-                Welcome to the ATI Explorer
-            </Heading>
-            <Text textAlign="center">
+        <Box className="centered-container">
+            <h2 className="ati-explorer-heading">Welcome to the ATI Explorer</h2>
+            <p className="ati-explorer-text">
                 Select a year to view data for that academic year.
-            </Text>
+            </p>
         </Box>
     );
 }

@@ -13,7 +13,7 @@ import {
     MenuItem,
 } from '@chakra-ui/react';
 import { ChevronDownIcon } from '@chakra-ui/icons';
-import { Routes, Route, Link as RouterLink } from 'react-router-dom';  // Use RouterLink to avoid nested links
+import { Routes, Route, Link as RouterLink } from 'react-router-dom';
 import { DataProvider } from './context/DataContext';
 import { useData } from './hooks/useData';
 import AtiExplorer from './components/AtiExplorer';
@@ -26,14 +26,10 @@ import { StatusLevelProvider } from "./context/StatusLevelContext";
 import { UserProvider, UserContext } from './context/UserContext';
 
 function App() {
-    // Access the current academic year using the useSettings hook
     const { currentAcademicYear, updateCurrentAcademicYear } = useSettings();
-    const { updateYear } = useData();  // Access the updateYear method to fetch new data
-
-    // Access the current user using the UserContext
+    const { updateYear } = useData();
     const { user } = React.useContext(UserContext);
 
-    // Year options for the dropdown
     const yearOptions = [
         '2020-2021',
         '2021-2022',
@@ -43,46 +39,29 @@ function App() {
     ];
 
     const handleYearChange = (year) => {
-        updateCurrentAcademicYear(year);  // Update global year state
-        updateYear(year);  // Fetch new data for the selected year
+        updateCurrentAcademicYear(year);
+        updateYear(year);
     };
 
     return (
         <ChakraProvider>
             <UserProvider>
                 <StatusLevelProvider>
-                    <Box className="App" minHeight="100vh" bg="gray.50">
-                        {/* Fixed Header containing Main Navigation */}
-                        <Box
-                            position="fixed"
-                            top="0"
-                            left="0"
-                            right="0"
-                            bg="gray.75"
-                            zIndex="1000"
-                        >
-                            {/* Main Navigation Bar */}
-                            <Flex
-                                as="nav"
-                                bg="teal.600"
-                                p={4}
-                                color="white"
-                                alignItems="center"
-                                aria-label="Main Navigation"
-                                justifyContent="space-between"
-                                height="60px" // Fixed height
-                            >
-                                <Flex alignItems="center">
-                                    <Heading as="h1" size="lg" aria-label="ATI App" mr={8}>
+                    {/* Main App Container */}
+                    <Box className="App">
+                        {/* Header Section */}
+                        <Box className="header-container">
+                            <Flex as="nav" className="nav-bar" aria-label="Main Navigation">
+                                <Flex className="nav-items-container">
+                                    <Heading as="h1" className="app-title">
                                         SF State ATI Knowledge Graph
                                     </Heading>
-                                    {/* Main Navigation Buttons */}
                                     <Button
                                         as={RouterLink}
                                         to="/ati-explorer"
                                         colorScheme="teal"
                                         variant="solid"
-                                        mr={4}
+                                        className="nav-button"
                                     >
                                         ATI Explorer
                                     </Button>
@@ -91,7 +70,7 @@ function App() {
                                         to="/dashboard"
                                         colorScheme="teal"
                                         variant="solid"
-                                        mr={4}
+                                        className="nav-button"
                                     >
                                         Dashboard
                                     </Button>
@@ -100,14 +79,14 @@ function App() {
                                         to="/about"
                                         colorScheme="teal"
                                         variant="solid"
-                                        mr={4}
+                                        className="nav-button"
                                     >
                                         About
                                     </Button>
                                 </Flex>
 
+                                {/* Year selection and user information */}
                                 <Flex alignItems="center">
-                                    {/* Year Dropdown Menu */}
                                     <Menu>
                                         <MenuButton
                                             as={Button}
@@ -116,11 +95,14 @@ function App() {
                                         >
                                             {currentAcademicYear || 'Select Year'}
                                         </MenuButton>
-                                        <MenuList>
+                                        <MenuList bg="white" color="gray.800" border="1px solid" borderColor="gray.200">
                                             {yearOptions.map((year) => (
                                                 <MenuItem
                                                     key={year}
                                                     onClick={() => handleYearChange(year)}
+                                                    _hover={{ bg: "teal.50" }}      // Light teal background on hover
+                                                    _focus={{ bg: "teal.100" }}      // Slightly darker teal on focus
+                                                    _active={{ bg: "teal.200" }}     // Even darker teal when active
                                                 >
                                                     {year}
                                                 </MenuItem>
@@ -128,8 +110,8 @@ function App() {
                                         </MenuList>
                                     </Menu>
 
-                                    {/* Display the current user name on the right */}
-                                    <Flex direction="column" alignItems="flex-end" ml={4}>
+                                    {/* Display the current user name */}
+                                    <Flex className="user-info">
                                         <Text fontSize="md" fontWeight="bold" aria-label="Current User">
                                             {user ? `Notating as: ${user.name}` : 'No Active User'}
                                         </Text>
@@ -137,18 +119,15 @@ function App() {
                                 </Flex>
                             </Flex>
 
-                            {/* Sub Navbar */}
+                            {/* SubNavbar Component */}
                             <SubNavbar />
                         </Box>
 
-                        {/* Wrapper Box with padding-top to offset fixed header height */}
-                        <Box pt="112px"> {/* 60px Main Nav + 52px SubNavbar = 112px */}
-                            {/* Main Content */}
+                        {/* Main Content Container */}
+                        <Box className="main-content">
                             <Container
                                 as="main"
                                 className="App-content"
-                                p={4}
-                                maxW="1400px"
                                 centerContent
                             >
                                 <Routes>

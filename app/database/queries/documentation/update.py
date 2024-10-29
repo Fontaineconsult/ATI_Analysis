@@ -52,6 +52,10 @@ def update_note(year_success_evidence: str, note_dict: dict, created_by: str = N
             raise CrudError(f"Failed to get Person: {e}")
 
     try:
+        if note.name != note_dict.get('name', note.name):
+            note.name = note_dict['name']
+
+
         if note.content != note_dict.get('content', note.content):
             note.content = note_dict['content']
 
@@ -106,6 +110,10 @@ def update_message(year_success_evidence: str, message_dict: dict, created_by: s
             raise CrudError(f"Failed to get Person: {e}")
 
     try:
+
+        if message.name != message_dict.get('name', message.name):
+            message.name = message_dict['name']
+
         if message.content != message_dict.get('content', message.content):
             message.content = message_dict['content']
 

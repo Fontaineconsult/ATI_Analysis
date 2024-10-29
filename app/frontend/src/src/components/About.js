@@ -7,7 +7,7 @@ import AtiOverview from "./dashboard_components/about_components/AtiOverview";
 
 function About() {
     return (
-        <Box maxW="800px" mx="auto" p={4} textAlign="center">
+        <Box maxW="1000px" mx="auto" p={4} textAlign="center">
             <Routes>
                 <Route path="sf-state-ati-overview" element={<AtiOverview />} />
                 <Route path="" element={<p>Select a section from the dashboard.</p>} />

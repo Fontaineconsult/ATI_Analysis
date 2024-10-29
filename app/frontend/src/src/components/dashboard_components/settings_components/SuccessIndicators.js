@@ -14,6 +14,7 @@ import { createYearSuccessEvidence } from '../../../services/api/post'; // Impor
 import { sortGoals, sortSuccessIndicators } from "../../../services/utils/sorters";
 import AddIndicator from './AddIndicator';
 import {SettingsContext} from "../../../context/SettingsContext";  // Import the AddIndicator component
+import '../../../styles/App.css';
 
 const SuccessIndicators = () => {
     const { data, refreshIndicators } = useContext(DataContext);
@@ -189,6 +190,8 @@ const SuccessIndicators = () => {
     );
 };
 
+
+
 const SuccessIndicatorTable = React.memo(({ data, columns }) => {
     const {
         getTableProps,
@@ -202,12 +205,12 @@ const SuccessIndicatorTable = React.memo(({ data, columns }) => {
     const removedRowText = useColorModeValue('gray.500', 'gray.400');
 
     return (
-        <table {...getTableProps()} style={{ width: '100%', marginTop: '1rem', border: '1px solid black', borderCollapse: 'collapse' }}>
+        <table {...getTableProps()} className="success-indicator-table">
             <thead>
             {headerGroups.map(headerGroup => (
                 <tr {...headerGroup.getHeaderGroupProps()}>
                     {headerGroup.headers.map(column => (
-                        <th {...column.getHeaderProps()} style={{ borderBottom: '2px solid black', padding: '8px', textAlign: 'left', backgroundColor: '#f2f2f2' }}>
+                        <th {...column.getHeaderProps()} className="success-indicator-table-header">
                             {column.render('Header')}
                         </th>
                     ))}
@@ -222,15 +225,14 @@ const SuccessIndicatorTable = React.memo(({ data, columns }) => {
                 return (
                     <tr
                         {...row.getRowProps()}
+                        className={isRemoved ? 'success-indicator-row-removed' : ''}
                         style={{
                             backgroundColor: isRemoved ? removedRowBg : 'inherit',
                             color: isRemoved ? removedRowText : 'inherit',
-                            opacity: isRemoved ? 0.6 : 1,
-                            transition: 'opacity 0.3s ease, background-color 0.3s ease',
                         }}
                     >
                         {row.cells.map(cell => (
-                            <td {...cell.getCellProps()} style={{ borderBottom: '1px solid black', padding: '8px', textAlign: 'left' }}>
+                            <td {...cell.getCellProps()} className="success-indicator-table-cell">
                                 {cell.render('Cell')}
                             </td>
                         ))}
@@ -241,5 +243,4 @@ const SuccessIndicatorTable = React.memo(({ data, columns }) => {
         </table>
     );
 });
-
 export default SuccessIndicators;

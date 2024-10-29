@@ -21,7 +21,8 @@ function ImplementationMasterContainer({ evidenceData = {},
         'Project',
         'Procedure',
         'Internal Policy',
-        'Service'
+        'Service',
+
     ];
 
     // Effect to reset selectedImplementationType when no evidenceTypes match or when container is collapsed

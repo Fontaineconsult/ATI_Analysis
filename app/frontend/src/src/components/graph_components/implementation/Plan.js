@@ -1,10 +1,10 @@
 import React from 'react';
 import { Box, Text, Heading, Flex, Divider } from '@chakra-ui/react';
+import '../../../styles/App.css';
 
 function Plan({ planData }) {
     if (!planData) return null;  // Return null if no plan data is available
-    console.log("EEEE", planData)
-    // Destructure all properties from the plan data
+
     const {
         name,
         description,
@@ -16,25 +16,28 @@ function Plan({ planData }) {
     } = planData.properties;
 
     return (
-        <Box tabIndex={0} mb={4} border="1px solid teal" p={3} borderRadius="md" bg="gray.50">
-            <Flex align="center" justify="space-between" wrap="wrap">
-                <Heading as="h5" size="sm" mb={2}>
+        <Box tabIndex={0} className="plan-card">
+            <Flex className="plan-header">
+                <Heading as="h5" size="sm">
                     {name}
                 </Heading>
-                <Text fontSize="sm" color="gray.600">
+                <Text className="plan-status">
                     <strong>Status:</strong> {plan_status || 'Not specified'}
                 </Text>
             </Flex>
 
             <Divider my={2} />
 
-            <Flex direction="row" wrap="wrap" gap={4}>
-                <Text fontSize="sm"><strong>Description:</strong> {description}</Text>
-                <Text fontSize="sm"><strong>Key Plan:</strong> {is_key_plan ? 'Yes' : 'No'}</Text>
-                <Text fontSize="sm"><strong>Campus Plan:</strong> {is_campus_plan ? 'Yes' : 'No'}</Text>
-                <Text fontSize="sm"><strong>Abandoned:</strong> {abandoned ? 'Yes' : 'No'}</Text>
+            <Flex className="plan-content-row">
+                <Text className="plan-label">Description:</Text><Text>{description}</Text>
+                <Text className="plan-label">Key Plan:</Text><Text>{is_key_plan ? 'Yes' : 'No'}</Text>
+                <Text className="plan-label">Campus Plan:</Text><Text>{is_campus_plan ? 'Yes' : 'No'}</Text>
+                <Text className="plan-label">Abandoned:</Text><Text>{abandoned ? 'Yes' : 'No'}</Text>
                 {abandoned && (
-                    <Text fontSize="sm"><strong>Abandoned Notes:</strong> {abandoned_notes || 'None provided'}</Text>
+                    <>
+                        <Text className="plan-label">Abandoned Notes:</Text>
+                        <Text>{abandoned_notes || 'None provided'}</Text>
+                    </>
                 )}
             </Flex>
         </Box>
