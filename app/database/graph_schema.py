@@ -44,6 +44,8 @@ class Law(StructuredNode):
 
      """
 
+    unique_id = UniqueIdProperty()
+
     title = StringProperty(unique_index=True, required=True)
     description = StringProperty()
     effective_date = DateProperty()
@@ -71,6 +73,8 @@ class Case(StructuredNode):
 
      """
 
+    unique_id = UniqueIdProperty()
+
     title = StringProperty(unique_index=True, required=True)
     description = StringProperty()
     effective_date = DateProperty()
@@ -93,6 +97,7 @@ class Directive(StructuredNode):
     to enhance accessibility and remove barriers for individuals with disabilities.
 
      """
+    unique_id = UniqueIdProperty()
 
     title = StringProperty(unique_index=True, required=True)
     description = StringProperty()
@@ -119,6 +124,8 @@ class ExternalPolicy(StructuredNode):
 
      """
 
+    unique_id = UniqueIdProperty()
+
     title = StringProperty(unique_index=True, required=True)
     description = StringProperty()
     effective_date = DateProperty()
@@ -142,6 +149,7 @@ class Memo(StructuredNode):
     members of the organization are aware of their roles and responsibilities in maintaining accessibility standards.
 
      """
+    unique_id = UniqueIdProperty()
 
     title = StringProperty(unique_index=True, required=True)
     description = StringProperty()
@@ -166,6 +174,7 @@ class Guideline(StructuredNode):
 
 
      """
+    unique_id = UniqueIdProperty()
 
     title = StringProperty(unique_index=True, required=True)
     description = StringProperty()
@@ -205,6 +214,7 @@ class Goal(StructuredNode):
     and help track progress over time.
 
      """
+    unique_id = UniqueIdProperty()
 
 
     name = StringProperty()
@@ -225,7 +235,8 @@ class Goal(StructuredNode):
             'description': self.description,
             'goal_number': self.goal_number,
             'date_added': self.date_added,
-            'removed': self.removed
+            'removed': self.removed,
+            "unique_id": self.unique_id
         }
 
 
@@ -247,6 +258,7 @@ class SuccessIndicator(StructuredNode):
 
 
      """
+    unique_id = UniqueIdProperty()
 
     number = IntegerProperty()
     success_indicator = StringProperty()
@@ -268,7 +280,8 @@ class SuccessIndicator(StructuredNode):
             'success_indicator': self.success_indicator,
             'composite_key': self.composite_key,
             'removed': self.removed,
-            'date_added': self.date_added
+            'date_added': self.date_added,
+            "unique_id": self.unique_id
         }
 
 
@@ -297,6 +310,7 @@ class Accomplishment(StructuredNode):
     Represents an accomplishment node to track the progress of the implementation of the accessibility initiatives.
 
     """
+    unique_id = UniqueIdProperty()
 
     name = StringProperty()
     description = StringProperty(unique_index=True, required=True)
@@ -313,7 +327,8 @@ class Accomplishment(StructuredNode):
     def serialize(self):
         return {
             'name': self.name,
-            'accomplishment_description': self.accomplishment_description
+            'accomplishment_description': self.accomplishment_description,
+            "unique_id": self.unique_id
         }
 
 
@@ -332,6 +347,7 @@ class Plan(StructuredNode):
     challenges or changes in technology.
 
     """
+    unique_id = UniqueIdProperty()
 
     name = StringProperty()
     academic_year = RelationshipTo("AcademicYear", "in_academic_year")
@@ -359,7 +375,8 @@ class Plan(StructuredNode):
             'abandoned': self.abandoned,
             'abandoned_notes': self.abandoned_notes,
             'plan_status': self.plan_status,
-            'description': self.description
+            'description': self.description,
+            "unique_id": self.unique_id
         }
 
 
@@ -376,6 +393,7 @@ class InternalPolicy(StructuredNode):
     are aware of their roles and responsibilities in maintaining accessibility standards.
 
     """
+    unique_id = UniqueIdProperty()
 
     title = StringProperty(unique_index=True, required=True)
     description = StringProperty()
@@ -394,7 +412,8 @@ class InternalPolicy(StructuredNode):
             'title': self.title,
             'description': self.description,
             'effective_date': self.effective_date,
-            'last_updated': self.last_updated
+            'last_updated': self.last_updated,
+            "unique_id": self.unique_id
         }
 
 
@@ -410,6 +429,7 @@ class Process(StructuredNode):
     to timelines, and regular monitoring to address challenges and track achievements
 
      """
+    unique_id = UniqueIdProperty()
 
     title = StringProperty(unique_index=True, required=True)
     description = StringProperty()
@@ -424,7 +444,8 @@ class Process(StructuredNode):
     def serialize(self):
         return {
             'title': self.title,
-            'description': self.description
+            'description': self.description,
+            "unique_id": self.unique_id
         }
 
 
@@ -442,6 +463,7 @@ class Project(StructuredNode):
     improvement efforts outlined in the ATI Campus Plan.
 
     """
+    unique_id = UniqueIdProperty()
 
     title = StringProperty(unique_index=True, required=True)
     description = StringProperty()
@@ -456,7 +478,8 @@ class Project(StructuredNode):
     def serialize(self):
         return {
             'title': self.title,
-            'description': self.description
+            'description': self.description,
+            "unique_id": self.unique_id
         }
 
 
@@ -471,6 +494,7 @@ class Procedure(StructuredNode):
     indicators. They are regularly reviewed and updated to reflect best practices and changes in technology
 
     """
+    unique_id = UniqueIdProperty()
 
     title = StringProperty(unique_index=True, required=True)
     description = StringProperty()
@@ -485,7 +509,8 @@ class Procedure(StructuredNode):
     def serialize(self):
         return {
             'title': self.title,
-            'description': self.description
+            'description': self.description,
+            "unique_id": self.unique_id
         }
 
 
@@ -500,6 +525,7 @@ class Service(StructuredNode):
     and offerings of the institution.
 
     """
+    unique_id = UniqueIdProperty()
 
     title = StringProperty(unique_index=True, required=True)
     description = StringProperty()
@@ -514,7 +540,8 @@ class Service(StructuredNode):
     def serialize(self):
         return {
             'title': self.title,
-            'description': self.description
+            'description': self.description,
+            "unique_id": self.unique_id
         }
 
 
@@ -531,6 +558,7 @@ class Guidance(StructuredNode):
     standards and best practices.
 
     """
+    unique_id = UniqueIdProperty()
 
     title = StringProperty(unique_index=True, required=True)
     description = StringProperty()
@@ -545,7 +573,8 @@ class Guidance(StructuredNode):
     def serialize(self):
         return {
             'title': self.title,
-            'description': self.description
+            'description': self.description,
+            "unique_id": self.unique_id
         }
 
 
@@ -556,6 +585,7 @@ class Tracking(StructuredNode):
     Represents a tracking node to track the progress of the implementation of the accessibility initiatives.
 
     """
+    unique_id = UniqueIdProperty()
 
     title = StringProperty(unique_index=True, required=True)
     description = StringProperty()
@@ -570,7 +600,8 @@ class Tracking(StructuredNode):
     def serialize(self):
         return {
             'title': self.title,
-            'description': self.description
+            'description': self.description,
+            "unique_id": self.unique_id
         }
 
 
@@ -601,6 +632,7 @@ class AcademicYear(StructuredNode):
     and progress tracking, occur.
 
     """
+    unique_id = UniqueIdProperty()
 
     name = StringProperty(unique_index=True, required=True)
     start_date = DateProperty()
@@ -612,7 +644,8 @@ class AcademicYear(StructuredNode):
         return {
             'name': self.name,
             'start_date': self.start_date,
-            'end_date': self.end_date
+            'end_date': self.end_date,
+            "unique_id": self.unique_id
         }
 
 
@@ -635,6 +668,7 @@ class StatusLevel(StructuredNode):
     Require evidence.
 
     """
+    unique_id = UniqueIdProperty()
 
     status_level = StringProperty(unique_index=True)
     description_of_procedures = StringProperty()
@@ -653,7 +687,10 @@ class StatusLevel(StructuredNode):
             'description_of_documentation_evidence': self.description_of_documentation_evidence,
             'description_of_resources': self.description_of_resources,
             'status_value': self.status_value,
-            'ati_report_evidence_column': self.ati_report_evidence_column}
+            'ati_report_evidence_column': self.ati_report_evidence_column,
+            "unique_id": self.unique_id
+
+        }
 
 
 class YearSuccessEvidence(StructuredNode):
@@ -671,6 +708,7 @@ class YearSuccessEvidence(StructuredNode):
     by working backward from YSE nodes through evidence nodes to retrieve their evidence documents.
 
     """
+    unique_id = UniqueIdProperty()
 
 
     year_identifier = StringProperty(unique_index=True)  # A unique identifier combining Year and SuccessIndicator name
@@ -709,7 +747,8 @@ class YearSuccessEvidence(StructuredNode):
             'year_identifier': self.year_identifier,
             'documentation_status': self.documentation_status,
             'resources_status': self.resources_status,
-            'implementation_plan_status': self.implementation_plan_status
+            'implementation_plan_status': self.implementation_plan_status,
+            "unique_id": self.unique_id
         }
 
 
@@ -744,6 +783,7 @@ class ATIWorkingGroup(StructuredNode):
     ATI strategy
 
     """
+    unique_id = UniqueIdProperty()
 
     name = StringProperty(unique_index=True, required=True)
     description = StringProperty()
@@ -780,6 +820,7 @@ class Person(StructuredNode):
     The Person node helps track the involvement and contributions of individuals to ATI-related activities,
     fostering collaboration and accountability within the initiative
     """
+    unique_id = UniqueIdProperty()
 
     name = StringProperty(unique_index=True, required=True)
     email = StringProperty()
@@ -801,6 +842,7 @@ class Person(StructuredNode):
             "can_approve_yse": self.can_approve_yse,
             "active": self.active,
             "ati_role": self.ati_role,
+            "unique_id": self.unique_id
         }
 
 
@@ -837,6 +879,7 @@ class Department(StructuredNode):
 
 
     """
+    unique_id = UniqueIdProperty()
 
 
 
@@ -858,6 +901,7 @@ class College(StructuredNode):
     for integrating accessibility into its curricula, research, and administrative practices.
 
     """
+    unique_id = UniqueIdProperty()
 
 
     name = StringProperty(unique_index=True)
@@ -879,6 +923,7 @@ class Vendor(StructuredNode):
     all procurement processes adhere to Section 508 requirements
 
     """
+    unique_id = UniqueIdProperty()
 
 
     name = StringProperty(unique_index=True)
@@ -904,6 +949,7 @@ class Document(StructuredNode):
     necessary information is readily accessible and systematically maintained.
 
     """
+    unique_id = UniqueIdProperty()
 
     hash = StringProperty(unique_index=True)
     name = StringProperty()
@@ -929,6 +975,7 @@ class Document(StructuredNode):
             "include_in_report": self.include_in_report,
             "is_administrative_review_documentation": self.is_administrative_review_documentation,
             "is_milestone_and_measures_documentation": self.is_milestone_and_measures_documentation,
+            "unique_id": self.unique_id
 
         }
 
@@ -942,7 +989,7 @@ class Webpage(StructuredNode):
     sections of the institution's website, instructional content, digital services, and other online materials.
 
     """
-
+    unique_id = UniqueIdProperty()
 
     url = StringProperty(unique_index=True)
     name = StringProperty()
@@ -965,7 +1012,8 @@ class Webpage(StructuredNode):
             "description": self.description,
             "no_longer_exists": self.no_longer_exists,
             "depreciated": self.depreciated,
-            "depreciated_date": self.depreciated_date
+            "depreciated_date": self.depreciated_date,
+            "unique_id": self.unique_id
 
         }
 
@@ -984,6 +1032,7 @@ class Note(StructuredNode):
 
 
     """
+    unique_id = UniqueIdProperty()
 
     name = StringProperty(unique_index=True)
     date_created = DateProperty()
@@ -1005,7 +1054,8 @@ class Note(StructuredNode):
             "dateCreated": self.date_created,
             "depreciated": self.depreciated,
             "depreciated_date": self.depreciated_date,
-            "include_in_report": self.include_in_report
+            "include_in_report": self.include_in_report,
+            "unique_id": self.unique_id
 
         }
 
@@ -1024,6 +1074,7 @@ class Message(StructuredNode):
 
 
     """
+    unique_id = UniqueIdProperty()
     name = StringProperty(unique_index=True)
     content = StringProperty()
     file_path = StringProperty()
@@ -1049,7 +1100,8 @@ class Message(StructuredNode):
                 "date_created": self.date_created,
                 "type": self.type,
                 "depreciated": self.depreciated,
-                "include_in_report": self.include_in_report
+                "include_in_report": self.include_in_report,
+            "unique_id": self.unique_id
 
         }
 
@@ -1071,6 +1123,7 @@ class Metric(StructuredNode):
     meet their accessibility goals by providing measurable criteria that can be regularly monitored and analyzed.
 
     """
+    unique_id = UniqueIdProperty()
 
     name = StringProperty()
     composite_key = StringProperty(unique_index=True)
@@ -1110,7 +1163,8 @@ class Metric(StructuredNode):
             "single_value": self.single_value,
             "comment": self.comment,
             "data": self.get_data() if self.value_dict else None,
-            "include_in_report": self.include_in_report
+            "include_in_report": self.include_in_report,
+            "unique_id": self.unique_id
 
 
         }
