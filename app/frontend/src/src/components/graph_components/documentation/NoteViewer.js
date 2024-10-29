@@ -101,6 +101,7 @@ function NoteViewer({ notes, onSubmit, yearSuccessEvidence, createdBy }) {
 
 function NoteForm({ note, onSubmit, createdBy }) {
     const [noteData, setNoteData] = useState({
+        unique_id: note?.properties?.unique_id || '',
         name: note?.properties?.name || '',
         date_created: note?.properties?.date_created || '',
         content: note?.properties?.content || '',

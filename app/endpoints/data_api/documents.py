@@ -96,7 +96,7 @@ class DocumentsAPI(MethodView):
         except Exception as e:
             return make_response(status='error', error=f"An unexpected error occurred: {str(e)}"), 500
 
-    def put(self, document_type):
+    def put(self):
         """
         Handle PUT requests to update documents based on the document type.
         """

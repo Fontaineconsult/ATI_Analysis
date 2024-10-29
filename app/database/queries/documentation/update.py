@@ -29,7 +29,7 @@ def unassign_note_from_yse(note_name, year_success_evidence):
 
 def update_note(year_success_evidence: str, note_dict: dict, created_by: str = None) -> bool:
     try:
-        note = Note.nodes.get(name=note_dict.get('name'))
+        note = Note.nodes.get(unique_id=note_dict.get('unique_id'))
     except Note.DoesNotExist:
         raise NotFoundError(f"Note with name {note_dict.get('name')} not found.")
     except Exception as e:
@@ -83,7 +83,7 @@ def update_note(year_success_evidence: str, note_dict: dict, created_by: str = N
 
 def update_message(year_success_evidence: str, message_dict: dict, created_by: str = None) -> bool:
     try:
-        message = Message.nodes.get(name=message_dict.get('name'))
+        message = Message.nodes.get(unique_id=message_dict.get('unique_id'))
     except Message.DoesNotExist:
         raise NotFoundError(f"Message with name {message_dict.get('name')} not found.")
     except Exception as e:

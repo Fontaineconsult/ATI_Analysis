@@ -72,24 +72,25 @@ def update_plan(data: dict) -> bool:
     Update an existing plan based on the provided data.
 
     :param data: A dictionary containing the plan's properties and relationships to update.
-    :return: True if the plan was successfully updated, False otherwise.
+    :return: True if the plan was successfully updated.
     """
 
     try:
-        # Retrieve the existing plan by name
-        plan_name = data.get('name')
-        if not plan_name:
-            raise ValidationError("Missing required field: 'name'")
+        # Retrieve the existing plan by unique_id
+        unique_id = data.get('unique_id')
+        if not unique_id:
+            raise ValidationError("Missing required field: 'unique_id'")
 
-        plan = Plan.nodes.get(name=plan_name)
+        plan = Plan.nodes.get(unique_id=unique_id)
 
         # Update plan properties
-        plan.plan_description = data.get('description', plan.plan_description)
+        plan.description = data.get('description', plan.description)
         plan.is_key_plan = data.get('is_key_plan', plan.is_key_plan)
         plan.is_campus_plan = data.get('is_campus_plan', plan.is_campus_plan)
         plan.plan_status = data.get('plan_status', plan.plan_status)
         plan.abandoned = data.get('abandoned', plan.abandoned)
         plan.abandoned_notes = data.get('abandoned_notes', plan.abandoned_notes)
+        plan.name = data.get('name', plan.name)
 
         # Save the updated properties
         plan.save()
@@ -114,7 +115,10 @@ def update_plan(data: dict) -> bool:
         furthered_goal_number = data.get('furthered_goal_number')
         furthered_working_group = data.get('furthered_working_group')
         if furthered_goal_number and furthered_working_group:
-            furthered_goal = Goal.nodes.get_or_none(goal_number=furthered_goal_number, working_group=furthered_working_group)
+            furthered_goal = Goal.nodes.get_or_none(
+                goal_number=furthered_goal_number,
+                working_group=furthered_working_group
+            )
             if furthered_goal:
                 plan.furthered_goals.disconnect_all()  # Clear existing relationships
                 plan.furthered_goals.connect(furthered_goal)
@@ -122,15 +126,17 @@ def update_plan(data: dict) -> bool:
         # Update furthered YearSuccessEvidence relationship
         furthered_yse_identifier = data.get('furthered_yse_identifier')
         if furthered_yse_identifier:
-            furthered_yse = YearSuccessEvidence.nodes.get_or_none(year_identifier=furthered_yse_identifier)
+            furthered_yse = YearSuccessEvidence.nodes.get_or_none(
+                year_identifier=furthered_yse_identifier
+            )
             if furthered_yse:
                 plan.furthered_year_success_indicators.disconnect_all()  # Clear existing relationships
                 plan.furthered_year_success_indicators.connect(furthered_yse)
 
-        print(f"Plan '{plan_name}' updated successfully")
+        print(f"Plan '{plan.name}' updated successfully")
         return True
 
     except Plan.DoesNotExist:
-        raise NotFoundError(f"Plan with name '{plan_name}' not found.")
+        raise NotFoundError(f"Plan with unique_id '{unique_id}' not found.")
     except Exception as e:
         raise CrudError(f"Failed to update plan: {e}")

@@ -115,6 +115,7 @@ function PlanViewer({ plans, onSubmit, yearSuccessEvidence, createdBy }) {
 
 function PlanForm({ plan, onSubmit, createdBy }) {
     const [planData, setPlanData] = useState({
+        unique_id: plan?.properties?.unique_id || '',
         name: plan?.properties?.name || '',
         description: plan?.properties?.description || '',
         is_key_plan: plan?.properties?.is_key_plan || false,

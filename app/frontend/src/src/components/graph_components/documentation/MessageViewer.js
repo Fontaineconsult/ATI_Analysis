@@ -109,6 +109,7 @@ function MessageViewer({ messages, onSubmit, yearSuccessEvidence, createdBy }) {
 
 function MessageForm({ message, onSubmit, createdBy }) {
     const [messageData, setMessageData] = useState({
+        unique_id: message?.properties?.unique_id || '',
         name: message?.properties?.name || '',
         date_created: message?.properties?.date_created || new Date().toISOString().split('T')[0],  // Default to today's date if new
         content: message?.properties?.content || '',

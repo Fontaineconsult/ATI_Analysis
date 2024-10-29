@@ -44,6 +44,7 @@ function WebsiteViewer({ websites, onSubmit }) {
 
 function WebsiteForm({ website, onSubmit }) {
     const [websiteData, setWebsiteData] = useState({
+        unique_id: website.properties.unique_id || '',
         url: website.properties.url || '',
         name: website.properties.name || '',
         description: website.properties.description || '',

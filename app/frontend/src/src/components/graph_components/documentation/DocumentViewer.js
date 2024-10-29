@@ -54,6 +54,7 @@ function DocumentViewer({ documents, onSubmit }) {
 
 function DocumentForm({ document, onSubmit }) {
     const [documentData, setDocumentData] = useState({
+        unique_id: document.properties.unique_id || '',
         name: document.properties.name || '',
         file_path: document.properties.file_path || '',
         uri_path: document.properties.uri_path || '',

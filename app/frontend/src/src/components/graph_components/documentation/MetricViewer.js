@@ -47,6 +47,7 @@ function MetricViewer({ metrics, onSubmit }) {
 
 function MetricForm({ metric, onSubmit }) {
     const [metricData, setMetricData] = useState({
+        unique_id: metric.properties.unique_id || '',
         name: metric.properties.name || '',
         composite_key: metric.properties.composite_key || '',
         metric_type: metric.properties.metric_type || '',

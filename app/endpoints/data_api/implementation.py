@@ -4,6 +4,8 @@ from datetime import datetime as dt
 
 
 from . import data_api_endpoints
+from ...database.queries.implementation.update import update_plan
+
 
 class ImplementationAPI(MethodView):
     def get(self):
@@ -21,7 +23,7 @@ from flask import request
 from flask.views import MethodView
 from app.database.queries.implementation.create import add_plan
 from app.endpoints.data_api.util.response import make_response
-from app.endpoints.data_api.errors.custom_exceptions import ApiError, ValidationError, CrudError
+from app.endpoints.data_api.errors.custom_exceptions import ApiError, ValidationError, CrudError, NotFoundError
 
 
 class ImplementationPlanAPI(MethodView):
@@ -41,6 +43,7 @@ class ImplementationPlanAPI(MethodView):
             "abandoned_notes": "Optional notes",
             "completed_year_name": "Optional completed year",
             "furthered_goal_number": 1,
+            "furthered_working_group": "Working Group Name",
             "furthered_yse_identifier": "2023-2024-1.2-web"
         }
         """
@@ -66,6 +69,50 @@ class ImplementationPlanAPI(MethodView):
             return make_response(status="error", error=str(e)), 500
         except Exception as e:
             return make_response(status="error", error="Failed to add plan"), 500
+
+    def put(self):
+        """
+        Handle PUT requests to update an existing implementation plan.
+        The expected payload should be in the following format:
+        {
+            "unique_id": "UUID of the plan",
+            "name": "Updated Plan Name",
+            "description": "Updated plan description",
+            "academic_year_name": "2023-2024",
+            "is_key_plan": true,
+            "is_campus_plan": false,
+            "plan_status": "Completed",
+            "abandoned": false,
+            "abandoned_notes": "Optional notes",
+            "completed_year_name": "2023-2024",
+            "furthered_goal_number": 1,
+            "furthered_working_group": "Working Group Name",
+            "furthered_yse_identifier": "2023-2024-1.2-web"
+        }
+        """
+        try:
+            # Extract JSON data from the request
+            data = request.get_json()
+
+            # Ensure required fields are present
+            if 'unique_id' not in data:
+                raise ValidationError("Missing required field: 'unique_id'")
+
+            # Call the update_plan function with the received data
+            update_plan(data)
+
+            # Return a success response
+            return make_response(status="success", message="Plan updated successfully"), 200
+
+        except ValidationError as e:
+            return make_response(status="error", error=str(e)), 400
+        except NotFoundError as e:
+            return make_response(status="error", error=str(e)), 404
+        except CrudError as e:
+            return make_response(status="error", error=str(e)), 500
+        except Exception as e:
+            return make_response(status="error", error="Failed to update plan"), 500
+
 
 
 class ImplementationAccomplishmentAPI(MethodView):
