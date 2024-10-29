@@ -25,7 +25,7 @@ function PlanViewer({ plans, onSubmit, yearSuccessEvidence, createdBy }) {
     const { currentWorkingGroup } = useSettings();
     const { user } = useContext(UserContext);  // Get the current user from UserContext
     const { currentAcademicYear } = useContext(SettingsContext);
-
+    console.log("PLAANNSS", plans)
     // Toggle expanded/collapsed state
     const toggleCollapse = (index) => {
         setExpandedIndex(expandedIndex === index ? null : index);
@@ -74,7 +74,7 @@ function PlanViewer({ plans, onSubmit, yearSuccessEvidence, createdBy }) {
                 // Render existing plans if not adding a new plan
                 plans && plans.length > 0 ? (
                     plans.map((planWrapper, index) => {
-                        const plan = planWrapper.plan;
+                        const plan = planWrapper;
                         const createdByPerson = planWrapper.created_by?.properties;
 
                         return (
@@ -88,9 +88,9 @@ function PlanViewer({ plans, onSubmit, yearSuccessEvidence, createdBy }) {
                                     </Button>
                                 </Flex>
 
-                                <Text fontSize="sm" color="gray.600" mt={2}>
-                                    Created by: {createdByPerson ? createdByPerson.name : 'Unknown Author'}
-                                </Text>
+                                {/*<Text fontSize="sm" color="gray.600" mt={2}>*/}
+                                {/*    Created by: {createdByPerson ? createdByPerson.name : 'Unknown Author'}*/}
+                                {/*</Text>*/}
 
                                 <Collapse in={expandedIndex === index} animateOpacity>
                                     <Box mt={4}>

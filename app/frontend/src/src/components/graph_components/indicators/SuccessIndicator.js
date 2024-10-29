@@ -19,7 +19,7 @@ import { useStatusLevels } from '../../../hooks/useStatusLevels';
 import { UserContext } from '../../../context/UserContext';
 import {SettingsContext, useSettings} from '../../../context/SettingsContext';
 import ImplementationMasterContainer from "../implementation/ImplementationMasterContainer";
-import YSENoteMasterContainer from "../documentation/YSENoteMasterContainer";
+import YSEAnnotationMasterContainer from "../documentation/YSEAnnotationMasterContainer";
 import ApprovalMasterContainer from "../../ati_explorer_containers/ApprovalMasterContainer";
 import {updateStatusLevel} from "../../../services/api/put";
 import {DataContext} from "../../../context/DataContext";
@@ -36,6 +36,8 @@ function SuccessIndicator({ indicatorData, evidenceData, bgColor }) {
     const statusLevel = evidenceData?.statusLevel?.properties?.status_level;
     const adminReviewers = evidenceData?.adminReviewers || [];
     const currentUserId = user?.employee_id || null;
+
+    console.log("evidenceData.plans", evidenceData.plans);
 
     // Handle status level change
     const handleStatusChange = (newStatus) => {
@@ -205,11 +207,11 @@ function IndicatorHeader({
                         <Text>
                             A Note in the Accessible Technology Initiative (ATI) represents an annotation that provides additional insights, observations, or feedback related to ATI efforts. Notes added here apply directly to this academic year success indicator.
                         </Text>
-                        <YSENoteMasterContainer hasNotes={notes}
-                                                hasMessages={messages}
-                                                hasMetrics={metrics}
-                                                plans={plans}
-                                                year_identifier={yearIdentifier}/>
+                        <YSEAnnotationMasterContainer hasNotes={notes}
+                                                      hasMessages={messages}
+                                                      hasMetrics={metrics}
+                                                      plans={plans}
+                                                      year_identifier={yearIdentifier}/>
                     </ModalBody>
                 </ModalContent>
             </Modal>
