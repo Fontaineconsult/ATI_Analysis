@@ -31,11 +31,11 @@ def assign_documentation_to_implementation(implementation_title, implementation_
     return True
 
 
-def assign_person_as_implementor(employee_name, year_identifier):
+def assign_person_as_implementor(unique_id, year_identifier):
     try:
-        person_node = Person.nodes.get(name=employee_name)
+        person_node = Person.nodes.get(unique_id=unique_id)
     except Person.DoesNotExist:
-        raise NotFoundError(f"No Person node found with name: {employee_name}")
+        raise NotFoundError(f"No Person node found with name: {unique_id}")
 
     try:
         year_success_evidence_node = YearSuccessEvidence.nodes.get(year_identifier=year_identifier)

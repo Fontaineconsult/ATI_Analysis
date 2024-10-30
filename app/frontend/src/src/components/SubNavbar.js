@@ -1,11 +1,21 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Flex, Button, Box } from '@chakra-ui/react';
 import { useLocation, Link } from 'react-router-dom';
+import { useSettings } from "../context/SettingsContext";
 
 function SubNavbar() {
-    const location = useLocation();  // Get the current location
+    const location = useLocation();
+    const { updateCurrentWorkingGroup } = useSettings();
 
-    // Define sub-nav items based on the current main component (path)
+    useEffect(() => {
+        if (location.pathname.includes('/ati-explorer')) {
+            const path = location.pathname.split('/').pop();
+            if (['web', 'instructional-materials', 'procurement'].includes(path)) {
+                updateCurrentWorkingGroup(path);
+            }
+        }
+    }, [location.pathname, updateCurrentWorkingGroup]);
+
     let subNavItems;
     if (location.pathname.includes('/ati-explorer')) {
         subNavItems = [
@@ -23,7 +33,6 @@ function SubNavbar() {
         subNavItems = [
             { label: 'ATI Working Group', path: '/about/ati-working-group' },
             { label: 'SF State ATI Overview', path: '/about/sf-state-ati-overview' },
-            // { label: 'History', path: '/about/history' },
         ];
     } else {
         subNavItems = [];
@@ -36,20 +45,20 @@ function SubNavbar() {
             py={2}
             boxShadow="md"
             position="relative"
-            height="52px" // Fixed height
-        > {/* Sub-navbar styling */}
+            height="52px"
+        >
             <Flex justify="center" align="center" height="100%">
                 {subNavItems.map((item) => (
                     <Button
                         key={item.label}
                         as={Link}
                         to={item.path}
-                        colorScheme={location.pathname === item.path ? 'teal' : 'gray'}  // Highlight if current path matches
-                        variant={location.pathname === item.path ? 'solid' : 'ghost'}  // Solid for active, ghost for inactive
+                        colorScheme={location.pathname === item.path ? 'teal' : 'gray'}
+                        variant={location.pathname === item.path ? 'solid' : 'ghost'}
                         size="md"
-                        fontWeight={location.pathname === item.path ? 'bold' : 'normal'}  // Bold for active
-                        _hover={{ textDecoration: 'none', bg: 'teal.100' }}  // Hover effect
-                        mx={2} // Margin between buttons
+                        fontWeight={location.pathname === item.path ? 'bold' : 'normal'}
+                        _hover={{ textDecoration: 'none', bg: 'teal.100' }}
+                        mx={2}
                     >
                         {item.label}
                     </Button>

@@ -3,7 +3,7 @@ import { Box, Heading, Text } from '@chakra-ui/react';
 import Goal from "../graph_components/indicators/Goal";
 
 function InstructionalMaterialsData({ instructionalMaterialsData }) {
-    console.log(instructionalMaterialsData)
+
     if (!instructionalMaterialsData || !instructionalMaterialsData.goals) return null; // Handle cases where data is unavailable
 
     return (

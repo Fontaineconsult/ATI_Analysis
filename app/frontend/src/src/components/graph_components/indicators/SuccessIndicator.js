@@ -13,9 +13,16 @@ import {
     ModalCloseButton,
     useDisclosure,
     useToast,
+    Table,
+    Thead,
+    Tbody,
+    Tr,
+    Th,
+    Td,
+    Select
 } from '@chakra-ui/react';
-import { AddIcon } from '@chakra-ui/icons'; // Import AddIcon from Chakra UI
-import { FaUser } from 'react-icons/fa'; // Import person icon from react-icons
+import { AddIcon } from '@chakra-ui/icons';
+import { FaUser } from 'react-icons/fa';
 import DropdownSelect from '../../functional_components/DropdownSelect';
 import { useStatusLevels } from '../../../hooks/useStatusLevels';
 import { UserContext } from '../../../context/UserContext';
@@ -23,7 +30,7 @@ import { SettingsContext, useSettings } from '../../../context/SettingsContext';
 import ImplementationMasterContainer from '../implementation/ImplementationMasterContainer';
 import YSEAnnotationMasterContainer from '../documentation/YSEAnnotationMasterContainer';
 import ApprovalMasterContainer from '../../ati_explorer_containers/ApprovalMasterContainer';
-import { updateStatusLevel } from '../../../services/api/put';
+import { updateStatusLevel, assignPersonAsImplementor, unassignPersonAsImplementor } from '../../../services/api/put';
 import { DataContext } from '../../../context/DataContext';
 
 function SuccessIndicator({ indicatorData, evidenceData, bgColor }) {
@@ -32,18 +39,18 @@ function SuccessIndicator({ indicatorData, evidenceData, bgColor }) {
     const { currentAcademicYear } = useContext(SettingsContext);
     const { success_indicator, date_added, composite_key } = indicatorData?.properties || {};
     const { currentWorkingGroup } = useSettings();
-
     const yearIdentifier = evidenceData?.evidence?.properties?.year_identifier;
     const statusLevel = evidenceData?.statusLevel?.properties?.status_level;
     const adminReviewers = evidenceData?.adminReviewers || [];
     const currentUserId = user?.employee_id || null;
 
-    console.log("evidenceData.plans", evidenceData.plans);
+
 
     const handleStatusChange = (newStatus) => {
         updateStatus(yearIdentifier, newStatus);
     };
 
+    // Rest of your component code remains the same
     if (!yearIdentifier) {
         return (
             <Box padding={4} bg="red.50" border="1px solid" borderColor="red.200" borderRadius="md">
@@ -106,7 +113,7 @@ function IndicatorHeader({
                          }) {
     const { isOpen: isNotesOpen, onOpen: onNotesOpen, onClose: onNotesClose } = useDisclosure();
     const { isOpen: isApprovalOpen, onOpen: onApprovalOpen, onClose: onApprovalClose } = useDisclosure();
-    const { isOpen: isImplementingPersonsOpen, onOpen: onImplementingPersonsOpen, onClose: onImplementingPersonsClose } = useDisclosure(); // For implementing persons modal
+    const { isOpen: isImplementingPersonsOpen, onOpen: onImplementingPersonsOpen, onClose: onImplementingPersonsClose } = useDisclosure();
     const [localStatusLevel, setLocalStatusLevel] = useState(initialStatusLevel);
     const toast = useToast();
     const { loadSingleWorkingGroupData } = useContext(DataContext);
@@ -119,7 +126,6 @@ function IndicatorHeader({
 
     const handleStatusChange = async (newStatus) => {
         setLocalStatusLevel(newStatus);
-
         try {
             await updateStatusLevel(yearIdentifier, newStatus);
             toast({ title: "Status updated.", description: "The status level was updated successfully.", status: "success", duration: 3000, isClosable: true });
@@ -150,6 +156,7 @@ function IndicatorHeader({
                     onClick={onImplementingPersonsOpen}
                     mr={4}
                 >
+                    Persons
                 </Button>
 
                 <Box width="170px">
@@ -185,8 +192,7 @@ function IndicatorHeader({
                     <ModalHeader>Implementing Persons</ModalHeader>
                     <ModalCloseButton />
                     <ModalBody>
-                        <Text>Add or view implementing persons responsible for this success indicator.</Text>
-                        {/* Implementation of adding/viewing implementing persons goes here */}
+                        <ImplementingPersonsManager yearIdentifier={yearIdentifier} />
                     </ModalBody>
                 </ModalContent>
             </Modal>
@@ -204,6 +210,7 @@ function IndicatorHeader({
         </Flex>
     );
 }
+
 // IndicatorDetails Component
 function IndicatorDetails({ description, persons, compositeKey }) {
     return (
@@ -237,6 +244,79 @@ function ResponsiblePersons({ persons, compositeKey }) {
     );
 }
 
+const ImplementingPersonsManager = React.memo(({ yearIdentifier }) => {
+    const { data, loadAllIndividuals, loadSingleWorkingGroupData } = useContext(DataContext);
+    const { currentWorkingGroup } = useSettings();
+    const [selectedPerson, setSelectedPerson] = useState('');
+    const toast = useToast();
+    const assignedPersons = data.individuals?.filter(person => person.yearSuccessEvidences.some(yse => yse.year_identifier === yearIdentifier)) || [];
 
+    useEffect(() => {
+        if (!data.individuals) {
+            loadAllIndividuals();
+        }
+    }, [data.individuals, loadAllIndividuals]);
 
+    const handleAssignPerson = async () => {
+        if (!selectedPerson) return;
+        try {
+            await assignPersonAsImplementor(selectedPerson, yearIdentifier);
+            toast({ title: "Person assigned successfully", status: "success", duration: 2000, isClosable: true });
+            loadSingleWorkingGroupData(currentWorkingGroup);
+            setSelectedPerson('');
+        } catch (error) {
+            toast({ title: "Error assigning person", description: error.message, status: "error", duration: 3000, isClosable: true });
+        }
+    };
+
+    const handleRemovePerson = async (personId) => {
+        try {
+            await unassignPersonAsImplementor(personId, yearIdentifier);
+            toast({ title: "Person unassigned successfully", status: "success", duration: 2000, isClosable: true });
+            loadSingleWorkingGroupData(currentWorkingGroup);
+        } catch (error) {
+            toast({ title: "Error removing person", description: error.message, status: "error", duration: 3000, isClosable: true });
+        }
+    };
+
+    // Filter out individuals with the 'active' flag set to false
+    const availableIndividuals = data.individuals?.filter(individual => individual.active) || [];
+
+    return (
+        <Box>
+            <Select placeholder="Select person to assign" value={selectedPerson} onChange={(e) => setSelectedPerson(e.target.value)} mb={4}>
+                {availableIndividuals.map((individual) => (
+                    <option key={individual.unique_id} value={individual.unique_id}>
+                        {individual.name} - {individual.title}
+                    </option>
+                ))}
+            </Select>
+            <Button colorScheme="teal" onClick={handleAssignPerson}>
+                Assign
+            </Button>
+            <Table variant="simple">
+                <Thead>
+                    <Tr>
+                        <Th>Name</Th>
+                        <Th>Title</Th>
+                        <Th>Actions</Th>
+                    </Tr>
+                </Thead>
+                <Tbody>
+                    {assignedPersons.map((person) => (
+                        <Tr key={person.unique_id}>
+                            <Td>{person.name}</Td>
+                            <Td>{person.title}</Td>
+                            <Td>
+                                <Button colorScheme="red" size="sm" onClick={() => handleRemovePerson(person.unique_id)}>
+                                    Remove
+                                </Button>
+                            </Td>
+                        </Tr>
+                    ))}
+                </Tbody>
+            </Table>
+        </Box>
+    );
+});
 export default SuccessIndicator;

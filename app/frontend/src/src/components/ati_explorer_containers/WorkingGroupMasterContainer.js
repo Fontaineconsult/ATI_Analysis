@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useContext} from 'react';
 import { Box, Spinner, Text } from '@chakra-ui/react';
 import { useData } from '../../hooks/useData';
 import { Routes, Route } from 'react-router-dom';
@@ -8,9 +8,10 @@ import WebData from './WebData';
 import InstructionalMaterialsData from './InstructionalMaterialsData';
 import ProcurementData from './ProcurementData';
 import '../../styles/App.css';
+import {DataContext} from "../../context/DataContext";
 
 function WorkingGroupMasterContainer() {
-    const { data, loading, error } = useData();
+    const { data, loading, error } = useContext(DataContext);
 
     if (loading) return <Spinner size="xl" />;
     if (error) return <Text color="red.500">Error: {error}</Text>;
@@ -19,6 +20,7 @@ function WorkingGroupMasterContainer() {
         <Box className="working-group-container">
             <Routes>
                 {/* Route for Web Working Group */}
+
                 <Route path="web" element={<WebData webData={data.web} />} />
 
                 {/* Route for Instructional Materials Working Group */}

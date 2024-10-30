@@ -25,6 +25,25 @@ import { SettingsProvider, useSettings } from "./context/SettingsContext";
 import { StatusLevelProvider } from "./context/StatusLevelContext";
 import { UserProvider, UserContext } from './context/UserContext';
 
+// In your theme file or App.js
+import { extendTheme } from '@chakra-ui/react'
+
+const theme = extendTheme({
+        fontSizes: {
+            xs: "0.65rem",
+            sm: "0.775rem",
+            md: "0.875rem",
+            lg: "1rem",
+            xl: "1.125rem",
+            "2xl": "1.25rem",
+            "3xl": "1.5rem",
+            "4xl": "1.875rem"
+        }
+    })
+
+
+
+
 function App() {
     const { currentAcademicYear, updateCurrentAcademicYear } = useSettings();
     const { updateYear } = useData();
@@ -44,9 +63,7 @@ function App() {
     };
 
     return (
-        <ChakraProvider>
-            <UserProvider>
-                <StatusLevelProvider>
+        <ChakraProvider >
                     {/* Main App Container */}
                     <Box className="App">
                         {/* Header Section */}
@@ -138,8 +155,7 @@ function App() {
                             </Container>
                         </Box>
                     </Box>
-                </StatusLevelProvider>
-            </UserProvider>
+
         </ChakraProvider>
     );
 }

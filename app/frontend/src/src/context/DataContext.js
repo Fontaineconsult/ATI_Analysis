@@ -1,6 +1,16 @@
 import React, { createContext, useState, useEffect } from 'react';
-import { fetchPrimaryData, fetchCurrentYearIndicator, fetchAllIndividuals } from '../services/api/get'; // Import fetchAllIndividuals
-import { useToast } from '@chakra-ui/react'; // Import useToast from Chakra UI
+import { fetchPrimaryData, fetchCurrentYearIndicator, fetchAllIndividuals } from '../services/api/get';
+import { useToast } from '@chakra-ui/react';
+
+
+const transformWorkingGroup = (workingGroup) => {
+    const mapping = {
+        'instructional-materials': 'instructionalMaterials',
+        'web': 'web',
+        'procurement': 'procurement'
+    };
+    return mapping[workingGroup] || workingGroup;
+};
 
 // Create a context
 export const DataContext = createContext();
@@ -12,43 +22,38 @@ export const DataProvider = ({ children }) => {
         instructionalMaterials: null,
         procurement: null,
         indicators: null,
-        individuals: null,  // Add individuals state
+        individuals: null,
     });
-    const [loading, setLoading] = useState(true);  // Loading state for initial data
-    const [updating, setUpdating] = useState(false);  // Updating state for background updates
-    const [error, setError] = useState(null);      // Error state
-    const [selectedYear, setSelectedYear] = useState('2022-2023');  // Default year
+    const [loading, setLoading] = useState(true);
+    const [updating, setUpdating] = useState(false);
+    const [error, setError] = useState(null);
+    const [selectedYear, setSelectedYear] = useState('2023-2024');
 
-    const toast = useToast(); // Chakra UI toast hook
+    const toast = useToast();
 
     useEffect(() => {
-        loadData();  // Load data when the component mounts or the selected year changes
+        loadData();
     }, [selectedYear]);
 
-    // Function to fetch data for all working groups and indicators
     const loadData = async () => {
         try {
-            setLoading(true);  // Show initial loading spinner
-            // Fetch data for all working groups for the selected year
+            setLoading(true);
             const [webData, instructionalMaterialsData, procurementData, indicatorsData] = await Promise.all([
                 fetchPrimaryData("web", selectedYear),
                 fetchPrimaryData("instructional-materials", selectedYear),
                 fetchPrimaryData("procurement", selectedYear),
-                fetchCurrentYearIndicator(selectedYear),  // Fetch indicators data
+                fetchCurrentYearIndicator(selectedYear),
             ]);
 
-            // Set the data in the state under their respective keys
             setData((prevData) => ({
                 ...prevData,
                 web: webData.data,
                 instructionalMaterials: instructionalMaterialsData.data,
                 procurement: procurementData.data,
-                indicators: indicatorsData.data,  // Store indicators data
+                indicators: indicatorsData.data,
             }));
-
         } catch (err) {
             setError(err.message);
-            // Show error toast notification
             toast({
                 title: "Error loading data.",
                 description: err.message,
@@ -57,25 +62,32 @@ export const DataProvider = ({ children }) => {
                 isClosable: true,
             });
         } finally {
-            setLoading(false);  // Stop initial loading
+            setLoading(false);
         }
     };
 
-    // Function to fetch data for a single working group (background update)
     const loadSingleWorkingGroupData = async (workingGroup) => {
+
+        const dataKey = transformWorkingGroup(workingGroup);
         try {
-            setUpdating(true);  // Trigger background updating state
+            setUpdating(true);
             const groupData = await fetchPrimaryData(workingGroup, selectedYear);
 
-            // Update only the specific working group data in the state
-            setData((prevData) => ({
-                ...prevData,
-                [workingGroup]: groupData.data,
-            }));
+            console.log("Current data:", data[dataKey]);
+            console.log("New data:", groupData.data);
+
+            setData((prevData) => {
+                console.log("Inside setState - Previous data:", prevData[dataKey]);
+                const newData = {
+                    ...prevData,
+                    [dataKey]: groupData.data,
+                };
+                console.log("Inside setState - New data:", newData[dataKey]);
+                return newData;
+            });
 
         } catch (err) {
             setError(err.message);
-            // Show error toast notification
             toast({
                 title: `Error updating ${workingGroup} data.`,
                 description: err.message,
@@ -84,20 +96,18 @@ export const DataProvider = ({ children }) => {
                 isClosable: true,
             });
         } finally {
-            setUpdating(false);  // Stop background updating
+            setUpdating(false);
         }
     };
 
-    // Function to refresh only the indicators data
     const refreshIndicators = async () => {
         try {
-            setUpdating(true);  // Trigger background updating state for indicators refresh
-            const indicatorsData = await fetchCurrentYearIndicator(selectedYear);  // Fetch indicators data
+            setUpdating(true);
+            const indicatorsData = await fetchCurrentYearIndicator(selectedYear);
 
-            // Update only the indicators data in the state
             setData((prevData) => ({
                 ...prevData,
-                indicators: indicatorsData.data,  // Update only indicators
+                indicators: indicatorsData.data,
             }));
         } catch (err) {
             toast({
@@ -108,22 +118,21 @@ export const DataProvider = ({ children }) => {
                 isClosable: true,
             });
         } finally {
-            setUpdating(false);  // Stop background updating after refresh
+            setUpdating(false);
         }
     };
 
-    // Function to load all individuals and store them in the context
-    const loadAllIndividuals = async () => {
+    // Function to load all individuals, with check to avoid redundant API calls
+    const loadAllIndividuals = async (forceLoad = false) => {
         try {
-            setUpdating(true);  // Trigger background updating state
-            const individualsData = await fetchAllIndividuals();  // Fetch all individuals
+            if (!forceLoad && data.individuals) return; // Avoid loading if data is already present unless forced
+            setUpdating(true);
+            const individualsData = await fetchAllIndividuals();
 
-            // Update the individuals data in the state
             setData((prevData) => ({
                 ...prevData,
-                individuals: individualsData.data.persons,  // Store individuals data
+                individuals: individualsData.data.persons,
             }));
-
         } catch (err) {
             toast({
                 title: "Error loading individuals data.",
@@ -133,14 +142,35 @@ export const DataProvider = ({ children }) => {
                 isClosable: true,
             });
         } finally {
-            setUpdating(false);  // Stop background updating after refresh
+            setUpdating(false);
         }
     };
 
-    // Function to update the selected year
+    // Function to refresh individuals data, always calls the API
+    const refreshAllIndividuals = async () => {
+        try {
+            setUpdating(true);
+            const individualsData = await fetchAllIndividuals();
+
+            setData((prevData) => ({
+                ...prevData,
+                individuals: individualsData.data.persons,
+            }));
+        } catch (err) {
+            toast({
+                title: "Error refreshing individuals data.",
+                description: err.message,
+                status: "error",
+                duration: 3000,
+                isClosable: true,
+            });
+        } finally {
+            setUpdating(false);
+        }
+    };
+
     const updateYear = (newYear) => {
         setSelectedYear(newYear);
-        // Show notification for changing the year
         toast({
             title: `Year changed to ${newYear}`,
             status: "info",
@@ -160,6 +190,7 @@ export const DataProvider = ({ children }) => {
             loadSingleWorkingGroupData,
             refreshIndicators,
             loadAllIndividuals,  // Add loadAllIndividuals to the context
+            refreshAllIndividuals,  // Add refreshAllIndividuals to the context
         }}>
             {children}
         </DataContext.Provider>

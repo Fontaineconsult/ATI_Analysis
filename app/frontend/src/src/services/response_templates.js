@@ -148,3 +148,19 @@ export function updatePlanPayload(plan) {
         ...plan
     };
 }
+
+export function assignResponsiblePersonPayload(unique_id, yearSuccessEvidence) {
+    return {
+        action: "assign_person_as_implementor",
+        unique_id: unique_id,
+        year_success_evidence: yearSuccessEvidence
+    };
+}
+
+export function unassignResponsiblePersonPayload(unique_id, yearSuccessEvidence) {
+    return {
+        action: "unassign_person_as_implementor",
+        unique_id: unique_id,
+        year_success_evidence: yearSuccessEvidence
+    };
+}

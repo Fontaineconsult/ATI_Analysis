@@ -3,7 +3,12 @@ import {
     assignApproverPayload,
     updateIndicatorRemovedStatus,
     generateUpdateStatusLevelPayload,
-    updateIndividualPayload, updatePlanPayload, updateNotePayload, updateMessagePayload
+    updateIndividualPayload,
+    updatePlanPayload,
+    updateNotePayload,
+    updateMessagePayload,
+    assignResponsiblePerson,
+    unassignResponsiblePersonPayload, assignResponsiblePersonPayload
 } from "../response_templates";
 
 export const updateStatusLevel = async (yse, statusLevel) => {
@@ -84,6 +89,25 @@ export const updatePlan = async (formData) => {
         await axios.put(`${process.env.REACT_APP_API_URL}/implementations/plans`, updatePlanPayload(formData));
     } catch (error) {
         console.error('Error updating plan:', error);
+        throw error;
+    }
+}
+
+export const assignPersonAsImplementor = async (employeeId, year_success_indicator) => {
+    try {
+        await axios.put(`${process.env.REACT_APP_API_URL}/implementations`, assignResponsiblePersonPayload(employeeId, year_success_indicator))
+
+    } catch (error) {
+        console.error('Error assigning person as implementor:', error);
+        throw error;
+    }
+}
+
+export const unassignPersonAsImplementor = async (employeeId, year_success_indicator) => {
+    try {
+        await axios.put(`${process.env.REACT_APP_API_URL}/implementations`, unassignResponsiblePersonPayload(employeeId, year_success_indicator));
+    } catch (error) {
+        console.error('Error unassigning person as implementor:', error);
         throw error;
     }
 }
