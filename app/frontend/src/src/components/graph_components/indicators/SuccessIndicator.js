@@ -215,7 +215,7 @@ function IndicatorHeader({
 function IndicatorDetails({ description, persons, compositeKey }) {
     return (
         <>
-            <Text id={`indicator-details-${compositeKey}`}><strong>Description:</strong> {description}</Text>
+            <Text as='h3' id={`indicator-details-${compositeKey}`}><strong>Description:</strong> {description}</Text>
             <ResponsiblePersons persons={persons} compositeKey={compositeKey} />
         </>
     );
