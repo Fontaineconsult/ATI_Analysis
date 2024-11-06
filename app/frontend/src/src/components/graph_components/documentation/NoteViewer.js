@@ -67,7 +67,7 @@ function NoteViewer({ notes, onSubmit, yearSuccessEvidence, createdBy }) {
                         return (
                             <Box key={index} mb={4} border="1px solid teal" borderRadius="md" p={4} boxShadow="sm">
                                 <Flex justify="space-between" alignItems="center" cursor="pointer" onClick={() => toggleCollapse(index)}>
-                                    <Text fontWeight="bold" fontSize="lg">
+                                    <Text fontWeight="bold" fontSize="sm">
                                         {note.properties.name || 'Untitled Note'}
                                     </Text>
                                     <Button size="sm" colorScheme="teal">

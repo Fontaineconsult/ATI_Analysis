@@ -1,26 +1,31 @@
 import React, { useState } from 'react';
-import { Box, Button, Flex } from '@chakra-ui/react';
-import NoteViewer from './NoteViewer';  // Import the NoteViewer component
-import MessageViewer from './MessageViewer';  // Import the MessageViewer component
-import PlanViewer from "../implementation/PlanViewer";  // Import the PlanViewer component
+import { Box, Button, Flex, Text } from '@chakra-ui/react';
+import NoteViewer from './NoteViewer';
+import MessageViewer from './MessageViewer';
+import PlanViewer from "../implementation/PlanViewer";
 
 function YSEAnnotationMasterContainer({ hasNotes, hasMessages, hasMetrics, plans, year_identifier }) {
-    const [selectedType, setSelectedType] = useState('Note');  // Default to 'Note'
+    const [selectedType, setSelectedType] = useState('Note');
+
+    const descriptions = {
+        Note: "Notes are general observations, insights, or documentation about the success indicator's progress. They help track important details and context over time. They do not count toward documented implementation evidence.",
+        Message: "Messages are communications between 2 or more parties; for example, emails. They should include details about the ATI. They do not count toward documented implementation evidence.",
+        Plan: "Plans outline specific actions, timelines, and responsibilities for achieving the success indicator. They help track what needs to be done and who is responsible."
+    };
 
     // Filter notes based on the labels
     const filteredNotes = hasNotes?.filter((item) =>
-        item.note?.labels?.includes('Note') // Accessing labels inside the note object
+        item.note?.labels?.includes('Note')
     );
 
     // Filter messages based on the labels
     const filteredMessages = hasMessages?.filter((item) =>
-        item.message?.labels?.includes('Message') // Accessing labels inside the message object
+        item.message?.labels?.includes('Message')
     );
-
 
     // Filter plans based on the labels
     const filteredPlans = plans?.filter((item) =>
-        item.labels?.includes('Plan') // Accessing labels inside the plan object
+        item.labels?.includes('Plan')
     );
 
     return (
@@ -52,6 +57,20 @@ function YSEAnnotationMasterContainer({ hasNotes, hasMessages, hasMetrics, plans
                 </Button>
             </Flex>
 
+            {/* Description box */}
+            <Box
+                p={4}
+                bg="gray.50"
+                borderRadius="md"
+                mb={4}
+                border="1px"
+                borderColor="gray.200"
+            >
+                <Text fontSize="sm" color="gray.600">
+                    {descriptions[selectedType]}
+                </Text>
+            </Box>
+
             {/* Render Notes, Messages, or Plans Viewer based on the selection */}
             {selectedType === 'Note' && (
                 <NoteViewer
@@ -78,4 +97,4 @@ function YSEAnnotationMasterContainer({ hasNotes, hasMessages, hasMetrics, plans
     );
 }
 
-export default YSEAnnotationMasterContainer;
+export default YSEAnnotationMasterContainer

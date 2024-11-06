@@ -175,12 +175,9 @@ function IndicatorHeader({
             <Modal isOpen={isNotesOpen} onClose={onNotesClose} size="xl">
                 <ModalOverlay />
                 <ModalContent>
-                    <ModalHeader>Notes Viewer</ModalHeader>
+                    <ModalHeader>Annotations for {compositeKey}</ModalHeader>
                     <ModalCloseButton />
                     <ModalBody>
-                        <Text>
-                            A Note in the Accessible Technology Initiative (ATI) represents an annotation that provides additional insights, observations, or feedback related to ATI efforts. Notes added here apply directly to this academic year success indicator.
-                        </Text>
                         <YSEAnnotationMasterContainer hasNotes={notes} hasMessages={messages} hasMetrics={metrics} plans={plans} year_identifier={yearIdentifier} />
                     </ModalBody>
                 </ModalContent>
