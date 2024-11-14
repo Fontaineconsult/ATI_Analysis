@@ -21,7 +21,6 @@ import {
     Td,
     Select
 } from '@chakra-ui/react';
-import { AddIcon } from '@chakra-ui/icons';
 import { FaUser } from 'react-icons/fa';
 import DropdownSelect from '../../functional_components/DropdownSelect';
 import { useStatusLevels } from '../../../hooks/useStatusLevels';
