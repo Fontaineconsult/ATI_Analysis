@@ -3,23 +3,20 @@
 #
 from app.database.graph_schema import *
 
-def delete_person(employee_id):
-    p_node = Person.nodes.get(employee_id=employee_id)
-    p_node.delete()
-    return True
-
+from app.endpoints.data_api.errors.custom_exceptions import NotFoundError, CrudError
 
 def delete_person(employee_id: str) -> bool:
     """
-    Deletes a directive node from the graph
-    :param title: Title of the directive
-    :return: True if the directive node is deleted successfully, False otherwise
+    Deletes a Person node from the graph by employee_id
+    :param employee_id: The employee ID of the person
+    :return: True if the person node is deleted successfully, False otherwise
     """
     try:
         person = Person.nodes.get(employee_id=employee_id)
         person.delete()
-        print("Deleted person")
+        print(f"Deleted person with employee_id {employee_id}")
         return True
     except Person.DoesNotExist:
-        print("Person does not exist")
-        return False
+        raise NotFoundError(f"Person with employee_id {employee_id} does not exist.")
+    except Exception as e:
+        raise CrudError(f"Failed to delete person: {str(e)}")

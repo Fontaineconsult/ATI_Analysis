@@ -2,10 +2,6 @@
 from flask import Blueprint, render_template
 from neomodel import db
 
-from app.database.neomodelschema import Document, YearSuccessEvidence
-from app.database.queries.create import add_document_to_year_success_evidence
-from app.database.queries.delete import delete_document_by_element_id
-from app.database.queries.read import get_documents_by_yse
 
 component_endpoints = Blueprint('components', __name__)
 

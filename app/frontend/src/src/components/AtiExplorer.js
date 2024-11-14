@@ -1,0 +1,66 @@
+import React from 'react';
+import { Box, Spinner } from '@chakra-ui/react';
+import WorkingGroupMasterContainer from './ati_explorer_containers/WorkingGroupMasterContainer';
+import { useData } from '../hooks/useData';
+import { useLocation } from 'react-router-dom';
+import '../styles/App.css'; // Import the CSS file
+
+function AtiExplorer() {
+    const location = useLocation();
+    const { data, loading, updating, error, selectedYear } = useData();
+
+    // Check if all data fields are null, indicating an empty state
+    const isDataEmpty = !data.web && !data.instructionalMaterials && !data.procurement;
+
+    if (loading) {
+        return (
+            <Box className="centered-container">
+                <Spinner size="xl" />
+                <p className="ati-explorer-text">Loading data for {selectedYear}...</p>
+            </Box>
+        );
+    }
+
+    if (!loading && isDataEmpty) {
+        return (
+            <Box className="centered-container">
+                <h2 className="ati-explorer-heading">Data Not Available</h2>
+                <p className="ati-explorer-text">
+                    There is no data available for the selected year. Please select a different year.
+                </p>
+            </Box>
+        );
+    }
+
+    if (error) {
+        return <p className="ati-explorer-text" style={{ color: 'red' }}>Error: {error}</p>;
+    }
+
+    return (
+        <Box maxW="1200px" mx="auto" p={4}>
+            {location.pathname === '/ati-explorer' && <AtiExplorerLanding />}
+
+            <WorkingGroupMasterContainer />
+
+            {updating && (
+                <Box className="update-spinner">
+                    <Spinner size="sm" />
+                    <p className="ati-explorer-text">Updating data in the background...</p>
+                </Box>
+            )}
+        </Box>
+    );
+}
+
+function AtiExplorerLanding() {
+    return (
+        <Box className="centered-container">
+            <h2 className="ati-explorer-heading">Welcome to the ATI Explorer</h2>
+            <p className="ati-explorer-text">
+                Select a year to view data for that academic year.
+            </p>
+        </Box>
+    );
+}
+
+export default AtiExplorer;

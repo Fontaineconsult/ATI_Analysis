@@ -23,17 +23,31 @@ def build_yse_report(year_success_evidence):
     # query for the services_that_evidence
     services = yse.services_that_evidence.all()
 
-    # query for the guidelines_that_evidence
-    guidance = yse.guidance_that_evidence.all()
+    # query for the guideances_that_evidence
+    guidances = yse.guidance_that_evidence.all()
+
+    # query for the trackings_that_evidence
+    trackings = yse.trackings_that_evidence.all()
+
+    # query for the internal_policies_that_evidence
+    internal_policies = yse.internal_policies_that_evidence.all()
+
 
     # query for the persons_that_implement
     persons = yse.persons_that_implement.all()
+
+    # query for the supporting notes
+    notes = yse.notes.all()
+
+    #query for all yse metrics
+    metrics = yse.metrics.all()
 
     # combine each query into a dictionary
     report = {
         "year_identifier": yse.year_identifier,
         "status": status.status_level,
         "success_indicator": success_indicator.success_indicator,
+        "metrics": [metric.serialize() for metric in metrics],
         "processes": [{
             "title": process.title,
             "description": process.description,
@@ -78,18 +92,41 @@ def build_yse_report(year_success_evidence):
             }
         } for service in services],
 
-        "guidelines": [{
-            "title": guideline.title,
-            "description": guideline.description,
+        "guidances": [{
+            "title": guidance.title,
+            "description": guidance.description,
             "documentation": {
-                "documents": [doc.serialize() for doc in guideline.supporting_documents.all()],
-                "webpages": [web.serialize() for web in guideline.supporting_webpages.all()],
-                "notes": [note.serialize() for note in guideline.supporting_notes.all()],
-                "messages": [message.serialize() for message in guideline.supporting_messages.all()]
+                "documents": [doc.serialize() for doc in guidance.supporting_documents.all()],
+                "webpages": [web.serialize() for web in guidance.supporting_webpages.all()],
+                "notes": [note.serialize() for note in guidance.supporting_notes.all()],
+                "messages": [message.serialize() for message in guidance.supporting_messages.all()]
             }
-        } for guideline in guidance],
+        } for guidance in guidances],
 
-        "persons": [person.name for person in persons]
+        "tracking": [{
+            "title": tracking.title,
+            "description": tracking.description,
+            "documentation": {
+                "documents": [doc.serialize() for doc in tracking.supporting_documents.all()],
+                "webpages": [web.serialize() for web in tracking.supporting_webpages.all()],
+                "notes": [note.serialize() for note in tracking.supporting_notes.all()],
+                "messages": [message.serialize() for message in tracking.supporting_messages.all()]
+            }
+        } for tracking in trackings],
+
+        "internal_policies": [{
+            "title": policy.title,
+            "description": policy.description,
+            "documentation": {
+                "documents": [doc.serialize() for doc in policy.supporting_documents.all()],
+                "webpages": [web.serialize() for web in policy.supporting_webpages.all()],
+                "notes": [note.serialize() for note in policy.supporting_notes.all()],
+                "messages": [message.serialize() for message in policy.supporting_messages.all()]
+            }
+        } for policy in internal_policies],
+
+        "persons": [person.name for person in persons],
+        "notes": [note.serialize() for note in notes]
     }
 
     return report

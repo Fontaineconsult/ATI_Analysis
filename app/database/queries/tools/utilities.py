@@ -1,10 +1,19 @@
 from app.database.graph_schema import YearSuccessEvidence
-from app.database.queries.implementation.read import get_all_processes, get_all_projects, get_all_procedures, get_all_services, get_all_guidelines
+from app.database.queries.implementation.read import (get_all_processes,
+                                                      get_all_projects,
+                                                      get_all_procedures,
+                                                      get_all_services,
+                                                      get_all_guidances,
+                                                      get_all_trackings,
+                                                      get_all_internal_policies,
+                                                      get_all_plans)
 from neomodel import db
+
+
 def get_all_implementations(implementation_type):
     """
     Get all implementation nodes from the graph based on the implementation type
-    :param implementation_type: Type of the implementation ("process", "project", "procedure", "service", "guideline")
+    :param implementation_type: Type of the implementation ("process", "project", "procedure", "service", "guidance", "tracking")
     :return: List of implementation nodes
     """
     implementation_functions = {
@@ -12,7 +21,10 @@ def get_all_implementations(implementation_type):
         "project": get_all_projects,
         "procedure": get_all_procedures,
         "service": get_all_services,
-        "guideline": get_all_guidelines
+        "guidance": get_all_guidances,
+        "tracking": get_all_trackings,
+        "internal_policy": get_all_internal_policies
+
     }
 
     if implementation_type in implementation_functions:
@@ -20,6 +32,7 @@ def get_all_implementations(implementation_type):
     else:
         raise ValueError(f"Invalid implementation type: {implementation_type}."
                          f" Expected one of: {list(implementation_functions.keys())}")
+
 
 
 def assign_year_success_evidence_to_academic_year_node(academic_year_name: str) -> bool:
@@ -31,7 +44,7 @@ def assign_year_success_evidence_to_academic_year_node(academic_year_name: str) 
     # If the query returns no results, raise an exception and return False
     if not results:
         raise ValueError(f"No YearSuccessEvidence nodes found containing '{academic_year_name}' in year_identifier.")
-        return False
+
 
     # For each YearSuccessEvidence node found, create a relationship evidence_in_year to the AcademicYear node
     for result in results:

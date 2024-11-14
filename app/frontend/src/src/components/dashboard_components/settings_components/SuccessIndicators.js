@@ -1,0 +1,246 @@
+import React, { useContext, useState } from 'react';
+import {
+    Box,
+    Heading,
+    Button,
+    Select,
+    useDisclosure,
+} from '@chakra-ui/react';
+import { useTable } from 'react-table';
+import { DataContext } from '../../../context/DataContext';
+import { useColorModeValue } from '@chakra-ui/react';
+import { updateRemovedStatus, attachYearSuccessEvidence, detachYearSuccessEvidence } from '../../../services/api/put';
+import { createYearSuccessEvidence } from '../../../services/api/post'; // Import API call
+import { sortGoals, sortSuccessIndicators } from "../../../services/utils/sorters";
+import AddIndicator from './AddIndicator';
+import {SettingsContext} from "../../../context/SettingsContext";  // Import the AddIndicator component
+import '../../../styles/App.css';
+
+const SuccessIndicators = () => {
+    const { data, refreshIndicators } = useContext(DataContext);
+    const { indicators } = data;
+    const { currentAcademicYear } = useContext(SettingsContext);
+    const [openModals, setOpenModals] = useState({});
+    const [selectedIndicator, setSelectedIndicator] = useState(null);
+    const [actionType, setActionType] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
+
+    // Open modal for adding an indicator to a specific category
+    const onAddOpen = (categoryName) => {
+        setOpenModals((prev) => ({ ...prev, [categoryName]: true }));
+    };
+
+    // Close modal for adding an indicator to a specific category
+    const onAddClose = (categoryName) => {
+        setOpenModals((prev) => ({ ...prev, [categoryName]: false }));
+    };
+
+    const handleStatusChange = async (indicator, newStatus) => {
+        const originalRemovedStatus = indicator.removed;
+        const newRemovedStatus = newStatus === 'Removed';
+
+        indicator.removed = newRemovedStatus;
+        refreshIndicators();
+
+        try {
+            setIsLoading(true);
+            await updateRemovedStatus(indicator.composite_key, newRemovedStatus);
+            refreshIndicators();
+        } catch (error) {
+            console.error("Failed to update status:", error);
+            indicator.removed = originalRemovedStatus;
+            refreshIndicators();
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const toggleYearSuccessEvidence = async (indicator, academicYear) => {
+        const action = indicator.yearSuccessIndicators.length > 0 ? "detach" : "attach";
+        setIsLoading(true);
+
+        try {
+            if (action === "attach") {
+                // Call the API to create a YearSuccessEvidence node
+
+                await createYearSuccessEvidence(academicYear, indicator.composite_key);
+            } else {
+                // Call the detach API for detaching YearSuccessEvidence if required
+                await detachYearSuccessEvidence(indicator.composite_key); // Assuming detach API exists
+            }
+            refreshIndicators(); // Refresh indicators to reflect new YSE state
+        } catch (error) {
+            console.error(`Failed to ${action} year success evidence:`, error);
+        } finally {
+            setIsLoading(false);
+            setSelectedIndicator(null);
+            setActionType('');
+        }
+    };
+
+    const handleActionClick = (indicator) => {
+        setSelectedIndicator(indicator);
+        setActionType(indicator.yearSuccessIndicators.length > 0 ? 'Detach YSE' : 'Attach YSE');
+        toggleYearSuccessEvidence(indicator, currentAcademicYear); // Trigger the toggle action with academicYear
+    };
+
+    const handleAddIndicatorSubmit = (indicatorData) => {
+        console.log("New indicator data:", indicatorData);
+        // Add API call to save the indicator data
+    };
+
+    const columns = React.useMemo(
+        () => [
+            {
+                Header: 'Success Indicator',
+                accessor: 'success_indicator',
+            },
+            {
+                Header: 'Composite Key',
+                accessor: 'composite_key',
+            },
+            {
+                Header: 'Status',
+                accessor: 'status',
+                Cell: ({ row }) => {
+                    const currentStatus = row.original.removed ? 'Removed' : 'Active';
+
+                    return (
+                        <Select
+                            value={currentStatus}
+                            onChange={(e) => handleStatusChange(row.original, e.target.value)}
+                            size="sm"
+                            width="120px"
+                        >
+                            <option value="Active">Active</option>
+                            <option value="Removed">Removed</option>
+                        </Select>
+                    );
+                },
+            },
+            {
+                Header: 'Actions',
+                accessor: 'actions',
+                Cell: ({ row }) => {
+                    const buttonLabel = row.original.yearSuccessIndicators.length > 0 ? 'Detach YSE' : 'Attach YSE';
+
+                    return (
+                        <Button
+                            size="sm"
+                            onClick={() => handleActionClick(row.original)} // Connect toggle action to button
+                            colorScheme={row.original.yearSuccessIndicators.length > 0 ? 'red' : 'green'}
+                        >
+                            {buttonLabel}
+                        </Button>
+                    );
+                },
+            },
+        ],
+        [refreshIndicators, currentAcademicYear]
+    );
+
+    if (!indicators) {
+        return <Box>Loading...</Box>;
+    }
+
+    return (
+        <Box>
+            <Heading size="md" mb={4}>Success Indicators</Heading>
+
+            {indicators
+                .sort(sortGoals)
+                .map((category) => (
+                    <Box key={category.name} mb={8}>
+                        <Heading size="md" mb={4}>{category.name}</Heading>
+
+                        <AddIndicator
+                            indicators={category}
+                            wg={category.name}
+                            isOpen={openModals[category.name] || false}
+                            onClose={() => onAddClose(category.name)}
+                            onSubmit={handleAddIndicatorSubmit}
+                        />
+
+                        <Button colorScheme="blue" onClick={() => onAddOpen(category.name)} mb={4}>Add Indicator</Button>
+
+                        {category.goals && category.goals.length > 0 ? (
+                            category.goals
+                                .sort(sortGoals)
+                                .map((goal) => (
+                                    <Box key={goal.goal_number} mb={6}>
+                                        <Heading size="sm" mb={2}>{`Goal ${goal.goal_number}: ${goal.goal}`}</Heading>
+                                        <p>{goal.name}</p>
+
+                                        {goal.successIndicators && goal.successIndicators.length > 0 ? (
+                                            <SuccessIndicatorTable
+                                                data={goal.successIndicators.sort(sortSuccessIndicators)}
+                                                columns={columns}
+                                            />
+                                        ) : (
+                                            <Box>No success indicators available.</Box>
+                                        )}
+                                    </Box>
+                                ))
+                        ) : (
+                            <Box>No goals available for {category.name}.</Box>
+                        )}
+                    </Box>
+                ))}
+        </Box>
+    );
+};
+
+
+
+const SuccessIndicatorTable = React.memo(({ data, columns }) => {
+    const {
+        getTableProps,
+        getTableBodyProps,
+        headerGroups,
+        rows,
+        prepareRow,
+    } = useTable({ columns, data });
+
+    const removedRowBg = useColorModeValue('gray.100', 'gray.700');
+    const removedRowText = useColorModeValue('gray.500', 'gray.400');
+
+    return (
+        <table {...getTableProps()} className="success-indicator-table">
+            <thead>
+            {headerGroups.map(headerGroup => (
+                <tr {...headerGroup.getHeaderGroupProps()}>
+                    {headerGroup.headers.map(column => (
+                        <th {...column.getHeaderProps()} className="success-indicator-table-header">
+                            {column.render('Header')}
+                        </th>
+                    ))}
+                </tr>
+            ))}
+            </thead>
+            <tbody {...getTableBodyProps()}>
+            {rows.map(row => {
+                prepareRow(row);
+                const isRemoved = row.original.removed;
+
+                return (
+                    <tr
+                        {...row.getRowProps()}
+                        className={isRemoved ? 'success-indicator-row-removed' : ''}
+                        style={{
+                            backgroundColor: isRemoved ? removedRowBg : 'inherit',
+                            color: isRemoved ? removedRowText : 'inherit',
+                        }}
+                    >
+                        {row.cells.map(cell => (
+                            <td {...cell.getCellProps()} className="success-indicator-table-cell">
+                                {cell.render('Cell')}
+                            </td>
+                        ))}
+                    </tr>
+                );
+            })}
+            </tbody>
+        </table>
+    );
+});
+export default SuccessIndicators;

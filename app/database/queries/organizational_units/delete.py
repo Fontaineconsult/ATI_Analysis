@@ -2,7 +2,7 @@
 # ORGANIZATIONAL UNITS DELETE QUERIES
 #
 from app.database.graph_schema import *
-
+from app.endpoints.data_api.errors.custom_exceptions import NotFoundError, CrudError
 
 def delete_department(name: str) -> bool:
     """
@@ -16,9 +16,9 @@ def delete_department(name: str) -> bool:
         print("Deleted department")
         return True
     except Department.DoesNotExist:
-        print("Department does not exist")
-        return False
-
+        raise NotFoundError(f"Department '{name}' does not exist.")
+    except Exception as e:
+        raise CrudError(f"Failed to delete department '{name}': {e}")
 
 def delete_vendor(name: str) -> bool:
     """
@@ -32,9 +32,9 @@ def delete_vendor(name: str) -> bool:
         print("Deleted vendor")
         return True
     except Vendor.DoesNotExist:
-        print("Vendor does not exist")
-        return False
-
+        raise NotFoundError(f"Vendor '{name}' does not exist.")
+    except Exception as e:
+        raise CrudError(f"Failed to delete vendor '{name}': {e}")
 
 def delete_college(name: str) -> bool:
     """
@@ -48,5 +48,6 @@ def delete_college(name: str) -> bool:
         print("Deleted college")
         return True
     except College.DoesNotExist:
-        print("College does not exist")
-        return False
+        raise NotFoundError(f"College '{name}' does not exist.")
+    except Exception as e:
+        raise CrudError(f"Failed to delete college '{name}': {e}")

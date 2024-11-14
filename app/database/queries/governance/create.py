@@ -3,6 +3,9 @@
 #
 from app.database.graph_schema import *
 from datetime import date, datetime
+
+from app.endpoints.data_api.errors.custom_exceptions import CrudError
+
 def add_law(title: str,
             description: str,
             effective_date: date,
@@ -32,10 +35,7 @@ def add_law(title: str,
         print("Added law")
         return True
     except Exception as e:
-        print(e)
-        return False
-
-
+        raise CrudError(f"Failed to add law: {e}")
 
 
 def add_policy(title: str,
@@ -61,8 +61,7 @@ def add_policy(title: str,
         print("Added policy")
         return True
     except Exception as e:
-        print(e)
-        return False
+        raise CrudError(f"Failed to add policy: {e}")
 
 
 def add_directive(title: str,
@@ -91,8 +90,7 @@ def add_directive(title: str,
         print("Added directive")
         return True
     except Exception as e:
-        print(e)
-        return False
+        raise CrudError(f"Failed to add directive: {e}")
 
 
 def add_case(title: str,
@@ -121,8 +119,7 @@ def add_case(title: str,
         print("Added case")
         return True
     except Exception as e:
-        print(e)
-        return False
+        raise CrudError(f"Failed to add case: {e}")
 
 
 def add_memo(title: str,
@@ -145,8 +142,7 @@ def add_memo(title: str,
         print("Added memo")
         return True
     except Exception as e:
-        print(e)
-        return False
+        raise CrudError(f"Failed to add memo: {e}")
 
 
 def add_guideline(title: str,
@@ -172,5 +168,4 @@ def add_guideline(title: str,
         print("Added guideline")
         return True
     except Exception as e:
-        print(e)
-        return False
+        raise CrudError(f"Failed to add guideline: {e}")

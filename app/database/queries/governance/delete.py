@@ -2,6 +2,7 @@
 # GOVERNANCE DELETE QUERIES
 #
 from app.database.graph_schema import *
+from app.endpoints.data_api.errors.custom_exceptions import CrudError, NotFoundError
 
 def delete_law(title: str) -> bool:
     """
@@ -15,8 +16,9 @@ def delete_law(title: str) -> bool:
         print("Deleted law")
         return True
     except Law.DoesNotExist:
-        print("Law does not exist")
-        return False
+        raise NotFoundError(f"Law '{title}' does not exist")
+    except Exception as e:
+        raise CrudError(f"Failed to delete law: {e}")
 
 
 def delete_policy(title: str) -> bool:
@@ -31,8 +33,9 @@ def delete_policy(title: str) -> bool:
         print("Deleted policy")
         return True
     except Policy.DoesNotExist:
-        print("Policy does not exist")
-        return False
+        raise NotFoundError(f"Policy '{title}' does not exist")
+    except Exception as e:
+        raise CrudError(f"Failed to delete policy: {e}")
 
 
 def delete_directive(title: str) -> bool:
@@ -47,8 +50,9 @@ def delete_directive(title: str) -> bool:
         print("Deleted directive")
         return True
     except Directive.DoesNotExist:
-        print("Directive does not exist")
-        return False
+        raise NotFoundError(f"Directive '{title}' does not exist")
+    except Exception as e:
+        raise CrudError(f"Failed to delete directive: {e}")
 
 
 def delete_case(title: str) -> bool:
@@ -63,8 +67,9 @@ def delete_case(title: str) -> bool:
         print("Deleted case")
         return True
     except Case.DoesNotExist:
-        print("Case does not exist")
-        return False
+        raise NotFoundError(f"Case '{title}' does not exist")
+    except Exception as e:
+        raise CrudError(f"Failed to delete case: {e}")
 
 
 def delete_memo(title: str) -> bool:
@@ -79,8 +84,9 @@ def delete_memo(title: str) -> bool:
         print("Deleted memo")
         return True
     except Memo.DoesNotExist:
-        print("Memo does not exist")
-        return False
+        raise NotFoundError(f"Memo '{title}' does not exist")
+    except Exception as e:
+        raise CrudError(f"Failed to delete memo: {e}")
 
 
 def delete_guideline(title: str) -> bool:
@@ -95,5 +101,6 @@ def delete_guideline(title: str) -> bool:
         print("Deleted guideline")
         return True
     except Guideline.DoesNotExist:
-        print("Guideline does not exist")
-        return False
+        raise NotFoundError(f"Guideline '{title}' does not exist")
+    except Exception as e:
+        raise CrudError(f"Failed to delete guideline: {e}")

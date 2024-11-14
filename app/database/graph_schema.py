@@ -1,9 +1,12 @@
+import json
 import uuid
+from email.policy import default
+
 from neomodel import (StructuredNode, StringProperty,
                       IntegerProperty, RelationshipTo,
                       RelationshipFrom, UniqueIdProperty,
-                      StructuredRel,Relationship, DateProperty,
-                      install_all_labels, BooleanProperty, IntegerProperty)
+                      StructuredRel, Relationship, DateProperty,
+                      install_all_labels, BooleanProperty, IntegerProperty, JSONProperty)
 from dotenv import load_dotenv
 import os
 
@@ -41,6 +44,8 @@ class Law(StructuredNode):
 
      """
 
+    unique_id = UniqueIdProperty()
+
     title = StringProperty(unique_index=True, required=True)
     description = StringProperty()
     effective_date = DateProperty()
@@ -68,6 +73,8 @@ class Case(StructuredNode):
 
      """
 
+    unique_id = UniqueIdProperty()
+
     title = StringProperty(unique_index=True, required=True)
     description = StringProperty()
     effective_date = DateProperty()
@@ -90,6 +97,7 @@ class Directive(StructuredNode):
     to enhance accessibility and remove barriers for individuals with disabilities.
 
      """
+    unique_id = UniqueIdProperty()
 
     title = StringProperty(unique_index=True, required=True)
     description = StringProperty()
@@ -103,7 +111,7 @@ class Directive(StructuredNode):
     supporting_messages = RelationshipTo("Message", "is_documented_by")
 
 
-class Policy(StructuredNode):
+class ExternalPolicy(StructuredNode):
 
     """    Class representing a policy node.
 
@@ -115,6 +123,8 @@ class Policy(StructuredNode):
     and detail the procedures for implementing accessibility standards.
 
      """
+
+    unique_id = UniqueIdProperty()
 
     title = StringProperty(unique_index=True, required=True)
     description = StringProperty()
@@ -139,6 +149,7 @@ class Memo(StructuredNode):
     members of the organization are aware of their roles and responsibilities in maintaining accessibility standards.
 
      """
+    unique_id = UniqueIdProperty()
 
     title = StringProperty(unique_index=True, required=True)
     description = StringProperty()
@@ -163,6 +174,7 @@ class Guideline(StructuredNode):
 
 
      """
+    unique_id = UniqueIdProperty()
 
     title = StringProperty(unique_index=True, required=True)
     description = StringProperty()
@@ -202,15 +214,35 @@ class Goal(StructuredNode):
     and help track progress over time.
 
      """
+    unique_id = UniqueIdProperty()
 
 
-    title = StringProperty()
+    name = StringProperty()
     description = StringProperty()
+    status = RelationshipTo("StatusLevel", "status_is")
     supporting_success_indicators = RelationshipTo("SuccessIndicator", "supported_by")
     goal = StringProperty()
     goal_number = IntegerProperty()
     date_added = DateProperty()
+    advanced_by = RelationshipFrom("Accomplishment", "advances_goal")
+    furthered_by = RelationshipFrom("Plan", "furthers_goal")
     removed = BooleanProperty(default=False)
+
+    #serialize
+    def serialize(self):
+        return {
+            'name': self.name,
+            'description': self.description,
+            'goal_number': self.goal_number,
+            'date_added': self.date_added,
+            'removed': self.removed,
+            "unique_id": self.unique_id
+        }
+
+
+class HasGoalRel(StructuredRel):
+    pass
+
 
 
 class SuccessIndicator(StructuredNode):
@@ -226,6 +258,7 @@ class SuccessIndicator(StructuredNode):
 
 
      """
+    unique_id = UniqueIdProperty()
 
     number = IntegerProperty()
     success_indicator = StringProperty()
@@ -239,6 +272,17 @@ class SuccessIndicator(StructuredNode):
     directed_projects = RelationshipTo("Project", "directs")
     directed_procedures = RelationshipTo("Procedure", "directs")
     directed_services = RelationshipTo("Service", "directs")
+
+    #serialize
+    def serialize(self):
+        return {
+            'number': self.number,
+            'success_indicator': self.success_indicator,
+            'composite_key': self.composite_key,
+            'removed': self.removed,
+            'date_added': self.date_added,
+            "unique_id": self.unique_id
+        }
 
 
 """
@@ -259,6 +303,35 @@ Relationships
 
 """
 
+class Accomplishment(StructuredNode):
+
+    """    Class representing an accomplishment node.
+
+    Represents an accomplishment node to track the progress of the implementation of the accessibility initiatives.
+
+    """
+    unique_id = UniqueIdProperty()
+
+    name = StringProperty()
+    description = StringProperty(unique_index=True, required=True)
+    supporting_documents = RelationshipTo("Document", "is_documented_by")
+    supporting_webpages = RelationshipTo("Webpage", "is_documented_by")
+    supporting_notes = RelationshipTo("Note", "is_documented_by")
+    supporting_messages = RelationshipTo("Message", "is_documented_by")
+    supporting_metrics = RelationshipTo("Metric", "has_metric")
+    academic_year = RelationshipTo("AcademicYear", "in_academic_year")
+    advanced_goals = RelationshipTo("Goal", "advances_goal")
+    advanced_year_success_indicators = RelationshipTo("YearSuccessEvidence", "advances_yse")
+
+    #serialize
+    def serialize(self):
+        return {
+            'name': self.name,
+            'accomplishment_description': self.accomplishment_description,
+            "unique_id": self.unique_id
+        }
+
+
 class Plan(StructuredNode):
 
     """    Class representing a plan node.
@@ -274,17 +347,75 @@ class Plan(StructuredNode):
     challenges or changes in technology.
 
     """
+    unique_id = UniqueIdProperty()
 
-    title = StringProperty(unique_index=True, required=True)
-    description = StringProperty()
+    name = StringProperty()
+    academic_year = RelationshipTo("AcademicYear", "in_academic_year")
+    furthered_goals = RelationshipTo("Goal", "furthers_goal")
+    furthered_year_success_indicators = RelationshipTo("YearSuccessEvidence", "furthers_yse")
+    is_key_plan = BooleanProperty(default=False)
+    is_campus_plan = BooleanProperty(default=False)
+    description = StringProperty(unique_index=True, required=True)
+    abandoned = BooleanProperty(default=False)
+    abandoned_notes = StringProperty()
+    plan_status = StringProperty()
+    completed_year = RelationshipTo("AcademicYear", "completed_in_year")
     supporting_documents = RelationshipTo("Document", "is_documented_by")
     supporting_webpages = RelationshipTo("Webpage", "is_documented_by")
     supporting_notes = RelationshipTo("Note", "is_documented_by")
     supporting_messages = RelationshipTo("Message", "is_documented_by")
-    detailed_processes = RelationshipTo("Process", "details")
-    detailed_projects = RelationshipTo("Project", "details")
-    detailed_procedures = RelationshipTo("Procedure", "details")
-    detailed_services = RelationshipTo("Service", "details")
+
+    #serialize
+    def serialize(self):
+        return {
+            'name': self.name,
+            'plan_description': self.plan_description,
+            'is_key_plan': self.is_key_plan,
+            'is_campus_plan': self.is_campus_plan,
+            'abandoned': self.abandoned,
+            'abandoned_notes': self.abandoned_notes,
+            'plan_status': self.plan_status,
+            'description': self.description,
+            "unique_id": self.unique_id
+        }
+
+
+
+class InternalPolicy(StructuredNode):
+
+    """    Class representing an internal policy node.
+
+    An Internal Policy in the context of the Accessible Technology Initiative (ATI) represents a set of rules,
+    procedures, and guidelines developed by an organization to ensure compliance with accessibility standards.
+    Internal policies are tailored to the specific needs and requirements of the institution, providing detailed
+    instructions on how to implement accessibility practices and procedures. These policies help align the
+    organization's activities with broader accessibility goals and ensure that all members of the institution
+    are aware of their roles and responsibilities in maintaining accessibility standards.
+
+    """
+    unique_id = UniqueIdProperty()
+
+    title = StringProperty(unique_index=True, required=True)
+    description = StringProperty()
+    effective_date = DateProperty()
+    last_updated = DateProperty()
+    supporting_documents = RelationshipTo("Document", "is_documented_by")
+    supporting_webpages = RelationshipTo("Webpage", "is_documented_by")
+    supporting_notes = RelationshipTo("Note", "is_documented_by")
+    supporting_messages = RelationshipTo("Message", "is_documented_by")
+    supporting_metrics = RelationshipTo("Metric", "has_metric")
+    is_evidence_for = RelationshipTo("YearSuccessEvidence", "is_evidence_for")
+
+    #serialize
+    def serialize(self):
+        return {
+            'title': self.title,
+            'description': self.description,
+            'effective_date': self.effective_date,
+            'last_updated': self.last_updated,
+            "unique_id": self.unique_id
+        }
+
 
 
 class Process(StructuredNode):
@@ -298,6 +429,7 @@ class Process(StructuredNode):
     to timelines, and regular monitoring to address challenges and track achievements
 
      """
+    unique_id = UniqueIdProperty()
 
     title = StringProperty(unique_index=True, required=True)
     description = StringProperty()
@@ -305,7 +437,16 @@ class Process(StructuredNode):
     supporting_webpages = RelationshipTo("Webpage", "is_documented_by")
     supporting_notes = RelationshipTo("Note", "is_documented_by")
     supporting_messages = RelationshipTo("Message", "is_documented_by")
+    supporting_metrics = RelationshipTo("Metric", "has_metric")
     is_evidence_for = RelationshipTo("YearSuccessEvidence", "is_evidence_for")
+
+    #serialize
+    def serialize(self):
+        return {
+            'title': self.title,
+            'description': self.description,
+            "unique_id": self.unique_id
+        }
 
 
 class Project(StructuredNode):
@@ -322,6 +463,7 @@ class Project(StructuredNode):
     improvement efforts outlined in the ATI Campus Plan.
 
     """
+    unique_id = UniqueIdProperty()
 
     title = StringProperty(unique_index=True, required=True)
     description = StringProperty()
@@ -329,7 +471,16 @@ class Project(StructuredNode):
     supporting_webpages = RelationshipTo("Webpage", "is_documented_by")
     supporting_notes = RelationshipTo("Note", "is_documented_by")
     supporting_messages = RelationshipTo("Message", "is_documented_by")
+    supporting_metrics = RelationshipTo("Metric", "has_metric")
     is_evidence_for = RelationshipTo("YearSuccessEvidence", "is_evidence_for")
+
+    #serialize
+    def serialize(self):
+        return {
+            'title': self.title,
+            'description': self.description,
+            "unique_id": self.unique_id
+        }
 
 
 class Procedure(StructuredNode):
@@ -343,6 +494,7 @@ class Procedure(StructuredNode):
     indicators. They are regularly reviewed and updated to reflect best practices and changes in technology
 
     """
+    unique_id = UniqueIdProperty()
 
     title = StringProperty(unique_index=True, required=True)
     description = StringProperty()
@@ -350,7 +502,16 @@ class Procedure(StructuredNode):
     supporting_webpages = RelationshipTo("Webpage", "is_documented_by")
     supporting_notes = RelationshipTo("Note", "is_documented_by")
     supporting_messages = RelationshipTo("Message", "is_documented_by")
+    supporting_metrics = RelationshipTo("Metric", "has_metric")
     is_evidence_for = RelationshipTo("YearSuccessEvidence", "is_evidence_for")
+
+    #serialize
+    def serialize(self):
+        return {
+            'title': self.title,
+            'description': self.description,
+            "unique_id": self.unique_id
+        }
 
 
 class Service(StructuredNode):
@@ -364,6 +525,7 @@ class Service(StructuredNode):
     and offerings of the institution.
 
     """
+    unique_id = UniqueIdProperty()
 
     title = StringProperty(unique_index=True, required=True)
     description = StringProperty()
@@ -371,7 +533,16 @@ class Service(StructuredNode):
     supporting_webpages = RelationshipTo("Webpage", "is_documented_by")
     supporting_notes = RelationshipTo("Note", "is_documented_by")
     supporting_messages = RelationshipTo("Message", "is_documented_by")
+    supporting_metrics = RelationshipTo("Metric", "has_metric")
     is_evidence_for = RelationshipTo("YearSuccessEvidence", "is_evidence_for")
+
+    #serialize
+    def serialize(self):
+        return {
+            'title': self.title,
+            'description': self.description,
+            "unique_id": self.unique_id
+        }
 
 
 
@@ -387,6 +558,7 @@ class Guidance(StructuredNode):
     standards and best practices.
 
     """
+    unique_id = UniqueIdProperty()
 
     title = StringProperty(unique_index=True, required=True)
     description = StringProperty()
@@ -394,7 +566,43 @@ class Guidance(StructuredNode):
     supporting_webpages = RelationshipTo("Webpage", "is_documented_by")
     supporting_notes = RelationshipTo("Note", "is_documented_by")
     supporting_messages = RelationshipTo("Message", "is_documented_by")
+    supporting_metrics = RelationshipTo("Metric", "has_metric")
     is_evidence_for = RelationshipTo("YearSuccessEvidence", "is_evidence_for")
+
+    #serialize
+    def serialize(self):
+        return {
+            'title': self.title,
+            'description': self.description,
+            "unique_id": self.unique_id
+        }
+
+
+class Tracking(StructuredNode):
+
+    """    Class representing a tracking node.
+
+    Represents a tracking node to track the progress of the implementation of the accessibility initiatives.
+
+    """
+    unique_id = UniqueIdProperty()
+
+    title = StringProperty(unique_index=True, required=True)
+    description = StringProperty()
+    supporting_documents = RelationshipTo("Document", "is_documented_by")
+    supporting_webpages = RelationshipTo("Webpage", "is_documented_by")
+    supporting_notes = RelationshipTo("Note", "is_documented_by")
+    supporting_messages = RelationshipTo("Message", "is_documented_by")
+    supporting_metrics = RelationshipTo("Metric", "has_metric")
+    is_evidence_for = RelationshipTo("YearSuccessEvidence", "is_evidence_for")
+
+    #serialize
+    def serialize(self):
+        return {
+            'title': self.title,
+            'description': self.description,
+            "unique_id": self.unique_id
+        }
 
 
 """
@@ -424,11 +632,21 @@ class AcademicYear(StructuredNode):
     and progress tracking, occur.
 
     """
+    unique_id = UniqueIdProperty()
 
     name = StringProperty(unique_index=True, required=True)
     start_date = DateProperty()
     end_date = DateProperty()
     year_success_evidences = RelationshipFrom("YearSuccessEvidence", "evidence_in_year")
+
+    #serialize
+    def serialize(self):
+        return {
+            'name': self.name,
+            'start_date': self.start_date,
+            'end_date': self.end_date,
+            "unique_id": self.unique_id
+        }
 
 
 class StatusLevel(StructuredNode):
@@ -443,13 +661,17 @@ class StatusLevel(StructuredNode):
      and evidence requirements that must be met to accurately reflect the institution's progress and ongoing efforts
     to remove accessibility barriers
 
-    Established: 1
-    Managed: 2
-    Optimized: 3
+    Not Started: 0
+    Initiated: 1
+    Defined: 2
+    Established: 3
+    Managed: 4
+    Optimized: 5
 
     Require evidence.
 
     """
+    unique_id = UniqueIdProperty()
 
     status_level = StringProperty(unique_index=True)
     description_of_procedures = StringProperty()
@@ -458,7 +680,71 @@ class StatusLevel(StructuredNode):
     description_of_resources = StringProperty()
     status_value = StringProperty()
     ati_report_evidence_column = StringProperty()
+    procedure_descriptions = RelationshipTo('ProcedureDescription', 'is_a_procedure_description')
+    procedure_requirements = RelationshipTo('ProcedureRequirement', 'is_a_procedure_requirement')
+    resource_descriptions = RelationshipTo('ResourceDescription', 'is_a_resource_description')
+    resource_requirements = RelationshipTo('ResourceRequirement', 'is_a_resource_requirement')
+    documentation_descriptions = RelationshipTo('DocumentationDescription', 'is_a_documentation_description')
+    documentation_requirements = RelationshipTo('ResourceRequirement', 'is_a_documentation_requirement')
+    documentation_evidence_descriptions = RelationshipTo('DocumentationEvidenceDescription', 'is_a_documentation_evidence_description')
+    documentation_evidence_requirements = RelationshipTo('DocumentationEvidenceRequirement', 'is_a_documentation_evidence_requirement')
     notes = RelationshipTo("Note", "has_note")
+
+    def serialize(self):
+        return {
+            'status_level': self.status_level,
+            'description_of_procedures': self.description_of_procedures,
+            'description_of_documentation': self.description_of_documentation,
+            'description_of_documentation_evidence': self.description_of_documentation_evidence,
+            'description_of_resources': self.description_of_resources,
+            'status_value': self.status_value,
+            'ati_report_evidence_column': self.ati_report_evidence_column,
+            "unique_id": self.unique_id
+
+        }
+
+class ProcedureDescription(StructuredNode):
+    unique_id = UniqueIdProperty()
+    description = StringProperty(unique_index=True)
+    display_name = StringProperty(default="Description of Procedures")
+
+
+class ProcedureRequirement(StructuredNode):
+    unique_id = UniqueIdProperty()
+    requirement_description = StringProperty(unique_index=True)
+
+
+class ResourceDescription(StructuredNode):
+    unique_id = UniqueIdProperty()
+    description = StringProperty(unique_index=True)
+    display_name = StringProperty(default="Description of Resources")
+
+
+class ResourceRequirement(StructuredNode):
+    unique_id = UniqueIdProperty()
+    requirement_description = StringProperty(unique_index=True)
+
+
+class DocumentationDescription(StructuredNode):
+    unique_id = UniqueIdProperty()
+    description = StringProperty(unique_index=True)
+    display_name = StringProperty(default="Description of Documentation")
+
+
+class DocumentationRequirement(StructuredNode):
+    unique_id = UniqueIdProperty()
+    requirement_description = StringProperty(unique_index=True)
+
+
+class DocumentationEvidenceDescription(StructuredNode):
+    unique_id = UniqueIdProperty()
+    description = StringProperty(unique_index=True)
+    display_name = StringProperty(default="Description of Documentation Evidence")
+
+
+class DocumentationEvidenceRequirement(StructuredNode):
+    unique_id = UniqueIdProperty()
+    requirement_description = StringProperty(unique_index=True)
 
 
 class YearSuccessEvidence(StructuredNode):
@@ -476,6 +762,7 @@ class YearSuccessEvidence(StructuredNode):
     by working backward from YSE nodes through evidence nodes to retrieve their evidence documents.
 
     """
+    unique_id = UniqueIdProperty()
 
 
     year_identifier = StringProperty(unique_index=True)  # A unique identifier combining Year and SuccessIndicator name
@@ -487,7 +774,14 @@ class YearSuccessEvidence(StructuredNode):
     documentation_status = StringProperty()
     resources_status = StringProperty()
     implementation_plan_status = StringProperty()
+    administrative_review_complete = BooleanProperty(default=False)
+    administrative_review_completed_date = DateProperty()
+    administrative_review_completed_by = RelationshipTo("Person", "admin_review_completed_by")
     notes = RelationshipTo("Note", "has_note")
+    messages = RelationshipTo("Message", "has_message")
+    metrics = RelationshipTo("Metric", "has_metric")
+    worked_on_in_current_year = BooleanProperty(default=False)
+    will_work_on_next_year = BooleanProperty(default=False)
 
     # Relationships from implementation nodes
     processes_that_evidence = RelationshipFrom("Process", "is_evidence_for")
@@ -495,9 +789,21 @@ class YearSuccessEvidence(StructuredNode):
     procedures_that_evidence = RelationshipFrom("Procedure", "is_evidence_for")
     services_that_evidence = RelationshipFrom("Service", "is_evidence_for")
     guidance_that_evidence = RelationshipFrom("Guidance", "is_evidence_for")
+    trackings_that_evidence = RelationshipFrom("Tracking", "is_evidence_for")
+    internal_policies_that_evidence = RelationshipFrom("InternalPolicy", "is_evidence_for")
 
     # Relationships from person nodes
     persons_that_implement = RelationshipFrom("Person", "implements")
+
+    #serialize
+    def serialize(self):
+        return {
+            'year_identifier': self.year_identifier,
+            'documentation_status': self.documentation_status,
+            'resources_status': self.resources_status,
+            'implementation_plan_status': self.implementation_plan_status,
+            "unique_id": self.unique_id
+        }
 
 
 
@@ -531,10 +837,11 @@ class ATIWorkingGroup(StructuredNode):
     ATI strategy
 
     """
+    unique_id = UniqueIdProperty()
 
     name = StringProperty(unique_index=True, required=True)
     description = StringProperty()
-    responsible_for = RelationshipTo("Goal", "responsible_for")
+    responsible_for = RelationshipTo("Goal", "responsible_for", model=HasGoalRel)
     # implements_process = RelationshipTo("Process", "implements")
     # implements_project = RelationshipTo("Project", "implements")
     # implements_procedure = RelationshipTo("Procedure", "implements")
@@ -566,16 +873,31 @@ class Person(StructuredNode):
     providing technical support, or ensuring compliance with accessibility policies and procedures.
     The Person node helps track the involvement and contributions of individuals to ATI-related activities,
     fostering collaboration and accountability within the initiative
-
-
     """
+    unique_id = UniqueIdProperty()
 
     name = StringProperty(unique_index=True, required=True)
     email = StringProperty()
     employee_id = StringProperty()
     title = StringProperty()
+    active = BooleanProperty(default=True)
+    can_approve_yse = BooleanProperty(default=False)
+    ati_role = StringProperty()
     in_ati_working_group = RelationshipTo('ATIWorkingGroup', 'participates_in')
     implements_yse = RelationshipTo("YearSuccessEvidence", "implements")
+
+    #serialize
+    def serialize(self):
+        return {
+            'name': self.name,
+            'email': self.email,
+            'employee_id': self.employee_id,
+            'title': self.title,
+            "can_approve_yse": self.can_approve_yse,
+            "active": self.active,
+            "ati_role": self.ati_role,
+            "unique_id": self.unique_id
+        }
 
 
 
@@ -611,6 +933,7 @@ class Department(StructuredNode):
 
 
     """
+    unique_id = UniqueIdProperty()
 
 
 
@@ -632,6 +955,7 @@ class College(StructuredNode):
     for integrating accessibility into its curricula, research, and administrative practices.
 
     """
+    unique_id = UniqueIdProperty()
 
 
     name = StringProperty(unique_index=True)
@@ -653,6 +977,7 @@ class Vendor(StructuredNode):
     all procurement processes adhere to Section 508 requirements
 
     """
+    unique_id = UniqueIdProperty()
 
 
     name = StringProperty(unique_index=True)
@@ -678,6 +1003,7 @@ class Document(StructuredNode):
     necessary information is readily accessible and systematically maintained.
 
     """
+    unique_id = UniqueIdProperty()
 
     hash = StringProperty(unique_index=True)
     name = StringProperty()
@@ -685,6 +1011,9 @@ class Document(StructuredNode):
     uri_path = StringProperty()
     is_administrative_review_documentation = StringProperty()
     is_milestone_and_measures_documentation = StringProperty()
+    depreciated = BooleanProperty()
+    depreciated_date = DateProperty()
+    include_in_report = BooleanProperty(default=True)
     notes = RelationshipTo("Note", "has_note")
 
     def serialize(self):
@@ -697,8 +1026,10 @@ class Document(StructuredNode):
             "name": self.name,
             "file_path": self.file_path,
             "uri_path": self.uri_path,
+            "include_in_report": self.include_in_report,
             "is_administrative_review_documentation": self.is_administrative_review_documentation,
             "is_milestone_and_measures_documentation": self.is_milestone_and_measures_documentation,
+            "unique_id": self.unique_id
 
         }
 
@@ -712,11 +1043,15 @@ class Webpage(StructuredNode):
     sections of the institution's website, instructional content, digital services, and other online materials.
 
     """
-
+    unique_id = UniqueIdProperty()
 
     url = StringProperty(unique_index=True)
-    title = StringProperty()
+    name = StringProperty()
     description = StringProperty()
+    no_longer_exists = BooleanProperty()
+    depreciated = BooleanProperty()
+    depreciated_date = DateProperty()
+    include_in_report = BooleanProperty(default=True)
     notes = RelationshipTo("Note", "has_note")
 
     def serialize(self):
@@ -725,9 +1060,14 @@ class Webpage(StructuredNode):
         storage, or API response.
         """
         return {
+
             "url": self.url,
-            "title": self.title,
+            "name": self.name,
             "description": self.description,
+            "no_longer_exists": self.no_longer_exists,
+            "depreciated": self.depreciated,
+            "depreciated_date": self.depreciated_date,
+            "unique_id": self.unique_id
 
         }
 
@@ -746,11 +1086,15 @@ class Note(StructuredNode):
 
 
     """
+    unique_id = UniqueIdProperty()
 
-
-    uuid = StringProperty(unique_index=True)
+    name = StringProperty(unique_index=True)
     date_created = DateProperty()
     content = StringProperty()
+    depreciated = BooleanProperty()
+    depreciated_date = DateProperty()
+    created_by = RelationshipTo("Person", "created_by")
+    include_in_report = BooleanProperty(default=True)
 
     def serialize(self):
         """
@@ -758,10 +1102,15 @@ class Note(StructuredNode):
         storage, or API response.
         """
         return {
-            "uuid": self.uuid,
+
+            "name": self.name,
             "content": self.content,
             "dateCreated": self.date_created,
-            "type": self.type
+            "depreciated": self.depreciated,
+            "depreciated_date": self.depreciated_date,
+            "include_in_report": self.include_in_report,
+            "unique_id": self.unique_id
+
         }
 
 
@@ -779,10 +1128,17 @@ class Message(StructuredNode):
 
 
     """
-    uuid = StringProperty(unique_index=True)
+    unique_id = UniqueIdProperty()
+    name = StringProperty(unique_index=True)
     content = StringProperty()
-    date_created = StringProperty
+    file_path = StringProperty()
+    uri_path = StringProperty()
+    date_created = DateProperty()
     type = StringProperty()
+    depreciated = BooleanProperty()
+    created_by = RelationshipTo("Person", "created_by")
+    include_in_report = BooleanProperty(default=True)
+
 
     def serialize(self):
         """
@@ -790,12 +1146,82 @@ class Message(StructuredNode):
         storage, or API response.
         """
         return {
-            "uuid": self.uuid,
-            "content": self.content,
-            "dateCreated": self.date_created,
-            "type": self.type
+
+                "name": self.name,
+                "content": self.content,
+                "file_path": self.file_path,
+                "uri_path": self.uri_path,
+                "date_created": self.date_created,
+                "type": self.type,
+                "depreciated": self.depreciated,
+                "include_in_report": self.include_in_report,
+            "unique_id": self.unique_id
+
         }
 
+
+class Metric(StructuredNode):
+
+    """
+    A Metric in the context of the Accessible Technology Initiative (ATI) represents a specific quantitative measurement
+    or benchmark used to evaluate the performance, progress, or success of accessibility-related activities.
+    Metrics provide concrete data points that support the evaluation of success indicators and goals, offering a
+    standardized way to track progress over time.
+
+    Metrics are often derived from processes, procedures, and projects, and they serve as evidence of implementation
+     and effectiveness. For example, a metric might include the number of accessible websites launched, the percentage
+     of compliance with Web Content Accessibility Guidelines (WCAG), or the response time to accessibility requests.
+
+    These metrics are documented and referenced in reports to ensure accountability, support decision-making, and
+    guide continuous improvement in accessibility efforts. Metrics play a crucial role in ensuring that institutions
+    meet their accessibility goals by providing measurable criteria that can be regularly monitored and analyzed.
+
+    """
+    unique_id = UniqueIdProperty()
+
+    name = StringProperty()
+    composite_key = StringProperty(unique_index=True)
+    metric_type = StringProperty()
+    file_path = StringProperty()
+    uri_path = StringProperty()
+    description = StringProperty()
+    single_value = StringProperty()
+    value_dict = JSONProperty()
+    comment = StringProperty()
+    created_by = RelationshipTo("Person", "created_by")
+    notes = RelationshipTo("Note", "has_note")
+    academic_year = RelationshipTo("AcademicYear", "measured_in_year")
+    include_in_report = BooleanProperty(default=True)
+
+
+    @staticmethod
+    def set_data(self, data):
+        self.value_dict = json.dumps(data)
+
+    def get_data(self):
+        return json.loads(self.value_dict)
+
+    def serialize(self):
+        """
+        Serializes the Message object to a dictionary format, making it suitable for JSON representation,
+        storage, or API response.
+
+        """
+        return {
+            "name": self.name,
+            "composite_key": self.composite_key,
+            "metric_type": self.metric_type,
+            "file_path": self.file_path,
+            "uri_path": self.uri_path,
+            "description": self.description,
+            "single_value": self.single_value,
+            "comment": self.comment,
+            "data": self.get_data() if self.value_dict else None,
+            "include_in_report": self.include_in_report,
+            "unique_id": self.unique_id
+
+
+        }
 
 
 def set_connection():

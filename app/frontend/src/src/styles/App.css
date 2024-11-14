@@ -1,0 +1,371 @@
+@import url('https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@400;600;700&display=swap');
+
+
+/* Global styles */
+body, html, #root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  font-family: 'Roboto', sans-serif;
+}
+
+/* Main App Container */
+.App {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background-color: #f0f4f7;
+}
+
+/* Header Section */
+.header-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  background-color: #e0e7ec; /* Equivalent to gray.75 */
+  z-index: 1000;
+}
+
+/* App Header (Navigation bar) */
+.App-header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background-color: #231161;
+  padding: 1rem;
+  box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Navigation Bar */
+.nav-bar {
+  background-color: #319795; /* Equivalent to teal.600 */
+  color: #ffffff;
+  padding: 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 60px;
+  border-top: #2d3748;
+  border-top-width: 1px;
+  border-top-style: solid;
+  border-bottom: #2d3748;
+  border-bottom-style: solid;
+  border-bottom-width: 1px;
+}
+
+/* Flex container for title and buttons */
+.nav-items-container {
+  display: flex;
+  align-items: center;
+}
+
+/* Title */
+.app-title {
+  font-size: 1.75rem;
+  margin-right: 2rem;
+}
+
+/* Button spacing */
+.nav-button {
+  margin-right: 1rem;
+}
+
+/* User Info */
+.user-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  margin-left: 1rem;
+}
+
+/* Focus outline for keyboard accessibility */
+button:focus, a:focus {
+  outline: 2px solid #E9D597;
+  outline-offset: 2px;
+}
+
+/* Content area */
+.App-content {
+  width: 100% !important;
+  max-width: 1200px !important;  /* Ensure the max-width does not get overridden */
+  padding: 2rem;
+  margin: 0 auto;  /* Horizontally center the content */
+}
+
+/* Media query for smaller screens */
+@media (max-width: 768px) {
+  .App-content {
+    padding: 1rem;
+    max-width: 100%;
+  }
+}
+
+/* Sub-navbar padding to offset header height */
+.main-content {
+  padding-top: 112px;
+}
+
+/* Centered box for loading and data not available messages */
+.centered-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1rem;
+  text-align: center;
+}
+
+/* Header styles */
+.ati-explorer-heading {
+  font-size: 2rem;
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+/* Subtext styles */
+.ati-explorer-text {
+  text-align: center;
+  color: #4a5568; /* A neutral color */
+}
+
+/* Spinner container for background updates */
+.update-spinner {
+  text-align: center;
+  margin-top: 1rem;
+}
+
+
+/* App.css */
+
+/* Center the main container with padding */
+.working-group-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+/* Navigation bar with centered buttons and gap */
+.navigation-bar {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+/* Button style for each navigation item */
+.nav-button {
+  color: white;
+  background-color: teal;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+.nav-button:hover {
+  background-color: #285e61; /* Darker teal on hover */
+}
+
+/* Text styling for fallback message */
+.fallback-text {
+  text-align: center;
+  color: #718096;
+  font-size: 1rem;
+  margin-top: 1rem;
+}
+
+
+/* Goal Component Styling */
+
+/* Outer section box for each goal */
+.goal-section {
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  border: 1px solid teal;
+  border-radius: 0.375rem;
+  background-color: #f7fafc; /* gray.50 */
+}
+
+/* Heading styles for goal title */
+.goal-heading {
+  font-size: 1.25rem; /* Equivalent to size "md" */
+  margin-bottom: 1rem;
+  outline: none; /* Ensures heading focus state is managed */
+}
+
+/* Goal text content */
+.goal-text {
+  margin-bottom: 1rem;
+  font-weight: bold;
+}
+
+/* GoalDetails Component Styling */
+
+/* Wrapper box for GoalDetails */
+.goal-details-wrapper {
+  outline: none; /* Removes default outline for better custom styling */
+  margin-top: 1rem;
+}
+
+/* Accordion button box for Plans and Accomplishments count display */
+.goal-details-accordion-button {
+  flex: 1;
+  text-align: left;
+  font-weight: bold;
+}
+
+/* Panel padding for each accordion item */
+.goal-details-panel {
+  padding-bottom: 1rem;
+  color: #2d3748; /* gray.700 */
+}
+
+/* Text styling for empty state messages */
+.no-content-text {
+  color: #718096; /* gray.500 */
+  font-style: italic;
+}
+
+/* Plan Component Styling */
+
+/* Main container for each plan item */
+.plan-card {
+  margin-bottom: 1rem;
+  border: 1px solid teal;
+  padding: 0.75rem;
+  border-radius: 0.375rem;
+  background-color: #f7fafc; /* Equivalent to gray.50 */
+  outline: none; /* For accessibility when focusing */
+}
+
+/* Flex container for header row */
+.plan-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+/* Plan status styling */
+.plan-status {
+  font-size: 0.875rem;
+  color: #718096; /* gray.600 */
+  font-weight: bold;
+}
+
+/* General content row styling */
+.plan-content-row {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+/* Label text for plan details */
+.plan-label {
+  font-weight: bold;
+  font-size: 0.875rem;
+}
+
+/* SettingsMasterContainer Styling */
+
+/* Overall settings page container */
+.settings-container {
+  width: 100%;
+  min-height: 100vh;
+  background-color: #f7fafc; /* gray.75 */
+  display: flex;
+  flex-direction: column;
+}
+
+/* Flex container for sidebar and content area */
+.settings-content {
+  display: flex;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  flex: 1;
+}
+
+/* Sidebar */
+.settings-sidebar {
+  width: 200px;
+  background-color: white;
+  padding: 1rem;
+  border-right: 1px solid #e2e8f0;
+}
+
+.settings-sidebar.vertical {
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.settings-sidebar h4 {
+  font-size: 0.875rem; /* size "sm" */
+  margin-bottom: 1rem;
+}
+
+/* Button styles */
+.settings-button {
+  width: 100%;
+  margin-bottom: 0.5rem;
+  font-size: 0.875rem;
+}
+
+.settings-button.active {
+  color: white;
+  background-color: teal;
+}
+
+.settings-button.inactive {
+  color: gray;
+}
+
+/* Main content area */
+.settings-main {
+  flex: 1;
+  padding: 1.5rem;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  min-width: 800px;
+}
+
+/* Main content box styling */
+.settings-box {
+  background-color: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.375rem;
+  box-shadow: var(--chakra-shadows-sm);
+  padding: 1.5rem;
+}
+
+
+/* SuccessIndicatorTable Styling */
+
+/* Table container */
+.success-indicator-table {
+  width: 100%;
+  margin-top: 1rem;
+  border: 1px solid black;
+  border-collapse: collapse;
+}
+
+/* Table header styling */
+.success-indicator-table th {
+  border-bottom: 2px solid black;
+  padding: 8px;
+  text-align: left;
+  background-color: #f2f2f2;
+}
+
+/* Table cell styling */
+.success-indicator-table td {
+  border-bottom: 1px solid black;
+  padding: 8px;
+  text-align: left;
+  transition: opacity 0.3s ease, background-color 0.3s ease;
+}
+
+/* Styling for rows that have been removed */
+.success-indicator-row-removed {
+  opacity: 0.6;
+}

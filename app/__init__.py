@@ -1,44 +1,121 @@
-# app/__init__.py
-from flask import Flask
-from jinja2 import Environment, FileSystemLoader
 
-from app.config import Config
+
+from app.endpoints.data_api import data_api_endpoints
+from app.endpoints.react_endpoints import react_pages
+from app.web_config import Config
 from neomodel import config, db
-# from flask_debugtoolbar import DebugToolbarExtension
-
 from urllib.parse import urlencode
+from app.endpoints.data_api.util.response import make_response
+
+from app.endpoints.data_api.errors.custom_exceptions import (
+    DatabaseError,
+    NotFoundError,
+    ValidationError,
+    CrudError,
+    ApiError
+)
+
+
+
 def merge_query_params(*dict1):
     print(dict1)
     return urlencode(dict1)
 
-
-
-
+from flask import Flask, send_from_directory
+from flask_cors import CORS
+import os
 
 def create_app():
-    app = Flask(__name__)
-    app.config.from_object(Config)
-    # env = Environment(loader=FileSystemLoader('templates'))
-    app.jinja_env.filters['merge_query_params'] = merge_query_params
+    app = Flask(__name__, static_folder='frontend/src/build/static', template_folder='frontend/src/build')
 
-    print(app.config['DATABASE_URL'])
+    # Enable CORS for handling requests from React
+    CORS(app)
+
+    # Load configuration from object
+    app.config.from_object(Config)
+
     # Set up database connection
     config.DATABASE_URL = app.config['DATABASE_URL']
     app.config['SECRET_KEY'] = 'accessibility'
     app.config['DEBUG_TB_INTERCEPT_REDIRECTS'] = False
     app.config['DEBUG_TB_PROFILER_ENABLED'] = True
-    # toolbar = DebugToolbarExtension(app)
 
     @app.before_request
     def initialize():
         if not hasattr(db, 'connection'):
             db.set_connection(app.config['DATABASE_URL'])
 
-    # Import and register Blueprints
-    from app.endpoints.components import component_endpoints
-    from app.endpoints.pages import page_endpoints
+    # Register your API blueprints
+    app.register_blueprint(data_api_endpoints, url_prefix='/data-api/v1')
+    app.register_blueprint(react_pages, url_prefix='/')
 
-    app.register_blueprint(component_endpoints)
-    app.register_blueprint(page_endpoints)
+    # Serve React App for non-API routes under /ati-explorer
 
     return app
+
+# def register_error_handlers(app):
+#     @app.errorhandler(ApiError)
+#     def handle_api_error(error):
+#         response = make_response(
+#             status="error",
+#             error=error.message
+#         )
+#         return response, 400  # Adjust status code as needed
+#
+#     @app.errorhandler(NotFoundError)
+#     def handle_not_found_error(error):
+#         response = make_response(
+#             status="error",
+#             error=error.message
+#         )
+#         return response, 404
+#
+#     @app.errorhandler(ValidationError)
+#     def handle_validation_error(error):
+#         response = make_response(
+#             status="error",
+#             error=error.message
+#         )
+#         return response, 400
+#
+#     @app.errorhandler(DatabaseError)
+#     def handle_database_error(error):
+#         response = make_response(
+#             status="error",
+#             error=error.message
+#         )
+#         return response, 500
+#
+#     @app.errorhandler(CrudError)
+#     def handle_crud_error(error):
+#         response = make_response(
+#             status="error",
+#             error=error.message
+#         )
+#         return response, 500
+#
+#     @app.errorhandler(404)
+#     def handle_404_error(error):
+#         response = make_response(
+#             status="error",
+#             error="Resource not found."
+#         )
+#         return response, 404
+#
+#     @app.errorhandler(405)
+#     def handle_405_error(error):
+#         response = make_response(
+#             status="error",
+#             error="Method not allowed."
+#         )
+#         return response, 405
+#
+#     @app.errorhandler(Exception)
+#     def handle_general_error(error):
+#         # Optional: Log the error details
+#         # app.logger.error(f"Unhandled Exception: {error}")
+#         response = make_response(
+#             status="error",
+#             error="An internal server error occurred."
+#         )
+#         return response, 500

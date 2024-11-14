@@ -2,6 +2,7 @@
 # ORGANIZATIONAL UNITS CREATE QUERIES
 #
 from app.database.graph_schema import *
+from app.endpoints.data_api.errors.custom_exceptions import CrudError
 
 def add_department(name: str, location: str) -> bool:
     """
@@ -19,8 +20,7 @@ def add_department(name: str, location: str) -> bool:
         print("Added department")
         return True
     except Exception as e:
-        print(e)
-        return False
+        raise CrudError(f"Failed to add department: {e}")
 
 def add_vendor(name: str, location: str) -> bool:
     """
@@ -38,9 +38,7 @@ def add_vendor(name: str, location: str) -> bool:
         print("Added vendor")
         return True
     except Exception as e:
-        print(e)
-        return False
-
+        raise CrudError(f"Failed to add vendor: {e}")
 
 def add_college(name: str, location: str) -> bool:
     """
@@ -58,5 +56,4 @@ def add_college(name: str, location: str) -> bool:
         print("Added college")
         return True
     except Exception as e:
-        print(e)
-        return False
+        raise CrudError(f"Failed to add college: {e}")
