@@ -1,17 +1,29 @@
-import React, { useContext, useState } from 'react';
-import { Box, Button, Input, Textarea, Switch, FormControl, FormLabel, Text, Flex, Collapse } from '@chakra-ui/react';
-import { updateNote } from "../../../services/api/put";
-import { addNewNote } from "../../../services/api/post";
-import { DataContext } from "../../../context/DataContext";
+import React, { useContext, useEffect, useState } from 'react';
+import {
+    Box,
+    Button,
+    Input,
+    Textarea,
+    Switch,
+    FormControl,
+    FormLabel,
+    Text,
+    Flex,
+    Collapse,
+} from '@chakra-ui/react';
+import { updateNote } from '../../../services/api/put';
+import { addNewNote } from '../../../services/api/post';
+import { DataContext } from '../../../context/DataContext';
 import { useSettings } from '../../../context/SettingsContext';
-import { UserContext } from '../../../context/UserContext';  // Import the UserContext
+import { UserContext } from '../../../context/UserContext'; // Import the UserContext
 
 function NoteViewer({ notes, onSubmit, yearSuccessEvidence, createdBy }) {
+    console.log('111', notes);
     const [expandedIndex, setExpandedIndex] = useState(null);
     const [isAddingNewNote, setIsAddingNewNote] = useState(false); // State for adding new note
     const { loadSingleWorkingGroupData, selectedYear } = useContext(DataContext);
     const { currentWorkingGroup } = useSettings();
-    const { user } = useContext(UserContext);  // Get the current user from UserContext
+    const { user } = useContext(UserContext); // Get the current user from UserContext
 
     // Toggle expanded/collapsed state
     const toggleCollapse = (index) => {
@@ -26,7 +38,7 @@ function NoteViewer({ notes, onSubmit, yearSuccessEvidence, createdBy }) {
             } else {
                 await updateNote(yearSuccessEvidence, noteData, createdBy);
             }
-            loadSingleWorkingGroupData(currentWorkingGroup); // Refresh data
+            await loadSingleWorkingGroupData(currentWorkingGroup); // Refresh data
             setExpandedIndex(null);
             setIsAddingNewNote(false);
         } catch (error) {
@@ -50,23 +62,34 @@ function NoteViewer({ notes, onSubmit, yearSuccessEvidence, createdBy }) {
 
             {/* Render the NoteForm for adding a new note if isAddingNewNote is true */}
             {isAddingNewNote ? (
-                <Box mb={4} border="1px solid teal" borderRadius="md" p={4} boxShadow="sm">
-                    <NoteForm
-                        note={null}  // Pass null for a new note
-                        onSubmit={(noteData) => handleFormSubmit(null, noteData, true)}  // Pass true to indicate new note
-                        createdBy={user?.properties || user}  // Pass user data or null
-                    />
-                </Box>
-            ) : (
-                // Render existing notes if not adding a new note
+                    <Box mb={4} border="1px solid teal" borderRadius="md" p={4} boxShadow="sm">
+                        <NoteForm
+                            note={null} // Pass null for a new note
+                            onSubmit={(noteData) => handleFormSubmit(null, noteData, true)} // Pass true to indicate new note
+                            createdBy={user?.properties || user} // Pass user data or null
+                        />
+                    </Box>
+                ) : // Render existing notes if not adding a new note
                 notes && notes.length > 0 ? (
                     notes.map((noteWrapper, index) => {
                         const note = noteWrapper.note;
                         const createdByPerson = noteWrapper.created_by?.properties;
 
                         return (
-                            <Box key={index} mb={4} border="1px solid teal" borderRadius="md" p={4} boxShadow="sm">
-                                <Flex justify="space-between" alignItems="center" cursor="pointer" onClick={() => toggleCollapse(index)}>
+                            <Box
+                                key={index}
+                                mb={4}
+                                border="1px solid teal"
+                                borderRadius="md"
+                                p={4}
+                                boxShadow="sm"
+                            >
+                                <Flex
+                                    justify="space-between"
+                                    alignItems="center"
+                                    cursor="pointer"
+                                    onClick={() => toggleCollapse(index)}
+                                >
                                     <Text fontWeight="bold" fontSize="sm">
                                         {note.properties.name || 'Untitled Note'}
                                     </Text>
@@ -82,8 +105,8 @@ function NoteViewer({ notes, onSubmit, yearSuccessEvidence, createdBy }) {
                                 <Collapse in={expandedIndex === index} animateOpacity>
                                     <Box mt={4}>
                                         <NoteForm
-                                            note={note}  // Pass the actual note object
-                                            onSubmit={(noteData) => handleFormSubmit(index, noteData, false)}  // Pass false to indicate update
+                                            note={note} // Pass the actual note object
+                                            onSubmit={(noteData) => handleFormSubmit(index, noteData, false)} // Pass false to indicate update
                                             createdBy={createdByPerson}
                                         />
                                     </Box>
@@ -93,8 +116,7 @@ function NoteViewer({ notes, onSubmit, yearSuccessEvidence, createdBy }) {
                     })
                 ) : (
                     <Text>No notes available.</Text>
-                )
-            )}
+                )}
         </Box>
     );
 }
@@ -107,9 +129,25 @@ function NoteForm({ note, onSubmit, createdBy }) {
         content: note?.properties?.content || '',
         depreciated: note?.properties?.depreciated || false,
         depreciated_date: note?.properties?.depreciated_date || '',
-        include_in_report: note?.properties?.include_in_report || true,
-        created_by: createdBy || {},  // Use the passed createdBy data or fallback to an empty object
+        include_in_report: note?.properties?.include_in_report ?? true,
+        created_by: createdBy || {}, // Use the passed createdBy data or fallback to an empty object
     });
+
+    // New state to track submission status
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
+    useEffect(() => {
+        setNoteData({
+            unique_id: note?.properties?.unique_id || '',
+            name: note?.properties?.name || '',
+            date_created: note?.properties?.date_created || '',
+            content: note?.properties?.content || '',
+            depreciated: note?.properties?.depreciated || false,
+            depreciated_date: note?.properties?.depreciated_date || '',
+            include_in_report: note?.properties?.include_in_report ?? true,
+            created_by: createdBy || {},
+        });
+    }, [note, createdBy]); // Add `note` and `createdBy` to dependency array
 
     const handleChange = (e) => {
         const { name, value, type, checked } = e.target;
@@ -119,9 +157,16 @@ function NoteForm({ note, onSubmit, createdBy }) {
         });
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        onSubmit(noteData);
+        setIsSubmitting(true); // Start the spinner
+        try {
+            await onSubmit(noteData);
+        } catch (error) {
+            console.error('Error submitting note:', error);
+        } finally {
+            setIsSubmitting(false); // Stop the spinner
+        }
     };
 
     return (
@@ -132,7 +177,12 @@ function NoteForm({ note, onSubmit, createdBy }) {
             </FormControl>
             <FormControl mb={4}>
                 <FormLabel>Date Created</FormLabel>
-                <Input name="date_created" type="date" value={noteData.date_created} onChange={handleChange} />
+                <Input
+                    name="date_created"
+                    type="date"
+                    value={noteData.date_created}
+                    onChange={handleChange}
+                />
             </FormControl>
             <FormControl mb={4}>
                 <FormLabel>Note Content</FormLabel>
@@ -183,7 +233,13 @@ function NoteForm({ note, onSubmit, createdBy }) {
                 </Box>
             </Flex>
 
-            <Button type="submit" colorScheme="teal" mt={4}>
+            <Button
+                type="submit"
+                colorScheme="teal"
+                mt={4}
+                isLoading={isSubmitting} // Chakra UI prop to show spinner
+                loadingText={note?.properties?.name ? 'Updating...' : 'Submitting...'}
+            >
                 {note?.properties?.name ? 'Update Note' : 'Submit Note'}
             </Button>
         </Box>

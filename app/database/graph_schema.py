@@ -661,9 +661,12 @@ class StatusLevel(StructuredNode):
      and evidence requirements that must be met to accurately reflect the institution's progress and ongoing efforts
     to remove accessibility barriers
 
-    Established: 1
-    Managed: 2
-    Optimized: 3
+    Not Started: 0
+    Initiated: 1
+    Defined: 2
+    Established: 3
+    Managed: 4
+    Optimized: 5
 
     Require evidence.
 
@@ -677,6 +680,14 @@ class StatusLevel(StructuredNode):
     description_of_resources = StringProperty()
     status_value = StringProperty()
     ati_report_evidence_column = StringProperty()
+    procedure_descriptions = RelationshipTo('ProcedureDescription', 'is_a_procedure_description')
+    procedure_requirements = RelationshipTo('ProcedureRequirement', 'is_a_procedure_requirement')
+    resource_descriptions = RelationshipTo('ResourceDescription', 'is_a_resource_description')
+    resource_requirements = RelationshipTo('ResourceRequirement', 'is_a_resource_requirement')
+    documentation_descriptions = RelationshipTo('DocumentationDescription', 'is_a_documentation_description')
+    documentation_requirements = RelationshipTo('ResourceRequirement', 'is_a_documentation_requirement')
+    documentation_evidence_descriptions = RelationshipTo('DocumentationEvidenceDescription', 'is_a_documentation_evidence_description')
+    documentation_evidence_requirements = RelationshipTo('DocumentationEvidenceRequirement', 'is_a_documentation_evidence_requirement')
     notes = RelationshipTo("Note", "has_note")
 
     def serialize(self):
@@ -691,6 +702,49 @@ class StatusLevel(StructuredNode):
             "unique_id": self.unique_id
 
         }
+
+class ProcedureDescription(StructuredNode):
+    unique_id = UniqueIdProperty()
+    description = StringProperty(unique_index=True)
+    display_name = StringProperty(default="Description of Procedures")
+
+
+class ProcedureRequirement(StructuredNode):
+    unique_id = UniqueIdProperty()
+    requirement_description = StringProperty(unique_index=True)
+
+
+class ResourceDescription(StructuredNode):
+    unique_id = UniqueIdProperty()
+    description = StringProperty(unique_index=True)
+    display_name = StringProperty(default="Description of Resources")
+
+
+class ResourceRequirement(StructuredNode):
+    unique_id = UniqueIdProperty()
+    requirement_description = StringProperty(unique_index=True)
+
+
+class DocumentationDescription(StructuredNode):
+    unique_id = UniqueIdProperty()
+    description = StringProperty(unique_index=True)
+    display_name = StringProperty(default="Description of Documentation")
+
+
+class DocumentationRequirement(StructuredNode):
+    unique_id = UniqueIdProperty()
+    requirement_description = StringProperty(unique_index=True)
+
+
+class DocumentationEvidenceDescription(StructuredNode):
+    unique_id = UniqueIdProperty()
+    description = StringProperty(unique_index=True)
+    display_name = StringProperty(default="Description of Documentation Evidence")
+
+
+class DocumentationEvidenceRequirement(StructuredNode):
+    unique_id = UniqueIdProperty()
+    requirement_description = StringProperty(unique_index=True)
 
 
 class YearSuccessEvidence(StructuredNode):

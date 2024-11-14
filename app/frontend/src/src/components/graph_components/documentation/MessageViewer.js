@@ -1,19 +1,40 @@
-import React, { useContext, useState } from 'react';
-import { Box, Button, Input, Textarea, Switch, FormControl, FormLabel, Text, Flex, Collapse, Select } from '@chakra-ui/react';
-import { updateMessage } from "../../../services/api/put";
-import { addNewMessage } from "../../../services/api/post";
-import { DataContext } from "../../../context/DataContext";
+import React, { useContext, useEffect, useState } from 'react';
+import {
+    Box,
+    Button,
+    Input,
+    Textarea,
+    Switch,
+    FormControl,
+    FormLabel,
+    Text,
+    Flex,
+    Collapse,
+    Select,
+} from '@chakra-ui/react';
+import { updateMessage } from '../../../services/api/put';
+import { addNewMessage } from '../../../services/api/post';
+import { DataContext } from '../../../context/DataContext';
 import { useSettings } from '../../../context/SettingsContext';
-import { UserContext } from '../../../context/UserContext';  // Import the UserContext
+import { UserContext } from '../../../context/UserContext'; // Import the UserContext
 
-const messageTypes = ["e-mail", "voice mail", "text message", "letter", "memo", "report", "meeting minutes", "presentation"];
+const messageTypes = [
+    'e-mail',
+    'voice mail',
+    'text message',
+    'letter',
+    'memo',
+    'report',
+    'meeting minutes',
+    'presentation',
+];
 
 function MessageViewer({ messages, onSubmit, yearSuccessEvidence, createdBy }) {
     const [expandedIndex, setExpandedIndex] = useState(null);
     const [isAddingNewMessage, setIsAddingNewMessage] = useState(false); // State for adding new message
     const { loadSingleWorkingGroupData, selectedYear } = useContext(DataContext);
     const { currentWorkingGroup } = useSettings();
-    const { user } = useContext(UserContext);  // Get the current user from UserContext
+    const { user } = useContext(UserContext); // Get the current user from UserContext
 
     // Toggle expanded/collapsed state
     const toggleCollapse = (index) => {
@@ -25,16 +46,12 @@ function MessageViewer({ messages, onSubmit, yearSuccessEvidence, createdBy }) {
         try {
             if (isNew) {
                 // If adding a new message, set date_created to now
-                messageData.date_created = new Date().toISOString().split('T')[0];  // Format as YYYY-MM-DD
-                await addNewMessage(yearSuccessEvidence,
-                    messageData,
-                    createdBy);
+                messageData.date_created = new Date().toISOString().split('T')[0]; // Format as YYYY-MM-DD
+                await addNewMessage(yearSuccessEvidence, messageData, user?.properties || user);
             } else {
-                await updateMessage(yearSuccessEvidence,
-                    messageData,
-                    createdBy);
+                await updateMessage(yearSuccessEvidence, messageData, user?.properties || user);
             }
-            loadSingleWorkingGroupData(currentWorkingGroup); // Refresh data
+            await loadSingleWorkingGroupData(currentWorkingGroup); // Refresh data
             setExpandedIndex(null);
             setIsAddingNewMessage(false);
         } catch (error) {
@@ -58,23 +75,34 @@ function MessageViewer({ messages, onSubmit, yearSuccessEvidence, createdBy }) {
 
             {/* Render the MessageForm for adding a new message if isAddingNewMessage is true */}
             {isAddingNewMessage ? (
-                <Box mb={4} border="1px solid teal" borderRadius="md" p={4} boxShadow="sm">
-                    <MessageForm
-                        message={null}  // Pass null for a new message
-                        onSubmit={(messageData) => handleFormSubmit(null, messageData, true)}  // Pass true to indicate new message
-                        createdBy={user?.properties || user}  // Pass user data or null
-                    />
-                </Box>
-            ) : (
-                // Render existing messages if not adding a new message
+                    <Box mb={4} border="1px solid teal" borderRadius="md" p={4} boxShadow="sm">
+                        <MessageForm
+                            message={null} // Pass null for a new message
+                            onSubmit={(messageData) => handleFormSubmit(null, messageData, true)} // Pass true to indicate new message
+                            createdBy={user?.properties || user} // Pass user data or null
+                        />
+                    </Box>
+                ) : // Render existing messages if not adding a new message
                 messages && messages.length > 0 ? (
                     messages.map((messageWrapper, index) => {
                         const message = messageWrapper.message;
                         const createdByPerson = messageWrapper.created_by?.properties;
 
                         return (
-                            <Box key={index} mb={4} border="1px solid teal" borderRadius="md" p={4} boxShadow="sm">
-                                <Flex justify="space-between" alignItems="center" cursor="pointer" onClick={() => toggleCollapse(index)}>
+                            <Box
+                                key={message.properties.unique_id || index}
+                                mb={4}
+                                border="1px solid teal"
+                                borderRadius="md"
+                                p={4}
+                                boxShadow="sm"
+                            >
+                                <Flex
+                                    justify="space-between"
+                                    alignItems="center"
+                                    cursor="pointer"
+                                    onClick={() => toggleCollapse(index)}
+                                >
                                     <Text fontWeight="bold" fontSize="sm">
                                         {message.properties.name || 'Untitled Message'}
                                     </Text>
@@ -90,8 +118,8 @@ function MessageViewer({ messages, onSubmit, yearSuccessEvidence, createdBy }) {
                                 <Collapse in={expandedIndex === index} animateOpacity>
                                     <Box mt={4}>
                                         <MessageForm
-                                            message={message}  // Pass the actual message object
-                                            onSubmit={(messageData) => handleFormSubmit(index, messageData, false)}  // Pass false to indicate update
+                                            message={message} // Pass the actual message object
+                                            onSubmit={(messageData) => handleFormSubmit(index, messageData, false)} // Pass false to indicate update
                                             createdBy={createdByPerson}
                                         />
                                     </Box>
@@ -101,8 +129,7 @@ function MessageViewer({ messages, onSubmit, yearSuccessEvidence, createdBy }) {
                     })
                 ) : (
                     <Text>No messages available.</Text>
-                )
-            )}
+                )}
         </Box>
     );
 }
@@ -111,16 +138,40 @@ function MessageForm({ message, onSubmit, createdBy }) {
     const [messageData, setMessageData] = useState({
         unique_id: message?.properties?.unique_id || '',
         name: message?.properties?.name || '',
-        date_created: message?.properties?.date_created || new Date().toISOString().split('T')[0],  // Default to today's date if new
+        date_created:
+            message?.properties?.date_created ||
+            new Date().toISOString().split('T')[0], // Default to today's date if new
         content: message?.properties?.content || '',
         file_path: message?.properties?.file_path || '',
         uri_path: message?.properties?.uri_path || '',
-        message_type: message?.properties?.message_type || messageTypes[0],  // Default to first message type
+        message_type: message?.properties?.message_type || messageTypes[0], // Default to first message type
         depreciated: message?.properties?.depreciated || false,
         depreciated_date: message?.properties?.depreciated_date || '',
-        include_in_report: message?.properties?.include_in_report || true,
-        created_by: createdBy || {},  // Use the passed createdBy data or fallback to an empty object
+        include_in_report: message?.properties?.include_in_report ?? true,
+        created_by: createdBy || {}, // Use the passed createdBy data or fallback to an empty object
     });
+
+    // New state to track submission status
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
+    // Update local state when `message` or `createdBy` prop changes
+    useEffect(() => {
+        setMessageData({
+            unique_id: message?.properties?.unique_id || '',
+            name: message?.properties?.name || '',
+            date_created:
+                message?.properties?.date_created ||
+                new Date().toISOString().split('T')[0], // Default to today's date if new
+            content: message?.properties?.content || '',
+            file_path: message?.properties?.file_path || '',
+            uri_path: message?.properties?.uri_path || '',
+            message_type: message?.properties?.message_type || messageTypes[0], // Default to first message type
+            depreciated: message?.properties?.depreciated || false,
+            depreciated_date: message?.properties?.depreciated_date || '',
+            include_in_report: message?.properties?.include_in_report ?? true,
+            created_by: createdBy || {},
+        });
+    }, [message, createdBy]);
 
     const handleChange = (e) => {
         const { name, value, type, checked } = e.target;
@@ -130,9 +181,16 @@ function MessageForm({ message, onSubmit, createdBy }) {
         });
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        onSubmit(messageData);
+        setIsSubmitting(true); // Start the spinner
+        try {
+            await onSubmit(messageData);
+        } catch (error) {
+            console.error('Error submitting message:', error);
+        } finally {
+            setIsSubmitting(false); // Stop the spinner
+        }
     };
 
     return (
@@ -143,7 +201,12 @@ function MessageForm({ message, onSubmit, createdBy }) {
             </FormControl>
             <FormControl mb={4}>
                 <FormLabel>Date Created</FormLabel>
-                <Input name="date_created" type="date" value={messageData.date_created} onChange={handleChange} />
+                <Input
+                    name="date_created"
+                    type="date"
+                    value={messageData.date_created}
+                    onChange={handleChange}
+                />
             </FormControl>
             <FormControl mb={4}>
                 <FormLabel>Message Content</FormLabel>
@@ -163,7 +226,9 @@ function MessageForm({ message, onSubmit, createdBy }) {
                 <FormLabel>Message Type</FormLabel>
                 <Select name="message_type" value={messageData.message_type} onChange={handleChange}>
                     {messageTypes.map((type) => (
-                        <option key={type} value={type}>{type}</option>
+                        <option key={type} value={type}>
+                            {type}
+                        </option>
                     ))}
                 </Select>
             </FormControl>
@@ -212,7 +277,13 @@ function MessageForm({ message, onSubmit, createdBy }) {
                 </Box>
             </Flex>
 
-            <Button type="submit" colorScheme="teal" mt={4}>
+            <Button
+                type="submit"
+                colorScheme="teal"
+                mt={4}
+                isLoading={isSubmitting} // Chakra UI prop to show spinner
+                loadingText={message?.properties?.name ? 'Updating...' : 'Submitting...'}
+            >
                 {message?.properties?.name ? 'Update Message' : 'Submit Message'}
             </Button>
         </Box>

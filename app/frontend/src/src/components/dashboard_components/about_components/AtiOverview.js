@@ -1,18 +1,28 @@
-import React, {useContext, useEffect, useState} from 'react';
+import React, { useContext, useEffect, useState } from 'react';
+import { Link as RouterLink } from 'react-router-dom'; // Correctly import RouterLink
 import {
     Box,
     Heading,
     Text,
-    Link,
     Accordion,
     AccordionItem,
     AccordionButton,
     AccordionPanel,
     AccordionIcon,
-    Divider,
-    VStack, Spinner, TableContainer, Table, Thead, Tr, Th, Tbody, Td
+    VStack,
+    Spinner,
+    TableContainer,
+    Table,
+    Thead,
+    Tr,
+    Th,
+    Tbody,
+    Td,
+    List,
+    ListItem, Link, Flex
 } from '@chakra-ui/react';
-import {DataContext} from "../../../context/DataContext";
+import { DataContext } from '../../../context/DataContext';
+import { StatusLevelContext } from '../../../context/StatusLevelContext'; // Import StatusLevelContext
 
 const calculateStatistics = (data) => {
     const stats = {
@@ -23,11 +33,11 @@ const calculateStatistics = (data) => {
         },
         statusLevels: {
             'Not Started': 0,
-            'Initiated': 0,
-            'Defined': 0,
-            'Established': 0,
-            'Managed': 0,
-            'Optimizing': 0
+            Initiated: 0,
+            Defined: 0,
+            Established: 0,
+            Managed: 0,
+            Optimizing: 0
         },
         unassignedEvidence: 0
     };
@@ -85,6 +95,7 @@ const calculateStatistics = (data) => {
 function ATIOverview() {
     const { data, loadAllIndividuals, loading } = useContext(DataContext);
     const [stats, setStats] = useState(null);
+    const { statusLevels, loading: statusLevelsLoading, error: statusLevelsError } = useContext(StatusLevelContext); // Use StatusLevelContext
 
     useEffect(() => {
         loadAllIndividuals();
@@ -98,185 +109,409 @@ function ATIOverview() {
 
     const activeMembers = data?.individuals?.filter((member) => member.active) || [];
 
-
     return (
-        <Box width="1000px" mx="auto" p={6}>
+        <Box maxW="1000px" mx="auto" p={6}>
             <Heading as="h2" size="xl" mb={6} textAlign="center">
                 ATI Overview
             </Heading>
 
             <Accordion
-                width="1000px"
+                allowToggle
+                defaultIndex={[0]}
                 sx={{
-                    width: '100%',  // Add width to sx
                     '.chakra-accordion__item': {
-                        width: '100%',
                         borderRadius: 'md',
                         mb: 2,
                         border: '1px solid',
                         borderColor: 'gray.200'
                     },
-                    '.chakra-accordion__panel': {
-                        width: '100%',
-                        px: 6,
-                        pb: 6
-                    },
                     '.chakra-accordion__button': {
-                        width: '100%',
                         bg: 'gray.50',
                         _hover: {
                             bg: 'gray.100'
-                        }
+                        },
+                        px: 6,
+                        py: 4
+                    },
+                    '.chakra-accordion__panel': {
+                        px: 6,
+                        pb: 6
                     }
                 }}
-
-                allowToggle defaultIndex={[0]}>
+            >
                 {/* ATI Overview Section */}
                 <AccordionItem>
                     <AccordionButton>
                         <Box flex="1" textAlign="left">
-                            <Heading as="h3" size="md">ATI Overview</Heading>
+                            <Heading as="h3" size="md">
+                                ATI Overview
+                            </Heading>
                         </Box>
                         <AccordionIcon />
                     </AccordionButton>
-                    <AccordionPanel pb={6}>
-                        <VStack align="stretch" spacing={8} width="100%">
+                    <AccordionPanel>
+                        <VStack align="stretch" spacing={6} width="100%">
                             {/* Vision and Purpose */}
-                            <Box borderLeft="2px" borderColor="teal.200" pl={4} py={2}>
-                                <Text fontSize="lg" fontWeight="bold" color="teal.700" mb={3}>
+                            <Box
+                                borderLeft="4px"
+                                borderColor="teal.400"
+                                pl={4}
+                                py={2}
+                                bg="gray.50"
+                                borderRadius="md"
+                                boxShadow="sm"
+                            >
+                                <Text fontSize="lg" fontWeight="bold" color="teal.700" mb={2}>
                                     Vision and Purpose
                                 </Text>
-                                <Text lineHeight="tall" color="gray.700">
+                                <Text lineHeight="tall" color="gray.700" textAlign="left">
                                     The Accessible Technology Initiative (ATI) represents the CSU's commitment to providing
-                                    equal access to information technology and services for all students, staff, faculty,
-                                    and the general public, as mandated by the ADA, Section 504, and Section 508 of the
-                                    Rehabilitation Act.
+                                    equal access to information technology and services for all students, staff, faculty, and the
+                                    general public, as mandated by the ADA, Section 504, and Section 508 of the Rehabilitation Act.
                                 </Text>
                             </Box>
 
                             {/* Core Principles */}
-                            <Box borderLeft="2px" borderColor="teal.200" pl={4} py={2}>
-                                <Text fontSize="lg" fontWeight="bold" color="teal.700" mb={3}>
+                            <Box
+                                borderLeft="4px"
+                                borderColor="teal.400"
+                                pl={4}
+                                py={2}
+                                bg="gray.50"
+                                borderRadius="md"
+                                boxShadow="sm"
+                            >
+                                <Text fontSize="lg" fontWeight="bold" color="teal.700" mb={2}>
                                     Core Principles
                                 </Text>
-                                <VStack align="start" spacing={3} pl={4}>
-                                    <Text lineHeight="tall" color="gray.700">
-                                        • Technology accessibility is an institution-wide responsibility requiring leadership commitment
-                                    </Text>
-                                    <Text lineHeight="tall" color="gray.700">
-                                        • Technology must provide equal access and benefits for individuals with disabilities
-                                    </Text>
-                                    <Text lineHeight="tall" color="gray.700">
-                                        • Universal Design principles should reduce the need for individual accommodations
-                                    </Text>
-                                </VStack>
+                                <List spacing={2} pl={4} styleType="disc" textAlign="left">
+                                    <ListItem color="gray.700">
+                                        Technology accessibility is an institution-wide responsibility requiring leadership
+                                        commitment
+                                    </ListItem>
+                                    <ListItem color="gray.700">
+                                        Technology must provide equal access and benefits for individuals with disabilities
+                                    </ListItem>
+                                    <ListItem color="gray.700">
+                                        Universal Design principles should reduce the need for individual accommodations
+                                    </ListItem>
+                                </List>
                             </Box>
 
                             {/* Priority Areas */}
-                            <Box borderLeft="2px" borderColor="teal.200" pl={4} py={2}>
-                                <Text fontSize="lg" fontWeight="bold" color="teal.700" mb={4}>
+                            <Box
+                                borderLeft="4px"
+                                borderColor="teal.400"
+                                pl={4}
+                                py={2}
+                                bg="gray.50"
+                                borderRadius="md"
+                                boxShadow="sm"
+                            >
+                                <Text fontSize="lg" fontWeight="bold" color="teal.700" mb={3}>
                                     Three Priority Areas
                                 </Text>
 
-                                <VStack align="stretch" spacing={6}>
+                                <VStack align="stretch" spacing={4}>
+                                    {/* Web Accessibility */}
                                     <Box>
                                         <Text fontSize="md" fontWeight="semibold" color="teal.600" mb={2}>
                                             1. Web Accessibility
                                         </Text>
-                                        <VStack align="start" spacing={2} pl={6}>
-                                            <Text lineHeight="tall" color="gray.700">• Evaluation and repair of inaccessible content</Text>
-                                            <Text lineHeight="tall" color="gray.700">• Ensuring new development complies with Section 508</Text>
-                                            <Text lineHeight="tall" color="gray.700">• Ongoing monitoring and maintenance</Text>
-                                        </VStack>
+                                        <List spacing={1} pl={6} styleType="disc" textAlign="left">
+                                            <ListItem color="gray.700">Evaluation and repair of inaccessible content</ListItem>
+                                            <ListItem color="gray.700">
+                                                Ensuring new development complies with Section 508
+                                            </ListItem>
+                                            <ListItem color="gray.700">Ongoing monitoring and maintenance</ListItem>
+                                        </List>
                                     </Box>
 
+                                    {/* Instructional Materials */}
                                     <Box>
                                         <Text fontSize="md" fontWeight="semibold" color="teal.600" mb={2}>
                                             2. Instructional Materials
                                         </Text>
-                                        <VStack align="start" spacing={2} pl={6}>
-                                            <Text lineHeight="tall" color="gray.700">• Timely adoption of accessible materials</Text>
-                                            <Text lineHeight="tall" color="gray.700">• LMS and course website accessibility</Text>
-                                            <Text lineHeight="tall" color="gray.700">• Support for faculty in creating accessible content</Text>
-                                        </VStack>
+                                        <List spacing={1} pl={6} styleType="disc" textAlign="left">
+                                            <ListItem color="gray.700">Timely adoption of accessible materials</ListItem>
+                                            <ListItem color="gray.700">LMS and course website accessibility</ListItem>
+                                            <ListItem color="gray.700">Support for faculty in creating accessible content</ListItem>
+                                        </List>
                                     </Box>
 
+                                    {/* Procurement */}
                                     <Box>
                                         <Text fontSize="md" fontWeight="semibold" color="teal.600" mb={2}>
                                             3. Procurement
                                         </Text>
-                                        <VStack align="start" spacing={2} pl={6}>
-                                            <Text lineHeight="tall" color="gray.700">• Section 508 compliance for all ICT purchases</Text>
-                                            <Text lineHeight="tall" color="gray.700">• Creation of Equally Effective Access Plans</Text>
-                                            <Text lineHeight="tall" color="gray.700">• Training for procurement stakeholders</Text>
-                                        </VStack>
+                                        <List spacing={1} pl={6} styleType="disc" textAlign="left">
+                                            <ListItem color="gray.700">Section 508 compliance for all ICT purchases</ListItem>
+                                            <ListItem color="gray.700">Creation of Equally Effective Access Plans</ListItem>
+                                            <ListItem color="gray.700">Training for procurement stakeholders</ListItem>
+                                        </List>
                                     </Box>
                                 </VStack>
                             </Box>
 
                             {/* Implementation Strategy */}
-                            <Box borderLeft="2px" borderColor="teal.200" pl={4} py={2}>
-                                <Text fontSize="lg" fontWeight="bold" color="teal.700" mb={3}>
+                            <Box
+                                borderLeft="4px"
+                                borderColor="teal.400"
+                                pl={4}
+                                py={2}
+                                bg="gray.50"
+                                borderRadius="md"
+                                boxShadow="sm"
+                            >
+                                <Text fontSize="lg" fontWeight="bold" color="teal.700" mb={2}>
                                     Implementation Strategy
                                 </Text>
-                                <VStack align="start" spacing={3} pl={4}>
-                                    <Text lineHeight="tall" color="gray.700">
-                                        • Uses a "capabilities maturity" approach focused on continuous improvement
-                                    </Text>
-                                    <Text lineHeight="tall" color="gray.700">
-                                        • Requires strong administrative support through executive sponsorship
-                                    </Text>
-                                    <Text lineHeight="tall" color="gray.700">
-                                        • Employs prioritization of projects based on impact and available resources
-                                    </Text>
-                                    <Text lineHeight="tall" color="gray.700">
-                                        • Documents progress through annual reporting and assessment
-                                    </Text>
-                                    <Text lineHeight="tall" color="gray.700">
-                                        • Focuses on both immediate accessibility needs and long-term institutional change
-                                    </Text>
-                                </VStack>
+                                <List spacing={2} pl={4} styleType="disc" textAlign="left">
+                                    <ListItem color="gray.700">
+                                        Uses a "capabilities maturity" approach focused on continuous improvement
+                                    </ListItem>
+                                    <ListItem color="gray.700">
+                                        Requires strong administrative support through executive sponsorship
+                                    </ListItem>
+                                    <ListItem color="gray.700">
+                                        Employs prioritization of projects based on impact and available resources
+                                    </ListItem>
+                                    <ListItem color="gray.700">
+                                        Documents progress through annual reporting and assessment
+                                    </ListItem>
+                                    <ListItem color="gray.700">
+                                        Focuses on both immediate accessibility needs and long-term institutional change
+                                    </ListItem>
+                                </List>
                             </Box>
 
                             {/* Campus Requirements */}
-                            <Box borderLeft="2px" borderColor="teal.200" pl={4} py={2}>
-                                <Text fontSize="lg" fontWeight="bold" color="teal.700" mb={3}>
+                            <Box
+                                borderLeft="4px"
+                                borderColor="teal.400"
+                                pl={4}
+                                py={2}
+                                bg="gray.50"
+                                borderRadius="md"
+                                boxShadow="sm"
+                            >
+                                <Text fontSize="lg" fontWeight="bold" color="teal.700" mb={2}>
                                     Campus Requirements
                                 </Text>
-                                <VStack align="start" spacing={3} pl={4}>
-                                    <Text lineHeight="tall" color="gray.700">• Appoint an ATI executive sponsor</Text>
-                                    <Text lineHeight="tall" color="gray.700">• Establish a campus ATI committee</Text>
-                                    <Text lineHeight="tall" color="gray.700">• Develop and maintain annual implementation plans</Text>
-                                    <Text lineHeight="tall" color="gray.700">• Submit regular progress reports</Text>
-                                    <Text lineHeight="tall" color="gray.700">
-                                        • Achieve baseline status of "Established" for key success indicators
-                                    </Text>
-                                </VStack>
+                                <List spacing={2} pl={4} styleType="disc" textAlign="left">
+                                    <ListItem color="gray.700">Appoint an ATI executive sponsor</ListItem>
+                                    <ListItem color="gray.700">Establish a campus ATI committee</ListItem>
+                                    <ListItem color="gray.700">Develop and maintain annual implementation plans</ListItem>
+                                    <ListItem color="gray.700">Submit regular progress reports</ListItem>
+                                    <ListItem color="gray.700">
+                                        Achieve baseline status of "Established" for key success indicators
+                                    </ListItem>
+                                </List>
                             </Box>
                         </VStack>
                     </AccordionPanel>
                 </AccordionItem>
+
                 {/* Instructions Section */}
                 <AccordionItem>
                     <AccordionButton>
                         <Box flex="1" textAlign="left">
-                            <Heading as="h3" size="md">Instructions</Heading>
+                            <Heading as="h3" size="md">
+                                Instructions
+                            </Heading>
                         </Box>
                         <AccordionIcon />
                     </AccordionButton>
-                    <AccordionPanel pb={4}>
-                        <Text>Using this ATI reporting tool:</Text>
-                        <VStack align="start" mt={2} pl={4}>
-                            <Text>1. Select a working group (Web, Instructional Materials, or Procurement)</Text>
-                            <Text>2. Review success indicators for your area</Text>
-                            <Text>3. Add notes, messages, or plans to document progress</Text>
-                            <Text>4. Update status levels as work progresses</Text>
-                            <Text>5. Attach evidence and documentation as needed</Text>
-                        </VStack>
+                    <AccordionPanel>
+                        <Box
+                            borderLeft="4px"
+                            borderColor="teal.400"
+                            pl={4}
+                            py={2}
+                            bg="gray.50"
+                            borderRadius="md"
+                            boxShadow="sm"
+                        >
+                            <Text fontSize="lg" fontWeight="bold" color="teal.700" mb={2}>
+                                Using this ATI Reporting Tool
+
+                            </Text>
+                            <List spacing={2} pl={4} styleType="decimal" textAlign="left">
+                                <ListItem color="gray.700">
+                                Select a working group (<Link as={RouterLink} variant="underline" to="/ati-explorer/web">Web</Link>,{' '}
+                                <Link as={RouterLink} variant="underline" to="/ati-explorer/instructional-materials">Instructional Materials</Link>, or{' '}
+                                <Link as={RouterLink} variant="underline" to="/ati-explorer/procurement">Procurement</Link>)
+
+                                </ListItem>
+                                <ListItem color="gray.700">Review success indicators for your area.</ListItem>
+                                <ListItem color="gray.700">Click on the "Annotations" button to add  notes, messages, or plans. Add anything you can think of that may help guide our efforts next year.</ListItem>
+                                <ListItem color="gray.700">In accordance with the chancellor's office directive, Daniel will lower status levels to better reflect the reality of our existing ATI implementations. Please review the status level definitions to better understand how we are instructed to measure our evidence.</ListItem>
+                                <ListItem color="gray.700">Please reach out to Daniel if you have any questions or encounter issues with this tool.</ListItem>
+                            </List>
+                        </Box>
                     </AccordionPanel>
                 </AccordionItem>
-                {/* Statistics Section */}
 
+
+                {/* Status Levels Section */}
+                {/* Status Levels Section */}
+                <AccordionItem>
+                    <AccordionButton>
+                        <Box flex="1" textAlign="left">
+                            <Heading as="h3" size="md">
+                                Status Levels
+                            </Heading>
+                        </Box>
+                        <AccordionIcon />
+                    </AccordionButton>
+                    <AccordionPanel>
+                        {statusLevelsLoading ? (
+                            <Spinner />
+                        ) : statusLevelsError ? (
+                            <Text color="red.500">{statusLevelsError}</Text>
+                        ) : (
+                            <VStack align="stretch" spacing={6}>
+                                {statusLevels
+                                    .sort((a, b) => a.status_value - b.status_value)
+                                    .map((level) => {
+                                        // Prepare categories array
+                                        const categories = [
+                                            {
+                                                name: 'Procedures',
+                                                descriptions: level.procedure_descriptions,
+                                                requirements: level.procedure_requirements,
+                                            },
+                                            {
+                                                name: 'Resources',
+                                                descriptions: level.resource_descriptions,
+                                                requirements: level.resource_requirements,
+                                            },
+                                            {
+                                                name: 'Documentation',
+                                                descriptions: level.documentation_descriptions,
+                                                requirements: level.documentation_requirements,
+                                            },
+                                            {
+                                                name: 'Documentation Evidence',
+                                                descriptions: level.documentation_evidence_descriptions,
+                                                requirements: level.documentation_evidence_requirements,
+                                            },
+                                        ];
+
+                                        return (
+                                            <Box
+                                                key={level.unique_id}
+                                                borderLeft="4px"
+                                                borderColor="teal.400"
+                                                pl={4}
+                                                py={2}
+                                                bg="gray.50"
+                                                borderRadius="md"
+                                                boxShadow="sm"
+                                            >
+                                                {/* Status Level Name and Value */}
+                                                <Text fontSize="lg" fontWeight="bold" color="teal.700" mb={4}>
+                                                    {level.status_level} ({level.status_value})
+                                                </Text>
+
+                                                {/* Categories Display */}
+                                                {categories.map((category) => {
+                                                    const hasContent =
+                                                        (category.descriptions && category.descriptions.length > 0) ||
+                                                        (category.requirements && category.requirements.length > 0);
+
+                                                    if (!hasContent) {
+                                                        return null;
+                                                    }
+
+                                                    return (
+                                                        <Flex
+                                                            key={category.name}
+                                                            mb={4}
+                                                            align="start"
+                                                            direction={{ base: 'column', md: 'row' }}
+                                                        >
+                                                            {/* Left Box: Category Name */}
+                                                            <Box
+                                                                width={{ base: '100%', md: '30%' }}
+                                                                pr={{ md: 4 }}
+                                                                mb={{ base: 2, md: 0 }}
+                                                            >
+                                                                <Text fontWeight="semibold" fontSize="md" color="teal.600">
+                                                                    {category.name}
+                                                                </Text>
+                                                            </Box>
+
+                                                            {/* Right Box: Descriptions and Requirements */}
+                                                            <Box width={{ base: '100%', md: '70%' }} textAlign="left">
+                                                                {category.descriptions && category.descriptions.length > 0 && (
+                                                                    <Box mb={2}>
+                                                                        <Text fontWeight="semibold">Descriptions:</Text>
+                                                                        <List spacing={1} pl={4} styleType="disc">
+                                                                            {category.descriptions.map((item, index) => (
+                                                                                <ListItem key={index} color="gray.700">
+                                                                                    {item.description}
+                                                                                </ListItem>
+                                                                            ))}
+                                                                        </List>
+                                                                    </Box>
+                                                                )}
+                                                                {category.requirements && category.requirements.length > 0 && (
+                                                                    <Box mb={2}>
+                                                                        <Text fontWeight="semibold">Requirements:</Text>
+                                                                        <List spacing={1} pl={4} styleType="disc">
+                                                                            {category.requirements.map((item, index) => (
+                                                                                <ListItem key={index} color="gray.700">
+                                                                                    {item.requirement_description}
+                                                                                </ListItem>
+                                                                            ))}
+                                                                        </List>
+                                                                    </Box>
+                                                                )}
+                                                            </Box>
+                                                        </Flex>
+                                                    );
+                                                })}
+
+                                                {/* Notes Section */}
+                                                {level.notes?.length > 0 && (
+                                                    <Flex
+                                                        mb={4}
+                                                        align="start"
+                                                        direction={{ base: 'column', md: 'row' }}
+                                                    >
+                                                        {/* Left Box: Category Name */}
+                                                        <Box
+                                                            width={{ base: '100%', md: '30%' }}
+                                                            pr={{ md: 4 }}
+                                                            mb={{ base: 2, md: 0 }}
+                                                        >
+                                                            <Text fontWeight="semibold" fontSize="md" color="teal.600">
+                                                                Notes
+                                                            </Text>
+                                                        </Box>
+
+                                                        {/* Right Box: Notes Content */}
+                                                        <Box width={{ base: '100%', md: '70%' }} textAlign="left">
+                                                            <List spacing={1} pl={4} styleType="disc">
+                                                                {level.notes.map((note, index) => (
+                                                                    <ListItem key={index} color="gray.700">
+                                                                        {note.content}
+                                                                    </ListItem>
+                                                                ))}
+                                                            </List>
+                                                        </Box>
+                                                    </Flex>
+                                                )}
+                                            </Box>
+                                        );
+                                    })}
+                            </VStack>
+                        )}
+                    </AccordionPanel>
+                </AccordionItem>
+
+                {/* Statistics Section */}
                 <AccordionItem>
                     <AccordionButton>
                         <Box flex="1" textAlign="left">
@@ -286,19 +521,27 @@ function ATIOverview() {
                         </Box>
                         <AccordionIcon />
                     </AccordionButton>
-                    <AccordionPanel pb={6}>
+                    <AccordionPanel>
                         {loading || !stats ? (
                             <Spinner />
                         ) : (
-                            <VStack align="stretch" spacing={8}>
-                                {/* Goals and Indicators by Group */}
-                                <Box borderLeft="2px" borderColor="teal.200" pl={4} py={2}>
+                            <VStack align="stretch" spacing={6}>
+                                {/* Working Group Metrics */}
+                                <Box
+                                    borderLeft="4px"
+                                    borderColor="teal.400"
+                                    pl={4}
+                                    py={2}
+                                    bg="gray.50"
+                                    borderRadius="md"
+                                    boxShadow="sm"
+                                >
                                     <Text fontSize="lg" fontWeight="bold" color="teal.700" mb={3}>
                                         Working Group Metrics
                                     </Text>
                                     <TableContainer>
                                         <Table variant="simple" size="sm">
-                                            <Thead bg="gray.50">
+                                            <Thead bg="gray.100">
                                                 <Tr>
                                                     <Th>Working Group</Th>
                                                     <Th isNumeric>Goals</Th>
@@ -326,14 +569,22 @@ function ATIOverview() {
                                     </TableContainer>
                                 </Box>
 
-                                {/* Implementation Status */}
-                                <Box borderLeft="2px" borderColor="teal.200" pl={4} py={2}>
+                                {/* Status Assignments */}
+                                <Box
+                                    borderLeft="4px"
+                                    borderColor="teal.400"
+                                    pl={4}
+                                    py={2}
+                                    bg="gray.50"
+                                    borderRadius="md"
+                                    boxShadow="sm"
+                                >
                                     <Text fontSize="lg" fontWeight="bold" color="teal.700" mb={3}>
                                         Status Assignments
                                     </Text>
                                     <TableContainer>
                                         <Table variant="simple" size="sm">
-                                            <Thead bg="gray.50">
+                                            <Thead bg="gray.100">
                                                 <Tr>
                                                     <Th>Status Level</Th>
                                                     <Th isNumeric>Count</Th>
@@ -352,11 +603,19 @@ function ATIOverview() {
                                 </Box>
 
                                 {/* Unassigned Evidence */}
-                                <Box borderLeft="2px" borderColor="teal.200" pl={4} py={2}>
-                                    <Text fontSize="lg" fontWeight="bold" color="teal.700" mb={3}>
+                                <Box
+                                    borderLeft="4px"
+                                    borderColor="teal.400"
+                                    pl={4}
+                                    py={2}
+                                    bg="gray.50"
+                                    borderRadius="md"
+                                    boxShadow="sm"
+                                >
+                                    <Text fontSize="lg" fontWeight="bold" color="teal.700" mb={2}>
                                         Implementation Assignment
                                     </Text>
-                                    <Text mb={2}>
+                                    <Text color="gray.700" mb={2}>
                                         Year Success Evidence nodes with no implementing person assigned:{' '}
                                         <Text as="span" fontWeight="bold">
                                             {stats.unassignedEvidence}
@@ -375,18 +634,31 @@ function ATIOverview() {
                 <AccordionItem>
                     <AccordionButton>
                         <Box flex="1" textAlign="left">
-                            <Heading as="h3" size="md">Committee Members</Heading>
+                            <Heading as="h3" size="md">
+                                Committee Members
+                            </Heading>
                         </Box>
                         <AccordionIcon />
                     </AccordionButton>
-                    <AccordionPanel pb={4}>
+                    <AccordionPanel>
                         {loading ? (
                             <Spinner size="md" />
                         ) : (
-                            <>
+                            <Box
+                                borderLeft="4px"
+                                borderColor="teal.400"
+                                pl={4}
+                                py={2}
+                                bg="gray.50"
+                                borderRadius="md"
+                                boxShadow="sm"
+                            >
+                                <Text fontSize="lg" fontWeight="bold" color="teal.700" mb={3}>
+                                    Active Committee Members
+                                </Text>
                                 <TableContainer>
                                     <Table variant="simple" size="sm">
-                                        <Thead>
+                                        <Thead bg="gray.100">
                                             <Tr>
                                                 <Th>Name</Th>
                                                 <Th>Role</Th>
@@ -399,66 +671,110 @@ function ATIOverview() {
                                                     <Td>{member.name}</Td>
                                                     <Td>{member.ati_role || 'Member'}</Td>
                                                     <Td>
-                                                        {member.workingGroups?.map(group =>
-                                                            group.name === 'Instructional Materials' ? 'Ins' :
-                                                                group.name === 'Procurement' ? 'Pro' :
-                                                                    'Web'
-                                                        ).join(', ')}
+                                                        {member.workingGroups
+                                                            ?.map((group) =>
+                                                                group.name === 'Instructional Materials'
+                                                                    ? 'Ins'
+                                                                    : group.name === 'Procurement'
+                                                                        ? 'Pro'
+                                                                        : 'Web'
+                                                            )
+                                                            .join(', ')}
                                                     </Td>
                                                 </Tr>
                                             ))}
                                         </Tbody>
                                     </Table>
                                 </TableContainer>
-                            </>
+                            </Box>
                         )}
                     </AccordionPanel>
                 </AccordionItem>
 
-                {/* Important Stats Section */}
                 {/* Knowledge Graph Overview Section */}
                 <AccordionItem>
                     <AccordionButton>
                         <Box flex="1" textAlign="left">
-                            <Heading as="h3" size="md">ATI Knowledge Graph Overview</Heading>
+                            <Heading as="h3" size="md">
+                                ATI Knowledge Graph Overview
+                            </Heading>
                         </Box>
                         <AccordionIcon />
                     </AccordionButton>
-                    <AccordionPanel pb={4}>
-                        {/* What is a Knowledge Graph */}
-                        <Box mb={4}>
-                            <Text fontWeight="bold" mb={2}>What is a Knowledge Graph?</Text>
-                            <Text mb={4}>
-                                A knowledge graph is a network of interconnected data points and their relationships. Unlike
-                                traditional databases that store information in tables, knowledge graphs represent data as
-                                nodes (entities) connected by edges (relationships), allowing for complex relationship mapping
-                                and intuitive data exploration.
-                            </Text>
-                            <Box mb={4}>
-                                <Text fontWeight="bold" mb={2}>ATI Knowledge Organization</Text>
-                                <Text mb={4}>
-                                    The ATI Knowledge Graph structures accessibility initiatives through interconnected layers of governance, implementation, and evidence.
-                                    At its core, it connects three primary working groups (Web, Instructional Materials, and Procurement) to specific goals and success
-                                    indicators that measure progress toward accessibility compliance. Each success indicator is tracked annually through year-specific
-                                    evidence nodes, which link to concrete implementations like processes, procedures, projects, and services that demonstrate how the
-                                    campus is meeting its accessibility obligations. Supporting documentation, including notes, messages, and metrics, are attached to
-                                    these implementations, creating a complete audit trail for each accessibility requirement. This structure allows committee members,
-                                    assigned through person nodes with specific roles and working group relationships, to effectively track progress, collaborate on
-                                    initiatives, and maintain comprehensive documentation of ATI efforts over time.
+                    <AccordionPanel>
+                        <VStack align="stretch" spacing={6}>
+                            {/* What is a Knowledge Graph */}
+                            <Box
+                                borderLeft="4px"
+                                borderColor="teal.400"
+                                pl={4}
+                                py={2}
+                                bg="gray.50"
+                                borderRadius="md"
+                                boxShadow="sm"
+                            >
+                                <Text fontWeight="bold" fontSize="lg" color="teal.700" mb={2}>
+                                    What is a Knowledge Graph?
+                                </Text>
+                                <Text color="gray.700" mb={4}>
+                                    A knowledge graph is a network of interconnected data points and their relationships. Unlike
+                                    traditional databases that store information in tables, knowledge graphs represent data as
+                                    nodes (entities) connected by edges (relationships), allowing for complex relationship mapping
+                                    and intuitive data exploration.
+                                </Text>
+                                <Text fontWeight="bold" fontSize="lg" color="teal.700" mb={2}>
+                                    ATI Knowledge Organization
+                                </Text>
+                                <Text color="gray.700">
+                                    The ATI Knowledge Graph structures accessibility initiatives through interconnected layers of
+                                    governance, implementation, and evidence. At its core, it connects three primary working groups
+                                    (Web, Instructional Materials, and Procurement) to specific goals and success indicators that
+                                    measure progress toward accessibility compliance.
                                 </Text>
                             </Box>
-                            {/* Why it's Powerful */}
-                            <Box mb={4}>
-                                <Text fontWeight="bold" mb={2}>Power for Enterprise Technology Governance</Text>
-                                <VStack align="start" spacing={2} pl={4}>
-                                    <Text>• Captures complex relationships between people, processes, and documentation</Text>
-                                    <Text>• Enables tracking of historical changes and decision-making processes</Text>
-                                    <Text>• Facilitates discovery of indirect relationships and dependencies</Text>
-                                    <Text>• Supports compliance by maintaining clear audit trails</Text>
-                                    <Text>• Allows for flexible data modeling as requirements evolve</Text>
-                                </VStack>
+
+                            {/* Power for Enterprise Technology Governance */}
+                            <Box
+                                borderLeft="4px"
+                                borderColor="teal.400"
+                                pl={4}
+                                py={2}
+                                bg="gray.50"
+                                borderRadius="md"
+                                boxShadow="sm"
+                            >
+                                <Text fontWeight="bold" fontSize="lg" color="teal.700" mb={2}>
+                                    Power for Enterprise Technology Governance
+                                </Text>
+                                <List spacing={2} pl={4} styleType="disc" textAlign="left">
+                                    <ListItem color="gray.700">
+                                        Captures complex relationships between people, processes, and documentation
+                                    </ListItem>
+                                    <ListItem color="gray.700">
+                                        Enables tracking of historical changes and decision-making processes
+                                    </ListItem>
+                                    <ListItem color="gray.700">
+                                        Facilitates discovery of indirect relationships and dependencies
+                                    </ListItem>
+                                    <ListItem color="gray.700">
+                                        Supports compliance by maintaining clear audit trails
+                                    </ListItem>
+                                    <ListItem color="gray.700">
+                                        Allows for flexible data modeling as requirements evolve
+                                    </ListItem>
+                                </List>
                             </Box>
-                            <Box mb={4}>
+
+                            {/* Graph Example Image */}
+                            <Box
+                                borderLeft="4px"
+                                borderColor="teal.400"
+                                pl={4}
+                                py={2}
+                                bg="gray.50"
+                                borderRadius="md"
+                                boxShadow="sm"
+                            >
                                 <img
                                     src={require('../../../assets/img/graph-example.png')}
                                     alt="Instructional Materials Graph Example"
@@ -476,117 +792,81 @@ function ATIOverview() {
                                     Example: Instructional Materials Knowledge Graph Structure
                                 </Text>
                             </Box>
-                        </Box>
 
-                        {/* What it Tracks */}
-                        <Box mb={4}>
-                            <Text fontWeight="bold" fontSize="lg" mb={4}>ATI Knowledge Organization</Text>
-                            <Text mb={6} lineHeight="tall">
-                                The ATI Knowledge Graph structures accessibility initiatives through the following key relationships:
-                            </Text>
-
-                            <VStack align="stretch" spacing={6} pl={4}>
-                                <Box borderLeft="2px" borderColor="teal.200" pl={4} py={2}>
-                                    <Text fontWeight="semibold" mb={2} color="teal.700">Working Group Structure</Text>
-                                    <Box
-                                        bg="gray.50"
-                                        p={3}
-                                        borderRadius="md"
-                                        fontFamily="mono"
-                                        fontSize="sm"
-                                        border="1px"
-                                        borderColor="gray.200"
-                                    >
-                                        <Text color="gray.800">
-                                            ATIWorkingGroup --[responsible_for]--&gt; Goal &lt;--[supported_by]-- SuccessIndicator
-                                        </Text>
-                                    </Box>
-                                    <Text fontSize="sm" color="gray.600" mt={3} lineHeight="tall">
-                                        Organizes the three main areas: Web, Instructional Materials, and Procurement
-                                    </Text>
-                                </Box>
-
-                                <Box borderLeft="2px" borderColor="teal.200" pl={4} py={2}>
-                                    <Text fontWeight="semibold" mb={2} color="teal.700">Evidence Collection</Text>
-                                    <Box
-                                        bg="gray.50"
-                                        p={3}
-                                        borderRadius="md"
-                                        fontFamily="mono"
-                                        fontSize="sm"
-                                        border="1px"
-                                        borderColor="gray.200"
-                                    >
-                                        <Text color="gray.800">
-                                            SuccessIndicator &lt;--[tracks]-- YearSuccessEvidence --[evidence_in_year]--&gt; AcademicYear
-                                        </Text>
-                                    </Box>
-                                    <Text fontSize="sm" color="gray.600" mt={3} lineHeight="tall">
-                                        Tracks annual progress and compliance through yearly evidence nodes
-                                    </Text>
-                                </Box>
-
-                                <Box borderLeft="2px" borderColor="teal.200" pl={4} py={2}>
-                                    <Text fontWeight="semibold" mb={2} color="teal.700">Implementation Tracking</Text>
-                                    <Box
-                                        bg="gray.50"
-                                        p={3}
-                                        borderRadius="md"
-                                        fontFamily="mono"
-                                        fontSize="sm"
-                                        border="1px"
-                                        borderColor="gray.200"
-                                    >
-                                        <Text color="gray.800">
-                                            YearSuccessEvidence &lt;--[is_evidence_for]-- {'{Process, Project, Service, Procedure, ...}'}
-                                        </Text>
-                                    </Box>
-                                    <Text fontSize="sm" color="gray.600" mt={3} lineHeight="tall">
-                                        Links concrete implementations to success indicators
-                                    </Text>
-                                </Box>
-
-                                <Box borderLeft="2px" borderColor="teal.200" pl={4} py={2}>
-                                    <Text fontWeight="semibold" mb={2} color="teal.700">Documentation Chain</Text>
-                                    <Box
-                                        bg="gray.50"
-                                        p={3}
-                                        borderRadius="md"
-                                        fontFamily="mono"
-                                        fontSize="sm"
-                                        border="1px"
-                                        borderColor="gray.200"
-                                    >
-                                        <Text color="gray.800">
-                                            Implementation &lt;--[is_documented_by]-- {'{Document, Webpage, Note, Message, Metric}'}
-                                        </Text>
-                                    </Box>
-                                    <Text fontSize="sm" color="gray.600" mt={3} lineHeight="tall">
-                                        Maintains comprehensive documentation and evidence trail
-                                    </Text>
-                                </Box>
-
-                                <Box borderLeft="2px" borderColor="teal.200" pl={4} py={2}>
-                                    <Text fontWeight="semibold" mb={2} color="teal.700">Committee Oversight</Text>
-                                    <Box
-                                        bg="gray.50"
-                                        p={3}
-                                        borderRadius="md"
-                                        fontFamily="mono"
-                                        fontSize="sm"
-                                        border="1px"
-                                        borderColor="gray.200"
-                                    >
-                                        <Text color="gray.800">
-                                            Person --[implements]--&gt; YearSuccessEvidence
-                                        </Text>
-                                    </Box>
-                                    <Text fontSize="sm" color="gray.600" mt={3} lineHeight="tall">
-                                        Assigns responsibility and tracks contributions to accessibility goals
-                                    </Text>
-                                </Box>
-                            </VStack>
-                        </Box>
+                            {/* ATI Knowledge Organization Relationships */}
+                            <Box
+                                borderLeft="4px"
+                                borderColor="teal.400"
+                                pl={4}
+                                py={2}
+                                bg="gray.50"
+                                borderRadius="md"
+                                boxShadow="sm"
+                            >
+                                <Text fontWeight="bold" fontSize="lg" color="teal.700" mb={4}>
+                                    ATI Knowledge Organization
+                                </Text>
+                                <Text color="gray.700" mb={4}>
+                                    The ATI Knowledge Graph structures accessibility initiatives through the following key
+                                    relationships:
+                                </Text>
+                                <VStack align="stretch" spacing={4}>
+                                    {/* Relationship Items */}
+                                    {[
+                                        {
+                                            title: 'Working Group Structure',
+                                            description:
+                                                'Organizes the three main areas: Web, Instructional Materials, and Procurement',
+                                            code: `ATIWorkingGroup --[responsible_for]--> Goal <--[supported_by]-- SuccessIndicator`
+                                        },
+                                        {
+                                            title: 'Evidence Collection',
+                                            description:
+                                                'Tracks annual progress and compliance through yearly evidence nodes',
+                                            code: `SuccessIndicator <--[tracks]-- YearSuccessEvidence --[evidence_in_year]--> AcademicYear`
+                                        },
+                                        {
+                                            title: 'Implementation Tracking',
+                                            description:
+                                                'Links concrete implementations to success indicators',
+                                            code: `YearSuccessEvidence <--[is_evidence_for]-- {Process, Project, Service, Procedure, ...}`
+                                        },
+                                        {
+                                            title: 'Documentation Chain',
+                                            description:
+                                                'Maintains comprehensive documentation and evidence trail',
+                                            code: `Implementation <--[is_documented_by]-- {Document, Webpage, Note, Message, Metric}`
+                                        },
+                                        {
+                                            title: 'Committee Oversight',
+                                            description:
+                                                'Assigns responsibility and tracks contributions to accessibility goals',
+                                            code: `Person --[implements]--> YearSuccessEvidence`
+                                        }
+                                    ].map((item, index) => (
+                                        <Box key={index}>
+                                            <Text fontWeight="semibold" color="teal.600" mb={2}>
+                                                {item.title}
+                                            </Text>
+                                            <Box
+                                                bg="gray.100"
+                                                p={3}
+                                                borderRadius="md"
+                                                fontFamily="mono"
+                                                fontSize="sm"
+                                                border="1px"
+                                                borderColor="gray.200"
+                                            >
+                                                <Text color="gray.800">{item.code}</Text>
+                                            </Box>
+                                            <Text fontSize="sm" color="gray.600" mt={2}>
+                                                {item.description}
+                                            </Text>
+                                        </Box>
+                                    ))}
+                                </VStack>
+                            </Box>
+                        </VStack>
                     </AccordionPanel>
                 </AccordionItem>
             </Accordion>

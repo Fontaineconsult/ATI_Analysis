@@ -1,6 +1,7 @@
 from app.database.graph_schema import *
 from app.database.class_factory import implementation_classes
 from app.endpoints.data_api.errors.custom_exceptions import CrudError
+from neomodel import db
 
 
 def get_all_academic_years() -> list:
@@ -81,3 +82,34 @@ def get_all_status_level_nodes() -> list:
         return StatusLevel.nodes.all()
     except Exception as e:
         raise CrudError(f"Error retrieving status levels: {e}")
+
+
+def get_connected_status_levels() -> list:
+    """
+    Retrieves all StatusLevel nodes along with their connected nodes.
+    :return: List of dictionaries containing StatusLevel data and connected nodes.
+    """
+    try:
+        # Read the Cypher query from the file
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        # Construct the absolute path to the query file
+        query_file_path = os.path.join(current_dir, '../../batch/status_levels.cypher')
+        # Normalize the path
+        query_file_path = os.path.normpath(query_file_path)
+
+
+        with open(query_file_path, 'r') as file:
+            query = file.read()
+
+
+        # Execute the query
+        results, meta = db.cypher_query(query)
+
+        # Extract the data from the results
+        status_levels = [record[0] for record in results]
+
+        return status_levels
+    except Exception as e:
+        raise CrudError(f"Error retrieving connected status levels: {e}")
+
+

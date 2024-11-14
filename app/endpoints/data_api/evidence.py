@@ -2,7 +2,7 @@ import json
 from flask import request
 from flask.views import MethodView
 from app.database.queries.compound_queries.get_all_by_working_group import fetch_evidence_for_working_group
-from app.database.queries.evidence.read import get_all_status_level_nodes
+from app.database.queries.evidence.read import get_all_status_level_nodes, get_connected_status_levels
 from app.database.queries.evidence.update import assign_status_to_yse, assign_approver_to_yse
 from . import data_api_endpoints
 from ...database.class_factory import working_group_names_web_query, status_levels
@@ -123,14 +123,17 @@ class StatusLevelAPI(MethodView):
 
     def get(self):
         """
-        Fetch all status levels from the database.
+        Fetch all status levels along with their connected nodes from the database.
         """
         try:
-            all_nodes = get_all_status_level_nodes()
-            serialized = [node.serialize() for node in all_nodes]
-            return make_response(status='success', data=serialized), 200
+            # Use the new function to get connected status levels
+            status_levels = get_connected_status_levels()
+            # The data is already in the desired format
+            return make_response(status='success', data=status_levels), 200
         except CrudError as e:
-            raise ApiError(message=f"Error retrieving status levels: {e}")
+            raise ApiError(message=f"Error retrieving connected status levels: {e}")
+        except Exception as e:
+            raise ApiError(message=f"An unexpected error occurred: {e}")
 
     def put(self):
         """

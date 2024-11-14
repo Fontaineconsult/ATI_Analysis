@@ -102,3 +102,8 @@ plan_statuses = ["Not Started",
                  "Complete",
                  "On Hold",
                  "Abandoned"]
+
+evidence_descriptions = ["procedure",
+                         "resource",
+                         "documentation",
+                         "documentation_evidence"]
