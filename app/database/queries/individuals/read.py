@@ -4,6 +4,7 @@
 from app.database.graph_schema import *
 
 
+
 def get_all_persons() -> list:
     """
     Get all person nodes from the graph
