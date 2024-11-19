@@ -39,6 +39,8 @@ def create_app():
     app.config['SECRET_KEY'] = 'accessibility'
     app.config['DEBUG_TB_INTERCEPT_REDIRECTS'] = False
     app.config['DEBUG_TB_PROFILER_ENABLED'] = True
+    app.config["DEBUG"] = True
+    app.config["PROPAGATE_EXCEPTIONS"] = True
 
     @app.before_request
     def initialize():

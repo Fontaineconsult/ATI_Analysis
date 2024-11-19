@@ -21,6 +21,22 @@
                 </map>
               </option>
             </DataSourceV1>
+            <DataSourceV1>
+              <option name="uuid" value="46d69a42-4cde-46c1-869b-67d89dae6ddf" />
+              <option name="name" value="data-center-ai" />
+              <option name="dataSourceType" value="NEO4J_BOLT" />
+              <option name="configuration">
+                <map>
+                  <entry key="authType" value="User &amp; Password" />
+                  <entry key="database" value="ati" />
+                  <entry key="host" value="130.212.104.18" />
+                  <entry key="password" value="accessibility" />
+                  <entry key="port" value="7687" />
+                  <entry key="protocol" value="bolt" />
+                  <entry key="user" value="neo4j" />
+                </map>
+              </option>
+            </DataSourceV1>
           </list>
         </option>
       </DataSourceContainerV1>
