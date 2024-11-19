@@ -25,6 +25,10 @@ def get_all_persons() -> list:
         # Return the duplicated nodes (e2)
     return results
 
+def get_all_persons_basic() -> list:
+    return Person.nodes.all()
+
+
 def get_person_by_employee_id(employee_id: str) -> Person:
     """
     Get a person node by employee_id
