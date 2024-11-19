@@ -1,4 +1,3 @@
 /classes.dot
 /app/.env
-__pycache__/
-/deploy_to_dprc_server.ps1
+/.idea/

@@ -1,4 +1,5 @@
-
+import logging
+from logging.handlers import RotatingFileHandler
 
 from app.endpoints.data_api import data_api_endpoints
 from app.endpoints.react_endpoints import react_pages
@@ -23,10 +24,13 @@ def merge_query_params(*dict1):
 
 from flask import Flask, send_from_directory
 from flask_cors import CORS
-import os
+
 
 def create_app():
-    app = Flask(__name__, static_folder='frontend/src/build/static', template_folder='frontend/src/build')
+    app = Flask(__name__,
+                static_folder='frontend/src/build/static',
+                template_folder='frontend/src/build',
+                )
 
     # Enable CORS for handling requests from React
     CORS(app)
@@ -42,6 +46,17 @@ def create_app():
     app.config["DEBUG"] = True
     app.config["PROPAGATE_EXCEPTIONS"] = True
 
+    # Configure logging
+    log_file = "app.log"
+    handler = RotatingFileHandler(log_file, maxBytes=10000, backupCount=3)
+    handler.setLevel(logging.ERROR)  # Log only errors
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    handler.setFormatter(formatter)
+    app.logger.addHandler(handler)
+
+    # Log an info message when the app starts
+    app.logger.info("Flask application is starting")
+
     @app.before_request
     def initialize():
         if not hasattr(db, 'connection'):
@@ -54,6 +69,7 @@ def create_app():
     # Serve React App for non-API routes under /ati-explorer
 
     return app
+
 
 # def register_error_handlers(app):
 #     @app.errorhandler(ApiError)

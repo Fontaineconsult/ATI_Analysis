@@ -13,7 +13,7 @@ from app.database.graph_schema import (Note,
 
 def add_note(year_success_evidence: str, note_dict: dict) -> bool:
     """
-    Adds a new note for a YearSuccessEvidence node.
+    Adds a new note for a YearSuccessEvidence node or attaches an existing note if one with the same name exists.
     """
     try:
         # Ensure required fields are present
@@ -22,17 +22,20 @@ def add_note(year_success_evidence: str, note_dict: dict) -> bool:
             if field not in note_dict:
                 raise ValidationError(f"Missing required field: {field}")
 
-        # Check if a note with the same name already exists
-        existing_note = Note.nodes.get_or_none(name=note_dict.get('name'))
-        if existing_note:
-            raise ValidationError(f"A note with the name {note_dict.get('name')} already exists.")
-
         # Fetch the YearSuccessEvidence node
         yse = YearSuccessEvidence.nodes.get_or_none(year_identifier=year_success_evidence)
         if not yse:
             raise NotFoundError(f"YearSuccessEvidence {year_success_evidence} not found.")
 
-        # Create and save the note
+        # Check if a note with the same name already exists
+        existing_note = Note.nodes.get_or_none(name=note_dict.get('name'))
+        if existing_note:
+            # Attach the existing note to the YSE if not already attached
+            if not yse.notes.is_connected(existing_note):
+                yse.notes.connect(existing_note)
+            return True
+
+        # Create and save the new note
         note = Note(
             name=note_dict['name'],
             content=note_dict['content'],
@@ -59,7 +62,7 @@ def add_note(year_success_evidence: str, note_dict: dict) -> bool:
                     person.save()
                 note.created_by.connect(person)
 
-        # Connect the note to YearSuccessEvidence
+        # Connect the new note to YearSuccessEvidence
         yse.notes.connect(note)
 
         return True
