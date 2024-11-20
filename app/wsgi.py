@@ -1,24 +1,21 @@
-import os,sys
-sys.path.append(os.path.dirname(os.path.dirname(__file__)))
-from app import create_app  # Import the Flask application factory
+import sys
+import os
 
-# Create the Flask application
-app = create_app()
+# Ensure current directory is in sys.path
 
-# Set up logging
+
+import sys
+import os
 import logging
-from logging.handlers import RotatingFileHandler
+sys.path.append(r"C:\www\ati")
+sys.path.append(r"C:\www\ati\ati")
+sys.path.insert(0, os.path.dirname(__file__))
+# Configure logging to output to stderr
+logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
 
-# Configure logging for error capture
-log_file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'app.log')  # Absolute path to app.log
-
-if not app.debug:  # Enable logging only if not in debug mode
-    handler = RotatingFileHandler(log_file_path, maxBytes=10000, backupCount=1)
-    handler.setLevel(logging.ERROR)
-    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-    handler.setFormatter(formatter)
-    app.logger.addHandler(handler)
-
-# Print a startup message for verification
-if __name__ == "__main__":
-    print("WSGI application loaded. Ready to serve requests.")
+try:
+    from app import create_app  # Adjust the import as necessary
+    application = create_app()
+except Exception:
+    logging.exception("An exception occurred while creating the application.")
+    raise
