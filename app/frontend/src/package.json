@@ -1,7 +1,8 @@
 {
-  "name": "src",
-  "version": "0.1.0",
+  "name": "sf-state-ati-knowledge-graph",
+  "version": "0.1",
   "private": true,
+  "homepage": "/ati",
   "dependencies": {
     "@chakra-ui/icons": "^2.2.4",
     "@chakra-ui/react": "^2.10.2",

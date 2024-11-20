@@ -10,7 +10,7 @@ from neomodel import (StructuredNode, StringProperty,
 from dotenv import load_dotenv
 import os
 
-dotenv_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'app', '.env')
+dotenv_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'app', '.env.development')
 load_dotenv(dotenv_path)
 
 """
@@ -1227,13 +1227,14 @@ class Metric(StructuredNode):
 def set_connection():
 
     from neomodel import config
-    config.DATABASE_URL = os.environ.get('database_url')
+    print(os.environ.get('DATABASE_URL'))
+    config.DATABASE_URL = os.environ.get('DATABASE_URL')
 
 set_connection()
 
 if __name__=="__main__":
 
-    dotenv_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), '.env')
+    dotenv_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), '.env.development')
     load_dotenv(dotenv_path)
     set_connection()
     install_all_labels()

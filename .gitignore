@@ -1,3 +1,4 @@
 /classes.dot
-/app/.env
+/app/.env.development
 /.idea/
+/app/.env.production
