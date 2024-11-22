@@ -4,7 +4,8 @@ from datetime import datetime as dt
 
 from . import data_api_endpoints
 from ...database.queries.implementation.delete import unassign_person_as_implementor
-from ...database.queries.implementation.update import update_plan, assign_person_as_implementor
+from ...database.queries.implementation.update import update_plan, assign_person_as_implementor, \
+    assign_documentation_to_implementation
 from app.endpoints.data_api.util.response import make_response
 from app.endpoints.data_api.errors.custom_exceptions import ApiError, ValidationError, CrudError, NotFoundError
 
@@ -24,38 +25,42 @@ class ImplementationAPI(MethodView):
         For assigning a person as implementor:
         {
             "action": "assign_person_as_implementor",
-            "employee_name": "John Doe",
-            "year_identifier": "2023-2024-1.2-web"
+            "unique_id": "person-unique-id",
+            "year_success_evidence": "2023-2024-1.2-web"
         }
 
         For unassigning a person as implementor:
         {
             "action": "unassign_person_as_implementor",
-            "employee_name": "John Doe",
-            "year_identifier": "2023-2024-1.2-web"
+            "unique_id": "person-unique-id",
+            "year_success_evidence": "2023-2024-1.2-web"
         }
+
+
         """
         try:
             data = request.get_json()
             action = data.get('action')
             if not action:
-                return make_response(status="error", error="Missing 'action' field in request."), 400
+                return make_response({"status": "error", "error": "Missing 'action' field in request."}), 400
 
             if action == "assign_person_as_implementor":
                 return self.handle_assign_person_as_implementor(data)
             elif action == "unassign_person_as_implementor":
                 return self.handle_unassign_person_as_implementor(data)
+            elif action == "assign_documentation_to_implementation":
+                return self.handle_assign_documentation_to_implementation(data)
             else:
-                return make_response(status="error", error=f"Unknown action '{action}' in request."), 400
+                return make_response({"status": "error", "error": f"Unknown action '{action}' in request."}), 400
 
         except ValidationError as e:
-            return make_response(status="error", error=str(e)), 400
+            return make_response({"status": "error", "error": str(e)}), 400
         except NotFoundError as e:
-            return make_response(status="error", error=str(e)), 404
+            return make_response({"status": "error", "error": str(e)}), 404
         except CrudError as e:
-            return make_response(status="error", error=str(e)), 500
+            return make_response({"status": "error", "error": str(e)}), 500
         except Exception as e:
-            return make_response(status="error", error="Failed to process request"), 500
+            return make_response({"status": "error", "error": "Failed to process request"}), 500
 
     def delete(self):
         pass
@@ -65,7 +70,7 @@ class ImplementationAPI(MethodView):
             raise ValidationError("Missing required fields: 'unique_id' or 'year_success_evidence'")
 
         assign_person_as_implementor(data['unique_id'], data['year_success_evidence'])
-        return make_response(status="success", message="Person assigned as implementor successfully"), 200
+        return make_response({"status": "success", "message": "Person assigned as implementor successfully"}), 200
 
     def handle_unassign_person_as_implementor(self, data):
         """
@@ -75,7 +80,25 @@ class ImplementationAPI(MethodView):
             raise ValidationError("Missing required fields: 'unique_id' or 'year_success_evidence'")
 
         unassign_person_as_implementor(data['unique_id'], data['year_success_evidence'])
-        return make_response(status="success", message="Person unassigned as implementor successfully"), 200
+        return make_response({"status": "success", "message": "Person unassigned as implementor successfully"}), 200
+
+    def handle_assign_documentation_to_implementation(self, data):
+        """
+        Handle the assign_documentation_to_implementation action.
+        """
+        required_fields = ['implementation_id', 'implementation_type', 'documentation_type', 'documentation_id']
+        for field in required_fields:
+            if field not in data:
+                raise ValidationError(f"Missing required field: '{field}'")
+
+        assign_documentation_to_implementation(
+            implementation_id=data['implementation_id'],
+            implementation_type=data['implementation_type'],
+            documentation_type=data['documentation_type'],
+            documentation_id=data['documentation_id']
+        )
+        return make_response({"status": "success", "message": "Documentation assigned to implementation successfully"}), 200
+
 
 
 import json
