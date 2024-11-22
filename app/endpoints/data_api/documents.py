@@ -62,28 +62,28 @@ class DocumentsAPI(MethodView):
                 if not all(field in data for field in required_fields):
                     return make_response(status="error", error="Missing required fields for note creation."), 400
                 if add_note(data['year_success_evidence'], data['note_dict']):
-                    return make_response(status="success", data="Note created successfully."), 201
+                    return make_response(status="success", message="Note created successfully."), 201
 
             elif action == 'add_message':
                 required_fields = ['year_success_evidence', 'message_dict']
                 if not all(field in data for field in required_fields):
                     return make_response(status="error", error="Missing required fields for message creation."), 400
                 if add_message(data['year_success_evidence'], data['message_dict']):
-                    return make_response(status="success", data="Message created successfully."), 201
+                    return make_response(status="success", message="Message created successfully."), 201
 
             elif action == 'add_document':
                 required_fields = ['name']
                 if not all(field in data for field in required_fields):
                     return make_response(status="error", error="Missing required fields for document creation."), 400
                 if add_document(**data):
-                    return make_response(status="success", data="Document created successfully."), 201
+                    return make_response(status="success", message="Document created successfully."), 201
 
             elif action == 'add_webpage':
                 required_fields = ['url', 'name', 'no_longer_exists', 'depreciated', 'depreciated_year', 'description']
                 if not all(field in data for field in required_fields):
                     return make_response(status="error", error="Missing required fields for webpage creation."), 400
                 if add_webpage(**data):
-                    return make_response(status="success", data="Webpage created successfully."), 201
+                    return make_response(status="success", message="Webpage created successfully."), 201
 
             else:
                 return make_response(status="error", error=f'Unknown action: {action}'), 400

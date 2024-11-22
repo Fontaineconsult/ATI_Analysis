@@ -6,7 +6,7 @@ from app.database.class_factory import implementation_classes, documentation_cla
 from app.endpoints.data_api.errors.custom_exceptions import NotFoundError, ValidationError, CrudError
 
 
-def assign_documentation_to_implementation(implementation_title, implementation_type, documentation_type, documentation_title):
+def assign_documentation_to_implementation(implementation_id, implementation_type, documentation_type, documentation_id):
     # Validate the implementation_type and documentation_type
     if implementation_type not in implementation_classes:
         raise ValidationError(f"Invalid implementation_type: {implementation_type}")
@@ -15,15 +15,15 @@ def assign_documentation_to_implementation(implementation_title, implementation_
 
     try:
         implementation_class = implementation_classes[implementation_type]
-        implementation_node = implementation_class.nodes.get(title=implementation_title)
+        implementation_node = implementation_class.nodes.get(unique_id=implementation_id)
     except implementation_class.DoesNotExist:
-        raise NotFoundError(f"No implementation node found with title: {implementation_title}")
+        raise NotFoundError(f"No implementation node found with title: {implementation_id}")
 
     try:
         documentation_class = documentation_classes[documentation_type]
-        documentation_node = documentation_class.nodes.get(name=documentation_title)
+        documentation_node = documentation_class.nodes.get(unique_id=documentation_id)
     except documentation_class.DoesNotExist:
-        raise NotFoundError(f"No documentation node found with title: {documentation_title}")
+        raise NotFoundError(f"No documentation node found with title: {documentation_id}")
 
     relationship = getattr(implementation_node, documentation_relationships[documentation_type])
     relationship.connect(documentation_node)
