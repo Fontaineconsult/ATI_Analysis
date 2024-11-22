@@ -20,7 +20,7 @@ function ImplementationMasterContainer({ evidenceData = {},
         'Process',
         'Project',
         'Procedure',
-        'Internal Policy',
+        'InternalPolicy',
         'Service',
 
     ];

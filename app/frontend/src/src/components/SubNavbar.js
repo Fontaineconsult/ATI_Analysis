@@ -26,12 +26,12 @@ function SubNavbar() {
     } else if (location.pathname.includes('/dashboard')) {
         subNavItems = [
             { label: 'Report Overview', path: '/dashboard/report-overview' },
-            { label: 'Implementations', path: '/dashboard/implementations' },
+            // { label: 'Implementations', path: '/dashboard/implementations' },
             { label: 'Settings', path: '/dashboard/settings' },
         ];
     } else if (location.pathname.includes('/about')) {
         subNavItems = [
-            { label: 'ATI Working Group', path: '/about/ati-working-group' },
+            // { label: 'ATI Working Group', path: '/about/ati-working-group' },
             { label: 'SF State ATI Overview', path: '/about/sf-state-ati-overview' },
         ];
     } else {

@@ -1,0 +1,1 @@
+match (p:Person) where p.active = TRUE return p.name, p.employee_id, p.email

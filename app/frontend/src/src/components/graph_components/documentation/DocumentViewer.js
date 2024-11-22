@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import {
     Box,
     Button,
@@ -8,62 +8,162 @@ import {
     FormLabel,
     Text,
     Flex,
-    Collapse
+    Collapse,
+    Select,
 } from '@chakra-ui/react';
+import { updateDocument } from '../../../services/api/put';
+import { addNewDocument } from '../../../services/api/post';
+import { DataContext } from '../../../context/DataContext';
+import { useSettings } from '../../../context/SettingsContext';
+import { UserContext } from '../../../context/UserContext';
 
-function DocumentViewer({ documents, onSubmit }) {
+function DocumentViewer({ documents, yearSuccessEvidence }) {
     const [expandedIndex, setExpandedIndex] = useState(null);
+    const [isAddingNewDocument, setIsAddingNewDocument] = useState(false);
+    const { loadSingleWorkingGroupData, selectedYear } = useContext(DataContext);
+    const { currentWorkingGroup } = useSettings();
+    const { user } = useContext(UserContext);
 
-    // Toggle expanded/collapsed state, allowing only one to be expanded at a time
+    // Toggle expanded/collapsed state
     const toggleCollapse = (index) => {
-        setExpandedIndex(expandedIndex === index ? null : index); // Toggle the selected document
+        setExpandedIndex(expandedIndex === index ? null : index);
     };
 
-    const handleFormSubmit = (index, updatedDocument) => {
-        onSubmit(index, updatedDocument);  // Pass the updated document data and index to the parent
-        setExpandedIndex(null);  // Collapse the form after submitting
+    // Handle form submission for both new and updated documents
+    const handleFormSubmit = async (index, documentData, isNew) => {
+        try {
+            if (isNew) {
+                // Assume that date_created and created_by are needed for a new document
+                documentData.date_created = new Date().toISOString().split('T')[0];
+                await addNewDocument(yearSuccessEvidence, documentData, user?.properties || user);
+            } else {
+                await updateDocument(yearSuccessEvidence, documentData, user?.properties || user);
+            }
+            await loadSingleWorkingGroupData(currentWorkingGroup); // Refresh data
+            setExpandedIndex(null);
+            setIsAddingNewDocument(false);
+        } catch (error) {
+            console.error('Error submitting document:', error);
+        }
     };
 
     return (
         <Box>
-            {documents.map((doc, index) => (
-                <Box key={index} mb={4} border="1px solid teal" borderRadius="md" p={4} boxShadow="sm">
-                    <Flex justify="space-between" alignItems="center" cursor="pointer" onClick={() => toggleCollapse(index)}>
-                        <Text fontWeight="bold" fontSize="lg">
-                            {doc.properties.name || 'Untitled Document'}
-                        </Text>
-                        <Button size="sm" colorScheme="teal">
-                            {expandedIndex === index ? 'Collapse' : 'Expand'}
-                        </Button>
-                    </Flex>
+            {/* Button to add a new document */}
+            <Button
+                colorScheme="teal"
+                onClick={() => {
+                    setIsAddingNewDocument(true);
+                    setExpandedIndex(null); // Collapse any other expanded documents
+                }}
+                mb={4}
+            >
+                Add New Document
+            </Button>
 
-                    {/* Collapsible form content */}
-                    <Collapse in={expandedIndex === index} animateOpacity>
-                        <Box mt={4}>
-                            <DocumentForm
-                                document={doc}  // Pass the current document to the form
-                                onSubmit={(updatedDocument) => handleFormSubmit(index, updatedDocument)}  // Handle form submit
-                            />
-                        </Box>
-                    </Collapse>
-                </Box>
-            ))}
+            {/* Render the DocumentForm for adding a new document if isAddingNewDocument is true */}
+            {isAddingNewDocument ? (
+                    <Box mb={4} border="1px solid teal" borderRadius="md" p={4} boxShadow="sm">
+                        <DocumentForm
+                            document={null} // Pass null for a new document
+                            onSubmit={(documentData) => handleFormSubmit(null, documentData, true)} // Pass true to indicate new document
+                            createdBy={user?.properties || user} // Pass user data or null
+                        />
+                    </Box>
+                ) : // Render existing documents if not adding a new document
+                documents && documents.length > 0 ? (
+                    documents.map((docWrapper, index) => {
+                        const document = docWrapper.document || docWrapper; // Adjust based on data structure
+                        const createdByPerson = docWrapper.created_by?.properties || document.created_by?.properties;
+
+                        return (
+                            <Box
+                                key={document.properties.unique_id || index}
+                                mb={4}
+                                border="1px solid teal"
+                                borderRadius="md"
+                                p={4}
+                                boxShadow="sm"
+                            >
+                                <Flex
+                                    justify="space-between"
+                                    alignItems="center"
+                                    cursor="pointer"
+                                    onClick={() => toggleCollapse(index)}
+                                >
+                                    <Text fontWeight="bold" fontSize="sm">
+                                        {document.properties.name || 'Untitled Document'}
+                                    </Text>
+                                    <Button size="sm" colorScheme="teal">
+                                        {expandedIndex === index ? 'Collapse' : 'Expand'}
+                                    </Button>
+                                </Flex>
+
+                                <Text fontSize="sm" color="gray.600" mt={2}>
+                                    Created by: {createdByPerson ? createdByPerson.name : 'Unknown Author'}
+                                </Text>
+
+                                <Collapse in={expandedIndex === index} animateOpacity>
+                                    <Box mt={4}>
+                                        <DocumentForm
+                                            document={document} // Pass the actual document object
+                                            onSubmit={(documentData) => handleFormSubmit(index, documentData, false)} // Pass false to indicate update
+                                            createdBy={createdByPerson}
+                                        />
+                                    </Box>
+                                </Collapse>
+                            </Box>
+                        );
+                    })
+                ) : (
+                    <Text>No documents available.</Text>
+                )}
         </Box>
     );
 }
 
-function DocumentForm({ document, onSubmit }) {
+function DocumentForm({ document, onSubmit, createdBy }) {
     const [documentData, setDocumentData] = useState({
-        unique_id: document.properties.unique_id || '',
-        name: document.properties.name || '',
-        file_path: document.properties.file_path || '',
-        uri_path: document.properties.uri_path || '',
-        is_administrative_review_documentation: document.properties.is_administrative_review_documentation === 'True',
-        is_milestone_and_measures_documentation: document.properties.is_milestone_and_measures_documentation === 'True',
-        include_in_report: document.properties.include_in_report || true,
-        depreciated: document.properties.depreciated || false,
-        depreciated_date: document.properties.depreciated_date || '',
+        unique_id: document?.properties?.unique_id || '',
+        name: document?.properties?.name || '',
+        file_path: document?.properties?.file_path || '',
+        uri_path: document?.properties?.uri_path || '',
+        is_administrative_review_documentation:
+            document?.properties?.is_administrative_review_documentation || false,
+        is_milestone_and_measures_documentation:
+            document?.properties?.is_milestone_and_measures_documentation || false,
+        include_in_report: document?.properties?.include_in_report ?? true,
+        depreciated: document?.properties?.depreciated || false,
+        depreciated_date: document?.properties?.depreciated_date || '',
+        date_created:
+            document?.properties?.date_created ||
+            new Date().toISOString().split('T')[0], // Default to today's date if new
+        created_by: createdBy || {},
     });
+
+    // New state to track submission status
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
+    // Update local state when `document` or `createdBy` prop changes
+    useEffect(() => {
+        setDocumentData({
+            unique_id: document?.properties?.unique_id || '',
+            name: document?.properties?.name || '',
+            file_path: document?.properties?.file_path || '',
+            uri_path: document?.properties?.uri_path || '',
+            is_administrative_review_documentation:
+                document?.properties?.is_administrative_review_documentation || false,
+            is_milestone_and_measures_documentation:
+                document?.properties?.is_milestone_and_measures_documentation || false,
+            include_in_report: document?.properties?.include_in_report ?? true,
+            depreciated: document?.properties?.depreciated || false,
+            depreciated_date: document?.properties?.depreciated_date || '',
+            date_created:
+                document?.properties?.date_created ||
+                new Date().toISOString().split('T')[0],
+            created_by: createdBy || {},
+        });
+    }, [document, createdBy]);
 
     const handleChange = (e) => {
         const { name, value, type, checked } = e.target;
@@ -73,9 +173,16 @@ function DocumentForm({ document, onSubmit }) {
         });
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        onSubmit(documentData);  // Pass the updated document data to the parent
+        setIsSubmitting(true); // Start the spinner
+        try {
+            await onSubmit(documentData);
+        } catch (error) {
+            console.error('Error submitting document:', error);
+        } finally {
+            setIsSubmitting(false); // Stop the spinner
+        }
     };
 
     return (
@@ -85,6 +192,15 @@ function DocumentForm({ document, onSubmit }) {
                 <Input name="name" value={documentData.name} onChange={handleChange} />
             </FormControl>
             <FormControl mb={4}>
+                <FormLabel>Date Created</FormLabel>
+                <Input
+                    name="date_created"
+                    type="date"
+                    value={documentData.date_created}
+                    onChange={handleChange}
+                />
+            </FormControl>
+            <FormControl mb={4}>
                 <FormLabel>File Path</FormLabel>
                 <Input name="file_path" value={documentData.file_path} onChange={handleChange} />
             </FormControl>
@@ -92,6 +208,17 @@ function DocumentForm({ document, onSubmit }) {
                 <FormLabel>URI Path</FormLabel>
                 <Input name="uri_path" value={documentData.uri_path} onChange={handleChange} />
             </FormControl>
+
+            {/* Display created_by person details */}
+            {createdBy?.name ? (
+                <Box mb={4}>
+                    <Text fontSize="sm" color="gray.600">
+                        Created by: {createdBy.name} ({createdBy.title || 'Unknown Title'})
+                    </Text>
+                </Box>
+            ) : (
+                <Text fontSize="sm" color="gray.600">Created by: Unknown</Text>
+            )}
 
             {/* Flex box to split the toggles and date fields into two columns */}
             <Flex gap={4} mb={4}>
@@ -143,7 +270,15 @@ function DocumentForm({ document, onSubmit }) {
                 </Box>
             </Flex>
 
-            <Button type="submit" colorScheme="teal" mt={4}>Submit Changes</Button>
+            <Button
+                type="submit"
+                colorScheme="teal"
+                mt={4}
+                isLoading={isSubmitting} // Chakra UI prop to show spinner
+                loadingText={document?.properties?.name ? 'Updating...' : 'Submitting...'}
+            >
+                {document?.properties?.name ? 'Update Document' : 'Submit Document'}
+            </Button>
         </Box>
     );
 }

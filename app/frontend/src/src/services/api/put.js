@@ -8,7 +8,11 @@ import {
     updateNotePayload,
     updateMessagePayload,
     assignResponsiblePerson,
-    unassignResponsiblePersonPayload, assignResponsiblePersonPayload
+    unassignResponsiblePersonPayload,
+    assignResponsiblePersonPayload,
+    updateDocumentPayload,
+    updateWebsitePayload,
+    updateMetricPayload
 } from "../response_templates";
 
 export const updateStatusLevel = async (yse, statusLevel) => {
@@ -56,6 +60,40 @@ export const updateMessage = async (year_success_evidence, message_dict, created
         throw error;
     }
 }
+
+
+export const updateDocument = async (year_success_evidence, document_dict, created_by) => {
+    try {
+        const response = await axios.put(`${process.env.REACT_APP_API_URL}/documents/documents`, updateDocumentPayload(year_success_evidence, document_dict, created_by));
+        return response.data;
+    } catch (error) {
+        console.error('Error updating message:', error);
+        throw error;
+    }
+
+}
+
+export const updateWebpage = async (year_success_evidence, website_dict, created_by) => {
+    try {
+        const response = await axios.put(`${process.env.REACT_APP_API_URL}/documents/websites`, updateWebsitePayload(year_success_evidence, website_dict, created_by));
+        return response.data;
+    } catch (error) {
+        console.error('Error updating message:', error);
+        throw error;
+    }
+
+}
+
+export const updateMetric = async (year_success_evidence, metric_dict, created_by) => {
+    try {
+        const response = await axios.put(`${process.env.REACT_APP_API_URL}/documents/metrics`, updateMetricPayload(year_success_evidence, metric_dict, created_by));
+        return response.data;
+    } catch (error) {
+        console.error('Error updating metric:', error);
+        throw error;
+    }
+}
+
 
 export const updateRemovedStatus = async (composite_key, removed) => {
     try {
@@ -111,3 +149,4 @@ export const unassignPersonAsImplementor = async (employeeId, year_success_indic
         throw error;
     }
 }
+

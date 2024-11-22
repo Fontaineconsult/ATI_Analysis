@@ -1,12 +1,12 @@
 import axios from "axios";
 import {
-    create_year_success_evidence_node, createIndividualPayload,
+    create_year_success_evidence_node, createDocumentPayload, createIndividualPayload,
     createMessagePayload,
     createNotePayload,
     createSuccessIndicatorPayload
 } from "../response_templates";
 
-
+// Create Functions for Direct YSE annotations
 export const addNewNote = async (year_success_evidence, note_dict, created_by) => {
     try {
         const response = await axios.post(`${process.env.REACT_APP_API_URL}/documents`,
@@ -18,7 +18,7 @@ export const addNewNote = async (year_success_evidence, note_dict, created_by) =
     }
 }
 
-// Function to add a new message using the wrapped payload
+
 export const addNewMessage = async (yearSuccessEvidence, messageContent, created_by) => {
 
     try {
@@ -33,6 +33,24 @@ export const addNewMessage = async (yearSuccessEvidence, messageContent, created
         throw error;
     }
 };
+
+
+// Create Functions for Implementation Evidence
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 export const createSuccessIndicator = async (indicator_number, goal_number, sub_committee, success_indicator_text, date_added, removed) => {
     try {

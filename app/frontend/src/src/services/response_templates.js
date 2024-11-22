@@ -54,23 +54,47 @@ export function updateNotePayload(yearSuccessEvidence, note_dict, created_by) {
 
 }
 
-export function updateMessagePayload(yearSuccessEvidence, note_dict, created_by) {
+export function updateMessagePayload(yearSuccessEvidence, message_dict, created_by) {
     return {
         action: "update_message",
         year_success_evidence: yearSuccessEvidence,
-        message_dict: note_dict,
+        message_dict: message_dict,
         created_by:created_by
     }
 
 }
 
 
-function updateMetricPayload() {
+export function updateDocumentPayload(yearSuccessEvidence, document_dict, created_by) {
     return {
-        action: "update_metric"
-    };
+        action: "update_document",
+        year_success_evidence: yearSuccessEvidence,
+        document_dict: document_dict,
+        created_by:created_by
+    }
+
 }
 
+
+export function updateWebsitePayload(yearSuccessEvidence, website_dict, created_by) {
+    return {
+        action: "update_website",
+        year_success_evidence: yearSuccessEvidence,
+        website_dict: website_dict,
+        created_by:created_by
+    }
+
+}
+
+export function updateMetricPayload(yearSuccessEvidence, metric_dict, created_by) {
+    return {
+        action: "update_metric",
+        year_success_evidence: yearSuccessEvidence,
+        metric_dict: metric_dict,
+        created_by:created_by
+    }
+
+}
 
 export function generateUpdateStatusLevelPayload(yearSuccessEvidence, statusLevel) {
     return {

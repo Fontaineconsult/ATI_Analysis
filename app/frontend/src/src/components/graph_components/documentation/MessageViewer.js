@@ -35,7 +35,7 @@ function MessageViewer({ messages, onSubmit, yearSuccessEvidence, createdBy }) {
     const { loadSingleWorkingGroupData, selectedYear } = useContext(DataContext);
     const { currentWorkingGroup } = useSettings();
     const { user } = useContext(UserContext); // Get the current user from UserContext
-
+    console.log("SDDSF", messages)
     // Toggle expanded/collapsed state
     const toggleCollapse = (index) => {
         setExpandedIndex(expandedIndex === index ? null : index);
@@ -84,9 +84,10 @@ function MessageViewer({ messages, onSubmit, yearSuccessEvidence, createdBy }) {
                     </Box>
                 ) : // Render existing messages if not adding a new message
                 messages && messages.length > 0 ? (
-                    messages.map((messageWrapper, index) => {
-                        const message = messageWrapper.message;
-                        const createdByPerson = messageWrapper.created_by?.properties;
+                    messages.map((message, index) => {
+
+
+                        const createdByPerson = message.created_by?.properties;
 
                         return (
                             <Box

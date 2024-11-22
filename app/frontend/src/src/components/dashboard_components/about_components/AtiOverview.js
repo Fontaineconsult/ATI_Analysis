@@ -139,6 +139,48 @@ function ATIOverview() {
                     }
                 }}
             >
+
+                {/* Instructions Section */}
+                <AccordionItem>
+                    <AccordionButton>
+                        <Box flex="1" textAlign="left">
+                            <Heading as="h3" size="md">
+                                Instructions
+                            </Heading>
+                        </Box>
+                        <AccordionIcon />
+                    </AccordionButton>
+                    <AccordionPanel>
+                        <Box
+                            borderLeft="4px"
+                            borderColor="teal.400"
+                            pl={4}
+                            py={2}
+                            bg="gray.50"
+                            borderRadius="md"
+                            boxShadow="sm"
+                        >
+                            <Text fontSize="lg" fontWeight="bold" color="teal.700" mb={2}>
+                                Using this ATI Reporting Tool
+
+                            </Text>
+                            <List spacing={2} pl={4} styleType="decimal" textAlign="left">
+                                <ListItem color="gray.700">Scroll down to 'Committee Members' and find your name. Based on the working groups assigned, please review the corresponding working group overview. These assignments are not final and if you feel your work intersects with success indicators in other working groups please let me know and feel free to engage with them.</ListItem>
+                                <ListItem color="gray.700"> Select a working group (<Link as={RouterLink} colorPalette="teal" variant="underline" to="/ati-explorer/web">Web</Link>,{' '}
+                                    <Link as={RouterLink}  colorPalette="teal" variant="underline" to="/ati-explorer/instructional-materials">Instructional Materials</Link>, or{' '}
+                                    <Link as={RouterLink}  colorPalette="teal" variant="underline" to="/ati-explorer/procurement">Procurement</Link>)
+
+                                </ListItem>
+                                <ListItem color="gray.700">Scroll through the list of success indicators and familiarize yourself with our responsibilities.</ListItem>
+                                <ListItem color="gray.700">Click on the "Annotations" button to add  notes, messages, or plans. Add anything you can think of that may help guide our efforts next year.</ListItem>
+                                <ListItem color="gray.700">Our goal is to collect evidence of <i>implementations</i> for success indicators. I've classified implementations into seven categories: 'Tracker', 'Guidance', 'Process', 'Project', 'Procedure', 'Internal Policy', and 'Service'. You don't yet have the ability to code these yourself, so simply indicate in a note which class applies. These are explained in detail in the 'ATI Knowledge Organization' section. When adding notes, try to think of any evidence you can provide that fits into these categories.</ListItem>
+                                <ListItem color="gray.700">In accordance with the chancellor's office directive, Daniel will lower status levels to better reflect the reality of our existing ATI implementations. Please review the status level definitions to better understand how we are instructed to measure our evidence.</ListItem>
+                                <ListItem color="gray.700">Please reach out to Daniel on teams or email if you have any questions or encounter issues with this tool.</ListItem>
+                            </List>
+                        </Box>
+                    </AccordionPanel>
+                </AccordionItem>
+
                 {/* ATI Overview Section */}
                 <AccordionItem>
                     <AccordionButton>
@@ -312,48 +354,6 @@ function ATIOverview() {
                     </AccordionPanel>
                 </AccordionItem>
 
-                {/* Instructions Section */}
-                <AccordionItem>
-                    <AccordionButton>
-                        <Box flex="1" textAlign="left">
-                            <Heading as="h3" size="md">
-                                Instructions
-                            </Heading>
-                        </Box>
-                        <AccordionIcon />
-                    </AccordionButton>
-                    <AccordionPanel>
-                        <Box
-                            borderLeft="4px"
-                            borderColor="teal.400"
-                            pl={4}
-                            py={2}
-                            bg="gray.50"
-                            borderRadius="md"
-                            boxShadow="sm"
-                        >
-                            <Text fontSize="lg" fontWeight="bold" color="teal.700" mb={2}>
-                                Using this ATI Reporting Tool
-
-                            </Text>
-                            <List spacing={2} pl={4} styleType="decimal" textAlign="left">
-                                <ListItem color="gray.700">
-                                Select a working group (<Link as={RouterLink} variant="underline" to="/ati-explorer/web">Web</Link>,{' '}
-                                <Link as={RouterLink} variant="underline" to="/ati-explorer/instructional-materials">Instructional Materials</Link>, or{' '}
-                                <Link as={RouterLink} variant="underline" to="/ati-explorer/procurement">Procurement</Link>)
-
-                                </ListItem>
-                                <ListItem color="gray.700">Review success indicators for your area.</ListItem>
-                                <ListItem color="gray.700">Click on the "Annotations" button to add  notes, messages, or plans. Add anything you can think of that may help guide our efforts next year.</ListItem>
-                                <ListItem color="gray.700">In accordance with the chancellor's office directive, Daniel will lower status levels to better reflect the reality of our existing ATI implementations. Please review the status level definitions to better understand how we are instructed to measure our evidence.</ListItem>
-                                <ListItem color="gray.700">Please reach out to Daniel if you have any questions or encounter issues with this tool.</ListItem>
-                            </List>
-                        </Box>
-                    </AccordionPanel>
-                </AccordionItem>
-
-
-                {/* Status Levels Section */}
                 {/* Status Levels Section */}
                 <AccordionItem>
                     <AccordionButton>
@@ -731,6 +731,87 @@ function ATIOverview() {
                                     (Web, Instructional Materials, and Procurement) to specific goals and success indicators that
                                     measure progress toward accessibility compliance.
                                 </Text>
+                            </Box>
+
+                            {/* Implementation Definitions */}
+                            <Box
+                                borderLeft="4px"
+                                borderColor="teal.400"
+                                pl={4}
+                                py={2}
+                                bg="gray.50"
+                                borderRadius="md"
+                                boxShadow="sm"
+                            >
+                                <Text fontWeight="bold" fontSize="lg" color="teal.700" mb={2}>
+                                    Implementation Definitions
+                                </Text>
+                                <Text color="gray.700" mb={4}>
+                                    The ATI Knowledge Graph includes various implementation and documentation types that help structure and support accessibility initiatives. Below are simplified descriptions of each type:
+                                </Text>
+
+                                {/* Implementations */}
+                                <Text fontWeight="semibold" fontSize="md" color="teal.600" mb={2}>
+                                    Implementations
+                                </Text>
+                                <VStack align="stretch" spacing={3} mb={4}>
+                                    <Box>
+                                        <Text fontWeight="bold" color="teal.700">
+                                            Internal Policy
+                                        </Text>
+                                        <Text color="gray.700">
+                                            A set of rules and guidelines developed to ensure compliance with accessibility standards within the organization.
+                                        </Text>
+                                    </Box>
+                                    <Box>
+                                        <Text fontWeight="bold" color="teal.700">
+                                            Process
+                                        </Text>
+                                        <Text color="gray.700">
+                                            A series of actions or steps taken to achieve a specific accessibility goal or outcome. Likely in the form of an internal process document.
+                                        </Text>
+                                    </Box>
+                                    <Box>
+                                        <Text fontWeight="bold" color="teal.700">
+                                            Project
+                                        </Text>
+                                        <Text color="gray.700">
+                                            A temporary, focused effort to create a specific product or result that enhances accessibility. For example, the <Link href={'https://access.sfsu.edu/drupal-pdf-accessibility-review'}>Drupal PDF Accessibility Review.</Link>
+                                        </Text>
+                                    </Box>
+                                    <Box>
+                                        <Text fontWeight="bold" color="teal.700">
+                                            Procedure
+                                        </Text>
+                                        <Text color="gray.700">
+                                            Detailed instructions on how to perform tasks to meet accessibility objectives consistently.
+                                        </Text>
+                                    </Box>
+                                    <Box>
+                                        <Text fontWeight="bold" color="teal.700">
+                                            Service
+                                        </Text>
+                                        <Text color="gray.700">
+                                            Ongoing support or assistance provided to ensure accessibility for individuals with disabilities. Example: <Link href={'https://access.sfsu.edu/amqc'}>accessible media quick converter</Link>.
+                                        </Text>
+                                    </Box>
+                                    <Box>
+                                        <Text fontWeight="bold" color="teal.700">
+                                            Guidance
+                                        </Text>
+                                        <Text color="gray.700">
+                                            Practical information like tips, power point presentations or FAQs that help users navigate accessibility resources and best practices.
+                                        </Text>
+                                    </Box>
+                                    <Box>
+                                        <Text fontWeight="bold" color="teal.700">
+                                            Tracking
+                                        </Text>
+                                        <Text color="gray.700">
+                                            Monitoring the progress of accessibility initiatives and implementations.
+                                        </Text>
+                                    </Box>
+                                </VStack>
                             </Box>
 
                             {/* Power for Enterprise Technology Governance */}

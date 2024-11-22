@@ -3,7 +3,8 @@ from flask.views import MethodView
 
 from . import data_api_endpoints
 from app.database.queries.documentation.create import add_note, add_message, add_document, add_webpage
-from app.database.queries.documentation.update import update_note, update_message, update_metric
+from app.database.queries.documentation.update import update_note, update_message, update_metric, update_document, \
+    update_webpage
 from app.database.queries.documentation.read import get_all_notes, get_all_messages, get_all_metrics, get_all_documents, get_all_webpages
 from app.endpoints.data_api.util.response import make_response
 from .errors.custom_exceptions import NotFoundError, CrudError, ValidationError
@@ -149,6 +150,34 @@ class DocumentsAPI(MethodView):
                     return make_response(status="success", data="Metric updated successfully."), 200
                 else:
                     return make_response(status="error", error="Failed to update metric."), 500
+
+            elif action == 'update_document':
+                required_fields = ['year_success_evidence', 'document_dict']
+                if not all(field in data for field in required_fields):
+                    return make_response(status="error", error="Missing required fields for document update."), 400
+
+                document_dict = data['document_dict']
+                if 'unique_id' not in document_dict:
+                    return make_response(status="error", error="The 'unique_id' field is required in 'document_dict'."), 400
+
+                if update_document(data['year_success_evidence'], document_dict, data.get('created_by')):
+                    return make_response(status="success", data="Document updated successfully."), 200
+                else:
+                    return make_response(status="error", error="Failed to update document."), 500
+
+            elif action == 'update_webpage':
+                required_fields = ['year_success_evidence', 'webpage_dict']
+                if not all(field in data for field in required_fields):
+                    return make_response(status="error", error="Missing required fields for webpage update."), 400
+
+                webpage_dict = data['webpage_dict']
+                if 'unique_id' not in webpage_dict:
+                    return make_response(status="error", error="The 'unique_id' field is required in 'webpage_dict'."), 400
+
+                if update_webpage(data['year_success_evidence'], webpage_dict, data.get('created_by')):
+                    return make_response(status="success", data="Webpage updated successfully."), 200
+                else:
+                    return make_response(status="error", error="Failed to update webpage."), 500
 
             else:
                 return make_response(status="error", error=f'Unknown action: {action}'), 400
