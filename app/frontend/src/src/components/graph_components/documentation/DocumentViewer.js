@@ -12,12 +12,14 @@ import {
     Select,
 } from '@chakra-ui/react';
 import { updateDocument } from '../../../services/api/put';
-import { addNewDocument } from '../../../services/api/post';
+import { addDocumentToImplementation } from '../../../services/api/post';
+
 import { DataContext } from '../../../context/DataContext';
 import { useSettings } from '../../../context/SettingsContext';
 import { UserContext } from '../../../context/UserContext';
 
-function DocumentViewer({ documents, yearSuccessEvidence }) {
+
+function DocumentViewer({ documents, implementation_id, implementation_type }) {
     const [expandedIndex, setExpandedIndex] = useState(null);
     const [isAddingNewDocument, setIsAddingNewDocument] = useState(false);
     const { loadSingleWorkingGroupData, selectedYear } = useContext(DataContext);
@@ -35,9 +37,10 @@ function DocumentViewer({ documents, yearSuccessEvidence }) {
             if (isNew) {
                 // Assume that date_created and created_by are needed for a new document
                 documentData.date_created = new Date().toISOString().split('T')[0];
-                await addNewDocument(yearSuccessEvidence, documentData, user?.properties || user);
+
+                await addDocumentToImplementation(implementation_id, implementation_type, documentData, user?.properties || user);
             } else {
-                await updateDocument(yearSuccessEvidence, documentData, user?.properties || user);
+                await updateDocument(implementation_id, implementation_type, documentData, user?.properties || user);
             }
             await loadSingleWorkingGroupData(currentWorkingGroup); // Refresh data
             setExpandedIndex(null);
@@ -75,6 +78,7 @@ function DocumentViewer({ documents, yearSuccessEvidence }) {
                     documents.map((docWrapper, index) => {
                         const document = docWrapper.document || docWrapper; // Adjust based on data structure
                         const createdByPerson = docWrapper.created_by?.properties || document.created_by?.properties;
+
 
                         return (
                             <Box

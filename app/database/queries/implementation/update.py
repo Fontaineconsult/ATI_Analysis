@@ -17,15 +17,20 @@ def assign_documentation_to_implementation(implementation_id, implementation_typ
         implementation_class = implementation_classes[implementation_type]
         implementation_node = implementation_class.nodes.get(unique_id=implementation_id)
     except implementation_class.DoesNotExist:
-        raise NotFoundError(f"No implementation node found with title: {implementation_id}")
+        raise NotFoundError(f"No implementation node found with id: {implementation_id}")
 
     try:
         documentation_class = documentation_classes[documentation_type]
         documentation_node = documentation_class.nodes.get(unique_id=documentation_id)
     except documentation_class.DoesNotExist:
-        raise NotFoundError(f"No documentation node found with title: {documentation_id}")
+        raise NotFoundError(f"No documentation node found with id: {documentation_id}")
 
     relationship = getattr(implementation_node, documentation_relationships[documentation_type])
+
+    # Check if the relationship already exists
+    if relationship.is_connected(documentation_node):
+        raise ValidationError(f"The relationship between implementation {implementation_id} and documentation {documentation_id} already exists.")
+
     relationship.connect(documentation_node)
 
     return True

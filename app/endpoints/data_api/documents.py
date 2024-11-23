@@ -2,7 +2,7 @@ from flask import jsonify, request
 from flask.views import MethodView
 
 from . import data_api_endpoints
-from app.database.queries.documentation.create import add_note, add_message, add_document, add_webpage
+from app.database.queries.documentation.create import add_note, add_message, add_document, add_webpage, add_metric
 from app.database.queries.documentation.update import update_note, update_message, update_metric, update_document, \
     update_webpage
 from app.database.queries.documentation.read import get_all_notes, get_all_messages, get_all_metrics, get_all_documents, get_all_webpages
@@ -47,55 +47,164 @@ class DocumentsAPI(MethodView):
 
     def post(self):
         """
-        Handle POST requests to create documents based on document type.
+        Handle POST requests to create documents or metrics based on the action.
         """
         try:
             data = request.get_json()
 
             action = data.get('action')
             if not action:
-                return make_response(status="error", error="The 'action' field is required."), 400
+                return make_response({"status": "error", "error": "The 'action' field is required."}), 400
 
             # Dynamically call the appropriate function based on the action
             if action == 'add_note':
-                required_fields = ['year_success_evidence', 'note_dict']
+                required_fields = ['note_dict']
                 if not all(field in data for field in required_fields):
-                    return make_response(status="error", error="Missing required fields for note creation."), 400
-                if add_note(data['year_success_evidence'], data['note_dict']):
-                    return make_response(status="success", message="Note created successfully."), 201
+                    return make_response({"status": "error", "error": "Missing 'note_dict' field for note creation."}), 400
+
+                # Optional fields
+                year_success_evidence = data.get('year_success_evidence')
+                implementation_id = data.get('implementation_id')
+                implementation_type = data.get('implementation_type')
+
+                if not (year_success_evidence or (implementation_id and implementation_type)):
+                    return make_response({"status": "error", "error": "Either 'year_success_evidence' or both 'implementation_id' and 'implementation_type' must be provided."}), 400
+
+                if add_note(
+                        note_dict=data['note_dict'],
+                        year_success_evidence=year_success_evidence,
+                        implementation_id=implementation_id,
+                        implementation_type=implementation_type
+                ):
+                    return make_response({"status": "success", "message": "Note created successfully."}), 201
 
             elif action == 'add_message':
-                required_fields = ['year_success_evidence', 'message_dict']
+                required_fields = ['message_dict']
                 if not all(field in data for field in required_fields):
-                    return make_response(status="error", error="Missing required fields for message creation."), 400
-                if add_message(data['year_success_evidence'], data['message_dict']):
-                    return make_response(status="success", message="Message created successfully."), 201
+                    return make_response({"status": "error", "error": "Missing 'message_dict' field for message creation."}), 400
+
+                # Optional fields
+                year_success_evidence = data.get('year_success_evidence')
+                implementation_id = data.get('implementation_id')
+                implementation_type = data.get('implementation_type')
+
+                if not (year_success_evidence or (implementation_id and implementation_type)):
+                    return make_response({"status": "error", "error": "Either 'year_success_evidence' or both 'implementation_id' and 'implementation_type' must be provided."}), 400
+
+                if add_message(
+                        message_dict=data['message_dict'],
+                        year_success_evidence=year_success_evidence,
+                        implementation_id=implementation_id,
+                        implementation_type=implementation_type
+                ):
+                    return make_response({"status": "success", "message": "Message created successfully."}), 201
 
             elif action == 'add_document':
-                required_fields = ['name']
+                required_fields = ['document_dict']
+                print(data)
                 if not all(field in data for field in required_fields):
-                    return make_response(status="error", error="Missing required fields for document creation."), 400
-                if add_document(**data):
-                    return make_response(status="success", message="Document created successfully."), 201
+                    return make_response({"status": "error", "error": "Missing 'document_dict' field for document creation."}), 400
+
+                document_dict = data['document_dict']
+
+                # Optional fields
+                implementation_id = data.get('implementation_id')
+                implementation_type = data.get('implementation_type')
+
+                # Extract fields from document_dict
+                name = document_dict.get('name')
+                file_path = document_dict.get('file_path')
+                uri_path = document_dict.get('uri_path')
+                depreciated = document_dict.get('depreciated', False)
+                depreciated_date = document_dict.get('depreciated_date')
+                is_administrative_review_documentation = document_dict.get('is_administrative_review_documentation', False)
+                is_milestone_and_measures_documentation = document_dict.get('is_milestone_and_measures_documentation', False)
+                include_in_report = document_dict.get('include_in_report', True)
+                created_by = data.get('created_by')
+
+                # Now call add_document with the correct parameters
+                if add_document(
+                        name=name,
+                        file_path=file_path,
+                        uri_path=uri_path,
+                        depreciated=depreciated,
+                        depreciated_date=depreciated_date,
+                        is_administrative_review_documentation=is_administrative_review_documentation,
+                        is_milestone_and_measures_documentation=is_milestone_and_measures_documentation,
+
+                        implementation_id=implementation_id,
+                        implementation_type=implementation_type,
+
+                ):
+                    return make_response({"status": "success", "message": "Document created successfully."}), 201
 
             elif action == 'add_webpage':
-                required_fields = ['url', 'name', 'no_longer_exists', 'depreciated', 'depreciated_year', 'description']
+                required_fields = ['website_dict']
                 if not all(field in data for field in required_fields):
-                    return make_response(status="error", error="Missing required fields for webpage creation."), 400
-                if add_webpage(**data):
-                    return make_response(status="success", message="Webpage created successfully."), 201
+                    return make_response({"status": "error", "error": "Missing required fields for webpage creation."}), 400
+
+                website_dict = data['website_dict']
+
+                # Optional fields
+                implementation_id = data.get('implementation_id')
+                implementation_type = data.get('implementation_type')
+                created_by = data.get('created_by')
+
+                # Extract fields from website_dict
+                url = website_dict.get('url')
+                name = website_dict.get('name')
+                no_longer_exists = website_dict.get('no_longer_exists', False)
+                depreciated = website_dict.get('depreciated', False)
+                depreciated_date = website_dict.get('depreciated_date')
+                description = website_dict.get('description', '')
+                include_in_report = website_dict.get('include_in_report', True)
+
+                # Now call add_webpage with the correct parameters
+                if add_webpage(
+                        url=url,
+                        name=name,
+                        no_longer_exists=no_longer_exists,
+                        depreciated=depreciated,
+                        depreciated_date=depreciated_date,
+                        description=description,
+                        include_in_report=include_in_report,
+                        implementation_id=implementation_id,
+                        implementation_type=implementation_type,
+                        created_by=created_by
+                ):
+                    return make_response({"status": "success", "message": "Webpage created successfully."}), 201
+
+            elif action == 'add_metric':
+                required_fields = ['metric_dict']
+                if not all(field in data for field in required_fields):
+                    return make_response({"status": "error", "error": "Missing 'metric_dict' field for metric creation."}), 400
+
+                # Optional fields
+                implementation_id = data.get('implementation_id')
+                implementation_type = data.get('implementation_type')
+
+                if not (implementation_id and implementation_type):
+                    return make_response({"status": "error", "error": "Both 'implementation_id' and 'implementation_type' must be provided for metric assignment."}), 400
+
+                if add_metric(
+                        metric_dict=data['metric_dict'],
+                        implementation_id=implementation_id,
+                        implementation_type=implementation_type
+                ):
+                    return make_response({"status": "success", "message": "Metric created successfully."}), 201
 
             else:
-                return make_response(status="error", error=f'Unknown action: {action}'), 400
+                return make_response({"status": "error", "error": f"Unknown action: {action}"}), 400
 
         except ValidationError as e:
-            return make_response(status='error', error=str(e)), 400
+            return make_response({"status": "error", "error": str(e)}), 400
         except NotFoundError as e:
-            return make_response(status='error', error=str(e)), 404
+            return make_response({"status": "error", "error": str(e)}), 404
         except CrudError as e:
-            return make_response(status='error', error=str(e)), 500
+            return make_response({"status": "error", "error": str(e)}), 500
         except Exception as e:
-            return make_response(status='error', error=f"An unexpected error occurred: {str(e)}"), 500
+            return make_response({"status": "error", "error": f"An unexpected error occurred: {str(e)}"}), 500
+
 
     def put(self, document_type):
         """
@@ -201,5 +310,5 @@ class DocumentsAPI(MethodView):
 
 # Register the view for different document types
 documents_view = DocumentsAPI.as_view('documents_api')
-data_api_endpoints.add_url_rule('/documents/<string:document_type>', view_func=documents_view, methods=['GET', 'PUT'])
-data_api_endpoints.add_url_rule('/documents', view_func=documents_view, methods=['POST'])
+data_api_endpoints.add_url_rule('/documents/<string:document_type>', view_func=documents_view, methods=['GET', 'PUT', 'POST'])
+data_api_endpoints.add_url_rule('/documents', view_func=documents_view, methods=['POST', 'PUT'])

@@ -12,7 +12,7 @@ import {
     assignResponsiblePersonPayload,
     updateDocumentPayload,
     updateWebsitePayload,
-    updateMetricPayload
+    updateMetricPayload, updateMessageForImplementationPayload
 } from "../response_templates";
 
 export const updateStatusLevel = async (yse, statusLevel) => {
@@ -62,9 +62,23 @@ export const updateMessage = async (year_success_evidence, message_dict, created
 }
 
 
-export const updateDocument = async (year_success_evidence, document_dict, created_by) => {
+export const updateMessageForImplementation = async (implementation_id, implementation_type, message_dict, created_by) => {
     try {
-        const response = await axios.put(`${process.env.REACT_APP_API_URL}/documents/documents`, updateDocumentPayload(year_success_evidence, document_dict, created_by));
+        const response = await axios.put(`${process.env.REACT_APP_API_URL}/documents/messages`,
+            updateMessageForImplementationPayload(implementation_id, implementation_type, message_dict, created_by));
+        return response.data;
+    } catch (error) {
+        console.error('Error updating message:', error);
+        throw error;
+    }
+}
+
+
+
+export const updateDocument = async (implementation_id, implementation_type, document_dict, created_by) => {
+    try {
+        const response = await axios.put(`${process.env.REACT_APP_API_URL}/documents/documents`,
+            updateDocumentPayload(implementation_id, implementation_type, document_dict, created_by));
         return response.data;
     } catch (error) {
         console.error('Error updating message:', error);

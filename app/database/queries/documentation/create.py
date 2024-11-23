@@ -174,7 +174,7 @@ def add_message(
             assign_documentation_to_implementation(
                 implementation_id=implementation_id,
                 implementation_type=implementation_type,
-                documentation_type="Message",
+                documentation_type="message",
                 documentation_id=message.unique_id
             )
 
@@ -225,6 +225,7 @@ def add_document(
         # Calculate hash if file_path is provided
         hash = get_file_hash(file_path) if file_path else None
 
+        hash = None # Todo implement when get_file_hash is implemented
         # Check if a document with the same hash already exists
         if hash:
             existing_document = Document.nodes.get_or_none(hash=hash)
@@ -254,7 +255,7 @@ def add_document(
             assign_documentation_to_implementation(
                 implementation_id=implementation_id,
                 implementation_type=implementation_type,
-                documentation_type="Document",
+                documentation_type="document",
                 documentation_id=new_document.unique_id
             )
 
@@ -273,26 +274,15 @@ def add_document(
 def add_webpage(
         url,
         name,
-        no_longer_exists,
-        depreciated,
-        depreciated_year,
-        description,
+        no_longer_exists=False,
+        depreciated=False,
+        depreciated_date=None,
+        description='',
+        include_in_report=True,
         implementation_id=None,
-        implementation_type=None
+        implementation_type=None,
+        created_by=None
 ) -> bool:
-    """
-    Adds a webpage node to the graph. Optionally assigns the webpage to an implementation if implementation_id is provided.
-
-    :param url: The URL of the webpage.
-    :param name: The name of the webpage.
-    :param no_longer_exists: Boolean indicating if the webpage no longer exists.
-    :param depreciated: Boolean indicating if the webpage is depreciated.
-    :param depreciated_year: The year the webpage was depreciated (format: YYYY-MM-DD).
-    :param description: A description of the webpage.
-    :param implementation_id: (Optional) The unique_id of the implementation to assign this webpage to.
-    :param implementation_type: (Optional) The type of the implementation (e.g., "Process", "Project").
-    :return: True if the webpage was added successfully.
-    """
     try:
         # Check if the webpage already exists
         existing_webpage = Webpage.nodes.get_or_none(url=url)
@@ -303,10 +293,11 @@ def add_webpage(
         new_webpage = Webpage(
             url=url,
             name=name,
-            depreciated=depreciated,
-            depreciated_date=datetime.strptime(depreciated_year, "%Y-%m-%d").date() if depreciated_year else None,
             no_longer_exists=no_longer_exists,
-            description=description
+            depreciated=depreciated,
+            depreciated_date=datetime.strptime(depreciated_date, "%Y-%m-%d").date() if depreciated_date else None,
+            description=description,
+            include_in_report=include_in_report
         )
         new_webpage.save()
 
@@ -329,7 +320,6 @@ def add_webpage(
     except Exception as e:
         print(f"Failed to add webpage: {e}")
         raise CrudError("Failed to add webpage", e)
-
 
 
 def add_metric(
@@ -406,7 +396,7 @@ def add_metric(
             assign_documentation_to_implementation(
                 implementation_id=implementation_id,
                 implementation_type=implementation_type,
-                documentation_type="Metric",
+                documentation_type="metric",
                 documentation_id=metric.unique_id
             )
 

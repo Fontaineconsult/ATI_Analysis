@@ -23,13 +23,13 @@ implementation_types = ["process",
                         "internal_policy"]
 
 implementation_classes = {
-    "process": Process,
-    "project": Project,
-    "procedure": Procedure,
-    "service": Service,
-    "guidance": Guidance,
-    "tracking": Tracking,
-    "internal_policy": InternalPolicy
+    "Process": Process,
+    "Project": Project,
+    "Procedure": Procedure,
+    "Service": Service,
+    "Guidance": Guidance,
+    "Tracking": Tracking,
+    "InternalPolicy": InternalPolicy
 }
 
 # Mapping of documentation types to their corresponding classes

@@ -3,7 +3,10 @@
 #
 from app.database.graph_schema import *
 from datetime import date
-from app.endpoints.data_api.errors.custom_exceptions import NotFoundError, CrudError
+
+from app.database.queries.implementation.update import assign_documentation_to_implementation
+from app.endpoints.data_api.errors.custom_exceptions import NotFoundError, CrudError, ValidationError
+
 
 def unassign_note_from_yse(note_name, year_success_evidence):
     try:
@@ -27,279 +30,404 @@ def unassign_note_from_yse(note_name, year_success_evidence):
         raise CrudError(f"Failed to disconnect Note from YearSuccessEvidence: {e}")
 
 
-def update_note(year_success_evidence: str, note_dict: dict, created_by: str = None) -> bool:
-    try:
-        note = Note.nodes.get(unique_id=note_dict.get('unique_id'))
-    except Note.DoesNotExist:
-        raise NotFoundError(f"Note with name {note_dict.get('name')} not found.")
-    except Exception as e:
-        raise CrudError(f"Failed to get Note: {e}")
+def update_note(
+        note_dict: dict,
+        year_success_evidence: str = None,
+        implementation_id: str = None,
+        implementation_type: str = None,
+        created_by: str = None
+) -> bool:
+    """
+    Updates an existing note. The note can be associated with a YearSuccessEvidence, an implementation, or both.
 
+    :param note_dict: Dictionary containing note properties to update.
+    :param year_success_evidence: (Optional) The year identifier of the YearSuccessEvidence to associate the note with.
+    :param implementation_id: (Optional) The unique_id of the implementation to associate the note with.
+    :param implementation_type: (Optional) The type of the implementation (e.g., "Process", "Project").
+    :param created_by: (Optional) The employee_id of the person who created the note.
+    :return: True if the note was updated successfully.
+    """
     try:
-        yse = YearSuccessEvidence.nodes.get(year_identifier=year_success_evidence)
-    except YearSuccessEvidence.DoesNotExist:
-        raise NotFoundError(f"YearSuccessEvidence with identifier {year_success_evidence} not found.")
-    except Exception as e:
-        raise CrudError(f"Failed to get YearSuccessEvidence: {e}")
+        # Fetch the note by unique_id
+        unique_id = note_dict.get('unique_id')
+        if not unique_id:
+            raise ValidationError("Missing 'unique_id' in note_dict.")
 
-    person = None
-    if created_by:
         try:
-            person = Person.nodes.get(employee_id=created_by)
-        except Person.DoesNotExist:
-            raise NotFoundError(f"Person with employee_id {created_by} not found.")
-        except Exception as e:
-            raise CrudError(f"Failed to get Person: {e}")
+            note = Note.nodes.get(unique_id=unique_id)
+        except Note.DoesNotExist:
+            raise NotFoundError(f"Note with unique_id {unique_id} not found.")
 
-    try:
-        if note.name != note_dict.get('name', note.name):
-            note.name = note_dict['name']
+        # Update note properties
+        updated_fields = False
 
+        for field in ['name', 'content', 'include_in_report']:
+            if field in note_dict and getattr(note, field) != note_dict[field]:
+                setattr(note, field, note_dict[field])
+                updated_fields = True
 
-        if note.content != note_dict.get('content', note.content):
-            note.content = note_dict['content']
-
-        if note.depreciated != note_dict.get('depreciated', note.depreciated):
+        # Handle depreciated and depreciated_date
+        if 'depreciated' in note_dict and note.depreciated != note_dict['depreciated']:
             note.depreciated = note_dict['depreciated']
+            updated_fields = True
 
-        if note_dict.get('depreciated_date'):
-            new_depreciated_date = note_dict.get('depreciated_date')
-            if new_depreciated_date != str(note.depreciated_date):
+        if 'depreciated_date' in note_dict:
+            new_depreciated_date = note_dict['depreciated_date']
+            if new_depreciated_date != (note.depreciated_date.isoformat() if note.depreciated_date else None):
                 note.depreciated_date = date.fromisoformat(new_depreciated_date) if new_depreciated_date else None
+                updated_fields = True
 
-        if note.include_in_report != note_dict.get('include_in_report', note.include_in_report):
-            note.include_in_report = note_dict['include_in_report']
+        # Update the created_by relationship
+        if created_by:
+            try:
+                person = Person.nodes.get(employee_id=created_by)
+                if not note.created_by.is_connected(person):
+                    note.created_by.disconnect_all()
+                    note.created_by.connect(person)
+                    updated_fields = True
+            except Person.DoesNotExist:
+                raise NotFoundError(f"Person with employee_id {created_by} not found.")
 
-        if person and not note.created_by.is_connected(person):
-            note.created_by.disconnect_all()
-            note.created_by.connect(person)
+        # Save the note if any fields were updated
+        if updated_fields:
+            note.save()
 
-        note.save()
+        # Handle YearSuccessEvidence association
+        if year_success_evidence:
+            try:
+                yse = YearSuccessEvidence.nodes.get(year_identifier=year_success_evidence)
+                if not yse.notes.is_connected(note):
+                    yse.notes.connect(note)
+            except YearSuccessEvidence.DoesNotExist:
+                raise NotFoundError(f"YearSuccessEvidence with identifier {year_success_evidence} not found.")
 
-        if not yse.notes.is_connected(note):
-            yse.notes.connect(note)
+        # Handle Implementation association
+        if implementation_id and implementation_type:
+            # Assign the note to the implementation
+            assign_documentation_to_implementation(
+                implementation_id=implementation_id,
+                implementation_type=implementation_type,
+                documentation_type="note",
+                documentation_id=note.unique_id
+            )
 
         return True
 
+    except ValidationError as e:
+        print(f"Validation error: {e}")
+        raise
+
+    except NotFoundError as e:
+        print(f"Not found: {e}")
+        raise
+
     except Exception as e:
-        raise CrudError(f"Error during note update: {e}")
+        print(f"Error during note update: {e}")
+        raise CrudError(f"Failed to update note: {e}")
 
 
-def update_message(year_success_evidence: str, message_dict: dict, created_by: str = None) -> bool:
+
+def update_message(
+        message_dict: dict,
+        year_success_evidence: str = None,
+        implementation_id: str = None,
+        implementation_type: str = None,
+        created_by: str = None
+) -> bool:
+    """
+    Updates an existing message. The message can be associated with a YearSuccessEvidence, an implementation, or both.
+
+    :param message_dict: Dictionary containing message properties to update.
+    :param year_success_evidence: (Optional) The year identifier of the YearSuccessEvidence to associate the message with.
+    :param implementation_id: (Optional) The unique_id of the implementation to associate the message with.
+    :param implementation_type: (Optional) The type of the implementation (e.g., "Process", "Project").
+    :param created_by: (Optional) The employee_id of the person who created the message.
+    :return: True if the message was updated successfully.
+    """
     try:
-        message = Message.nodes.get(unique_id=message_dict.get('unique_id'))
-    except Message.DoesNotExist:
-        raise NotFoundError(f"Message with name {message_dict.get('name')} not found.")
-    except Exception as e:
-        raise CrudError(f"Failed to get Message: {e}")
+        # Fetch the message by unique_id
+        unique_id = message_dict.get('unique_id')
+        if not unique_id:
+            raise ValidationError("Missing 'unique_id' in message_dict.")
 
-    try:
-        yse = YearSuccessEvidence.nodes.get(year_identifier=year_success_evidence)
-    except YearSuccessEvidence.DoesNotExist:
-        raise NotFoundError(f"YearSuccessEvidence with identifier {year_success_evidence} not found.")
-    except Exception as e:
-        raise CrudError(f"Failed to get YearSuccessEvidence: {e}")
-
-    person = None
-    if created_by:
         try:
-            person = Person.nodes.get(employee_id=created_by)
-        except Person.DoesNotExist:
-            raise NotFoundError(f"Person with employee_id {created_by} not found.")
-        except Exception as e:
-            raise CrudError(f"Failed to get Person: {e}")
+            message = Message.nodes.get(unique_id=unique_id)
+        except Message.DoesNotExist:
+            raise NotFoundError(f"Message with unique_id {unique_id} not found.")
 
-    try:
+        # Update message properties
+        updated_fields = False
 
-        if message.name != message_dict.get('name', message.name):
-            message.name = message_dict['name']
+        for field in ['name', 'content', 'file_path', 'uri_path', 'include_in_report']:
+            if field in message_dict and getattr(message, field) != message_dict[field]:
+                setattr(message, field, message_dict[field])
+                updated_fields = True
 
-        if message.content != message_dict.get('content', message.content):
-            message.content = message_dict['content']
-
-        if message.file_path != message_dict.get('file_path', message.file_path):
-            message.file_path = message_dict['file_path']
-
-        if message.uri_path != message_dict.get('uri_path', message.uri_path):
-            message.uri_path = message_dict['uri_path']
-
-        if message.depreciated != message_dict.get('depreciated', message.depreciated):
+        # Handle depreciated and depreciated_date
+        if 'depreciated' in message_dict and message.depreciated != message_dict['depreciated']:
             message.depreciated = message_dict['depreciated']
+            updated_fields = True
 
-        if message_dict.get('depreciated_date'):
-            new_depreciated_date = message_dict.get('depreciated_date')
-            if new_depreciated_date != str(message.depreciated_date):
+        if 'depreciated_date' in message_dict:
+            new_depreciated_date = message_dict['depreciated_date']
+            if new_depreciated_date != (message.depreciated_date.isoformat() if message.depreciated_date else None):
                 message.depreciated_date = date.fromisoformat(new_depreciated_date) if new_depreciated_date else None
+                updated_fields = True
 
-        if message.include_in_report != message_dict.get('include_in_report', message.include_in_report):
-            message.include_in_report = message_dict['include_in_report']
+        # Update the created_by relationship
+        if created_by:
+            try:
+                person = Person.nodes.get(employee_id=created_by)
+                if not message.created_by.is_connected(person):
+                    message.created_by.disconnect_all()
+                    message.created_by.connect(person)
+                    updated_fields = True
+            except Person.DoesNotExist:
+                raise NotFoundError(f"Person with employee_id {created_by} not found.")
 
-        if person and not message.created_by.is_connected(person):
-            message.created_by.disconnect_all()
-            message.created_by.connect(person)
+        # Save the message if any fields were updated
+        if updated_fields:
+            message.save()
 
-        message.save()
+        # Handle YearSuccessEvidence association
+        if year_success_evidence:
+            try:
+                yse = YearSuccessEvidence.nodes.get(year_identifier=year_success_evidence)
+                if not yse.messages.is_connected(message):
+                    yse.messages.connect(message)
+            except YearSuccessEvidence.DoesNotExist:
+                raise NotFoundError(f"YearSuccessEvidence with identifier {year_success_evidence} not found.")
 
-        if not yse.messages.is_connected(message):
-            yse.messages.connect(message)
+        # Handle Implementation association
+        if implementation_id and implementation_type:
+            # Assign the message to the implementation
+            assign_documentation_to_implementation(
+                implementation_id=implementation_id,
+                implementation_type=implementation_type,
+                documentation_type="message",
+                documentation_id=message.unique_id
+            )
 
         return True
 
+    except ValidationError as e:
+        print(f"Validation error: {e}")
+        raise
+
+    except NotFoundError as e:
+        print(f"Not found: {e}")
+        raise
+
     except Exception as e:
-        raise CrudError(f"Error during message update: {e}")
+        print(f"Error during message update: {e}")
+        raise CrudError(f"Failed to update message: {e}")
 
 
-def update_document(year_success_evidence: str, document_dict: dict, created_by: str = None) -> bool:
+
+def update_document(
+        document_dict: dict,
+        year_success_evidence: str = None,
+        implementation_id: str = None,
+        implementation_type: str = None,
+        created_by: str = None
+) -> bool:
+    """
+    Updates an existing document. The document can be associated with a YearSuccessEvidence, an implementation, or both.
+
+    :param document_dict: Dictionary containing document properties to update.
+    :param year_success_evidence: (Optional) The year identifier of the YearSuccessEvidence to associate the document with.
+    :param implementation_id: (Optional) The unique_id of the implementation to associate the document with.
+    :param implementation_type: (Optional) The type of the implementation (e.g., "Process", "Project").
+    :param created_by: (Optional) The employee_id of the person who created the document.
+    :return: True if the document was updated successfully.
+    """
     try:
-        # Retrieve the Document node by unique_id
-        document = Document.nodes.get(unique_id=document_dict.get('unique_id'))
-    except Document.DoesNotExist:
-        raise NotFoundError(f"Document with unique_id {document_dict.get('unique_id')} not found.")
-    except Exception as e:
-        raise CrudError(f"Failed to get Document: {e}")
+        # Fetch the document by unique_id
+        unique_id = document_dict.get('unique_id')
+        if not unique_id:
+            raise ValidationError("Missing 'unique_id' in document_dict.")
 
-    try:
-        # Retrieve the YearSuccessEvidence node by year_identifier
-        yse = YearSuccessEvidence.nodes.get(year_identifier=year_success_evidence)
-    except YearSuccessEvidence.DoesNotExist:
-        raise NotFoundError(f"YearSuccessEvidence with identifier {year_success_evidence} not found.")
-    except Exception as e:
-        raise CrudError(f"Failed to get YearSuccessEvidence: {e}")
-
-    person = None
-    if created_by:
         try:
-            # Retrieve the Person node by employee_id
-            person = Person.nodes.get(employee_id=created_by)
-        except Person.DoesNotExist:
-            raise NotFoundError(f"Person with employee_id {created_by} not found.")
-        except Exception as e:
-            raise CrudError(f"Failed to get Person: {e}")
+            document = Document.nodes.get(unique_id=unique_id)
+        except Document.DoesNotExist:
+            raise NotFoundError(f"Document with unique_id {unique_id} not found.")
 
-    try:
-        # Update the Document's properties if they have changed
-        if document.name != document_dict.get('name', document.name):
-            document.name = document_dict['name']
+        # Update document properties
+        updated_fields = False
 
-        if document.file_path != document_dict.get('file_path', document.file_path):
-            document.file_path = document_dict['file_path']
+        for field in [
+            'name',
+            'file_path',
+            'uri_path',
+            'is_administrative_review_documentation',
+            'is_milestone_and_measures_documentation',
+            'include_in_report'
+        ]:
+            if field in document_dict and getattr(document, field) != document_dict[field]:
+                setattr(document, field, document_dict[field])
+                updated_fields = True
 
-        if document.uri_path != document_dict.get('uri_path', document.uri_path):
-            document.uri_path = document_dict['uri_path']
-
-        if document.is_administrative_review_documentation != document_dict.get('is_administrative_review_documentation', document.is_administrative_review_documentation):
-            document.is_administrative_review_documentation = document_dict['is_administrative_review_documentation']
-
-        if document.is_milestone_and_measures_documentation != document_dict.get('is_milestone_and_measures_documentation', document.is_milestone_and_measures_documentation):
-            document.is_milestone_and_measures_documentation = document_dict['is_milestone_and_measures_documentation']
-
-        if document.include_in_report != document_dict.get('include_in_report', document.include_in_report):
-            document.include_in_report = document_dict['include_in_report']
-
-        if document.depreciated != document_dict.get('depreciated', document.depreciated):
+        # Handle depreciated and depreciated_date
+        if 'depreciated' in document_dict and document.depreciated != document_dict['depreciated']:
             document.depreciated = document_dict['depreciated']
+            updated_fields = True
 
-        # Update depreciated_date if provided
-        new_depreciated_date_str = document_dict.get('depreciated_date')
-        if new_depreciated_date_str:
-            new_depreciated_date = date.fromisoformat(new_depreciated_date_str)
-            if document.depreciated_date != new_depreciated_date:
-                document.depreciated_date = new_depreciated_date
-        elif document.depreciated_date is not None:
-            document.depreciated_date = None
+        if 'depreciated_date' in document_dict:
+            new_depreciated_date_str = document_dict['depreciated_date']
+            if new_depreciated_date_str != (document.depreciated_date.isoformat() if document.depreciated_date else None):
+                document.depreciated_date = date.fromisoformat(new_depreciated_date_str) if new_depreciated_date_str else None
+                updated_fields = True
 
-        # Update the created_by relationship if a person is provided
-        if person:
-            if not document.created_by.is_connected(person):
-                document.created_by.disconnect_all()
-                document.created_by.connect(person)
+        # Update the created_by relationship
+        if created_by:
+            try:
+                person = Person.nodes.get(employee_id=created_by)
+                if not document.created_by.is_connected(person):
+                    document.created_by.disconnect_all()
+                    document.created_by.connect(person)
+                    updated_fields = True
+            except Person.DoesNotExist:
+                raise NotFoundError(f"Person with employee_id {created_by} not found.")
 
-        # Save the updated Document node
-        document.save()
+        # Save the document if any fields were updated
+        if updated_fields:
+            document.save()
 
-        # Connect the Document to the YearSuccessEvidence if not already connected
-        if not yse.documents.is_connected(document):
-            yse.documents.connect(document)
+        # Handle YearSuccessEvidence association
+        if year_success_evidence:
+            try:
+                yse = YearSuccessEvidence.nodes.get(year_identifier=year_success_evidence)
+                if not yse.documents.is_connected(document):
+                    yse.documents.connect(document)
+            except YearSuccessEvidence.DoesNotExist:
+                raise NotFoundError(f"YearSuccessEvidence with identifier {year_success_evidence} not found.")
+
+        # Handle Implementation association
+        if implementation_id and implementation_type:
+            # Assign the document to the implementation
+            assign_documentation_to_implementation(
+                implementation_id=implementation_id,
+                implementation_type=implementation_type,
+                documentation_type="document",
+                documentation_id=document.unique_id
+            )
 
         return True
 
+    except ValidationError as e:
+        print(f"Validation error: {e}")
+        raise
+
+    except NotFoundError as e:
+        print(f"Not found: {e}")
+        raise
+
     except Exception as e:
-        raise CrudError(f"Error during document update: {e}")
+        print(f"Error during document update: {e}")
+        raise CrudError(f"Failed to update document: {e}")
 
 
-def update_webpage(year_success_evidence: str, webpage_dict: dict, created_by: str = None) -> bool:
+
+def update_webpage(
+        webpage_dict: dict,
+        year_success_evidence: str = None,
+        implementation_id: str = None,
+        implementation_type: str = None,
+        created_by: str = None
+) -> bool:
+    """
+    Updates an existing webpage. The webpage can be associated with a YearSuccessEvidence, an implementation, or both.
+
+    :param webpage_dict: Dictionary containing webpage properties to update.
+    :param year_success_evidence: (Optional) The year identifier of the YearSuccessEvidence to associate the webpage with.
+    :param implementation_id: (Optional) The unique_id of the implementation to associate the webpage with.
+    :param implementation_type: (Optional) The type of the implementation (e.g., "Process", "Project").
+    :param created_by: (Optional) The employee_id of the person who created the webpage.
+    :return: True if the webpage was updated successfully.
+    """
     try:
-        # Retrieve the Webpage node by unique_id
-        webpage = Webpage.nodes.get(unique_id=webpage_dict.get('unique_id'))
-    except Webpage.DoesNotExist:
-        raise NotFoundError(f"Webpage with unique_id {webpage_dict.get('unique_id')} not found.")
-    except Exception as e:
-        raise CrudError(f"Failed to get Webpage: {e}")
+        # Fetch the webpage by unique_id
+        unique_id = webpage_dict.get('unique_id')
+        if not unique_id:
+            raise ValidationError("Missing 'unique_id' in webpage_dict.")
 
-    try:
-        # Retrieve the YearSuccessEvidence node by year_identifier
-        yse = YearSuccessEvidence.nodes.get(year_identifier=year_success_evidence)
-    except YearSuccessEvidence.DoesNotExist:
-        raise NotFoundError(f"YearSuccessEvidence with identifier {year_success_evidence} not found.")
-    except Exception as e:
-        raise CrudError(f"Failed to get YearSuccessEvidence: {e}")
-
-    person = None
-    if created_by:
         try:
-            # Retrieve the Person node by employee_id
-            person = Person.nodes.get(employee_id=created_by)
-        except Person.DoesNotExist:
-            raise NotFoundError(f"Person with employee_id {created_by} not found.")
-        except Exception as e:
-            raise CrudError(f"Failed to get Person: {e}")
+            webpage = Webpage.nodes.get(unique_id=unique_id)
+        except Webpage.DoesNotExist:
+            raise NotFoundError(f"Webpage with unique_id {unique_id} not found.")
 
-    try:
-        # Update the Webpage's properties if they have changed
-        if webpage.name != webpage_dict.get('name', webpage.name):
-            webpage.name = webpage_dict['name']
+        # Update webpage properties
+        updated_fields = False
 
-        if webpage.url != webpage_dict.get('url', webpage.url):
-            webpage.url = webpage_dict['url']
+        for field in [
+            'name',
+            'url',
+            'description',
+            'no_longer_exists',
+            'include_in_report'
+        ]:
+            if field in webpage_dict and getattr(webpage, field) != webpage_dict[field]:
+                setattr(webpage, field, webpage_dict[field])
+                updated_fields = True
 
-        if webpage.description != webpage_dict.get('description', webpage.description):
-            webpage.description = webpage_dict['description']
-
-        if webpage.no_longer_exists != webpage_dict.get('no_longer_exists', webpage.no_longer_exists):
-            webpage.no_longer_exists = webpage_dict['no_longer_exists']
-
-        if webpage.depreciated != webpage_dict.get('depreciated', webpage.depreciated):
+        # Handle depreciated and depreciated_date
+        if 'depreciated' in webpage_dict and webpage.depreciated != webpage_dict['depreciated']:
             webpage.depreciated = webpage_dict['depreciated']
+            updated_fields = True
 
-        # Update depreciated_date if provided
-        new_depreciated_date_str = webpage_dict.get('depreciated_date')
-        if new_depreciated_date_str:
-            new_depreciated_date = date.fromisoformat(new_depreciated_date_str)
-            if webpage.depreciated_date != new_depreciated_date:
-                webpage.depreciated_date = new_depreciated_date
-        elif webpage.depreciated_date is not None:
-            webpage.depreciated_date = None
+        if 'depreciated_date' in webpage_dict:
+            new_depreciated_date_str = webpage_dict['depreciated_date']
+            if new_depreciated_date_str != (webpage.depreciated_date.isoformat() if webpage.depreciated_date else None):
+                webpage.depreciated_date = date.fromisoformat(new_depreciated_date_str) if new_depreciated_date_str else None
+                updated_fields = True
 
-        if webpage.include_in_report != webpage_dict.get('include_in_report', webpage.include_in_report):
-            webpage.include_in_report = webpage_dict['include_in_report']
+        # Update the created_by relationship
+        if created_by:
+            try:
+                person = Person.nodes.get(employee_id=created_by)
+                if not webpage.created_by.is_connected(person):
+                    webpage.created_by.disconnect_all()
+                    webpage.created_by.connect(person)
+                    updated_fields = True
+            except Person.DoesNotExist:
+                raise NotFoundError(f"Person with employee_id {created_by} not found.")
 
-        # Update the created_by relationship if a person is provided
-        if person:
-            if not webpage.created_by.is_connected(person):
-                webpage.created_by.disconnect_all()
-                webpage.created_by.connect(person)
+        # Save the webpage if any fields were updated
+        if updated_fields:
+            webpage.save()
 
-        # Save the updated Webpage node
-        webpage.save()
+        # Handle YearSuccessEvidence association
+        if year_success_evidence:
+            try:
+                yse = YearSuccessEvidence.nodes.get(year_identifier=year_success_evidence)
+                if not yse.webpages.is_connected(webpage):
+                    yse.webpages.connect(webpage)
+            except YearSuccessEvidence.DoesNotExist:
+                raise NotFoundError(f"YearSuccessEvidence with identifier {year_success_evidence} not found.")
 
-        # Connect the Webpage to the YearSuccessEvidence if not already connected
-        if not yse.webpages.is_connected(webpage):
-            yse.webpages.connect(webpage)
+        # Handle Implementation association
+        if implementation_id and implementation_type:
+            # Assign the webpage to the implementation
+            assign_documentation_to_implementation(
+                implementation_id=implementation_id,
+                implementation_type=implementation_type,
+                documentation_type="webpage",
+                documentation_id=webpage.unique_id
+            )
 
         return True
 
+    except ValidationError as e:
+        print(f"Validation error: {e}")
+        raise
+
+    except NotFoundError as e:
+        print(f"Not found: {e}")
+        raise
+
     except Exception as e:
-        raise CrudError(f"Error during webpage update: {e}")
+        print(f"Error during webpage update: {e}")
+        raise CrudError(f"Failed to update webpage: {e}")
 
 
 

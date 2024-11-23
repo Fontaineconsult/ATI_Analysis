@@ -8,7 +8,10 @@ import MetricViewer from './MetricViewer';
 
 function DocumentationMasterViewer({ documentation }) {
     // Destructure evidenceTypes from documentation
+    console.log("SDFSDF", documentation)
     const { docs = [], webs = [], notes = [], msgs = [], metrics = [] } = documentation || {};
+    const implementation_id = documentation.evidenceType.properties.unique_id;
+    const implementation_type = documentation.evidenceType.labels[0];
 
     // Mapping of document types to their data lists
     const dataLists = {
@@ -33,11 +36,17 @@ function DocumentationMasterViewer({ documentation }) {
 
     // Mapping of selected type to its viewer component
     const viewerComponents = {
-        Documents: <DocumentViewer documents={filteredDocs} />,
-        Websites: <WebsiteViewer websites={filteredDocs} />,
-        Notes: <NoteViewer notes={filteredDocs} />,
+        Documents: <DocumentViewer documents={filteredDocs}
+                                   implementation_id={implementation_id}
+                                   implementation_type={implementation_type} />,
+        Websites: <WebsiteViewer websites={filteredDocs} documents={filteredDocs}
+                                 implementation_id={implementation_id}
+                                 implementation_type={implementation_type} />,
+        Notes: <NoteViewer notes={filteredDocs}  />,
         Messages: <MessageViewer messages={filteredDocs} />,
-        Metrics: <MetricViewer metrics={filteredDocs} />
+        Metrics: <MetricViewer metrics={filteredDocs} documents={filteredDocs}
+                               implementation_id={implementation_id}
+                               implementation_type={implementation_type}/>
     };
 
 

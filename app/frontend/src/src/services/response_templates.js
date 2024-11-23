@@ -21,28 +21,81 @@ export function createMessagePayload(yearSuccessEvidence, messageContent, create
     };
 }
 
-export function createDocumentPayload(name, filePath = null, uriPath = null, depreciated = false) {
+export function createDocumentPayloadForImplementation(implementation_id, implementation_type, document_dict, created_by) {
     return {
         action: "add_document",
-        name: name,
-        file_path: filePath,
-        uri_path: uriPath,
-        depreciated: depreciated
+        implementation_id: implementation_id,
+        implementation_type: implementation_type,
+        document_dict: document_dict,
+        created_by:created_by
+
     };
 }
 
 
-function createWebpagePayload(url, name, noLongerExists, depreciated, depreciatedYear, description) {
+export function createWebpagePayloadForImplementation(implementation_id, implementation_type, webpage_dict, created_by) {
     return {
         action: "add_webpage",
-        url: url,
-        name: name,
-        no_longer_exists: noLongerExists,
-        depreciated: depreciated,
-        depreciated_year: depreciatedYear,
-        description: description
+        implementation_id: implementation_id,
+        implementation_type: implementation_type,
+        webpage_dict: webpage_dict,
+        created_by:created_by
+
     };
 }
+
+
+
+export function createMessagePayloadForImplementation(implementation_id, implementation_type, message_dict, created_by) {
+    return {
+        action: "create_message",
+        implementation_id: implementation_id,
+        implementation_type: implementation_type,
+        message_dict: message_dict,
+        created_by:created_by
+    }
+
+}
+
+
+export function updateMessageForImplementationPayload(implementation_id, implementation_type, message_dict, created_by) {
+
+    return {
+        action: "update_metric",
+        implementation_id: implementation_id,
+        implementation_type: implementation_type,
+        message_dict: message_dict,
+        created_by:created_by
+    }
+
+
+
+}
+
+
+export function createMetricPayloadForImplementation(implementation_id, implementation_type, document_dict, created_by) {
+    return {
+        action: "create_metric",
+        implementation_id: implementation_id,
+        implementation_type: implementation_type,
+        document_dict: document_dict,
+        created_by:created_by
+    }
+
+}
+
+
+
+export function updateNotePayloadForImplementation(implementation_id, implementation_type, note_dict, created_by) {
+    return {
+        action: "update_note",
+        implementation_id: implementation_id,
+        implementation_type: implementation_type,
+        note_dict: note_dict,
+        created_by:created_by
+    }
+}
+
 
 export function updateNotePayload(yearSuccessEvidence, note_dict, created_by) {
     return {
@@ -65,10 +118,12 @@ export function updateMessagePayload(yearSuccessEvidence, message_dict, created_
 }
 
 
-export function updateDocumentPayload(yearSuccessEvidence, document_dict, created_by) {
+
+export function updateDocumentPayload(implementation_id, implementation_type, document_dict, created_by) {
     return {
         action: "update_document",
-        year_success_evidence: yearSuccessEvidence,
+        implementation_id: implementation_id,
+        implementation_type: implementation_type,
         document_dict: document_dict,
         created_by:created_by
     }
@@ -76,20 +131,22 @@ export function updateDocumentPayload(yearSuccessEvidence, document_dict, create
 }
 
 
-export function updateWebsitePayload(yearSuccessEvidence, website_dict, created_by) {
+export function updateWebsitePayload(implementation_id, implementation_type, website_dict, created_by) {
     return {
         action: "update_website",
-        year_success_evidence: yearSuccessEvidence,
+        implementation_id: implementation_id,
+        implementation_type: implementation_type,
         website_dict: website_dict,
         created_by:created_by
     }
 
 }
 
-export function updateMetricPayload(yearSuccessEvidence, metric_dict, created_by) {
+export function updateMetricPayload(implementation_id, implementation_type, metric_dict, created_by) {
     return {
         action: "update_metric",
-        year_success_evidence: yearSuccessEvidence,
+        implementation_id: implementation_id,
+        implementation_type: implementation_type,
         metric_dict: metric_dict,
         created_by:created_by
     }
