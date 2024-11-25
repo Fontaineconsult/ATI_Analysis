@@ -227,7 +227,7 @@ class DocumentsAPI(MethodView):
                 if 'unique_id' not in note_dict:
                     return make_response(status="error", error="The 'unique_id' field is required in 'note_dict'."), 400
 
-                if update_note(data['year_success_evidence'], note_dict, data.get('created_by')):
+                if update_note(note_dict, data['year_success_evidence'], note_dict.get('created_by')):
                     return make_response(status="success", data="Note updated successfully."), 200
                 else:
                     return make_response(status="error", error="Failed to update note."), 500
@@ -241,7 +241,7 @@ class DocumentsAPI(MethodView):
                 if 'unique_id' not in message_dict:
                     return make_response(status="error", error="The 'unique_id' field is required in 'message_dict'."), 400
 
-                if update_message(data['year_success_evidence'], message_dict, data.get('created_by')):
+                if update_message(message_dict, data['year_success_evidence'], message_dict.get('created_by')):
                     return make_response(status="success", data="Message updated successfully."), 200
                 else:
                     return make_response(status="error", error="Failed to update message."), 500
@@ -255,41 +255,79 @@ class DocumentsAPI(MethodView):
                 if 'unique_id' not in metric_dict:
                     return make_response(status="error", error="The 'unique_id' field is required in 'metric_dict'."), 400
 
-                if update_metric(data['year_success_evidence'], metric_dict, data.get('created_by')):
+                if update_metric(metric_dict, data['year_success_evidence'], metric_dict.get('created_by')):
                     return make_response(status="success", data="Metric updated successfully."), 200
                 else:
                     return make_response(status="error", error="Failed to update metric."), 500
 
             elif action == 'update_document':
-                required_fields = ['year_success_evidence', 'document_dict']
+                required_fields = ['document_dict']
                 if not all(field in data for field in required_fields):
-                    return make_response(status="error", error="Missing required fields for document update."), 400
+                    return make_response({"status": "error", "error": "Missing required fields for document update."}), 400
 
                 document_dict = data['document_dict']
                 if 'unique_id' not in document_dict:
-                    return make_response(status="error", error="The 'unique_id' field is required in 'document_dict'."), 400
+                    return make_response({"status": "error", "error": "The 'unique_id' field is required in 'document_dict'."}), 400
 
-                if update_document(data['year_success_evidence'], document_dict, data.get('created_by')):
-                    return make_response(status="success", data="Document updated successfully."), 200
-                else:
-                    return make_response(status="error", error="Failed to update document."), 500
+                # Extract optional parameters
+                year_success_evidence = data.get('year_success_evidence')
+                implementation_id = data.get('implementation_id')
+                implementation_type = data.get('implementation_type')
+                created_by = data.get('created_by')
+
+                try:
+                    if update_document(
+                            document_dict=document_dict,
+                            year_success_evidence=year_success_evidence,
+                            implementation_id=implementation_id,
+                            implementation_type=implementation_type,
+                            # created_by=created_by #Todo add to schema
+                    ):
+                        return make_response({"status": "success", "data": "Document updated successfully."}), 200
+                    else:
+                        return make_response({"status": "error", "error": "Failed to update document."}), 500
+                except ValidationError as e:
+                    return make_response({"status": "error", "error": str(e)}), 400
+                except NotFoundError as e:
+                    return make_response({"status": "error", "error": str(e)}), 404
+                except Exception as e:
+                    print(f"Unexpected error: {e}")
+                    return make_response({"status": "error", "error": "An unexpected error occurred."}), 500
+
 
             elif action == 'update_webpage':
-                required_fields = ['year_success_evidence', 'webpage_dict']
+                required_fields = ['webpage_dict']
                 if not all(field in data for field in required_fields):
-                    return make_response(status="error", error="Missing required fields for webpage update."), 400
+                    return make_response({"status": "error", "error": "Missing required fields for webpage update."}), 400
 
                 webpage_dict = data['webpage_dict']
                 if 'unique_id' not in webpage_dict:
-                    return make_response(status="error", error="The 'unique_id' field is required in 'webpage_dict'."), 400
+                    return make_response({"status": "error", "error": "The 'unique_id' field is required in 'webpage_dict'."}), 400
 
-                if update_webpage(data['year_success_evidence'], webpage_dict, data.get('created_by')):
-                    return make_response(status="success", data="Webpage updated successfully."), 200
-                else:
-                    return make_response(status="error", error="Failed to update webpage."), 500
+                # Extract optional parameters
+                year_success_evidence = data.get('year_success_evidence')
+                implementation_id = data.get('implementation_id')
+                implementation_type = data.get('implementation_type')
 
-            else:
-                return make_response(status="error", error=f'Unknown action: {action}'), 400
+
+                try:
+                    if update_webpage(
+                            webpage_dict=webpage_dict,
+                            year_success_evidence=year_success_evidence,
+                            implementation_id=implementation_id,
+                            implementation_type=implementation_type,
+                    ):
+                        return make_response({"status": "success", "data": "Webpage updated successfully."}), 200
+                    else:
+                        return make_response({"status": "error", "error": "Failed to update webpage."}), 500
+                except ValidationError as e:
+                    return make_response({"status": "error", "error": str(e)}), 400
+                except NotFoundError as e:
+                    return make_response({"status": "error", "error": str(e)}), 404
+                except Exception as e:
+                    print(f"Error during webpage update: {e}")
+                    return make_response({"status": "error", "error": "An unexpected error occurred."}), 500
+
 
         except ValidationError as e:
             return make_response(status='error', error=str(e)), 400

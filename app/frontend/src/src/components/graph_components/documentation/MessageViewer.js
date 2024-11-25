@@ -47,9 +47,9 @@ function MessageViewer({ messages, onSubmit, yearSuccessEvidence, createdBy }) {
             if (isNew) {
                 // If adding a new message, set date_created to now
                 messageData.date_created = new Date().toISOString().split('T')[0]; // Format as YYYY-MM-DD
-                await addNewMessage(yearSuccessEvidence, messageData, user?.properties || user);
+                await addNewMessage(yearSuccessEvidence, messageData, user?.properties.employee_id || user);
             } else {
-                await updateMessage(yearSuccessEvidence, messageData, user?.properties || user);
+                await updateMessage(yearSuccessEvidence, messageData, user?.properties.employee_id || user);
             }
             await loadSingleWorkingGroupData(currentWorkingGroup); // Refresh data
             setExpandedIndex(null);

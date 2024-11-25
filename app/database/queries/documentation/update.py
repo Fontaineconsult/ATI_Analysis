@@ -49,6 +49,7 @@ def update_note(
     """
     try:
         # Fetch the note by unique_id
+        print("DSFDSF",note_dict)
         unique_id = note_dict.get('unique_id')
         if not unique_id:
             raise ValidationError("Missing 'unique_id' in note_dict.")
@@ -122,7 +123,9 @@ def update_note(
         raise
 
     except Exception as e:
+        import traceback
         print(f"Error during note update: {e}")
+        traceback.print_exc()
         raise CrudError(f"Failed to update note: {e}")
 
 

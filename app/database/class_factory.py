@@ -14,13 +14,13 @@ academic_years = ["2019-2020",
                   "2024-2025",]
 
 
-implementation_types = ["process",
-                        "project",
-                        "procedure",
-                        "service",
-                        "guidance",
-                        "tracking",
-                        "internal_policy"]
+implementation_types = ["Process",
+                        "Project",
+                        "Procedure",
+                        "Service",
+                        "Guidance",
+                        "Tracking",
+                        "Internal_policy"]
 
 implementation_classes = {
     "Process": Process,
@@ -58,11 +58,12 @@ documentation_relationships = {
 
 
 implementor_classes = {
-    "process": "implements_process",
-    "project": "implements_project",
-    "procedure": "implements_procedure",
-    "service": "implements_service",
-    "guidance": "implements_guidance"
+    "Process": "implements_process",
+    "Project": "implements_project",
+    "Procedure": "implements_procedure",
+    "Service": "implements_service",
+    "Guidance": "implements_guidance",
+    "Tracking": "implements_tracking",
 
 }
 

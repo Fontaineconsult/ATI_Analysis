@@ -17,13 +17,13 @@ def get_all_implementations(implementation_type):
     :return: List of implementation nodes
     """
     implementation_functions = {
-        "process": get_all_processes,
-        "project": get_all_projects,
-        "procedure": get_all_procedures,
-        "service": get_all_services,
-        "guidance": get_all_guidances,
-        "tracking": get_all_trackings,
-        "internal_policy": get_all_internal_policies
+        "Process": get_all_processes,
+        "Project": get_all_projects,
+        "Procedure": get_all_procedures,
+        "Service": get_all_services,
+        "Guidance": get_all_guidances,
+        "Tracking": get_all_trackings,
+        "Internal_policy": get_all_internal_policies
 
     }
 

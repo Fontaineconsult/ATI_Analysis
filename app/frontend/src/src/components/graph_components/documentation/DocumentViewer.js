@@ -37,10 +37,10 @@ function DocumentViewer({ documents, implementation_id, implementation_type }) {
             if (isNew) {
                 // Assume that date_created and created_by are needed for a new document
                 documentData.date_created = new Date().toISOString().split('T')[0];
-
-                await addDocumentToImplementation(implementation_id, implementation_type, documentData, user?.properties || user);
+                console.log("DDSD",user)
+                await addDocumentToImplementation(implementation_id, implementation_type, documentData, user?.employee_id || '');
             } else {
-                await updateDocument(implementation_id, implementation_type, documentData, user?.properties || user);
+                await updateDocument(implementation_id, implementation_type, documentData, user?.employee_id || '');
             }
             await loadSingleWorkingGroupData(currentWorkingGroup); // Refresh data
             setExpandedIndex(null);

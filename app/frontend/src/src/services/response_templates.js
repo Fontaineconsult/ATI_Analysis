@@ -136,7 +136,7 @@ export function updateWebsitePayload(implementation_id, implementation_type, web
         action: "update_website",
         implementation_id: implementation_id,
         implementation_type: implementation_type,
-        website_dict: website_dict,
+        webpage_dict: website_dict,
         created_by:created_by
     }
 

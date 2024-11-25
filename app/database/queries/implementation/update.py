@@ -1,6 +1,8 @@
 #
 # IMPLEMENTATION UPDATE QUERIES
 #
+from pycparser.c_ast import Return
+
 from app.database.graph_schema import *
 from app.database.class_factory import implementation_classes, documentation_classes, documentation_relationships
 from app.endpoints.data_api.errors.custom_exceptions import NotFoundError, ValidationError, CrudError
@@ -29,7 +31,7 @@ def assign_documentation_to_implementation(implementation_id, implementation_typ
 
     # Check if the relationship already exists
     if relationship.is_connected(documentation_node):
-        raise ValidationError(f"The relationship between implementation {implementation_id} and documentation {documentation_id} already exists.")
+        return True
 
     relationship.connect(documentation_node)
 
