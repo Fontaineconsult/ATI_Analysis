@@ -23,7 +23,7 @@ def get_all_implementations(implementation_type):
         "Service": get_all_services,
         "Guidance": get_all_guidances,
         "Tracking": get_all_trackings,
-        "Internal_policy": get_all_internal_policies
+        "InternalPolicy": get_all_internal_policies
 
     }
 

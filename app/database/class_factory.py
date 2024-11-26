@@ -20,7 +20,7 @@ implementation_types = ["Process",
                         "Service",
                         "Guidance",
                         "Tracking",
-                        "Internal_policy"]
+                        "InternalPolicy"]
 
 implementation_classes = {
     "Process": Process,
@@ -64,6 +64,7 @@ implementor_classes = {
     "Service": "implements_service",
     "Guidance": "implements_guidance",
     "Tracking": "implements_tracking",
+
 
 }
 
