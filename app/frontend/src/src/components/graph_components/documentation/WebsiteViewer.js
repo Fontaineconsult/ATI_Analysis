@@ -15,7 +15,7 @@ import {
 } from '@chakra-ui/react';
 import { updateWebpage } from '../../../services/api/put';
 import { addWebpageToImplementation } from '../../../services/api/post';
-
+import { useToast } from '@chakra-ui/react';
 import { DataContext } from '../../../context/DataContext';
 import { useSettings } from '../../../context/SettingsContext';
 import { UserContext } from '../../../context/UserContext';
@@ -26,7 +26,7 @@ function WebsiteViewer({ websites, implementation_id, implementation_type }) {
     const { loadSingleWorkingGroupData, selectedYear } = useContext(DataContext);
     const { currentWorkingGroup } = useSettings();
     const { user } = useContext(UserContext);
-
+    const toast = useToast();
     // Toggle expanded/collapsed state
     const toggleCollapse = (index) => {
         setExpandedIndex(expandedIndex === index ? null : index);
@@ -35,31 +35,53 @@ function WebsiteViewer({ websites, implementation_id, implementation_type }) {
     // Handle form submission for both new and updated websites
     const handleFormSubmit = async (index, websiteData, isNew) => {
         try {
+            let response; // Declare a variable to hold the response
+
             if (isNew) {
                 // Assume that date_created and created_by are needed for a new website
                 websiteData.date_created = new Date().toISOString().split('T')[0];
 
-                await addWebpageToImplementation(
+                // Capture the response from the API call
+                response = await addWebpageToImplementation(
                     implementation_id,
                     implementation_type,
                     websiteData,
                     user?.properties || user
                 );
             } else {
-                await updateWebpage(
+                // Capture the response from the API call
+                response = await updateWebpage(
                     implementation_id,
                     implementation_type,
                     websiteData,
                     user?.properties || user
                 );
             }
+
+            // Use the message from the response in the success toast
+
+            toast({
+                title: "Success",
+                description: response.message || "Operation completed successfully.",
+                status: "success",
+                duration: 3000,
+                isClosable: true,
+            });
+
             await loadSingleWorkingGroupData(currentWorkingGroup); // Refresh data
             setExpandedIndex(null);
             setIsAddingNewWebsite(false);
         } catch (error) {
-            console.error('Error submitting website:', error);
+            toast({
+                title: "Error",
+                description: error.response?.data?.error || "An unexpected error occurred.",
+                status: "error",
+                duration: 3000,
+                isClosable: true,
+            });
         }
     };
+
 
     return (
         <Box>

@@ -139,16 +139,17 @@ class DocumentsAPI(MethodView):
                     return make_response({"status": "success", "message": "Document created successfully."}), 201
 
             elif action == 'add_webpage':
-                required_fields = ['website_dict']
+                required_fields = ['webpage_dict']
                 if not all(field in data for field in required_fields):
                     return make_response({"status": "error", "error": "Missing required fields for webpage creation."}), 400
 
-                website_dict = data['website_dict']
+                website_dict = data['webpage_dict']
+
 
                 # Optional fields
                 implementation_id = data.get('implementation_id')
                 implementation_type = data.get('implementation_type')
-                created_by = data.get('created_by')
+                created_by = website_dict.get('created_by')
 
                 # Extract fields from website_dict
                 url = website_dict.get('url')
@@ -172,7 +173,7 @@ class DocumentsAPI(MethodView):
                         implementation_type=implementation_type,
                         created_by=created_by
                 ):
-                    return make_response({"status": "success", "message": "Webpage created successfully."}), 201
+                    return make_response(status="success", message="Webpage created successfully"), 201
 
             elif action == 'add_metric':
                 required_fields = ['metric_dict']
@@ -197,13 +198,13 @@ class DocumentsAPI(MethodView):
                 return make_response({"status": "error", "error": f"Unknown action: {action}"}), 400
 
         except ValidationError as e:
-            return make_response({"status": "error", "error": str(e)}), 400
+            return make_response(status="error", error=str(e)), 400
         except NotFoundError as e:
-            return make_response({"status": "error", "error": str(e)}), 404
+            return make_response(status="error", error=str(e)), 404
         except CrudError as e:
-            return make_response({"status": "error", "error": str(e)}), 500
+            return make_response(status="error", error=str(e)), 500
         except Exception as e:
-            return make_response({"status": "error", "error": f"An unexpected error occurred: {str(e)}"}), 500
+            return make_response(status="error", error=str(e)), 500
 
 
     def put(self, document_type):
@@ -263,11 +264,11 @@ class DocumentsAPI(MethodView):
             elif action == 'update_document':
                 required_fields = ['document_dict']
                 if not all(field in data for field in required_fields):
-                    return make_response({"status": "error", "error": "Missing required fields for document update."}), 400
+                    return make_response(status="error", error="Missing required fields for document update."), 400
 
                 document_dict = data['document_dict']
                 if 'unique_id' not in document_dict:
-                    return make_response({"status": "error", "error": "The 'unique_id' field is required in 'document_dict'."}), 400
+                    return make_response(status="error", error="The 'unique_id' field is required in 'document_dict'."), 400
 
                 # Extract optional parameters
                 year_success_evidence = data.get('year_success_evidence')
@@ -283,26 +284,26 @@ class DocumentsAPI(MethodView):
                             implementation_type=implementation_type,
                             # created_by=created_by #Todo add to schema
                     ):
-                        return make_response({"status": "success", "data": "Document updated successfully."}), 200
+                        return make_response(status="success",data="Document updated successfully."), 200
                     else:
-                        return make_response({"status": "error", "error": "Failed to update document."}), 500
+                        return make_response(status="error", error="Failed to update document."), 500
                 except ValidationError as e:
-                    return make_response({"status": "error", "error": str(e)}), 400
+                    return make_response(status="error", error=str(e)), 400
                 except NotFoundError as e:
-                    return make_response({"status": "error", "error": str(e)}), 404
+                    return make_response(status="error", error=str(e)), 404
                 except Exception as e:
                     print(f"Unexpected error: {e}")
-                    return make_response({"status": "error", "error": "An unexpected error occurred."}), 500
+                    return make_response(status="error", error="An unexpected error occurred."), 500
 
 
             elif action == 'update_webpage':
                 required_fields = ['webpage_dict']
                 if not all(field in data for field in required_fields):
-                    return make_response({"status": "error", "error": "Missing required fields for webpage update."}), 400
+                    return make_response(status="error", error="Missing required fields for webpage update."), 400
 
                 webpage_dict = data['webpage_dict']
                 if 'unique_id' not in webpage_dict:
-                    return make_response({"status": "error", "error": "The 'unique_id' field is required in 'webpage_dict'."}), 400
+                    return make_response(status="error", error="The 'unique_id' field is required in 'webpage_dict'"), 400
 
                 # Extract optional parameters
                 year_success_evidence = data.get('year_success_evidence')
@@ -317,16 +318,16 @@ class DocumentsAPI(MethodView):
                             implementation_id=implementation_id,
                             implementation_type=implementation_type,
                     ):
-                        return make_response({"status": "success", "data": "Webpage updated successfully."}), 200
+                        return make_response(status="success", message="Webpage updated successfully."), 200
                     else:
-                        return make_response({"status": "error", "error": "Failed to update webpage."}), 500
+                        return make_response(status="error", error="Failed to update webpage."), 500
                 except ValidationError as e:
-                    return make_response({"status": "error", "error": str(e)}), 400
+                    return make_response(status="error", error=str(e)), 400
                 except NotFoundError as e:
-                    return make_response({"status": "error", "error": str(e)}), 404
+                    return make_response(status="error", error=str(e)), 404
                 except Exception as e:
                     print(f"Error during webpage update: {e}")
-                    return make_response({"status": "error", "error": "An unexpected error occurred."}), 500
+                    return make_response(status="error", error="An unexpected error occurred"), 500
 
 
         except ValidationError as e:

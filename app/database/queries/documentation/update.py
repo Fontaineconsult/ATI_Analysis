@@ -49,7 +49,7 @@ def update_note(
     """
     try:
         # Fetch the note by unique_id
-        print("DSFDSF",note_dict)
+
         unique_id = note_dict.get('unique_id')
         if not unique_id:
             raise ValidationError("Missing 'unique_id' in note_dict.")
@@ -318,12 +318,10 @@ def update_document(
         return True
 
     except ValidationError as e:
-        print(f"Validation error: {e}")
-        raise
+        raise CrudError(f"Failed to update document: {e}")
 
     except NotFoundError as e:
-        print(f"Not found: {e}")
-        raise
+        raise CrudError(f"Failed to update document: {e}")
 
     except Exception as e:
         print(f"Error during document update: {e}")
@@ -380,8 +378,14 @@ def update_webpage(
 
         if 'depreciated_date' in webpage_dict:
             new_depreciated_date_str = webpage_dict['depreciated_date']
-            if new_depreciated_date_str != (webpage.depreciated_date.isoformat() if webpage.depreciated_date else None):
-                webpage.depreciated_date = date.fromisoformat(new_depreciated_date_str) if new_depreciated_date_str else None
+            current_depreciated_date_str = (
+                webpage.depreciated_date.isoformat() if webpage.depreciated_date else None
+            )
+            if new_depreciated_date_str != current_depreciated_date_str:
+                webpage.depreciated_date = (
+                    date.fromisoformat(new_depreciated_date_str)
+                    if new_depreciated_date_str else None
+                )
                 updated_fields = True
 
         # Update the created_by relationship
@@ -411,26 +415,28 @@ def update_webpage(
         # Handle Implementation association
         if implementation_id and implementation_type:
             # Assign the webpage to the implementation
-            assign_documentation_to_implementation(
-                implementation_id=implementation_id,
-                implementation_type=implementation_type,
-                documentation_type="webpage",
-                documentation_id=webpage.unique_id
-            )
+            try:
+                assign_documentation_to_implementation(
+                    implementation_id=implementation_id,
+                    implementation_type=implementation_type,
+                    documentation_type="webpage",
+                    documentation_id=webpage.unique_id
+                )
+            except Exception as e:
+                raise CrudError(f"Error assigning webpage to implementation: {e}")
 
         return True
 
     except ValidationError as e:
-        print(f"Validation error: {e}")
-        raise
+        raise CrudError(f"Failed to update webpage: {e}")
 
     except NotFoundError as e:
-        print(f"Not found: {e}")
-        raise
+        raise CrudError(f"Failed to update webpage: {e}")
 
     except Exception as e:
         print(f"Error during webpage update: {e}")
         raise CrudError(f"Failed to update webpage: {e}")
+
 
 
 

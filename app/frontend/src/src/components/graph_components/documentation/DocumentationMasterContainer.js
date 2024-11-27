@@ -8,7 +8,7 @@ import MetricViewer from './MetricViewer';
 
 function DocumentationMasterViewer({ documentation }) {
     // Destructure evidenceTypes from documentation
-    console.log("Documentation:", documentation);
+
     const { docs = [], webs = [], notes = [], msgs = [], metrics = [] } = documentation || {};
     const implementation_id = documentation.evidenceType.properties.unique_id;
     const implementation_type = documentation.evidenceType.labels[0];

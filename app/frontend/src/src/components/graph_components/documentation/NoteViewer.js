@@ -18,7 +18,7 @@ import { useSettings } from '../../../context/SettingsContext';
 import { UserContext } from '../../../context/UserContext'; // Import the UserContext
 
 function NoteViewer({ notes, onSubmit, yearSuccessEvidence, createdBy }) {
-    console.log('111', notes);
+
     const [expandedIndex, setExpandedIndex] = useState(null);
     const [isAddingNewNote, setIsAddingNewNote] = useState(false); // State for adding new note
     const { loadSingleWorkingGroupData, selectedYear } = useContext(DataContext);

@@ -131,12 +131,12 @@ export function updateDocumentPayload(implementation_id, implementation_type, do
 }
 
 
-export function updateWebsitePayload(implementation_id, implementation_type, website_dict, created_by) {
+export function updateWebsitePayload(implementation_id, implementation_type, update_webpage, created_by) {
     return {
-        action: "update_website",
+        action: "update_webpage",
         implementation_id: implementation_id,
         implementation_type: implementation_type,
-        webpage_dict: website_dict,
+        webpage_dict: update_webpage,
         created_by:created_by
     }
 

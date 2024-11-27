@@ -274,28 +274,48 @@ def add_document(
 def add_webpage(
         url,
         name,
-        no_longer_exists=False,
-        depreciated=False,
-        depreciated_date=None,
-        description='',
-        include_in_report=True,
+        no_longer_exists,
+        depreciated,
+        depreciated_date,
+        description,
+        include_in_report,
+        created_by=None,
         implementation_id=None,
         implementation_type=None,
-        created_by=None
 ) -> bool:
+    """
+    Adds a webpage node to the graph. Optionally assigns the webpage to an implementation if implementation_id is provided.
+
+    :param url: The URL of the webpage.
+    :param name: The name of the webpage.
+    :param no_longer_exists: Boolean indicating if the webpage no longer exists.
+    :param depreciated: Boolean indicating if the webpage is depreciated.
+    :param depreciated_year: The year the webpage was depreciated (format: YYYY-MM-DD).
+    :param description: A description of the webpage.
+    :param implementation_id: (Optional) The unique_id of the implementation to assign this webpage to.
+    :param implementation_type: (Optional) The type of the implementation (e.g., "Process", "Project").
+    :return: True if the webpage was added successfully.
+    """
     try:
         # Check if the webpage already exists
         existing_webpage = Webpage.nodes.get_or_none(url=url)
         if existing_webpage:
-            raise ValidationError(f"A webpage with URL {url} already exists.")
+            if implementation_id and implementation_type:
+                assign_documentation_to_implementation(
+                    implementation_id=implementation_id,
+                    implementation_type=implementation_type,
+                    documentation_type="webpage",
+                    documentation_id=existing_webpage.unique_id
+                )
+                return True
 
         # Create and save the webpage
         new_webpage = Webpage(
             url=url,
             name=name,
-            no_longer_exists=no_longer_exists,
             depreciated=depreciated,
-            depreciated_date=datetime.strptime(depreciated_date, "%Y-%m-%d").date() if depreciated_date else None,
+            depreciated_date=datetime.strptime(depreciated_date, "%Y-%m-%d").date() if depreciated_date else None, # just get the year
+            no_longer_exists=no_longer_exists,
             description=description,
             include_in_report=include_in_report
         )
@@ -307,7 +327,7 @@ def add_webpage(
             assign_documentation_to_implementation(
                 implementation_id=implementation_id,
                 implementation_type=implementation_type,
-                documentation_type="Webpage",
+                documentation_type="webpage",
                 documentation_id=new_webpage.unique_id
             )
 
@@ -320,6 +340,7 @@ def add_webpage(
     except Exception as e:
         print(f"Failed to add webpage: {e}")
         raise CrudError("Failed to add webpage", e)
+
 
 
 def add_metric(

@@ -35,7 +35,7 @@ function MessageViewer({ messages, onSubmit, yearSuccessEvidence, createdBy }) {
     const { loadSingleWorkingGroupData, selectedYear } = useContext(DataContext);
     const { currentWorkingGroup } = useSettings();
     const { user } = useContext(UserContext); // Get the current user from UserContext
-    console.log("SDDSF", messages)
+
     // Toggle expanded/collapsed state
     const toggleCollapse = (index) => {
         setExpandedIndex(expandedIndex === index ? null : index);
