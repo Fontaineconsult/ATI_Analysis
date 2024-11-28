@@ -570,6 +570,7 @@ function ATIOverview() {
                                 </Box>
 
                                 {/* Status Assignments */}
+                                {/* Status Assignments */}
                                 <Box
                                     borderLeft="4px"
                                     borderColor="teal.400"
@@ -588,19 +589,27 @@ function ATIOverview() {
                                                 <Tr>
                                                     <Th>Status Level</Th>
                                                     <Th isNumeric>Count</Th>
+                                                    <Th isNumeric>Percent</Th> {/* New column */}
                                                 </Tr>
                                             </Thead>
                                             <Tbody>
-                                                {Object.entries(stats.statusLevels).map(([status, count]) => (
-                                                    <Tr key={status}>
-                                                        <Td>{status}</Td>
-                                                        <Td isNumeric>{count}</Td>
-                                                    </Tr>
-                                                ))}
+                                                {Object.entries(stats.statusLevels).map(([status, count]) => {
+                                                    const total = Object.values(stats.statusLevels).reduce((sum, val) => sum + val, 0); // Calculate total
+                                                    const percentage = total ? ((count / total) * 100).toFixed(2) : 0; // Calculate percentage
+
+                                                    return (
+                                                        <Tr key={status}>
+                                                            <Td>{status}</Td>
+                                                            <Td isNumeric>{count}</Td>
+                                                            <Td isNumeric>{percentage}%</Td> {/* Display percentage */}
+                                                        </Tr>
+                                                    );
+                                                })}
                                             </Tbody>
                                         </Table>
                                     </TableContainer>
                                 </Box>
+
 
                                 {/* Unassigned Evidence */}
                                 <Box
