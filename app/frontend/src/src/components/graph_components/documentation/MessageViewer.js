@@ -85,6 +85,7 @@ function MessageViewer({ messages, onSubmit, yearSuccessEvidence, createdBy }) {
                 ) : // Render existing messages if not adding a new message
                 messages && messages.length > 0 ? (
                     messages.map((message, index) => {
+                        message = message.message
 
 
                         const createdByPerson = message.created_by?.properties;
@@ -140,8 +141,7 @@ function MessageForm({ message, onSubmit, createdBy }) {
         unique_id: message?.properties?.unique_id || '',
         name: message?.properties?.name || '',
         date_created:
-            message?.properties?.date_created ||
-            new Date().toISOString().split('T')[0], // Default to today's date if new
+            message?.properties?.date_created,
         content: message?.properties?.content || '',
         file_path: message?.properties?.file_path || '',
         uri_path: message?.properties?.uri_path || '',

@@ -134,7 +134,7 @@ def add_message(
         message = Message(
             name=message_dict['name'],
             type=message_dict.get('message_type'),
-            date_created=message_dict.get('date_created'),
+            date_created=date.fromisoformat(message_dict['date_created']) if message_dict.get('date_created') else None,
             content=message_dict.get('content'),
             file_path=message_dict.get('file_path'),
             uri_path=message_dict.get('uri_path'),
