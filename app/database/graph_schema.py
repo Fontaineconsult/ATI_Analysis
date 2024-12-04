@@ -359,6 +359,7 @@ class Plan(StructuredNode):
     abandoned = BooleanProperty(default=False)
     abandoned_notes = StringProperty()
     plan_status = StringProperty()
+
     completed_year = RelationshipTo("AcademicYear", "completed_in_year")
     supporting_documents = RelationshipTo("Document", "is_documented_by")
     supporting_webpages = RelationshipTo("Webpage", "is_documented_by")
@@ -1136,6 +1137,7 @@ class Message(StructuredNode):
     date_created = DateProperty()
     type = StringProperty()
     depreciated = BooleanProperty()
+    depreciated_date = DateProperty()
     created_by = RelationshipTo("Person", "created_by")
     include_in_report = BooleanProperty(default=True)
 
