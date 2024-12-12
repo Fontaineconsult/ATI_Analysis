@@ -7,13 +7,29 @@ import MessageViewer from './MessageViewer';
 import MetricViewer from './MetricViewer';
 
 function DocumentationMasterViewer({ documentation }) {
-    // Destructure evidenceTypes from documentation
-
     const { docs = [], webs = [], notes = [], msgs = [], metrics = [] } = documentation || {};
     const implementation_id = documentation.evidenceType.properties.unique_id;
     const implementation_type = documentation.evidenceType.labels[0];
+    console.log(documentation)
+    // Apply label-based filtering similar to YSEAnnotationMasterContainer
+    // Adjust these label checks as needed based on actual data structures and labels.
+    const filteredDocs = docs?.filter((item) =>
+        item.document?.labels?.includes('Document')
+    ) || [];
+    const filteredWebs = webs?.filter((item) =>
+        item.webpage?.labels?.includes('Webpage')
+    ) || [];
+    const filteredNotes = notes?.filter((item) =>
+        item.note?.labels?.includes('Note')
+    ) || [];
+    const filteredMsgs = msgs?.filter((item) =>
+        item.message?.labels?.includes('Message')
+    ) || [];
+    const filteredMetrics = metrics?.filter((item) =>
+        item.metric?.labels?.includes('Metric')
+    ) || [];
 
-    // Mapping of document types to their data lists
+    // Map our filtered arrays to their respective categories
     const dataLists = {
         Documents: docs,
         Websites: webs,
@@ -22,6 +38,7 @@ function DocumentationMasterViewer({ documentation }) {
         Metrics: metrics
     };
 
+    console.log("SDSD", dataLists)
     // Descriptions for each document type
     const descriptions = {
         Documents: "Documents are files or written materials that serve as evidence of implementation activities or progress. They can include policies, reports, meeting minutes, or other official documents related to the ATI.",
@@ -38,41 +55,41 @@ function DocumentationMasterViewer({ documentation }) {
     const [selectedType, setSelectedType] = useState(documentTypes[0]);
 
     // Filtered data based on selected type
-    const filteredDocs = dataLists[selectedType] || [];
+    const filteredDocsForSelectedType = dataLists[selectedType] || [];
 
     // Mapping of selected type to its viewer component
     const viewerComponents = {
         Documents: (
             <DocumentViewer
-                documents={filteredDocs}
+                documents={filteredDocsForSelectedType}
                 implementation_id={implementation_id}
                 implementation_type={implementation_type}
             />
         ),
         Websites: (
             <WebsiteViewer
-                websites={filteredDocs}
+                websites={filteredDocsForSelectedType}
                 implementation_id={implementation_id}
                 implementation_type={implementation_type}
             />
         ),
         Notes: (
             <NoteViewer
-                notes={filteredDocs}
+                notes={filteredDocsForSelectedType}
                 implementation_id={implementation_id}
                 implementation_type={implementation_type}
             />
         ),
         Messages: (
             <MessageViewer
-                messages={filteredDocs}
+                messages={filteredDocsForSelectedType}
                 implementation_id={implementation_id}
                 implementation_type={implementation_type}
             />
         ),
         Metrics: (
             <MetricViewer
-                metrics={filteredDocs}
+                metrics={filteredDocsForSelectedType}
                 implementation_id={implementation_id}
                 implementation_type={implementation_type}
             />
@@ -113,14 +130,7 @@ function DocumentationMasterViewer({ documentation }) {
             </Box>
 
             <Box>
-                {/* Always render NoteViewer to allow adding notes */}
-                {selectedType === 'Notes' ? (
-                    <NoteViewer
-                        notes={filteredDocs}
-                        implementation_id={implementation_id}
-                        implementation_type={implementation_type}
-                    />
-                ) : filteredDocs.length > 0 ? (
+                {filteredDocsForSelectedType.length > 0 ? (
                     viewerComponents[selectedType]
                 ) : (
                     <>

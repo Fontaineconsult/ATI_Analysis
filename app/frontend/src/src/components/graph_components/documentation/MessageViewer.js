@@ -16,7 +16,7 @@ import { updateMessage } from '../../../services/api/put';
 import { addNewMessage } from '../../../services/api/post';
 import { DataContext } from '../../../context/DataContext';
 import { useSettings } from '../../../context/SettingsContext';
-import { UserContext } from '../../../context/UserContext'; // Import the UserContext
+import { UserContext } from '../../../context/UserContext';
 
 const messageTypes = [
     'e-mail',
@@ -29,12 +29,20 @@ const messageTypes = [
     'presentation',
 ];
 
-function MessageViewer({ messages, onSubmit, yearSuccessEvidence, createdBy }) {
+function MessageViewer({ messages, onSubmit, yearSuccessEvidence, createdBy, implementation_id, implementation_type }) {
+    const [isImplementation, setIsImplementation] = useState(false);
+    const [isYearSuccessEvidence, setIsYearSuccessEvidence] = useState(false);
+
+    useEffect(() => {
+        setIsYearSuccessEvidence(!!yearSuccessEvidence);
+        setIsImplementation(!!implementation_id && !!implementation_type);
+    }, [yearSuccessEvidence, implementation_id, implementation_type]);
+
     const [expandedIndex, setExpandedIndex] = useState(null);
-    const [isAddingNewMessage, setIsAddingNewMessage] = useState(false); // State for adding new message
+    const [isAddingNewMessage, setIsAddingNewMessage] = useState(false);
     const { loadSingleWorkingGroupData, selectedYear } = useContext(DataContext);
     const { currentWorkingGroup } = useSettings();
-    const { user } = useContext(UserContext); // Get the current user from UserContext
+    const { user } = useContext(UserContext);
 
     // Toggle expanded/collapsed state
     const toggleCollapse = (index) => {
@@ -44,13 +52,34 @@ function MessageViewer({ messages, onSubmit, yearSuccessEvidence, createdBy }) {
     // Handle form submission for both new and updated messages
     const handleFormSubmit = async (index, messageData, isNew) => {
         try {
+            // Set date_created if new
             if (isNew) {
-                // If adding a new message, set date_created to now
                 messageData.date_created = new Date().toISOString().split('T')[0]; // Format as YYYY-MM-DD
-                await addNewMessage(yearSuccessEvidence, messageData, user?.properties.employee_id || user);
-            } else {
-                await updateMessage(yearSuccessEvidence, messageData, user?.properties.employee_id || user);
             }
+
+            // Depending on which state is active, call add/update message differently
+            if (isNew) {
+                if (isYearSuccessEvidence) {
+                    await addNewMessage(yearSuccessEvidence, messageData, user?.employee_id || '');
+                } else if (isImplementation) {
+                    // Call addNewMessage with implementation params
+                    await addNewMessage(null, messageData, user?.employee_id || '', implementation_id, implementation_type);
+                } else {
+                    console.error('No valid context (YearSuccessEvidence or Implementation) to add a new message.');
+                    return;
+                }
+            } else {
+                if (isYearSuccessEvidence) {
+                    await updateMessage(yearSuccessEvidence, messageData, user?.employee_id || '');
+                } else if (isImplementation) {
+                    // Call updateMessage with implementation params
+                    await updateMessage(null, messageData, user?.employee_id || '', implementation_id, implementation_type);
+                } else {
+                    console.error('No valid context (YearSuccessEvidence or Implementation) to update the message.');
+                    return;
+                }
+            }
+
             await loadSingleWorkingGroupData(currentWorkingGroup); // Refresh data
             setExpandedIndex(null);
             setIsAddingNewMessage(false);
@@ -61,77 +90,76 @@ function MessageViewer({ messages, onSubmit, yearSuccessEvidence, createdBy }) {
 
     return (
         <Box>
-            {/* Button to add a new message */}
-            <Button
-                colorScheme="teal"
-                onClick={() => {
-                    setIsAddingNewMessage(true);
-                    setExpandedIndex(null); // Collapse any other expanded messages
-                }}
-                mb={4}
-            >
-                Add New Message
-            </Button>
+            {(isYearSuccessEvidence || isImplementation) && (
+                <Button
+                    colorScheme="teal"
+                    onClick={() => {
+                        setIsAddingNewMessage(true);
+                        setExpandedIndex(null); // Collapse any other expanded messages
+                    }}
+                    mb={4}
+                >
+                    Add New Message
+                </Button>
+            )}
 
-            {/* Render the MessageForm for adding a new message if isAddingNewMessage is true */}
             {isAddingNewMessage ? (
-                    <Box mb={4} border="1px solid teal" borderRadius="md" p={4} boxShadow="sm">
-                        <MessageForm
-                            message={null} // Pass null for a new message
-                            onSubmit={(messageData) => handleFormSubmit(null, messageData, true)} // Pass true to indicate new message
-                            createdBy={user?.properties || user} // Pass user data or null
-                        />
-                    </Box>
-                ) : // Render existing messages if not adding a new message
-                messages && messages.length > 0 ? (
-                    messages.map((message, index) => {
-                        message = message.message
+                <Box mb={4} border="1px solid teal" borderRadius="md" p={4} boxShadow="sm">
+                    <MessageForm
+                        message={null}
+                        onSubmit={(messageData) => handleFormSubmit(null, messageData, true)}
+                        createdBy={user?.properties || user}
+                    />
+                </Box>
+            ) : messages && messages.length > 0 ? (
+                messages.map((message, index) => {
+                    // Normalize message object
+                    message = message.message ? message.message : message;
 
+                    const createdByPerson = message.created_by?.properties || null;
 
-                        const createdByPerson = message.created_by?.properties;
-
-                        return (
-                            <Box
-                                key={message.properties.unique_id || index}
-                                mb={4}
-                                border="1px solid teal"
-                                borderRadius="md"
-                                p={4}
-                                boxShadow="sm"
+                    return (
+                        <Box
+                            key={message.properties.unique_id || index}
+                            mb={4}
+                            border="1px solid teal"
+                            borderRadius="md"
+                            p={4}
+                            boxShadow="sm"
+                        >
+                            <Flex
+                                justify="space-between"
+                                alignItems="center"
+                                cursor="pointer"
+                                onClick={() => toggleCollapse(index)}
                             >
-                                <Flex
-                                    justify="space-between"
-                                    alignItems="center"
-                                    cursor="pointer"
-                                    onClick={() => toggleCollapse(index)}
-                                >
-                                    <Text fontWeight="bold" fontSize="sm">
-                                        {message.properties.name || 'Untitled Message'}
-                                    </Text>
-                                    <Button size="sm" colorScheme="teal">
-                                        {expandedIndex === index ? 'Collapse' : 'Expand'}
-                                    </Button>
-                                </Flex>
-
-                                <Text fontSize="sm" color="gray.600" mt={2}>
-                                    Created by: {createdByPerson ? createdByPerson.name : 'Unknown Author'}
+                                <Text fontWeight="bold" fontSize="sm">
+                                    {message.properties.name || 'Untitled Message'}
                                 </Text>
+                                <Button size="sm" colorScheme="teal">
+                                    {expandedIndex === index ? 'Collapse' : 'Expand'}
+                                </Button>
+                            </Flex>
 
-                                <Collapse in={expandedIndex === index} animateOpacity>
-                                    <Box mt={4}>
-                                        <MessageForm
-                                            message={message} // Pass the actual message object
-                                            onSubmit={(messageData) => handleFormSubmit(index, messageData, false)} // Pass false to indicate update
-                                            createdBy={createdByPerson}
-                                        />
-                                    </Box>
-                                </Collapse>
-                            </Box>
-                        );
-                    })
-                ) : (
-                    <Text>No messages available.</Text>
-                )}
+                            <Text fontSize="sm" color="gray.600" mt={2}>
+                                Created by: {createdByPerson ? createdByPerson.name : 'Unknown Author'}
+                            </Text>
+
+                            <Collapse in={expandedIndex === index} animateOpacity>
+                                <Box mt={4}>
+                                    <MessageForm
+                                        message={message}
+                                        onSubmit={(messageData) => handleFormSubmit(index, messageData, false)}
+                                        createdBy={createdByPerson}
+                                    />
+                                </Box>
+                            </Collapse>
+                        </Box>
+                    );
+                })
+            ) : (
+                <Text>No messages available.</Text>
+            )}
         </Box>
     );
 }
@@ -140,33 +168,30 @@ function MessageForm({ message, onSubmit, createdBy }) {
     const [messageData, setMessageData] = useState({
         unique_id: message?.properties?.unique_id || '',
         name: message?.properties?.name || '',
-        date_created:
-            message?.properties?.date_created,
+        date_created: message?.properties?.date_created || new Date().toISOString().split('T')[0],
         content: message?.properties?.content || '',
         file_path: message?.properties?.file_path || '',
         uri_path: message?.properties?.uri_path || '',
-        message_type: message?.properties?.message_type || messageTypes[0], // Default to first message type
+        message_type: message?.properties?.message_type || messageTypes[0],
         depreciated: message?.properties?.depreciated || false,
         depreciated_date: message?.properties?.depreciated_date || '',
         include_in_report: message?.properties?.include_in_report ?? true,
-        created_by: createdBy || {}, // Use the passed createdBy data or fallback to an empty object
+        created_by: createdBy || {},
     });
 
-    // New state to track submission status
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    // Update local state when `message` or `createdBy` prop changes
     useEffect(() => {
         setMessageData({
             unique_id: message?.properties?.unique_id || '',
             name: message?.properties?.name || '',
             date_created:
                 message?.properties?.date_created ||
-                new Date().toISOString().split('T')[0], // Default to today's date if new
+                new Date().toISOString().split('T')[0],
             content: message?.properties?.content || '',
             file_path: message?.properties?.file_path || '',
             uri_path: message?.properties?.uri_path || '',
-            message_type: message?.properties?.message_type || messageTypes[0], // Default to first message type
+            message_type: message?.properties?.message_type || messageTypes[0],
             depreciated: message?.properties?.depreciated || false,
             depreciated_date: message?.properties?.depreciated_date || '',
             include_in_report: message?.properties?.include_in_report ?? true,
@@ -184,13 +209,13 @@ function MessageForm({ message, onSubmit, createdBy }) {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setIsSubmitting(true); // Start the spinner
+        setIsSubmitting(true);
         try {
             await onSubmit(messageData);
         } catch (error) {
             console.error('Error submitting message:', error);
         } finally {
-            setIsSubmitting(false); // Stop the spinner
+            setIsSubmitting(false);
         }
     };
 
@@ -222,7 +247,6 @@ function MessageForm({ message, onSubmit, createdBy }) {
                 <Input name="uri_path" value={messageData.uri_path} onChange={handleChange} />
             </FormControl>
 
-            {/* Dropdown for message type */}
             <FormControl mb={4}>
                 <FormLabel>Message Type</FormLabel>
                 <Select name="message_type" value={messageData.message_type} onChange={handleChange}>
@@ -234,11 +258,10 @@ function MessageForm({ message, onSubmit, createdBy }) {
                 </Select>
             </FormControl>
 
-            {/* Display created_by person details */}
-            {createdBy?.name ? (
+            {messageData.created_by?.name ? (
                 <Box mb={4}>
                     <Text fontSize="sm" color="gray.600">
-                        Created by: {createdBy.name} ({createdBy.title || 'Unknown Title'})
+                        Created by: {messageData.created_by.name} ({messageData.created_by.title || 'Unknown Title'})
                     </Text>
                 </Box>
             ) : (
@@ -282,7 +305,7 @@ function MessageForm({ message, onSubmit, createdBy }) {
                 type="submit"
                 colorScheme="teal"
                 mt={4}
-                isLoading={isSubmitting} // Chakra UI prop to show spinner
+                isLoading={isSubmitting}
                 loadingText={message?.properties?.name ? 'Updating...' : 'Submitting...'}
             >
                 {message?.properties?.name ? 'Update Message' : 'Submit Message'}

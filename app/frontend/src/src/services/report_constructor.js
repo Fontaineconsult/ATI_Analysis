@@ -315,6 +315,41 @@ function generateReport(evidenceItem) {
 
 
 function GenerateReportComponent({ evidenceItem }) {
+
+    // Helper function to filter arrays based on include_in_report
+    const filterByIncludeInReport = (array, itemKey = 'properties') => {
+        return (array || []).filter((item) => {
+            // If item or item[itemKey] doesn't exist, exclude it
+            if (!item || !item[itemKey]) return false;
+            // If include_in_report is explicitly false, exclude it
+            if (item[itemKey].include_in_report === false) return false;
+            // Otherwise include
+            return true;
+        });
+    };
+
+    // Filter main-level notes
+    const filteredNotes = filterByIncludeInReport(evidenceItem.has_notes, 'note.properties');
+
+    // Filter main-level messages
+    const filteredMessages = filterByIncludeInReport(evidenceItem.has_messages, 'message.properties');
+
+    // Filter main-level metrics
+    const filteredMetrics = filterByIncludeInReport(evidenceItem.has_metrics, 'metric.properties');
+
+    // For evidenceTypes, we need to filter each array:
+    // docs, webs, notes, msgs, metrics
+    const filteredEvidenceTypes = (evidenceItem.evidenceTypes || []).map((etype) => {
+        return {
+            ...etype,
+            docs: filterByIncludeInReport(etype.docs, 'properties'),
+            webs: filterByIncludeInReport(etype.webs, 'properties'),
+            notes: filterByIncludeInReport(etype.notes, 'properties'),
+            msgs: filterByIncludeInReport(etype.msgs, 'properties'),
+            metrics: filterByIncludeInReport(etype.metrics, 'properties'),
+        };
+    }).filter(et => et); // Just ensure we don't break if something is null
+
     return (
         <Box p={4}>
             {/* Indicator Information */}
@@ -350,26 +385,20 @@ function GenerateReportComponent({ evidenceItem }) {
                         {evidenceItem.evidence.properties.year_identifier}
                     </Text>
 
-                    {/* Include additional evidence properties if they exist */}
-                    {'administrative_review_complete' in
-                        evidenceItem.evidence.properties && (
-                            <Text>
-                                <strong>Administrative Review Complete:</strong>{' '}
-                                {evidenceItem.evidence.properties.administrative_review_complete
-                                    ? 'Yes'
-                                    : 'No'}
-                            </Text>
-                        )}
-                    {'administrative_review_completed_date' in
-                        evidenceItem.evidence.properties && (
-                            <Text>
-                                <strong>Administrative Review Completed Date:</strong>{' '}
-                                {
-                                    evidenceItem.evidence.properties
-                                        .administrative_review_completed_date
-                                }
-                            </Text>
-                        )}
+                    {'administrative_review_complete' in evidenceItem.evidence.properties && (
+                        <Text>
+                            <strong>Administrative Review Complete:</strong>{' '}
+                            {evidenceItem.evidence.properties.administrative_review_complete
+                                ? 'Yes'
+                                : 'No'}
+                        </Text>
+                    )}
+                    {'administrative_review_completed_date' in evidenceItem.evidence.properties && (
+                        <Text>
+                            <strong>Administrative Review Completed Date:</strong>{' '}
+                            {evidenceItem.evidence.properties.administrative_review_completed_date}
+                        </Text>
+                    )}
 
                     {/* Status Level */}
                     {evidenceItem.statusLevel &&
@@ -386,9 +415,7 @@ function GenerateReportComponent({ evidenceItem }) {
                             <Text fontWeight="bold">Persons Involved:</Text>
                             <List spacing={2} mt={2}>
                                 {evidenceItem.persons.map((person) => {
-                                    if (!person || !person.properties) {
-                                        return null;
-                                    }
+                                    if (!person || !person.properties) return null;
                                     return (
                                         <ListItem key={person.id}>
                                             {person.properties.name} - {person.properties.title} (
@@ -407,9 +434,7 @@ function GenerateReportComponent({ evidenceItem }) {
                                 <Text fontWeight="bold">Admin Reviewers:</Text>
                                 <List spacing={2} mt={2}>
                                     {evidenceItem.adminReviewers.map((reviewer) => {
-                                        if (!reviewer || !reviewer.properties) {
-                                            return null;
-                                        }
+                                        if (!reviewer || !reviewer.properties) return null;
                                         return (
                                             <ListItem key={reviewer.id}>
                                                 {reviewer.properties.name} - {reviewer.properties.title}{' '}
@@ -422,18 +447,12 @@ function GenerateReportComponent({ evidenceItem }) {
                         )}
 
                     {/* Notes */}
-                    {evidenceItem.has_notes && evidenceItem.has_notes.length > 0 && (
+                    {filteredNotes.length > 0 && (
                         <Box mt={4}>
                             <Text fontWeight="bold">Notes:</Text>
                             <Stack spacing={3} mt={2}>
-                                {evidenceItem.has_notes.map((noteItem, index) => {
-                                    if (
-                                        !noteItem ||
-                                        !noteItem.note ||
-                                        !noteItem.note.properties
-                                    ) {
-                                        return null;
-                                    }
+                                {filteredNotes.map((noteItem, index) => {
+                                    if (!noteItem?.note?.properties) return null;
                                     const noteProps = noteItem.note.properties;
                                     return (
                                         <Box key={index} p={3} borderWidth="1px" borderRadius="md">
@@ -441,7 +460,6 @@ function GenerateReportComponent({ evidenceItem }) {
                                                 <strong>Date:</strong> {noteProps.date_created || 'N/A'}
                                             </Text>
                                             <Text mt={1}>{noteProps.content}</Text>
-                                            {/* Handle file_path or uri_path in notes if they exist */}
                                             {(noteProps.file_path || noteProps.uri_path) && (
                                                 <Text mt={1}>
                                                     <strong>Attachment:</strong>{' '}
@@ -454,12 +472,11 @@ function GenerateReportComponent({ evidenceItem }) {
                                                     </Link>
                                                 </Text>
                                             )}
-                                            {noteItem.created_by &&
-                                                noteItem.created_by.properties && (
-                                                    <Text mt={1} fontStyle="italic">
-                                                        (Created by: {noteItem.created_by.properties.name})
-                                                    </Text>
-                                                )}
+                                            {noteItem.created_by?.properties && (
+                                                <Text mt={1} fontStyle="italic">
+                                                    (Created by: {noteItem.created_by.properties.name})
+                                                </Text>
+                                            )}
                                         </Box>
                                     );
                                 })}
@@ -468,302 +485,278 @@ function GenerateReportComponent({ evidenceItem }) {
                     )}
 
                     {/* Messages */}
-                    {evidenceItem.has_messages &&
-                        evidenceItem.has_messages.length > 0 && (
-                            <Box mt={4}>
-                                <Text fontWeight="bold">Messages:</Text>
-                                <Stack spacing={3} mt={2}>
-                                    {evidenceItem.has_messages.map((messageItem, index) => {
-                                        if (
-                                            !messageItem ||
-                                            !messageItem.message ||
-                                            !messageItem.message.properties
-                                        ) {
-                                            return null;
-                                        }
-                                        const messageProps = messageItem.message.properties;
-                                        return (
-                                            <Box
-                                                key={index}
-                                                p={3}
-                                                borderWidth="1px"
-                                                borderRadius="md"
-                                            >
-                                                <Text>
-                                                    <strong>Date:</strong>{' '}
-                                                    {messageProps.date_sent || 'N/A'}
+                    {filteredMessages.length > 0 && (
+                        <Box mt={4}>
+                            <Text fontWeight="bold">Messages:</Text>
+                            <Stack spacing={3} mt={2}>
+                                {filteredMessages.map((messageItem, index) => {
+                                    if (!messageItem?.message?.properties) return null;
+                                    const messageProps = messageItem.message.properties;
+                                    return (
+                                        <Box
+                                            key={index}
+                                            p={3}
+                                            borderWidth="1px"
+                                            borderRadius="md"
+                                        >
+                                            <Text>
+                                                <strong>Date:</strong>{' '}
+                                                {messageProps.date_sent || 'N/A'}
+                                            </Text>
+                                            <Text mt={1}>{messageProps.content}</Text>
+                                            {(messageProps.file_path || messageProps.uri_path) && (
+                                                <Text mt={1}>
+                                                    <strong>Attachment:</strong>{' '}
+                                                    <Link
+                                                        href={
+                                                            messageProps.file_path ||
+                                                            messageProps.uri_path
+                                                        }
+                                                        isExternal
+                                                        color="teal.500"
+                                                    >
+                                                        {messageProps.name || 'Link'}
+                                                    </Link>
                                                 </Text>
-                                                <Text mt={1}>{messageProps.content}</Text>
-                                                {/* Handle file_path or uri_path in messages if they exist */}
-                                                {(messageProps.file_path || messageProps.uri_path) && (
-                                                    <Text mt={1}>
-                                                        <strong>Attachment:</strong>{' '}
-                                                        <Link
-                                                            href={
-                                                                messageProps.file_path || messageProps.uri_path
-                                                            }
-                                                            isExternal
-                                                            color="teal.500"
-                                                        >
-                                                            {messageProps.name || 'Link'}
-                                                        </Link>
-                                                    </Text>
-                                                )}
-                                                {messageItem.created_by &&
-                                                    messageItem.created_by.properties && (
-                                                        <Text mt={1} fontStyle="italic">
-                                                            (Sent by: {messageItem.created_by.properties.name})
-                                                        </Text>
-                                                    )}
-                                            </Box>
-                                        );
-                                    })}
-                                </Stack>
-                            </Box>
-                        )}
+                                            )}
+                                            {messageItem.created_by?.properties && (
+                                                <Text mt={1} fontStyle="italic">
+                                                    (Sent by: {messageItem.created_by.properties.name})
+                                                </Text>
+                                            )}
+                                        </Box>
+                                    );
+                                })}
+                            </Stack>
+                        </Box>
+                    )}
 
                     {/* Metrics */}
-                    {evidenceItem.has_metrics &&
-                        evidenceItem.has_metrics.length > 0 && (
-                            <Box mt={4}>
-                                <Text fontWeight="bold">Metrics:</Text>
-                                <List spacing={2} mt={2}>
-                                    {evidenceItem.has_metrics.map((metricItem, index) => {
-                                        if (
-                                            !metricItem ||
-                                            !metricItem.metric ||
-                                            !metricItem.metric.properties
-                                        ) {
-                                            return null;
-                                        }
-                                        return (
-                                            <ListItem key={index}>
-                                                <strong>Metric:</strong>{' '}
-                                                {metricItem.metric.properties.name},{' '}
-                                                <strong>Value:</strong>{' '}
-                                                {metricItem.metric.properties.value}
-                                                {metricItem.created_by &&
-                                                    metricItem.created_by.properties && (
-                                                        <Text fontStyle="italic">
-                                                            (Recorded by:{' '}
-                                                            {metricItem.created_by.properties.name})
-                                                        </Text>
-                                                    )}
-                                            </ListItem>
-                                        );
-                                    })}
-                                </List>
-                            </Box>
-                        )}
+                    {filteredMetrics.length > 0 && (
+                        <Box mt={4}>
+                            <Text fontWeight="bold">Metrics:</Text>
+                            <List spacing={2} mt={2}>
+                                {filteredMetrics.map((metricItem, index) => {
+                                    if (!metricItem?.metric?.properties) return null;
+                                    return (
+                                        <ListItem key={index}>
+                                            <strong>Metric:</strong>{' '}
+                                            {metricItem.metric.properties.name},{' '}
+                                            <strong>Value:</strong>{' '}
+                                            {metricItem.metric.properties.value}
+                                            {metricItem.created_by?.properties && (
+                                                <Text fontStyle="italic">
+                                                    (Recorded by:{' '}
+                                                    {metricItem.created_by.properties.name})
+                                                </Text>
+                                            )}
+                                        </ListItem>
+                                    );
+                                })}
+                            </List>
+                        </Box>
+                    )}
                 </Box>
             )}
 
             {/* Evidence Types */}
-            {evidenceItem.evidenceTypes &&
-                evidenceItem.evidenceTypes.length > 0 && (
-                    <Box mb={6}>
-                        <Heading size="md">Evidence Types</Heading>
-                        {evidenceItem.evidenceTypes.map((etype, index) => {
-                            if (!etype) {
-                                return null;
-                            }
-                            return (
-                                <Box
-                                    key={index}
-                                    mt={4}
-                                    p={4}
-                                    borderWidth="1px"
-                                    borderRadius="md"
-                                >
-                                    <Text>
-                                        <strong>Type:</strong> {etype.type || 'N/A'}
-                                    </Text>
-                                    {etype.evidenceType && etype.evidenceType.properties && (
-                                        <>
-                                            <Text mt={2}>
-                                                <strong>Title:</strong>{' '}
-                                                {etype.evidenceType.properties.title}
-                                            </Text>
-                                            <Text mt={1}>
-                                                <strong>Description:</strong>{' '}
-                                                {etype.evidenceType.properties.description}
-                                            </Text>
-                                        </>
-                                    )}
+            {filteredEvidenceTypes.length > 0 && (
+                <Box mb={6}>
+                    <Heading size="md">Evidence Types</Heading>
+                    {filteredEvidenceTypes.map((etype, index) => {
+                        if (!etype) return null;
 
-                                    {/* Documents */}
-                                    {etype.docs && etype.docs.length > 0 && (
-                                        <Box mt={3}>
-                                            <Text fontWeight="bold">Documents:</Text>
-                                            <List spacing={2} mt={2}>
-                                                {etype.docs.map((doc) => {
-                                                    if (!doc || !doc.properties) {
-                                                        return null;
-                                                    }
-                                                    return (
-                                                        <ListItem key={doc.id}>
-                                                            <Link
-                                                                href={
-                                                                    doc.properties.file_path ||
-                                                                    doc.properties.uri_path
-                                                                }
-                                                                isExternal
-                                                                color="teal.500"
-                                                            >
-                                                                {doc.properties.name}
-                                                            </Link>
-                                                        </ListItem>
-                                                    );
-                                                })}
-                                            </List>
-                                        </Box>
-                                    )}
+                        // Filtered data within this evidence type is already done above.
+                        const { docs, webs, notes, msgs, metrics } = etype;
 
-                                    {/* Webpages */}
-                                    {etype.webs && etype.webs.length > 0 && (
-                                        <Box mt={3}>
-                                            <Text fontWeight="bold">Webpages:</Text>
-                                            <List spacing={2} mt={2}>
-                                                {etype.webs.map((web) => {
-                                                    if (!web || !web.properties) {
-                                                        return null;
-                                                    }
-                                                    return (
-                                                        <ListItem key={web.id}>
-                                                            <Link
-                                                                href={web.properties.url}
-                                                                isExternal
-                                                                color="teal.500"
-                                                            >
-                                                                {web.properties.title}
-                                                            </Link>
-                                                        </ListItem>
-                                                    );
-                                                })}
-                                            </List>
-                                        </Box>
-                                    )}
+                        return (
+                            <Box
+                                key={index}
+                                mt={4}
+                                p={4}
+                                borderWidth="1px"
+                                borderRadius="md"
+                            >
+                                <Text>
+                                    <strong>Type:</strong> {etype.type || 'N/A'}
+                                </Text>
+                                {etype.evidenceType?.properties && (
+                                    <>
+                                        <Text mt={2}>
+                                            <strong>Title:</strong>{' '}
+                                            {etype.evidenceType.properties.title}
+                                        </Text>
+                                        <Text mt={1}>
+                                            <strong>Description:</strong>{' '}
+                                            {etype.evidenceType.properties.description}
+                                        </Text>
+                                    </>
+                                )}
 
-                                    {/* Notes */}
-                                    {etype.notes && etype.notes.length > 0 && (
-                                        <Box mt={3}>
-                                            <Text fontWeight="bold">Notes:</Text>
-                                            <Stack spacing={3} mt={2}>
-                                                {etype.notes.map((note, idx) => {
-                                                    if (!note || !note.properties) {
-                                                        return null;
-                                                    }
-                                                    return (
-                                                        <Box
-                                                            key={idx}
-                                                            p={3}
-                                                            borderWidth="1px"
-                                                            borderRadius="md"
+                                {/* Documents */}
+                                {docs.length > 0 && (
+                                    <Box mt={3}>
+                                        <Text fontWeight="bold">Documents:</Text>
+                                        <List spacing={2} mt={2}>
+                                            {docs.map((doc) => {
+                                                if (!doc?.properties) return null;
+                                                return (
+                                                    <ListItem key={doc.id}>
+                                                        <Link
+                                                            href={
+                                                                doc.properties.file_path ||
+                                                                doc.properties.uri_path
+                                                            }
+                                                            isExternal
+                                                            color="teal.500"
                                                         >
-                                                            <Text>
-                                                                <strong>Date:</strong>{' '}
-                                                                {note.properties.date_created || 'N/A'}
-                                                            </Text>
-                                                            <Text mt={1}>{note.properties.content}</Text>
-                                                            {/* Handle file_path or uri_path in notes if they exist */}
-                                                            {(note.properties.file_path ||
-                                                                note.properties.uri_path) && (
-                                                                <Text mt={1}>
-                                                                    <strong>Attachment:</strong>{' '}
-                                                                    <Link
-                                                                        href={
-                                                                            note.properties.file_path ||
-                                                                            note.properties.uri_path
-                                                                        }
-                                                                        isExternal
-                                                                        color="teal.500"
-                                                                    >
-                                                                        {note.properties.name || 'Link'}
-                                                                    </Link>
-                                                                </Text>
-                                                            )}
-                                                        </Box>
-                                                    );
-                                                })}
-                                            </Stack>
-                                        </Box>
-                                    )}
+                                                            {doc.properties.name}
+                                                        </Link>
+                                                    </ListItem>
+                                                );
+                                            })}
+                                        </List>
+                                    </Box>
+                                )}
 
-                                    {/* Messages */}
-                                    {etype.msgs && etype.msgs.length > 0 && (
-                                        <Box mt={3}>
-                                            <Text fontWeight="bold">Messages:</Text>
-                                            <Stack spacing={3} mt={2}>
-                                                {etype.msgs.map((msg, idx) => {
-                                                    if (!msg || !msg.properties) {
-                                                        return null;
-                                                    }
-                                                    return (
-                                                        <Box
-                                                            key={idx}
-                                                            p={3}
-                                                            borderWidth="1px"
-                                                            borderRadius="md"
+                                {/* Webpages */}
+                                {webs.length > 0 && (
+                                    <Box mt={3}>
+                                        <Text fontWeight="bold">Webpages:</Text>
+                                        <List spacing={2} mt={2}>
+                                            {webs.map((web) => {
+                                                if (!web?.properties) return null;
+                                                return (
+                                                    <ListItem key={web.id}>
+                                                        <Link
+                                                            href={web.properties.url}
+                                                            isExternal
+                                                            color="teal.500"
                                                         >
-                                                            <Text>
-                                                                <strong>Date:</strong>{' '}
-                                                                {msg.properties.date_sent || 'N/A'}
-                                                            </Text>
-                                                            <Text mt={1}>{msg.properties.content}</Text>
-                                                            {/* Handle file_path or uri_path in messages if they exist */}
-                                                            {(msg.properties.file_path ||
-                                                                msg.properties.uri_path) && (
-                                                                <Text mt={1}>
-                                                                    <strong>Attachment:</strong>{' '}
-                                                                    <Link
-                                                                        href={
-                                                                            msg.properties.file_path ||
-                                                                            msg.properties.uri_path
-                                                                        }
-                                                                        isExternal
-                                                                        color="teal.500"
-                                                                    >
-                                                                        {msg.properties.name || 'Link'}
-                                                                    </Link>
-                                                                </Text>
-                                                            )}
-                                                        </Box>
-                                                    );
-                                                })}
-                                            </Stack>
-                                        </Box>
-                                    )}
+                                                            {web.properties.title}
+                                                        </Link>
+                                                    </ListItem>
+                                                );
+                                            })}
+                                        </List>
+                                    </Box>
+                                )}
 
-                                    {/* Metrics */}
-                                    {etype.metrics && etype.metrics.length > 0 && (
-                                        <Box mt={3}>
-                                            <Text fontWeight="bold">Metrics:</Text>
-                                            <List spacing={2} mt={2}>
-                                                {etype.metrics.map((metric, idx) => {
-                                                    if (!metric || !metric.properties) {
-                                                        return null;
-                                                    }
-                                                    return (
-                                                        <ListItem key={idx}>
-                                                            <strong>Metric:</strong>{' '}
-                                                            {metric.properties.name}, <strong>Value:</strong>{' '}
-                                                            {metric.properties.value}
-                                                        </ListItem>
-                                                    );
-                                                })}
-                                            </List>
-                                        </Box>
-                                    )}
-                                </Box>
-                            );
-                        })}
-                    </Box>
-                )}
+                                {/* Notes */}
+                                {notes.length > 0 && (
+                                    <Box mt={3}>
+                                        <Text fontWeight="bold">Notes:</Text>
+                                        <Stack spacing={3} mt={2}>
+                                            {notes.map((note, idx) => {
+                                                if (!note?.properties) return null;
+                                                return (
+                                                    <Box
+                                                        key={idx}
+                                                        p={3}
+                                                        borderWidth="1px"
+                                                        borderRadius="md"
+                                                    >
+                                                        <Text>
+                                                            <strong>Date:</strong>{' '}
+                                                            {note.properties.date_created || 'N/A'}
+                                                        </Text>
+                                                        <Text mt={1}>
+                                                            {note.properties.content}
+                                                        </Text>
+                                                        {(note.properties.file_path ||
+                                                            note.properties.uri_path) && (
+                                                            <Text mt={1}>
+                                                                <strong>Attachment:</strong>{' '}
+                                                                <Link
+                                                                    href={
+                                                                        note.properties.file_path ||
+                                                                        note.properties.uri_path
+                                                                    }
+                                                                    isExternal
+                                                                    color="teal.500"
+                                                                >
+                                                                    {note.properties.name || 'Link'}
+                                                                </Link>
+                                                            </Text>
+                                                        )}
+                                                    </Box>
+                                                );
+                                            })}
+                                        </Stack>
+                                    </Box>
+                                )}
+
+                                {/* Messages */}
+                                {msgs.length > 0 && (
+                                    <Box mt={3}>
+                                        <Text fontWeight="bold">Messages:</Text>
+                                        <Stack spacing={3} mt={2}>
+                                            {msgs.map((msg, idx) => {
+                                                if (!msg?.properties) return null;
+                                                return (
+                                                    <Box
+                                                        key={idx}
+                                                        p={3}
+                                                        borderWidth="1px"
+                                                        borderRadius="md"
+                                                    >
+                                                        <Text>
+                                                            <strong>Date:</strong>{' '}
+                                                            {msg.properties.date_sent || 'N/A'}
+                                                        </Text>
+                                                        <Text mt={1}>
+                                                            {msg.properties.content}
+                                                        </Text>
+                                                        {(msg.properties.file_path ||
+                                                            msg.properties.uri_path) && (
+                                                            <Text mt={1}>
+                                                                <strong>Attachment:</strong>{' '}
+                                                                <Link
+                                                                    href={
+                                                                        msg.properties.file_path ||
+                                                                        msg.properties.uri_path
+                                                                    }
+                                                                    isExternal
+                                                                    color="teal.500"
+                                                                >
+                                                                    {msg.properties.name || 'Link'}
+                                                                </Link>
+                                                            </Text>
+                                                        )}
+                                                    </Box>
+                                                );
+                                            })}
+                                        </Stack>
+                                    </Box>
+                                )}
+
+                                {/* Metrics */}
+                                {metrics.length > 0 && (
+                                    <Box mt={3}>
+                                        <Text fontWeight="bold">Metrics:</Text>
+                                        <List spacing={2} mt={2}>
+                                            {metrics.map((metric, idx) => {
+                                                if (!metric?.properties) return null;
+                                                return (
+                                                    <ListItem key={idx}>
+                                                        <strong>Metric:</strong>{' '}
+                                                        {metric.properties.name},{' '}
+                                                        <strong>Value:</strong>{' '}
+                                                        {metric.properties.value}
+                                                    </ListItem>
+                                                );
+                                            })}
+                                        </List>
+                                    </Box>
+                                )}
+                            </Box>
+                        );
+                    })}
+                </Box>
+            )}
         </Box>
     );
 }
-
-export default GenerateReportComponent;
 
 
 

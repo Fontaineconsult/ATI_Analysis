@@ -218,7 +218,6 @@ class DocumentsAPI(MethodView):
             if not action:
                 return make_response(status="error", error="The 'action' field is required."), 400
 
-            # Dynamically call the appropriate function based on the action
             if action == 'update_note':
                 required_fields = ['year_success_evidence', 'note_dict']
                 if not all(field in data for field in required_fields):
@@ -228,10 +227,18 @@ class DocumentsAPI(MethodView):
                 if 'unique_id' not in note_dict:
                     return make_response(status="error", error="The 'unique_id' field is required in 'note_dict'."), 400
 
-                if update_note(note_dict, data['year_success_evidence'], note_dict.get('created_by')):
-                    return make_response(status="success", data="Note updated successfully."), 200
-                else:
-                    return make_response(status="error", error="Failed to update note."), 500
+                try:
+                    if update_note(note_dict, data['year_success_evidence'], note_dict.get('created_by')):
+                        return make_response(status="success", data="Note updated successfully."), 200
+                    else:
+                        return make_response(status="error", error="Failed to update note."), 500
+                except ValidationError as e:
+                    return make_response(status="error", error=str(e)), 400
+                except NotFoundError as e:
+                    return make_response(status="error", error=str(e)), 404
+                except Exception as e:
+                    print(f"Unexpected error during note update: {e}")
+                    return make_response(status="error", error="An unexpected error occurred."), 500
 
             elif action == 'update_message':
                 required_fields = ['year_success_evidence', 'message_dict']
@@ -242,10 +249,18 @@ class DocumentsAPI(MethodView):
                 if 'unique_id' not in message_dict:
                     return make_response(status="error", error="The 'unique_id' field is required in 'message_dict'."), 400
 
-                if update_message(message_dict, data['year_success_evidence'], message_dict.get('created_by')):
-                    return make_response(status="success", data="Message updated successfully."), 200
-                else:
-                    return make_response(status="error", error="Failed to update message."), 500
+                try:
+                    if update_message(message_dict, data['year_success_evidence'], message_dict.get('created_by')):
+                        return make_response(status="success", data="Message updated successfully."), 200
+                    else:
+                        return make_response(status="error", error="Failed to update message."), 500
+                except ValidationError as e:
+                    return make_response(status="error", error=str(e)), 400
+                except NotFoundError as e:
+                    return make_response(status="error", error=str(e)), 404
+                except Exception as e:
+                    print(f"Unexpected error during message update: {e}")
+                    return make_response(status="error", error="An unexpected error occurred."), 500
 
             elif action == 'update_metric':
                 required_fields = ['year_success_evidence', 'metric_dict']
@@ -256,10 +271,18 @@ class DocumentsAPI(MethodView):
                 if 'unique_id' not in metric_dict:
                     return make_response(status="error", error="The 'unique_id' field is required in 'metric_dict'."), 400
 
-                if update_metric(metric_dict, data['year_success_evidence'], metric_dict.get('created_by')):
-                    return make_response(status="success", data="Metric updated successfully."), 200
-                else:
-                    return make_response(status="error", error="Failed to update metric."), 500
+                try:
+                    if update_metric(metric_dict, data['year_success_evidence'], metric_dict.get('created_by')):
+                        return make_response(status="success", data="Metric updated successfully."), 200
+                    else:
+                        return make_response(status="error", error="Failed to update metric."), 500
+                except ValidationError as e:
+                    return make_response(status="error", error=str(e)), 400
+                except NotFoundError as e:
+                    return make_response(status="error", error=str(e)), 404
+                except Exception as e:
+                    print(f"Unexpected error during metric update: {e}")
+                    return make_response(status="error", error="An unexpected error occurred."), 500
 
             elif action == 'update_document':
                 required_fields = ['document_dict']
@@ -282,9 +305,9 @@ class DocumentsAPI(MethodView):
                             year_success_evidence=year_success_evidence,
                             implementation_id=implementation_id,
                             implementation_type=implementation_type,
-                            # created_by=created_by #Todo add to schema
+                            # created_by=created_by # Todo: add to schema if needed
                     ):
-                        return make_response(status="success",data="Document updated successfully."), 200
+                        return make_response(status="success", data="Document updated successfully."), 200
                     else:
                         return make_response(status="error", error="Failed to update document."), 500
                 except ValidationError as e:
@@ -294,7 +317,6 @@ class DocumentsAPI(MethodView):
                 except Exception as e:
                     print(f"Unexpected error: {e}")
                     return make_response(status="error", error="An unexpected error occurred."), 500
-
 
             elif action == 'update_webpage':
                 required_fields = ['webpage_dict']
@@ -309,7 +331,6 @@ class DocumentsAPI(MethodView):
                 year_success_evidence = data.get('year_success_evidence')
                 implementation_id = data.get('implementation_id')
                 implementation_type = data.get('implementation_type')
-
 
                 try:
                     if update_webpage(
@@ -329,7 +350,6 @@ class DocumentsAPI(MethodView):
                     print(f"Error during webpage update: {e}")
                     return make_response(status="error", error="An unexpected error occurred"), 500
 
-
         except ValidationError as e:
             return make_response(status='error', error=str(e)), 400
         except NotFoundError as e:
@@ -338,6 +358,7 @@ class DocumentsAPI(MethodView):
             return make_response(status='error', error=str(e)), 500
         except Exception as e:
             return make_response(status='error', error=f"An unexpected error occurred: {str(e)}"), 500
+
 
 
     def delete(self):

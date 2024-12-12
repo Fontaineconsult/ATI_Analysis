@@ -6,6 +6,7 @@ def build_yse_report(year_success_evidence):
     yse = YearSuccessEvidence.nodes.get(year_identifier=year_success_evidence)
 
     # query for the status level
+    print("DSFSDFSDFSDFSDFSDF", yse, yse.status_level.single())
     status = yse.status_level.single()
 
     # query for the success indicator
@@ -43,6 +44,7 @@ def build_yse_report(year_success_evidence):
     metrics = yse.metrics.all()
 
     # combine each query into a dictionary
+
     report = {
         "year_identifier": yse.year_identifier,
         "status": status.status_level,

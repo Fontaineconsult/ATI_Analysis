@@ -41,6 +41,7 @@ function PlainTextReport({ evidenceItem, indicatorItem }) {
                 report += `\nPersons Involved:\n`;
                 evidenceItem.persons.forEach((person) => {
                     if (person && person.properties) {
+                        // Persons nodes don't seem to have `include_in_report`, so we just include them.
                         report += `- ${person.properties.name} - ${person.properties.title} (${person.properties.email})\n`;
                     }
                 });
@@ -51,6 +52,7 @@ function PlainTextReport({ evidenceItem, indicatorItem }) {
                 report += `\nAdmin Reviewers:\n`;
                 evidenceItem.adminReviewers.forEach((reviewer) => {
                     if (reviewer && reviewer.properties) {
+                        // Admin reviewers also don't seem to have `include_in_report`
                         report += `- ${reviewer.properties.name} - ${reviewer.properties.title} (${reviewer.properties.email})\n`;
                     }
                 });
@@ -58,9 +60,15 @@ function PlainTextReport({ evidenceItem, indicatorItem }) {
 
             // Notes
             if (evidenceItem.has_notes && evidenceItem.has_notes.length > 0) {
-                report += `\nNotes:\n`;
-                evidenceItem.has_notes.forEach((noteItem, index) => {
-                    if (noteItem && noteItem.note && noteItem.note.properties) {
+                // Filter notes that have include_in_report = false
+                const filteredNotes = evidenceItem.has_notes.filter((noteItem) => {
+                    return noteItem && noteItem.note && noteItem.note.properties &&
+                        (noteItem.note.properties.include_in_report !== false);
+                });
+
+                if (filteredNotes.length > 0) {
+                    report += `\nNotes:\n`;
+                    filteredNotes.forEach((noteItem, index) => {
                         const noteProps = noteItem.note.properties;
                         report += `\nNote ${index + 1}:\n`;
                         report += `Date: ${noteProps.date_created || 'N/A'}\n`;
@@ -71,19 +79,24 @@ function PlainTextReport({ evidenceItem, indicatorItem }) {
                         if (noteItem.created_by && noteItem.created_by.properties) {
                             report += `Created by: ${noteItem.created_by.properties.name}\n`;
                         }
-                    }
-                });
+                    });
+                }
             }
 
             // Messages
             if (evidenceItem.has_messages && evidenceItem.has_messages.length > 0) {
-                report += `\nMessages:\n`;
-                evidenceItem.has_messages.forEach((messageItem, index) => {
-                    if (
+                const filteredMessages = evidenceItem.has_messages.filter((messageItem) => {
+                    return (
                         messageItem &&
                         messageItem.message &&
-                        messageItem.message.properties
-                    ) {
+                        messageItem.message.properties &&
+                        (messageItem.message.properties.include_in_report !== false)
+                    );
+                });
+
+                if (filteredMessages.length > 0) {
+                    report += `\nMessages:\n`;
+                    filteredMessages.forEach((messageItem, index) => {
                         const messageProps = messageItem.message.properties;
                         report += `\nMessage ${index + 1}:\n`;
                         report += `Date: ${messageProps.date_sent || 'N/A'}\n`;
@@ -94,12 +107,14 @@ function PlainTextReport({ evidenceItem, indicatorItem }) {
                         if (messageItem.created_by && messageItem.created_by.properties) {
                             report += `Sent by: ${messageItem.created_by.properties.name}\n`;
                         }
-                    }
-                });
+                    });
+                }
             }
 
             // Metrics
             if (evidenceItem.has_metrics && evidenceItem.has_metrics.length > 0) {
+                // Metrics do not appear to have an `include_in_report` property.
+                // If you do have it, filter similarly. Otherwise, just include all.
                 report += `\nMetrics:\n`;
                 evidenceItem.has_metrics.forEach((metricItem) => {
                     if (
@@ -129,58 +144,71 @@ function PlainTextReport({ evidenceItem, indicatorItem }) {
 
                         // Documents
                         if (etype.docs && etype.docs.length > 0) {
-                            report += `\nDocuments:\n`;
-                            etype.docs.forEach((doc) => {
-                                if (doc && doc.properties) {
+                            const filteredDocs = etype.docs.filter((doc) => {
+                                return doc && doc.properties && (doc.properties.include_in_report !== false);
+                            });
+                            if (filteredDocs.length > 0) {
+                                report += `\nDocuments:\n`;
+                                filteredDocs.forEach((doc) => {
                                     report += `- ${doc.properties.name}: ${
                                         doc.properties.file_path || doc.properties.uri_path
                                     }\n`;
-                                }
-                            });
+                                });
+                            }
                         }
 
                         // Webpages
                         if (etype.webs && etype.webs.length > 0) {
-                            report += `\nWebpages:\n`;
-                            etype.webs.forEach((web) => {
-                                if (web && web.properties) {
-                                    report += `- ${web.properties.title}: ${web.properties.url}\n`;
-                                }
+                            const filteredWebs = etype.webs.filter((web) => {
+                                return web && web.properties && (web.properties.include_in_report !== false);
                             });
+                            if (filteredWebs.length > 0) {
+                                report += `\nWebpages:\n`;
+                                filteredWebs.forEach((web) => {
+                                    report += `- ${web.properties.title}: ${web.properties.url}\n`;
+                                });
+                            }
                         }
 
-                        // Notes
+                        // Notes under Evidence Type
                         if (etype.notes && etype.notes.length > 0) {
-                            report += `\nNotes:\n`;
-                            etype.notes.forEach((note, idx) => {
-                                if (note && note.properties) {
+                            const filteredETypeNotes = etype.notes.filter((note) => {
+                                return note && note.properties && (note.properties.include_in_report !== false);
+                            });
+                            if (filteredETypeNotes.length > 0) {
+                                report += `\nNotes:\n`;
+                                filteredETypeNotes.forEach((note, idx) => {
                                     report += `\nNote ${idx + 1}:\n`;
                                     report += `Date: ${note.properties.date_created || 'N/A'}\n`;
                                     report += `${note.properties.content}\n`;
                                     if (note.properties.file_path || note.properties.uri_path) {
                                         report += `Attachment: ${note.properties.file_path || note.properties.uri_path}\n`;
                                     }
-                                }
-                            });
+                                });
+                            }
                         }
 
-                        // Messages
+                        // Messages under Evidence Type
                         if (etype.msgs && etype.msgs.length > 0) {
-                            report += `\nMessages:\n`;
-                            etype.msgs.forEach((msg, idx) => {
-                                if (msg && msg.properties) {
+                            const filteredETypeMsgs = etype.msgs.filter((msg) => {
+                                return msg && msg.properties && (msg.properties.include_in_report !== false);
+                            });
+                            if (filteredETypeMsgs.length > 0) {
+                                report += `\nMessages:\n`;
+                                filteredETypeMsgs.forEach((msg, idx) => {
                                     report += `\nMessage ${idx + 1}:\n`;
                                     report += `Date: ${msg.properties.date_sent || 'N/A'}\n`;
                                     report += `${msg.properties.content}\n`;
                                     if (msg.properties.file_path || msg.properties.uri_path) {
                                         report += `Attachment: ${msg.properties.file_path || msg.properties.uri_path}\n`;
                                     }
-                                }
-                            });
+                                });
+                            }
                         }
 
-                        // Metrics
+                        // Metrics under Evidence Type
                         if (etype.metrics && etype.metrics.length > 0) {
+                            // Assuming metrics do not have include_in_report or that all should be included
                             report += `\nMetrics:\n`;
                             etype.metrics.forEach((metric) => {
                                 if (metric && metric.properties) {
