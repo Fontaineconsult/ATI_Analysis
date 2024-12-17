@@ -23,6 +23,9 @@ def main():
         plan_name = plan['name'] if plan else 'N/A'
         print(f"Plan: {plan_name}")
 
+        plan_description = plan['description'] if plan else 'N/A'
+        print(f"  Description: {plan_description}")
+
         ay_name = ay['name'] if ay else 'N/A'
         print(f"  Academic Year: {ay_name}")
 

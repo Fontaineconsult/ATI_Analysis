@@ -165,7 +165,7 @@ function PlainTextReport({ evidenceItem, indicatorItem }) {
                             if (filteredWebs.length > 0) {
                                 report += `\nWebpages:\n`;
                                 filteredWebs.forEach((web) => {
-                                    report += `- ${web.properties.title}: ${web.properties.url}\n`;
+                                    report += `- ${web.properties.name}: ${web.properties.url}\n`;
                                 });
                             }
                         }

@@ -1012,9 +1012,9 @@ class Document(StructuredNode):
     uri_path = StringProperty()
     is_administrative_review_documentation = StringProperty()
     is_milestone_and_measures_documentation = StringProperty()
-    depreciated = BooleanProperty()
-    depreciated_date = DateProperty()
-    include_in_report = BooleanProperty(default=True)
+    depreciated = BooleanProperty() #Todo this needs to placed in an edge
+    depreciated_date = DateProperty() #Todo this needs to placed in an edge
+    include_in_report = BooleanProperty(default=True) #Todo this needs to placed in an edge
     notes = RelationshipTo("Note", "has_note")
 
     def serialize(self):
