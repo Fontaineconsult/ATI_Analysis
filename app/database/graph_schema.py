@@ -1229,8 +1229,9 @@ class Metric(StructuredNode):
 def set_connection():
 
     from neomodel import config
-    print(os.environ.get('DATABASE_URL'))
-    config.DATABASE_URL = os.environ.get('DATABASE_URL')
+    print(os.environ.get('DATABASE_CONNECTOR'))
+
+    config.DATABASE_URL = os.environ.get('DATABASE_CONNECTOR')
 
 set_connection()
 

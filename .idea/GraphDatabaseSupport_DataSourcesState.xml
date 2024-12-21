@@ -12,7 +12,7 @@
               <option name="configuration">
                 <map>
                   <entry key="authType" value="User &amp; Password" />
-                  <entry key="database" value="neo4j" />
+                  <entry key="database" value="ati" />
                   <entry key="host" value="localhost" />
                   <entry key="password" value="accessibility" />
                   <entry key="port" value="7687" />
