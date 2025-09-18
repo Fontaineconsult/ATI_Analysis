@@ -1,6 +1,7 @@
 # web_config.py
 import os
 from dotenv import load_dotenv
+from neomodel import config
 
 # Determine the base directory
 base_dir = os.path.dirname(__file__)
@@ -14,6 +15,9 @@ dotenv_path = os.path.join(base_dir, f'.env.{env_name}')
 # Load the .env file
 load_dotenv(dotenv_path)
 print(os.environ.get('DATABASE_URL'))
+
+config.DATABASE_NAME = 'ati'
+
 class Config:
     FLASK_APP = os.environ.get('FLASK_APP', 'application.py')
     FLASK_ENV = env_name
@@ -22,3 +26,4 @@ class Config:
     FLASK_RUN_PORT = int(os.environ.get('FLASK_RUN_PORT', 5000))
     THREADED = True
     DATABASE_URL = os.environ.get('DATABASE_URL')
+    NEO4J_DATABASE = os.environ.get('NEO4J_DATABASE')

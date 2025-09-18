@@ -14,3 +14,5 @@ if __name__ == '__main__':
             port=app.config['FLASK_RUN_PORT'],
             threaded=app.config['THREADED'],
             debug=True)
+
+

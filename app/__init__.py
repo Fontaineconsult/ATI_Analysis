@@ -47,15 +47,15 @@ def create_app():
     app.config["PROPAGATE_EXCEPTIONS"] = True
 
     # Configure logging
-    log_file = "app.log"
-    handler = RotatingFileHandler(log_file, maxBytes=10000, backupCount=3)
-    handler.setLevel(logging.ERROR)  # Log only errors
-    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-    handler.setFormatter(formatter)
-    app.logger.addHandler(handler)
+    # log_file = "app.log"
+    # handler = RotatingFileHandler(log_file, maxBytes=10000, backupCount=3)
+    # handler.setLevel(logging.ERROR)  # Log only errors
+    # formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    # handler.setFormatter(formatter)
+    # app.logger.addHandler(handler)
 
     # Log an info message when the app starts
-    app.logger.info("Flask application is starting")
+    # app.logger.info("Flask application is starting")
 
     @app.before_request
     def initialize():

@@ -13,10 +13,9 @@ sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
 try:
     sys.path.insert(0, os.path.dirname(__file__))
     # Configure logging to output to stderr
-    logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
+    # logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
 
-    from . import create_app  # Adjust the import as necessary
+    from app import create_app  # Adjust the import as necessary
     application = create_app()
 except Exception:
-    logging.exception("An exception occurred while creating the application.")
     raise

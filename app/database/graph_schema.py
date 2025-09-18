@@ -1229,9 +1229,15 @@ class Metric(StructuredNode):
 def set_connection():
 
     from neomodel import config
-    print(os.environ.get('DATABASE_CONNECTOR'))
+
+    dotenv_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), '.env.development')
+    load_dotenv(dotenv_path)
+
+
+    config.DATABASE_NAME = os.environ.get('NEO4J_DATABASE')
 
     config.DATABASE_URL = os.environ.get('DATABASE_CONNECTOR')
+
 
 set_connection()
 

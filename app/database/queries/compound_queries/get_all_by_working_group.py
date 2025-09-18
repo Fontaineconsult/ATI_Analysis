@@ -202,3 +202,5 @@ def fetch_evidence_for_working_group(working_group, academic_year):
     except Exception as e:
         raise CrudError(f"Failed to fetch evidence: {str(e)}")
 
+if __name__=='__main__':
+    print(fetch_evidence_for_working_group("Procurement", "2023-2024"))
