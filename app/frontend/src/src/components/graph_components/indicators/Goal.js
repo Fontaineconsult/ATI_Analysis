@@ -9,6 +9,8 @@ function Goal({ goalData, plans, accomplishments, indicators }) {
     const { goal_number, name, goal, date_added } = goalData.properties;
 
     return (
+
+        <Box>
         <Box as="section" className="goal-section" aria-label={`Goal ${goal_number}: ${name}`}>
             <Heading tabIndex={0} as="h2" className="goal-heading">
                 Goal {goal_number}: {name}
@@ -21,8 +23,19 @@ function Goal({ goalData, plans, accomplishments, indicators }) {
             <GoalDetails plans={plans} accomplishments={accomplishments} indicators={indicators} />
 
             {/* Render the EvidenceMasterContainer for Success Indicators */}
+
+
+        </Box>
+
+
+        <Box>
             <EvidenceMasterContainer indicators={indicators} />
         </Box>
+
+        </Box>
+
+
+
     );
 }
 

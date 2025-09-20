@@ -27,7 +27,7 @@ export const DataProvider = ({ children }) => {
     const [loading, setLoading] = useState(true);
     const [updating, setUpdating] = useState(false);
     const [error, setError] = useState(null);
-    const [selectedYear, setSelectedYear] = useState('2023-2024');
+    const [selectedYear, setSelectedYear] = useState('2024-2025');
 
     const toast = useToast();
 

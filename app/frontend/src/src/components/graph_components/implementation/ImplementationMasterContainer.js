@@ -5,7 +5,7 @@ import EvidenceTypeMasterList from '../evidence/EvidenceTypeMasterList';
 function ImplementationMasterContainer({ evidenceData = {},
                                            compositeKey}) {
 
-    console.log("EEEEE", evidenceData)
+
     // Destructure evidenceTypes or use an empty array if none are present
     const { evidenceTypes = [] } = evidenceData;
 

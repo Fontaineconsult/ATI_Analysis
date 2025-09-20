@@ -8,9 +8,6 @@ function ProcurementReportContainer({ procurementData }) {
 
     return (
         <Box mb={6}>
-            <Heading as="h3" size="lg" mb={4}>
-                Goals and Success Indicators for the Procurement Working Group
-            </Heading>
 
 
             {/* Loop through the goals and pass each goal, along with its plans and accomplishments, to the Goal component */}

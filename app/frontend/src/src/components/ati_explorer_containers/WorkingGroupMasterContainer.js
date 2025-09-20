@@ -1,14 +1,9 @@
-import React, {useContext} from 'react';
+import React, { useContext } from 'react';
 import { Box, Spinner, Text } from '@chakra-ui/react';
-import { useData } from '../../hooks/useData';
 import { Routes, Route } from 'react-router-dom';
-
-// Subcomponents for different data categories
-import WebData from './WebData';
-import InstructionalMaterialsData from './InstructionalMaterialsData';
-import ProcurementData from './ProcurementData';
+import { DataContext } from "../../context/DataContext";
+import GoalNavigator from './GoalNavigator';
 import '../../styles/App.css';
-import {DataContext} from "../../context/DataContext";
 
 function WorkingGroupMasterContainer() {
     const { data, loading, error } = useContext(DataContext);
@@ -19,17 +14,11 @@ function WorkingGroupMasterContainer() {
     return (
         <Box className="working-group-container">
             <Routes>
-                {/* Route for Web Working Group */}
+                {/* Routes for each working group with optional goal */}
+                <Route path=":workingGroup" element={<GoalNavigator data={data} />} />
+                <Route path=":workingGroup/goal/:goalId" element={<GoalNavigator data={data} />} />
 
-                <Route path="web" element={<WebData webData={data.web} />} />
-
-                {/* Route for Instructional Materials Working Group */}
-                <Route path="instructional-materials" element={<InstructionalMaterialsData instructionalMaterialsData={data.instructionalMaterials} />} />
-
-                {/* Route for Procurement Working Group */}
-                <Route path="procurement" element={<ProcurementData procurementData={data.procurement} />} />
-
-                {/* Fallback Route - if no specific working group is selected */}
+                {/* Fallback Route */}
                 <Route path="*" element={<Text className="fallback-text">Please select a working group.</Text>} />
             </Routes>
         </Box>

@@ -19,9 +19,9 @@ function SubNavbar() {
     let subNavItems;
     if (location.pathname.includes('/ati-explorer')) {
         subNavItems = [
-            { label: 'Web', path: '/ati-explorer/web' },
-            { label: 'Instructional Materials', path: '/ati-explorer/instructional-materials' },
-            { label: 'Procurement', path: '/ati-explorer/procurement' },
+            { label: 'Web', path: '/ati-explorer/web/goal/1' },
+            { label: 'Instructional Materials', path: '/ati-explorer/instructional-materials/goal/1' },
+            { label: 'Procurement', path: '/ati-explorer/procurement/goal/1' },
         ];
     } else if (location.pathname.includes('/dashboard')) {
         subNavItems = [

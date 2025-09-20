@@ -37,7 +37,7 @@ function AtiExplorer() {
     }
 
     return (
-        <Box maxW="1200px" mx="auto" p={4}>
+        <Box maxW="1400px" mx="auto" p={4}>
             {location.pathname === '/ati-explorer' && <AtiExplorerLanding />}
 
             <WorkingGroupMasterContainer />

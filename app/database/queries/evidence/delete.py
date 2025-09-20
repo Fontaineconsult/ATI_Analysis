@@ -131,5 +131,3 @@ def delete_year_success_evidence(year_success_identifier: str) -> bool:
     except Exception as e:
         raise CrudError(f"Failed to delete Year Success Evidence: {e}")
 
-# delete_year_success_evidence("2022-2023-6.6-web")
-# delete_year_success_evidence("2024-2025-1.6-ins")

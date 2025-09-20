@@ -119,7 +119,7 @@ function IndicatorHeader({
 
     const annotationCount = (notes?.length || 0) + (messages?.length || 0) + (metrics?.length || 0) + (plans?.length || 0);
 
-    console.log("SDDEEE", notes, messages, metrics, plans);
+
 
     useEffect(() => {
         setLocalStatusLevel(initialStatusLevel);
