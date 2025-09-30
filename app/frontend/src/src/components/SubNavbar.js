@@ -25,9 +25,11 @@ function SubNavbar() {
         ];
     } else if (location.pathname.includes('/dashboard')) {
         subNavItems = [
+            {label: 'View Reports', path: '/dashboard/reports' },
             { label: 'Report Overview', path: '/dashboard/report-overview' },
             // { label: 'Implementations', path: '/dashboard/implementations' },
             { label: 'Settings', path: '/dashboard/settings' },
+
         ];
     } else if (location.pathname.includes('/about')) {
         subNavItems = [

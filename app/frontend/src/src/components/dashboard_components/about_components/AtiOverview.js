@@ -625,7 +625,7 @@ function ATIOverview() {
                                         Implementation Assignment
                                     </Text>
                                     <Text color="gray.700" mb={2}>
-                                        Year Success Evidence nodes with no implementing person assigned:{' '}
+                                        Success Indicators with no implementing person assigned:{' '}
                                         <Text as="span" fontWeight="bold">
                                             {stats.unassignedEvidence}
                                         </Text>

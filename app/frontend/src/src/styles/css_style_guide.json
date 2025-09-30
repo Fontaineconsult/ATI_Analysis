@@ -1,0 +1,295 @@
+{
+    "theme": {
+        "name": "Unified Chakra UI Theme",
+        "description": "Clean, professional design system with teal accents and gray/white base",
+
+        "colors": {
+            "primary": {
+                "action": "teal.500",
+                "hover": "teal.600",
+                "heading": "teal.700",
+                "light": "teal.50"
+            },
+            "text": {
+                "primary": "gray.800",
+                "secondary": "gray.700",
+                "muted": "gray.600",
+                "disabled": "gray.500"
+            },
+            "background": {
+                "page": "gray.50",
+                "card": "white",
+                "hover": "gray.50",
+                "tableHeader": "gray.50",
+                "active": "teal.50"
+            },
+            "border": {
+                "default": "gray.200",
+                "light": "gray.100"
+            },
+            "status": {
+                "error": "red.500",
+                "warning": "orange.500",
+                "success": "green.500"
+            }
+        },
+
+        "typography": {
+            "heading": {
+                "xl": { "size": "xl", "color": "gray.800", "weight": "bold" },
+                "lg": { "size": "lg", "color": "gray.800", "weight": "bold" },
+                "md": { "size": "md", "color": "teal.700", "weight": "bold" },
+                "sm": { "size": "sm", "color": "gray.700", "weight": "bold" }
+            },
+            "body": {
+                "primary": { "size": "sm", "color": "gray.700" },
+                "secondary": { "size": "xs", "color": "gray.600" },
+                "muted": { "size": "xs", "color": "gray.500" }
+            },
+            "label": {
+                "uppercase": {
+                    "size": "xs",
+                    "color": "teal.600",
+                    "transform": "uppercase",
+                    "weight": "semibold"
+                },
+                "normal": {
+                    "size": "xs",
+                    "color": "gray.600",
+                    "weight": "semibold"
+                }
+            },
+            "fontWeight": {
+                "bold": "bold",
+                "semibold": "semibold",
+                "medium": "medium",
+                "normal": "normal"
+            }
+        },
+
+        "spacing": {
+            "padding": {
+                "xs": 2,
+                "sm": 4,
+                "md": 6,
+                "lg": 8
+            },
+            "margin": {
+                "xs": 2,
+                "sm": 3,
+                "md": 4,
+                "lg": 6,
+                "xl": 8
+            },
+            "gap": {
+                "tight": 3,
+                "normal": 4,
+                "loose": 6,
+                "wide": 8
+            },
+            "stack": {
+                "tight": 3,
+                "normal": 4,
+                "loose": 6
+            }
+        },
+
+        "components": {
+            "container": {
+                "borderWidth": "1px",
+                "borderColor": "gray.200",
+                "borderRadius": "lg",
+                "bg": "white",
+                "boxShadow": "sm",
+                "p": 4,
+                "hover": {
+                    "boxShadow": "md"
+                },
+                "transition": "box-shadow 0.2s"
+            },
+
+            "table": {
+                "variant": "simple",
+                "size": "sm",
+                "header": {
+                    "bg": "gray.50",
+                    "th": {
+                        "color": "gray.600",
+                        "fontWeight": "semibold",
+                        "fontSize": "xs"
+                    }
+                },
+                "body": {
+                    "tr": {
+                        "hover": { "bg": "gray.50" }
+                    },
+                    "td": {
+                        "color": "gray.700",
+                        "fontSize": "xs"
+                    }
+                }
+            },
+
+            "button": {
+                "primary": {
+                    "size": "xs",
+                    "colorScheme": "teal",
+                    "variant": "solid",
+                    "hover": { "bg": "teal.600" }
+                },
+                "secondary": {
+                    "size": "sm",
+                    "colorScheme": "gray",
+                    "variant": "outline"
+                }
+            },
+
+            "badge": {
+                "fontSize": "xs",
+                "px": 2,
+                "py": 1,
+                "borderRadius": "md",
+                "color": "white"
+            },
+
+            "spinner": {
+                "size": "lg",
+                "color": "teal.500",
+                "thickness": "3px"
+            },
+
+            "alert": {
+                "borderRadius": "lg",
+                "fontSize": "sm"
+            },
+
+            "accordion": {
+                "item": {
+                    "borderWidth": "1px",
+                    "borderColor": "gray.200",
+                    "borderRadius": "lg",
+                    "mb": 2,
+                    "overflow": "hidden"
+                },
+                "button": {
+                    "bg": "white",
+                    "hover": { "bg": "gray.50" },
+                    "expanded": { "bg": "teal.50" },
+                    "py": 3,
+                    "px": 4
+                },
+                "icon": {
+                    "color": "teal.600"
+                },
+                "panel": {
+                    "bg": "white",
+                    "px": 4,
+                    "pb": 4
+                }
+            },
+
+            "divider": {
+                "borderColor": "gray.200",
+                "my": 6
+            },
+
+            "loadingState": {
+                "wrapper": {
+                    "display": "flex",
+                    "flexDirection": "column",
+                    "alignItems": "center",
+                    "justifyContent": "center",
+                    "py": 8,
+                    "minH": "400px"
+                },
+                "text": {
+                    "mt": 4,
+                    "color": "gray.600",
+                    "fontSize": "sm"
+                }
+            },
+
+            "toast": {
+                "position": "top-right",
+                "duration": 3000,
+                "isClosable": true
+            },
+
+            "modal": {
+                "header": {
+                    "fontSize": "md",
+                    "color": "gray.800"
+                },
+                "sizes": {
+                    "small": "lg",
+                    "medium": "2xl",
+                    "large": "3xl"
+                }
+            },
+
+            "indicatorCard": {
+                "wrapper": {
+                    "mb": 6,
+                    "p": 4,
+                    "borderWidth": "1px",
+                    "borderColor": "gray.200",
+                    "borderRadius": "lg",
+                    "bg": "white",
+                    "boxShadow": "sm",
+                    "hover": { "boxShadow": "md" },
+                    "transition": "box-shadow 0.2s"
+                },
+                "errorState": {
+                    "p": 4,
+                    "bg": "red.50",
+                    "borderWidth": "1px",
+                    "borderColor": "red.200",
+                    "borderRadius": "lg",
+                    "textColor": "red.600"
+                }
+            }
+        },
+
+        "layout": {
+            "mainContent": {
+                "flex": "0 0 75%",
+                "bg": "white",
+                "borderRadius": "lg",
+                "p": 6,
+                "boxShadow": "sm"
+            },
+            "sidebar": {
+                "flex": "0 0 25%",
+                "bg": "white",
+                "borderRadius": "lg",
+                "p": 6,
+                "boxShadow": "sm",
+                "position": "sticky",
+                "top": 24,
+                "height": "fit-content"
+            },
+            "pageWrapper": {
+                "p": 6,
+                "gap": 8,
+                "bg": "gray.50"
+            }
+        },
+
+        "principles": {
+            "borderRadius": "Always use 'lg' for containers, 'md' for smaller elements",
+            "shadows": "Use 'sm' as default, 'md' on hover for interactive elements",
+            "transitions": "Add smooth transitions for hover states (0.2s duration)",
+            "hoverStates": "Keep subtle - use shadow changes and light background tints",
+            "colorUsage": "Restrained - teal for primary actions, grays for content",
+            "whitespace": "Use generously for visual breathing room",
+            "hierarchy": "Establish through size, weight, and color rather than borders",
+            "colorfulAccents": {
+                "description": "While maintaining restraint, use color strategically for engagement",
+                "primaryBorders": "teal.300 for important containers, gray.200 for standard",
+                "tableHeaders": "teal.50 for primary tables, gray.50 for secondary",
+                "buttons": "Use full colorScheme with solid variants for primary actions",
+                "striping": "Use colorScheme striping for data tables when appropriate"
+            }
+        }
+    }
+}

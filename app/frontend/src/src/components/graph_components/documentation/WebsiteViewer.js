@@ -27,21 +27,19 @@ function WebsiteViewer({ websites, implementation_id, implementation_type }) {
     const { currentWorkingGroup } = useSettings();
     const { user } = useContext(UserContext);
     const toast = useToast();
+
     // Toggle expanded/collapsed state
-    const toggleCollapse = (index) => {
+    const toggleEdit = (index) => {
         setExpandedIndex(expandedIndex === index ? null : index);
     };
 
     // Handle form submission for both new and updated websites
     const handleFormSubmit = async (index, websiteData, isNew) => {
         try {
-            let response; // Declare a variable to hold the response
+            let response;
 
             if (isNew) {
-                // Assume that date_created and created_by are needed for a new website
                 websiteData.date_created = new Date().toISOString().split('T')[0];
-
-                // Capture the response from the API call
                 response = await addWebpageToImplementation(
                     implementation_id,
                     implementation_type,
@@ -49,7 +47,6 @@ function WebsiteViewer({ websites, implementation_id, implementation_type }) {
                     user?.properties || user
                 );
             } else {
-                // Capture the response from the API call
                 response = await updateWebpage(
                     implementation_id,
                     implementation_type,
@@ -57,8 +54,6 @@ function WebsiteViewer({ websites, implementation_id, implementation_type }) {
                     user?.properties || user
                 );
             }
-
-            // Use the message from the response in the success toast
 
             toast({
                 title: "Success",
@@ -68,7 +63,7 @@ function WebsiteViewer({ websites, implementation_id, implementation_type }) {
                 isClosable: true,
             });
 
-            await loadSingleWorkingGroupData(currentWorkingGroup); // Refresh data
+            await loadSingleWorkingGroupData(currentWorkingGroup);
             setExpandedIndex(null);
             setIsAddingNewWebsite(false);
         } catch (error) {
@@ -82,83 +77,147 @@ function WebsiteViewer({ websites, implementation_id, implementation_type }) {
         }
     };
 
-
     return (
         <Box>
-            {/* Button to add a new website */}
             <Button
                 colorScheme="teal"
                 onClick={() => {
                     setIsAddingNewWebsite(true);
-                    setExpandedIndex(null); // Collapse any other expanded websites
+                    setExpandedIndex(null);
                 }}
                 mb={4}
             >
                 Add New Website
             </Button>
 
-            {/* Render the WebsiteForm for adding a new website if isAddingNewWebsite is true */}
             {isAddingNewWebsite ? (
-                    <Box mb={4} border="1px solid teal" borderRadius="md" p={4} boxShadow="sm">
-                        <WebsiteForm
-                            website={null} // Pass null for a new website
-                            onSubmit={(websiteData) => handleFormSubmit(null, websiteData, true)} // Pass true to indicate new website
-                            createdBy={user?.properties || user} // Pass user data or null
-                        />
-                    </Box>
-                ) : // Render existing websites if not adding a new website
-                websites && websites.length > 0 ? (
-                    websites.map((webWrapper, index) => {
-                        const website = webWrapper.webpage || webWrapper; // Adjust based on data structure
-                        const createdByPerson = webWrapper.created_by?.properties || website.created_by?.properties;
+                <Box mb={4} border="1px solid teal" borderRadius="md" p={4} boxShadow="sm">
+                    <WebsiteForm
+                        website={null}
+                        onSubmit={(websiteData) => handleFormSubmit(null, websiteData, true)}
+                        createdBy={user?.properties || user}
+                        isNewWebsite={true}
+                        onCancel={() => setIsAddingNewWebsite(false)}
+                    />
+                </Box>
+            ) : websites && websites.length > 0 ? (
+                websites.map((webWrapper, index) => {
+                    const website = webWrapper.webpage || webWrapper;
+                    const createdByPerson = webWrapper.created_by?.properties || website.created_by?.properties;
+                    const isExpanded = expandedIndex === index;
 
-                        return (
-                            <Box
-                                key={website.properties.unique_id || index}
-                                mb={4}
-                                border="1px solid teal"
-                                borderRadius="md"
-                                p={4}
-                                boxShadow="sm"
-                            >
-                                <Flex
-                                    justify="space-between"
-                                    alignItems="center"
-                                    cursor="pointer"
-                                    onClick={() => toggleCollapse(index)}
-                                >
-                                    <Text fontWeight="bold" fontSize="sm">
-                                        {website.properties.name || 'Untitled Website'}
-                                    </Text>
-                                    <Button size="sm" colorScheme="teal">
-                                        {expandedIndex === index ? 'Collapse' : 'Expand'}
-                                    </Button>
-                                </Flex>
-
-                                <Text fontSize="sm" color="gray.600" mt={2}>
-                                    Created by: {createdByPerson ? createdByPerson.name : 'Unknown Author'}
-                                </Text>
-
-                                <Collapse in={expandedIndex === index} animateOpacity>
-                                    <Box mt={4}>
-                                        <WebsiteForm
-                                            website={website} // Pass the actual website object
-                                            onSubmit={(websiteData) => handleFormSubmit(index, websiteData, false)} // Pass false to indicate update
-                                            createdBy={createdByPerson}
-                                        />
+                    return (
+                        <Box
+                            key={website.properties.unique_id || index}
+                            mb={4}
+                            border="1px solid teal"
+                            borderRadius="md"
+                            p={4}
+                            boxShadow="sm"
+                        >
+                            {/* Always visible compact view with Edit button */}
+                            <Flex justify="space-between" alignItems="flex-start" mb={2}>
+                                <Flex flex="1" gap={4}>
+                                    {/* Left side - Basic Info (2/3 width) */}
+                                    <Box flex="2" fontSize="sm">
+                                        <Flex mb={1} align="baseline">
+                                            <Text fontWeight="bold" color="gray.600" minWidth="50px">
+                                                URL:
+                                            </Text>
+                                            <a
+                                                href={website.properties.url}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                style={{ color: '#3182ce', textDecoration: 'underline', wordBreak: 'break-all' }}
+                                            >
+                                                {website.properties.url || 'No URL provided'}
+                                            </a>
+                                        </Flex>
+                                        <Flex mb={1} align="baseline">
+                                            <Text fontWeight="bold" color="gray.600" minWidth="50px">
+                                                Name:
+                                            </Text>
+                                            <Text>{website.properties.name || 'No name provided'}</Text>
+                                        </Flex>
+                                        <Flex align="baseline">
+                                            <Text fontWeight="bold" color="gray.600" minWidth="50px">
+                                                Desc:
+                                            </Text>
+                                            <Text>{website.properties.description || 'No description provided'}</Text>
+                                        </Flex>
                                     </Box>
-                                </Collapse>
-                            </Box>
-                        );
-                    })
-                ) : (
-                    <Text>No websites available.</Text>
-                )}
+
+                                    {/* Right side - Status Info (1/3 width) */}
+                                    <Box flex="1" fontSize="sm" borderLeft="1px solid" borderColor="gray.200" pl={4}>
+                                        <Flex mb={1} align="baseline">
+                                            <Text fontWeight="bold" color="gray.600" minWidth="120px">
+                                                No Longer Exists:
+                                            </Text>
+                                            <Text color={website.properties.no_longer_exists ? "red.500" : "green.500"}>
+                                                {website.properties.no_longer_exists ? 'True' : 'False'}
+                                            </Text>
+                                        </Flex>
+                                        <Flex mb={1} align="baseline">
+                                            <Text fontWeight="bold" color="gray.600" minWidth="120px">
+                                                Include in Report:
+                                            </Text>
+                                            <Text color={website.properties.include_in_report ? "green.500" : "red.500"}>
+                                                {website.properties.include_in_report ? 'True' : 'False'}
+                                            </Text>
+                                        </Flex>
+                                        <Flex mb={1} align="baseline">
+                                            <Text fontWeight="bold" color="gray.600" minWidth="120px">
+                                                Depreciated:
+                                            </Text>
+                                            <Text color={website.properties.depreciated ? "orange.500" : "green.500"}>
+                                                {website.properties.depreciated ? 'True' : 'False'}
+                                            </Text>
+                                        </Flex>
+                                        <Flex align="baseline">
+                                            <Text fontWeight="bold" color="gray.600" minWidth="120px">
+                                                Depreciation Date:
+                                            </Text>
+                                            <Text>{website.properties.depreciated_date || 'N/A'}</Text>
+                                        </Flex>
+                                    </Box>
+                                </Flex>
+                                <Button
+                                    size="sm"
+                                    colorScheme={isExpanded ? "gray" : "blue"}
+                                    onClick={() => toggleEdit(index)}
+                                    ml={4}
+                                >
+                                    {isExpanded ? 'Cancel' : 'Edit'}
+                                </Button>
+                            </Flex>
+
+                            <Text fontSize="xs" color="gray.500">
+                                Created by: {createdByPerson ? createdByPerson.name : 'Unknown'}
+                            </Text>
+
+                            {/* Collapsible edit form */}
+                            <Collapse in={isExpanded} animateOpacity>
+                                <Box mt={4} pt={4} borderTop="1px solid" borderColor="gray.200">
+                                    <WebsiteForm
+                                        website={website}
+                                        onSubmit={(websiteData) => handleFormSubmit(index, websiteData, false)}
+                                        createdBy={createdByPerson}
+                                        isNewWebsite={false}
+                                        onCancel={() => toggleEdit(index)}
+                                    />
+                                </Box>
+                            </Collapse>
+                        </Box>
+                    );
+                })
+            ) : (
+                <Text>No websites available.</Text>
+            )}
         </Box>
     );
 }
 
-function WebsiteForm({ website, onSubmit, createdBy }) {
+function WebsiteForm({ website, onSubmit, createdBy, isNewWebsite, onCancel }) {
     const [websiteData, setWebsiteData] = useState({
         unique_id: website?.properties?.unique_id || '',
         url: website?.properties?.url || '',
@@ -173,10 +232,8 @@ function WebsiteForm({ website, onSubmit, createdBy }) {
         created_by: createdBy || {},
     });
 
-    // New state to track submission status
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    // Update local state when `website` or `createdBy` prop changes
     useEffect(() => {
         setWebsiteData({
             unique_id: website?.properties?.unique_id || '',
@@ -203,25 +260,36 @@ function WebsiteForm({ website, onSubmit, createdBy }) {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setIsSubmitting(true); // Start the spinner
+        setIsSubmitting(true);
         try {
             await onSubmit(websiteData);
         } catch (error) {
             console.error('Error submitting website:', error);
         } finally {
-            setIsSubmitting(false); // Stop the spinner
+            setIsSubmitting(false);
         }
     };
 
     return (
         <Box as="form" onSubmit={handleSubmit}>
+            {/* Show input fields only when editing or for new websites */}
             <FormControl mb={4}>
                 <FormLabel>Website URL</FormLabel>
-                <Input name="url" value={websiteData.url} onChange={handleChange} required />
+                <Input
+                    name="url"
+                    value={websiteData.url}
+                    onChange={handleChange}
+                    required
+                />
             </FormControl>
             <FormControl mb={4}>
                 <FormLabel>Website Name</FormLabel>
-                <Input name="name" value={websiteData.name} onChange={handleChange} required />
+                <Input
+                    name="name"
+                    value={websiteData.name}
+                    onChange={handleChange}
+                    required
+                />
             </FormControl>
             <FormControl mb={4}>
                 <FormLabel>Description</FormLabel>
@@ -232,18 +300,7 @@ function WebsiteForm({ website, onSubmit, createdBy }) {
                 />
             </FormControl>
 
-            {/* Display created_by person details */}
-            {createdBy?.name ? (
-                <Box mb={4}>
-                    <Text fontSize="sm" color="gray.600">
-                        Created by: {createdBy.name} ({createdBy.title || 'Unknown Title'})
-                    </Text>
-                </Box>
-            ) : (
-                <Text fontSize="sm" color="gray.600">Created by: Unknown</Text>
-            )}
-
-            {/* Flex box to split the toggles and date fields into two columns */}
+            {/* Toggles and date fields */}
             <Flex gap={4} mb={4}>
                 <Box flex="1">
                     <FormControl mb={4}>
@@ -285,15 +342,26 @@ function WebsiteForm({ website, onSubmit, createdBy }) {
                 </Box>
             </Flex>
 
-            <Button
-                type="submit"
-                colorScheme="teal"
-                mt={4}
-                isLoading={isSubmitting} // Chakra UI prop to show spinner
-                loadingText={website?.properties?.name ? 'Updating...' : 'Submitting...'}
-            >
-                {website?.properties?.name ? 'Update Website' : 'Submit Website'}
-            </Button>
+            {/* Action buttons */}
+            <Flex gap={2}>
+                <Button
+                    type="submit"
+                    colorScheme="teal"
+                    isLoading={isSubmitting}
+                    loadingText={isNewWebsite ? 'Submitting...' : 'Updating...'}
+                >
+                    {isNewWebsite ? 'Submit Website' : 'Update Website'}
+                </Button>
+                {onCancel && (
+                    <Button
+                        variant="outline"
+                        onClick={onCancel}
+                        isDisabled={isSubmitting}
+                    >
+                        Cancel
+                    </Button>
+                )}
+            </Flex>
         </Box>
     );
 }

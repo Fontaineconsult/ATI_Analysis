@@ -19,7 +19,9 @@ import {
     Tr,
     Th,
     Td,
-    Select
+    Select,
+    HStack,
+    Badge
 } from '@chakra-ui/react';
 import { FaUser } from 'react-icons/fa';
 import DropdownSelect from '../../functional_components/DropdownSelect';
@@ -31,8 +33,12 @@ import YSEAnnotationMasterContainer from '../documentation/YSEAnnotationMasterCo
 import ApprovalMasterContainer from '../../ati_explorer_containers/ApprovalMasterContainer';
 import { updateStatusLevel, assignPersonAsImplementor, unassignPersonAsImplementor } from '../../../services/api/put';
 import { DataContext } from '../../../context/DataContext';
+import {getUrlFromCompositeKey} from '../../../services/utils/tools';
+import { useNavigate } from 'react-router-dom';
+
 
 function SuccessIndicator({ indicatorData, evidenceData, bgColor }) {
+
     const { statusLevels, updateStatus } = useStatusLevels();
     const { user } = useContext(UserContext);
     const { currentAcademicYear } = useContext(SettingsContext);
@@ -43,17 +49,22 @@ function SuccessIndicator({ indicatorData, evidenceData, bgColor }) {
     const adminReviewers = evidenceData?.adminReviewers || [];
     const currentUserId = user?.employee_id || null;
 
-
-
     const handleStatusChange = (newStatus) => {
         updateStatus(yearIdentifier, newStatus);
     };
 
-    // Rest of your component code remains the same
+    // Error state for missing evidence
     if (!yearIdentifier) {
         return (
-            <Box padding={4} bg="red.50" border="1px solid" borderColor="red.200" borderRadius="md">
-                <Text color="red.700" fontWeight="bold">
+            <Box
+                p={4}
+                bg="red.50"
+                borderWidth="1px"
+                borderColor="red.300"
+                borderRadius="lg"
+                boxShadow="sm"
+            >
+                <Text color="red.700" fontWeight="semibold" fontSize="sm">
                     No YearSuccessEvidence node attached for {success_indicator}
                 </Text>
             </Box>
@@ -71,7 +82,23 @@ function SuccessIndicator({ indicatorData, evidenceData, bgColor }) {
     }
 
     return (
-        <Box as="section" mb={4} p={4} border="1px solid teal" borderRadius="md" bg={bgColor} tabIndex={0} aria-labelledby={`indicator-${composite_key}`} aria-describedby={`indicator-details-${composite_key}`}>
+        <Box
+            id={`${composite_key}`}
+            as="section"
+            mb={6}
+            p={5}
+            borderWidth="2px"
+            borderColor="teal.300"
+            borderRadius="lg"
+            bg={bgColor || "white"}
+            boxShadow="sm"
+            _hover={{ boxShadow: "md", borderColor: "teal.400" }}
+            transition="all 0.2s"
+            tabIndex={0}
+            aria-labelledby={`indicator-${composite_key}`}
+            aria-describedby={`indicator-details-${composite_key}`}
+            scrollMarginTop="120px"
+        >
             <IndicatorHeader
                 compositeKey={composite_key}
                 statusLevels={statusLevels}
@@ -88,7 +115,12 @@ function SuccessIndicator({ indicatorData, evidenceData, bgColor }) {
                 currentWorkingGroup={currentWorkingGroup}
                 evidenceData={evidenceData}
             />
-            <IndicatorDetails description={success_indicator} persons={evidenceData.persons} compositeKey={composite_key} />
+            <IndicatorDetails
+                description={success_indicator}
+                persons={evidenceData.persons}
+                compositeKey={composite_key}
+                evidenceData={evidenceData}
+            />
             <ImplementationMasterContainer evidenceData={evidenceData} compositeKey={composite_key} />
         </Box>
     );
@@ -119,8 +151,6 @@ function IndicatorHeader({
 
     const annotationCount = (notes?.length || 0) + (messages?.length || 0) + (metrics?.length || 0) + (plans?.length || 0);
 
-
-
     useEffect(() => {
         setLocalStatusLevel(initialStatusLevel);
     }, [initialStatusLevel]);
@@ -129,57 +159,99 @@ function IndicatorHeader({
         setLocalStatusLevel(newStatus);
         try {
             await updateStatusLevel(yearIdentifier, newStatus);
-            toast({ title: "Status updated.", description: "The status level was updated successfully.", status: "success", duration: 3000, isClosable: true });
+            toast({
+                title: "Status updated",
+                description: "The status level was updated successfully.",
+                status: "success",
+                duration: 3000,
+                isClosable: true,
+                position: "top-right"
+            });
             onStatusChange(newStatus);
             loadSingleWorkingGroupData(currentWorkingGroup);
         } catch (error) {
-            toast({ title: "Error updating status.", description: "There was an error updating the status level. Please try again.", status: "error", duration: 3000, isClosable: true });
+            toast({
+                title: "Error updating status",
+                description: "Please try again.",
+                status: "error",
+                duration: 3000,
+                isClosable: true,
+                position: "top-right"
+            });
             setLocalStatusLevel(initialStatusLevel);
         }
     };
 
     return (
-        <Flex justify="space-between" align="center" mb={2}>
-            <Heading as="h6" size="sm" id={`indicator-${compositeKey}`}>
-                Indicator: {compositeKey}
-            </Heading>
+        <Box>
+            <Flex justify="space-between" align="center" mb={4}>
+                <Heading size="sm" color="teal.700" id={`indicator-${compositeKey}`}>
+                    Indicator: {compositeKey}
+                </Heading>
 
-            <Flex align="center">
-                <Button mr={4} onClick={onNotesOpen} colorScheme="teal" aria-label="View Notes" padding="15px">
-                    Annotations ({annotationCount})
-                </Button>
+                <HStack spacing={3}>
+                    <Button
+                        size="sm"
+                        onClick={onNotesOpen}
+                        colorScheme="teal"
+                        variant="solid"
+                        aria-label="View Notes"
+                        _hover={{ bg: "teal.600" }}
+                    >
+                        Annotations
+                        <Badge ml={2} bg="white" color="teal.600" fontSize="xs">
+                            {annotationCount}
+                        </Badge>
+                    </Button>
 
-                <Button
-                    rightIcon={<FaUser />}
-                    colorScheme="blue"
-                    variant="outline"
-                    aria-label="Implementing Persons"
-                    onClick={onImplementingPersonsOpen}
-                    mr={4}
-                >
-                    Persons
-                </Button>
+                    <Button
+                        size="sm"
+                        rightIcon={<FaUser />}
+                        colorScheme="blue"
+                        variant="outline"
+                        aria-label="Implementing Persons"
+                        onClick={onImplementingPersonsOpen}
+                        _hover={{ bg: "blue.50" }}
+                    >
+                        Persons
+                    </Button>
 
-                <Box width="170px">
-                    <DropdownSelect
-                        options={statusLevels.map((level) => level.status_level)}
-                        initialValue={localStatusLevel}
-                        onChange={handleStatusChange}
-                    />
-                </Box>
+                    <Box width="170px">
+                        <DropdownSelect
+                            options={statusLevels.map((level) => level.status_level)}
+                            initialValue={localStatusLevel}
+                            onChange={handleStatusChange}
+                        />
+                    </Box>
 
-                <Button ml={4} colorScheme={approveButtonColor} onClick={onApprovalOpen} isDisabled={isButtonDisabled}>
-                    {approveButtonText}
-                </Button>
+                    <Button
+                        size="sm"
+                        colorScheme={approveButtonColor}
+                        onClick={onApprovalOpen}
+                        isDisabled={isButtonDisabled}
+                        variant={approveButtonText === 'Approved' ? 'solid' : 'outline'}
+                    >
+                        {approveButtonText}
+                    </Button>
+                </HStack>
             </Flex>
 
-            <Modal isOpen={isNotesOpen} onClose={onNotesClose} size="xl">
+            {/* Modals */}
+            <Modal isOpen={isNotesOpen} onClose={onNotesClose} size="3xl">
                 <ModalOverlay />
                 <ModalContent>
-                    <ModalHeader>Annotations for {compositeKey}</ModalHeader>
+                    <ModalHeader fontSize="lg" color="teal.700">
+                        Annotations for {compositeKey}
+                    </ModalHeader>
                     <ModalCloseButton />
                     <ModalBody>
-                        <YSEAnnotationMasterContainer hasNotes={notes} hasMessages={messages} hasMetrics={metrics} plans={plans} year_identifier={yearIdentifier} />
+                        <YSEAnnotationMasterContainer
+                            hasNotes={notes}
+                            hasMessages={messages}
+                            hasMetrics={metrics}
+                            plans={plans}
+                            year_identifier={yearIdentifier}
+                        />
                     </ModalBody>
                 </ModalContent>
             </Modal>
@@ -187,7 +259,9 @@ function IndicatorHeader({
             <Modal isOpen={isImplementingPersonsOpen} onClose={onImplementingPersonsClose} size="lg">
                 <ModalOverlay />
                 <ModalContent>
-                    <ModalHeader>Implementing Persons</ModalHeader>
+                    <ModalHeader fontSize="lg" color="teal.700">
+                        Implementing Persons
+                    </ModalHeader>
                     <ModalCloseButton />
                     <ModalBody>
                         <ImplementingPersonsManager yearIdentifier={yearIdentifier} />
@@ -198,45 +272,168 @@ function IndicatorHeader({
             <Modal isOpen={isApprovalOpen} onClose={onApprovalClose} size="2xl">
                 <ModalOverlay />
                 <ModalContent>
-                    <ModalHeader>Approval Process</ModalHeader>
+                    <ModalHeader fontSize="lg" color="teal.700">
+                        Approval Process
+                    </ModalHeader>
                     <ModalCloseButton />
                     <ModalBody>
-                        <ApprovalMasterContainer evidenceData={evidenceData} currentWorkingGroup={currentWorkingGroup} />
+                        <ApprovalMasterContainer
+                            evidenceData={evidenceData}
+                            currentWorkingGroup={currentWorkingGroup}
+                        />
                     </ModalBody>
                 </ModalContent>
             </Modal>
-        </Flex>
+        </Box>
     );
 }
 
 // IndicatorDetails Component
-function IndicatorDetails({ description, persons, compositeKey }) {
+function IndicatorDetails({ description, persons, compositeKey, evidenceData }) {
     return (
-        <>
-            <Text as='h3' id={`indicator-details-${compositeKey}`}><strong>Description:</strong> {description}</Text>
-            <ResponsiblePersons persons={persons} compositeKey={compositeKey} />
-        </>
+        <Box>
+            <Text fontSize="sm" color="gray.700" mb={3} id={`indicator-details-${compositeKey}`}>
+                <Text as="span" fontWeight="bold" color="gray.800">Description:</Text> {description}
+            </Text>
+            <ResponsiblePersons persons={persons} compositeKey={compositeKey} evidenceData={evidenceData} />
+        </Box>
     );
 }
 
-// ResponsiblePersons Component
-function ResponsiblePersons({ persons, compositeKey }) {
+// ResponsiblePersons Component with Table
+function ResponsiblePersons({ persons, compositeKey, evidenceData }) {
+    const navigate = useNavigate();
+
     if (!persons || persons.length === 0) {
-        return <Text color="red.500" fontWeight="bold" mt={4}>No responsible persons assigned.</Text>;
+        return (
+            <Text color="red.500" fontWeight="bold" fontSize="sm" mt={4}>
+                No responsible persons assigned.
+            </Text>
+        );
+    }
+
+    // Count implementation types from evidenceTypes
+    const implementationCounts = {
+        Tracker: 0,
+        Guidance: 0,
+        Process: 0,
+        Project: 0,
+        Procedure: 0,
+        InternalPolicy: 0,
+        Service: 0
+    };
+
+    // Count the evidenceTypes which represent the actual implementations
+    if (evidenceData && evidenceData.evidenceTypes) {
+        evidenceData.evidenceTypes.forEach(evidenceType => {
+            if (evidenceType.type && implementationCounts.hasOwnProperty(evidenceType.type)) {
+                implementationCounts[evidenceType.type]++;
+            }
+        });
     }
 
     return (
         <Box mt={4} aria-labelledby={`responsible-persons-heading-${compositeKey}`}>
-            <Heading as="h6" size="sm" mb={2} id={`responsible-persons-heading-${compositeKey}`}>
+            <Heading size="xs" color="teal.700" mb={3} id={`responsible-persons-heading-${compositeKey}`}>
                 Responsible Persons:
             </Heading>
-            <Flex wrap="wrap" gap={4} aria-label="List of responsible persons">
-                {persons.map((person) => (
-                    <Box key={person.id} as="span" aria-labelledby={`person-${person.id}`}>
-                        <Text id={`person-name-${person.id}`} fontSize="sm"><strong>Name:</strong> {person.properties.name}</Text>
-                        <Text id={`person-title-${person.id}`} fontSize="sm"><strong>Title:</strong> {person.properties.title}</Text>
-                    </Box>
-                ))}
+
+            <Flex gap={4}>
+                {/* Left side - Table (50% width) */}
+                <Box
+                    flex="1"
+                    maxWidth="50%"
+                    borderWidth="1px"
+                    borderColor="teal.300"
+                    borderRadius="lg"
+                    overflow="hidden"
+                    boxShadow="sm"
+                >
+                    <Table variant="striped" colorScheme="teal" size="sm" aria-label="List of responsible persons">
+                        <Thead bg="teal.50">
+                            <Tr>
+                                <Th borderBottom="2px solid" borderColor="teal.200" color="teal.700" fontSize="xs">
+                                    Name
+                                </Th>
+                                <Th borderBottom="2px solid" borderColor="teal.200" color="teal.700" fontSize="xs">
+                                    Title
+                                </Th>
+                            </Tr>
+                        </Thead>
+                        <Tbody>
+                            {persons.map((person) => (
+                                <Tr key={person.id}>
+                                    <Td color="gray.700" fontSize="xs" borderBottom="1px solid" borderColor="gray.100">
+                                        {person.properties.name}
+                                    </Td>
+                                    <Td color="gray.600" fontSize="xs" borderBottom="1px solid" borderColor="gray.100">
+                                        {person.properties.title}
+                                    </Td>
+                                </Tr>
+                            ))}
+                        </Tbody>
+                    </Table>
+                </Box>
+
+                {/* Right side - Implementation Overview (50% width) */}
+                <Box
+                    flex="1"
+                    maxWidth="50%"
+                    borderWidth="1px"
+                    borderColor="teal.300"
+                    borderRadius="lg"
+                    p={4}
+                    bg="white"
+                    boxShadow="sm"
+                >
+                    <Flex gap={4}>
+                        {/* Left section - Implementation counts */}
+                        <Box flex="2">
+                            <Text fontWeight="bold" fontSize="xs" mb={2} color="teal.700" textTransform="uppercase">
+                                Implementation Overview
+                            </Text>
+                            <Flex flexWrap="wrap" gap={2} as="dl" aria-label="Implementation types and counts">
+                                {Object.entries(implementationCounts).map(([type, count]) => (
+                                    <Box key={type} flexBasis="calc(50% - 4px)" pl={2}>
+                                        <Flex justify="space-between" fontSize="xs">
+                                            <Text as="dt" color="gray.600">{type}:</Text>
+                                            <Text
+                                                as="dd"
+                                                fontWeight="bold"
+                                                color={count > 0 ? "teal.600" : "gray.400"}
+                                                ml={2}
+                                            >
+                                                {count}
+                                            </Text>
+                                        </Flex>
+                                    </Box>
+                                ))}
+                            </Flex>
+                        </Box>
+
+                        {/* Right section - View Evidence button */}
+                        <Flex
+                            flex="1"
+                            align="center"
+                            borderLeftWidth="1px"
+                            borderColor="gray.200"
+                            pl={4}
+                        >
+                            <Button
+                                size="sm"
+                                colorScheme="blue"
+                                width="100%"
+                                onClick={() => {
+                                    const urlSegment = getUrlFromCompositeKey(compositeKey);
+                                    navigate(`/dashboard/reports/${urlSegment}`);
+                                }}
+                                _hover={{ bg: "blue.600" }}
+                            >
+                                View Evidence
+                            </Button>
+                        </Flex>
+                    </Flex>
+                </Box>
             </Flex>
         </Box>
     );
@@ -247,7 +444,9 @@ const ImplementingPersonsManager = React.memo(({ yearIdentifier }) => {
     const { currentWorkingGroup } = useSettings();
     const [selectedPerson, setSelectedPerson] = useState('');
     const toast = useToast();
-    const assignedPersons = data.individuals?.filter(person => person.yearSuccessEvidences.some(yse => yse.year_identifier === yearIdentifier)) || [];
+    const assignedPersons = data.individuals?.filter(
+        person => person.yearSuccessEvidences.some(yse => yse.year_identifier === yearIdentifier)
+    ) || [];
 
     useEffect(() => {
         if (!data.individuals) {
@@ -259,21 +458,47 @@ const ImplementingPersonsManager = React.memo(({ yearIdentifier }) => {
         if (!selectedPerson) return;
         try {
             await assignPersonAsImplementor(selectedPerson, yearIdentifier);
-            toast({ title: "Person assigned successfully", status: "success", duration: 2000, isClosable: true });
+            toast({
+                title: "Person assigned successfully",
+                status: "success",
+                duration: 2000,
+                isClosable: true,
+                position: "top-right"
+            });
             loadSingleWorkingGroupData(currentWorkingGroup);
             setSelectedPerson('');
         } catch (error) {
-            toast({ title: "Error assigning person", description: error.message, status: "error", duration: 3000, isClosable: true });
+            toast({
+                title: "Error assigning person",
+                description: error.message,
+                status: "error",
+                duration: 3000,
+                isClosable: true,
+                position: "top-right"
+            });
         }
     };
 
     const handleRemovePerson = async (personId) => {
         try {
             await unassignPersonAsImplementor(personId, yearIdentifier);
-            toast({ title: "Person unassigned successfully", status: "success", duration: 2000, isClosable: true });
+            toast({
+                title: "Person unassigned successfully",
+                status: "success",
+                duration: 2000,
+                isClosable: true,
+                position: "top-right"
+            });
             loadSingleWorkingGroupData(currentWorkingGroup);
         } catch (error) {
-            toast({ title: "Error removing person", description: error.message, status: "error", duration: 3000, isClosable: true });
+            toast({
+                title: "Error removing person",
+                description: error.message,
+                status: "error",
+                duration: 3000,
+                isClosable: true,
+                position: "top-right"
+            });
         }
     };
 
@@ -282,31 +507,49 @@ const ImplementingPersonsManager = React.memo(({ yearIdentifier }) => {
 
     return (
         <Box>
-            <Select placeholder="Select person to assign" value={selectedPerson} onChange={(e) => setSelectedPerson(e.target.value)} mb={4}>
-                {availableIndividuals.map((individual) => (
-                    <option key={individual.unique_id} value={individual.unique_id}>
-                        {individual.name} - {individual.title}
-                    </option>
-                ))}
-            </Select>
-            <Button colorScheme="teal" onClick={handleAssignPerson}>
-                Assign
-            </Button>
-            <Table variant="simple">
+            <Flex gap={2} mb={4}>
+                <Select
+                    size="sm"
+                    placeholder="Select person to assign"
+                    value={selectedPerson}
+                    onChange={(e) => setSelectedPerson(e.target.value)}
+                    fontSize="sm"
+                    borderColor="teal.300"
+                    _hover={{ borderColor: "teal.400" }}
+                    _focus={{ borderColor: "teal.500", boxShadow: "0 0 0 1px teal.500" }}
+                >
+                    {availableIndividuals.map((individual) => (
+                        <option key={individual.unique_id} value={individual.unique_id}>
+                            {individual.name} - {individual.title}
+                        </option>
+                    ))}
+                </Select>
+                <Button size="sm" colorScheme="teal" onClick={handleAssignPerson}>
+                    Assign
+                </Button>
+            </Flex>
+
+            <Table variant="simple" size="sm">
                 <Thead>
-                    <Tr>
-                        <Th>Name</Th>
-                        <Th>Title</Th>
-                        <Th>Actions</Th>
+                    <Tr bg="teal.50">
+                        <Th color="teal.700" fontWeight="semibold" fontSize="xs">Name</Th>
+                        <Th color="teal.700" fontWeight="semibold" fontSize="xs">Title</Th>
+                        <Th color="teal.700" fontWeight="semibold" fontSize="xs">Actions</Th>
                     </Tr>
                 </Thead>
                 <Tbody>
                     {assignedPersons.map((person) => (
-                        <Tr key={person.unique_id}>
-                            <Td>{person.name}</Td>
-                            <Td>{person.title}</Td>
+                        <Tr key={person.unique_id} _hover={{ bg: "gray.50" }}>
+                            <Td color="gray.700" fontSize="xs">{person.name}</Td>
+                            <Td color="gray.600" fontSize="xs">{person.title}</Td>
                             <Td>
-                                <Button colorScheme="red" size="sm" onClick={() => handleRemovePerson(person.unique_id)}>
+                                <Button
+                                    size="xs"
+                                    colorScheme="red"
+                                    variant="solid"
+                                    onClick={() => handleRemovePerson(person.unique_id)}
+                                    _hover={{ bg: "red.600" }}
+                                >
                                     Remove
                                 </Button>
                             </Td>
@@ -317,4 +560,5 @@ const ImplementingPersonsManager = React.memo(({ yearIdentifier }) => {
         </Box>
     );
 });
+
 export default SuccessIndicator;

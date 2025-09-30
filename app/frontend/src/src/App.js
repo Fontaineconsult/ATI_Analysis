@@ -71,7 +71,7 @@ function App() {
                             <Flex as="nav" className="nav-bar" aria-label="Main Navigation">
                                 <Flex className="nav-items-container">
                                     <Heading as="h1" className="app-title">
-                                        SF State ATI Knowledge Graph
+                                        SF State ATI Annual Report
                                     </Heading>
                                     <Button
                                         as={RouterLink}

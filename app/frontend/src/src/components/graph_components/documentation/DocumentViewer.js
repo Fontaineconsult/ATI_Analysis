@@ -9,15 +9,14 @@ import {
     Text,
     Flex,
     Collapse,
-    Select,
+    Select, Link,
 } from '@chakra-ui/react';
 import { updateDocument } from '../../../services/api/put';
 import { addDocumentToImplementation } from '../../../services/api/post';
-
+import { useToast } from '@chakra-ui/react';
 import { DataContext } from '../../../context/DataContext';
 import { useSettings } from '../../../context/SettingsContext';
 import { UserContext } from '../../../context/UserContext';
-
 
 function DocumentViewer({ documents, implementation_id, implementation_type }) {
     const [expandedIndex, setExpandedIndex] = useState(null);
@@ -25,107 +24,224 @@ function DocumentViewer({ documents, implementation_id, implementation_type }) {
     const { loadSingleWorkingGroupData, selectedYear } = useContext(DataContext);
     const { currentWorkingGroup } = useSettings();
     const { user } = useContext(UserContext);
+    const toast = useToast();
 
     // Toggle expanded/collapsed state
-    const toggleCollapse = (index) => {
+    const toggleEdit = (index) => {
         setExpandedIndex(expandedIndex === index ? null : index);
     };
 
     // Handle form submission for both new and updated documents
     const handleFormSubmit = async (index, documentData, isNew) => {
         try {
+            let response;
+
             if (isNew) {
-                // Assume that date_created and created_by are needed for a new document
                 documentData.date_created = new Date().toISOString().split('T')[0];
-                await addDocumentToImplementation(implementation_id, implementation_type, documentData, user?.employee_id || '');
+                response = await addDocumentToImplementation(
+                    implementation_id,
+                    implementation_type,
+                    documentData,
+                    user?.employee_id || ''
+                );
             } else {
-                await updateDocument(implementation_id, implementation_type, documentData, user?.employee_id || '');
+                response = await updateDocument(
+                    implementation_id,
+                    implementation_type,
+                    documentData,
+                    user?.employee_id || ''
+                );
             }
-            await loadSingleWorkingGroupData(currentWorkingGroup); // Refresh data
+
+            toast({
+                title: "Success",
+                description: response?.message || "Operation completed successfully.",
+                status: "success",
+                duration: 3000,
+                isClosable: true,
+            });
+
+            await loadSingleWorkingGroupData(currentWorkingGroup);
             setExpandedIndex(null);
             setIsAddingNewDocument(false);
         } catch (error) {
-            console.error('Error submitting document:', error);
+            toast({
+                title: "Error",
+                description: error.response?.data?.error || "An unexpected error occurred.",
+                status: "error",
+                duration: 3000,
+                isClosable: true,
+            });
         }
     };
 
     return (
         <Box>
-            {/* Button to add a new document */}
             <Button
                 colorScheme="teal"
                 onClick={() => {
                     setIsAddingNewDocument(true);
-                    setExpandedIndex(null); // Collapse any other expanded documents
+                    setExpandedIndex(null);
                 }}
                 mb={4}
             >
                 Add New Document
             </Button>
 
-            {/* Render the DocumentForm for adding a new document if isAddingNewDocument is true */}
             {isAddingNewDocument ? (
-                    <Box mb={4} border="1px solid teal" borderRadius="md" p={4} boxShadow="sm">
-                        <DocumentForm
-                            document={null} // Pass null for a new document
-                            onSubmit={(documentData) => handleFormSubmit(null, documentData, true)} // Pass true to indicate new document
-                            createdBy={user?.properties || user} // Pass user data or null
-                        />
-                    </Box>
-                ) : // Render existing documents if not adding a new document
-                documents && documents.length > 0 ? (
-                    documents.map((docWrapper, index) => {
-                        const document = docWrapper.document || docWrapper; // Adjust based on data structure
-                        const createdByPerson = docWrapper.created_by?.properties || document.created_by?.properties;
+                <Box mb={4} border="1px solid teal" borderRadius="md" p={4} boxShadow="sm">
+                    <DocumentForm
+                        document={null}
+                        onSubmit={(documentData) => handleFormSubmit(null, documentData, true)}
+                        createdBy={user?.properties || user}
+                        isNewDocument={true}
+                        onCancel={() => setIsAddingNewDocument(false)}
+                    />
+                </Box>
+            ) : documents && documents.length > 0 ? (
+                documents.map((docWrapper, index) => {
+                    const document = docWrapper.document || docWrapper;
+                    const createdByPerson = docWrapper.created_by?.properties || document.created_by?.properties;
+                    const isExpanded = expandedIndex === index;
 
-
-                        return (
-                            <Box
-                                key={document.properties.unique_id || index}
-                                mb={4}
-                                border="1px solid teal"
-                                borderRadius="md"
-                                p={4}
-                                boxShadow="sm"
-                            >
-                                <Flex
-                                    justify="space-between"
-                                    alignItems="center"
-                                    cursor="pointer"
-                                    onClick={() => toggleCollapse(index)}
-                                >
-                                    <Text fontWeight="bold" fontSize="sm">
-                                        {document.properties.name || 'Untitled Document'}
-                                    </Text>
-                                    <Button size="sm" colorScheme="teal">
-                                        {expandedIndex === index ? 'Collapse' : 'Expand'}
-                                    </Button>
-                                </Flex>
-
-                                <Text fontSize="sm" color="gray.600" mt={2}>
-                                    Created by: {createdByPerson ? createdByPerson.name : 'Unknown Author'}
-                                </Text>
-
-                                <Collapse in={expandedIndex === index} animateOpacity>
-                                    <Box mt={4}>
-                                        <DocumentForm
-                                            document={document} // Pass the actual document object
-                                            onSubmit={(documentData) => handleFormSubmit(index, documentData, false)} // Pass false to indicate update
-                                            createdBy={createdByPerson}
-                                        />
+                    return (
+                        <Box
+                            key={document.properties.unique_id || index}
+                            mb={4}
+                            border="1px solid teal"
+                            borderRadius="md"
+                            p={4}
+                            boxShadow="sm"
+                        >
+                            {/* Always visible compact view with Edit button */}
+                            <Flex justify="space-between" alignItems="flex-start" mb={2}>
+                                <Flex flex="1" gap={4}>
+                                    {/* Left side - Basic Info (2/3 width) */}
+                                    <Box flex="2" fontSize="sm">
+                                        <Flex mb={1} align="baseline">
+                                            <Text fontWeight="bold" color="gray.600" minWidth="80px">
+                                                Name:
+                                            </Text>
+                                            <Text>{document.properties.name || 'No name provided'}</Text>
+                                        </Flex>
+                                        <Flex mb={1} align="baseline">
+                                            <Text fontWeight="bold" color="gray.600" minWidth="80px">
+                                                File Path:
+                                            </Text>
+                                            {document.properties.file_path ? (
+                                                <Link href={document.properties.file_path} wordBreak="break-all" isExternal>
+                                                    {document.properties.file_path}
+                                                </Link>
+                                            ) : (
+                                                <Text>No file path provided</Text>
+                                            )}
+                                        </Flex>
+                                        <Flex mb={1} align="baseline">
+                                            <Text fontWeight="bold" color="gray.600" minWidth="80px">
+                                                URI Path:
+                                            </Text>
+                                            {document.properties.uri_path ? (
+                                                <a
+                                                    href={document.properties.uri_path}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    style={{ color: '#3182ce', textDecoration: 'underline', wordBreak: 'break-all' }}
+                                                >
+                                                    {document.properties.uri_path}
+                                                </a>
+                                            ) : (
+                                                <Text>No URI provided</Text>
+                                            )}
+                                        </Flex>
+                                        <Flex align="baseline">
+                                            <Text fontWeight="bold" color="gray.600" minWidth="80px">
+                                                Created:
+                                            </Text>
+                                            <Text>{document.properties.date_created || 'N/A'}</Text>
+                                        </Flex>
                                     </Box>
-                                </Collapse>
-                            </Box>
-                        );
-                    })
-                ) : (
-                    <Text>No documents available.</Text>
-                )}
+
+                                    {/* Right side - Status Info (1/3 width) */}
+                                    <Box flex="1" fontSize="sm" borderLeft="1px solid" borderColor="gray.200" pl={4}>
+                                        <Flex mb={1} align="baseline">
+                                            <Text fontWeight="bold" color="gray.600" minWidth="100px">
+                                                Admin Review:
+                                            </Text>
+                                            <Text color={document.properties.is_administrative_review_documentation ? "green.500" : "gray.400"}>
+                                                {document.properties.is_administrative_review_documentation ? 'Yes' : 'No'}
+                                            </Text>
+                                        </Flex>
+                                        <Flex mb={1} align="baseline">
+                                            <Text fontWeight="bold" color="gray.600" minWidth="100px">
+                                                Milestones:
+                                            </Text>
+                                            <Text color={document.properties.is_milestone_and_measures_documentation ? "green.500" : "gray.400"}>
+                                                {document.properties.is_milestone_and_measures_documentation ? 'Yes' : 'No'}
+                                            </Text>
+                                        </Flex>
+                                        <Flex mb={1} align="baseline">
+                                            <Text fontWeight="bold" color="gray.600" minWidth="100px">
+                                                In Report:
+                                            </Text>
+                                            <Text color={document.properties.include_in_report ? "green.500" : "red.500"}>
+                                                {document.properties.include_in_report ? 'Yes' : 'No'}
+                                            </Text>
+                                        </Flex>
+                                        <Flex mb={1} align="baseline">
+                                            <Text fontWeight="bold" color="gray.600" minWidth="100px">
+                                                Depreciated:
+                                            </Text>
+                                            <Text color={document.properties.depreciated ? "orange.500" : "green.500"}>
+                                                {document.properties.depreciated ? 'Yes' : 'No'}
+                                            </Text>
+                                        </Flex>
+                                        {document.properties.depreciated && (
+                                            <Flex align="baseline">
+                                                <Text fontWeight="bold" color="gray.600" minWidth="100px">
+                                                    Dep. Date:
+                                                </Text>
+                                                <Text>{document.properties.depreciated_date || 'N/A'}</Text>
+                                            </Flex>
+                                        )}
+                                    </Box>
+                                </Flex>
+                                <Button
+                                    size="sm"
+                                    colorScheme={isExpanded ? "gray" : "blue"}
+                                    onClick={() => toggleEdit(index)}
+                                    ml={4}
+                                >
+                                    {isExpanded ? 'Cancel' : 'Edit'}
+                                </Button>
+                            </Flex>
+
+                            <Text fontSize="xs" color="gray.500">
+                                Created by: {createdByPerson ? createdByPerson.name : 'Unknown'}
+                            </Text>
+
+                            {/* Collapsible edit form */}
+                            <Collapse in={isExpanded} animateOpacity>
+                                <Box mt={4} pt={4} borderTop="1px solid" borderColor="gray.200">
+                                    <DocumentForm
+                                        document={document}
+                                        onSubmit={(documentData) => handleFormSubmit(index, documentData, false)}
+                                        createdBy={createdByPerson}
+                                        isNewDocument={false}
+                                        onCancel={() => toggleEdit(index)}
+                                    />
+                                </Box>
+                            </Collapse>
+                        </Box>
+                    );
+                })
+            ) : (
+                <Text>No documents available.</Text>
+            )}
         </Box>
     );
 }
 
-function DocumentForm({ document, onSubmit, createdBy }) {
+function DocumentForm({ document, onSubmit, createdBy, isNewDocument, onCancel }) {
     const [documentData, setDocumentData] = useState({
         unique_id: document?.properties?.unique_id || '',
         name: document?.properties?.name || '',
@@ -140,14 +256,12 @@ function DocumentForm({ document, onSubmit, createdBy }) {
         depreciated_date: document?.properties?.depreciated_date || '',
         date_created:
             document?.properties?.date_created ||
-            new Date().toISOString().split('T')[0], // Default to today's date if new
+            new Date().toISOString().split('T')[0],
         created_by: createdBy || {},
     });
 
-    // New state to track submission status
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    // Update local state when `document` or `createdBy` prop changes
     useEffect(() => {
         setDocumentData({
             unique_id: document?.properties?.unique_id || '',
@@ -178,13 +292,13 @@ function DocumentForm({ document, onSubmit, createdBy }) {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setIsSubmitting(true); // Start the spinner
+        setIsSubmitting(true);
         try {
             await onSubmit(documentData);
         } catch (error) {
             console.error('Error submitting document:', error);
         } finally {
-            setIsSubmitting(false); // Stop the spinner
+            setIsSubmitting(false);
         }
     };
 
@@ -192,7 +306,7 @@ function DocumentForm({ document, onSubmit, createdBy }) {
         <Box as="form" onSubmit={handleSubmit}>
             <FormControl mb={4}>
                 <FormLabel>Document Name</FormLabel>
-                <Input name="name" value={documentData.name} onChange={handleChange} />
+                <Input name="name" value={documentData.name} onChange={handleChange} required />
             </FormControl>
             <FormControl mb={4}>
                 <FormLabel>Date Created</FormLabel>
@@ -212,18 +326,7 @@ function DocumentForm({ document, onSubmit, createdBy }) {
                 <Input name="uri_path" value={documentData.uri_path} onChange={handleChange} />
             </FormControl>
 
-            {/* Display created_by person details */}
-            {createdBy?.name ? (
-                <Box mb={4}>
-                    <Text fontSize="sm" color="gray.600">
-                        Created by: {createdBy.name} ({createdBy.title || 'Unknown Title'})
-                    </Text>
-                </Box>
-            ) : (
-                <Text fontSize="sm" color="gray.600">Created by: Unknown</Text>
-            )}
-
-            {/* Flex box to split the toggles and date fields into two columns */}
+            {/* Toggles and date fields */}
             <Flex gap={4} mb={4}>
                 <Box flex="1">
                     <FormControl mb={4}>
@@ -273,15 +376,26 @@ function DocumentForm({ document, onSubmit, createdBy }) {
                 </Box>
             </Flex>
 
-            <Button
-                type="submit"
-                colorScheme="teal"
-                mt={4}
-                isLoading={isSubmitting} // Chakra UI prop to show spinner
-                loadingText={document?.properties?.name ? 'Updating...' : 'Submitting...'}
-            >
-                {document?.properties?.name ? 'Update Document' : 'Submit Document'}
-            </Button>
+            {/* Action buttons */}
+            <Flex gap={2}>
+                <Button
+                    type="submit"
+                    colorScheme="teal"
+                    isLoading={isSubmitting}
+                    loadingText={isNewDocument ? 'Submitting...' : 'Updating...'}
+                >
+                    {isNewDocument ? 'Submit Document' : 'Update Document'}
+                </Button>
+                {onCancel && (
+                    <Button
+                        variant="outline"
+                        onClick={onCancel}
+                        isDisabled={isSubmitting}
+                    >
+                        Cancel
+                    </Button>
+                )}
+            </Flex>
         </Box>
     );
 }
