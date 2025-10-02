@@ -1,11 +1,13 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useContext } from 'react';
 import { Flex, Button, Box } from '@chakra-ui/react';
 import { useLocation, Link } from 'react-router-dom';
 import { useSettings } from "../context/SettingsContext";
+import { DataContext } from '../context/DataContext';
 
 function SubNavbar() {
     const location = useLocation();
     const { updateCurrentWorkingGroup } = useSettings();
+    const { isUserAdmin } = useContext(DataContext);
 
     useEffect(() => {
         if (location.pathname.includes('/ati-explorer')) {
@@ -25,11 +27,10 @@ function SubNavbar() {
         ];
     } else if (location.pathname.includes('/dashboard')) {
         subNavItems = [
-            {label: 'View Reports', path: '/dashboard/reports' },
+            { label: 'View Reports', path: '/dashboard/reports' },
             { label: 'Report Overview', path: '/dashboard/report-overview' },
             // { label: 'Implementations', path: '/dashboard/implementations' },
-            { label: 'Settings', path: '/dashboard/settings' },
-
+            { label: 'Settings', path: '/dashboard/settings', requiresAdmin: true },
         ];
     } else if (location.pathname.includes('/about')) {
         subNavItems = [
@@ -43,28 +44,73 @@ function SubNavbar() {
     return (
         <Box
             as="nav"
-            bg="gray.100"
-            py={2}
-            boxShadow="md"
+            bg="white"
+            borderBottomWidth="1px"
+            borderColor="gray.200"
+            boxShadow="sm"
             position="relative"
-            height="52px"
+            height="48px"
         >
-            <Flex justify="center" align="center" height="100%">
-                {subNavItems.map((item) => (
-                    <Button
-                        key={item.label}
-                        as={Link}
-                        to={item.path}
-                        colorScheme={location.pathname === item.path ? 'teal' : 'gray'}
-                        variant={location.pathname === item.path ? 'solid' : 'ghost'}
-                        size="md"
-                        fontWeight={location.pathname === item.path ? 'bold' : 'normal'}
-                        _hover={{ textDecoration: 'none', bg: 'teal.100' }}
-                        mx={2}
-                    >
-                        {item.label}
-                    </Button>
-                ))}
+            <Flex
+                justify="center"
+                align="center"
+                height="100%"
+                px={6}
+            >
+                {subNavItems.map((item, index) => {
+                    const isActive = location.pathname === item.path;
+                    const isDisabled = item.requiresAdmin && !isUserAdmin();
+
+                    return (
+                        <React.Fragment key={item.label}>
+                            <Button
+                                as={isDisabled ? undefined : Link}
+                                to={isDisabled ? undefined : item.path}
+                                size="sm"
+                                variant="ghost"
+                                position="relative"
+                                px={4}
+                                isDisabled={isDisabled}
+                                color={isDisabled ? 'gray.400' : (isActive ? 'teal.700' : 'gray.600')}
+                                fontWeight={isActive ? 'semibold' : 'normal'}
+                                fontSize="sm"
+                                bg={isActive && !isDisabled ? 'teal.50' : 'transparent'}
+                                cursor={isDisabled ? 'not-allowed' : 'pointer'}
+                                opacity={isDisabled ? 0.6 : 1}
+                                _hover={isDisabled ? {} : {
+                                    textDecoration: 'none',
+                                    bg: isActive ? 'teal.100' : 'gray.50',
+                                    color: isActive ? 'teal.800' : 'gray.700'
+                                }}
+                                _active={isDisabled ? {} : {
+                                    bg: isActive ? 'teal.100' : 'gray.100'
+                                }}
+                                transition="all 0.2s"
+                                borderRadius="md"
+                                _after={isActive && !isDisabled ? {
+                                    content: '""',
+                                    position: 'absolute',
+                                    bottom: '-1px',
+                                    left: '10%',
+                                    right: '10%',
+                                    height: '2px',
+                                    bg: 'teal.500',
+                                    borderRadius: 'full'
+                                } : {}}
+                            >
+                                {item.label}
+                            </Button>
+                            {index < subNavItems.length - 1 && (
+                                <Box
+                                    width="1px"
+                                    height="20px"
+                                    bg="gray.200"
+                                    mx={3}
+                                />
+                            )}
+                        </React.Fragment>
+                    );
+                })}
             </Flex>
         </Box>
     );

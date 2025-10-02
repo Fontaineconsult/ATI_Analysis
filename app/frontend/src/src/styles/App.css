@@ -376,3 +376,11 @@ button:focus, a:focus {
 .chakra-ui-light {
   min-height: 100vh !important;
 }
+
+
+:root {
+  --chakra-sizes-container-xl: 1400px !important;  /* Default is usually 1280px */
+  --chakra-sizes-container-lg: 1280px !important;
+  --chakra-sizes-container-md: 768px !important;
+  --chakra-sizes-container-sm: 640px !important;
+}

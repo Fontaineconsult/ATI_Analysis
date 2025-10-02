@@ -2,7 +2,8 @@ import json
 from flask import request
 from flask.views import MethodView
 from app.database.queries.compound_queries.get_all_by_working_group import fetch_evidence_for_working_group
-from app.database.queries.evidence.read import get_all_status_level_nodes, get_connected_status_levels
+from app.database.queries.evidence.read import get_all_status_level_nodes, get_connected_status_levels, \
+    get_evidence_trends
 from app.database.queries.evidence.update import assign_status_to_yse, assign_approver_to_yse
 from . import data_api_endpoints
 from ...database.class_factory import working_group_names_web_query, status_levels
@@ -177,8 +178,36 @@ class StatusLevelAPI(MethodView):
             raise ApiError(message=f"Error assigning status {status_level} to YSE {yse}: {e}")
 
 
+
+class TrendsAPI(MethodView):
+
+    def get(self):
+        """
+        Fetch all status levels along with their connected nodes from the database.
+        """
+        try:
+
+            # Use the new function to get connected status levels
+            previous_year = request.args.get('previous_year')
+            current_year = request.args.get('current_year')
+
+            print("SDFSDF", previous_year, current_year)
+
+            trends = get_evidence_trends(previous_year, current_year)
+
+            # The data is already in the desired format
+            return make_response(status='success', data=trends), 200
+        except CrudError as e:
+            raise ApiError(message=f"Error retrieving connected status levels: {e}")
+        except Exception as e:
+            raise ApiError(message=f"An unexpected error occurred: {e}")
+
+
+
+
 # Register the view for the working group evidence functionality
 evidence_view = EvidenceAPI.as_view('evidence_api')
+trends_view = TrendsAPI.as_view('trends_api')
 
 # Register the URL rule for fetching evidence by working group and academic year
 data_api_endpoints.add_url_rule(
@@ -192,6 +221,17 @@ data_api_endpoints.add_url_rule(
     view_func=evidence_view,
     methods=['POST', 'PUT']
 )
+
+
+data_api_endpoints.add_url_rule(
+    '/evidence/trends',
+    view_func=trends_view,
+    methods=['GET']
+)
+
+
+
+
 
 
 # Register the view for the status level functionality

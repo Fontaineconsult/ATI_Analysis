@@ -1,7 +1,8 @@
 import React, { createContext, useState, useEffect } from 'react';
-import { fetchPrimaryData, fetchCurrentYearIndicator, fetchAllIndividuals } from '../services/api/get';
+import {fetchPrimaryData, fetchCurrentYearIndicator, fetchAllIndividuals, fetchTrends} from '../services/api/get';
 import { useToast } from '@chakra-ui/react';
-
+import {year_difference} from "../services/utils/tools";
+import adminData from './admins.json'; // Import the admin data
 
 const transformWorkingGroup = (workingGroup) => {
     const mapping = {
@@ -23,6 +24,7 @@ export const DataProvider = ({ children }) => {
         procurement: null,
         indicators: null,
         individuals: null,
+        admins: [], // Add admins to the data state
     });
     const [loading, setLoading] = useState(true);
     const [updating, setUpdating] = useState(false);
@@ -33,16 +35,55 @@ export const DataProvider = ({ children }) => {
 
     useEffect(() => {
         loadData();
+        loadAdmins(); // Load admin data on mount
     }, [selectedYear]);
+
+    // Function to load admin data from JSON file
+    const loadAdmins = () => {
+        try {
+            // Set the admin data from the imported JSON
+            setData((prevData) => ({
+                ...prevData,
+                admins: adminData.admins || []
+            }));
+        } catch (err) {
+            console.error('Error loading admin data:', err);
+            toast({
+                title: "Error loading admin data.",
+                description: "Could not load administrator list.",
+                status: "warning",
+                duration: 3000,
+                isClosable: true,
+            });
+            // Set empty array as fallback
+            setData((prevData) => ({
+                ...prevData,
+                admins: []
+            }));
+        }
+    };
+
+    // Helper function to check if a user is an admin based on query string
+    const isUserAdmin = () => {
+        // Get the query string from the current URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const employeeId = urlParams.get('employee_id');
+
+        // Check if the employee_id from query string is in the admins list
+        if (!employeeId) return false;
+
+        return data.admins.includes(String(employeeId));
+    };
 
     const loadData = async () => {
         try {
             setLoading(true);
-            const [webData, instructionalMaterialsData, procurementData, indicatorsData] = await Promise.all([
+            const [webData, instructionalMaterialsData, procurementData, indicatorsData, yoyTrends] = await Promise.all([
                 fetchPrimaryData("web", selectedYear),
                 fetchPrimaryData("instructional-materials", selectedYear),
                 fetchPrimaryData("procurement", selectedYear),
-                fetchCurrentYearIndicator(selectedYear),
+                fetchCurrentYearIndicator(),
+                fetchTrends(year_difference(selectedYear),selectedYear)
             ]);
 
             setData((prevData) => ({
@@ -51,6 +92,7 @@ export const DataProvider = ({ children }) => {
                 instructionalMaterials: instructionalMaterialsData.data,
                 procurement: procurementData.data,
                 indicators: indicatorsData.data,
+                yoyTrends: yoyTrends.data
             }));
         } catch (err) {
             setError(err.message);
@@ -189,8 +231,10 @@ export const DataProvider = ({ children }) => {
             updateYear,
             loadSingleWorkingGroupData,
             refreshIndicators,
-            loadAllIndividuals,  // Add loadAllIndividuals to the context
-            refreshAllIndividuals,  // Add refreshAllIndividuals to the context
+            loadAllIndividuals,
+            refreshAllIndividuals,
+            isUserAdmin, // Provide the admin check function
+            admins: data.admins // Provide direct access to admin list
         }}>
             {children}
         </DataContext.Provider>

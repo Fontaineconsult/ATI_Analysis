@@ -113,3 +113,72 @@ def get_connected_status_levels() -> list:
         raise CrudError(f"Error retrieving connected status levels: {e}")
 
 
+def get_evidence_trends(past_year, current_year, working_group=None):
+    """
+    Looks at previous year and current year and determines, per success indicator,
+    if the current is lower, same or higher than the past.
+
+    :param past_year: The earlier academic year to compare (e.g., "2022-2023")
+    :param current_year: The later academic year to compare (e.g., "2023-2024")
+    :param working_group: Optional - specific working group name. If None, returns all three groups.
+    :return: Dictionary with trends for each working group or list if single group specified
+    """
+
+    try:
+        # Read the Cypher query from the file
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        # Construct the absolute path to the query file
+        query_file_path = os.path.join(current_dir, '../../batch/trends.cypher')
+        # Normalize the path
+        query_file_path = os.path.normpath(query_file_path)
+
+        with open(query_file_path, 'r') as file:
+            query = file.read()
+
+        # If a specific working group is requested, return just that
+        if working_group:
+            params = {
+                'past_year': past_year,
+                'current_year': current_year,
+                'working_group': working_group
+            }
+
+            results, meta = db.cypher_query(query, params)
+            trends = [record[0] for record in results]
+            return trends
+
+        # Otherwise, get trends for all three ATI working groups
+        working_groups = ['Web', 'Instructional Materials', 'Procurement']
+        combined_trends = {}
+
+        for wg in working_groups:
+            params = {
+                'past_year': past_year,
+                'current_year': current_year,
+                'working_group': wg
+            }
+
+            results, meta = db.cypher_query(query, params)
+            trends = [record[0] for record in results]
+            combined_trends[wg] = trends
+
+        # Add summary statistics
+        combined_trends['summary'] = {
+            'past_year': past_year,
+            'current_year': current_year,
+            'total_indicators': sum(len(trends) for trends in combined_trends.values() if isinstance(trends, list)),
+            'by_working_group': {
+                wg: {
+                    'total': len(combined_trends[wg]),
+                    'improving': len([t for t in combined_trends[wg] if t['trend'] == 'improving']),
+                    'static': len([t for t in combined_trends[wg] if t['trend'] == 'static']),
+                    'declining': len([t for t in combined_trends[wg] if t['trend'] == 'declining'])
+                }
+                for wg in working_groups
+            }
+        }
+
+        return combined_trends
+
+    except Exception as e:
+        raise CrudError(f"Error retrieving evidence trends: {e}")

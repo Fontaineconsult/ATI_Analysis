@@ -10,7 +10,7 @@ import ReportMasterList from "./dashboard_components/report_components/ReportMas
 // Main Dashboard component containing route-based subcomponents
 function Dashboard() {
     return (
-        <Box className="dashboard-container" ml={0}  maxW="1200px" mx="auto" p={4} textAlign="center">
+        <Box className="dashboard-container" ml={0} mx="auto" p={4} textAlign="center">
             <Routes>
                 <Route path="report-overview" element={<ReportOverviewMasterContainer />} />
                 <Route

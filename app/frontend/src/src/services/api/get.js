@@ -80,3 +80,18 @@ export const fetchAllIndividuals = async () => {
         throw error;
     }
 }
+
+export const fetchTrends = async (previous_year, current_year) => {
+    try {
+        const response = await axios.get(`${process.env.REACT_APP_API_URL}/evidence/trends?previous_year=${previous_year}&current_year=${current_year}`);
+
+        if (response.status === 200) {
+            return response.data;  // Return the entire response data
+        } else {
+            throw new Error(`Failed to fetch individuals: ${response.data.error}`);
+        }
+    } catch (error) {
+        console.error('Error fetching individuals:', error.message);
+        throw error;
+    }
+}

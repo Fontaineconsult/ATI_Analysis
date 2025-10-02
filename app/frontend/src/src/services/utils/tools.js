@@ -39,4 +39,18 @@ const getStatusColor = (statusLevel) => {
 };
 
 
-export { getUrlFromCompositeKey, getStatusColor };
+const year_difference = (current_year) => {
+    // Split the year range and convert to numbers
+    const [startYear, endYear] = current_year.split('-').map(year => parseInt(year));
+
+    // Subtract 1 from both years
+    const newStartYear = startYear - 1;
+    const newEndYear = endYear - 1;
+
+    // Return the new year range as a string
+    return `${newStartYear}-${newEndYear}`;
+};
+
+
+
+export { getUrlFromCompositeKey, getStatusColor, year_difference };

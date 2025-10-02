@@ -1,4 +1,5 @@
 import React, { useContext, useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
     Box,
     Text,
@@ -86,12 +87,39 @@ const calculateStatistics = (data) => {
 const AtiStats = () => {
     const { data, loading } = useContext(DataContext);
     const [stats, setStats] = useState(null);
+    const navigate = useNavigate();
 
     useEffect(() => {
         if (data && !loading) {
             setStats(calculateStatistics(data));
         }
     }, [data, loading]);
+
+    const handleWorkingGroupClick = (workingGroup) => {
+        // Map working group names to anchor IDs
+        const anchorMap = {
+            'web': 'web-section',
+            'instructionalMaterials': 'instructional-materials-section',
+            'procurement': 'procurement-section'
+        };
+
+        const anchorId = anchorMap[workingGroup];
+
+        // Scroll to the section
+        const element = document.getElementById(anchorId);
+        if (element) {
+            element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        } else {
+            // If element doesn't exist yet, navigate to the page first then scroll
+            navigate('/dashboard/reports#' + anchorId);
+            setTimeout(() => {
+                const retryElement = document.getElementById(anchorId);
+                if (retryElement) {
+                    retryElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            }, 100);
+        }
+    };
 
     if (loading || !stats) {
         return (
@@ -129,17 +157,29 @@ const AtiStats = () => {
                             </Tr>
                         </Thead>
                         <Tbody>
-                            <Tr _hover={{ bg: "gray.50" }}>
+                            <Tr
+                                _hover={{ bg: "gray.50", cursor: "pointer" }}
+                                onClick={() => handleWorkingGroupClick('web')}
+                                cursor="pointer"
+                            >
                                 <Td color="gray.700">Web</Td>
                                 <Td color="gray.700" isNumeric fontWeight="medium">{stats.workingGroups.web.goals}</Td>
                                 <Td color="gray.700" isNumeric fontWeight="medium">{stats.workingGroups.web.indicators}</Td>
                             </Tr>
-                            <Tr _hover={{ bg: "gray.50" }}>
+                            <Tr
+                                _hover={{ bg: "gray.50", cursor: "pointer" }}
+                                onClick={() => handleWorkingGroupClick('instructionalMaterials')}
+                                cursor="pointer"
+                            >
                                 <Td color="gray.700">Instructional Materials</Td>
                                 <Td color="gray.700" isNumeric fontWeight="medium">{stats.workingGroups.instructionalMaterials.goals}</Td>
                                 <Td color="gray.700" isNumeric fontWeight="medium">{stats.workingGroups.instructionalMaterials.indicators}</Td>
                             </Tr>
-                            <Tr _hover={{ bg: "gray.50" }}>
+                            <Tr
+                                _hover={{ bg: "gray.50", cursor: "pointer" }}
+                                onClick={() => handleWorkingGroupClick('procurement')}
+                                cursor="pointer"
+                            >
                                 <Td color="gray.700">Procurement</Td>
                                 <Td color="gray.700" isNumeric fontWeight="medium">{stats.workingGroups.procurement.goals}</Td>
                                 <Td color="gray.700" isNumeric fontWeight="medium">{stats.workingGroups.procurement.indicators}</Td>

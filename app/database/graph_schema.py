@@ -1226,6 +1226,38 @@ class Metric(StructuredNode):
         }
 
 
+def update_remote():
+    from neomodel import config
+    print("Updating remote connection")
+
+    # Construct path to .env.remote file
+    dotenv_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), '.env.remote')
+    print(f"Loading environment from: {dotenv_path}")
+
+    # Load environment variables and check if file exists
+    if os.path.exists(dotenv_path):
+        load_dotenv(dotenv_path, override=True)
+        print("Environment file loaded successfully")
+    else:
+        print(f"Warning: Environment file not found at {dotenv_path}")
+
+    # Get environment variables with fallback values
+    neo4j_database = os.environ.get('NEO4J_DATABASE')
+    database_connector = os.environ.get('DATABASE_CONNECTOR')
+
+    print(f"NEO4J_DATABASE: {neo4j_database}")
+    print(f"DATABASE_CONNECTOR: {database_connector}")
+
+    # Ensure environment variables are set before configuring
+    if not neo4j_database or not database_connector:
+        raise ValueError("Required environment variables NEO4J_DATABASE and DATABASE_CONNECTOR must be set")
+
+    config.DATABASE_NAME = neo4j_database
+    config.DATABASE_URL = database_connector
+
+    print(f"Config set - DATABASE_NAME: {config.DATABASE_NAME}, DATABASE_URL: {config.DATABASE_URL}")
+
+
 def set_connection():
 
     from neomodel import config
@@ -1239,7 +1271,7 @@ def set_connection():
     config.DATABASE_URL = os.environ.get('DATABASE_CONNECTOR')
 
 
-set_connection()
+# set_connection()
 
 if __name__=="__main__":
 
