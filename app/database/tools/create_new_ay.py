@@ -136,7 +136,7 @@ def reset_admin_review_for_year(year):
 
 
 if __name__ == '__main__':
-    update_remote()
+    # update_remote()
     # clean_duplicate_year_evidence("2024-2025")
     duplicate_year_success_evidence('2023-2024', '2024-2025')
     reset_admin_review_for_year('2024-2025')

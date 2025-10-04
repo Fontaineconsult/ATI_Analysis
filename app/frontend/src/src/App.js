@@ -42,8 +42,6 @@ const theme = extendTheme({
         "4xl": "2.25rem"
     },
 
-
-
     colors: {
         teal: {
             50: "#E6FFFA",
@@ -62,8 +60,10 @@ const theme = extendTheme({
 
 function App() {
     const { currentAcademicYear, updateCurrentAcademicYear } = useSettings();
-    const { updateYear } = useData();
+    const { updateYear, data, currentUser, setUser } = useData();
     const { user } = React.useContext(UserContext);
+
+    const activeIndividuals = data.individuals?.filter(person => person.active) || [];
 
     const yearOptions = [
         '2020-2021',
@@ -76,6 +76,10 @@ function App() {
     const handleYearChange = (year) => {
         updateCurrentAcademicYear(year);
         updateYear(year);
+    };
+
+    const handlePersonChange = (person) => {
+        setUser(person);
     };
 
     return (
@@ -183,8 +187,9 @@ function App() {
                             </HStack>
                         </HStack>
 
-                        {/* Right side - Year selector and User info */}
+                        {/* Right side - Year selector, Person selector and User info */}
                         <HStack spacing={4}>
+                            {/* Year Selector */}
                             <Menu>
                                 <MenuButton
                                     as={Button}
@@ -212,6 +217,17 @@ function App() {
                                     boxShadow="lg"
                                     py={1}
                                 >
+                                    <Text
+                                        px={3}
+                                        py={2}
+                                        fontSize="xs"
+                                        fontWeight="semibold"
+                                        color="gray.600"
+                                        textTransform="uppercase"
+                                        letterSpacing="wide"
+                                    >
+                                        Report Year
+                                    </Text>
                                     {yearOptions.map((year) => (
                                         <MenuItem
                                             key={year}
@@ -224,6 +240,67 @@ function App() {
                                             fontWeight={currentAcademicYear === year ? 'semibold' : 'normal'}
                                         >
                                             {year}
+                                        </MenuItem>
+                                    ))}
+                                </MenuList>
+                            </Menu>
+
+                            {/* Person Selector */}
+                            <Menu>
+                                <MenuButton
+                                    as={Button}
+                                    rightIcon={<ChevronDownIcon />}
+                                    size="sm"
+                                    bg="white"
+                                    color="teal.700"
+                                    fontWeight="medium"
+                                    minW="150px"
+                                    _hover={{
+                                        bg: 'gray.50',
+                                        transform: 'translateY(-1px)'
+                                    }}
+                                    _active={{
+                                        bg: 'gray.100',
+                                        transform: 'translateY(0)'
+                                    }}
+                                    boxShadow="sm"
+                                    transition="all 0.2s"
+                                    aria-label="Select person"
+                                >
+                                    {currentUser ? currentUser.name : 'Select Person'}
+                                </MenuButton>
+                                <MenuList
+                                    bg="white"
+                                    borderColor="gray.200"
+                                    boxShadow="lg"
+                                    py={1}
+                                    maxH="300px"
+                                    overflowY="auto"
+                                >
+                                    <Text
+                                        px={3}
+                                        py={2}
+                                        fontSize="xs"
+                                        fontWeight="semibold"
+                                        color="gray.600"
+                                        textTransform="uppercase"
+                                        letterSpacing="wide"
+                                    >
+                                        Committee Members
+                                    </Text>
+                                    <Divider />
+                                    {activeIndividuals.map((person) => (
+                                        <MenuItem
+                                            key={person.unique_id}
+                                            fontSize="sm"
+                                            color="gray.700"
+                                            onClick={() => handlePersonChange(person)}
+                                            _hover={{ bg: "teal.50", color: "teal.700" }}
+                                            _focus={{ bg: "teal.50" }}
+                                            bg={currentUser?.unique_id === person.unique_id ? 'teal.50' : 'transparent'}
+                                            fontWeight={currentUser?.unique_id === person.unique_id ? 'semibold' : 'normal'}
+                                        >
+                                            {person.name}
                                         </MenuItem>
                                     ))}
                                 </MenuList>
@@ -258,7 +335,7 @@ function App() {
                                     aria-label="Current User"
                                     lineHeight="1.2"
                                 >
-                                    {user ? user.name : 'No Active User'}
+                                    {currentUser ? currentUser.name : 'No Active User'}
                                 </Text>
                             </Box>
                         </HStack>

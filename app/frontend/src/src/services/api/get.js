@@ -95,3 +95,30 @@ export const fetchTrends = async (previous_year, current_year) => {
         throw error;
     }
 }
+
+export const fetchImplementation = async (implementation_type, title) => {
+    try {
+        const response = await axios.get(`${process.env.REACT_APP_API_URL}/implementations`, {
+            params: {
+                implementation_type,
+                title
+            }
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error fetching implementation:', error);
+        throw error;
+    }
+}
+
+export const fetchImplementationsByType = async (implementation_type) => {
+    try {
+        const response = await axios.get(`${process.env.REACT_APP_API_URL}/implementations`, {
+            params: { implementation_type }
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error fetching implementations by type:', error);
+        throw error;
+    }
+}

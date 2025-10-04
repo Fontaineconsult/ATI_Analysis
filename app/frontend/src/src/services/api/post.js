@@ -153,3 +153,25 @@ export const createPlan = async (formData) => {
         throw error;
     }
 }
+
+
+export const createImplementation = async (implementation_type, title, description, year_success_identifier = null) => {
+    try {
+        const payload = {
+            action: "add_implementation",
+            implementation_type,
+            title,
+            description
+        };
+
+        if (year_success_identifier) {
+            payload.year_success_identifier = year_success_identifier;
+        }
+
+        const response = await axios.post(`${process.env.REACT_APP_API_URL}/implementations`, payload);
+        return response.data;
+    } catch (error) {
+        console.error('Error creating implementation:', error);
+        throw error;
+    }
+}

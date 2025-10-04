@@ -121,7 +121,7 @@ function SuccessIndicator({ indicatorData, evidenceData, bgColor }) {
                 compositeKey={composite_key}
                 evidenceData={evidenceData}
             />
-            <ImplementationMasterContainer evidenceData={evidenceData} compositeKey={composite_key} />
+            <ImplementationMasterContainer evidenceData={evidenceData} compositeKey={composite_key} yearIdentifier={yearIdentifier} />
         </Box>
     );
 }
@@ -304,14 +304,6 @@ function IndicatorDetails({ description, persons, compositeKey, evidenceData }) 
 function ResponsiblePersons({ persons, compositeKey, evidenceData }) {
     const navigate = useNavigate();
 
-    if (!persons || persons.length === 0) {
-        return (
-            <Text color="red.500" fontWeight="bold" fontSize="sm" mt={4}>
-                No responsible persons assigned.
-            </Text>
-        );
-    }
-
     // Count implementation types from evidenceTypes
     const implementationCounts = {
         Tracker: 0,
@@ -349,33 +341,41 @@ function ResponsiblePersons({ persons, compositeKey, evidenceData }) {
                     overflow="hidden"
                     boxShadow="sm"
                 >
-                    <Table variant="striped" colorScheme="teal" size="sm" aria-label="List of responsible persons">
-                        <Thead bg="teal.50">
-                            <Tr>
-                                <Th borderBottom="2px solid" borderColor="teal.200" color="teal.700" fontSize="xs">
-                                    Name
-                                </Th>
-                                <Th borderBottom="2px solid" borderColor="teal.200" color="teal.700" fontSize="xs">
-                                    Title
-                                </Th>
-                            </Tr>
-                        </Thead>
-                        <Tbody>
-                            {persons.map((person) => (
-                                <Tr key={person.id}>
-                                    <Td color="gray.700" fontSize="xs" borderBottom="1px solid" borderColor="gray.100">
-                                        {person.properties.name}
-                                    </Td>
-                                    <Td color="gray.600" fontSize="xs" borderBottom="1px solid" borderColor="gray.100">
-                                        {person.properties.title}
-                                    </Td>
+                    {(!persons || persons.length === 0) ? (
+                        <Box p={4} bg="red.50">
+                            <Text color="red.500" fontWeight="bold" fontSize="sm" textAlign="center">
+                                No responsible persons assigned.
+                            </Text>
+                        </Box>
+                    ) : (
+                        <Table variant="striped" colorScheme="teal" size="sm" aria-label="List of responsible persons">
+                            <Thead bg="teal.50">
+                                <Tr>
+                                    <Th borderBottom="2px solid" borderColor="teal.200" color="teal.700" fontSize="xs">
+                                        Name
+                                    </Th>
+                                    <Th borderBottom="2px solid" borderColor="teal.200" color="teal.700" fontSize="xs">
+                                        Title
+                                    </Th>
                                 </Tr>
-                            ))}
-                        </Tbody>
-                    </Table>
+                            </Thead>
+                            <Tbody>
+                                {persons.map((person) => (
+                                    <Tr key={person.id}>
+                                        <Td color="gray.700" fontSize="xs" borderBottom="1px solid" borderColor="gray.100">
+                                            {person.properties.name}
+                                        </Td>
+                                        <Td color="gray.600" fontSize="xs" borderBottom="1px solid" borderColor="gray.100">
+                                            {person.properties.title}
+                                        </Td>
+                                    </Tr>
+                                ))}
+                            </Tbody>
+                        </Table>
+                    )}
                 </Box>
 
-                {/* Right side - Implementation Overview (50% width) */}
+                {/* Right side - Implementation Overview (50% width) - Always displayed */}
                 <Box
                     flex="1"
                     maxWidth="50%"

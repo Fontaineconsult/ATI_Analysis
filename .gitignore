@@ -2,3 +2,4 @@
 /app/.env.development
 /.idea/
 /app/.env.production
+/app/.env.remote

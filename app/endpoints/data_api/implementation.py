@@ -1,6 +1,6 @@
-from flask import jsonify, request
+from flask import request
 from flask.views import MethodView
-from datetime import datetime as dt
+from app.database.queries.implementation.create import add_plan
 
 from . import data_api_endpoints
 from ...database.queries.implementation.delete import unassign_person_as_implementor
@@ -10,11 +10,240 @@ from app.endpoints.data_api.util.response import make_response
 from app.endpoints.data_api.errors.custom_exceptions import ApiError, ValidationError, CrudError, NotFoundError
 
 class ImplementationAPI(MethodView):
+
+    """
+    GET /implementations
+    -------------------
+    Retrieve a specific implementation by type and title.
+
+    Query Parameters:
+        implementation_type (str, required): One of [Process, Project, Procedure,
+                                            Service, Guidance, Tracking, InternalPolicy]
+        title (str, required): Title of the implementation to retrieve
+
+    Returns:
+        200: {
+            "status": "success",
+            "data": {
+                "unique_id": str,
+                "title": str,
+                "description": str,
+                "type": str
+            }
+        }
+        400: {"status": "error", "error": "Both 'implementation_type' and 'title' are required"}
+        404: {"status": "error", "error": "No {type} found with title: {title}"}
+
+
+    POST /implementations
+    --------------------
+    Create a new implementation node.
+
+    Request Body:
+        {
+            "action": "add_implementation",
+            "implementation_type": str,  # One of valid types
+            "title": str,                # Required, unique within type
+            "description": str            # Required
+        }
+
+    Returns:
+        201: {"status": "success", "message": "{type} created successfully"}
+        400: {"status": "error", "error": "Missing required fields..."}
+        500: {"status": "error", "error": "Failed to create {type}"}
+
+
+    PUT /implementations
+    -------------------
+    Perform various update operations on implementations.
+
+    Actions:
+
+    1. update_implementation - Update title/description
+       {
+           "action": "update_implementation",
+           "implementation_type": str,
+           "unique_id": str,           # Required
+           "title": str,                # Optional
+           "description": str           # Optional
+       }
+       Returns: 200 | 404
+
+    2. assign_person_as_implementor - Link person to YSE
+       {
+           "action": "assign_person_as_implementor",
+           "unique_id": str,            # Person UUID
+           "year_success_evidence": str  # YSE identifier
+       }
+       Returns: 200 | 400 | 404
+
+    3. unassign_person_as_implementor - Remove person-YSE link
+       {
+           "action": "unassign_person_as_implementor",
+           "unique_id": str,
+           "year_success_evidence": str
+       }
+       Returns: 200 | 400 | 404
+
+    4. assign_documentation_to_implementation - Link docs to implementation
+       {
+           "action": "assign_documentation_to_implementation",
+           "implementation_id": str,
+           "implementation_type": str,
+           "documentation_type": str,    # [document, webpage, message, note, metric]
+           "documentation_id": str
+       }
+       Returns: 200 | 400 | 404
+
+
+    DELETE /implementations
+    ----------------------
+    Not implemented (returns 405)
+    """
+
+
     def get(self):
-        pass
+        """
+        Handle GET requests to fetch implementation nodes.
+
+        Query parameters:
+        - implementation_type: Type of implementation (Process, Project, etc.)
+        - title: Title of the implementation
+
+        Example: /implementations?implementation_type=Process&title=My Process
+        """
+        try:
+            from app.database.class_factory import implementation_classes
+
+            # Get query parameters
+            implementation_type = request.args.get('implementation_type')
+            title = request.args.get('title')
+
+
+            # If only type provided, get all of that type
+            if implementation_type and not title:
+                from app.database.queries.implementation.read import get_all_implementations_by_type
+                try:
+                    implementations = get_all_implementations_by_type(implementation_type)
+                    return make_response({"status": "success", "data": implementations}), 200
+                except ValidationError as e:
+                    return make_response({"status": "error", "error": str(e)}), 400
+                except CrudError as e:
+                    return make_response({"status": "error", "error": str(e)}), 500
+
+
+            if not implementation_type or not title:
+                return make_response({"status": "error", "error": "Both 'implementation_type' and 'title' are required"}), 400
+
+            # Validate implementation type
+            if implementation_type not in implementation_classes:
+                return make_response({"status": "error", "error": f"Invalid implementation_type: {implementation_type}"}), 400
+
+            # Get the implementation class and query for the node
+            implementation_class = implementation_classes[implementation_type]
+
+            try:
+                implementation_node = implementation_class.nodes.get(title=title)
+
+                # Serialize the node data
+                node_data = {
+                    "unique_id": implementation_node.unique_id,
+                    "title": implementation_node.title,
+                    "description": implementation_node.description,
+                    "type": implementation_type
+                }
+
+                return make_response({"status": "success", "data": node_data}), 200
+
+            except implementation_class.DoesNotExist:
+                raise NotFoundError(f"No {implementation_type} found with title: {title}")
+
+        except NotFoundError as e:
+            return make_response({"status": "error", "error": str(e)}), 404
+        except Exception as e:
+            return make_response({"status": "error", "error": f"Failed to fetch implementation: {str(e)}"}), 500
 
     def post(self):
-        pass
+        """
+        Handle POST requests to create new implementation nodes.
+
+        Example payload:
+        {
+            "action": "add_implementation",
+            "implementation_type": "Process",  // Must be one of: Process, Project, Procedure, Service, Guidance, Tracking, InternalPolicy
+            "title": "New Process Title",
+            "description": "Description of the process"
+        }
+        """
+        try:
+            data = request.get_json()
+            action = data.get('action')
+
+            if not action:
+                return make_response({"status": "error", "error": "Missing 'action' field in request."}), 400
+
+            if action == "add_implementation":
+                return self.handle_add_implementation(data)
+            else:
+                return make_response({"status": "error", "error": f"Unknown action '{action}' in request."}), 400
+
+        except ValidationError as e:
+            return make_response({"status": "error", "error": str(e)}), 400
+        except CrudError as e:
+            return make_response({"status": "error", "error": str(e)}), 500
+        except Exception as e:
+            return make_response({"status": "error", "error": "Failed to process request"}), 500
+
+    def handle_add_implementation(self, data):
+        from app.database.queries.implementation.create import (
+            add_process, add_guidance, add_project, add_procedure,
+            add_service, add_tracking, add_internal_policy
+        )
+        from app.database.queries.evidence.update import assign_implementation_to_year_success_indicator
+        from app.database.class_factory import implementation_types
+
+        implementation_type = data.get('implementation_type')
+        title = data.get('title')
+        description = data.get('description')
+        year_success_identifier = data.get('year_success_identifier')  # Get YSE identifier
+
+        if not all([implementation_type, title, description]):
+            raise ValidationError("Missing required fields: 'implementation_type', 'title', or 'description'")
+
+        if implementation_type not in implementation_types:
+            raise ValidationError(f"Invalid implementation_type: {implementation_type}")
+
+        creation_functions = {
+            "Process": add_process,
+            "Project": add_project,
+            "Procedure": add_procedure,
+            "Service": add_service,
+            "Guidance": add_guidance,
+            "Tracking": add_tracking,
+            "InternalPolicy": add_internal_policy
+        }
+
+        creation_function = creation_functions.get(implementation_type)
+        if creation_function:
+            success = creation_function(title=title, description=description)
+            if success:
+                # Auto-assign if YSE identifier provided
+                if year_success_identifier:
+                    try:
+                        assign_implementation_to_year_success_indicator(
+                            year_success_identifier,
+                            implementation_type,
+                            title
+                        )
+                        return make_response({"status": "success", "message": f"{implementation_type} created and assigned"}), 201
+                    except Exception as e:
+                        return make_response({"status": "partial_success", "message": f"{implementation_type} created but assignment failed: {str(e)}"}), 201
+
+                return make_response({"status": "success", "message": f"{implementation_type} created successfully"}), 201
+            else:
+                return make_response({"status": "error", "error": f"Failed to create {implementation_type}"}), 500
+        else:
+            raise CrudError(f"No creation function found for implementation_type: {implementation_type}")
 
     def put(self):
         """
@@ -36,7 +265,14 @@ class ImplementationAPI(MethodView):
             "year_success_evidence": "2023-2024-1.2-web"
         }
 
-
+        For updating implementation details:
+        {
+            "action": "update_implementation",
+            "implementation_type": "Process",
+            "unique_id": "implementation-unique-id",
+            "title": "Updated Title",
+            "description": "Updated Description"
+        }
         """
         try:
             data = request.get_json()
@@ -50,6 +286,10 @@ class ImplementationAPI(MethodView):
                 return self.handle_unassign_person_as_implementor(data)
             elif action == "assign_documentation_to_implementation":
                 return self.handle_assign_documentation_to_implementation(data)
+            elif action == "update_implementation":
+                return self.handle_update_implementation(data)
+            elif action == "assign_implementation_to_yse":
+                return self.handle_assign_implementation_to_yse(data)
             else:
                 return make_response({"status": "error", "error": f"Unknown action '{action}' in request."}), 400
 
@@ -62,8 +302,55 @@ class ImplementationAPI(MethodView):
         except Exception as e:
             return make_response({"status": "error", "error": "Failed to process request"}), 500
 
-    def delete(self):
-        pass
+    def handle_assign_implementation_to_yse(self, data):
+        from app.database.queries.evidence.update import assign_implementation_to_year_success_indicator
+
+        required = ['year_success_identifier', 'implementation_type', 'implementation_title']
+        if not all(field in data for field in required):
+            raise ValidationError(f"Missing required fields: {required}")
+
+        assign_implementation_to_year_success_indicator(
+            data['year_success_identifier'],
+            data['implementation_type'],
+            data['implementation_title']
+        )
+        return make_response({"status": "success", "message": "Implementation assigned to YSE"}), 200
+
+    def handle_update_implementation(self, data):
+        """
+        Handle updating implementation title and description.
+        """
+        from app.database.class_factory import implementation_classes
+
+        implementation_type = data.get('implementation_type')
+        unique_id = data.get('unique_id')
+        title = data.get('title')
+        description = data.get('description')
+
+        if not implementation_type or not unique_id:
+            raise ValidationError("Missing required fields: 'implementation_type' and 'unique_id'")
+
+        if not title and not description:
+            raise ValidationError("At least one field to update is required: 'title' or 'description'")
+
+        if implementation_type not in implementation_classes:
+            raise ValidationError(f"Invalid implementation_type: {implementation_type}")
+
+        try:
+            implementation_class = implementation_classes[implementation_type]
+            implementation_node = implementation_class.nodes.get(unique_id=unique_id)
+
+            if title:
+                implementation_node.title = title
+            if description:
+                implementation_node.description = description
+
+            implementation_node.save()
+
+            return make_response({"status": "success", "message": f"{implementation_type} updated successfully"}), 200
+
+        except implementation_class.DoesNotExist:
+            raise NotFoundError(f"No {implementation_type} found with unique_id: {unique_id}")
 
     def handle_assign_person_as_implementor(self, data):
         if 'unique_id' not in data or 'year_success_evidence' not in data:
@@ -98,14 +385,6 @@ class ImplementationAPI(MethodView):
             documentation_id=data['documentation_id']
         )
         return make_response({"status": "success", "message": "Documentation assigned to implementation successfully"}), 200
-
-
-
-import json
-from flask import request
-from flask.views import MethodView
-from app.database.queries.implementation.create import add_plan
-from app.endpoints.data_api.util.response import make_response
 
 
 class ImplementationPlanAPI(MethodView):

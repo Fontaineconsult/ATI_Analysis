@@ -5,7 +5,8 @@ from app.data_config import working_group_names
 from app.database.graph_schema import *
 from neomodel import db
 
-from app.endpoints.data_api.errors.custom_exceptions import NotFoundError
+from app.endpoints.data_api.errors.custom_exceptions import NotFoundError, ValidationError, CrudError
+
 
 def get_all_guidances():
     """
@@ -139,4 +140,27 @@ def get_goal_node(goal_number, working_group):
 
 
 
+def get_all_implementations_by_type(implementation_type: str) -> list:
+    """
+    Get all implementation nodes of a specific type.
 
+    :param implementation_type: Type of implementation (Process, Project, etc.)
+    :return: List of implementation nodes
+    """
+    from app.database.class_factory import implementation_classes
+
+    if implementation_type not in implementation_classes:
+        raise ValidationError(f"Invalid implementation_type: {implementation_type}")
+
+    try:
+        implementation_class = implementation_classes[implementation_type]
+        implementations = implementation_class.nodes.all()
+
+        return [{
+            'unique_id': impl.unique_id,
+            'title': impl.title,
+            'description': impl.description,
+            'type': implementation_type
+        } for impl in implementations]
+    except Exception as e:
+        raise CrudError(f"Error retrieving {implementation_type} implementations: {e}")

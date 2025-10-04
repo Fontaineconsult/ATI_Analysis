@@ -164,3 +164,34 @@ export const unassignPersonAsImplementor = async (employeeId, year_success_indic
     }
 }
 
+export const updateImplementation = async (implementation_type, unique_id, title, description) => {
+    try {
+        const response = await axios.put(`${process.env.REACT_APP_API_URL}/implementations`, {
+            action: "update_implementation",
+            implementation_type,
+            unique_id,
+            title,
+            description
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error updating implementation:', error);
+        throw error;
+    }
+}
+
+
+export const assignImplementationToYSE = async (yearIdentifier, implementationType, implementationTitle) => {
+    try {
+        const response = await axios.put(`${process.env.REACT_APP_API_URL}/implementations`, {
+            action: "assign_implementation_to_yse",
+            year_success_identifier: yearIdentifier,
+            implementation_type: implementationType,
+            implementation_title: implementationTitle
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error assigning implementation to YSE:', error);
+        throw error;
+    }
+}

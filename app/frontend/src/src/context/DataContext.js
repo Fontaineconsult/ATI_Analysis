@@ -30,13 +30,29 @@ export const DataProvider = ({ children }) => {
     const [updating, setUpdating] = useState(false);
     const [error, setError] = useState(null);
     const [selectedYear, setSelectedYear] = useState('2024-2025');
+    const [currentUser, setCurrentUser] = useState(null); // Add user state
 
     const toast = useToast();
 
     useEffect(() => {
         loadData();
         loadAdmins(); // Load admin data on mount
+        loadAllIndividuals()
     }, [selectedYear]);
+
+    // Load user from localStorage on mount
+    useEffect(() => {
+        const savedUser = localStorage.getItem('ati_current_user');
+        if (savedUser) {
+            try {
+                const userData = JSON.parse(savedUser);
+                setCurrentUser(userData);
+            } catch (err) {
+                console.error('Error loading saved user:', err);
+                localStorage.removeItem('ati_current_user');
+            }
+        }
+    }, []);
 
     // Function to load admin data from JSON file
     const loadAdmins = () => {
@@ -75,6 +91,56 @@ export const DataProvider = ({ children }) => {
         return data.admins.includes(String(employeeId));
     };
 
+    // Function to set the current user
+    const setUser = (userData) => {
+        if (userData) {
+            const userInfo = {
+                name: userData.name,
+                employee_id: userData.employee_id,
+                unique_id: userData.unique_id,
+                title: userData.title,
+                email: userData.email,
+                active: userData.active
+            };
+            setCurrentUser(userInfo);
+            // Save to localStorage for persistence
+            localStorage.setItem('ati_current_user', JSON.stringify(userInfo));
+
+            toast({
+                title: "User selected",
+                description: `Now notating as ${userData.name}`,
+                status: "success",
+                duration: 2000,
+                isClosable: true,
+            });
+        } else {
+            setCurrentUser(null);
+            localStorage.removeItem('ati_current_user');
+        }
+    };
+
+    // Function to clear the current user
+    const clearUser = () => {
+        setCurrentUser(null);
+        localStorage.removeItem('ati_current_user');
+        toast({
+            title: "User cleared",
+            description: "No active user selected",
+            status: "info",
+            duration: 2000,
+            isClosable: true,
+        });
+    };
+
+    // Function to get user by ID from individuals list
+    const getUserById = (userId) => {
+        if (!data.individuals) return null;
+        return data.individuals.find(person =>
+            person.unique_id === userId ||
+            person.employee_id === userId
+        );
+    };
+
     const loadData = async () => {
         try {
             setLoading(true);
@@ -109,22 +175,16 @@ export const DataProvider = ({ children }) => {
     };
 
     const loadSingleWorkingGroupData = async (workingGroup) => {
-
         const dataKey = transformWorkingGroup(workingGroup);
         try {
             setUpdating(true);
             const groupData = await fetchPrimaryData(workingGroup, selectedYear);
 
-            console.log("Current data:", data[dataKey]);
-            console.log("New data:", groupData.data);
-
             setData((prevData) => {
-                console.log("Inside setState - Previous data:", prevData[dataKey]);
                 const newData = {
                     ...prevData,
                     [dataKey]: groupData.data,
                 };
-                console.log("Inside setState - New data:", newData[dataKey]);
                 return newData;
             });
 
@@ -175,6 +235,23 @@ export const DataProvider = ({ children }) => {
                 ...prevData,
                 individuals: individualsData.data.persons,
             }));
+
+            // Check if current user still exists in the updated list
+            if (currentUser) {
+                const userStillExists = individualsData.data.persons.some(
+                    person => person.unique_id === currentUser.unique_id
+                );
+                if (!userStillExists) {
+                    clearUser();
+                    toast({
+                        title: "User no longer available",
+                        description: "The selected user is no longer in the system",
+                        status: "warning",
+                        duration: 3000,
+                        isClosable: true,
+                    });
+                }
+            }
         } catch (err) {
             toast({
                 title: "Error loading individuals data.",
@@ -233,8 +310,13 @@ export const DataProvider = ({ children }) => {
             refreshIndicators,
             loadAllIndividuals,
             refreshAllIndividuals,
-            isUserAdmin, // Provide the admin check function
-            admins: data.admins // Provide direct access to admin list
+            isUserAdmin,
+            admins: data.admins,
+            // User-related exports
+            currentUser,
+            setUser,
+            clearUser,
+            getUserById
         }}>
             {children}
         </DataContext.Provider>
