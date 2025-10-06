@@ -1,5 +1,5 @@
 import React, { createContext, useState, useEffect } from 'react';
-import {fetchPrimaryData, fetchCurrentYearIndicator, fetchAllIndividuals, fetchTrends} from '../services/api/get';
+import {fetchPrimaryData, fetchCurrentYearIndicator, fetchAllIndividuals, fetchTrends, fetchAllImplementations} from '../services/api/get';
 import { useToast } from '@chakra-ui/react';
 import {year_difference} from "../services/utils/tools";
 import adminData from './admins.json'; // Import the admin data
@@ -24,7 +24,8 @@ export const DataProvider = ({ children }) => {
         procurement: null,
         indicators: null,
         individuals: null,
-        admins: [], // Add admins to the data state
+        admins: [],
+        implementations: {}
     });
     const [loading, setLoading] = useState(true);
     const [updating, setUpdating] = useState(false);
@@ -144,12 +145,13 @@ export const DataProvider = ({ children }) => {
     const loadData = async () => {
         try {
             setLoading(true);
-            const [webData, instructionalMaterialsData, procurementData, indicatorsData, yoyTrends] = await Promise.all([
+            const [webData, instructionalMaterialsData, procurementData, indicatorsData, yoyTrends, implementationsData] = await Promise.all([
                 fetchPrimaryData("web", selectedYear),
                 fetchPrimaryData("instructional-materials", selectedYear),
                 fetchPrimaryData("procurement", selectedYear),
                 fetchCurrentYearIndicator(),
-                fetchTrends(year_difference(selectedYear),selectedYear)
+                fetchTrends(year_difference(selectedYear), selectedYear),
+                fetchAllImplementations() // Add this
             ]);
 
             setData((prevData) => ({
@@ -158,7 +160,8 @@ export const DataProvider = ({ children }) => {
                 instructionalMaterials: instructionalMaterialsData.data,
                 procurement: procurementData.data,
                 indicators: indicatorsData.data,
-                yoyTrends: yoyTrends.data
+                yoyTrends: yoyTrends.data,
+                implementations: implementationsData.status?.data || implementationsData.data || {} // Add this
             }));
         } catch (err) {
             setError(err.message);
@@ -298,6 +301,30 @@ export const DataProvider = ({ children }) => {
         });
     };
 
+
+    const refreshImplementations = async () => {
+        try {
+            setUpdating(true);
+            const implementationsData = await fetchAllImplementations();
+
+            setData((prevData) => ({
+                ...prevData,
+                implementations: implementationsData.status?.data || implementationsData.data || {}
+            }));
+        } catch (err) {
+            toast({
+                title: "Error refreshing implementations.",
+                description: err.message,
+                status: "error",
+                duration: 3000,
+                isClosable: true,
+            });
+        } finally {
+            setUpdating(false);
+        }
+    };
+
+
     return (
         <DataContext.Provider value={{
             data,
@@ -308,11 +335,11 @@ export const DataProvider = ({ children }) => {
             updateYear,
             loadSingleWorkingGroupData,
             refreshIndicators,
+            refreshImplementations, // Add this
             loadAllIndividuals,
             refreshAllIndividuals,
             isUserAdmin,
             admins: data.admins,
-            // User-related exports
             currentUser,
             setUser,
             clearUser,
@@ -321,4 +348,5 @@ export const DataProvider = ({ children }) => {
             {children}
         </DataContext.Provider>
     );
-};
+
+}

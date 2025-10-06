@@ -122,3 +122,15 @@ export const fetchImplementationsByType = async (implementation_type) => {
         throw error;
     }
 }
+
+export const fetchAllImplementations = async () => {
+    try {
+        const response = await axios.get(`${process.env.REACT_APP_API_URL}/implementations`, {
+            params: { all: 'true' }
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error fetching all implementations:', error);
+        throw error;
+    }
+}

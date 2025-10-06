@@ -4,6 +4,7 @@ import { Routes, Route } from 'react-router-dom';
 import { DataContext } from "../../context/DataContext";
 import GoalNavigator from './GoalNavigator';
 import '../../styles/App.css';
+import ImplementationMasterContainer from "../implementation_explorer/ImplementationMasterContainer";
 
 function WorkingGroupMasterContainer() {
     const { data, loading, error } = useContext(DataContext);
@@ -14,12 +15,11 @@ function WorkingGroupMasterContainer() {
     return (
         <Box className="working-group-container">
             <Routes>
-                {/* Routes for each working group with optional goal */}
                 <Route path=":workingGroup" element={<GoalNavigator data={data} />} />
                 <Route path=":workingGroup/goal/:goalId" element={<GoalNavigator data={data} />} />
-
-                {/* Fallback Route */}
-                <Route path="*" element={<Text className="fallback-text">Please select a working group.</Text>} />
+                <Route path="implementations" element={<ImplementationMasterContainer />} />
+                <Route path="governance" element={<Text>This area will display the governance category</Text>} />
+                <Route path="*" element={<Text>Please select a working group.</Text>} />
             </Routes>
         </Box>
     );

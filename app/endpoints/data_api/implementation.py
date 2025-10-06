@@ -105,20 +105,24 @@ class ImplementationAPI(MethodView):
     def get(self):
         """
         Handle GET requests to fetch implementation nodes.
-
-        Query parameters:
-        - implementation_type: Type of implementation (Process, Project, etc.)
-        - title: Title of the implementation
-
-        Example: /implementations?implementation_type=Process&title=My Process
         """
         try:
             from app.database.class_factory import implementation_classes
 
+            # Check if requesting all implementations
+            all_param = request.args.get('all')
+
+            if all_param and all_param.lower() == 'true':
+                from app.database.queries.implementation.read import get_all_implementations
+                try:
+                    implementations = get_all_implementations()
+                    return make_response({"status": "success", "data": implementations}), 200
+                except CrudError as e:
+                    return make_response({"status": "error", "error": str(e)}), 500
+
             # Get query parameters
             implementation_type = request.args.get('implementation_type')
             title = request.args.get('title')
-
 
             # If only type provided, get all of that type
             if implementation_type and not title:
@@ -131,9 +135,9 @@ class ImplementationAPI(MethodView):
                 except CrudError as e:
                     return make_response({"status": "error", "error": str(e)}), 500
 
-
+            # Both type and title required for single implementation
             if not implementation_type or not title:
-                return make_response({"status": "error", "error": "Both 'implementation_type' and 'title' are required"}), 400
+                return make_response({"status": "error", "error": "Both 'implementation_type' and 'title' are required for single implementation fetch"}), 400
 
             # Validate implementation type
             if implementation_type not in implementation_classes:

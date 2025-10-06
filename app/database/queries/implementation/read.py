@@ -164,3 +164,39 @@ def get_all_implementations_by_type(implementation_type: str) -> list:
         } for impl in implementations]
     except Exception as e:
         raise CrudError(f"Error retrieving {implementation_type} implementations: {e}")
+
+
+def get_all_implementations() -> dict:
+    """
+    Get all implementation nodes across all types with their relationships.
+
+    :return: Dictionary with implementation types as keys and lists of implementations as values
+    """
+    from app.database.class_factory import implementation_classes
+
+    try:
+        all_implementations = {}
+
+        for implementation_type, implementation_class in implementation_classes.items():
+            implementations = implementation_class.nodes.all()
+
+            all_implementations[implementation_type] = []
+
+            for impl in implementations:
+                impl_data = {
+                    'unique_id': impl.unique_id,
+                    'title': impl.title,
+                    'description': impl.description,
+                    'type': implementation_type,
+                    'supporting_documents': [{'unique_id': doc.unique_id, 'name': doc.name} for doc in impl.supporting_documents.all()],
+                    'supporting_webpages': [{'unique_id': wp.unique_id, 'url': wp.url, 'name': wp.name} for wp in impl.supporting_webpages.all()],
+                    'supporting_notes': [{'unique_id': note.unique_id, 'name': note.name} for note in impl.supporting_notes.all()],
+                    'supporting_messages': [{'unique_id': msg.unique_id, 'name': msg.name} for msg in impl.supporting_messages.all()],
+                    'supporting_metrics': [{'unique_id': metric.unique_id, 'name': metric.name} for metric in impl.supporting_metrics.all()],
+                    'is_evidence_for': [{'year_identifier': yse.year_identifier, 'unique_id': yse.unique_id} for yse in impl.is_evidence_for.all()]
+                }
+                all_implementations[implementation_type].append(impl_data)
+
+        return all_implementations
+    except Exception as e:
+        raise CrudError(f"Error retrieving all implementations: {e}")
