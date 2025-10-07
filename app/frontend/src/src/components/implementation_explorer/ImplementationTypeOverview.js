@@ -20,11 +20,20 @@ import {
     TabPanels,
     Tab,
     TabPanel,
-    Link
+    Link,
+    Alert,
+    AlertIcon,
 } from '@chakra-ui/react';
-import { EditIcon, CheckIcon, CloseIcon, ExternalLinkIcon } from '@chakra-ui/icons';
+import { EditIcon, CheckIcon, CloseIcon } from '@chakra-ui/icons';
 import { updateImplementation } from '../../services/api/put';
 import { DataContext } from '../../context/DataContext';
+
+// New sub-viewers (same folder as this file)
+import DocumentsViewer from './doc_components/DocumentsViewer';
+import WebpagesViewer from './doc_components/WebpagesViewer';
+import NotesViewer from './doc_components/NotesViewer';
+import MessagesViewer from './doc_components/MessagesViewer';
+import MetricsViewer from './doc_components/MetricsSection';
 
 function ImplementationTypeOverview({ implementationType }) {
     const { data, refreshImplementations } = useContext(DataContext);
@@ -33,19 +42,18 @@ function ImplementationTypeOverview({ implementationType }) {
     const [editForm, setEditForm] = useState({ title: '', description: '' });
     const toast = useToast();
 
-    // Get implementations from context
     const implementations = data.implementations?.[implementationType] || [];
 
     useEffect(() => {
         if (implementations.length > 0 && !selectedImpl) {
             setSelectedImpl(implementations[0]);
         }
-    }, [implementations, implementationType]);
+    }, [implementations, implementationType]); // eslint-disable-line react-hooks/exhaustive-deps
 
     const handleEdit = () => {
         setEditForm({
             title: selectedImpl.title,
-            description: selectedImpl.description
+            description: selectedImpl.description,
         });
         setIsEditing(true);
     };
@@ -59,19 +67,23 @@ function ImplementationTypeOverview({ implementationType }) {
                 editForm.description
             );
             toast({
-                title: "Success",
-                description: "Implementation updated successfully",
-                status: "success",
+                title: 'Success',
+                description: 'Implementation updated successfully',
+                status: 'success',
                 duration: 3000,
+                position: 'top-right',
+                isClosable: true,
             });
             setIsEditing(false);
             await refreshImplementations();
         } catch (error) {
             toast({
-                title: "Error",
-                description: "Failed to update implementation",
-                status: "error",
+                title: 'Error',
+                description: 'Failed to update implementation',
+                status: 'error',
                 duration: 3000,
+                position: 'top-right',
+                isClosable: true,
             });
         }
     };
@@ -81,110 +93,160 @@ function ImplementationTypeOverview({ implementationType }) {
         setEditForm({ title: '', description: '' });
     };
 
-    // Count total relationships
-    const getTotalRelationships = (impl) => {
-        if (!impl) return 0;
-        return (impl.supporting_documents?.length || 0) +
-            (impl.supporting_webpages?.length || 0) +
-            (impl.supporting_notes?.length || 0) +
-            (impl.supporting_messages?.length || 0) +
-            (impl.supporting_metrics?.length || 0) +
-            (impl.is_evidence_for?.length || 0);
+    const formatDate = (dateString) => {
+        if (!dateString) return null;
+        return new Date(dateString).toLocaleDateString();
     };
 
+    const totalSupporting =
+        (selectedImpl?.supporting_documents?.length || 0) +
+        (selectedImpl?.supporting_webpages?.length || 0) +
+        (selectedImpl?.supporting_messages?.length || 0) +
+        (selectedImpl?.supporting_notes?.length || 0) +
+        (selectedImpl?.supporting_metrics?.length || 0);
+
     return (
-        <Flex h="700px" gap={4}>
+        <Flex h="700px" gap={6}>
             {/* Left Panel - Implementation List */}
             <Box
                 w="35%"
                 borderWidth="1px"
-                borderRadius="md"
-                p={4}
+                borderColor="gray.200"
+                borderRadius="lg"
+                bg="white"
+                p={6}
                 overflowY="auto"
+                boxShadow="sm"
             >
-                <Heading size="sm" mb={4}>
+                <Heading size="md" color="teal.700" mb={4} fontWeight="bold">
                     {implementationType}s ({implementations.length})
                 </Heading>
-                <VStack align="stretch" spacing={2}>
-                    {implementations.map((impl) => (
-                        <Button
-                            key={impl.unique_id}
-                            variant={selectedImpl?.unique_id === impl.unique_id ? "solid" : "outline"}
-                            colorScheme={selectedImpl?.unique_id === impl.unique_id ? "teal" : "gray"}
-                            size="sm"
-                            justifyContent="space-between"
-                            onClick={() => setSelectedImpl(impl)}
-                            textAlign="left"
-                            whiteSpace="normal"
-                            h="auto"
-                            py={2}
-                            px={3}
-                        >
-                            <VStack align="start" spacing={1} flex="1">
-                                <Text fontSize="sm" noOfLines={2}>
-                                    {impl.title}
-                                </Text>
-                                <HStack spacing={2}>
-                                    <Badge colorScheme="blue" fontSize="xs">
+                {implementations.length > 0 ? (
+                    <VStack align="stretch" spacing={3}>
+                        {implementations.map((impl) => (
+                            <Button
+                                key={impl.unique_id}
+                                variant={
+                                    selectedImpl?.unique_id === impl.unique_id ? 'solid' : 'outline'
+                                }
+                                colorScheme="teal"
+                                size="sm"
+                                justifyContent="space-between"
+                                onClick={() => setSelectedImpl(impl)}
+                                textAlign="left"
+                                whiteSpace="normal"
+                                h="auto"
+                                py={3}
+                                px={4}
+                                bg={
+                                    selectedImpl?.unique_id === impl.unique_id ? 'teal.500' : 'white'
+                                }
+                                _hover={{
+                                    bg:
+                                        selectedImpl?.unique_id === impl.unique_id
+                                            ? 'teal.600'
+                                            : 'gray.50',
+                                    boxShadow: 'md',
+                                }}
+                                transition="all 0.2s"
+                            >
+                                <VStack align="start" spacing={1} flex="1">
+                                    <Text
+                                        fontSize="sm"
+                                        color={
+                                            selectedImpl?.unique_id === impl.unique_id
+                                                ? 'white'
+                                                : 'gray.700'
+                                        }
+                                        noOfLines={2}
+                                    >
+                                        {impl.title}
+                                    </Text>
+                                    <Badge colorScheme="teal" fontSize="xs" px={2} py={1} borderRadius="md">
                                         {impl.is_evidence_for?.length || 0} YSE
                                     </Badge>
-                                </HStack>
-                            </VStack>
-                        </Button>
-                    ))}
-                </VStack>
+                                </VStack>
+                            </Button>
+                        ))}
+                    </VStack>
+                ) : (
+                    <Alert status="info" borderRadius="lg" fontSize="sm">
+                        <AlertIcon />
+                        No {implementationType}s found
+                    </Alert>
+                )}
             </Box>
 
             {/* Right Panel - Details and Relationships */}
             <Box
                 flex="1"
                 borderWidth="1px"
-                borderRadius="md"
+                borderColor="gray.200"
+                borderRadius="lg"
+                bg="white"
                 p={6}
                 overflowY="auto"
+                boxShadow="sm"
             >
                 {selectedImpl ? (
-                    <Tabs>
+                    <Tabs colorScheme="teal">
                         <TabList>
-                            <Tab>Details</Tab>
-                            <Tab>Evidence For ({selectedImpl.is_evidence_for?.length || 0})</Tab>
-                            <Tab>Supporting Docs ({
-                                (selectedImpl.supporting_documents?.length || 0) +
-                                (selectedImpl.supporting_webpages?.length || 0) +
-                                (selectedImpl.supporting_messages?.length || 0) +
-                                (selectedImpl.supporting_notes?.length || 0) +
-                                (selectedImpl.supporting_metrics?.length || 0)
-                            })</Tab>
+                            <Tab
+                                fontSize="sm"
+                                fontWeight="semibold"
+                                color="gray.600"
+                                _selected={{ color: 'teal.600', borderColor: 'teal.500' }}
+                            >
+                                Details
+                            </Tab>
+                            <Tab
+                                fontSize="sm"
+                                fontWeight="semibold"
+                                color="gray.600"
+                                _selected={{ color: 'teal.600', borderColor: 'teal.500' }}
+                            >
+                                Evidence For ({selectedImpl.is_evidence_for?.length || 0})
+                            </Tab>
+                            <Tab
+                                fontSize="sm"
+                                fontWeight="semibold"
+                                color="gray.600"
+                                _selected={{ color: 'teal.600', borderColor: 'teal.500' }}
+                            >
+                                {`Supporting Docs (${totalSupporting})`}
+                            </Tab>
                         </TabList>
 
                         <TabPanels>
                             {/* Details Tab */}
-                            <TabPanel>
-                                <VStack align="stretch" spacing={4}>
+                            <TabPanel px={0} py={4}>
+                                <VStack align="stretch" spacing={6}>
                                     <Flex justify="space-between" align="center">
-                                        <Heading size="md">Details</Heading>
+                                        <Heading size="md" color="teal.700" fontWeight="bold">
+                                            Details
+                                        </Heading>
                                         {!isEditing ? (
                                             <IconButton
                                                 icon={<EditIcon />}
-                                                size="sm"
-                                                colorScheme="blue"
+                                                size="xs"
+                                                colorScheme="teal"
                                                 variant="outline"
                                                 onClick={handleEdit}
                                                 aria-label="Edit"
                                             />
                                         ) : (
-                                            <HStack>
+                                            <HStack spacing={2}>
                                                 <IconButton
                                                     icon={<CheckIcon />}
-                                                    size="sm"
-                                                    colorScheme="green"
+                                                    size="xs"
+                                                    colorScheme="teal"
                                                     onClick={handleSave}
                                                     aria-label="Save"
                                                 />
                                                 <IconButton
                                                     icon={<CloseIcon />}
-                                                    size="sm"
-                                                    colorScheme="red"
+                                                    size="xs"
+                                                    colorScheme="gray"
                                                     variant="outline"
                                                     onClick={handleCancel}
                                                     aria-label="Cancel"
@@ -193,70 +255,105 @@ function ImplementationTypeOverview({ implementationType }) {
                                         )}
                                     </Flex>
 
-                                    <Divider />
+                                    <Divider borderColor="gray.200" />
 
                                     <FormControl>
-                                        <FormLabel>Title</FormLabel>
+                                        <FormLabel fontSize="xs" color="gray.600" fontWeight="semibold">
+                                            Title
+                                        </FormLabel>
                                         {isEditing ? (
                                             <Input
                                                 value={editForm.title}
-                                                onChange={(e) => setEditForm({
-                                                    ...editForm,
-                                                    title: e.target.value
-                                                })}
+                                                onChange={(e) =>
+                                                    setEditForm({
+                                                        ...editForm,
+                                                        title: e.target.value,
+                                                    })
+                                                }
+                                                size="sm"
+                                                borderColor="gray.200"
+                                                _hover={{ borderColor: 'gray.300' }}
+                                                _focus={{ borderColor: 'teal.500', boxShadow: '0 0 0 1px teal.500' }}
                                             />
                                         ) : (
-                                            <Text>{selectedImpl.title}</Text>
+                                            <Text fontSize="sm" color="gray.700">
+                                                {selectedImpl.title}
+                                            </Text>
                                         )}
                                     </FormControl>
 
                                     <FormControl>
-                                        <FormLabel>Description</FormLabel>
+                                        <FormLabel fontSize="xs" color="gray.600" fontWeight="semibold">
+                                            Description
+                                        </FormLabel>
                                         {isEditing ? (
                                             <Textarea
                                                 value={editForm.description}
-                                                onChange={(e) => setEditForm({
-                                                    ...editForm,
-                                                    description: e.target.value
-                                                })}
+                                                onChange={(e) =>
+                                                    setEditForm({
+                                                        ...editForm,
+                                                        description: e.target.value,
+                                                    })
+                                                }
                                                 rows={6}
+                                                size="sm"
+                                                borderColor="gray.200"
+                                                _hover={{ borderColor: 'gray.300' }}
+                                                _focus={{ borderColor: 'teal.500', boxShadow: '0 0 0 1px teal.500' }}
                                             />
                                         ) : (
-                                            <Text whiteSpace="pre-wrap">{selectedImpl.description}</Text>
+                                            <Text fontSize="sm" color="gray.700" whiteSpace="pre-wrap">
+                                                {selectedImpl.description}
+                                            </Text>
                                         )}
                                     </FormControl>
 
                                     <Box>
-                                        <Badge colorScheme="purple">ID: {selectedImpl.unique_id}</Badge>
+                                        <Badge colorScheme="purple" fontSize="xs" px={2} py={1} borderRadius="md">
+                                            ID: {selectedImpl.unique_id}
+                                        </Badge>
                                     </Box>
                                 </VStack>
                             </TabPanel>
 
                             {/* Evidence For Tab */}
-                            <TabPanel>
-                                <VStack align="stretch" spacing={3}>
-                                    <Heading size="sm">Success Indicators This Evidences</Heading>
+                            <TabPanel px={0} py={4}>
+                                <VStack align="stretch" spacing={4}>
+                                    <Heading size="sm" color="gray.700" fontWeight="bold">
+                                        Success Indicators This Evidences
+                                    </Heading>
                                     {selectedImpl.is_evidence_for?.length > 0 ? (
                                         selectedImpl.is_evidence_for.map((yse) => (
                                             <Box
                                                 key={yse.unique_id}
                                                 p={4}
                                                 borderWidth="1px"
-                                                borderRadius="md"
-                                                bg="gray.50"
+                                                borderColor="gray.200"
+                                                borderRadius="lg"
+                                                bg="white"
+                                                boxShadow="sm"
+                                                _hover={{ boxShadow: 'md' }}
+                                                transition="box-shadow 0.2s"
                                             >
-                                                <VStack align="stretch" spacing={2}>
+                                                <VStack align="stretch" spacing={3}>
                                                     <Text fontWeight="bold" fontSize="sm" color="teal.700">
                                                         {yse.year_identifier}
                                                     </Text>
 
                                                     {yse.success_indicator && (
                                                         <Box>
-                                                            <Text fontSize="xs" color="gray.600" fontWeight="semibold">
-                                                                Success Indicator:
+                                                            <Text
+                                                                fontSize="xs"
+                                                                color="teal.600"
+                                                                fontWeight="semibold"
+                                                                textTransform="uppercase"
+                                                                mb={1}
+                                                            >
+                                                                Success Indicator
                                                             </Text>
                                                             <Text fontSize="sm" color="gray.700">
-                                                                {yse.indicator_number ? `${yse.indicator_number}. ` : ''}{yse.success_indicator}
+                                                                {yse.indicator_number ? `${yse.indicator_number}. ` : ''}
+                                                                {yse.success_indicator}
                                                             </Text>
                                                         </Box>
                                                     )}
@@ -274,159 +371,54 @@ function ImplementationTypeOverview({ implementationType }) {
                                             </Box>
                                         ))
                                     ) : (
-                                        <Text color="gray.500">No success indicators linked</Text>
+                                        <Text fontSize="xs" color="gray.500" fontStyle="italic">
+                                            No success indicators linked to this {implementationType}
+                                        </Text>
                                     )}
                                 </VStack>
                             </TabPanel>
 
                             {/* Supporting Documentation Tab */}
-                            <TabPanel>
-                                <VStack align="stretch" spacing={4}>
-                                    {/* Documents */}
-                                    {selectedImpl.supporting_documents?.length > 0 && (
-                                        <Box>
-                                            <Heading size="xs" mb={2}>Documents</Heading>
-                                            <VStack align="stretch" spacing={2}>
-                                                {selectedImpl.supporting_documents.map((doc) => (
-                                                    <Box key={doc.unique_id} p={3} bg="blue.50" borderRadius="md">
-                                                        <Text fontSize="sm" fontWeight="bold">{doc.name}</Text>
-                                                        {doc.uri && (
-                                                            <Text fontSize="xs" color="gray.600">Path: {doc.uri}</Text>
-                                                        )}
-                                                        {doc.is_administrative_review_documentation && (
-                                                            <Badge colorScheme="purple" fontSize="xs" mt={1}>Admin Review</Badge>
-                                                        )}
-                                                        {doc.is_milestone_and_measures_documentation && (
-                                                            <Badge colorScheme="orange" fontSize="xs" mt={1} ml={1}>Milestone Doc</Badge>
-                                                        )}
-                                                    </Box>
-                                                ))}
-                                            </VStack>
-                                        </Box>
-                                    )}
+                            <TabPanel px={0} py={4}>
+                                <VStack align="stretch" spacing={6}>
+                                    <DocumentsViewer
+                                        documents={selectedImpl.supporting_documents || []}
+                                        formatDate={formatDate}
+                                    />
 
-                                    {/* Webpages */}
-                                    {selectedImpl.supporting_webpages?.length > 0 && (
-                                        <Box>
-                                            <Heading size="xs" mb={2}>Webpages</Heading>
-                                            <VStack align="stretch" spacing={2}>
-                                                {selectedImpl.supporting_webpages.map((wp) => (
-                                                    <Box key={wp.unique_id} p={3} bg="green.50" borderRadius="md">
-                                                        <Link href={wp.url} isExternal color="blue.600">
-                                                            <HStack>
-                                                                <Text fontSize="sm" fontWeight="bold">{wp.name || wp.url}</Text>
-                                                                <ExternalLinkIcon />
-                                                            </HStack>
-                                                        </Link>
-                                                        {wp.description && (
-                                                            <Text fontSize="xs" color="gray.600" mt={1}>{wp.description}</Text>
-                                                        )}
-                                                        {(wp.depreciated || wp.no_longer_exists) && (
-                                                            <HStack mt={1}>
-                                                                {wp.depreciated && <Badge colorScheme="red" fontSize="xs">Deprecated</Badge>}
-                                                                {wp.no_longer_exists && <Badge colorScheme="gray" fontSize="xs">No Longer Exists</Badge>}
-                                                            </HStack>
-                                                        )}
-                                                    </Box>
-                                                ))}
-                                            </VStack>
-                                        </Box>
-                                    )}
+                                    <Divider borderColor="gray.200" />
 
-                                    {/* Notes */}
-                                    {selectedImpl.supporting_notes?.length > 0 && (
-                                        <Box>
-                                            <Heading size="xs" mb={2}>Notes</Heading>
-                                            <VStack align="stretch" spacing={2}>
-                                                {selectedImpl.supporting_notes.map((note) => (
-                                                    <Box key={note.unique_id} p={3} bg="yellow.50" borderRadius="md">
-                                                        <Text fontSize="sm" fontWeight="bold">{note.name}</Text>
-                                                        {note.content && (
-                                                            <Text fontSize="xs" color="gray.700" mt={1} noOfLines={3}>
-                                                                {note.content}
-                                                            </Text>
-                                                        )}
-                                                        {note.date_created && (
-                                                            <Text fontSize="xs" color="gray.500" mt={1}>
-                                                                Created: {new Date(note.date_created).toLocaleDateString()}
-                                                            </Text>
-                                                        )}
-                                                        {note.depreciated && <Badge colorScheme="red" fontSize="xs" mt={1}>Deprecated</Badge>}
-                                                    </Box>
-                                                ))}
-                                            </VStack>
-                                        </Box>
-                                    )}
+                                    <WebpagesViewer
+                                        webpages={selectedImpl.supporting_webpages || []}
+                                        formatDate={formatDate}
+                                    />
 
-                                    {/* Messages */}
-                                    {selectedImpl.supporting_messages?.length > 0 && (
-                                        <Box>
-                                            <Heading size="xs" mb={2}>Messages</Heading>
-                                            <VStack align="stretch" spacing={2}>
-                                                {selectedImpl.supporting_messages.map((msg) => (
-                                                    <Box key={msg.unique_id} p={3} bg="purple.50" borderRadius="md">
-                                                        <HStack justify="space-between">
-                                                            <Text fontSize="sm" fontWeight="bold">{msg.name}</Text>
-                                                            {msg.type && <Badge colorScheme="purple" fontSize="xs">{msg.type}</Badge>}
-                                                        </HStack>
-                                                        {msg.content && (
-                                                            <Text fontSize="xs" color="gray.700" mt={1} noOfLines={3}>
-                                                                {msg.content}
-                                                            </Text>
-                                                        )}
-                                                        {msg.date_created && (
-                                                            <Text fontSize="xs" color="gray.500" mt={1}>
-                                                                Sent: {new Date(msg.date_created).toLocaleDateString()}
-                                                            </Text>
-                                                        )}
-                                                        {msg.depreciated && <Badge colorScheme="red" fontSize="xs" mt={1}>Deprecated</Badge>}
-                                                    </Box>
-                                                ))}
-                                            </VStack>
-                                        </Box>
-                                    )}
+                                    <Divider borderColor="gray.200" />
 
-                                    {/* Metrics */}
-                                    {selectedImpl.supporting_metrics?.length > 0 && (
-                                        <Box>
-                                            <Heading size="xs" mb={2}>Metrics</Heading>
-                                            <VStack align="stretch" spacing={2}>
-                                                {selectedImpl.supporting_metrics.map((metric) => (
-                                                    <Box key={metric.unique_id} p={3} bg="orange.50" borderRadius="md">
-                                                        <HStack justify="space-between">
-                                                            <Text fontSize="sm" fontWeight="bold">{metric.name}</Text>
-                                                            {metric.metric_type && <Badge colorScheme="orange" fontSize="xs">{metric.metric_type}</Badge>}
-                                                        </HStack>
-                                                        {metric.description && (
-                                                            <Text fontSize="xs" color="gray.700" mt={1}>
-                                                                {metric.description}
-                                                            </Text>
-                                                        )}
-                                                        {metric.single_value && (
-                                                            <Text fontSize="xs" color="gray.600" mt={1}>
-                                                                Value: {metric.single_value}
-                                                            </Text>
-                                                        )}
-                                                        {metric.comment && (
-                                                            <Text fontSize="xs" color="gray.500" mt={1} fontStyle="italic">
-                                                                {metric.comment}
-                                                            </Text>
-                                                        )}
-                                                    </Box>
-                                                ))}
-                                            </VStack>
-                                        </Box>
-                                    )}
+                                    <NotesViewer
+                                        notes={selectedImpl.supporting_notes || []}
+                                        formatDate={formatDate}
+                                    />
 
-                                    {getTotalRelationships(selectedImpl) === (selectedImpl.is_evidence_for?.length || 0) && (
-                                        <Text color="gray.500">No supporting documentation</Text>
-                                    )}
+                                    <Divider borderColor="gray.200" />
+
+                                    <MessagesViewer
+                                        messages={selectedImpl.supporting_messages || []}
+                                        formatDate={formatDate}
+                                    />
+
+                                    <Divider borderColor="gray.200" />
+
+                                    <MetricsViewer metrics={selectedImpl.supporting_metrics || []} />
                                 </VStack>
                             </TabPanel>
                         </TabPanels>
                     </Tabs>
                 ) : (
-                    <Text color="gray.500">Select an implementation to view details</Text>
+                    <Alert status="info" borderRadius="lg" fontSize="sm">
+                        <AlertIcon />
+                        Select an implementation to view details
+                    </Alert>
                 )}
             </Box>
         </Flex>

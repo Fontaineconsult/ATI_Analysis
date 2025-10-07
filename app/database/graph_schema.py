@@ -1010,6 +1010,7 @@ class Document(StructuredNode):
     name = StringProperty()
     file_path = StringProperty()
     uri_path = StringProperty()
+    description = StringProperty()
     is_administrative_review_documentation = StringProperty()
     is_milestone_and_measures_documentation = StringProperty()
     depreciated = BooleanProperty() #Todo this needs to placed in an edge
@@ -1027,6 +1028,8 @@ class Document(StructuredNode):
             "name": self.name,
             "file_path": self.file_path,
             "uri_path": self.uri_path,
+            "depreciated": self.depreciated,
+            "depreciated_date": self.depreciated_date,
             "include_in_report": self.include_in_report,
             "is_administrative_review_documentation": self.is_administrative_review_documentation,
             "is_milestone_and_measures_documentation": self.is_milestone_and_measures_documentation,
@@ -1068,7 +1071,8 @@ class Webpage(StructuredNode):
             "no_longer_exists": self.no_longer_exists,
             "depreciated": self.depreciated,
             "depreciated_date": self.depreciated_date,
-            "unique_id": self.unique_id
+            "unique_id": self.unique_id,
+            "include_in_report": self.include_in_report
 
         }
 
@@ -1221,7 +1225,6 @@ class Metric(StructuredNode):
             "data": self.get_data() if self.value_dict else None,
             "include_in_report": self.include_in_report,
             "unique_id": self.unique_id
-
 
         }
 
