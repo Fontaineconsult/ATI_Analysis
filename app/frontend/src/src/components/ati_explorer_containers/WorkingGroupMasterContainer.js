@@ -18,6 +18,7 @@ function WorkingGroupMasterContainer() {
                 <Route path=":workingGroup" element={<GoalNavigator data={data} />} />
                 <Route path=":workingGroup/goal/:goalId" element={<GoalNavigator data={data} />} />
                 <Route path="implementations" element={<ImplementationMasterContainer />} />
+                <Route path="implementations/:implementationType" element={<ImplementationMasterContainer />} />
                 <Route path="governance" element={<Text>This area will display the governance category</Text>} />
                 <Route path="*" element={<Text>Please select a working group.</Text>} />
             </Routes>

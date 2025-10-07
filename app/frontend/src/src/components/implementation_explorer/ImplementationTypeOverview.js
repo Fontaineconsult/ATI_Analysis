@@ -240,17 +240,37 @@ function ImplementationTypeOverview({ implementationType }) {
                                         selectedImpl.is_evidence_for.map((yse) => (
                                             <Box
                                                 key={yse.unique_id}
-                                                p={3}
+                                                p={4}
                                                 borderWidth="1px"
                                                 borderRadius="md"
                                                 bg="gray.50"
                                             >
-                                                <Text fontWeight="bold" fontSize="sm">
-                                                    {yse.year_identifier}
-                                                </Text>
-                                                <Text fontSize="xs" color="gray.600">
-                                                    ID: {yse.unique_id}
-                                                </Text>
+                                                <VStack align="stretch" spacing={2}>
+                                                    <Text fontWeight="bold" fontSize="sm" color="teal.700">
+                                                        {yse.year_identifier}
+                                                    </Text>
+
+                                                    {yse.success_indicator && (
+                                                        <Box>
+                                                            <Text fontSize="xs" color="gray.600" fontWeight="semibold">
+                                                                Success Indicator:
+                                                            </Text>
+                                                            <Text fontSize="sm" color="gray.700">
+                                                                {yse.indicator_number ? `${yse.indicator_number}. ` : ''}{yse.success_indicator}
+                                                            </Text>
+                                                        </Box>
+                                                    )}
+
+                                                    {yse.indicator_composite_key && (
+                                                        <Text fontSize="xs" color="gray.500">
+                                                            Key: {yse.indicator_composite_key}
+                                                        </Text>
+                                                    )}
+
+                                                    <Text fontSize="xs" color="gray.500">
+                                                        YSE ID: {yse.unique_id}
+                                                    </Text>
+                                                </VStack>
                                             </Box>
                                         ))
                                     ) : (
@@ -268,9 +288,18 @@ function ImplementationTypeOverview({ implementationType }) {
                                             <Heading size="xs" mb={2}>Documents</Heading>
                                             <VStack align="stretch" spacing={2}>
                                                 {selectedImpl.supporting_documents.map((doc) => (
-                                                    <HStack key={doc.unique_id} p={2} bg="blue.50" borderRadius="md">
-                                                        <Text fontSize="sm">{doc.name}</Text>
-                                                    </HStack>
+                                                    <Box key={doc.unique_id} p={3} bg="blue.50" borderRadius="md">
+                                                        <Text fontSize="sm" fontWeight="bold">{doc.name}</Text>
+                                                        {doc.uri && (
+                                                            <Text fontSize="xs" color="gray.600">Path: {doc.uri}</Text>
+                                                        )}
+                                                        {doc.is_administrative_review_documentation && (
+                                                            <Badge colorScheme="purple" fontSize="xs" mt={1}>Admin Review</Badge>
+                                                        )}
+                                                        {doc.is_milestone_and_measures_documentation && (
+                                                            <Badge colorScheme="orange" fontSize="xs" mt={1} ml={1}>Milestone Doc</Badge>
+                                                        )}
+                                                    </Box>
                                                 ))}
                                             </VStack>
                                         </Box>
@@ -282,14 +311,23 @@ function ImplementationTypeOverview({ implementationType }) {
                                             <Heading size="xs" mb={2}>Webpages</Heading>
                                             <VStack align="stretch" spacing={2}>
                                                 {selectedImpl.supporting_webpages.map((wp) => (
-                                                    <HStack key={wp.unique_id} p={2} bg="green.50" borderRadius="md">
+                                                    <Box key={wp.unique_id} p={3} bg="green.50" borderRadius="md">
                                                         <Link href={wp.url} isExternal color="blue.600">
                                                             <HStack>
-                                                                <Text fontSize="sm">{wp.name || wp.url}</Text>
+                                                                <Text fontSize="sm" fontWeight="bold">{wp.name || wp.url}</Text>
                                                                 <ExternalLinkIcon />
                                                             </HStack>
                                                         </Link>
-                                                    </HStack>
+                                                        {wp.description && (
+                                                            <Text fontSize="xs" color="gray.600" mt={1}>{wp.description}</Text>
+                                                        )}
+                                                        {(wp.depreciated || wp.no_longer_exists) && (
+                                                            <HStack mt={1}>
+                                                                {wp.depreciated && <Badge colorScheme="red" fontSize="xs">Deprecated</Badge>}
+                                                                {wp.no_longer_exists && <Badge colorScheme="gray" fontSize="xs">No Longer Exists</Badge>}
+                                                            </HStack>
+                                                        )}
+                                                    </Box>
                                                 ))}
                                             </VStack>
                                         </Box>
@@ -301,9 +339,20 @@ function ImplementationTypeOverview({ implementationType }) {
                                             <Heading size="xs" mb={2}>Notes</Heading>
                                             <VStack align="stretch" spacing={2}>
                                                 {selectedImpl.supporting_notes.map((note) => (
-                                                    <HStack key={note.unique_id} p={2} bg="yellow.50" borderRadius="md">
-                                                        <Text fontSize="sm">{note.name}</Text>
-                                                    </HStack>
+                                                    <Box key={note.unique_id} p={3} bg="yellow.50" borderRadius="md">
+                                                        <Text fontSize="sm" fontWeight="bold">{note.name}</Text>
+                                                        {note.content && (
+                                                            <Text fontSize="xs" color="gray.700" mt={1} noOfLines={3}>
+                                                                {note.content}
+                                                            </Text>
+                                                        )}
+                                                        {note.date_created && (
+                                                            <Text fontSize="xs" color="gray.500" mt={1}>
+                                                                Created: {new Date(note.date_created).toLocaleDateString()}
+                                                            </Text>
+                                                        )}
+                                                        {note.depreciated && <Badge colorScheme="red" fontSize="xs" mt={1}>Deprecated</Badge>}
+                                                    </Box>
                                                 ))}
                                             </VStack>
                                         </Box>
@@ -315,9 +364,23 @@ function ImplementationTypeOverview({ implementationType }) {
                                             <Heading size="xs" mb={2}>Messages</Heading>
                                             <VStack align="stretch" spacing={2}>
                                                 {selectedImpl.supporting_messages.map((msg) => (
-                                                    <HStack key={msg.unique_id} p={2} bg="purple.50" borderRadius="md">
-                                                        <Text fontSize="sm">{msg.name}</Text>
-                                                    </HStack>
+                                                    <Box key={msg.unique_id} p={3} bg="purple.50" borderRadius="md">
+                                                        <HStack justify="space-between">
+                                                            <Text fontSize="sm" fontWeight="bold">{msg.name}</Text>
+                                                            {msg.type && <Badge colorScheme="purple" fontSize="xs">{msg.type}</Badge>}
+                                                        </HStack>
+                                                        {msg.content && (
+                                                            <Text fontSize="xs" color="gray.700" mt={1} noOfLines={3}>
+                                                                {msg.content}
+                                                            </Text>
+                                                        )}
+                                                        {msg.date_created && (
+                                                            <Text fontSize="xs" color="gray.500" mt={1}>
+                                                                Sent: {new Date(msg.date_created).toLocaleDateString()}
+                                                            </Text>
+                                                        )}
+                                                        {msg.depreciated && <Badge colorScheme="red" fontSize="xs" mt={1}>Deprecated</Badge>}
+                                                    </Box>
                                                 ))}
                                             </VStack>
                                         </Box>
@@ -329,9 +392,27 @@ function ImplementationTypeOverview({ implementationType }) {
                                             <Heading size="xs" mb={2}>Metrics</Heading>
                                             <VStack align="stretch" spacing={2}>
                                                 {selectedImpl.supporting_metrics.map((metric) => (
-                                                    <HStack key={metric.unique_id} p={2} bg="orange.50" borderRadius="md">
-                                                        <Text fontSize="sm">{metric.name}</Text>
-                                                    </HStack>
+                                                    <Box key={metric.unique_id} p={3} bg="orange.50" borderRadius="md">
+                                                        <HStack justify="space-between">
+                                                            <Text fontSize="sm" fontWeight="bold">{metric.name}</Text>
+                                                            {metric.metric_type && <Badge colorScheme="orange" fontSize="xs">{metric.metric_type}</Badge>}
+                                                        </HStack>
+                                                        {metric.description && (
+                                                            <Text fontSize="xs" color="gray.700" mt={1}>
+                                                                {metric.description}
+                                                            </Text>
+                                                        )}
+                                                        {metric.single_value && (
+                                                            <Text fontSize="xs" color="gray.600" mt={1}>
+                                                                Value: {metric.single_value}
+                                                            </Text>
+                                                        )}
+                                                        {metric.comment && (
+                                                            <Text fontSize="xs" color="gray.500" mt={1} fontStyle="italic">
+                                                                {metric.comment}
+                                                            </Text>
+                                                        )}
+                                                    </Box>
                                                 ))}
                                             </VStack>
                                         </Box>

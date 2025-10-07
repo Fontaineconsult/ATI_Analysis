@@ -29,7 +29,7 @@ function SubNavbar() {
     } else if (location.pathname.includes('/dashboard')) {
         subNavItems = [
             { label: 'View Reports', path: '/dashboard/reports' },
-            { label: 'Report Overview', path: '/dashboard/report-overview' },
+            { label: 'Copy Report', path: '/dashboard/report-overview' },
             // { label: 'Implementations', path: '/dashboard/implementations' },
             { label: 'Settings', path: '/dashboard/settings', requiresAdmin: true },
         ];

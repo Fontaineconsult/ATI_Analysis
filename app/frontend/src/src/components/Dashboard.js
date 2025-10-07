@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Box, Heading } from '@chakra-ui/react';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, useLocation, useNavigate } from 'react-router-dom';
 import ReportOverviewMasterContainer from './dashboard_components/report_components/ReportOverviewMasterContainer';
 import ImplementationsMasterContainer from './dashboard_components/implementation_components/ImplementationsMasterContainer';
 import SettingsMasterContainer from './dashboard_components/settings_components/SettingsMasterContainer';
@@ -9,6 +9,16 @@ import ReportMasterList from "./dashboard_components/report_components/ReportMas
 
 // Main Dashboard component containing route-based subcomponents
 function Dashboard() {
+    const location = useLocation();
+    const navigate = useNavigate();
+
+    // Redirect from /dashboard to /dashboard/reports
+    useEffect(() => {
+        if (location.pathname === '/dashboard' || location.pathname === '/dashboard/') {
+            navigate('/dashboard/reports', { replace: true });
+        }
+    }, [location.pathname, navigate]);
+
     return (
         <Box className="dashboard-container" ml={0} mx="auto" p={4} textAlign="center">
             <Routes>
@@ -23,7 +33,7 @@ function Dashboard() {
                 />
                 <Route path="implementations" element={<ImplementationsMasterContainer />} />
                 <Route path="settings" element={<SettingsMasterContainer />} />
-                <Route path="/" element={<p>Select a section from the dashboard.</p>} />
+                <Route path="/" element={<ReportMasterList />} />
             </Routes>
         </Box>
     );

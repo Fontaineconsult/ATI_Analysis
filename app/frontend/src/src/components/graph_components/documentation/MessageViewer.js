@@ -44,6 +44,7 @@ function MessageViewer({ messages, onSubmit, yearSuccessEvidence, createdBy, imp
     const { currentWorkingGroup } = useSettings();
     const { user } = useContext(UserContext);
 
+
     // Toggle expanded/collapsed state
     const toggleCollapse = (index) => {
         setExpandedIndex(expandedIndex === index ? null : index);
@@ -108,19 +109,18 @@ function MessageViewer({ messages, onSubmit, yearSuccessEvidence, createdBy, imp
                     <MessageForm
                         message={null}
                         onSubmit={(messageData) => handleFormSubmit(null, messageData, true)}
-                        createdBy={user?.properties || user}
+                        createdBy={user}
                     />
                 </Box>
             ) : messages && messages.length > 0 ? (
-                messages.map((message, index) => {
+                messages.map((messageWrapper, index) => {
                     // Normalize message object
-                    message = message.message ? message.message : message;
-
-                    const createdByPerson = message.created_by?.properties || null;
+                    const message = messageWrapper.message || messageWrapper;
+                    const createdBy = messageWrapper.created_by || message.created_by || null;
 
                     return (
                         <Box
-                            key={message.properties.unique_id || index}
+                            key={message.properties?.unique_id || index}
                             mb={4}
                             border="1px solid teal"
                             borderRadius="md"
@@ -134,7 +134,7 @@ function MessageViewer({ messages, onSubmit, yearSuccessEvidence, createdBy, imp
                                 onClick={() => toggleCollapse(index)}
                             >
                                 <Text fontWeight="bold" fontSize="sm">
-                                    {message.properties.name || 'Untitled Message'}
+                                    {message.properties?.name || 'Untitled Message'}
                                 </Text>
                                 <Button size="sm" colorScheme="teal">
                                     {expandedIndex === index ? 'Collapse' : 'Expand'}
@@ -142,7 +142,7 @@ function MessageViewer({ messages, onSubmit, yearSuccessEvidence, createdBy, imp
                             </Flex>
 
                             <Text fontSize="sm" color="gray.600" mt={2}>
-                                Created by: {createdByPerson ? createdByPerson.name : 'Unknown Author'}
+                                Created by: {createdBy?.properties?.name || 'Unknown Author'}
                             </Text>
 
                             <Collapse in={expandedIndex === index} animateOpacity>
@@ -150,7 +150,7 @@ function MessageViewer({ messages, onSubmit, yearSuccessEvidence, createdBy, imp
                                     <MessageForm
                                         message={message}
                                         onSubmit={(messageData) => handleFormSubmit(index, messageData, false)}
-                                        createdBy={createdByPerson}
+                                        createdBy={createdBy}
                                     />
                                 </Box>
                             </Collapse>
@@ -178,7 +178,7 @@ function MessageForm({ message, onSubmit, createdBy }) {
         include_in_report: message?.properties?.include_in_report ?? true,
         created_by: createdBy || {},
     });
-
+    console.log(message)
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     useEffect(() => {
@@ -258,10 +258,10 @@ function MessageForm({ message, onSubmit, createdBy }) {
                 </Select>
             </FormControl>
 
-            {messageData.created_by?.name ? (
+            {createdBy ? (
                 <Box mb={4}>
                     <Text fontSize="sm" color="gray.600">
-                        Created by: {messageData.created_by.name} ({messageData.created_by.title || 'Unknown Title'})
+                        Created by: {createdBy?.properties?.name || createdBy?.name || 'Unknown'} ({createdBy?.properties?.title || createdBy?.title || 'Unknown Title'})
                     </Text>
                 </Box>
             ) : (

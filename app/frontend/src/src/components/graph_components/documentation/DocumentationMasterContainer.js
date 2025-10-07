@@ -10,7 +10,6 @@ function DocumentationMasterViewer({ documentation }) {
     const { docs = [], webs = [], notes = [], msgs = [], metrics = [] } = documentation || {};
     const implementation_id = documentation.evidenceType.properties.unique_id;
     const implementation_type = documentation.evidenceType.labels[0];
-    console.log(documentation)
     // Apply label-based filtering similar to YSEAnnotationMasterContainer
     // Adjust these label checks as needed based on actual data structures and labels.
     const filteredDocs = docs?.filter((item) =>
@@ -30,12 +29,13 @@ function DocumentationMasterViewer({ documentation }) {
     ) || [];
 
     // Map our filtered arrays to their respective categories
+// In DocumentationMasterViewer, update the dataLists to preserve the full structure:
     const dataLists = {
-        Documents: docs,
-        Websites: webs,
-        Notes: notes,
-        Messages: msgs,
-        Metrics: metrics
+        Documents: filteredDocs,  // Keep full structure
+        Websites: filteredWebs,
+        Notes: filteredNotes,
+        Messages: filteredMsgs,    // This preserves the created_by relationship
+        Metrics: filteredMetrics
     };
 
     console.log("SDSD", dataLists)

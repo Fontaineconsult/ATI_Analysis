@@ -1,13 +1,21 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Box, Spinner } from '@chakra-ui/react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import WorkingGroupMasterContainer from './ati_explorer_containers/WorkingGroupMasterContainer';
 import { useData } from '../hooks/useData';
-import { useLocation } from 'react-router-dom';
-import '../styles/App.css'; // Import the CSS file
+import '../styles/App.css';
 
 function AtiExplorer() {
     const location = useLocation();
+    const navigate = useNavigate();
     const { data, loading, updating, error, selectedYear } = useData();
+
+    // Redirect from /ati-explorer to /ati-explorer/web/goal/1
+    useEffect(() => {
+        if (location.pathname === '/ati-explorer' || location.pathname === '/ati-explorer/') {
+            navigate('/ati-explorer/web/goal/1', { replace: true });
+        }
+    }, [location.pathname, navigate]);
 
     // Check if all data fields are null, indicating an empty state
     const isDataEmpty = !data.web && !data.instructionalMaterials && !data.procurement;
@@ -38,8 +46,6 @@ function AtiExplorer() {
 
     return (
         <Box maxW="1400px" mx="auto" p={4}>
-            {location.pathname === '/ati-explorer' && <AtiExplorerLanding />}
-
             <WorkingGroupMasterContainer />
 
             {updating && (
@@ -48,17 +54,6 @@ function AtiExplorer() {
                     <p className="ati-explorer-text">Updating data in the background...</p>
                 </Box>
             )}
-        </Box>
-    );
-}
-
-function AtiExplorerLanding() {
-    return (
-        <Box className="centered-container">
-            <h2 className="ati-explorer-heading">Welcome to the ATI Explorer</h2>
-            <p className="ati-explorer-text">
-                Select a year to view data for that academic year.
-            </p>
         </Box>
     );
 }

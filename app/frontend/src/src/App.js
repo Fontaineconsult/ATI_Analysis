@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import {
     ChakraProvider,
     Box,
@@ -15,17 +15,15 @@ import {
     Divider
 } from '@chakra-ui/react';
 import { ChevronDownIcon } from '@chakra-ui/icons';
-import { Routes, Route, Link as RouterLink } from 'react-router-dom';
-import { DataProvider } from './context/DataContext';
+import { Routes, Route, Link as RouterLink, Navigate } from 'react-router-dom';
 import { useData } from './hooks/useData';
+import { UserContext } from './context/UserContext';
 import AtiExplorer from './components/AtiExplorer';
 import Dashboard from './components/Dashboard';
 import About from './components/About';
 import SubNavbar from './components/SubNavbar';
 import './styles/App.css';
-import { SettingsProvider, useSettings } from "./context/SettingsContext";
-import { StatusLevelProvider } from "./context/StatusLevelContext";
-import { UserProvider, UserContext } from './context/UserContext';
+import { useSettings } from "./context/SettingsContext";
 
 // Theme extension
 import { extendTheme } from '@chakra-ui/react'
@@ -60,10 +58,14 @@ const theme = extendTheme({
 
 function App() {
     const { currentAcademicYear, updateCurrentAcademicYear } = useSettings();
-    const { updateYear, data, currentUser, setUser } = useData();
-    const { user } = React.useContext(UserContext);
+    const { updateYear } = useData();
+    const {
+        currentUser,
+        setUser,
+        individuals
+    } = useContext(UserContext);
 
-    const activeIndividuals = data.individuals?.filter(person => person.active) || [];
+    const activeIndividuals = individuals?.filter(person => person.active) || [];
 
     const yearOptions = [
         '2020-2021',
@@ -355,6 +357,7 @@ function App() {
                             <Route path="/ati-explorer/*" element={<AtiExplorer />} />
                             <Route path="/dashboard/*" element={<Dashboard />} />
                             <Route path="/about/*" element={<About />} />
+                            <Route path="/" element={<Navigate to="/dashboard" replace />} />
                         </Routes>
                     </Container>
                 </Box>

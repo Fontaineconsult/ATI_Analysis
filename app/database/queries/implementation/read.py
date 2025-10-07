@@ -188,13 +188,79 @@ def get_all_implementations() -> dict:
                     'title': impl.title,
                     'description': impl.description,
                     'type': implementation_type,
-                    'supporting_documents': [{'unique_id': doc.unique_id, 'name': doc.name} for doc in impl.supporting_documents.all()],
-                    'supporting_webpages': [{'unique_id': wp.unique_id, 'url': wp.url, 'name': wp.name} for wp in impl.supporting_webpages.all()],
-                    'supporting_notes': [{'unique_id': note.unique_id, 'name': note.name} for note in impl.supporting_notes.all()],
-                    'supporting_messages': [{'unique_id': msg.unique_id, 'name': msg.name} for msg in impl.supporting_messages.all()],
-                    'supporting_metrics': [{'unique_id': metric.unique_id, 'name': metric.name} for metric in impl.supporting_metrics.all()],
-                    'is_evidence_for': [{'year_identifier': yse.year_identifier, 'unique_id': yse.unique_id} for yse in impl.is_evidence_for.all()]
+                    'supporting_documents': [{
+                        'unique_id': doc.unique_id,
+                        'name': doc.name,
+                        'hash': doc.hash,
+                        'file_path': doc.file_path,
+                        'uri_path': doc.uri_path,
+                        'include_in_report': doc.include_in_report,
+                        'is_administrative_review_documentation': doc.is_administrative_review_documentation,
+                        'is_milestone_and_measures_documentation': doc.is_milestone_and_measures_documentation
+                    } for doc in impl.supporting_documents.all()],
+                    'supporting_webpages': [{
+                        'unique_id': wp.unique_id,
+                        'url': wp.url,
+                        'name': wp.name,
+                        'description': wp.description,
+                        'no_longer_exists': wp.no_longer_exists,
+                        'depreciated': wp.depreciated,
+                        'include_in_report': wp.include_in_report
+                    } for wp in impl.supporting_webpages.all()],
+                    'supporting_notes': [{
+                        'unique_id': note.unique_id,
+                        'name': note.name,
+                        'content': note.content,
+                        'date_created': note.date_created.isoformat() if note.date_created else None,
+                        'depreciated': note.depreciated,
+                        'include_in_report': note.include_in_report
+                    } for note in impl.supporting_notes.all()],
+                    'supporting_messages': [{
+                        'unique_id': msg.unique_id,
+                        'name': msg.name,
+                        'content': msg.content,
+                        'file_path': msg.file_path,
+                        'uri_path': msg.uri_path,
+                        'date_created': msg.date_created.isoformat() if msg.date_created else None,
+                        'type': msg.type,
+                        'depreciated': msg.depreciated,
+                        'include_in_report': msg.include_in_report
+                    } for msg in impl.supporting_messages.all()],
+                    'supporting_metrics': [{
+                        'unique_id': metric.unique_id,
+                        'name': metric.name,
+                        'composite_key': metric.composite_key,
+                        'metric_type': metric.metric_type,
+                        'file_path': metric.file_path,
+                        'uri_path': metric.uri_path,
+                        'description': metric.description,
+                        'single_value': metric.single_value,
+                        'comment': metric.comment,
+                        'include_in_report': metric.include_in_report
+                    } for metric in impl.supporting_metrics.all()],
+                    'is_evidence_for': []
                 }
+
+                # Process YSE relationships to get success indicator details
+                for yse in impl.is_evidence_for.all():
+                    yse_data = {
+                        'year_identifier': yse.year_identifier,
+                        'unique_id': yse.unique_id,
+                        'success_indicator': None,
+                        'indicator_number': None,
+                        'indicator_composite_key': None
+                    }
+
+                    # Get the success indicator through the tracks relationship
+                    success_indicators = yse.tracks_success_indicator.all()
+                    if success_indicators:
+                        indicator = success_indicators[0]  # Should only be one
+                        yse_data['success_indicator'] = indicator.success_indicator
+                        yse_data['indicator_number'] = indicator.number
+                        yse_data['indicator_composite_key'] = indicator.composite_key
+
+                    impl_data['is_evidence_for'].append(yse_data)
+
                 all_implementations[implementation_type].append(impl_data)
 
         return all_implementations

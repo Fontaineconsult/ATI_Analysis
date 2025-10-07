@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import {
     Box,
     Button,
@@ -12,20 +13,12 @@ import {
     ModalHeader,
     ModalBody,
     ModalCloseButton,
-    useDisclosure,
-    Tabs,
-    TabList,
-    TabPanels,
-    Tab,
-    TabPanel
+    useDisclosure
 } from '@chakra-ui/react';
 import { AddIcon } from '@chakra-ui/icons';
 import ImplementationTypeOverview from './ImplementationTypeOverview';
 import CreateImplementationModal from '../graph_components/implementation/CreateImplementation';
-import { useContext } from 'react';
 import { DataContext } from '../../context/DataContext';
-
-
 
 function ImplementationExplorer() {
     const implementationTypes = [
@@ -38,9 +31,31 @@ function ImplementationExplorer() {
         'InternalPolicy'
     ];
 
-    const [selectedType, setSelectedType] = useState(implementationTypes[0]);
+    const { implementationType } = useParams();
+    const navigate = useNavigate();
+    const [selectedType, setSelectedType] = useState(implementationType || implementationTypes[0]);
     const { isOpen, onOpen, onClose } = useDisclosure();
     const { refreshImplementations } = useContext(DataContext);
+
+    // Update selected type when URL changes
+    useEffect(() => {
+        if (implementationType && implementationTypes.includes(implementationType)) {
+            setSelectedType(implementationType);
+        }
+    }, [implementationType]);
+
+    // Navigate when type is selected
+    const handleTypeSelect = (type) => {
+        setSelectedType(type);
+        navigate(`/ati-explorer/implementations/${type}`);
+    };
+
+    // If no type in URL, redirect to first type
+    useEffect(() => {
+        if (!implementationType) {
+            navigate(`/ati-explorer/implementations/${implementationTypes[0]}`, { replace: true });
+        }
+    }, [implementationType, navigate]);
 
     const handleModalClose = () => {
         onClose();
@@ -75,7 +90,7 @@ function ImplementationExplorer() {
                 {implementationTypes.map(type => (
                     <Button
                         key={type}
-                        onClick={() => setSelectedType(type)}
+                        onClick={() => handleTypeSelect(type)}
                         colorScheme={selectedType === type ? "teal" : "gray"}
                         variant={selectedType === type ? "solid" : "outline"}
                         size="sm"
@@ -111,7 +126,7 @@ function ImplementationExplorer() {
                     <ModalBody py={4}>
                         <CreateImplementationModal
                             implementationTypes={implementationTypes}
-                            yearIdentifier={null}  // No YSE to assign to from here
+                            yearIdentifier={null}
                             onClose={handleModalClose}
                             onSuccess={() => {}}
                             currentWorkingGroup={null}

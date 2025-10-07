@@ -142,6 +142,8 @@ def add_message(
             depreciated_date=date.fromisoformat(message_dict['depreciated_date']) if message_dict.get('depreciated_date') else None,
             include_in_report=message_dict.get('include_in_report', True),
         )
+        print("MESSAGGEE", message_dict)
+
         message.save()
 
         # Handle the created_by relationship
