@@ -357,16 +357,6 @@ function ImplementationTypeOverview({ implementationType }) {
                                                             </Text>
                                                         </Box>
                                                     )}
-
-                                                    {yse.indicator_composite_key && (
-                                                        <Text fontSize="xs" color="gray.500">
-                                                            Key: {yse.indicator_composite_key}
-                                                        </Text>
-                                                    )}
-
-                                                    <Text fontSize="xs" color="gray.500">
-                                                        YSE ID: {yse.unique_id}
-                                                    </Text>
                                                 </VStack>
                                             </Box>
                                         ))

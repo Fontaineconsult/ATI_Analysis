@@ -3,7 +3,7 @@ import { Box, Button, Flex, Text, Modal, ModalOverlay, ModalContent, ModalHeader
 import DocumentationMasterViewer from "../documentation/DocumentationMasterContainer";
 
 function EvidenceTypeMasterList({ evidence }) {
-    console.log(">>>>",evidence)
+
     const { isOpen, onOpen, onClose } = useDisclosure();  // Chakra UI hook for modal control
     const [selectedEvidence, setSelectedEvidence] = useState(null);  // State to track the currently selected evidence
 

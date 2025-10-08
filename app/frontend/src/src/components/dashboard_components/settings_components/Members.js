@@ -20,6 +20,7 @@ import {
 } from '@chakra-ui/react';
 import { useTable } from 'react-table';
 import { DataContext } from '../../../context/DataContext';
+import { UserContext } from '../../../context/UserContext';
 import { updateIndividual } from '../../../services/api/put'; // Import the update function
 import EditIndividual from './EditIndividual'; // Import the new component
 
@@ -72,7 +73,8 @@ const MembersTable = React.memo(({ columns, data }) => {
 });
 
 function Members() {
-    const { data, loadAllIndividuals, loading } = useContext(DataContext);
+    const { data, loading } = useContext(DataContext);
+    const {loadAllIndividuals,individuals } = useContext(UserContext);
     const [individualsData, setIndividualsData] = useState([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedIndividual, setSelectedIndividual] = useState(null); // For edit mode
@@ -85,10 +87,10 @@ function Members() {
 
     // Update individualsData when data.individuals changes
     useEffect(() => {
-        if (data.individuals) {
-            setIndividualsData(data.individuals);
+        if (individuals) {
+            setIndividualsData(individuals);
         }
-    }, [data.individuals]);
+    }, [individuals]);
 
     // Function to refresh data after save
     const refreshData = useCallback(() => {

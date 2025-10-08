@@ -38,7 +38,7 @@ function DocumentationMasterViewer({ documentation }) {
         Metrics: filteredMetrics
     };
 
-    console.log("SDSD", dataLists)
+
     // Descriptions for each document type
     const descriptions = {
         Documents: "Documents are files or written materials that serve as evidence of implementation activities or progress. They can include policies, reports, meeting minutes, or other official documents related to the ATI.",

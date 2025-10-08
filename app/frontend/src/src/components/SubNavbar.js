@@ -3,11 +3,12 @@ import { Flex, Button, Box } from '@chakra-ui/react';
 import { useLocation, Link } from 'react-router-dom';
 import { useSettings } from "../context/SettingsContext";
 import { DataContext } from '../context/DataContext';
+import {UserContext} from "../context/UserContext";
 
 function SubNavbar() {
     const location = useLocation();
     const { updateCurrentWorkingGroup } = useSettings();
-    const { isUserAdmin } = useContext(DataContext);
+    const { isUserAdmin } = useContext(UserContext);
 
     useEffect(() => {
         if (location.pathname.includes('/ati-explorer')) {

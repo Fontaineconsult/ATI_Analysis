@@ -12,19 +12,21 @@ import {
     Spinner
 } from '@chakra-ui/react';
 import { DataContext } from '../../../context/DataContext';
+import {UserContext} from "../../../context/UserContext";
 
 function Members() {
-    const { data, loadAllIndividuals, loading } = useContext(DataContext);
+    const { data, loading } = useContext(DataContext);
+    const { loadAllIndividuals, individuals } = useContext(UserContext);
 
     useEffect(() => {
         // Load individuals data when component mounts
-        if (!data.individuals) {
+        if (!individuals) {
             loadAllIndividuals();
         }
     }, []);
 
     // Filter for active members only
-    const activeMembers = data?.individuals?.filter((member) => member.active) || [];
+    const activeMembers = individuals?.filter((member) => member.active) || [];
 
     if (loading) {
         return (

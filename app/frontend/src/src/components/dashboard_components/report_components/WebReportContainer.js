@@ -5,7 +5,7 @@ import ReportGoalContainer from "./ReportGoalContainer";
 
 function WebReportContainer({ webData }) {
     if (!webData || !webData.goals) return null; // Handle cases where data is unavailable
-    console.log(webData)
+
     return (
         <Box mb={6}>
             <Heading as="h3" size="lg" mb={4}>

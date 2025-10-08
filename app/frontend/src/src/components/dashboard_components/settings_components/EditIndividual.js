@@ -69,7 +69,7 @@ const EditIndividual = ({ isOpen, onClose, individualData, onSave }) => {
 
     const handleWorkingGroupChange = (wgName, isChecked) => {
         setFormData((prev) => {
-            console.log(wgName, isChecked)
+
             const prevWorkingGroups = Array.isArray(prev.workingGroups) ? prev.workingGroups : [];
 
             let updatedWorkingGroups;
