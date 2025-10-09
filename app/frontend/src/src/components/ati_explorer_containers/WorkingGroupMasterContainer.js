@@ -5,6 +5,7 @@ import { DataContext } from "../../context/DataContext";
 import GoalNavigator from './GoalNavigator';
 import '../../styles/App.css';
 import ImplementationMasterContainer from "../implementation_explorer/ImplementationMasterContainer";
+import ImplementationTypeOverviewWrapper from "../implementation_explorer/ImplementationTypeOverviewWrapper";
 
 function WorkingGroupMasterContainer() {
     const { data, loading, error } = useContext(DataContext);
@@ -17,8 +18,21 @@ function WorkingGroupMasterContainer() {
             <Routes>
                 <Route path=":workingGroup" element={<GoalNavigator data={data} />} />
                 <Route path=":workingGroup/goal/:goalId" element={<GoalNavigator data={data} />} />
-                <Route path="implementations" element={<ImplementationMasterContainer />} />
-                <Route path="implementations/:implementationType" element={<ImplementationMasterContainer />} />
+
+                {/* Implementation routes */}
+                <Route
+                    path="implementations/:implementationType/:implementationId"
+                    element={<ImplementationMasterContainer />}
+                />
+                <Route
+                    path="implementations/:implementationType"
+                    element={<ImplementationMasterContainer />}
+                />
+                <Route
+                    path="implementations"
+                    element={<ImplementationMasterContainer />}
+                />
+
                 <Route path="governance" element={<Text>This area will display the governance category</Text>} />
                 <Route path="*" element={<Text>Please select a working group.</Text>} />
             </Routes>

@@ -6,6 +6,7 @@ import ImplementationsMasterContainer from './dashboard_components/implementatio
 import SettingsMasterContainer from './dashboard_components/settings_components/SettingsMasterContainer';
 import SingleReportMasterContainer from "./dashboard_components/report_components/SingleReportMasterContainer";
 import ReportMasterList from "./dashboard_components/report_components/ReportMasterList";
+import ImplementationTypeOverviewWrapper from './implementation_explorer/ImplementationTypeOverviewWrapper';
 
 // Main Dashboard component containing route-based subcomponents
 function Dashboard() {
@@ -31,7 +32,18 @@ function Dashboard() {
                     path="reports"
                     element={<ReportMasterList />}
                 />
+
+                {/* Implementation routes */}
                 <Route path="implementations" element={<ImplementationsMasterContainer />} />
+                <Route
+                    path="implementations/:implementationType/:implementationId"
+                    element={<ImplementationsMasterContainer />}
+                />
+                <Route
+                    path="implementations/:implementationType"
+                    element={<ImplementationsMasterContainer />}
+                />
+
                 <Route path="settings" element={<SettingsMasterContainer />} />
                 <Route path="/" element={<ReportMasterList />} />
             </Routes>

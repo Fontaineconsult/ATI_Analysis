@@ -18,6 +18,7 @@ import {
     Th,
     Td
 } from '@chakra-ui/react';
+import {useNavigate} from "react-router-dom";
 
 let datas = {
     "persons": [
@@ -322,6 +323,17 @@ function generateReport(evidenceItem) {
 }
 
 function GenerateReportComponent({ evidenceItem }) {
+
+
+    const navigate = useNavigate();
+
+
+    const handleImplementationClick = (type, uniqueId) => {
+        if (uniqueId) {
+            navigate(`/ati-explorer/implementations/${type}/${uniqueId}`);
+        }
+    };
+
     // Helper function to filter arrays based on include_in_report
     const filterByIncludeInReport = (array, itemKey = 'properties') => {
         return (array || []).filter((item) => {
@@ -560,7 +572,17 @@ function GenerateReportComponent({ evidenceItem }) {
                                                 {etype.type}
                                             </Badge>
                                             {etype.evidenceType?.properties?.title && (
-                                                <Heading as="h4" size="xs" color="gray.700">
+                                                <Heading
+                                                    as="h4"
+                                                    size="xs"
+                                                    color="gray.700"
+                                                    cursor="pointer"
+                                                    _hover={{ color: 'teal.600', textDecoration: 'underline' }}
+                                                    onClick={() => handleImplementationClick(
+                                                        etype.type,
+                                                        etype.evidenceType?.properties?.unique_id
+                                                    )}
+                                                >
                                                     {etype.evidenceType.properties.title}
                                                 </Heading>
                                             )}

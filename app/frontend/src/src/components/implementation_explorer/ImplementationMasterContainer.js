@@ -31,7 +31,7 @@ function ImplementationExplorer() {
         'InternalPolicy'
     ];
 
-    const { implementationType } = useParams();
+    const { implementationType, implementationId } = useParams(); // Get both params
     const navigate = useNavigate();
     const [selectedType, setSelectedType] = useState(implementationType || implementationTypes[0]);
     const { isOpen, onOpen, onClose } = useDisclosure();
@@ -107,7 +107,10 @@ function ImplementationExplorer() {
             </Flex>
 
             {selectedType && (
-                <ImplementationTypeOverview implementationType={selectedType} />
+                <ImplementationTypeOverview
+                    implementationType={selectedType}
+                    initialImplementationId={implementationId} // Pass the ID if it exists
+                />
             )}
 
             <Modal isOpen={isOpen} onClose={handleModalClose} size="2xl">

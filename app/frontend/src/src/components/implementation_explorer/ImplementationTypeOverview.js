@@ -24,7 +24,8 @@ import {
     Alert,
     AlertIcon,
 } from '@chakra-ui/react';
-import { EditIcon, CheckIcon, CloseIcon } from '@chakra-ui/icons';
+import { EditIcon, CheckIcon, CloseIcon, LinkIcon } from '@chakra-ui/icons';
+import { useNavigate } from 'react-router-dom';
 import { updateImplementation } from '../../services/api/put';
 import { DataContext } from '../../context/DataContext';
 
@@ -35,20 +36,61 @@ import NotesViewer from './doc_components/NotesViewer';
 import MessagesViewer from './doc_components/MessagesViewer';
 import MetricsViewer from './doc_components/MetricsSection';
 
-function ImplementationTypeOverview({ implementationType }) {
+function ImplementationTypeOverview({ implementationType, initialImplementationId }) {
     const { data, refreshImplementations } = useContext(DataContext);
     const [selectedImpl, setSelectedImpl] = useState(null);
     const [isEditing, setIsEditing] = useState(false);
     const [editForm, setEditForm] = useState({ title: '', description: '' });
     const toast = useToast();
+    const navigate = useNavigate();
 
     const implementations = data.implementations?.[implementationType] || [];
 
+    // Handle initial selection based on URL parameter
     useEffect(() => {
-        if (implementations.length > 0 && !selectedImpl) {
-            setSelectedImpl(implementations[0]);
+        if (implementations.length > 0) {
+            let implToSelect = null;
+
+            if (initialImplementationId) {
+                // Find implementation by unique_id
+                implToSelect = implementations.find(impl =>
+                    impl.unique_id === initialImplementationId
+                );
+            }
+
+            // Default to first implementation if none found or no ID provided
+            if (!implToSelect && implementations.length > 0) {
+                implToSelect = implementations[0];
+            }
+
+            if (implToSelect && (!selectedImpl || selectedImpl.unique_id !== implToSelect.unique_id)) {
+                setSelectedImpl(implToSelect);
+            }
         }
-    }, [implementations, implementationType]); // eslint-disable-line react-hooks/exhaustive-deps
+    }, [implementations, initialImplementationId]); // eslint-disable-line react-hooks/exhaustive-deps
+
+    // Update URL when implementation is selected
+    const handleImplementationSelect = (impl) => {
+        setSelectedImpl(impl);
+        // Update URL with the unique_id
+        navigate(`/ati-explorer/implementations/${implementationType}/${impl.unique_id}`,
+            { replace: true }
+        );
+    };
+
+    // Copy link function
+    const copyImplementationLink = () => {
+        const url = `${window.location.origin}/ati-explorer/implementations/${implementationType}/${selectedImpl.unique_id}`;
+
+        navigator.clipboard.writeText(url);
+        toast({
+            title: "Link copied!",
+            description: "Direct link to this implementation copied to clipboard",
+            status: "success",
+            duration: 2000,
+            isClosable: true,
+        });
+    };
 
     const handleEdit = () => {
         setEditForm({
@@ -106,7 +148,7 @@ function ImplementationTypeOverview({ implementationType }) {
         (selectedImpl?.supporting_metrics?.length || 0);
 
     return (
-        <Flex h="700px" gap={6}>
+        <Flex h="80vh" gap={6}>
             {/* Left Panel - Implementation List */}
             <Box
                 w="35%"
@@ -132,7 +174,7 @@ function ImplementationTypeOverview({ implementationType }) {
                                 colorScheme="teal"
                                 size="sm"
                                 justifyContent="space-between"
-                                onClick={() => setSelectedImpl(impl)}
+                                onClick={() => handleImplementationSelect(impl)}
                                 textAlign="left"
                                 whiteSpace="normal"
                                 h="auto"
@@ -307,12 +349,6 @@ function ImplementationTypeOverview({ implementationType }) {
                                             </Text>
                                         )}
                                     </FormControl>
-
-                                    <Box>
-                                        <Badge colorScheme="purple" fontSize="xs" px={2} py={1} borderRadius="md">
-                                            ID: {selectedImpl.unique_id}
-                                        </Badge>
-                                    </Box>
                                 </VStack>
                             </TabPanel>
 
@@ -387,12 +423,16 @@ function ImplementationTypeOverview({ implementationType }) {
                                         formatDate={formatDate}
                                     />
 
+                                    <Divider borderColor="gray.200" />
+
                                     <NotesViewer
                                         notes={selectedImpl.supporting_notes || []}
                                         implementation_id={selectedImpl.unique_id}
                                         implementation_type={implementationType}
                                         formatDate={formatDate}
                                     />
+
+                                    <Divider borderColor="gray.200" />
 
                                     <MessagesViewer
                                         messages={selectedImpl.supporting_messages || []}
@@ -401,13 +441,13 @@ function ImplementationTypeOverview({ implementationType }) {
                                         formatDate={formatDate}
                                     />
 
+                                    <Divider borderColor="gray.200" />
+
                                     <MetricsViewer
                                         metrics={selectedImpl.supporting_metrics || []}
                                         implementation_id={selectedImpl.unique_id}
                                         implementation_type={implementationType}
                                     />
-                                    <Divider borderColor="gray.200" />
-
                                 </VStack>
                             </TabPanel>
                         </TabPanels>
