@@ -373,6 +373,8 @@ function ImplementationTypeOverview({ implementationType }) {
                                 <VStack align="stretch" spacing={6}>
                                     <DocumentsViewer
                                         documents={selectedImpl.supporting_documents || []}
+                                        implementation_id={selectedImpl.unique_id}
+                                        implementation_type={implementationType}
                                         formatDate={formatDate}
                                     />
 
@@ -380,26 +382,32 @@ function ImplementationTypeOverview({ implementationType }) {
 
                                     <WebpagesViewer
                                         webpages={selectedImpl.supporting_webpages || []}
+                                        implementation_id={selectedImpl.unique_id}
+                                        implementation_type={implementationType}
                                         formatDate={formatDate}
                                     />
-
-                                    <Divider borderColor="gray.200" />
 
                                     <NotesViewer
                                         notes={selectedImpl.supporting_notes || []}
+                                        implementation_id={selectedImpl.unique_id}
+                                        implementation_type={implementationType}
                                         formatDate={formatDate}
                                     />
-
-                                    <Divider borderColor="gray.200" />
 
                                     <MessagesViewer
                                         messages={selectedImpl.supporting_messages || []}
+                                        implementation_id={selectedImpl.unique_id}
+                                        implementation_type={implementationType}
                                         formatDate={formatDate}
                                     />
 
+                                    <MetricsViewer
+                                        metrics={selectedImpl.supporting_metrics || []}
+                                        implementation_id={selectedImpl.unique_id}
+                                        implementation_type={implementationType}
+                                    />
                                     <Divider borderColor="gray.200" />
 
-                                    <MetricsViewer metrics={selectedImpl.supporting_metrics || []} />
                                 </VStack>
                             </TabPanel>
                         </TabPanels>

@@ -440,22 +440,27 @@ function ResponsiblePersons({ persons, compositeKey, evidenceData }) {
 }
 
 const ImplementingPersonsManager = React.memo(({ yearIdentifier }) => {
-    const { data, loadAllIndividuals, loadSingleWorkingGroupData } = useContext(DataContext);
+    const { loadSingleWorkingGroupData } = useContext(DataContext);
+    const { refreshAllIndividuals, individuals } = useContext(UserContext);
     const { currentWorkingGroup } = useSettings();
     const [selectedPerson, setSelectedPerson] = useState('');
+    const [isAssigning, setIsAssigning] = useState(false);
+    const [removingPersonId, setRemovingPersonId] = useState(null);
     const toast = useToast();
-    const assignedPersons = data.individuals?.filter(
+
+    const assignedPersons = individuals?.filter(
         person => person.yearSuccessEvidences.some(yse => yse.year_identifier === yearIdentifier)
     ) || [];
 
     useEffect(() => {
-        if (!data.individuals) {
-            loadAllIndividuals();
+        if (!individuals) {
+            refreshAllIndividuals();
         }
-    }, [data.individuals, loadAllIndividuals]);
+    }, [individuals, refreshAllIndividuals]);
 
     const handleAssignPerson = async () => {
         if (!selectedPerson) return;
+        setIsAssigning(true);
         try {
             await assignPersonAsImplementor(selectedPerson, yearIdentifier);
             toast({
@@ -465,7 +470,13 @@ const ImplementingPersonsManager = React.memo(({ yearIdentifier }) => {
                 isClosable: true,
                 position: "top-right"
             });
-            loadSingleWorkingGroupData(currentWorkingGroup);
+
+            // Refresh both data sources
+            await Promise.all([
+                loadSingleWorkingGroupData(currentWorkingGroup),
+                refreshAllIndividuals()
+            ]);
+
             setSelectedPerson('');
         } catch (error) {
             toast({
@@ -476,10 +487,13 @@ const ImplementingPersonsManager = React.memo(({ yearIdentifier }) => {
                 isClosable: true,
                 position: "top-right"
             });
+        } finally {
+            setIsAssigning(false);
         }
     };
 
     const handleRemovePerson = async (personId) => {
+        setRemovingPersonId(personId);
         try {
             await unassignPersonAsImplementor(personId, yearIdentifier);
             toast({
@@ -489,7 +503,13 @@ const ImplementingPersonsManager = React.memo(({ yearIdentifier }) => {
                 isClosable: true,
                 position: "top-right"
             });
-            loadSingleWorkingGroupData(currentWorkingGroup);
+
+            // Refresh both data sources
+            await Promise.all([
+                loadSingleWorkingGroupData(currentWorkingGroup),
+                refreshAllIndividuals()
+            ]);
+
         } catch (error) {
             toast({
                 title: "Error removing person",
@@ -499,11 +519,13 @@ const ImplementingPersonsManager = React.memo(({ yearIdentifier }) => {
                 isClosable: true,
                 position: "top-right"
             });
+        } finally {
+            setRemovingPersonId(null);
         }
     };
 
     // Filter out individuals with the 'active' flag set to false
-    const availableIndividuals = data.individuals?.filter(individual => individual.active) || [];
+    const availableIndividuals = individuals?.filter(individual => individual.active) || [];
 
     return (
         <Box>
@@ -515,6 +537,7 @@ const ImplementingPersonsManager = React.memo(({ yearIdentifier }) => {
                     onChange={(e) => setSelectedPerson(e.target.value)}
                     fontSize="sm"
                     borderColor="teal.300"
+                    isDisabled={isAssigning}
                     _hover={{ borderColor: "teal.400" }}
                     _focus={{ borderColor: "teal.500", boxShadow: "0 0 0 1px teal.500" }}
                 >
@@ -524,7 +547,14 @@ const ImplementingPersonsManager = React.memo(({ yearIdentifier }) => {
                         </option>
                     ))}
                 </Select>
-                <Button size="sm" colorScheme="teal" onClick={handleAssignPerson}>
+                <Button
+                    size="sm"
+                    colorScheme="teal"
+                    onClick={handleAssignPerson}
+                    isLoading={isAssigning}
+                    loadingText="Assigning..."
+                    isDisabled={!selectedPerson || isAssigning}
+                >
                     Assign
                 </Button>
             </Flex>
@@ -548,6 +578,9 @@ const ImplementingPersonsManager = React.memo(({ yearIdentifier }) => {
                                     colorScheme="red"
                                     variant="solid"
                                     onClick={() => handleRemovePerson(person.unique_id)}
+                                    isLoading={removingPersonId === person.unique_id}
+                                    loadingText="Removing..."
+                                    isDisabled={removingPersonId !== null}
                                     _hover={{ bg: "red.600" }}
                                 >
                                     Remove

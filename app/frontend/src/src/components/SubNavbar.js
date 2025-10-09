@@ -1,20 +1,29 @@
-import React, { useEffect, useContext } from 'react';
+
 import { Flex, Button, Box } from '@chakra-ui/react';
+import React, { useEffect, useContext } from 'react';
 import { useLocation, Link } from 'react-router-dom';
 import { useSettings } from "../context/SettingsContext";
-import { DataContext } from '../context/DataContext';
+
 import {UserContext} from "../context/UserContext";
 
 function SubNavbar() {
     const location = useLocation();
-    const { updateCurrentWorkingGroup } = useSettings();
+    const { updateCurrentWorkingGroup, currentWorkingGroup } = useSettings();
     const { isUserAdmin } = useContext(UserContext);
 
     useEffect(() => {
         if (location.pathname.includes('/ati-explorer')) {
-            const path = location.pathname.split('/').pop();
-            if (['web', 'instructional-materials', 'procurement'].includes(path)) {
-                updateCurrentWorkingGroup(path);
+            const pathSegments = location.pathname.split('/');
+            // Get the segment after 'ati-explorer'
+            const atiExplorerIndex = pathSegments.indexOf('ati-explorer');
+            if (atiExplorerIndex !== -1 && pathSegments[atiExplorerIndex + 1]) {
+                const workingGroup = pathSegments[atiExplorerIndex + 1];
+
+                if (['web', 'instructional-materials', 'procurement'].includes(workingGroup)) {
+                    console.log("UPDATING", workingGroup);
+                    console.log("Current working group before update:", currentWorkingGroup);
+                    updateCurrentWorkingGroup(workingGroup);
+                }
             }
         }
     }, [location.pathname, updateCurrentWorkingGroup]);

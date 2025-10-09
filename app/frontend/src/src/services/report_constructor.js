@@ -8,10 +8,16 @@ import {
     ListItem,
     Divider,
     Stack,
-    Link, GridItem, VStack, HStack
+    Link,
+    VStack,
+    HStack,
+    Table,
+    Thead,
+    Tbody,
+    Tr,
+    Th,
+    Td
 } from '@chakra-ui/react';
-import {Grid} from "lucide-react";
-
 
 let datas = {
     "persons": [
@@ -315,11 +321,7 @@ function generateReport(evidenceItem) {
     return report;
 }
 
-
-
-
 function GenerateReportComponent({ evidenceItem }) {
-
     // Helper function to filter arrays based on include_in_report
     const filterByIncludeInReport = (array, itemKey = 'properties') => {
         return (array || []).filter((item) => {
@@ -347,7 +349,7 @@ function GenerateReportComponent({ evidenceItem }) {
     const filteredMessages = filterByIncludeInReport(evidenceItem.has_messages || [], 'message.properties');
     const filteredMetrics = filterByIncludeInReport(evidenceItem.has_metrics || [], 'metric.properties');
 
-    // Filter evidenceTypes
+    // Filter evidenceTypes and their nested content
     const filteredEvidenceTypes = (evidenceItem.evidenceTypes || []).map((etype) => {
         return {
             ...etype,
@@ -357,114 +359,117 @@ function GenerateReportComponent({ evidenceItem }) {
             msgs: filterByIncludeInReport(etype.msgs, 'properties'),
             metrics: filterByIncludeInReport(etype.metrics, 'properties'),
         };
-    }).filter(et => et);
+    }).filter(et => {
+        const hasContent = et.docs?.length || et.webs?.length ||
+            et.notes?.length || et.msgs?.length || et.metrics?.length;
+        return hasContent;
+    });
 
     return (
-        <Box p={4} bg="white" fontSize="sm">
-            <VStack align="stretch" spacing={4} textAlign="left">
+        <Box p={4} bg="white" fontSize="sm" textAlign="left">
+            <VStack align="stretch" spacing={0}>
 
                 {/* Indicator Information */}
                 {evidenceItem.indicator?.properties && (
-                    <Box textAlign="left">
-                        <Heading size="md" color="gray.800" mb={2} textAlign="left">
-                            Success Indicator {evidenceItem.indicator.properties.number}
-                        </Heading>
-                        <Text mb={1} textAlign="left">{evidenceItem.indicator.properties.success_indicator}</Text>
-                        <Text fontSize="xs" color="gray.600" textAlign="left">
-                            <strong>Composite Key:</strong> {evidenceItem.indicator.properties.composite_key}
-                        </Text>
-                        <Text fontSize="xs" color="gray.600" textAlign="left">
-                            <strong>Status:</strong> {evidenceItem.indicator.properties.removed ? 'Removed' : 'Active'}
-                        </Text>
-                        <Text fontSize="xs" color="gray.600" textAlign="left">
-                            <strong>Date Added:</strong> {evidenceItem.indicator.properties.date_added}
-                        </Text>
-                    </Box>
+                    <>
+                        <Box>
+                            <Heading as="h2" size="md" color="gray.800">
+                                Success Indicator {evidenceItem.indicator.properties.number}
+                            </Heading>
+                            <Text fontSize="sm" color="gray.700" mb={1}>
+                                {evidenceItem.indicator.properties.success_indicator}
+                            </Text>
+                            <Text fontSize="xs" color="gray.700">
+                                <Text as="span" fontWeight="semibold">Composite Key:</Text> {evidenceItem.indicator.properties.composite_key}
+                            </Text>
+                            <Text fontSize="xs" color="gray.700">
+                                <Text as="span" fontWeight="semibold">Status:</Text> {evidenceItem.indicator.properties.removed ? 'Removed' : 'Active'} |
+                                <Text as="span" fontWeight="semibold"> Date Added:</Text> {evidenceItem.indicator.properties.date_added}
+                            </Text>
+                        </Box>
+                        <Box height="16px" /> {/* Visual break */}
+                    </>
                 )}
-
-                <Divider />
 
                 {/* Evidence Information */}
                 {evidenceItem.evidence?.properties && (
-                    <Box textAlign="left">
-                        <Heading size="sm" color="gray.700" mb={2} textAlign="left">
-                            Evidence Information
-                        </Heading>
+                    <>
+                        <Box>
+                            <Heading as="h3" size="sm" color="teal.700" mb={2}>
+                                Evidence Information
+                            </Heading>
 
-                        <Text fontSize="xs" mb={1} textAlign="left">
-                            <strong>Year:</strong> {evidenceItem.evidence.properties.year_identifier}
-                        </Text>
-                        {evidenceItem.statusLevel?.properties && (
-                            <Text fontSize="xs" mb={1} textAlign="left">
-                                <strong>Status Level:</strong> {evidenceItem.statusLevel.properties.status_level}
+                            <Text fontSize="xs" color="gray.700" mb={1}>
+                                <Text as="span" fontWeight="semibold">Year:</Text> {evidenceItem.evidence.properties.year_identifier}
                             </Text>
-                        )}
-                        {'administrative_review_complete' in evidenceItem.evidence.properties && (
-                            <Text fontSize="xs" mb={2} textAlign="left">
-                                <strong>Admin Review:</strong> {
-                                evidenceItem.evidence.properties.administrative_review_complete ? 'Complete' : 'Pending'
-                            }
-                                {evidenceItem.evidence.properties.administrative_review_completed_date &&
-                                    ` (${evidenceItem.evidence.properties.administrative_review_completed_date})`
+                            {evidenceItem.statusLevel?.properties && (
+                                <Text fontSize="xs" color="gray.700" mb={1}>
+                                    <Text as="span" fontWeight="semibold">Status Level:</Text> {evidenceItem.statusLevel.properties.status_level}
+                                </Text>
+                            )}
+                            {'administrative_review_complete' in evidenceItem.evidence.properties && (
+                                <Text fontSize="xs" color="gray.700" mb={2}>
+                                    <Text as="span" fontWeight="semibold">Admin Review:</Text> {
+                                    evidenceItem.evidence.properties.administrative_review_complete ? 'Complete' : 'Pending'
                                 }
-                            </Text>
-                        )}
+                                    {evidenceItem.evidence.properties.administrative_review_completed_date &&
+                                        ` (${evidenceItem.evidence.properties.administrative_review_completed_date})`
+                                    }
+                                </Text>
+                            )}
 
-                        {/* Persons Involved */}
-                        {evidenceItem.persons?.length > 0 && (
-                            <Box mb={2} textAlign="left">
-                                <Text fontWeight="bold" fontSize="xs" textAlign="left">Persons Involved:</Text>
-                                <List spacing={0} fontSize="xs" ml={4} styleType="none">
-                                    {evidenceItem.persons.map((person) => {
-                                        if (!person?.properties) return null;
-                                        return (
-                                            <ListItem key={person.id} textAlign="left">
-                                                {person.properties.name} - {person.properties.title} ({person.properties.email})
-                                            </ListItem>
-                                        );
-                                    })}
-                                </List>
-                            </Box>
-                        )}
+                            {/* Persons */}
+                            {evidenceItem.persons?.length > 0 && (
+                                <Box mb={2}>
+                                    <Heading as="h4" size="xs" color="gray.700" mb={1}>
+                                        Persons Involved:
+                                    </Heading>
+                                    {evidenceItem.persons.map((person) => (
+                                        <Text key={person.id} fontSize="xs" color="gray.700" pl={3}>
+                                            • {person.properties.name} - {person.properties.title} ({person.properties.email})
+                                        </Text>
+                                    ))}
+                                </Box>
+                            )}
 
-                        {/* Admin Reviewers */}
-                        {evidenceItem.adminReviewers?.length > 0 && (
-                            <Box mb={2} textAlign="left">
-                                <Text fontWeight="bold" fontSize="xs" textAlign="left">Admin Reviewers:</Text>
-                                <List spacing={0} fontSize="xs" ml={4} styleType="none">
-                                    {evidenceItem.adminReviewers.map((reviewer) => {
-                                        if (!reviewer?.properties) return null;
-                                        return (
-                                            <ListItem key={reviewer.id} textAlign="left">
-                                                {reviewer.properties.name} - {reviewer.properties.title} ({reviewer.properties.email})
-                                            </ListItem>
-                                        );
-                                    })}
-                                </List>
-                            </Box>
-                        )}
-                    </Box>
+                            {/* Admin Reviewers */}
+                            {evidenceItem.adminReviewers?.length > 0 && (
+                                <Box>
+                                    <Heading as="h4" size="xs" color="gray.700" mb={1}>
+                                        Admin Reviewers:
+                                    </Heading>
+                                    {evidenceItem.adminReviewers.map((reviewer) => (
+                                        <Text key={reviewer.id} fontSize="xs" color="gray.700" pl={3}>
+                                            • {reviewer.properties.name} - {reviewer.properties.title}
+                                        </Text>
+                                    ))}
+                                </Box>
+                            )}
+                        </Box>
+                        <Box height="16px" /> {/* Visual break */}
+                    </>
                 )}
 
                 {/* Notes */}
                 {filteredNotes.length > 0 && (
                     <>
-                        <Divider />
-                        <Box textAlign="left">
-                            <Heading size="sm" color="gray.700" mb={2} textAlign="left">
+                        <Box>
+                            <Heading as="h3" size="sm" color="teal.700" mb={2}>
                                 Notes ({filteredNotes.length})
                             </Heading>
                             <Stack spacing={2}>
                                 {filteredNotes.map((noteItem, index) => {
-                                    if (!noteItem?.note?.properties) return null;
                                     const noteProps = noteItem.note.properties;
                                     return (
-                                        <Box key={index} pl={4} fontSize="xs" textAlign="left">
-                                            <Text textAlign="left">
-                                                <strong>{noteProps.date_created || 'No date'}:</strong> {noteProps.content}
-                                                {noteItem.created_by?.properties && (
-                                                    <Text as="span" color="gray.500"> (by {noteItem.created_by.properties.name})</Text>
-                                                )}
+                                        <Box key={index} pl={3} borderLeft="3px solid" borderLeftColor="gray.200">
+                                            <Text fontSize="xs" fontWeight="semibold" color="gray.700">
+                                                {noteProps.date_created || 'No date'}
+                                                {noteItem.created_by?.properties &&
+                                                    <Text as="span" fontWeight="normal"> - {noteItem.created_by.properties.name}</Text>
+                                                }
+                                            </Text>
+                                            <Text fontSize="xs" color="gray.700" mt={1}>
+                                                {noteProps.content}
                                             </Text>
                                             {(noteProps.file_path || noteProps.uri_path) && (
                                                 <Link
@@ -472,11 +477,10 @@ function GenerateReportComponent({ evidenceItem }) {
                                                     isExternal
                                                     color="teal.600"
                                                     fontSize="xs"
-                                                    display="block"
-                                                    ml={4}
-                                                    textAlign="left"
+                                                    mt={1}
+                                                    display="inline-block"
                                                 >
-                                                    Attachment: {noteProps.name || 'Link'}
+                                                    📎 {noteProps.name || 'Attachment'}
                                                 </Link>
                                             )}
                                         </Box>
@@ -484,207 +488,209 @@ function GenerateReportComponent({ evidenceItem }) {
                                 })}
                             </Stack>
                         </Box>
+                        <Box height="16px" /> {/* Visual break */}
                     </>
                 )}
 
                 {/* Messages */}
                 {filteredMessages.length > 0 && (
                     <>
-                        <Divider />
-                        <Box textAlign="left">
-                            <Heading size="sm" color="gray.700" mb={2} textAlign="left">
+                        <Box>
+                            <Heading as="h3" size="sm" color="teal.700" mb={2}>
                                 Messages ({filteredMessages.length})
                             </Heading>
                             <Stack spacing={2}>
                                 {filteredMessages.map((messageItem, index) => {
-                                    if (!messageItem?.message?.properties) return null;
                                     const messageProps = messageItem.message.properties;
                                     return (
-                                        <Box key={index} pl={4} fontSize="xs" textAlign="left">
-                                            <Text textAlign="left">
-                                                <strong>{messageProps.date_sent || 'No date'}:</strong> {messageProps.content}
-                                                {messageItem.created_by?.properties && (
-                                                    <Text as="span" color="gray.500"> (sent by {messageItem.created_by.properties.name})</Text>
-                                                )}
+                                        <Box key={index} pl={3} borderLeft="3px solid" borderLeftColor="gray.200">
+                                            <Text fontSize="xs" fontWeight="semibold" color="gray.700">
+                                                {messageProps.date_sent || 'No date'}
+                                                {messageItem.created_by?.properties &&
+                                                    <Text as="span" fontWeight="normal"> - {messageItem.created_by.properties.name}</Text>
+                                                }
                                             </Text>
-                                            {(messageProps.file_path || messageProps.uri_path) && (
-                                                <Link
-                                                    href={messageProps.file_path || messageProps.uri_path}
-                                                    isExternal
-                                                    color="teal.600"
-                                                    fontSize="xs"
-                                                    display="block"
-                                                    ml={4}
-                                                    textAlign="left"
-                                                >
-                                                    Attachment: {messageProps.name || 'Link'}
-                                                </Link>
-                                            )}
+                                            <Text fontSize="xs" color="gray.700" mt={1}>
+                                                {messageProps.content}
+                                            </Text>
                                         </Box>
                                     );
                                 })}
                             </Stack>
                         </Box>
+                        <Box height="16px" /> {/* Visual break */}
                     </>
                 )}
 
                 {/* Metrics */}
                 {filteredMetrics.length > 0 && (
                     <>
-                        <Divider />
-                        <Box textAlign="left">
-                            <Heading size="sm" color="gray.700" mb={2} textAlign="left">
+                        <Box>
+                            <Heading as="h3" size="sm" color="teal.700" mb={2}>
                                 Metrics ({filteredMetrics.length})
                             </Heading>
-                            <List spacing={0} fontSize="xs" ml={4} styleType="none">
-                                {filteredMetrics.map((metricItem, index) => {
-                                    if (!metricItem?.metric?.properties) return null;
-                                    return (
-                                        <ListItem key={index} textAlign="left">
-                                            <strong>{metricItem.metric.properties.name}:</strong> {metricItem.metric.properties.value}
-                                            {metricItem.created_by?.properties && (
-                                                <Text as="span" color="gray.500" ml={2}>
-                                                    (by {metricItem.created_by.properties.name})
-                                                </Text>
-                                            )}
-                                        </ListItem>
-                                    );
-                                })}
-                            </List>
+                            <Stack spacing={1}>
+                                {filteredMetrics.map((metricItem, index) => (
+                                    <Text key={index} fontSize="xs" color="gray.700" pl={3}>
+                                        • <Text as="span" fontWeight="semibold">{metricItem.metric.properties.name}:</Text>{' '}
+                                        {metricItem.metric.properties.value}
+                                        {metricItem.created_by?.properties &&
+                                            <Text as="span" color="gray.700"> ({metricItem.created_by.properties.name})</Text>
+                                        }
+                                    </Text>
+                                ))}
+                            </Stack>
                         </Box>
+                        <Box height="16px" /> {/* Visual break */}
                     </>
                 )}
 
-                {/* Evidence Types / Implementation Evidence */}
+                {/* Implementation Evidence */}
                 {filteredEvidenceTypes.length > 0 && (
                     <>
-                        <Divider />
                         <Box>
-                            <Heading size="sm" color="gray.700" mb={2}>
+                            <Heading as="h3" size="sm" color="teal.700" mb={2}>
                                 Implementation Evidence
                             </Heading>
                             <Stack spacing={3}>
-                                {filteredEvidenceTypes.map((etype, index) => {
-                                    if (!etype) return null;
-                                    const { docs, webs, notes, msgs, metrics } = etype;
-
-                                    // Skip if this evidence type has no content
-                                    if (!docs?.length && !webs?.length && !notes?.length && !msgs?.length && !metrics?.length) {
-                                        return null;
-                                    }
-
-                                    return (
-                                        <Box key={index} pl={4}>
-                                            <Text fontWeight="bold" fontSize="xs" mb={1}>
-                                                {etype.type || 'Unknown Type'}
-                                                {etype.evidenceType?.properties?.title &&
-                                                    `: ${etype.evidenceType.properties.title}`
-                                                }
-                                            </Text>
-
-                                            {etype.evidenceType?.properties?.description && (
-                                                <Text fontSize="xs" color="gray.600" mb={1} pl={4}>
-                                                    {etype.evidenceType.properties.description}
-                                                </Text>
+                                {filteredEvidenceTypes.map((etype, index) => (
+                                    <Box key={index} pl={3} borderLeft="3px solid" borderLeftColor="teal.200">
+                                        <HStack spacing={2} mb={2}>
+                                            <Badge colorScheme="teal" fontSize="xs">
+                                                {etype.type}
+                                            </Badge>
+                                            {etype.evidenceType?.properties?.title && (
+                                                <Heading as="h4" size="xs" color="gray.700">
+                                                    {etype.evidenceType.properties.title}
+                                                </Heading>
                                             )}
+                                        </HStack>
 
+                                        {etype.evidenceType?.properties?.description && (
+                                            <Text fontSize="xs" color="gray.700" mb={2}>
+                                                {etype.evidenceType.properties.description}
+                                            </Text>
+                                        )}
+
+                                        <Stack spacing={2}>
                                             {/* Documents */}
-                                            {docs?.length > 0 && (
-                                                <Box pl={4} mb={1}>
-                                                    <Text fontWeight="semibold" fontSize="xs">Documents:</Text>
-                                                    {docs.map((doc) => {
-                                                        if (!doc?.properties) return null;
-                                                        return (
-                                                            <Link
-                                                                key={doc.id}
-                                                                href={doc.properties.file_path || doc.properties.uri_path}
-                                                                isExternal
-                                                                color="teal.600"
-                                                                fontSize="xs"
-                                                                display="block"
-                                                                pl={2}
-                                                            >
-                                                                {doc.properties.name}
-                                                            </Link>
-                                                        );
-                                                    })}
+                                            {etype.docs?.length > 0 && (
+                                                <Box>
+                                                    <Heading as="h5" size="xs" color="gray.700" fontWeight="semibold">
+                                                        Documents:
+                                                    </Heading>
+                                                    <Stack spacing={1} pl={3}>
+                                                        {etype.docs.map((doc) => (
+                                                            <Box key={doc.id}>
+                                                                <HStack spacing={2} align="baseline">
+                                                                    <Link
+                                                                        href={doc.properties.file_path || doc.properties.uri_path}
+                                                                        isExternal
+                                                                        color="teal.600"
+                                                                        fontSize="xs"
+                                                                    >
+                                                                        • {doc.properties.name}
+                                                                    </Link>
+                                                                    <HStack spacing={1}>
+                                                                        {(doc.properties.is_administrative_review_documentation === "True" || doc.properties.is_administrative_review_documentation === true) &&
+                                                                            <Badge colorScheme="purple" fontSize="10px">Admin Review</Badge>
+                                                                        }
+                                                                        {(doc.properties.is_milestone_and_measures_documentation === "True" || doc.properties.is_milestone_and_measures_documentation === true) &&
+                                                                            <Badge colorScheme="blue" fontSize="10px">Milestones</Badge>
+                                                                        }
+                                                                        {(doc.properties.depreciated === true) &&
+                                                                            <Badge colorScheme="orange" fontSize="10px">Depreciated</Badge>
+                                                                        }
+                                                                    </HStack>
+                                                                </HStack>
+                                                            </Box>
+                                                        ))}
+                                                    </Stack>
                                                 </Box>
                                             )}
 
                                             {/* Webpages */}
-                                            {webs?.length > 0 && (
-                                                <Box pl={4} mb={1}>
-                                                    <Text fontWeight="semibold" fontSize="xs">Webpages:</Text>
-                                                    {webs.map((web) => {
-                                                        if (!web?.properties) return null;
-                                                        return (
-                                                            <Link
-                                                                key={web.id}
-                                                                href={web.properties.url}
-                                                                isExternal
-                                                                color="teal.600"
-                                                                fontSize="xs"
-                                                                display="block"
-                                                                pl={2}
-                                                            >
-                                                                {web.properties.title}
-                                                            </Link>
-                                                        );
-                                                    })}
+                                            {etype.webs?.length > 0 && (
+                                                <Box>
+                                                    <Heading as="h5" size="xs" color="gray.700" fontWeight="semibold">
+                                                        Webpages:
+                                                    </Heading>
+                                                    <Stack spacing={1} pl={3}>
+                                                        {etype.webs.map((web) => (
+                                                            <Box key={web.id}>
+                                                                <HStack spacing={2} align="baseline">
+                                                                    <Link
+                                                                        href={web.properties.url}
+                                                                        isExternal
+                                                                        color="teal.600"
+                                                                        fontSize="xs"
+                                                                    >
+                                                                        • {web.properties.name || web.properties.title}
+                                                                    </Link>
+                                                                    <HStack spacing={1}>
+                                                                        {(web.properties.no_longer_exists === true) &&
+                                                                            <Badge colorScheme="red" fontSize="10px">No Longer Exists</Badge>
+                                                                        }
+                                                                        {(web.properties.depreciated === true) &&
+                                                                            <Badge colorScheme="orange" fontSize="10px">Depreciated</Badge>
+                                                                        }
+                                                                    </HStack>
+                                                                </HStack>
+                                                                {web.properties.description && (
+                                                                    <Text fontSize="xs" color="gray.700" pl={3} mt={1}>
+                                                                        {web.properties.description}
+                                                                    </Text>
+                                                                )}
+                                                            </Box>
+                                                        ))}
+                                                    </Stack>
                                                 </Box>
                                             )}
 
                                             {/* Implementation Notes */}
-                                            {notes?.length > 0 && (
-                                                <Box pl={4} mb={1}>
-                                                    <Text fontWeight="semibold" fontSize="xs">Notes:</Text>
-                                                    {notes.map((note, idx) => {
-                                                        if (!note?.properties) return null;
-                                                        return (
-                                                            <Box key={idx} pl={2} fontSize="xs">
-                                                                <Text>
-                                                                    <strong>{note.properties.date_created || 'No date'}:</strong> {note.properties.content}
-                                                                </Text>
-                                                            </Box>
-                                                        );
-                                                    })}
+                                            {etype.notes?.length > 0 && (
+                                                <Box>
+                                                    <Heading as="h5" size="xs" color="gray.700" fontWeight="semibold">
+                                                        Notes:
+                                                    </Heading>
+                                                    {etype.notes.map((note, idx) => (
+                                                        <Text key={idx} fontSize="xs" color="gray.700" pl={3}>
+                                                            • {note.properties.date_created || 'No date'}: {note.properties.content}
+                                                        </Text>
+                                                    ))}
                                                 </Box>
                                             )}
 
                                             {/* Implementation Messages */}
-                                            {msgs?.length > 0 && (
-                                                <Box pl={4} mb={1}>
-                                                    <Text fontWeight="semibold" fontSize="xs">Messages:</Text>
-                                                    {msgs.map((msg, idx) => {
-                                                        if (!msg?.properties) return null;
-                                                        return (
-                                                            <Box key={idx} pl={2} fontSize="xs">
-                                                                <Text>
-                                                                    <strong>{msg.properties.date_sent || 'No date'}:</strong> {msg.properties.content}
-                                                                </Text>
-                                                            </Box>
-                                                        );
-                                                    })}
+                                            {etype.msgs?.length > 0 && (
+                                                <Box>
+                                                    <Heading as="h5" size="xs" color="gray.700" fontWeight="semibold">
+                                                        Messages:
+                                                    </Heading>
+                                                    {etype.msgs.map((msg, idx) => (
+                                                        <Text key={idx} fontSize="xs" color="gray.700" pl={3}>
+                                                            • {msg.properties.date_sent || 'No date'}: {msg.properties.content}
+                                                        </Text>
+                                                    ))}
                                                 </Box>
                                             )}
 
                                             {/* Implementation Metrics */}
-                                            {metrics?.length > 0 && (
-                                                <Box pl={4} mb={1}>
-                                                    <Text fontWeight="semibold" fontSize="xs">Metrics:</Text>
-                                                    {metrics.map((metric, idx) => {
-                                                        if (!metric?.properties) return null;
-                                                        return (
-                                                            <Text key={idx} pl={2} fontSize="xs">
-                                                                <strong>{metric.properties.name}:</strong> {metric.properties.value}
-                                                            </Text>
-                                                        );
-                                                    })}
+                                            {etype.metrics?.length > 0 && (
+                                                <Box>
+                                                    <Heading as="h5" size="xs" color="gray.700" fontWeight="semibold">
+                                                        Metrics:
+                                                    </Heading>
+                                                    {etype.metrics.map((metric, idx) => (
+                                                        <Text key={idx} fontSize="xs" color="gray.700" pl={3}>
+                                                            • {metric.properties.name}: <Text as="span" fontWeight="semibold">{metric.properties.value}</Text>
+                                                        </Text>
+                                                    ))}
                                                 </Box>
                                             )}
-                                        </Box>
-                                    );
-                                })}
+                                        </Stack>
+                                    </Box>
+                                ))}
                             </Stack>
                         </Box>
                     </>
@@ -693,8 +699,4 @@ function GenerateReportComponent({ evidenceItem }) {
         </Box>
     );
 }
-
-
-
-
 export { generateReport, GenerateReportComponent };
