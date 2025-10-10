@@ -19,6 +19,7 @@ import {
     Td
 } from '@chakra-ui/react';
 import {useNavigate} from "react-router-dom";
+import {getEditUrlFromCompositeKey} from "./utils/tools";
 
 let datas = {
     "persons": [
@@ -176,157 +177,249 @@ let datas = {
 function generateReport(evidenceItem) {
     let report = '';
 
-    // If the evidenceItem has an indicator, extract indicator information
-    if (evidenceItem.indicator) {
+    // Helper function to filter arrays based on include_in_report
+    const filterByIncludeInReport = (array, itemKey = 'properties') => {
+        return (array || []).filter((item) => {
+            if (!item) return false;
+
+            // Handle nested property access for notes/messages/metrics
+            if (itemKey.includes('.')) {
+                const keys = itemKey.split('.');
+                let value = item;
+                for (const key of keys) {
+                    value = value?.[key];
+                    if (!value) return false;
+                }
+                return value.include_in_report !== false;
+            }
+
+            if (!item[itemKey]) return false;
+            if (item[itemKey].include_in_report === false) return false;
+            return true;
+        });
+    };
+
+    // Filter main-level items
+    const filteredNotes = filterByIncludeInReport(evidenceItem.has_notes || [], 'note.properties');
+    const filteredMessages = filterByIncludeInReport(evidenceItem.has_messages || [], 'message.properties');
+    const filteredMetrics = filterByIncludeInReport(evidenceItem.has_metrics || [], 'metric.properties');
+
+    // Filter evidenceTypes and their nested content
+    const filteredEvidenceTypes = (evidenceItem.evidenceTypes || []).map((etype) => {
+        return {
+            ...etype,
+            docs: filterByIncludeInReport(etype.docs, 'properties'),
+            webs: filterByIncludeInReport(etype.webs, 'properties'),
+            notes: filterByIncludeInReport(etype.notes, 'properties'),
+            msgs: filterByIncludeInReport(etype.msgs, 'properties'),
+            metrics: filterByIncludeInReport(etype.metrics, 'properties'),
+        };
+    }).filter(et => {
+        const hasContent = et.docs?.length || et.webs?.length ||
+            et.notes?.length || et.msgs?.length || et.metrics?.length;
+        return hasContent;
+    });
+
+    // Indicator Information
+    if (evidenceItem.indicator?.properties) {
         const indicatorProps = evidenceItem.indicator.properties;
-        report += `Success Indicator ${indicatorProps.number}: ${indicatorProps.success_indicator}\n`;
+        report += `${evidenceItem.evidence.properties.year_identifier}\n`;
+        report += `${indicatorProps.success_indicator}\n`;
         report += `Composite Key: ${indicatorProps.composite_key}\n`;
-        report += `Removed: ${indicatorProps.removed ? 'Yes' : 'No'}\n`;
-        report += `Date Added: ${indicatorProps.date_added}\n\n`;
+        report += `Status: ${indicatorProps.removed ? 'Removed' : 'Active'} | Date Added: ${indicatorProps.date_added}\n\n`;
     }
 
-    // Since we're working with a single evidence item, process it directly
-    report += `Evidence:\n`;
+    // Evidence Information
+    if (evidenceItem.evidence?.properties) {
+        report += `EVIDENCE INFORMATION\n`;
+        report += `${'='.repeat(50)}\n`;
 
-    // Evidence properties
-    const evidenceProps = evidenceItem.evidence.properties;
-    report += `  Year Identifier: ${evidenceProps.year_identifier}\n`;
+        const evidenceProps = evidenceItem.evidence.properties;
+        report += `Year: ${evidenceProps.year_identifier}\n`;
 
-    // Status Level
-    if (evidenceItem.statusLevel) {
-        const statusProps = evidenceItem.statusLevel.properties;
-        report += `  Status Level: ${statusProps.status_level}\n`;
-    }
+        if (evidenceItem.statusLevel?.properties) {
+            report += `Status Level: ${evidenceItem.statusLevel.properties.status_level}\n`;
+        }
 
-    // Persons involved
-    if (evidenceItem.persons && evidenceItem.persons.length > 0) {
-        report += `  Persons Involved:\n`;
-        evidenceItem.persons.forEach((person) => {
-            const personProps = person.properties;
-            report += `    - Name: ${personProps.name}, Title: ${personProps.title}, Email: ${personProps.email}\n`;
-        });
-    }
+        if ('administrative_review_complete' in evidenceProps) {
+            report += `Admin Review: ${evidenceProps.administrative_review_complete ? 'Complete' : 'Pending'}`;
+            if (evidenceProps.administrative_review_completed_date) {
+                report += ` (${evidenceProps.administrative_review_completed_date})`;
+            }
+            report += '\n';
+        }
 
-    // Admin Reviewers
-    if (evidenceItem.adminReviewers && evidenceItem.adminReviewers.length > 0) {
-        report += `  Admin Reviewers:\n`;
-        evidenceItem.adminReviewers.forEach((reviewer) => {
-            const reviewerProps = reviewer.properties;
-            report += `    - Name: ${reviewerProps.name}, Title: ${reviewerProps.title}, Email: ${reviewerProps.email}\n`;
-        });
+        // Persons Involved
+        if (evidenceItem.persons?.length > 0) {
+            report += `\nPersons Involved:\n`;
+            evidenceItem.persons.forEach((person) => {
+                const personProps = person.properties;
+                report += `  • ${personProps.name} - ${personProps.title} (${personProps.email})\n`;
+            });
+        }
+
+        // Admin Reviewers
+        if (evidenceItem.adminReviewers?.length > 0) {
+            report += `\nAdmin Reviewers:\n`;
+            evidenceItem.adminReviewers.forEach((reviewer) => {
+                const reviewerProps = reviewer.properties;
+                report += `  • ${reviewerProps.name} - ${reviewerProps.title}\n`;
+            });
+        }
+        report += '\n';
     }
 
     // Notes
-    if (evidenceItem.has_notes && evidenceItem.has_notes.length > 0) {
-        report += `  Notes:\n`;
-        evidenceItem.has_notes.forEach((noteItem) => {
+    if (filteredNotes.length > 0) {
+        report += `NOTES (${filteredNotes.length})\n`;
+        report += `${'='.repeat(50)}\n`;
+        filteredNotes.forEach((noteItem) => {
             const noteProps = noteItem.note.properties;
-            const noteDate = noteProps.date_created || 'N/A';
-            report += `    - ${noteDate}: ${noteProps.content}\n`;
-            if (noteItem.created_by) {
-                const creatorProps = noteItem.created_by.properties;
-                report += `      (Created by: ${creatorProps.name})\n`;
+            report += `${noteProps.date_created || 'No date'}`;
+            if (noteItem.created_by?.properties) {
+                report += ` - ${noteItem.created_by.properties.name}`;
             }
+            report += '\n';
+            report += `  ${noteProps.content}\n`;
+            if (noteProps.file_path || noteProps.uri_path) {
+                report += `  Attachment: ${noteProps.name || 'Attachment'} - ${noteProps.file_path || noteProps.uri_path}\n`;
+            }
+            report += '\n';
         });
     }
 
     // Messages
-    if (evidenceItem.has_messages && evidenceItem.has_messages.length > 0) {
-        report += `  Messages:\n`;
-        evidenceItem.has_messages.forEach((messageItem) => {
+    if (filteredMessages.length > 0) {
+        report += `MESSAGES (${filteredMessages.length})\n`;
+        report += `${'='.repeat(50)}\n`;
+        filteredMessages.forEach((messageItem) => {
             const messageProps = messageItem.message.properties;
-            const messageDate = messageProps.date_sent || 'N/A';
-            report += `    - ${messageDate}: ${messageProps.content}\n`;
-            if (messageItem.created_by) {
-                const creatorProps = messageItem.created_by.properties;
-                report += `      (Sent by: ${creatorProps.name})\n`;
+            report += `${messageProps.date_sent || 'No date'}`;
+            if (messageItem.created_by?.properties) {
+                report += ` - ${messageItem.created_by.properties.name}`;
             }
+            report += '\n';
+            report += `  ${messageProps.content}\n\n`;
         });
     }
 
     // Metrics
-    if (evidenceItem.has_metrics && evidenceItem.has_metrics.length > 0) {
-        report += `  Metrics:\n`;
-        evidenceItem.has_metrics.forEach((metricItem) => {
+    if (filteredMetrics.length > 0) {
+        report += `METRICS (${filteredMetrics.length})\n`;
+        report += `${'='.repeat(50)}\n`;
+        filteredMetrics.forEach((metricItem) => {
             const metricProps = metricItem.metric.properties;
-            report += `    - Metric: ${metricProps.name}, Value: ${metricProps.value}\n`;
-            if (metricItem.created_by) {
-                const creatorProps = metricItem.created_by.properties;
-                report += `      (Recorded by: ${creatorProps.name})\n`;
+            report += `  • ${metricProps.name}: ${metricProps.value}`;
+            if (metricItem.created_by?.properties) {
+                report += ` (${metricItem.created_by.properties.name})`;
             }
+            report += '\n';
         });
+        report += '\n';
     }
 
-    // Evidence Types
-    if (evidenceItem.evidenceTypes && evidenceItem.evidenceTypes.length > 0) {
-        report += `  Evidence Types:\n`;
-        evidenceItem.evidenceTypes.forEach((etype) => {
-            report += `    - Type: ${etype.type || 'N/A'}\n`;
-            if (etype.evidenceType) {
-                const etypeProps = etype.evidenceType.properties;
-                report += `      Title: ${etypeProps.title}\n`;
-                report += `      Description: ${etypeProps.description}\n`;
+    // Implementation Evidence
+    if (filteredEvidenceTypes.length > 0) {
+        report += `IMPLEMENTATION EVIDENCE\n`;
+        report += `${'='.repeat(50)}\n`;
+
+        filteredEvidenceTypes.forEach((etype) => {
+            report += `\n[${etype.type}] `;
+            if (etype.evidenceType?.properties?.title) {
+                report += etype.evidenceType.properties.title;
+            }
+            report += '\n';
+
+            if (etype.evidenceType?.properties?.description) {
+                report += `  ${etype.evidenceType.properties.description}\n`;
             }
 
             // Documents
-            if (etype.docs && etype.docs.length > 0) {
-                report += `      Documents:\n`;
+            if (etype.docs?.length > 0) {
+                report += `\n  Documents:\n`;
                 etype.docs.forEach((doc) => {
                     const docProps = doc.properties;
-                    report += `        * ${docProps.name}: ${docProps.file_path || docProps.uri_path}\n`;
-                });
-            }
+                    report += `    • ${docProps.name}`;
 
-            // Notes
-            if (etype.notes && etype.notes.length > 0) {
-                report += `      Notes:\n`;
-                etype.notes.forEach((note) => {
-                    const noteProps = note.properties;
-                    const noteDate = noteProps.date_created || 'N/A';
-                    report += `        * ${noteDate}: ${noteProps.content}\n`;
-                });
-            }
-
-            // Messages
-            if (etype.msgs && etype.msgs.length > 0) {
-                report += `      Messages:\n`;
-                etype.msgs.forEach((msg) => {
-                    const msgProps = msg.properties;
-                    const msgDate = msgProps.date_sent || 'N/A';
-                    report += `        * ${msgDate}: ${msgProps.content}\n`;
-                });
-            }
-
-            // Metrics
-            if (etype.metrics && etype.metrics.length > 0) {
-                report += `      Metrics:\n`;
-                etype.metrics.forEach((metric) => {
-                    const metricProps = metric.properties;
-                    report += `        * Metric: ${metricProps.name}, Value: ${metricProps.value}\n`;
+                    // Add badges as text
+                    const badges = [];
+                    if (docProps.is_administrative_review_documentation === "True" || docProps.is_administrative_review_documentation === true) {
+                        badges.push('Admin Review');
+                    }
+                    if (docProps.is_milestone_and_measures_documentation === "True" || docProps.is_milestone_and_measures_documentation === true) {
+                        badges.push('Milestones');
+                    }
+                    if (docProps.depreciated === true) {
+                        badges.push('Depreciated');
+                    }
+                    if (badges.length > 0) {
+                        report += ` [${badges.join(', ')}]`;
+                    }
+                    report += '\n';
+                    report += `      ${docProps.file_path || docProps.uri_path}\n`;
                 });
             }
 
             // Webpages
-            if (etype.webs && etype.webs.length > 0) {
-                report += `      Webpages:\n`;
+            if (etype.webs?.length > 0) {
+                report += `\n  Webpages:\n`;
                 etype.webs.forEach((web) => {
                     const webProps = web.properties;
-                    report += `        * ${webProps.title}: ${webProps.url}\n`;
+                    report += `    • ${webProps.name || webProps.title}`;
+
+                    // Add badges as text
+                    const badges = [];
+                    if (webProps.no_longer_exists === true) {
+                        badges.push('No Longer Exists');
+                    }
+                    if (webProps.depreciated === true) {
+                        badges.push('Depreciated');
+                    }
+                    if (badges.length > 0) {
+                        report += ` [${badges.join(', ')}]`;
+                    }
+                    report += '\n';
+                    report += `      ${webProps.url}\n`;
+                    if (webProps.description) {
+                        report += `      ${webProps.description}\n`;
+                    }
+                });
+            }
+
+            // Implementation Notes
+            if (etype.notes?.length > 0) {
+                report += `\n  Notes:\n`;
+                etype.notes.forEach((note) => {
+                    const noteProps = note.properties;
+                    report += `    • ${noteProps.date_created || 'No date'}: ${noteProps.content}\n`;
+                });
+            }
+
+            // Implementation Messages
+            if (etype.msgs?.length > 0) {
+                report += `\n  Messages:\n`;
+                etype.msgs.forEach((msg) => {
+                    const msgProps = msg.properties;
+                    report += `    • ${msgProps.date_sent || 'No date'}: ${msgProps.content}\n`;
+                });
+            }
+
+            // Implementation Metrics
+            if (etype.metrics?.length > 0) {
+                report += `\n  Metrics:\n`;
+                etype.metrics.forEach((metric) => {
+                    const metricProps = metric.properties;
+                    report += `    • ${metricProps.name}: ${metricProps.value}\n`;
                 });
             }
         });
     }
-
-    report += '\n'; // Add space after the evidence
 
     return report;
 }
 
 function GenerateReportComponent({ evidenceItem }) {
-
-
     const navigate = useNavigate();
-
 
     const handleImplementationClick = (type, uniqueId) => {
         if (uniqueId) {
@@ -385,8 +478,35 @@ function GenerateReportComponent({ evidenceItem }) {
                 {evidenceItem.indicator?.properties && (
                     <>
                         <Box>
-                            <Heading as="h2" size="md" color="gray.800">
-                                Success Indicator {evidenceItem.indicator.properties.number}
+                            <Heading as="h2"
+                                     size="md"
+                                     color="gray.800"
+                                     cursor="pointer"
+                                     _hover={{ color: 'teal.600', textDecoration: 'underline' }}
+                                     onClick={() => {
+                                         const editUrl = getEditUrlFromCompositeKey(evidenceItem.indicator.properties.composite_key);
+                                         const [pathname, hash] = editUrl.split('#');
+
+                                         navigate(pathname + '#' + hash);
+
+                                         setTimeout(() => {
+                                             if (hash) {
+                                                 const element = document.getElementById(hash);
+                                                 if (element) {
+                                                     element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                                 } else {
+                                                     setTimeout(() => {
+                                                         const retryElement = document.getElementById(hash);
+                                                         if (retryElement) {
+                                                             retryElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                                         }
+                                                     }, 300);
+                                                 }
+                                             }
+                                         }, 100);
+                                     }}
+                            >
+                                {evidenceItem.evidence.properties.year_identifier}
                             </Heading>
                             <Text fontSize="sm" color="gray.700" mb={1}>
                                 {evidenceItem.indicator.properties.success_indicator}
@@ -399,7 +519,7 @@ function GenerateReportComponent({ evidenceItem }) {
                                 <Text as="span" fontWeight="semibold"> Date Added:</Text> {evidenceItem.indicator.properties.date_added}
                             </Text>
                         </Box>
-                        <Box height="16px" /> {/* Visual break */}
+                        <Box height="16px" />
                     </>
                 )}
 
@@ -458,7 +578,7 @@ function GenerateReportComponent({ evidenceItem }) {
                                 </Box>
                             )}
                         </Box>
-                        <Box height="16px" /> {/* Visual break */}
+                        <Box height="16px" />
                     </>
                 )}
 
@@ -500,7 +620,7 @@ function GenerateReportComponent({ evidenceItem }) {
                                 })}
                             </Stack>
                         </Box>
-                        <Box height="16px" /> {/* Visual break */}
+                        <Box height="16px" />
                     </>
                 )}
 
@@ -530,7 +650,7 @@ function GenerateReportComponent({ evidenceItem }) {
                                 })}
                             </Stack>
                         </Box>
-                        <Box height="16px" /> {/* Visual break */}
+                        <Box height="16px" />
                     </>
                 )}
 
@@ -553,7 +673,7 @@ function GenerateReportComponent({ evidenceItem }) {
                                 ))}
                             </Stack>
                         </Box>
-                        <Box height="16px" /> {/* Visual break */}
+                        <Box height="16px" />
                     </>
                 )}
 
@@ -598,9 +718,9 @@ function GenerateReportComponent({ evidenceItem }) {
                                             {/* Documents */}
                                             {etype.docs?.length > 0 && (
                                                 <Box>
-                                                    <Heading as="h5" size="xs" color="gray.700" fontWeight="semibold">
+                                                    <Text fontSize="xs" color="gray.700" fontWeight="semibold">
                                                         Documents:
-                                                    </Heading>
+                                                    </Text>
                                                     <Stack spacing={1} pl={3}>
                                                         {etype.docs.map((doc) => (
                                                             <Box key={doc.id}>
@@ -634,9 +754,9 @@ function GenerateReportComponent({ evidenceItem }) {
                                             {/* Webpages */}
                                             {etype.webs?.length > 0 && (
                                                 <Box>
-                                                    <Heading as="h5" size="xs" color="gray.700" fontWeight="semibold">
+                                                    <Text fontSize="xs" color="gray.700" fontWeight="semibold">
                                                         Webpages:
-                                                    </Heading>
+                                                    </Text>
                                                     <Stack spacing={1} pl={3}>
                                                         {etype.webs.map((web) => (
                                                             <Box key={web.id}>
@@ -669,12 +789,12 @@ function GenerateReportComponent({ evidenceItem }) {
                                                 </Box>
                                             )}
 
-                                            {/* Implementation Notes */}
+                                            {/* Implementation Notes, Messages, and Metrics */}
                                             {etype.notes?.length > 0 && (
                                                 <Box>
-                                                    <Heading as="h5" size="xs" color="gray.700" fontWeight="semibold">
+                                                    <Text fontSize="xs" color="gray.700" fontWeight="semibold">
                                                         Notes:
-                                                    </Heading>
+                                                    </Text>
                                                     {etype.notes.map((note, idx) => (
                                                         <Text key={idx} fontSize="xs" color="gray.700" pl={3}>
                                                             • {note.properties.date_created || 'No date'}: {note.properties.content}
@@ -683,12 +803,11 @@ function GenerateReportComponent({ evidenceItem }) {
                                                 </Box>
                                             )}
 
-                                            {/* Implementation Messages */}
                                             {etype.msgs?.length > 0 && (
                                                 <Box>
-                                                    <Heading as="h5" size="xs" color="gray.700" fontWeight="semibold">
+                                                    <Text fontSize="xs" color="gray.700" fontWeight="semibold">
                                                         Messages:
-                                                    </Heading>
+                                                    </Text>
                                                     {etype.msgs.map((msg, idx) => (
                                                         <Text key={idx} fontSize="xs" color="gray.700" pl={3}>
                                                             • {msg.properties.date_sent || 'No date'}: {msg.properties.content}
@@ -697,12 +816,11 @@ function GenerateReportComponent({ evidenceItem }) {
                                                 </Box>
                                             )}
 
-                                            {/* Implementation Metrics */}
                                             {etype.metrics?.length > 0 && (
                                                 <Box>
-                                                    <Heading as="h5" size="xs" color="gray.700" fontWeight="semibold">
+                                                    <Text fontSize="xs" color="gray.700" fontWeight="semibold">
                                                         Metrics:
-                                                    </Heading>
+                                                    </Text>
                                                     {etype.metrics.map((metric, idx) => (
                                                         <Text key={idx} fontSize="xs" color="gray.700" pl={3}>
                                                             • {metric.properties.name}: <Text as="span" fontWeight="semibold">{metric.properties.value}</Text>

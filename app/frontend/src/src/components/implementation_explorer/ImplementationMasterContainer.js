@@ -13,12 +13,15 @@ import {
     ModalHeader,
     ModalBody,
     ModalCloseButton,
-    useDisclosure
+    useDisclosure,
+    Card,
+    CardBody
 } from '@chakra-ui/react';
 import { AddIcon } from '@chakra-ui/icons';
 import ImplementationTypeOverview from './ImplementationTypeOverview';
 import CreateImplementationModal from '../graph_components/implementation/CreateImplementation';
 import { DataContext } from '../../context/DataContext';
+import {getDefinition} from "../../context/definitions";
 
 function ImplementationExplorer() {
     const implementationTypes = [
@@ -31,7 +34,7 @@ function ImplementationExplorer() {
         'InternalPolicy'
     ];
 
-    const { implementationType, implementationId } = useParams(); // Get both params
+    const { implementationType, implementationId } = useParams();
     const navigate = useNavigate();
     const [selectedType, setSelectedType] = useState(implementationType || implementationTypes[0]);
     const { isOpen, onOpen, onClose } = useDisclosure();
@@ -63,6 +66,9 @@ function ImplementationExplorer() {
             refreshImplementations();
         }
     };
+
+    // Get the definition for the selected type
+    const selectedDefinition = getDefinition(selectedType);
 
     return (
         <Box maxW="1400px" mx="auto" p={4}>
@@ -106,10 +112,35 @@ function ImplementationExplorer() {
                 ))}
             </Flex>
 
+            {/* Definition Card */}
+            {selectedDefinition && (
+                <Card
+                    mb={6}
+                    borderRadius="lg"
+                    bg="gray.50"
+                    borderWidth="1px"
+                    borderColor="gray.200"
+                    shadow="sm"
+                >
+                    <CardBody>
+                        <Heading size="sm" mb={2} color="teal.600">
+                            {selectedDefinition.name}
+                        </Heading>
+                        <Text
+                            color="gray.700"
+                            fontSize="sm"
+                            lineHeight="tall"
+                        >
+                            {selectedDefinition.description}
+                        </Text>
+                    </CardBody>
+                </Card>
+            )}
+
             {selectedType && (
                 <ImplementationTypeOverview
                     implementationType={selectedType}
-                    initialImplementationId={implementationId} // Pass the ID if it exists
+                    initialImplementationId={implementationId}
                 />
             )}
 

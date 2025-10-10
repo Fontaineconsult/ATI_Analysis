@@ -8,6 +8,16 @@ export function createNotePayload(yearSuccessEvidence, noteContent, created_by) 
     };
 }
 
+export function createImplementationNotePayload(implementation_id, implementation_type, noteContent, created_by) {
+    return {
+        action: "add_note",
+        implementation_id: implementation_id,
+        implementation_type: implementation_type,
+        note_dict: noteContent,
+        created_by:created_by
+
+    };
+}
 
 
 export function createMessagePayload(yearSuccessEvidence, messageContent, created_by) {
@@ -48,7 +58,30 @@ export function createWebpagePayloadForImplementation(implementation_id, impleme
 
 export function createMessagePayloadForImplementation(implementation_id, implementation_type, message_dict, created_by) {
     return {
-        action: "create_message",
+        action: "add_message",
+        implementation_id: implementation_id,
+        implementation_type: implementation_type,
+        message_dict: message_dict,
+        created_by:created_by
+    }
+
+}
+
+export function createNotePayloadForImplementation(implementation_id, implementation_type, note_dict, created_by) {
+    return {
+        action: "add_note",
+        implementation_id: implementation_id,
+        implementation_type: implementation_type,
+        message_dict: note_dict,
+        created_by:created_by
+    }
+
+}
+
+
+export function updateMessageForImplementationPayload(implementation_id, implementation_type, message_dict, created_by) {
+    return {
+        action: "update_message",
         implementation_id: implementation_id,
         implementation_type: implementation_type,
         message_dict: message_dict,
@@ -58,13 +91,14 @@ export function createMessagePayloadForImplementation(implementation_id, impleme
 }
 
 
-export function updateMessageForImplementationPayload(implementation_id, implementation_type, message_dict, created_by) {
+
+export function updateMetricForImplementationPayload(implementation_id, implementation_type, metric_dict, created_by) {
 
     return {
         action: "update_metric",
         implementation_id: implementation_id,
         implementation_type: implementation_type,
-        message_dict: message_dict,
+        message_dict: metric_dict,
         created_by:created_by
     }
 

@@ -2,7 +2,7 @@ import axios from "axios";
 import {
     create_year_success_evidence_node,
     createDocumentPayload,
-    createDocumentPayloadForImplementation,
+    createDocumentPayloadForImplementation, createImplementationNotePayload,
     createIndividualPayload,
     createMessagePayload, createMessagePayloadForImplementation, createMetricPayloadForImplementation,
     createNotePayload,
@@ -20,6 +20,18 @@ export const addNewNote = async (year_success_evidence, note_dict, created_by) =
         throw error;
     }
 }
+
+export const addImplementationNote = async (implementation_id, implementation_type, note_dict, created_by) => {
+    try {
+        const response = await axios.post(`${process.env.REACT_APP_API_URL}/documents`,
+            createImplementationNotePayload(implementation_id, implementation_type, note_dict, created_by));
+        return response.data;
+    } catch (error) {
+        console.error('Error adding new note:', error);
+        throw error;
+    }
+}
+
 
 
 export const addNewMessage = async (yearSuccessEvidence, messageContent, created_by) => {
@@ -40,10 +52,13 @@ export const addNewMessage = async (yearSuccessEvidence, messageContent, created
 
 // Create Functions for Implementation Evidence
 export const addDocumentToImplementation = async (implementation_id, implementation_type, document_dict, created_by) => {
+    console.log("ZZZ", createDocumentPayloadForImplementation(implementation_id, implementation_type, document_dict, created_by));
+
     try {
 
         // Send the POST request with the payload
         const response = await axios.post(`${process.env.REACT_APP_API_URL}/documents`,
+
             createDocumentPayloadForImplementation(implementation_id, implementation_type, document_dict, created_by));
 
         return response.data;
@@ -56,6 +71,27 @@ export const addDocumentToImplementation = async (implementation_id, implementat
 
 
 export const addWebpageToImplementation = async (implementation_id, implementation_type, webpage_dict, created_by) => {
+
+    try {
+
+        // Send the POST request with the payload
+        const response = await axios.post(`${process.env.REACT_APP_API_URL}/documents`,
+            createWebpagePayloadForImplementation(implementation_id, implementation_type, webpage_dict, created_by));
+
+        return response.data;
+    } catch (error) {
+        console.error('Error adding new message:', error);
+        throw error;
+    }
+
+
+
+
+}
+
+
+
+export const addNoteToImplementation = async (implementation_id, implementation_type, webpage_dict, created_by) => {
 
     try {
 

@@ -8,9 +8,15 @@ import {
     FormControl,
     FormLabel,
     Text,
-    Flex,
     Collapse,
+    VStack,
+    HStack,
+    Badge,
+    IconButton,
+    Grid,
+    GridItem
 } from '@chakra-ui/react';
+import { EditIcon } from '@chakra-ui/icons';
 import { updateNote } from '../../../services/api/put';
 import { addNewNote } from '../../../services/api/post';
 import { useToast } from '@chakra-ui/react';
@@ -33,15 +39,12 @@ function NoteViewer({ notes, onSubmit, yearSuccessEvidence, implementation_id, i
         setIsImplementation(!!implementation_id && !!implementation_type);
     }, [yearSuccessEvidence, implementation_id, implementation_type]);
 
-    // Toggle expanded/collapsed state
     const toggleCollapse = (index) => {
         setExpandedIndex(expandedIndex === index ? null : index);
     };
 
-    // Handle form submission for both new and updated notes
     const handleFormSubmit = async (index, noteData, isNew) => {
         try {
-            // Set date_created if new
             if (isNew) {
                 noteData.date_created = new Date().toISOString().split('T')[0];
             }
@@ -93,80 +96,111 @@ function NoteViewer({ notes, onSubmit, yearSuccessEvidence, implementation_id, i
         <Box>
             {(isYearSuccessEvidence || isImplementation) && (
                 <Button
+                    size="xs"
                     colorScheme="teal"
                     onClick={() => {
                         setIsAddingNewNote(true);
                         setExpandedIndex(null);
                     }}
-                    mb={4}
+                    mb={3}
                 >
                     Add New Note
                 </Button>
             )}
 
-            {isAddingNewNote ? (
-                <Box mb={4} border="1px solid teal" borderRadius="md" p={4} boxShadow="sm">
+            {isAddingNewNote && (
+                <Box mb={3} borderWidth="1px" borderColor="teal.300" borderRadius="md" p={3} bg="teal.50">
                     <NoteForm
                         note={null}
                         onSubmit={(noteData) => handleFormSubmit(null, noteData, true)}
                         createdBy={user}
                         isNewNote={true}
+                        onCancel={() => setIsAddingNewNote(false)}
                     />
                 </Box>
-            ) : notes && notes.length > 0 ? (
-                notes.map((noteWrapper, index) => {
-                    // Extract note and created_by from wrapper
-                    const note = noteWrapper.note || noteWrapper;
-                    const createdBy = noteWrapper.created_by || note.created_by || null;
+            )}
 
-                    return (
-                        <Box
-                            key={note.properties?.unique_id || index}
-                            mb={4}
-                            border="1px solid teal"
-                            borderRadius="md"
-                            p={4}
-                            boxShadow="sm"
-                        >
-                            <Flex
-                                justify="space-between"
-                                alignItems="center"
-                                cursor="pointer"
-                                onClick={() => toggleCollapse(index)}
+            {notes && notes.length > 0 ? (
+                <VStack spacing={2} align="stretch">
+                    {notes.map((noteWrapper, index) => {
+                        const note = noteWrapper.note || noteWrapper;
+                        const createdBy = noteWrapper.created_by || note.created_by || null;
+                        const isExpanded = expandedIndex === index;
+
+                        return (
+                            <Box
+                                key={note.properties?.unique_id || index}
+                                borderWidth="1px"
+                                borderColor="gray.200"
+                                borderRadius="md"
+                                p={3}
+                                bg="white"
+                                _hover={{ borderColor: 'teal.300', bg: 'gray.50' }}
+                                transition="all 0.2s"
                             >
-                                <Text fontWeight="bold" fontSize="sm">
-                                    {note.properties?.name || 'Untitled Note'}
-                                </Text>
-                                <Button size="sm" colorScheme="teal">
-                                    {expandedIndex === index ? 'Collapse' : 'Expand'}
-                                </Button>
-                            </Flex>
+                                {/* Compact view */}
+                                <HStack justify="space-between" align="start">
+                                    <VStack align="start" spacing={1} flex="1">
+                                        <HStack spacing={2}>
+                                            <Text fontWeight="bold" fontSize="sm" color="gray.800">
+                                                {note.properties?.name || 'Untitled Note'}
+                                            </Text>
+                                            {note.properties?.include_in_report && (
+                                                <Badge colorScheme="green" fontSize="10px">In Report</Badge>
+                                            )}
+                                            {note.properties?.depreciated && (
+                                                <Badge colorScheme="orange" fontSize="10px">Deprecated</Badge>
+                                            )}
+                                        </HStack>
 
-                            <Text fontSize="sm" color="gray.600" mt={2}>
-                                Created by: {createdBy?.properties?.name || 'Unknown Author'}
-                            </Text>
+                                        {note.properties?.content && (
+                                            <Text fontSize="xs" color="gray.600" noOfLines={2}>
+                                                {note.properties.content}
+                                            </Text>
+                                        )}
 
-                            <Collapse in={expandedIndex === index} animateOpacity>
-                                <Box mt={4}>
-                                    <NoteForm
-                                        note={note}
-                                        onSubmit={(noteData) => handleFormSubmit(index, noteData, false)}
-                                        createdBy={createdBy}
-                                        isNewNote={false}
+                                        <HStack spacing={3} fontSize="xs" color="gray.500">
+                                            <Text>Created: {note.properties?.date_created || 'N/A'}</Text>
+                                            {createdBy && (
+                                                <Text>By: {createdBy?.properties?.name || 'Unknown'}</Text>
+                                            )}
+                                        </HStack>
+                                    </VStack>
+
+                                    <IconButton
+                                        aria-label="Edit note"
+                                        icon={<EditIcon />}
+                                        size="xs"
+                                        colorScheme={isExpanded ? "gray" : "teal"}
+                                        variant={isExpanded ? "solid" : "ghost"}
+                                        onClick={() => toggleCollapse(index)}
                                     />
-                                </Box>
-                            </Collapse>
-                        </Box>
-                    );
-                })
+                                </HStack>
+
+                                {/* Collapsible edit form */}
+                                <Collapse in={isExpanded} animateOpacity>
+                                    <Box mt={3} pt={3} borderTop="1px solid" borderColor="gray.200">
+                                        <NoteForm
+                                            note={note}
+                                            onSubmit={(noteData) => handleFormSubmit(index, noteData, false)}
+                                            createdBy={createdBy}
+                                            isNewNote={false}
+                                            onCancel={() => toggleCollapse(index)}
+                                        />
+                                    </Box>
+                                </Collapse>
+                            </Box>
+                        );
+                    })}
+                </VStack>
             ) : (
-                <Text>No notes available.</Text>
+                <Text color="gray.500" fontSize="sm">No notes available.</Text>
             )}
         </Box>
     );
 }
 
-function NoteForm({ note, onSubmit, createdBy, isNewNote }) {
+function NoteForm({ note, onSubmit, createdBy, isNewNote, onCancel }) {
     const [noteData, setNoteData] = useState({
         unique_id: note?.properties?.unique_id || '',
         name: note?.properties?.name || '',
@@ -179,19 +213,6 @@ function NoteForm({ note, onSubmit, createdBy, isNewNote }) {
     });
 
     const [isSubmitting, setIsSubmitting] = useState(false);
-
-    useEffect(() => {
-        setNoteData({
-            unique_id: note?.properties?.unique_id || '',
-            name: note?.properties?.name || '',
-            date_created: note?.properties?.date_created || new Date().toISOString().split('T')[0],
-            content: note?.properties?.content || '',
-            depreciated: note?.properties?.depreciated || false,
-            depreciated_date: note?.properties?.depreciated_date || '',
-            include_in_report: note?.properties?.include_in_report ?? true,
-            created_by: createdBy || {},
-        });
-    }, [note, createdBy]);
 
     const handleChange = (e) => {
         const { name, value, type, checked } = e.target;
@@ -215,83 +236,71 @@ function NoteForm({ note, onSubmit, createdBy, isNewNote }) {
 
     return (
         <Box as="form" onSubmit={handleSubmit}>
-            <FormControl mb={4}>
-                <FormLabel>Note Name</FormLabel>
-                <Input name="name" value={noteData.name} onChange={handleChange} />
-            </FormControl>
-
-            <FormControl mb={4}>
-                <FormLabel>Date Created</FormLabel>
-                <Input
-                    name="date_created"
-                    type="date"
-                    value={noteData.date_created}
-                    onChange={handleChange}
-                />
-            </FormControl>
-
-            <FormControl mb={4}>
-                <FormLabel>Note Content</FormLabel>
-                <Textarea
-                    name="content"
-                    value={noteData.content}
-                    onChange={handleChange}
-                    rows={6}
-                />
-            </FormControl>
-
-            {createdBy ? (
-                <Box mb={4}>
-                    <Text fontSize="sm" color="gray.600">
-                        Created by: {createdBy?.properties?.name || createdBy?.name || 'Unknown'} ({createdBy?.properties?.title || createdBy?.title || 'Unknown Title'})
-                    </Text>
-                </Box>
-            ) : (
-                <Text fontSize="sm" color="gray.600" mb={4}>Created by: Unknown</Text>
-            )}
-
-            <Flex gap={4} mb={4}>
-                <Box flex="1">
-                    <FormControl mb={4}>
-                        <FormLabel>Depreciated</FormLabel>
-                        <Switch
-                            name="depreciated"
-                            isChecked={noteData.depreciated}
-                            onChange={handleChange}
-                        />
+            <Grid templateColumns="repeat(2, 1fr)" gap={3}>
+                <GridItem colSpan={2}>
+                    <FormControl>
+                        <FormLabel fontSize="xs">Note Name</FormLabel>
+                        <Input size="sm" name="name" value={noteData.name} onChange={handleChange} />
                     </FormControl>
-                    <FormControl mb={4}>
-                        <FormLabel>Include in Report</FormLabel>
-                        <Switch
-                            name="include_in_report"
-                            isChecked={noteData.include_in_report}
-                            onChange={handleChange}
-                        />
-                    </FormControl>
-                </Box>
+                </GridItem>
 
-                <Box flex="1">
-                    <FormControl mb={4}>
-                        <FormLabel>Depreciation Date</FormLabel>
-                        <Input
-                            type="date"
-                            name="depreciated_date"
-                            value={noteData.depreciated_date}
-                            onChange={handleChange}
-                        />
+                <GridItem>
+                    <FormControl>
+                        <FormLabel fontSize="xs">Date Created</FormLabel>
+                        <Input size="sm" name="date_created" type="date" value={noteData.date_created} onChange={handleChange} />
                     </FormControl>
-                </Box>
-            </Flex>
+                </GridItem>
 
-            <Button
-                type="submit"
-                colorScheme="teal"
-                mt={4}
-                isLoading={isSubmitting}
-                loadingText={isNewNote ? 'Submitting...' : 'Updating...'}
-            >
-                {isNewNote ? 'Submit Note' : 'Update Note'}
-            </Button>
+                <GridItem>
+                    <FormControl>
+                        <FormLabel fontSize="xs">Depreciation Date</FormLabel>
+                        <Input size="sm" type="date" name="depreciated_date" value={noteData.depreciated_date} onChange={handleChange} />
+                    </FormControl>
+                </GridItem>
+
+                <GridItem colSpan={2}>
+                    <FormControl>
+                        <FormLabel fontSize="xs">Note Content</FormLabel>
+                        <Textarea size="sm" name="content" value={noteData.content} onChange={handleChange} rows={3} />
+                    </FormControl>
+                </GridItem>
+            </Grid>
+
+            {/* Toggle switches */}
+            <Grid templateColumns="repeat(2, 1fr)" gap={3} mt={3}>
+                <FormControl display="flex" alignItems="center">
+                    <FormLabel fontSize="xs" mb="0" flex="1">Include in Report</FormLabel>
+                    <Switch size="sm" name="include_in_report" isChecked={noteData.include_in_report} onChange={handleChange} />
+                </FormControl>
+
+                <FormControl display="flex" alignItems="center">
+                    <FormLabel fontSize="xs" mb="0" flex="1">Deprecated</FormLabel>
+                    <Switch size="sm" name="depreciated" isChecked={noteData.depreciated} onChange={handleChange} />
+                </FormControl>
+            </Grid>
+
+            {/* Action buttons */}
+            <HStack mt={3} spacing={2}>
+                <Button
+                    type="submit"
+                    size="xs"
+                    colorScheme="teal"
+                    isLoading={isSubmitting}
+                    loadingText={isNewNote ? 'Submitting...' : 'Updating...'}
+                >
+                    {isNewNote ? 'Submit' : 'Update'}
+                </Button>
+                {onCancel && (
+                    <Button
+                        size="xs"
+                        variant="outline"
+                        onClick={onCancel}
+                        isDisabled={isSubmitting}
+                    >
+                        Cancel
+                    </Button>
+                )}
+            </HStack>
         </Box>
     );
 }

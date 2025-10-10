@@ -67,8 +67,16 @@ class DocumentsAPI(MethodView):
                 implementation_id = data.get('implementation_id')
                 implementation_type = data.get('implementation_type')
 
-                if not (year_success_evidence or (implementation_id and implementation_type)):
+                # At least one assignment target must be provided, but not necessarily both
+                has_yse = bool(year_success_evidence)
+                has_implementation = bool(implementation_id and implementation_type)
+
+                if not (has_yse or has_implementation):
                     return make_response({"status": "error", "error": "Either 'year_success_evidence' or both 'implementation_id' and 'implementation_type' must be provided."}), 400
+
+                # Validate implementation fields are both present if one is provided
+                if (implementation_id and not implementation_type) or (implementation_type and not implementation_id):
+                    return make_response({"status": "error", "error": "Both 'implementation_id' and 'implementation_type' must be provided together."}), 400
 
                 if add_note(
                         note_dict=data['note_dict'],
@@ -204,6 +212,7 @@ class DocumentsAPI(MethodView):
         except CrudError as e:
             return make_response(status="error", error=str(e)), 500
         except Exception as e:
+            print(f"Unexpected error: {e}")
             return make_response(status="error", error=str(e)), 500
 
 

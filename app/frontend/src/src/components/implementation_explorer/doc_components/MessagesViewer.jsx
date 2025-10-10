@@ -4,7 +4,7 @@ import {
     FormControl, FormLabel, Flex, Collapse, useToast, Textarea, Select
 } from '@chakra-ui/react';
 import { ExternalLinkIcon } from '@chakra-ui/icons';
-import { addNewMessage } from '../../../services/api/post';
+import {addMessageToImplementation, addNewMessage} from '../../../services/api/post';
 import { updateMessage } from '../../../services/api/put';
 import { DataContext } from '../../../context/DataContext';
 import { useSettings } from '../../../context/SettingsContext';
@@ -147,7 +147,7 @@ const MessagesViewer = ({ messages = [], implementation_id, implementation_type,
 
     const handleAddMessage = async (messageData) => {
         try {
-            await addNewMessage(null, messageData, user?.employee_id || '', implementation_id, implementation_type);
+            await addMessageToImplementation(implementation_id, implementation_type, messageData, user?.employee_id || '', implementation_id, implementation_type);
 
             toast({
                 title: "Message added successfully",
@@ -251,9 +251,9 @@ const MessagesViewer = ({ messages = [], implementation_id, implementation_type,
                                     <HStack justify="space-between" align="start">
                                         <Box flex="1">
                                             <HStack justify="space-between" mb={2}>
-                                                <Text fontSize="sm" fontWeight="bold" color="gray.800">
+                                                <Heading as='h3' fontSize="sm" fontWeight="bold" color="gray.800">
                                                     {msg.name}
-                                                </Text>
+                                                </Heading>
                                                 {msg.type && (
                                                     <Badge colorScheme="purple" fontSize="xs">
                                                         {msg.type}

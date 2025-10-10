@@ -1,50 +1,71 @@
+// ReportOverviewMasterContainer.js
 import React, { useState } from 'react';
-import { Box, Heading, Spinner, Text, Button, ButtonGroup } from '@chakra-ui/react';
+import { Box, Heading, Spinner, Text, Button, ButtonGroup, VStack } from '@chakra-ui/react';
 import { useData } from "../../../hooks/useData";
-
 import ProcurementReportContainer from "./ProcurementReportContainer";
 import WebReportContainer from "./WebReportContainer";
 import InstructionalMaterialsReportContainer from "./InstructionalMaterialsReportContainer";
 
 function ReportOverviewMasterContainer() {
-    const { data, loading, error } = useData();  // Access data from context
-    const [selectedReport, setSelectedReport] = useState('web');  // State to manage selected report
+    const { data, loading, error } = useData();
+    const [selectedReport, setSelectedReport] = useState('web');
 
-    if (loading) return <Spinner size="xl" />;
-    if (error) return <Text color="red.500">Error: {error}</Text>;
+    if (loading) {
+        return (
+            <Box display="flex" flexDirection="column" alignItems="center" justifyContent="center" minH="400px">
+                <Spinner size="xl" color="teal.500" thickness="3px" />
+                <Text mt={4} color="gray.600" fontSize="sm">Loading reports...</Text>
+            </Box>
+        );
+    }
+
+    if (error) {
+        return (
+            <Box p={8}>
+                <Text color="red.500" fontSize="sm">Error: {error}</Text>
+            </Box>
+        );
+    }
 
     return (
-        <Box maxW="800px" mx="auto" p={4}>
-            <Heading as="h3" size="lg" mb={4}>
-                Report Overview
-            </Heading>
+        <Box maxW="1200px" mx="auto" p={6}>
+            <VStack align="stretch" spacing={6}>
+                <Box bg="white" borderRadius="lg" p={6} boxShadow="sm">
+                    <Heading as="h1" size="lg" color="gray.800" mb={4}>
+                        Report Overview
+                    </Heading>
 
-            {/* Button group to switch between reports */}
-            <ButtonGroup mb={4} isAttached>
-                <Button
-                    colorScheme={selectedReport === 'web' ? 'blue' : 'gray'}
-                    onClick={() => setSelectedReport('web')}
-                >
-                    Web
-                </Button>
-                <Button
-                    colorScheme={selectedReport === 'instructionalMaterials' ? 'blue' : 'gray'}
-                    onClick={() => setSelectedReport('instructionalMaterials')}
-                >
-                    Instructional Materials
-                </Button>
-                <Button
-                    colorScheme={selectedReport === 'procurement' ? 'blue' : 'gray'}
-                    onClick={() => setSelectedReport('procurement')}
-                >
-                    Procurement
-                </Button>
-            </ButtonGroup>
+                    <ButtonGroup size="sm" mb={6}>
+                        <Button
+                            variant={selectedReport === 'web' ? 'solid' : 'outline'}
+                            colorScheme="teal"
+                            onClick={() => setSelectedReport('web')}
+                        >
+                            Web
+                        </Button>
+                        <Button
+                            variant={selectedReport === 'instructionalMaterials' ? 'solid' : 'outline'}
+                            colorScheme="teal"
+                            onClick={() => setSelectedReport('instructionalMaterials')}
+                        >
+                            Instructional Materials
+                        </Button>
+                        <Button
+                            variant={selectedReport === 'procurement' ? 'solid' : 'outline'}
+                            colorScheme="teal"
+                            onClick={() => setSelectedReport('procurement')}
+                        >
+                            Procurement
+                        </Button>
+                    </ButtonGroup>
 
-            {/* Conditionally render the report container based on selection */}
-            {selectedReport === 'web' && <WebReportContainer webData={data.web} />}
-            {selectedReport === 'instructionalMaterials' && <InstructionalMaterialsReportContainer instructionalMaterialsData={data.instructionalMaterials}/>}
-            {selectedReport === 'procurement' && <ProcurementReportContainer procurementData={data.procurement} />}
+                    {selectedReport === 'web' && <WebReportContainer webData={data.web} />}
+                    {selectedReport === 'instructionalMaterials' &&
+                        <InstructionalMaterialsReportContainer instructionalMaterialsData={data.instructionalMaterials}/>
+                    }
+                    {selectedReport === 'procurement' && <ProcurementReportContainer procurementData={data.procurement} />}
+                </Box>
+            </VStack>
         </Box>
     );
 }

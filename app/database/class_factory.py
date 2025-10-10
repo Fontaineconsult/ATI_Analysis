@@ -44,6 +44,7 @@ documentation_classes = {
     "webpage": Webpage,
     "message": Message,
     "note": Note,
+    "Note": Note,
     "metric": Metric
 }
 
@@ -53,6 +54,7 @@ documentation_relationships = {
     "webpage": "supporting_webpages",
     "message": "supporting_messages",
     "note": "supporting_notes",
+    "Note": "supporting_notes",
     "metric": "supporting_metrics"
 }
 

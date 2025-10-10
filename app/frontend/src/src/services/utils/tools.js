@@ -1,3 +1,6 @@
+import {useNavigate} from "react-router-dom";
+
+
 function getUrlFromCompositeKey(compositeKey) {
     // Parse composite key like "1.2-ins" or "5.14-web"
     const [numbers, suffix] = compositeKey.split('-');
@@ -53,4 +56,31 @@ const year_difference = (current_year) => {
 
 
 
-export { getUrlFromCompositeKey, getStatusColor, year_difference };
+
+
+// Helper function to get Edit URL for ATI Explorer
+const getEditUrlFromCompositeKey = (compositeKey) => {
+    const [numbers, suffix] = compositeKey.split('-');
+    const [goalNumber, indicatorNumber] = numbers.split('.');
+
+    const workingGroupMap = {
+        'web': 'web',
+        'pro': 'procurement',
+        'ins': 'instructional-materials'
+    };
+
+    const workingGroupSegment = workingGroupMap[suffix] || suffix;
+    return `/ati-explorer/${workingGroupSegment}/goal/${goalNumber}#${compositeKey}`;
+};
+
+
+const getImplementationURL = (type, uniqueId) => {
+        return `/ati-explorer/implementations/${type}/${uniqueId}`
+};
+
+
+export { getUrlFromCompositeKey,
+    getStatusColor,
+    year_difference,
+    getEditUrlFromCompositeKey,
+    getImplementationURL };

@@ -4,7 +4,7 @@ import {
     FormControl, FormLabel, Flex, Collapse, useToast, Textarea
 } from '@chakra-ui/react';
 import { ExternalLinkIcon } from '@chakra-ui/icons';
-import { addNewNote } from '../../../services/api/post';
+import {addImplementationNote, addNewNote} from '../../../services/api/post';
 import { updateNote } from '../../../services/api/put';
 import { DataContext } from '../../../context/DataContext';
 import { useSettings } from '../../../context/SettingsContext';
@@ -126,7 +126,7 @@ const NotesViewer = ({ notes = [], implementation_id, implementation_type, forma
 
     const handleAddNote = async (noteData) => {
         try {
-            await addNewNote(null, noteData, user?.employee_id || '', implementation_id, implementation_type);
+            await addImplementationNote(implementation_id, implementation_type, noteData, user?.employee_id || '', implementation_id, implementation_type);
 
             toast({
                 title: "Note added successfully",
@@ -229,9 +229,9 @@ const NotesViewer = ({ notes = [], implementation_id, implementation_type, forma
                                 >
                                     <HStack justify="space-between" align="start">
                                         <Box flex="1">
-                                            <Text fontSize="sm" fontWeight="bold" color="gray.800" mb={2}>
+                                            <Heading as='h3' fontSize="sm" fontWeight="bold" color="gray.800" mb={2}>
                                                 {note.name || 'Untitled Note'}
-                                            </Text>
+                                            </Heading>
 
                                             {note.content && (
                                                 <Text fontSize="xs" color="gray.700" whiteSpace="pre-wrap">

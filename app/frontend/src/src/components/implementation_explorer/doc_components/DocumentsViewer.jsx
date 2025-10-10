@@ -250,9 +250,9 @@ export default function DocumentsViewer({ documents = [], implementation_id, imp
                                 >
                                     <HStack justify="space-between" align="start">
                                         <Box flex="1">
-                                            <Text fontSize="sm" fontWeight="bold" color="gray.800">
+                                            <Heading as='h3' fontSize="sm" fontWeight="bold" color="gray.800">
                                                 {doc.name}
-                                            </Text>
+                                            </Heading>
 
                                             {doc.description && (
                                                 <Text fontSize="xs" color="gray.700" mt={2}>

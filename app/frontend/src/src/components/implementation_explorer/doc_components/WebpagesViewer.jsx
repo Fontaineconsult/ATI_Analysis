@@ -241,9 +241,9 @@ export default function WebpagesViewer({ webpages = [], implementation_id, imple
                                         <Box flex="1">
                                             <Link href={wp.url} isExternal color="teal.600">
                                                 <HStack>
-                                                    <Text fontSize="sm" fontWeight="bold">
+                                                    <Heading as='h3' fontSize="sm" fontWeight="bold">
                                                         {wp.name || wp.url}
-                                                    </Text>
+                                                    </Heading>
                                                     <ExternalLinkIcon />
                                                 </HStack>
                                             </Link>

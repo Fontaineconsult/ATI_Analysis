@@ -11,7 +11,15 @@ import {
     Flex,
     Collapse,
     Select,
+    HStack,
+    VStack,
+    Badge,
+    IconButton,
+    Grid,
+    GridItem,
+    Link
 } from '@chakra-ui/react';
+import { EditIcon, ExternalLinkIcon } from '@chakra-ui/icons';
 import { updateMessage } from '../../../services/api/put';
 import { addNewMessage } from '../../../services/api/post';
 import { DataContext } from '../../../context/DataContext';
@@ -29,59 +37,56 @@ const messageTypes = [
     'presentation',
 ];
 
+const messageTypeColors = {
+    'e-mail': 'blue',
+    'voice mail': 'purple',
+    'text message': 'green',
+    'letter': 'orange',
+    'memo': 'yellow',
+    'report': 'red',
+    'meeting minutes': 'cyan',
+    'presentation': 'pink',
+};
+
 function MessageViewer({ messages, onSubmit, yearSuccessEvidence, createdBy, implementation_id, implementation_type }) {
     const [isImplementation, setIsImplementation] = useState(false);
     const [isYearSuccessEvidence, setIsYearSuccessEvidence] = useState(false);
+    const [expandedIndex, setExpandedIndex] = useState(null);
+    const [isAddingNewMessage, setIsAddingNewMessage] = useState(false);
+    const { loadSingleWorkingGroupData } = useContext(DataContext);
+    const { currentWorkingGroup } = useSettings();
+    const { user } = useContext(UserContext);
 
     useEffect(() => {
         setIsYearSuccessEvidence(!!yearSuccessEvidence);
         setIsImplementation(!!implementation_id && !!implementation_type);
     }, [yearSuccessEvidence, implementation_id, implementation_type]);
 
-    const [expandedIndex, setExpandedIndex] = useState(null);
-    const [isAddingNewMessage, setIsAddingNewMessage] = useState(false);
-    const { loadSingleWorkingGroupData, selectedYear } = useContext(DataContext);
-    const { currentWorkingGroup } = useSettings();
-    const { user } = useContext(UserContext);
-
-
-    // Toggle expanded/collapsed state
     const toggleCollapse = (index) => {
         setExpandedIndex(expandedIndex === index ? null : index);
     };
 
-    // Handle form submission for both new and updated messages
     const handleFormSubmit = async (index, messageData, isNew) => {
         try {
-            // Set date_created if new
             if (isNew) {
-                messageData.date_created = new Date().toISOString().split('T')[0]; // Format as YYYY-MM-DD
+                messageData.date_created = new Date().toISOString().split('T')[0];
             }
 
-            // Depending on which state is active, call add/update message differently
             if (isNew) {
                 if (isYearSuccessEvidence) {
                     await addNewMessage(yearSuccessEvidence, messageData, user?.employee_id || '');
                 } else if (isImplementation) {
-                    // Call addNewMessage with implementation params
                     await addNewMessage(null, messageData, user?.employee_id || '', implementation_id, implementation_type);
-                } else {
-                    console.error('No valid context (YearSuccessEvidence or Implementation) to add a new message.');
-                    return;
                 }
             } else {
                 if (isYearSuccessEvidence) {
                     await updateMessage(yearSuccessEvidence, messageData, user?.employee_id || '');
                 } else if (isImplementation) {
-                    // Call updateMessage with implementation params
                     await updateMessage(null, messageData, user?.employee_id || '', implementation_id, implementation_type);
-                } else {
-                    console.error('No valid context (YearSuccessEvidence or Implementation) to update the message.');
-                    return;
                 }
             }
 
-            await loadSingleWorkingGroupData(currentWorkingGroup); // Refresh data
+            await loadSingleWorkingGroupData(currentWorkingGroup);
             setExpandedIndex(null);
             setIsAddingNewMessage(false);
         } catch (error) {
@@ -93,78 +98,131 @@ function MessageViewer({ messages, onSubmit, yearSuccessEvidence, createdBy, imp
         <Box>
             {(isYearSuccessEvidence || isImplementation) && (
                 <Button
+                    size="xs"
                     colorScheme="teal"
                     onClick={() => {
                         setIsAddingNewMessage(true);
-                        setExpandedIndex(null); // Collapse any other expanded messages
+                        setExpandedIndex(null);
                     }}
-                    mb={4}
+                    mb={3}
                 >
                     Add New Message
                 </Button>
             )}
 
-            {isAddingNewMessage ? (
-                <Box mb={4} border="1px solid teal" borderRadius="md" p={4} boxShadow="sm">
+            {isAddingNewMessage && (
+                <Box mb={3} borderWidth="1px" borderColor="teal.300" borderRadius="md" p={3} bg="teal.50">
                     <MessageForm
                         message={null}
                         onSubmit={(messageData) => handleFormSubmit(null, messageData, true)}
                         createdBy={user}
+                        onCancel={() => setIsAddingNewMessage(false)}
                     />
                 </Box>
-            ) : messages && messages.length > 0 ? (
-                messages.map((messageWrapper, index) => {
-                    // Normalize message object
-                    const message = messageWrapper.message || messageWrapper;
-                    const createdBy = messageWrapper.created_by || message.created_by || null;
+            )}
 
-                    return (
-                        <Box
-                            key={message.properties?.unique_id || index}
-                            mb={4}
-                            border="1px solid teal"
-                            borderRadius="md"
-                            p={4}
-                            boxShadow="sm"
-                        >
-                            <Flex
-                                justify="space-between"
-                                alignItems="center"
-                                cursor="pointer"
-                                onClick={() => toggleCollapse(index)}
+            {messages && messages.length > 0 ? (
+                <VStack spacing={2} align="stretch">
+                    {messages.map((messageWrapper, index) => {
+                        const message = messageWrapper.message || messageWrapper;
+                        const createdBy = messageWrapper.created_by || message.created_by || null;
+                        const isExpanded = expandedIndex === index;
+
+                        return (
+                            <Box
+                                key={message.properties?.unique_id || index}
+                                borderWidth="1px"
+                                borderColor="gray.200"
+                                borderRadius="md"
+                                p={3}
+                                bg="white"
+                                _hover={{ borderColor: 'teal.300', bg: 'gray.50' }}
+                                transition="all 0.2s"
                             >
-                                <Text fontWeight="bold" fontSize="sm">
-                                    {message.properties?.name || 'Untitled Message'}
-                                </Text>
-                                <Button size="sm" colorScheme="teal">
-                                    {expandedIndex === index ? 'Collapse' : 'Expand'}
-                                </Button>
-                            </Flex>
+                                {/* Compact view */}
+                                <Flex justify="space-between" align="start">
+                                    <VStack align="start" spacing={1} flex="1">
+                                        {/* Title row with badges */}
+                                        <HStack spacing={2} width="full">
+                                            <Text fontWeight="bold" fontSize="sm" color="gray.800">
+                                                {message.properties?.name || 'Untitled Message'}
+                                            </Text>
+                                            <Badge
+                                                colorScheme={messageTypeColors[message.properties?.message_type] || 'gray'}
+                                                fontSize="10px"
+                                            >
+                                                {message.properties?.message_type || 'unknown'}
+                                            </Badge>
+                                            {message.properties?.include_in_report && (
+                                                <Badge colorScheme="green" fontSize="10px">In Report</Badge>
+                                            )}
+                                            {message.properties?.depreciated && (
+                                                <Badge colorScheme="orange" fontSize="10px">Deprecated</Badge>
+                                            )}
+                                        </HStack>
 
-                            <Text fontSize="sm" color="gray.600" mt={2}>
-                                Created by: {createdBy?.properties?.name || 'Unknown Author'}
-                            </Text>
+                                        {/* Content preview and metadata */}
+                                        <HStack spacing={3} fontSize="xs" width="full">
+                                            {message.properties?.content && (
+                                                <Text color="gray.600" noOfLines={1} maxW="400px">
+                                                    {message.properties.content}
+                                                </Text>
+                                            )}
+                                            {(message.properties?.file_path || message.properties?.uri_path) && (
+                                                <Link
+                                                    href={message.properties?.file_path || message.properties?.uri_path}
+                                                    isExternal
+                                                    color="teal.600"
+                                                    display="flex"
+                                                    alignItems="center"
+                                                >
+                                                    Link <ExternalLinkIcon ml={1} />
+                                                </Link>
+                                            )}
+                                        </HStack>
 
-                            <Collapse in={expandedIndex === index} animateOpacity>
-                                <Box mt={4}>
-                                    <MessageForm
-                                        message={message}
-                                        onSubmit={(messageData) => handleFormSubmit(index, messageData, false)}
-                                        createdBy={createdBy}
+                                        <HStack spacing={3} fontSize="xs" color="gray.500">
+                                            <Text>Created: {message.properties?.date_created || 'N/A'}</Text>
+                                            {createdBy?.properties?.name && (
+                                                <Text>By: {createdBy.properties.name}</Text>
+                                            )}
+                                        </HStack>
+                                    </VStack>
+
+                                    <IconButton
+                                        aria-label="Edit message"
+                                        icon={<EditIcon />}
+                                        size="xs"
+                                        colorScheme={isExpanded ? "gray" : "teal"}
+                                        variant={isExpanded ? "solid" : "ghost"}
+                                        onClick={() => toggleCollapse(index)}
+                                        ml={2}
                                     />
-                                </Box>
-                            </Collapse>
-                        </Box>
-                    );
-                })
+                                </Flex>
+
+                                {/* Collapsible edit form */}
+                                <Collapse in={isExpanded} animateOpacity>
+                                    <Box mt={3} pt={3} borderTop="1px solid" borderColor="gray.200">
+                                        <MessageForm
+                                            message={message}
+                                            onSubmit={(messageData) => handleFormSubmit(index, messageData, false)}
+                                            createdBy={createdBy}
+                                            onCancel={() => toggleCollapse(index)}
+                                        />
+                                    </Box>
+                                </Collapse>
+                            </Box>
+                        );
+                    })}
+                </VStack>
             ) : (
-                <Text>No messages available.</Text>
+                <Text color="gray.500" fontSize="sm">No messages available.</Text>
             )}
         </Box>
     );
 }
 
-function MessageForm({ message, onSubmit, createdBy }) {
+function MessageForm({ message, onSubmit, createdBy, onCancel }) {
     const [messageData, setMessageData] = useState({
         unique_id: message?.properties?.unique_id || '',
         name: message?.properties?.name || '',
@@ -178,26 +236,8 @@ function MessageForm({ message, onSubmit, createdBy }) {
         include_in_report: message?.properties?.include_in_report ?? true,
         created_by: createdBy || {},
     });
-    console.log(message)
-    const [isSubmitting, setIsSubmitting] = useState(false);
 
-    useEffect(() => {
-        setMessageData({
-            unique_id: message?.properties?.unique_id || '',
-            name: message?.properties?.name || '',
-            date_created:
-                message?.properties?.date_created ||
-                new Date().toISOString().split('T')[0],
-            content: message?.properties?.content || '',
-            file_path: message?.properties?.file_path || '',
-            uri_path: message?.properties?.uri_path || '',
-            message_type: message?.properties?.message_type || messageTypes[0],
-            depreciated: message?.properties?.depreciated || false,
-            depreciated_date: message?.properties?.depreciated_date || '',
-            include_in_report: message?.properties?.include_in_report ?? true,
-            created_by: createdBy || {},
-        });
-    }, [message, createdBy]);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     const handleChange = (e) => {
         const { name, value, type, checked } = e.target;
@@ -221,95 +261,87 @@ function MessageForm({ message, onSubmit, createdBy }) {
 
     return (
         <Box as="form" onSubmit={handleSubmit}>
-            <FormControl mb={4}>
-                <FormLabel>Message Name</FormLabel>
-                <Input name="name" value={messageData.name} onChange={handleChange} />
-            </FormControl>
-            <FormControl mb={4}>
-                <FormLabel>Date Created</FormLabel>
-                <Input
-                    name="date_created"
-                    type="date"
-                    value={messageData.date_created}
-                    onChange={handleChange}
-                />
-            </FormControl>
-            <FormControl mb={4}>
-                <FormLabel>Message Content</FormLabel>
-                <Textarea name="content" value={messageData.content} onChange={handleChange} />
-            </FormControl>
-            <FormControl mb={4}>
-                <FormLabel>File Path</FormLabel>
-                <Input name="file_path" value={messageData.file_path} onChange={handleChange} />
-            </FormControl>
-            <FormControl mb={4}>
-                <FormLabel>URI Path</FormLabel>
-                <Input name="uri_path" value={messageData.uri_path} onChange={handleChange} />
-            </FormControl>
+            <Grid templateColumns="repeat(2, 1fr)" gap={3}>
+                <GridItem colSpan={2}>
+                    <FormControl>
+                        <FormLabel fontSize="xs">Message Name</FormLabel>
+                        <Input size="sm" name="name" value={messageData.name} onChange={handleChange} required />
+                    </FormControl>
+                </GridItem>
 
-            <FormControl mb={4}>
-                <FormLabel>Message Type</FormLabel>
-                <Select name="message_type" value={messageData.message_type} onChange={handleChange}>
-                    {messageTypes.map((type) => (
-                        <option key={type} value={type}>
-                            {type}
-                        </option>
-                    ))}
-                </Select>
-            </FormControl>
+                <FormControl>
+                    <FormLabel fontSize="xs">Message Type</FormLabel>
+                    <Select size="sm" name="message_type" value={messageData.message_type} onChange={handleChange}>
+                        {messageTypes.map((type) => (
+                            <option key={type} value={type}>{type}</option>
+                        ))}
+                    </Select>
+                </FormControl>
 
-            {createdBy ? (
-                <Box mb={4}>
-                    <Text fontSize="sm" color="gray.600">
-                        Created by: {createdBy?.properties?.name || createdBy?.name || 'Unknown'} ({createdBy?.properties?.title || createdBy?.title || 'Unknown Title'})
-                    </Text>
-                </Box>
-            ) : (
-                <Text fontSize="sm" color="gray.600">Created by: Unknown</Text>
+                <FormControl>
+                    <FormLabel fontSize="xs">Date Created</FormLabel>
+                    <Input size="sm" name="date_created" type="date" value={messageData.date_created} onChange={handleChange} />
+                </FormControl>
+
+                <GridItem colSpan={2}>
+                    <FormControl>
+                        <FormLabel fontSize="xs">Message Content</FormLabel>
+                        <Textarea size="sm" name="content" value={messageData.content} onChange={handleChange} rows={3} />
+                    </FormControl>
+                </GridItem>
+
+                <FormControl>
+                    <FormLabel fontSize="xs">File Path</FormLabel>
+                    <Input size="sm" name="file_path" value={messageData.file_path} onChange={handleChange} />
+                </FormControl>
+
+                <FormControl>
+                    <FormLabel fontSize="xs">URI Path</FormLabel>
+                    <Input size="sm" name="uri_path" value={messageData.uri_path} onChange={handleChange} />
+                </FormControl>
+
+                <FormControl>
+                    <FormLabel fontSize="xs">Depreciation Date</FormLabel>
+                    <Input size="sm" type="date" name="depreciated_date" value={messageData.depreciated_date} onChange={handleChange} />
+                </FormControl>
+            </Grid>
+
+            {/* Toggle switches in compact grid */}
+            <Grid templateColumns="repeat(3, 1fr)" gap={3} mt={3}>
+                <FormControl display="flex" alignItems="center">
+                    <FormLabel fontSize="xs" mb="0" flex="1">In Report</FormLabel>
+                    <Switch size="sm" name="include_in_report" isChecked={messageData.include_in_report} onChange={handleChange} />
+                </FormControl>
+
+                <FormControl display="flex" alignItems="center">
+                    <FormLabel fontSize="xs" mb="0" flex="1">Deprecated</FormLabel>
+                    <Switch size="sm" name="depreciated" isChecked={messageData.depreciated} onChange={handleChange} />
+                </FormControl>
+            </Grid>
+
+            {createdBy?.properties?.name && (
+                <Text fontSize="xs" color="gray.500" mt={2}>
+                    Created by: {createdBy.properties.name}
+                </Text>
             )}
 
-            <Flex gap={4} mb={4}>
-                <Box flex="1">
-                    <FormControl mb={4}>
-                        <FormLabel>Depreciated</FormLabel>
-                        <Switch
-                            name="depreciated"
-                            isChecked={messageData.depreciated}
-                            onChange={handleChange}
-                        />
-                    </FormControl>
-                    <FormControl mb={4}>
-                        <FormLabel>Include in Report</FormLabel>
-                        <Switch
-                            name="include_in_report"
-                            isChecked={messageData.include_in_report}
-                            onChange={handleChange}
-                        />
-                    </FormControl>
-                </Box>
-
-                <Box flex="1">
-                    <FormControl mb={4}>
-                        <FormLabel>Depreciation Date</FormLabel>
-                        <Input
-                            type="date"
-                            name="depreciated_date"
-                            value={messageData.depreciated_date}
-                            onChange={handleChange}
-                        />
-                    </FormControl>
-                </Box>
-            </Flex>
-
-            <Button
-                type="submit"
-                colorScheme="teal"
-                mt={4}
-                isLoading={isSubmitting}
-                loadingText={message?.properties?.name ? 'Updating...' : 'Submitting...'}
-            >
-                {message?.properties?.name ? 'Update Message' : 'Submit Message'}
-            </Button>
+            {/* Action buttons */}
+            <HStack mt={3} spacing={2}>
+                <Button
+                    type="submit"
+                    size="xs"
+                    colorScheme="teal"
+                    isLoading={isSubmitting}
+                    loadingText={message?.properties?.name ? 'Updating...' : 'Submitting...'}
+                >
+                    {message?.properties?.name ? 'Update' : 'Submit'}
+                </Button>
+                {onCancel && (
+                    <Button size="xs" variant="outline" onClick={onCancel} isDisabled={isSubmitting}>
+                        Cancel
+                    </Button>
+                )}
+            </HStack>
         </Box>
     );
 }

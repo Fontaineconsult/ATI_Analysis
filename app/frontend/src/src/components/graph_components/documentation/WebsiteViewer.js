@@ -1,5 +1,3 @@
-// WebsiteViewer.jsx
-
 import React, { useState, useContext, useEffect } from 'react';
 import {
     Box,
@@ -12,7 +10,15 @@ import {
     Text,
     Flex,
     Collapse,
+    Link,
+    HStack,
+    VStack,
+    Badge,
+    IconButton,
+    Grid,
+    GridItem
 } from '@chakra-ui/react';
+import { EditIcon, ExternalLinkIcon } from '@chakra-ui/icons';
 import { updateWebpage } from '../../../services/api/put';
 import { addWebpageToImplementation } from '../../../services/api/post';
 import { useToast } from '@chakra-ui/react';
@@ -23,17 +29,15 @@ import { UserContext } from '../../../context/UserContext';
 function WebsiteViewer({ websites, implementation_id, implementation_type }) {
     const [expandedIndex, setExpandedIndex] = useState(null);
     const [isAddingNewWebsite, setIsAddingNewWebsite] = useState(false);
-    const { loadSingleWorkingGroupData, selectedYear } = useContext(DataContext);
+    const { loadSingleWorkingGroupData } = useContext(DataContext);
     const { currentWorkingGroup } = useSettings();
     const { user } = useContext(UserContext);
     const toast = useToast();
 
-    // Toggle expanded/collapsed state
     const toggleEdit = (index) => {
         setExpandedIndex(expandedIndex === index ? null : index);
     };
 
-    // Handle form submission for both new and updated websites
     const handleFormSubmit = async (index, websiteData, isNew) => {
         try {
             let response;
@@ -80,18 +84,19 @@ function WebsiteViewer({ websites, implementation_id, implementation_type }) {
     return (
         <Box>
             <Button
+                size="xs"
                 colorScheme="teal"
                 onClick={() => {
                     setIsAddingNewWebsite(true);
                     setExpandedIndex(null);
                 }}
-                mb={4}
+                mb={3}
             >
                 Add New Website
             </Button>
 
-            {isAddingNewWebsite ? (
-                <Box mb={4} border="1px solid teal" borderRadius="md" p={4} boxShadow="sm">
+            {isAddingNewWebsite && (
+                <Box mb={3} borderWidth="1px" borderColor="teal.300" borderRadius="md" p={3} bg="teal.50">
                     <WebsiteForm
                         website={null}
                         onSubmit={(websiteData) => handleFormSubmit(null, websiteData, true)}
@@ -100,118 +105,101 @@ function WebsiteViewer({ websites, implementation_id, implementation_type }) {
                         onCancel={() => setIsAddingNewWebsite(false)}
                     />
                 </Box>
-            ) : websites && websites.length > 0 ? (
-                websites.map((webWrapper, index) => {
-                    const website = webWrapper.webpage || webWrapper;
-                    const createdByPerson = webWrapper.created_by?.properties || website.created_by?.properties;
-                    const isExpanded = expandedIndex === index;
+            )}
 
-                    return (
-                        <Box
-                            key={website.properties.unique_id || index}
-                            mb={4}
-                            border="1px solid teal"
-                            borderRadius="md"
-                            p={4}
-                            boxShadow="sm"
-                        >
-                            {/* Always visible compact view with Edit button */}
-                            <Flex justify="space-between" alignItems="flex-start" mb={2}>
-                                <Flex flex="1" gap={4}>
-                                    {/* Left side - Basic Info (2/3 width) */}
-                                    <Box flex="2" fontSize="sm">
-                                        <Flex mb={1} align="baseline">
-                                            <Text fontWeight="bold" color="gray.600" minWidth="50px">
-                                                URL:
+            {websites && websites.length > 0 ? (
+                <VStack spacing={2} align="stretch">
+                    {websites.map((webWrapper, index) => {
+                        const website = webWrapper.webpage || webWrapper;
+                        const createdByPerson = webWrapper.created_by?.properties || website.created_by?.properties;
+                        const isExpanded = expandedIndex === index;
+
+                        return (
+                            <Box
+                                key={website.properties.unique_id || index}
+                                borderWidth="1px"
+                                borderColor="gray.200"
+                                borderRadius="md"
+                                p={3}
+                                bg="white"
+                                _hover={{ borderColor: 'teal.300', bg: 'gray.50' }}
+                                transition="all 0.2s"
+                            >
+                                {/* Compact view */}
+                                <Flex justify="space-between" align="start">
+                                    <VStack align="start" spacing={1} flex="1">
+                                        {/* Title row with status badges */}
+                                        <HStack spacing={2} width="full" flexWrap="wrap">
+                                            <Text fontWeight="bold" fontSize="sm" color="gray.800">
+                                                {website.properties.name || 'Untitled Website'}
                                             </Text>
-                                            <a
+                                            {website.properties.include_in_report && (
+                                                <Badge colorScheme="green" fontSize="10px">In Report</Badge>
+                                            )}
+                                            {website.properties.no_longer_exists && (
+                                                <Badge colorScheme="red" fontSize="10px">404</Badge>
+                                            )}
+                                            {website.properties.depreciated && (
+                                                <Badge colorScheme="orange" fontSize="10px">Deprecated</Badge>
+                                            )}
+                                        </HStack>
+
+                                        {/* URL and description */}
+                                        <HStack spacing={3} fontSize="xs" width="full">
+                                            <Link
                                                 href={website.properties.url}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                style={{ color: '#3182ce', textDecoration: 'underline', wordBreak: 'break-all' }}
+                                                isExternal
+                                                color="teal.600"
+                                                display="flex"
+                                                alignItems="center"
+                                                maxW="300px"
+                                                isTruncated
                                             >
-                                                {website.properties.url || 'No URL provided'}
-                                            </a>
-                                        </Flex>
-                                        <Flex mb={1} align="baseline">
-                                            <Text fontWeight="bold" color="gray.600" minWidth="50px">
-                                                Name:
-                                            </Text>
-                                            <Text>{website.properties.name || 'No name provided'}</Text>
-                                        </Flex>
-                                        <Flex align="baseline">
-                                            <Text fontWeight="bold" color="gray.600" minWidth="50px">
-                                                Desc:
-                                            </Text>
-                                            <Text>{website.properties.description || 'No description provided'}</Text>
-                                        </Flex>
-                                    </Box>
+                                                {website.properties.url} <ExternalLinkIcon ml={1} />
+                                            </Link>
+                                            {createdByPerson && (
+                                                <Text color="gray.500">
+                                                    By: {createdByPerson.name}
+                                                </Text>
+                                            )}
+                                        </HStack>
 
-                                    {/* Right side - Status Info (1/3 width) */}
-                                    <Box flex="1" fontSize="sm" borderLeft="1px solid" borderColor="gray.200" pl={4}>
-                                        <Flex mb={1} align="baseline">
-                                            <Text fontWeight="bold" color="gray.600" minWidth="120px">
-                                                No Longer Exists:
+                                        {website.properties.description && (
+                                            <Text fontSize="xs" color="gray.600" noOfLines={1}>
+                                                {website.properties.description}
                                             </Text>
-                                            <Text color={website.properties.no_longer_exists ? "red.500" : "green.500"}>
-                                                {website.properties.no_longer_exists ? 'True' : 'False'}
-                                            </Text>
-                                        </Flex>
-                                        <Flex mb={1} align="baseline">
-                                            <Text fontWeight="bold" color="gray.600" minWidth="120px">
-                                                Include in Report:
-                                            </Text>
-                                            <Text color={website.properties.include_in_report ? "green.500" : "red.500"}>
-                                                {website.properties.include_in_report ? 'True' : 'False'}
-                                            </Text>
-                                        </Flex>
-                                        <Flex mb={1} align="baseline">
-                                            <Text fontWeight="bold" color="gray.600" minWidth="120px">
-                                                Depreciated:
-                                            </Text>
-                                            <Text color={website.properties.depreciated ? "orange.500" : "green.500"}>
-                                                {website.properties.depreciated ? 'True' : 'False'}
-                                            </Text>
-                                        </Flex>
-                                        <Flex align="baseline">
-                                            <Text fontWeight="bold" color="gray.600" minWidth="120px">
-                                                Depreciation Date:
-                                            </Text>
-                                            <Text>{website.properties.depreciated_date || 'N/A'}</Text>
-                                        </Flex>
-                                    </Box>
-                                </Flex>
-                                <Button
-                                    size="sm"
-                                    colorScheme={isExpanded ? "gray" : "blue"}
-                                    onClick={() => toggleEdit(index)}
-                                    ml={4}
-                                >
-                                    {isExpanded ? 'Cancel' : 'Edit'}
-                                </Button>
-                            </Flex>
+                                        )}
+                                    </VStack>
 
-                            <Text fontSize="xs" color="gray.500">
-                                Created by: {createdByPerson ? createdByPerson.name : 'Unknown'}
-                            </Text>
-
-                            {/* Collapsible edit form */}
-                            <Collapse in={isExpanded} animateOpacity>
-                                <Box mt={4} pt={4} borderTop="1px solid" borderColor="gray.200">
-                                    <WebsiteForm
-                                        website={website}
-                                        onSubmit={(websiteData) => handleFormSubmit(index, websiteData, false)}
-                                        createdBy={createdByPerson}
-                                        isNewWebsite={false}
-                                        onCancel={() => toggleEdit(index)}
+                                    <IconButton
+                                        aria-label="Edit website"
+                                        icon={<EditIcon />}
+                                        size="xs"
+                                        colorScheme={isExpanded ? "gray" : "teal"}
+                                        variant={isExpanded ? "solid" : "ghost"}
+                                        onClick={() => toggleEdit(index)}
+                                        ml={2}
                                     />
-                                </Box>
-                            </Collapse>
-                        </Box>
-                    );
-                })
+                                </Flex>
+
+                                {/* Collapsible edit form */}
+                                <Collapse in={isExpanded} animateOpacity>
+                                    <Box mt={3} pt={3} borderTop="1px solid" borderColor="gray.200">
+                                        <WebsiteForm
+                                            website={website}
+                                            onSubmit={(websiteData) => handleFormSubmit(index, websiteData, false)}
+                                            createdBy={createdByPerson}
+                                            isNewWebsite={false}
+                                            onCancel={() => toggleEdit(index)}
+                                        />
+                                    </Box>
+                                </Collapse>
+                            </Box>
+                        );
+                    })}
+                </VStack>
             ) : (
-                <Text>No websites available.</Text>
+                <Text color="gray.500" fontSize="sm">No websites available.</Text>
             )}
         </Box>
     );
@@ -227,28 +215,11 @@ function WebsiteForm({ website, onSubmit, createdBy, isNewWebsite, onCancel }) {
         depreciated: website?.properties?.depreciated || false,
         depreciated_date: website?.properties?.depreciated_date || '',
         include_in_report: website?.properties?.include_in_report ?? true,
-        date_created:
-            website?.properties?.date_created || new Date().toISOString().split('T')[0],
+        date_created: website?.properties?.date_created || new Date().toISOString().split('T')[0],
         created_by: createdBy || {},
     });
 
     const [isSubmitting, setIsSubmitting] = useState(false);
-
-    useEffect(() => {
-        setWebsiteData({
-            unique_id: website?.properties?.unique_id || '',
-            url: website?.properties?.url || '',
-            name: website?.properties?.name || '',
-            description: website?.properties?.description || '',
-            no_longer_exists: website?.properties?.no_longer_exists || false,
-            depreciated: website?.properties?.depreciated || false,
-            depreciated_date: website?.properties?.depreciated_date || '',
-            include_in_report: website?.properties?.include_in_report ?? true,
-            date_created:
-                website?.properties?.date_created || new Date().toISOString().split('T')[0],
-            created_by: createdBy || {},
-        });
-    }, [website, createdBy]);
 
     const handleChange = (e) => {
         const { name, value, type, checked } = e.target;
@@ -272,88 +243,101 @@ function WebsiteForm({ website, onSubmit, createdBy, isNewWebsite, onCancel }) {
 
     return (
         <Box as="form" onSubmit={handleSubmit}>
-            {/* Show input fields only when editing or for new websites */}
-            <FormControl mb={4}>
-                <FormLabel>Website URL</FormLabel>
-                <Input
-                    name="url"
-                    value={websiteData.url}
-                    onChange={handleChange}
-                    required
-                />
-            </FormControl>
-            <FormControl mb={4}>
-                <FormLabel>Website Name</FormLabel>
-                <Input
-                    name="name"
-                    value={websiteData.name}
-                    onChange={handleChange}
-                    required
-                />
-            </FormControl>
-            <FormControl mb={4}>
-                <FormLabel>Description</FormLabel>
-                <Textarea
-                    name="description"
-                    value={websiteData.description}
-                    onChange={handleChange}
-                />
-            </FormControl>
+            <VStack spacing={3}>
+                <FormControl>
+                    <FormLabel fontSize="xs">Website URL</FormLabel>
+                    <Input
+                        size="sm"
+                        name="url"
+                        value={websiteData.url}
+                        onChange={handleChange}
+                        required
+                    />
+                </FormControl>
 
-            {/* Toggles and date fields */}
-            <Flex gap={4} mb={4}>
-                <Box flex="1">
-                    <FormControl mb={4}>
-                        <FormLabel>No Longer Exists</FormLabel>
-                        <Switch
-                            name="no_longer_exists"
-                            isChecked={websiteData.no_longer_exists}
-                            onChange={handleChange}
-                        />
-                    </FormControl>
-                    <FormControl mb={4}>
-                        <FormLabel>Include in Report</FormLabel>
-                        <Switch
-                            name="include_in_report"
-                            isChecked={websiteData.include_in_report}
-                            onChange={handleChange}
-                        />
-                    </FormControl>
-                </Box>
-
-                <Box flex="1">
-                    <FormControl mb={4}>
-                        <FormLabel>Depreciated</FormLabel>
-                        <Switch
-                            name="depreciated"
-                            isChecked={websiteData.depreciated}
-                            onChange={handleChange}
-                        />
-                    </FormControl>
-                    <FormControl mb={4}>
-                        <FormLabel>Depreciation Date</FormLabel>
+                <Grid templateColumns="repeat(2, 1fr)" gap={3} width="full">
+                    <FormControl>
+                        <FormLabel fontSize="xs">Website Name</FormLabel>
                         <Input
+                            size="sm"
+                            name="name"
+                            value={websiteData.name}
+                            onChange={handleChange}
+                            required
+                        />
+                    </FormControl>
+
+                    <FormControl>
+                        <FormLabel fontSize="xs">Depreciation Date</FormLabel>
+                        <Input
+                            size="sm"
                             type="date"
                             name="depreciated_date"
                             value={websiteData.depreciated_date}
                             onChange={handleChange}
                         />
                     </FormControl>
-                </Box>
-            </Flex>
+                </Grid>
+
+                <FormControl>
+                    <FormLabel fontSize="xs">Description</FormLabel>
+                    <Textarea
+                        size="sm"
+                        name="description"
+                        value={websiteData.description}
+                        onChange={handleChange}
+                        rows={2}
+                    />
+                </FormControl>
+
+                {/* Toggle switches in compact grid */}
+                <Grid templateColumns="repeat(2, 1fr)" gap={3} width="full">
+                    <FormControl display="flex" alignItems="center">
+                        <FormLabel fontSize="xs" mb="0" flex="1">404/Dead Link</FormLabel>
+                        <Switch
+                            size="sm"
+                            name="no_longer_exists"
+                            isChecked={websiteData.no_longer_exists}
+                            onChange={handleChange}
+                        />
+                    </FormControl>
+
+                    <FormControl display="flex" alignItems="center">
+                        <FormLabel fontSize="xs" mb="0" flex="1">Include in Report</FormLabel>
+                        <Switch
+                            size="sm"
+                            name="include_in_report"
+                            isChecked={websiteData.include_in_report}
+                            onChange={handleChange}
+                        />
+                    </FormControl>
+
+                    <FormControl display="flex" alignItems="center">
+                        <FormLabel fontSize="xs" mb="0" flex="1">Deprecated</FormLabel>
+                        <Switch
+                            size="sm"
+                            name="depreciated"
+                            isChecked={websiteData.depreciated}
+                            onChange={handleChange}
+                        />
+                    </FormControl>
+                </Grid>
+            </VStack>
 
             {/* Action buttons */}
-            <Flex gap={2}>
+            <HStack mt={4} spacing={2}>
                 <Button
                     type="submit"
+                    size="xs"
                     colorScheme="teal"
                     isLoading={isSubmitting}
                     loadingText={isNewWebsite ? 'Submitting...' : 'Updating...'}
                 >
-                    {isNewWebsite ? 'Submit Website' : 'Update Website'}
+                    {isNewWebsite ? 'Submit' : 'Update'}
                 </Button>
                 {onCancel && (
                     <Button
+                        size="xs"
                         variant="outline"
                         onClick={onCancel}
                         isDisabled={isSubmitting}
@@ -361,7 +345,7 @@ function WebsiteForm({ website, onSubmit, createdBy, isNewWebsite, onCancel }) {
                         Cancel
                     </Button>
                 )}
-            </Flex>
+            </HStack>
         </Box>
     );
 }

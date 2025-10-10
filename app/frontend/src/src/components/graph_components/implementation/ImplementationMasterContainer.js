@@ -18,14 +18,18 @@ import {
     TabList,
     TabPanels,
     Tab,
-    TabPanel
+    TabPanel,
+    VStack,
+    HStack,
+    Badge
 } from '@chakra-ui/react';
-import { AddIcon } from '@chakra-ui/icons';
+import { AddIcon, ChevronDownIcon, ChevronUpIcon } from '@chakra-ui/icons';
 import EvidenceTypeMasterList from '../evidence/EvidenceTypeMasterList';
 import CreateImplementationModal from './CreateImplementation';
 import LinkImplementationModal from './LinkImplementation';
 import { DataContext } from '../../../context/DataContext';
 import { useSettings } from '../../../context/SettingsContext';
+import { getDefinition } from '../../../context/definitions';
 
 function ImplementationMasterContainer({ evidenceData = {}, compositeKey, yearIdentifier }) {
     const { evidenceTypes = [] } = evidenceData;
@@ -94,14 +98,21 @@ function ImplementationMasterContainer({ evidenceData = {}, compositeKey, yearId
         }
     };
 
+    const selectedTypeDefinition = selectedImplementationType ? getDefinition(selectedImplementationType) : null;
+
+    // Count implementations by type
+    const getTypeCount = (type) => {
+        return evidenceTypes.filter(evidenceType => {
+            const directTypeMatch = evidenceType.type && evidenceType.type === type;
+            const nestedTypeMatch = evidenceType.evidenceType?.properties?.title === type;
+            return directTypeMatch || nestedTypeMatch;
+        }).length;
+    };
+
     return (
         <Box
-            tabIndex={0}
-            role="region"
-            aria-labelledby="implementation-container-heading"
-            aria-expanded={isExpanded}
             borderWidth="1px"
-            borderColor="teal.300"
+            borderColor="gray.200"
             borderRadius="lg"
             mt={6}
             bg="white"
@@ -109,115 +120,158 @@ function ImplementationMasterContainer({ evidenceData = {}, compositeKey, yearId
             transition="all 0.2s"
             _hover={{ boxShadow: 'md' }}
         >
+            {/* Header Section */}
             <Flex
                 justify="space-between"
                 align="center"
-                bg="teal.600"
-                color="white"
                 p={4}
                 borderTopRadius="lg"
+                borderBottom="1px"
+                borderColor="gray.200"
+                bg="teal.400"
+                transition="background-color 0.2s"
             >
-                <Heading
-                    as="h5"
-                    size="md"
-                    textAlign="center"
-                    flex="1"
-                    id="implementation-container-heading"
-                    fontWeight="bold"
-                >
-                    Implementation Details for {compositeKey}
-                </Heading>
+                <HStack spacing={3}>
+                    <Heading
+                        size="sm"
+                        color="white"
+                        fontWeight="bold"
+                    >
+                        Implementation Details
+                    </Heading>
+                </HStack>
                 <Button
-                    size="sm"
+                    size="xs"
                     onClick={toggleExpand}
-                    colorScheme="whiteAlpha"
-                    variant="outline"
-                    aria-controls="implementation-content"
-                    aria-expanded={isExpanded}
-                    ml={4}
-                    borderRadius="lg"
-                    _hover={{ bg: 'whiteAlpha.200' }}
-                    transition="all 0.2s"
+                    bg="whiteAlpha.200"
+                    color="white"
+                    borderWidth="1px"
+                    borderColor="whiteAlpha.400"
+                    rightIcon={isExpanded ? <ChevronUpIcon /> : <ChevronDownIcon />}
+                    _hover={{
+                        bg: 'whiteAlpha.300',
+                        borderColor: 'whiteAlpha.600'
+                    }}
                 >
                     {isExpanded ? 'Collapse' : 'Expand'}
                 </Button>
             </Flex>
 
-            <Collapse in={isExpanded} animateOpacity id="implementation-content">
-                <Box p={6}>
-                    <Flex justify="space-between" align="center" mb={4}>
-                        <Flex wrap="wrap" gap={3}>
-                            {implementationTypes.map((type) => (
-                                <Button
-                                    key={type}
-                                    onClick={() => setSelectedImplementationType(type)}
-                                    colorScheme={selectedImplementationType === type ? 'teal' : 'gray'}
-                                    aria-pressed={selectedImplementationType === type ? 'true' : 'false'}
-                                    variant={selectedImplementationType === type ? 'solid' : 'outline'}
-                                    isDisabled={!isTypeAvailable(type)}
-                                    size="sm"
-                                    borderRadius="lg"
-                                    _hover={{
-                                        boxShadow: 'md',
-                                        transform: 'translateY(-1px)'
-                                    }}
-                                    transition="all 0.2s"
-                                >
-                                    {type}
-                                </Button>
-                            ))}
+            <Collapse in={isExpanded} animateOpacity>
+                <VStack align="stretch" spacing={4} p={6}>
+                    {/* Implementation Type Selector */}
+                    <Box>
+                        <Flex justify="space-between" align="center" mb={3}>
+                            <Text fontSize="xs" color="gray.600" fontWeight="semibold" textTransform="uppercase">
+                                Select Implementation Type
+                            </Text>
+                            <IconButton
+                                aria-label="Add or link implementation"
+                                icon={<AddIcon />}
+                                size="xs"
+                                colorScheme="teal"
+                                onClick={handleOpenModal}
+                                borderRadius="md"
+                            />
                         </Flex>
-                        <IconButton
-                            aria-label="Add or link implementation"
-                            icon={<AddIcon />}
-                            size="sm"
-                            colorScheme="green"
-                            variant="solid"
-                            onClick={handleOpenModal}
-                            ml={4}
-                            borderRadius="lg"
-                            _hover={{
-                                boxShadow: 'md',
-                                transform: 'scale(1.05)'
-                            }}
-                            transition="all 0.2s"
-                        />
-                    </Flex>
 
-                    {selectedImplementationType ? (
-                        <Heading
-                            as="h6"
-                            size="sm"
-                            mb={3}
-                            color="teal.700"
-                            fontWeight="semibold"
+                        <Flex wrap="wrap" gap={2}>
+                            {implementationTypes.map((type) => {
+                                const count = getTypeCount(type);
+                                const isAvailable = isTypeAvailable(type);
+                                const isSelected = selectedImplementationType === type;
+
+                                return (
+                                    <Button
+                                        key={type}
+                                        onClick={() => setSelectedImplementationType(type)}
+                                        size="sm"
+                                        variant={isSelected ? 'solid' : 'outline'}
+                                        colorScheme={isSelected ? 'teal' : 'gray'}
+                                        isDisabled={!isAvailable}
+                                        borderRadius="md"
+                                        position="relative"
+                                        pr={count > 1 ? 10 : 5}
+                                        px={6}
+                                        py={3}
+                                        opacity={!isAvailable ? 0.5 : 1}
+                                        _disabled={{
+                                            opacity: 0.5,
+                                            cursor: 'not-allowed',
+                                            _hover: {
+                                                bg: isSelected ? 'teal.500' : 'transparent'
+                                            }
+                                        }}
+                                    >
+                                        {type}
+                                    </Button>
+                                );
+                            })}
+                        </Flex>
+                    </Box>
+
+                    {/* Definition Box */}
+                    {selectedTypeDefinition && (
+                        <Box
+                            p={4}
+                            bg="gray.50"
+                            borderRadius="lg"
+                            borderLeft="3px solid"
+                            borderLeftColor="teal.500"
                         >
-                            Currently Viewing: {selectedImplementationType}
-                        </Heading>
-                    ) : (
-                        <Text color="gray.600" fontSize="sm">
-                            No Implementation Type Selected
-                        </Text>
+                            <Text fontSize="xs" color="teal.600" fontWeight="semibold" textTransform="uppercase" mb={2}>
+                                {selectedTypeDefinition.name} Definition
+                            </Text>
+                            <Text fontSize="sm" color="gray.700">
+                                {selectedTypeDefinition.description}
+                            </Text>
+                        </Box>
                     )}
 
+                    {/* Evidence List Section */}
                     <Box
-                        p={4}
+                        p={3}
                         bg="gray.50"
                         borderRadius="lg"
                         borderWidth="1px"
                         borderColor="gray.200"
                     >
-                        {filteredEvidence.length > 0 ? (
-                            <EvidenceTypeMasterList evidence={filteredEvidence} />
-                        ) : (
-                            <Text color="gray.500" fontSize="sm">
-                                No Implementation Assigned to this Success Indicator
+                        {!selectedImplementationType ? (
+                            <Text color="gray.500" fontSize="sm" textAlign="center" py={3}>
+                                Select an implementation type to view details
                             </Text>
+                        ) : (
+                            <>
+                                <Flex justify="space-between" align="center" mb={2}>
+                                    <Text fontSize="xs" color="gray.600" fontWeight="semibold" textTransform="uppercase">
+                                        {selectedImplementationType} ({filteredEvidence.length})
+                                    </Text>
+                                    {filteredEvidence.length === 0 && (
+                                        <Button
+                                            size="xs"
+                                            colorScheme="teal"
+                                            onClick={handleOpenModal}
+                                            leftIcon={<AddIcon />}
+                                        >
+                                            Add First
+                                        </Button>
+                                    )}
+                                </Flex>
+
+                                {filteredEvidence.length > 0 ? (
+                                    <EvidenceTypeMasterList evidence={filteredEvidence} />
+                                ) : (
+                                    <Text color="gray.500" fontSize="sm" textAlign="center" py={2}>
+                                        No implementations found
+                                    </Text>
+                                )}
+                            </>
                         )}
                     </Box>
-                </Box>
+                </VStack>
             </Collapse>
 
+            {/* Modal remains the same */}
             <Modal isOpen={isOpen} onClose={handleModalClose} size="2xl">
                 <ModalOverlay />
                 <ModalContent borderRadius="lg">
@@ -239,26 +293,8 @@ function ImplementationMasterContainer({ evidenceData = {}, compositeKey, yearId
                             size="sm"
                         >
                             <TabList borderBottomColor="gray.200">
-                                <Tab
-                                    _selected={{
-                                        color: 'teal.600',
-                                        borderBottomColor: 'teal.500',
-                                        fontWeight: 'semibold'
-                                    }}
-                                    fontSize="sm"
-                                >
-                                    Create New
-                                </Tab>
-                                <Tab
-                                    _selected={{
-                                        color: 'teal.600',
-                                        borderBottomColor: 'teal.500',
-                                        fontWeight: 'semibold'
-                                    }}
-                                    fontSize="sm"
-                                >
-                                    Link Existing
-                                </Tab>
+                                <Tab fontSize="sm">Create New</Tab>
+                                <Tab fontSize="sm">Link Existing</Tab>
                             </TabList>
 
                             <TabPanels>

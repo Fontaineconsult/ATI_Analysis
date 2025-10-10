@@ -1,224 +1,253 @@
 import React from 'react';
 
 function PlainTextReport({ evidenceItem, indicatorItem }) {
+    // Helper function to filter arrays based on include_in_report
+    const filterByIncludeInReport = (array, itemKey = 'properties') => {
+        return (array || []).filter((item) => {
+            if (!item) return false;
+
+            // Handle nested property access for notes/messages/metrics
+            if (itemKey.includes('.')) {
+                const keys = itemKey.split('.');
+                let value = item;
+                for (const key of keys) {
+                    value = value?.[key];
+                    if (!value) return false;
+                }
+                return value.include_in_report !== false;
+            }
+
+            if (!item[itemKey]) return false;
+            if (item[itemKey].include_in_report === false) return false;
+            return true;
+        });
+    };
+
     // Function to generate the plain text report
     const generateReportText = () => {
         let report = '';
 
-        // Indicator Information
-        if (indicatorItem && indicatorItem.properties) {
-            report += `Success Indicator ${indicatorItem.properties.number}\n`;
-            report += `${indicatorItem.properties.success_indicator}\n\n`;
+        // Filter main-level items
+        const filteredNotes = filterByIncludeInReport(evidenceItem?.has_notes || [], 'note.properties');
+        const filteredMessages = filterByIncludeInReport(evidenceItem?.has_messages || [], 'message.properties');
+        const filteredMetrics = filterByIncludeInReport(evidenceItem?.has_metrics || [], 'metric.properties');
 
-            // Composite Key as a minor heading
-            report += `--- Composite Key: ${indicatorItem.properties.composite_key} ---\n\n`;
+        // Filter evidenceTypes and their nested content
+        const filteredEvidenceTypes = (evidenceItem?.evidenceTypes || []).map((etype) => {
+            return {
+                ...etype,
+                docs: filterByIncludeInReport(etype.docs, 'properties'),
+                webs: filterByIncludeInReport(etype.webs, 'properties'),
+                notes: filterByIncludeInReport(etype.notes, 'properties'),
+                msgs: filterByIncludeInReport(etype.msgs, 'properties'),
+                metrics: filterByIncludeInReport(etype.metrics, 'properties'),
+            };
+        }).filter(et => {
+            const hasContent = et.docs?.length || et.webs?.length ||
+                et.notes?.length || et.msgs?.length || et.metrics?.length;
+            return hasContent;
+        });
 
-            report += `Removed: ${indicatorItem.properties.removed ? 'Yes' : 'No'}\n`;
-            report += `Date Added: ${indicatorItem.properties.date_added}\n\n`;
+        // Indicator Information (if passed separately)
+        if (indicatorItem?.properties) {
+            report += `${evidenceItem?.evidence?.properties?.year_identifier || indicatorItem.properties.composite_key}\n`;
+            report += `${indicatorItem.properties.success_indicator}\n`;
+            report += `Composite Key: ${indicatorItem.properties.composite_key}\n`;
+            report += `Status: ${indicatorItem.properties.removed ? 'Removed' : 'Active'} | Date Added: ${indicatorItem.properties.date_added}\n\n`;
+        }
+        // Or if indicator is part of evidenceItem
+        else if (evidenceItem?.indicator?.properties) {
+            const indicatorProps = evidenceItem.indicator.properties;
+            report += `${evidenceItem.evidence.properties.year_identifier}\n`;
+            report += `${indicatorProps.success_indicator}\n`;
+            report += `Composite Key: ${indicatorProps.composite_key}\n`;
+            report += `Status: ${indicatorProps.removed ? 'Removed' : 'Active'} | Date Added: ${indicatorProps.date_added}\n\n`;
         }
 
         // Evidence Information
-        if (evidenceItem && evidenceItem.evidence && evidenceItem.evidence.properties) {
-            report += `Evidence\n\n`;
-            report += `Year Identifier: ${evidenceItem.evidence.properties.year_identifier}\n`;
+        if (evidenceItem?.evidence?.properties) {
+            report += `EVIDENCE INFORMATION\n`;
+            report += `${'='.repeat(50)}\n`;
 
-            if ('administrative_review_complete' in evidenceItem.evidence.properties) {
-                report += `Administrative Review Complete: ${
-                    evidenceItem.evidence.properties.administrative_review_complete ? 'Yes' : 'No'
-                }\n`;
-            }
-            if ('administrative_review_completed_date' in evidenceItem.evidence.properties) {
-                report += `Administrative Review Completed Date: ${evidenceItem.evidence.properties.administrative_review_completed_date}\n`;
-            }
+            const evidenceProps = evidenceItem.evidence.properties;
+            report += `Year: ${evidenceProps.year_identifier}\n`;
 
-            // Status Level
-            if (evidenceItem.statusLevel && evidenceItem.statusLevel.properties) {
+            if (evidenceItem.statusLevel?.properties) {
                 report += `Status Level: ${evidenceItem.statusLevel.properties.status_level}\n`;
             }
 
+            if ('administrative_review_complete' in evidenceProps) {
+                report += `Admin Review: ${evidenceProps.administrative_review_complete ? 'Complete' : 'Pending'}`;
+                if (evidenceProps.administrative_review_completed_date) {
+                    report += ` (${evidenceProps.administrative_review_completed_date})`;
+                }
+                report += '\n';
+            }
+
             // Persons Involved
-            if (evidenceItem.persons && evidenceItem.persons.length > 0) {
+            if (evidenceItem.persons?.length > 0) {
                 report += `\nPersons Involved:\n`;
                 evidenceItem.persons.forEach((person) => {
-                    if (person && person.properties) {
-                        // Persons nodes don't seem to have `include_in_report`, so we just include them.
-                        report += `- ${person.properties.name} - ${person.properties.title} (${person.properties.email})\n`;
-                    }
+                    const personProps = person.properties;
+                    report += `  • ${personProps.name} - ${personProps.title} (${personProps.email})\n`;
                 });
             }
 
             // Admin Reviewers
-            if (evidenceItem.adminReviewers && evidenceItem.adminReviewers.length > 0) {
+            if (evidenceItem.adminReviewers?.length > 0) {
                 report += `\nAdmin Reviewers:\n`;
                 evidenceItem.adminReviewers.forEach((reviewer) => {
-                    if (reviewer && reviewer.properties) {
-                        // Admin reviewers also don't seem to have `include_in_report`
-                        report += `- ${reviewer.properties.name} - ${reviewer.properties.title} (${reviewer.properties.email})\n`;
-                    }
+                    const reviewerProps = reviewer.properties;
+                    report += `  • ${reviewerProps.name} - ${reviewerProps.title}\n`;
                 });
             }
+            report += '\n';
+        }
 
-            // Notes
-            if (evidenceItem.has_notes && evidenceItem.has_notes.length > 0) {
-                // Filter notes that have include_in_report = false
-                const filteredNotes = evidenceItem.has_notes.filter((noteItem) => {
-                    return noteItem && noteItem.note && noteItem.note.properties &&
-                        (noteItem.note.properties.include_in_report !== false);
-                });
+        // Notes
+        if (filteredNotes.length > 0) {
+            report += `NOTES (${filteredNotes.length})\n`;
+            report += `${'='.repeat(50)}\n`;
+            filteredNotes.forEach((noteItem) => {
+                const noteProps = noteItem.note.properties;
+                report += `${noteProps.date_created || 'No date'}`;
+                if (noteItem.created_by?.properties) {
+                    report += ` - ${noteItem.created_by.properties.name}`;
+                }
+                report += '\n';
+                report += `  ${noteProps.content}\n`;
+                if (noteProps.file_path || noteProps.uri_path) {
+                    report += `  Attachment: ${noteProps.name || 'Attachment'} - ${noteProps.file_path || noteProps.uri_path}\n`;
+                }
+                report += '\n';
+            });
+        }
 
-                if (filteredNotes.length > 0) {
-                    report += `\nNotes:\n`;
-                    filteredNotes.forEach((noteItem, index) => {
-                        const noteProps = noteItem.note.properties;
-                        report += `\nNote ${index + 1}:\n`;
-                        report += `Date: ${noteProps.date_created || 'N/A'}\n`;
-                        report += `${noteProps.content}\n`;
-                        if (noteProps.file_path || noteProps.uri_path) {
-                            report += `Attachment: ${noteProps.file_path || noteProps.uri_path}\n`;
+        // Messages
+        if (filteredMessages.length > 0) {
+            report += `MESSAGES (${filteredMessages.length})\n`;
+            report += `${'='.repeat(50)}\n`;
+            filteredMessages.forEach((messageItem) => {
+                const messageProps = messageItem.message.properties;
+                report += `${messageProps.date_sent || 'No date'}`;
+                if (messageItem.created_by?.properties) {
+                    report += ` - ${messageItem.created_by.properties.name}`;
+                }
+                report += '\n';
+                report += `  ${messageProps.content}\n\n`;
+            });
+        }
+
+        // Metrics
+        if (filteredMetrics.length > 0) {
+            report += `METRICS (${filteredMetrics.length})\n`;
+            report += `${'='.repeat(50)}\n`;
+            filteredMetrics.forEach((metricItem) => {
+                const metricProps = metricItem.metric.properties;
+                report += `  • ${metricProps.name}: ${metricProps.value}`;
+                if (metricItem.created_by?.properties) {
+                    report += ` (${metricItem.created_by.properties.name})`;
+                }
+                report += '\n';
+            });
+            report += '\n';
+        }
+
+        // Implementation Evidence
+        if (filteredEvidenceTypes.length > 0) {
+            report += `IMPLEMENTATION EVIDENCE\n`;
+            report += `${'='.repeat(50)}\n`;
+
+            filteredEvidenceTypes.forEach((etype) => {
+                report += `\n[${etype.type}] `;
+                if (etype.evidenceType?.properties?.title) {
+                    report += etype.evidenceType.properties.title;
+                }
+                report += '\n';
+
+                if (etype.evidenceType?.properties?.description) {
+                    report += `  ${etype.evidenceType.properties.description}\n`;
+                }
+
+                // Documents
+                if (etype.docs?.length > 0) {
+                    report += `\n  Documents:\n`;
+                    etype.docs.forEach((doc) => {
+                        const docProps = doc.properties;
+                        report += `    • ${docProps.name}`;
+
+                        // Add badges as text
+                        const badges = [];
+                        if (docProps.is_administrative_review_documentation === "True" || docProps.is_administrative_review_documentation === true) {
+                            badges.push('Admin Review');
                         }
-                        if (noteItem.created_by && noteItem.created_by.properties) {
-                            report += `Created by: ${noteItem.created_by.properties.name}\n`;
+                        if (docProps.is_milestone_and_measures_documentation === "True" || docProps.is_milestone_and_measures_documentation === true) {
+                            badges.push('Milestones');
+                        }
+                        if (docProps.depreciated === true) {
+                            badges.push('Depreciated');
+                        }
+                        if (badges.length > 0) {
+                            report += ` [${badges.join(', ')}]`;
+                        }
+                        report += '\n';
+                        report += `      ${docProps.file_path || docProps.uri_path}\n`;
+                    });
+                }
+
+                // Webpages
+                if (etype.webs?.length > 0) {
+                    report += `\n  Webpages:\n`;
+                    etype.webs.forEach((web) => {
+                        const webProps = web.properties;
+                        report += `    • ${webProps.name || webProps.title}`;
+
+                        // Add badges as text
+                        const badges = [];
+                        if (webProps.no_longer_exists === true) {
+                            badges.push('No Longer Exists');
+                        }
+                        if (webProps.depreciated === true) {
+                            badges.push('Depreciated');
+                        }
+                        if (badges.length > 0) {
+                            report += ` [${badges.join(', ')}]`;
+                        }
+                        report += '\n';
+                        report += `      ${webProps.url}\n`;
+                        if (webProps.description) {
+                            report += `      ${webProps.description}\n`;
                         }
                     });
                 }
-            }
 
-            // Messages
-            if (evidenceItem.has_messages && evidenceItem.has_messages.length > 0) {
-                const filteredMessages = evidenceItem.has_messages.filter((messageItem) => {
-                    return (
-                        messageItem &&
-                        messageItem.message &&
-                        messageItem.message.properties &&
-                        (messageItem.message.properties.include_in_report !== false)
-                    );
-                });
-
-                if (filteredMessages.length > 0) {
-                    report += `\nMessages:\n`;
-                    filteredMessages.forEach((messageItem, index) => {
-                        const messageProps = messageItem.message.properties;
-                        report += `\nMessage ${index + 1}:\n`;
-                        report += `Date: ${messageProps.date_sent || 'N/A'}\n`;
-                        report += `${messageProps.content}\n`;
-                        if (messageProps.file_path || messageProps.uri_path) {
-                            report += `Attachment: ${messageProps.file_path || messageProps.uri_path}\n`;
-                        }
-                        if (messageItem.created_by && messageItem.created_by.properties) {
-                            report += `Sent by: ${messageItem.created_by.properties.name}\n`;
-                        }
+                // Implementation Notes
+                if (etype.notes?.length > 0) {
+                    report += `\n  Notes:\n`;
+                    etype.notes.forEach((note) => {
+                        const noteProps = note.properties;
+                        report += `    • ${noteProps.date_created || 'No date'}: ${noteProps.content}\n`;
                     });
                 }
-            }
 
-            // Metrics
-            if (evidenceItem.has_metrics && evidenceItem.has_metrics.length > 0) {
-                // Metrics do not appear to have an `include_in_report` property.
-                // If you do have it, filter similarly. Otherwise, just include all.
-                report += `\nMetrics:\n`;
-                evidenceItem.has_metrics.forEach((metricItem) => {
-                    if (
-                        metricItem &&
-                        metricItem.metric &&
-                        metricItem.metric.properties
-                    ) {
-                        report += `- Metric: ${metricItem.metric.properties.name}, Value: ${metricItem.metric.properties.value}\n`;
-                        if (metricItem.created_by && metricItem.created_by.properties) {
-                            report += `  Recorded by: ${metricItem.created_by.properties.name}\n`;
-                        }
-                    }
-                });
-            }
+                // Implementation Messages
+                if (etype.msgs?.length > 0) {
+                    report += `\n  Messages:\n`;
+                    etype.msgs.forEach((msg) => {
+                        const msgProps = msg.properties;
+                        report += `    • ${msgProps.date_sent || 'No date'}: ${msgProps.content}\n`;
+                    });
+                }
 
-            // Evidence Types
-            if (evidenceItem.evidenceTypes && evidenceItem.evidenceTypes.length > 0) {
-                report += `\nEvidence Types:\n`;
-                evidenceItem.evidenceTypes.forEach((etype, index) => {
-                    if (etype) {
-                        report += `\nEvidence Type ${index + 1}:\n`;
-                        report += `Type: ${etype.type || 'N/A'}\n`;
-                        if (etype.evidenceType && etype.evidenceType.properties) {
-                            report += `Title: ${etype.evidenceType.properties.title}\n`;
-                            report += `Description: ${etype.evidenceType.properties.description}\n`;
-                        }
-
-                        // Documents
-                        if (etype.docs && etype.docs.length > 0) {
-                            const filteredDocs = etype.docs.filter((doc) => {
-                                return doc && doc.properties && (doc.properties.include_in_report !== false);
-                            });
-                            if (filteredDocs.length > 0) {
-                                report += `\nDocuments:\n`;
-                                filteredDocs.forEach((doc) => {
-                                    report += `- ${doc.properties.name}: ${
-                                        doc.properties.file_path || doc.properties.uri_path
-                                    }\n`;
-                                });
-                            }
-                        }
-
-                        // Webpages
-                        if (etype.webs && etype.webs.length > 0) {
-                            const filteredWebs = etype.webs.filter((web) => {
-                                return web && web.properties && (web.properties.include_in_report !== false);
-                            });
-                            if (filteredWebs.length > 0) {
-                                report += `\nWebpages:\n`;
-                                filteredWebs.forEach((web) => {
-                                    report += `- ${web.properties.name}: ${web.properties.url}\n`;
-                                });
-                            }
-                        }
-
-                        // Notes under Evidence Type
-                        if (etype.notes && etype.notes.length > 0) {
-                            const filteredETypeNotes = etype.notes.filter((note) => {
-                                return note && note.properties && (note.properties.include_in_report !== false);
-                            });
-                            if (filteredETypeNotes.length > 0) {
-                                report += `\nNotes:\n`;
-                                filteredETypeNotes.forEach((note, idx) => {
-                                    report += `\nNote ${idx + 1}:\n`;
-                                    report += `Date: ${note.properties.date_created || 'N/A'}\n`;
-                                    report += `${note.properties.content}\n`;
-                                    if (note.properties.file_path || note.properties.uri_path) {
-                                        report += `Attachment: ${note.properties.file_path || note.properties.uri_path}\n`;
-                                    }
-                                });
-                            }
-                        }
-
-                        // Messages under Evidence Type
-                        if (etype.msgs && etype.msgs.length > 0) {
-                            const filteredETypeMsgs = etype.msgs.filter((msg) => {
-                                return msg && msg.properties && (msg.properties.include_in_report !== false);
-                            });
-                            if (filteredETypeMsgs.length > 0) {
-                                report += `\nMessages:\n`;
-                                filteredETypeMsgs.forEach((msg, idx) => {
-                                    report += `\nMessage ${idx + 1}:\n`;
-                                    report += `Date: ${msg.properties.date_sent || 'N/A'}\n`;
-                                    report += `${msg.properties.content}\n`;
-                                    if (msg.properties.file_path || msg.properties.uri_path) {
-                                        report += `Attachment: ${msg.properties.file_path || msg.properties.uri_path}\n`;
-                                    }
-                                });
-                            }
-                        }
-
-                        // Metrics under Evidence Type
-                        if (etype.metrics && etype.metrics.length > 0) {
-                            // Assuming metrics do not have include_in_report or that all should be included
-                            report += `\nMetrics:\n`;
-                            etype.metrics.forEach((metric) => {
-                                if (metric && metric.properties) {
-                                    report += `- Metric: ${metric.properties.name}, Value: ${metric.properties.value}\n`;
-                                }
-                            });
-                        }
-                    }
-                });
-            }
+                // Implementation Metrics
+                if (etype.metrics?.length > 0) {
+                    report += `\n  Metrics:\n`;
+                    etype.metrics.forEach((metric) => {
+                        const metricProps = metric.properties;
+                        report += `    • ${metricProps.name}: ${metricProps.value}\n`;
+                    });
+                }
+            });
         }
 
         return report;
@@ -228,16 +257,17 @@ function PlainTextReport({ evidenceItem, indicatorItem }) {
 
     return (
         <div style={{ marginTop: '20px', marginBottom: '20px' }}>
-            {indicatorItem && indicatorItem.properties && (
+            {(indicatorItem?.properties || evidenceItem?.indicator?.properties) && (
                 <>
-                    <h4>{`Success Indicator ${indicatorItem.properties.number}`}</h4>
-                    <h5>{`Composite Key: ${indicatorItem.properties.composite_key}`}</h5>
+                    <h2>{evidenceItem?.evidence?.properties?.year_identifier || indicatorItem?.properties?.composite_key}</h2>
+                    <h3>Plain Text Report</h3>
                 </>
             )}
             <textarea
                 style={{ width: '100%', height: '500px', border: '1px solid #ccc' }}
                 value={reportText}
                 readOnly
+                aria-label="Plain text report content"
             />
         </div>
     );

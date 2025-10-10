@@ -8,36 +8,18 @@ import MetricViewer from './MetricViewer';
 
 function DocumentationMasterViewer({ documentation }) {
     const { docs = [], webs = [], notes = [], msgs = [], metrics = [] } = documentation || {};
-    const implementation_id = documentation.evidenceType.properties.unique_id;
-    const implementation_type = documentation.evidenceType.labels[0];
-    // Apply label-based filtering similar to YSEAnnotationMasterContainer
-    // Adjust these label checks as needed based on actual data structures and labels.
-    const filteredDocs = docs?.filter((item) =>
-        item.document?.labels?.includes('Document')
-    ) || [];
-    const filteredWebs = webs?.filter((item) =>
-        item.webpage?.labels?.includes('Webpage')
-    ) || [];
-    const filteredNotes = notes?.filter((item) =>
-        item.note?.labels?.includes('Note')
-    ) || [];
-    const filteredMsgs = msgs?.filter((item) =>
-        item.message?.labels?.includes('Message')
-    ) || [];
-    const filteredMetrics = metrics?.filter((item) =>
-        item.metric?.labels?.includes('Metric')
-    ) || [];
+    const implementation_id = documentation?.evidenceType?.properties?.unique_id;
+    const implementation_type = documentation?.evidenceType?.labels?.[0] || documentation?.type;
 
-    // Map our filtered arrays to their respective categories
-// In DocumentationMasterViewer, update the dataLists to preserve the full structure:
+    // Remove the label-based filtering since the data is already categorized
+    // The data comes pre-sorted into docs, webs, notes, msgs, metrics arrays
     const dataLists = {
-        Documents: filteredDocs,  // Keep full structure
-        Websites: filteredWebs,
-        Notes: filteredNotes,
-        Messages: filteredMsgs,    // This preserves the created_by relationship
-        Metrics: filteredMetrics
+        Documents: docs || [],
+        Websites: webs || [],
+        Notes: notes || [],
+        Messages: msgs || [],
+        Metrics: metrics || []
     };
-
 
     // Descriptions for each document type
     const descriptions = {
@@ -56,6 +38,7 @@ function DocumentationMasterViewer({ documentation }) {
 
     // Filtered data based on selected type
     const filteredDocsForSelectedType = dataLists[selectedType] || [];
+
 
     // Mapping of selected type to its viewer component
     const viewerComponents = {
@@ -109,7 +92,7 @@ function DocumentationMasterViewer({ documentation }) {
                             variant={selectedType === type ? 'solid' : 'outline'}
                             opacity={hasData ? 1 : 0.6}
                         >
-                            {type}
+                            {type} ({dataLists[type].length})
                         </Button>
                     );
                 })}
@@ -129,15 +112,9 @@ function DocumentationMasterViewer({ documentation }) {
                 </Text>
             </Box>
 
+            {/* ALWAYS render the viewer component - remove the conditional */}
             <Box>
-                {filteredDocsForSelectedType.length > 0 ? (
-                    viewerComponents[selectedType]
-                ) : (
-                    <>
-                        {viewerComponents[selectedType]}
-                        <Text>No {selectedType} available for this evidence.</Text>
-                    </>
-                )}
+                {viewerComponents[selectedType]}
             </Box>
         </Box>
     );
