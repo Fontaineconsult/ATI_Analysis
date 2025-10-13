@@ -1,68 +1,193 @@
-import React from 'react';
-import { Accordion, AccordionItem, AccordionButton, AccordionPanel, Box, Text } from '@chakra-ui/react';
-import Plan from './Plan';  // Import Plan component
-import Accomplishment from './Accomplishment';  // Import Accomplishment component
+import React, { useState, useContext } from 'react';
+import {
+    Accordion,
+    AccordionItem,
+    AccordionButton,
+    AccordionPanel,
+    Box,
+    Text,
+    HStack,
+    Button,
+    Heading,
+    AccordionIcon
+} from '@chakra-ui/react';
+import { FaPlus } from 'react-icons/fa';
+import Plan from './Plan';
+import Accomplishment from './Accomplishment';
+import { DataContext } from '../../../context/DataContext';
+import { SettingsContext } from '../../../context/SettingsContext';
 
-function GoalDetails({ plans, accomplishments, indicators }) {
+function GoalDetails({ plans, accomplishments, indicators, goalNumber }) {
+    const { loadSingleWorkingGroupData } = useContext(DataContext);
+    const { currentAcademicYear, currentWorkingGroup } = useContext(SettingsContext);
+    const [showNewPlan, setShowNewPlan] = useState(false);
+    const [showNewAccomplishment, setShowNewAccomplishment] = useState(false);
+
     // Calculate the total count of plans
     const goalPlansCount = plans ? plans.length : 0;
     const indicatorPlansCount = indicators.reduce((acc, indicator) => {
-        return acc + (indicator.evidences[0].plans?.length || 0);
+        return acc + (indicator.evidences[0]?.plans?.length || 0);
     }, 0);
     const totalPlansCount = goalPlansCount + indicatorPlansCount;
 
+    const handleRefresh = () => {
+        loadSingleWorkingGroupData(currentWorkingGroup);
+        setShowNewPlan(false);
+        setShowNewAccomplishment(false);
+    };
+
     return (
-        <Box tabIndex={0} className="goal-details-wrapper">
-            <h2>Plans and Accomplishments</h2>
+        <Box mt={4}>
+            <Heading size="sm" mb={3} color="teal.700">Plans and Accomplishments</Heading>
             <Accordion allowToggle>
                 {/* Accordion for Plans */}
-                <AccordionItem>
+                <AccordionItem
+                    borderWidth="1px"
+                    borderColor="gray.200"
+                    borderRadius="lg"
+                    mb={2}
+                    overflow="hidden"
+                >
                     <h2>
-                        <AccordionButton>
-                            <Box className="goal-details-accordion-button">
+                        <AccordionButton
+                            bg="white"
+                            _hover={{ bg: "gray.50" }}
+                            _expanded={{ bg: "teal.50" }}
+                            py={3}
+                            px={4}
+                        >
+                            <Box flex="1" textAlign="left" fontWeight="semibold" color="teal.700">
                                 Plans ({totalPlansCount})
                             </Box>
+                            <AccordionIcon color="teal.600" />
                         </AccordionButton>
                     </h2>
-                    <AccordionPanel className="goal-details-panel">
+                    <AccordionPanel bg="white" px={4} pb={4}>
+                        <HStack justify="flex-end" mb={3}>
+                            <Button
+                                size="xs"
+                                colorScheme="teal"
+                                leftIcon={<FaPlus />}
+                                onClick={() => setShowNewPlan(!showNewPlan)}
+                                variant={showNewPlan ? "outline" : "solid"}
+                            >
+                                {showNewPlan ? 'Cancel' : 'Add Plan'}
+                            </Button>
+                        </HStack>
+
+                        {/* New Plan Form */}
+                        {showNewPlan && (
+                            <Plan
+                                isNew={true}
+                                goalNumber={goalNumber}
+                                workingGroup={currentWorkingGroup}
+                                academicYear={currentAcademicYear}
+                                onSuccess={handleRefresh}
+                                onCancel={() => setShowNewPlan(false)}
+                            />
+                        )}
+
+                        {/* Existing Plans */}
                         {totalPlansCount > 0 ? (
                             <>
-                                {/* Render each goalPlan */}
-                                {plans.map((goalPlan, index) => (
-                                    <Plan key={`goal-${index}`} planData={goalPlan} />
+                                {plans?.map((goalPlan, index) => (
+                                    <Plan
+                                        key={`goal-plan-${index}`}
+                                        planData={goalPlan}
+                                        goalNumber={goalNumber}
+                                        workingGroup={currentWorkingGroup}
+                                        academicYear={currentAcademicYear}
+                                        onUpdate={handleRefresh}
+                                    />
                                 ))}
-                                {/* Render each indicatorPlan for each indicator */}
                                 {indicators.map((item, index) => (
-                                    item.evidences[0].plans?.map((indicatorPlan, indIndex) => (
+                                    item.evidences[0]?.plans?.map((indicatorPlan, indIndex) => (
                                         <Plan
-                                            key={`indicator-${index}-${indIndex}`}
-                                            planData={indicatorPlan}  // Correctly passing indicatorPlan
+                                            key={`indicator-plan-${index}-${indIndex}`}
+                                            planData={indicatorPlan}
+                                            goalNumber={goalNumber}
+                                            workingGroup={currentWorkingGroup}
+                                            academicYear={currentAcademicYear}
+                                            onUpdate={handleRefresh}
                                         />
                                     ))
                                 ))}
                             </>
                         ) : (
-                            <Text className="no-content-text">No plans available for this goal.</Text>
+                            !showNewPlan && (
+                                <Text fontSize="sm" color="gray.500" textAlign="center" py={4}>
+                                    No plans available for this goal.
+                                </Text>
+                            )
                         )}
                     </AccordionPanel>
                 </AccordionItem>
 
                 {/* Accordion for Accomplishments */}
-                <AccordionItem>
+                <AccordionItem
+                    borderWidth="1px"
+                    borderColor="gray.200"
+                    borderRadius="lg"
+                    mb={2}
+                    overflow="hidden"
+                >
                     <h2>
-                        <AccordionButton>
-                            <Box className="goal-details-accordion-button">
+                        <AccordionButton
+                            bg="white"
+                            _hover={{ bg: "gray.50" }}
+                            _expanded={{ bg: "teal.50" }}
+                            py={3}
+                            px={4}
+                        >
+                            <Box flex="1" textAlign="left" fontWeight="semibold" color="teal.700">
                                 Accomplishments ({accomplishments?.length || 0})
                             </Box>
+                            <AccordionIcon color="teal.600" />
                         </AccordionButton>
                     </h2>
-                    <AccordionPanel className="goal-details-panel">
+                    <AccordionPanel bg="white" px={4} pb={4}>
+                        <HStack justify="flex-end" mb={3}>
+                            <Button
+                                size="xs"
+                                colorScheme="blue"
+                                leftIcon={<FaPlus />}
+                                onClick={() => setShowNewAccomplishment(!showNewAccomplishment)}
+                                variant={showNewAccomplishment ? "outline" : "solid"}
+                            >
+                                {showNewAccomplishment ? 'Cancel' : 'Add Accomplishment'}
+                            </Button>
+                        </HStack>
+
+                        {/* New Accomplishment Form */}
+                        {showNewAccomplishment && (
+                            <Accomplishment
+                                isNew={true}
+                                goalNumber={goalNumber}
+                                workingGroup={currentWorkingGroup}
+                                academicYear={currentAcademicYear}
+                                onSuccess={handleRefresh}
+                                onCancel={() => setShowNewAccomplishment(false)}
+                            />
+                        )}
+
+                        {/* Existing Accomplishments */}
                         {accomplishments && accomplishments.length > 0 ? (
                             accomplishments.map((accomplishment, index) => (
-                                <Accomplishment key={index} accomplishmentData={accomplishment} />
+                                <Accomplishment
+                                    key={`accomplishment-${index}`}
+                                    accomplishmentData={accomplishment}
+                                    goalNumber={goalNumber}
+                                    workingGroup={currentWorkingGroup}
+                                    academicYear={currentAcademicYear}
+                                    onUpdate={handleRefresh}
+                                />
                             ))
                         ) : (
-                            <Text className="no-content-text">No accomplishments available for this goal.</Text>
+                            !showNewAccomplishment && (
+                                <Text fontSize="sm" color="gray.500" textAlign="center" py={4}>
+                                    No accomplishments available for this goal.
+                                </Text>
+                            )
                         )}
                     </AccordionPanel>
                 </AccordionItem>

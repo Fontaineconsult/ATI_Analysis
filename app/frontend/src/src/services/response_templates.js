@@ -264,6 +264,26 @@ export function updatePlanPayload(plan) {
     };
 }
 
+export function createAccomplishmentPayload(accomplishment) {
+
+    return {
+        action: "add_accomplishment",
+        ...accomplishment
+    }
+
+}
+
+
+export function updateAccomplishmentPayload(accomplishment) {
+
+    return {
+        action: "update_accomplishment",
+        ...accomplishment
+    }
+
+}
+
+
 export function assignResponsiblePersonPayload(unique_id, yearSuccessEvidence) {
     return {
         action: "assign_person_as_implementor",
@@ -279,3 +299,5 @@ export function unassignResponsiblePersonPayload(unique_id, yearSuccessEvidence)
         year_success_evidence: yearSuccessEvidence
     };
 }
+
+

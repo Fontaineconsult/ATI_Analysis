@@ -12,7 +12,7 @@ import {
     assignResponsiblePersonPayload,
     updateDocumentPayload,
     updateWebsitePayload,
-    updateMetricPayload, updateMessageForImplementationPayload
+    updateMetricPayload, updateMessageForImplementationPayload, updateAccomplishmentPayload
 } from "../response_templates";
 
 export const updateStatusLevel = async (yse, statusLevel) => {
@@ -144,6 +144,22 @@ export const updatePlan = async (formData) => {
         throw error;
     }
 }
+
+export const updateAccomplishment = async (formData) => {
+    try {
+        const response = await axios.put(
+            `${process.env.REACT_APP_API_URL}/implementations/accomplishments`,
+            updateAccomplishmentPayload(formData)
+        );
+        return response.data;
+    } catch (error) {
+        console.error('Error updating accomplishment:', error);
+        throw error;
+    }
+}
+
+
+
 
 export const assignPersonAsImplementor = async (employeeId, year_success_indicator) => {
     try {

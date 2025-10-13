@@ -107,14 +107,81 @@ def add_service(title: str, description: str) -> bool:
 
 
 def add_accomplishment(name: str,
-                       accomplishment_description: str,
+                       description: str,  # Changed from accomplishment_description
                        academic_year: str,
-                       advanced_goal_number: str=None,
+                       advanced_goal_number: int=None,  # Changed to int
                        working_group: str=None,
                        furthered_yse_identifier: str=None,
                        ) -> bool:
+
+
+
+    """
+    Creates a new Accomplishment node in the graph database.
+
+    An Accomplishment represents a completed achievement that advances the accessibility
+    initiative's goals and success indicators.
+
+    Parameters
+    ----------
+    name : str (required)
+        The name/title of the accomplishment. Should be descriptive and unique.
+        Example: "WCAG 2.1 Compliance Achieved for Main Website"
+
+    description : str (required)
+        Detailed description of what was accomplished. This field is unique indexed,
+        so must be distinct from other accomplishments.
+        Example: "Successfully upgraded university main website to meet WCAG 2.1 AA standards"
+
+    academic_year : str (required)
+        Name of the academic year when this was accomplished. Must match an existing
+        AcademicYear node's name.
+        Example: "2023-2024"
+
+    advanced_goal_number : int (optional)
+        The number of the goal this accomplishment advances. Must be used together
+        with working_group parameter.
+        Example: 1, 2, 3
+
+    working_group : str (optional)
+        Name of the ATI Working Group whose goal is being advanced. Required if
+        advanced_goal_number is provided.
+        Example: "Web", "Instructional Materials", "Procurement"
+
+    furthered_yse_identifier : str (optional)
+        The year_identifier of a YearSuccessEvidence node that this accomplishment
+        furthers. Format typically: "YYYY_SuccessIndicatorName"
+        Example: "2023-2024_WebAccessibility"
+
+    Returns
+    -------
+    bool
+        True if accomplishment was successfully created, raises CrudError otherwise
+
+    Raises
+    ------
+    CrudError
+        If creation fails due to database issues or invalid references
+    AcademicYear.DoesNotExist
+        If the specified academic_year doesn't exist
+
+    Examples
+    --------
+    >>> add_accomplishment(
+    ...     name="Campus Website Remediation",
+    ...     description="Completed full accessibility audit and remediation of campus website",
+    ...     academic_year="2023-2024",
+    ...     advanced_goal_number=1,
+    ...     working_group="Web"
+    ... )
+    True
+    """
+
     try:
-        academic_year = AcademicYear.nodes.get(name=academic_year)
+        academic_year_node = AcademicYear.nodes.get(name=academic_year)
+        furthered_goal = None
+        furthered_yse = None
+
         if advanced_goal_number and working_group:
             furthered_goal = get_goal_node(advanced_goal_number, working_group)
         if furthered_yse_identifier:
@@ -122,17 +189,17 @@ def add_accomplishment(name: str,
 
         accomplishment = Accomplishment(
             name=name,
-            accomplishment_description=accomplishment_description,
+            description=description  # Fixed field name
         ).save()
 
-        accomplishment.academic_year.connect(academic_year)
+        accomplishment.academic_year.connect(academic_year_node)
 
-        if advanced_goal_number and working_group:
+        if furthered_goal:
             accomplishment.advanced_goals.connect(furthered_goal)
-        if furthered_yse_identifier:
-            accomplishment.furthered_year_success_indicators.connect(furthered_yse)
+        if furthered_yse:
+            accomplishment.advanced_year_success_indicators.connect(furthered_yse)
 
-        print(f"Plan '{name}' added successfully")
+        print(f"Accomplishment '{name}' added successfully")
         return True
     except Exception as e:
         raise CrudError(f"Failed to add accomplishment: {e}")
@@ -140,11 +207,70 @@ def add_accomplishment(name: str,
 
 def add_plan(plan_data: dict) -> bool:
     """
-    Adds a new Plan node based on the provided data in the form of a dictionary.
+    Creates a new Plan node in the graph database.
 
-    :param plan_data: Dictionary containing plan details.
-    :return: bool indicating success or failure.
+    A Plan represents a detailed strategy outlining steps, resources, and timelines
+    to achieve accessibility goals.
+
+    Parameters
+    ----------
+    plan_data : dict (required)
+        Dictionary containing all plan properties and relationships.
+
+        Required fields:
+        - name : str - Name/title of the plan
+        - description : str - Detailed description (unique indexed)
+        - academic_year_name : str - Name of the academic year for this plan
+
+        Required (at least one):
+        - furthered_goal_number : int - Goal number the plan furthers (use with furthered_working_group)
+        - furthered_working_group : str - Working group name (use with furthered_goal_number)
+        - furthered_yse_identifier : str - YearSuccessEvidence identifier the plan furthers
+
+        Optional fields:
+        - is_key_plan : bool - Whether this is a key strategic plan (default: False)
+        - is_campus_plan : bool - Whether this is a campus-wide plan (default: False)
+        - plan_status : str - Current status of the plan (e.g., "In Progress", "Completed")
+        - abandoned : bool - Whether the plan was abandoned (default: False)
+        - abandoned_notes : str - Notes explaining why plan was abandoned
+        - completed_year_name : str - Name of academic year when plan was completed
+
+    Returns
+    -------
+    bool
+        True if plan was successfully created
+
+    Raises
+    ------
+    ValidationError
+        If none of the furthering fields are provided
+    CrudError
+        If creation fails due to database issues
+    AcademicYear.DoesNotExist
+        If specified academic year doesn't exist
+
+    Examples
+    --------
+    >>> add_plan({
+    ...     'name': 'Web Accessibility Improvement Plan',
+    ...     'description': 'Comprehensive plan to improve web accessibility across all platforms',
+    ...     'academic_year_name': '2023-2024',
+    ...     'is_key_plan': True,
+    ...     'furthered_goal_number': 1,
+    ...     'furthered_working_group': 'Web',
+    ...     'plan_status': 'In Progress'
+    ... })
+    True
+
+    Notes
+    -----
+    - At least one furthering relationship must be specified (goal or YSE)
+    - Description must be unique across all plans
+    - Use academic year names exactly as they exist in the database
     """
+
+    VALID_PLAN_STATUSES = ["Not Started", "In Progress", "Completed", "On Hold", "Abandoned"]
+
     try:
         # Unpack dictionary values with default fallbacks
         name = plan_data.get('name')
@@ -159,6 +285,10 @@ def add_plan(plan_data: dict) -> bool:
         furthered_goal_number = plan_data.get('furthered_goal_number', None)
         furthered_working_group = plan_data.get('furthered_working_group', None)
         furthered_yse_identifier = plan_data.get('furthered_yse_identifier', None)
+
+        # Validate plan_status if provided
+        if plan_status is not None and plan_status not in VALID_PLAN_STATUSES:
+            raise ValidationError(f"Invalid plan_status: '{plan_status}'. Must be one of: {', '.join(VALID_PLAN_STATUSES)}")
 
         # Validate that at least one of the furthering fields is provided
         if not (furthered_goal_number or furthered_working_group or furthered_yse_identifier):

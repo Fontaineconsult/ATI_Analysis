@@ -20,6 +20,17 @@ function getUrlFromCompositeKey(compositeKey) {
 }
 
 
+function workingGroupCodeFromName(workingGroupName) {
+    const workingGroupMap = {
+        'web': 'web',
+        'procurement': 'pro',
+        'instructional-materials': 'ins'
+    }
+
+    return workingGroupMap[workingGroupName] || workingGroupName;
+}
+
+
 // Helper function to get status color
 const getStatusColor = (statusLevel) => {
     const level = statusLevel?.toLowerCase();
@@ -83,4 +94,5 @@ export { getUrlFromCompositeKey,
     getStatusColor,
     year_difference,
     getEditUrlFromCompositeKey,
-    getImplementationURL };
+    getImplementationURL,
+    workingGroupCodeFromName};

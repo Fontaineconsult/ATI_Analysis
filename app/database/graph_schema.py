@@ -327,7 +327,7 @@ class Accomplishment(StructuredNode):
     def serialize(self):
         return {
             'name': self.name,
-            'accomplishment_description': self.accomplishment_description,
+            'description': self.description,  # Fixed from accomplishment_description
             "unique_id": self.unique_id
         }
 
@@ -370,13 +370,12 @@ class Plan(StructuredNode):
     def serialize(self):
         return {
             'name': self.name,
-            'plan_description': self.plan_description,
+            'description': self.description,  # Fixed from plan_description
             'is_key_plan': self.is_key_plan,
             'is_campus_plan': self.is_campus_plan,
             'abandoned': self.abandoned,
             'abandoned_notes': self.abandoned_notes,
             'plan_status': self.plan_status,
-            'description': self.description,
             "unique_id": self.unique_id
         }
 

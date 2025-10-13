@@ -5,6 +5,7 @@ from pycparser.c_ast import Return
 
 from app.database.graph_schema import *
 from app.database.class_factory import implementation_classes, documentation_classes, documentation_relationships
+from app.database.queries.implementation.read import get_goal_node
 from app.endpoints.data_api.errors.custom_exceptions import NotFoundError, ValidationError, CrudError
 
 
@@ -76,17 +77,82 @@ def assign_note_to_implementation(implementation_title, implementation_type, not
 
 def update_plan(data: dict) -> bool:
     """
-    Update an existing plan based on the provided data.
+    Updates an existing Plan node in the graph database.
 
-    :param data: A dictionary containing the plan's properties and relationships to update.
-    :return: True if the plan was successfully updated.
+    Parameters
+    ----------
+    data : dict (required)
+        Dictionary containing plan properties to update.
+
+        Required fields:
+        - unique_id : str - The unique identifier of the plan to update
+
+        Optional fields (only include fields you want to update):
+        - name : str - New name for the plan
+        - description : str - New description (must be unique)
+        - academic_year_name : str - Academic year to associate with
+        - is_key_plan : bool - Update key plan status
+        - is_campus_plan : bool - Update campus plan status
+        - plan_status : str - New status (e.g., "Completed", "In Progress")
+        - abandoned : bool - Mark as abandoned or not
+        - abandoned_notes : str - Notes about abandonment
+        - completed_year_name : str - Academic year of completion
+        - furthered_goal_number : int - Goal number (use with furthered_working_group)
+        - furthered_working_group : str - Working group (use with furthered_goal_number)
+        - furthered_yse_identifier : str - YearSuccessEvidence identifier
+
+    Returns
+    -------
+    bool
+        True if plan was successfully updated
+
+    Raises
+    ------
+    ValidationError
+        If unique_id is not provided
+    NotFoundError
+        If no plan exists with given unique_id
+    CrudError
+        If update fails due to database issues
+
+    Examples
+    --------
+    >>> # Update status and mark as completed
+    >>> update_plan({
+    ...     'unique_id': 'plan_67890',
+    ...     'plan_status': 'Completed',
+    ...     'completed_year_name': '2023-2024'
+    ... })
+    True
+
+    >>> # Abandon a plan with notes
+    >>> update_plan({
+    ...     'unique_id': 'plan_11111',
+    ...     'abandoned': True,
+    ...     'abandoned_notes': 'Superseded by new campus-wide initiative',
+    ...     'plan_status': 'Abandoned'
+    ... })
+    True
+
+    Notes
+    -----
+    - Only provided fields will be updated; others remain unchanged
+    - Relationships are replaced entirely (existing connections disconnected first)
+    - Validation ensures data integrity with existing nodes
     """
 
+    VALID_PLAN_STATUSES = ["Not Started", "In Progress", "Completed", "On Hold", "Abandoned"]
+
+
     try:
-        # Retrieve the existing plan by unique_id
         unique_id = data.get('unique_id')
         if not unique_id:
             raise ValidationError("Missing required field: 'unique_id'")
+
+        # Validate plan_status if provided
+        plan_status = data.get('plan_status')
+        if plan_status is not None and plan_status not in VALID_PLAN_STATUSES:
+            raise ValidationError(f"Invalid plan_status: '{plan_status}'. Must be one of: {', '.join(VALID_PLAN_STATUSES)}")
 
         plan = Plan.nodes.get(unique_id=unique_id)
 
@@ -99,7 +165,6 @@ def update_plan(data: dict) -> bool:
         plan.abandoned_notes = data.get('abandoned_notes', plan.abandoned_notes)
         plan.name = data.get('name', plan.name)
 
-        # Save the updated properties
         plan.save()
 
         # Update academic year relationship
@@ -107,27 +172,25 @@ def update_plan(data: dict) -> bool:
         if academic_year_name:
             academic_year = AcademicYear.nodes.get_or_none(name=academic_year_name)
             if academic_year:
-                plan.academic_year.disconnect_all()  # Clear any existing academic year relation
+                plan.academic_year.disconnect_all()
                 plan.academic_year.connect(academic_year)
 
-        # Update completed year relationship (if provided)
+        # Update completed year relationship
         completed_year_name = data.get('completed_year_name')
         if completed_year_name:
             completed_year = AcademicYear.nodes.get_or_none(name=completed_year_name)
             if completed_year:
-                plan.completed_year.disconnect_all()  # Clear any existing completed year relation
+                plan.completed_year.disconnect_all()
                 plan.completed_year.connect(completed_year)
 
         # Update furthered goal relationship
         furthered_goal_number = data.get('furthered_goal_number')
         furthered_working_group = data.get('furthered_working_group')
         if furthered_goal_number and furthered_working_group:
-            furthered_goal = Goal.nodes.get_or_none(
-                goal_number=furthered_goal_number,
-                working_group=furthered_working_group
-            )
+            # Use the get_goal_node helper function instead
+            furthered_goal = get_goal_node(furthered_goal_number, furthered_working_group)
             if furthered_goal:
-                plan.furthered_goals.disconnect_all()  # Clear existing relationships
+                plan.furthered_goals.disconnect_all()
                 plan.furthered_goals.connect(furthered_goal)
 
         # Update furthered YearSuccessEvidence relationship
@@ -137,7 +200,7 @@ def update_plan(data: dict) -> bool:
                 year_identifier=furthered_yse_identifier
             )
             if furthered_yse:
-                plan.furthered_year_success_indicators.disconnect_all()  # Clear existing relationships
+                plan.furthered_year_success_indicators.disconnect_all()
                 plan.furthered_year_success_indicators.connect(furthered_yse)
 
         print(f"Plan '{plan.name}' updated successfully")
@@ -147,3 +210,103 @@ def update_plan(data: dict) -> bool:
         raise NotFoundError(f"Plan with unique_id '{unique_id}' not found.")
     except Exception as e:
         raise CrudError(f"Failed to update plan: {e}")
+
+
+def update_accomplishment(data: dict) -> bool:
+
+    """
+    Updates an existing Accomplishment node in the graph database.
+
+    Parameters
+    ----------
+    data : dict (required)
+        Dictionary containing the accomplishment properties to update.
+
+        Required fields:
+        - unique_id : str - The unique identifier of the accomplishment to update
+
+        Optional fields (only include fields you want to update):
+        - name : str - New name for the accomplishment
+        - description : str - New description (must be unique across all accomplishments)
+        - academic_year : str - Name of academic year to associate with
+        - advanced_goal_number : int - Goal number being advanced (use with working_group)
+        - working_group : str - Working group name (use with advanced_goal_number)
+        - furthered_yse_identifier : str - YearSuccessEvidence identifier being furthered
+
+    Returns
+    -------
+    bool
+        True if accomplishment was successfully updated
+
+    Raises
+    ------
+    ValidationError
+        If unique_id is not provided in the data dictionary
+    NotFoundError
+        If no accomplishment exists with the given unique_id
+    CrudError
+        If update fails due to database issues
+
+    Examples
+    --------
+    >>> update_accomplishment({
+    ...     'unique_id': 'uuid',
+    ...     'description': 'Updated description of campus website remediation project',
+    ...     'academic_year': '2024-2025'
+    ... })
+    True
+
+    Notes
+    -----
+    - Only fields provided in the data dictionary will be updated
+    - Relationships will be completely replaced (not added to)
+    - Use disconnect_all() before connecting new relationships
+    """
+
+    try:
+        unique_id = data.get('unique_id')
+        if not unique_id:
+            raise ValidationError("Missing required field: 'unique_id'")
+
+        accomplishment = Accomplishment.nodes.get(unique_id=unique_id)
+
+        # Update accomplishment properties
+        accomplishment.name = data.get('name', accomplishment.name)
+        accomplishment.description = data.get('description', accomplishment.description)
+
+        accomplishment.save()
+
+        # Update academic year relationship
+        academic_year_name = data.get('academic_year')
+        if academic_year_name:
+            academic_year = AcademicYear.nodes.get_or_none(name=academic_year_name)
+            if academic_year:
+                accomplishment.academic_year.disconnect_all()
+                accomplishment.academic_year.connect(academic_year)
+
+        # Update advanced goal relationship
+        advanced_goal_number = data.get('advanced_goal_number')
+        working_group = data.get('working_group')
+        if advanced_goal_number and working_group:
+            advanced_goal = get_goal_node(advanced_goal_number, working_group)
+            if advanced_goal:
+                accomplishment.advanced_goals.disconnect_all()
+                accomplishment.advanced_goals.connect(advanced_goal)
+
+        # Update furthered YearSuccessEvidence relationship
+        furthered_yse_identifier = data.get('furthered_yse_identifier')
+        if furthered_yse_identifier:
+            furthered_yse = YearSuccessEvidence.nodes.get_or_none(
+                year_identifier=furthered_yse_identifier
+            )
+            if furthered_yse:
+                accomplishment.advanced_year_success_indicators.disconnect_all()
+                accomplishment.advanced_year_success_indicators.connect(furthered_yse)
+
+        print(f"Accomplishment '{accomplishment.name}' updated successfully")
+        return True
+
+    except Accomplishment.DoesNotExist:
+        raise NotFoundError(f"Accomplishment with unique_id '{unique_id}' not found.")
+    except Exception as e:
+        raise CrudError(f"Failed to update accomplishment: {e}")

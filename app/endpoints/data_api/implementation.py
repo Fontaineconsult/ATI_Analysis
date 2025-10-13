@@ -392,6 +392,93 @@ class ImplementationAPI(MethodView):
 
 
 class ImplementationPlanAPI(MethodView):
+    """
+    Enhanced API endpoints for managing Plan nodes.
+    """
+
+    def get(self):
+        """
+        Handle GET requests to fetch plan nodes.
+
+        Query Parameters:
+            - all (bool): If 'true', returns all plans
+            - unique_id (str): Get specific plan by ID
+            - name (str): Get specific plan by name
+            - academic_year (str): Filter by academic year
+            - is_key_plan (bool): Filter by key plan status
+            - is_campus_plan (bool): Filter by campus plan status
+            - abandoned (bool): Filter by abandoned status
+        """
+        try:
+            from app.database.graph_schema import Plan, AcademicYear
+
+            # Check if requesting all plans
+            all_param = request.args.get('all')
+
+            if all_param and all_param.lower() == 'true':
+                plans = Plan.nodes.all()
+                data = [plan.serialize() for plan in plans]
+                return make_response({"status": "success", "data": data}), 200
+
+            # Get by unique_id
+            unique_id = request.args.get('unique_id')
+            if unique_id:
+                try:
+                    plan = Plan.nodes.get(unique_id=unique_id)
+                    return make_response({"status": "success", "data": plan.serialize()}), 200
+                except Plan.DoesNotExist:
+                    raise NotFoundError(f"No plan found with unique_id: {unique_id}")
+
+            # Get by name
+            name = request.args.get('name')
+            if name:
+                try:
+                    plan = Plan.nodes.get(name=name)
+                    return make_response({"status": "success", "data": plan.serialize()}), 200
+                except Plan.DoesNotExist:
+                    raise NotFoundError(f"No plan found with name: {name}")
+
+            # Filter by various criteria
+            filters = {}
+
+            # Boolean filters
+            is_key_plan = request.args.get('is_key_plan')
+            if is_key_plan is not None:
+                filters['is_key_plan'] = is_key_plan.lower() == 'true'
+
+            is_campus_plan = request.args.get('is_campus_plan')
+            if is_campus_plan is not None:
+                filters['is_campus_plan'] = is_campus_plan.lower() == 'true'
+
+            abandoned = request.args.get('abandoned')
+            if abandoned is not None:
+                filters['abandoned'] = abandoned.lower() == 'true'
+
+            # Apply filters if any
+            if filters:
+                plans = Plan.nodes.filter(**filters)
+                data = [plan.serialize() for plan in plans]
+                return make_response({"status": "success", "data": data}), 200
+
+            # Filter by academic year
+            academic_year = request.args.get('academic_year')
+            if academic_year:
+                try:
+                    year = AcademicYear.nodes.get(name=academic_year)
+                    plans = year.plan_set.all()
+                    data = [plan.serialize() for plan in plans]
+                    return make_response({"status": "success", "data": data}), 200
+                except AcademicYear.DoesNotExist:
+                    raise NotFoundError(f"No academic year found with name: {academic_year}")
+
+            # If no parameters provided, return error
+            return make_response({"status": "error", "error": "Please provide query parameters"}), 400
+
+        except NotFoundError as e:
+            return make_response({"status": "error", "error": str(e)}), 404
+        except Exception as e:
+            return make_response({"status": "error", "error": f"Failed to fetch plans: {str(e)}"}), 500
+
 
     def post(self):
         """
@@ -426,14 +513,15 @@ class ImplementationPlanAPI(MethodView):
             add_plan(data)
 
             # Return a success response
-            return make_response(status="success", message="Plan added successfully"), 201
+            return make_response({"status": "success", "message": "Plan added successfully"}), 201
 
         except ValidationError as e:
-            return make_response(status="error", error=str(e)), 400
+            return make_response({"status": "error", "error": str(e)}), 400
         except CrudError as e:
-            return make_response(status="error", error=str(e)), 500
+            return make_response({"status": "error", "error": str(e)}), 500
         except Exception as e:
-            return make_response(status="error", error="Failed to add plan"), 500
+            return make_response({"status": "error", "error": "Failed to add plan"}), 500
+
 
     def put(self):
         """
@@ -457,22 +545,22 @@ class ImplementationPlanAPI(MethodView):
             # Retrieve action from data
             action = data.get('action')
             if not action:
-                return make_response(status="error", error="Missing 'action' field in request."), 400
+                return make_response({"status": "error", "error": "Missing 'action' field in request."}), 400
 
             # Handle different actions
             if action == "update_plan":
                 return self.handle_update_plan(data)
             else:
-                return make_response(status="error", error=f"Unknown action '{action}' in request."), 400
+                return make_response({"status": "error", "error": f"Unknown action '{action}' in request."}), 400
 
         except ValidationError as e:
-            return make_response(status="error", error=str(e)), 400
+            return make_response({"status": "error", "error": str(e)}), 400
         except NotFoundError as e:
-            return make_response(status="error", error=str(e)), 404
+            return make_response({"status": "error", "error": str(e)}), 404
         except CrudError as e:
-            return make_response(status="error", error=str(e)), 500
+            return make_response({"status": "error", "error": str(e)}), 500
         except Exception as e:
-            return make_response(status="error", error="Failed to process request"), 500
+            return make_response({"status": "error", "error": "Failed to process request"}), 500
 
     def handle_update_plan(self, data):
         """
@@ -485,18 +573,244 @@ class ImplementationPlanAPI(MethodView):
         # Call the update_plan function
         update_plan(data)
 
-        return make_response(status="success", message="Plan updated successfully"), 200
+        return make_response({"status": "success", "message": "Plan updated successfully"}), 200
+
+    def delete(self):
+        """
+        Handle DELETE requests to remove a plan.
+
+        Request Body:
+            {
+                "unique_id": str (required)
+            }
+        """
+        try:
+            from app.database.graph_schema import Plan
+
+            data = request.get_json()
+
+            # Validate required field
+            unique_id = data.get('unique_id')
+            if not unique_id:
+                raise ValidationError("Missing required field: 'unique_id'")
+
+            try:
+                plan = Plan.nodes.get(unique_id=unique_id)
+                plan.delete()
+                return make_response({"status": "success", "message": "Plan deleted successfully"}), 200
+            except Plan.DoesNotExist:
+                raise NotFoundError(f"No plan found with unique_id: {unique_id}")
+
+        except ValidationError as e:
+            return make_response({"status": "error", "error": str(e)}), 400
+        except NotFoundError as e:
+            return make_response({"status": "error", "error": str(e)}), 404
+        except Exception as e:
+            return make_response({"status": "error", "error": f"Failed to delete plan: {str(e)}"}), 500
 
 
 class ImplementationAccomplishmentAPI(MethodView):
+    """
+    API endpoints for managing Accomplishment nodes.
+
+    GET /implementations/accomplishments
+    ------------------------------------
+    Retrieve accomplishment(s) by various criteria.
+
+    Query Parameters:
+        - all (bool): If 'true', returns all accomplishments
+        - unique_id (str): Get specific accomplishment by ID
+        - academic_year (str): Filter by academic year
+        - name (str): Get specific accomplishment by name
+
+    Returns:
+        200: {"status": "success", "data": accomplishment(s)}
+        404: {"status": "error", "error": "Accomplishment not found"}
+
+
+    POST /implementations/accomplishments
+    -------------------------------------
+    Create a new accomplishment.
+
+    Request Body:
+        {
+            "name": str (required),
+            "description": str (required),
+            "academic_year": str (required),
+            "advanced_goal_number": int (optional),
+            "working_group": str (optional),
+            "furthered_yse_identifier": str (optional)
+        }
+
+    Returns:
+        201: {"status": "success", "message": "Accomplishment created successfully"}
+        400: {"status": "error", "error": "Missing required fields"}
+        500: {"status": "error", "error": "Failed to create accomplishment"}
+
+
+    PUT /implementations/accomplishments
+    ------------------------------------
+    Update an existing accomplishment.
+
+    Request Body:
+        {
+            "action": "update_accomplishment",
+            "unique_id": str (required),
+            "name": str (optional),
+            "description": str (optional),
+            "academic_year": str (optional),
+            "advanced_goal_number": int (optional),
+            "working_group": str (optional),
+            "furthered_yse_identifier": str (optional)
+        }
+
+    Returns:
+        200: {"status": "success", "message": "Accomplishment updated successfully"}
+        404: {"status": "error", "error": "Accomplishment not found"}
+
+
+    DELETE /implementations/accomplishments
+    ---------------------------------------
+    Delete an accomplishment.
+
+    Request Body:
+        {
+            "unique_id": str (required)
+        }
+
+    Returns:
+        200: {"status": "success", "message": "Accomplishment deleted successfully"}
+        404: {"status": "error", "error": "Accomplishment not found"}
+    """
+
     def get(self):
-        pass
+        """
+        Handle GET requests to fetch accomplishment nodes.
+        """
+        try:
+            from app.database.graph_schema import Accomplishment, AcademicYear
+
+            # Check if requesting all accomplishments
+            all_param = request.args.get('all')
+
+            if all_param and all_param.lower() == 'true':
+                accomplishments = Accomplishment.nodes.all()
+                data = [acc.serialize() for acc in accomplishments]
+                return make_response({"status": "success", "data": data}), 200
+
+            # Get by unique_id
+            unique_id = request.args.get('unique_id')
+            if unique_id:
+                try:
+                    accomplishment = Accomplishment.nodes.get(unique_id=unique_id)
+                    return make_response({"status": "success", "data": accomplishment.serialize()}), 200
+                except Accomplishment.DoesNotExist:
+                    raise NotFoundError(f"No accomplishment found with unique_id: {unique_id}")
+
+            # Get by name
+            name = request.args.get('name')
+            if name:
+                try:
+                    accomplishment = Accomplishment.nodes.get(name=name)
+                    return make_response({"status": "success", "data": accomplishment.serialize()}), 200
+                except Accomplishment.DoesNotExist:
+                    raise NotFoundError(f"No accomplishment found with name: {name}")
+
+            # Filter by academic year
+            academic_year = request.args.get('academic_year')
+            if academic_year:
+                try:
+                    year = AcademicYear.nodes.get(name=academic_year)
+                    accomplishments = year.accomplishment_set.all()
+                    data = [acc.serialize() for acc in accomplishments]
+                    return make_response({"status": "success", "data": data}), 200
+                except AcademicYear.DoesNotExist:
+                    raise NotFoundError(f"No academic year found with name: {academic_year}")
+
+            # If no parameters provided, return error
+            return make_response({"status": "error", "error": "Please provide query parameters"}), 400
+
+        except NotFoundError as e:
+            return make_response({"status": "error", "error": str(e)}), 404
+        except Exception as e:
+            return make_response({"status": "error", "error": f"Failed to fetch accomplishments: {str(e)}"}), 500
+
     def post(self):
-        pass
+        """
+        Handle POST requests to create a new accomplishment.
+        """
+        try:
+            from app.database.queries.implementation.create import add_accomplishment
+
+            data = request.get_json()
+
+            # Validate required fields
+            required_fields = ['name', 'description', 'academic_year']
+            for field in required_fields:
+                if field not in data:
+                    raise ValidationError(f"Missing required field: '{field}'")
+
+            # Call the add_accomplishment function
+            success = add_accomplishment(
+                name=data['name'],
+                description=data['description'],  # Fixed from accomplishment_description
+                academic_year=data['academic_year'],
+                advanced_goal_number=data.get('advanced_goal_number'),
+                working_group=data.get('working_group'),
+                furthered_yse_identifier=data.get('furthered_yse_identifier')
+            )
+
+            if success:
+                return make_response({"status": "success", "message": "Accomplishment created successfully"}), 201
+            else:
+                raise CrudError("Failed to create accomplishment")
+
+        except ValidationError as e:
+            return make_response({"status": "error", "error": str(e)}), 400
+        except CrudError as e:
+            return make_response({"status": "error", "error": str(e)}), 500
+        except Exception as e:
+            return make_response({"status": "error", "error": f"Failed to create accomplishment: {str(e)}"}), 500
+
     def put(self):
-        pass
-    def delete(self):
-        pass
+        """
+        Handle PUT requests to update an existing accomplishment.
+        """
+        try:
+            from app.database.queries.implementation.update import update_accomplishment
+
+            data = request.get_json()
+
+            # Check for action
+            action = data.get('action')
+            if not action:
+                return make_response({"status": "error", "error": "Missing 'action' field"}), 400
+
+            if action == "update_accomplishment":
+                # Ensure unique_id is present
+                if 'unique_id' not in data:
+                    raise ValidationError("Missing required field: 'unique_id'")
+
+                # Call the update function
+                success = update_accomplishment(data)
+
+                if success:
+                    return make_response({"status": "success", "message": "Accomplishment updated successfully"}), 200
+                else:
+                    raise CrudError("Failed to update accomplishment")
+            else:
+                return make_response({"status": "error", "error": f"Unknown action: {action}"}), 400
+
+        except ValidationError as e:
+            return make_response({"status": "error", "error": str(e)}), 400
+        except NotFoundError as e:
+            return make_response({"status": "error", "error": str(e)}), 404
+        except CrudError as e:
+            return make_response({"status": "error", "error": str(e)}), 500
+        except Exception as e:
+            return make_response({"status": "error", "error": f"Failed to update accomplishment: {str(e)}"}), 500
+
+
 
 
 # Register the views

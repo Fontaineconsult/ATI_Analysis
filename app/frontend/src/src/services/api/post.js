@@ -1,11 +1,11 @@
 import axios from "axios";
 import {
-    create_year_success_evidence_node,
+    create_year_success_evidence_node, createAccomplishmentPayload,
     createDocumentPayload,
     createDocumentPayloadForImplementation, createImplementationNotePayload,
     createIndividualPayload,
     createMessagePayload, createMessagePayloadForImplementation, createMetricPayloadForImplementation,
-    createNotePayload,
+    createNotePayload, createPlanPayload,
     createSuccessIndicatorPayload, createWebpagePayloadForImplementation
 } from "../response_templates";
 
@@ -182,7 +182,7 @@ export const createIndividual = async (formData) => {
 
 export const createPlan = async (formData) => {
     try {
-        const response = await axios.post(`${process.env.REACT_APP_API_URL}/implementations/plans`, formData);
+        const response = await axios.post(`${process.env.REACT_APP_API_URL}/implementations/plans`, createPlanPayload(formData));
         return response.data;
     } catch (error) {
         console.error('Error creating plan:', error);
@@ -208,6 +208,22 @@ export const createImplementation = async (implementation_type, title, descripti
         return response.data;
     } catch (error) {
         console.error('Error creating implementation:', error);
+        throw error;
+    }
+}
+
+
+
+// ACCOMPLISHMENT CREATE FUNCTIONS
+export const createAccomplishment = async (formData) => {
+    try {
+        const response = await axios.post(
+            `${process.env.REACT_APP_API_URL}/implementations/accomplishments`,
+            createAccomplishmentPayload(formData)
+        );
+        return response.data;
+    } catch (error) {
+        console.error('Error creating accomplishment:', error);
         throw error;
     }
 }
