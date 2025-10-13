@@ -419,6 +419,8 @@ function generateReport(evidenceItem) {
 }
 
 function GenerateReportComponent({ evidenceItem }) {
+    console.log("ZINNGG", evidenceItem)
+
     const navigate = useNavigate();
 
     const handleImplementationClick = (type, uniqueId) => {
@@ -449,6 +451,9 @@ function GenerateReportComponent({ evidenceItem }) {
         });
     };
 
+    const filteredPlans = filterByIncludeInReport(evidenceItem?.plans || [], 'properties');
+    const filteredAccomplishments = filterByIncludeInReport(evidenceItem?.accomplishments || [], 'properties');
+
     // Filter main-level items
     const filteredNotes = filterByIncludeInReport(evidenceItem.has_notes || [], 'note.properties');
     const filteredMessages = filterByIncludeInReport(evidenceItem.has_messages || [], 'message.properties');
@@ -463,6 +468,7 @@ function GenerateReportComponent({ evidenceItem }) {
             notes: filterByIncludeInReport(etype.notes, 'properties'),
             msgs: filterByIncludeInReport(etype.msgs, 'properties'),
             metrics: filterByIncludeInReport(etype.metrics, 'properties'),
+
         };
     }).filter(et => {
         const hasContent = et.docs?.length || et.webs?.length ||
@@ -473,6 +479,8 @@ function GenerateReportComponent({ evidenceItem }) {
     return (
         <Box p={4} bg="white" fontSize="sm" textAlign="left">
             <VStack align="stretch" spacing={0}>
+
+
 
                 {/* Indicator Information */}
                 {evidenceItem.indicator?.properties && (
@@ -522,6 +530,9 @@ function GenerateReportComponent({ evidenceItem }) {
                         <Box height="16px" />
                     </>
                 )}
+
+
+
 
                 {/* Evidence Information */}
                 {evidenceItem.evidence?.properties && (
@@ -581,6 +592,88 @@ function GenerateReportComponent({ evidenceItem }) {
                         <Box height="16px" />
                     </>
                 )}
+                {/* Plans and Accomplishments Section - Add this at the top */}
+                {(filteredPlans.length > 0 || filteredAccomplishments.length > 0) && (
+                    <>
+                        <Box>
+                            <Heading as="h2" size="md" color="gray.800" mb={3}>
+                                Plans and Accomplishments
+                            </Heading>
+
+                            {/* Plans */}
+                            {filteredPlans.length > 0 && (
+                                <Box mb={3}>
+                                    <Heading as="h3" size="sm" color="teal.700" mb={2}>
+                                        Plans ({filteredPlans.length})
+                                    </Heading>
+                                    <Stack spacing={2}>
+                                        {filteredPlans.map((plan, index) => (
+                                            <Box key={index} pl={3} borderLeft="3px solid" borderLeftColor="teal.200">
+                                                <HStack spacing={2} mb={1}>
+                                                    <Text fontSize="xs" fontWeight="semibold" color="gray.700">
+                                                        {plan.properties.name}
+                                                    </Text>
+                                                    <Badge
+                                                        fontSize="10px"
+                                                        colorScheme={
+                                                            plan.properties.plan_status === 'Completed' ? 'green' :
+                                                                plan.properties.plan_status === 'In Progress' ? 'blue' :
+                                                                    plan.properties.abandoned ? 'red' : 'gray'
+                                                        }
+                                                    >
+                                                        {plan.properties.abandoned ? 'Abandoned' : plan.properties.plan_status}
+                                                    </Badge>
+                                                    {plan.properties.is_key_plan && (
+                                                        <Badge colorScheme="purple" fontSize="10px">Key Plan</Badge>
+                                                    )}
+                                                    {plan.properties.is_campus_plan && (
+                                                        <Badge colorScheme="green" fontSize="10px">Campus Plan</Badge>
+                                                    )}
+                                                </HStack>
+                                                <Text fontSize="xs" color="gray.700">
+                                                    {plan.properties.description}
+                                                </Text>
+                                                {plan.properties.abandoned && plan.properties.abandoned_notes && (
+                                                    <Text fontSize="xs" color="red.600" mt={1}>
+                                                        <Text as="span" fontWeight="semibold">Abandonment Notes:</Text> {plan.properties.abandoned_notes}
+                                                    </Text>
+                                                )}
+                                            </Box>
+                                        ))}
+                                    </Stack>
+                                </Box>
+                            )}
+
+                            {/* Accomplishments */}
+                            {filteredAccomplishments.length > 0 && (
+                                <Box>
+                                    <Heading as="h3" size="sm" color="blue.700" mb={2}>
+                                        Accomplishments ({filteredAccomplishments.length})
+                                    </Heading>
+                                    <Stack spacing={2}>
+                                        {filteredAccomplishments.map((accomplishment, index) => (
+                                            <Box key={index} pl={3} borderLeft="3px solid" borderLeftColor="blue.200">
+                                                <HStack spacing={1} mb={1}>
+                                                    <Text fontSize="xs" fontWeight="semibold" color="gray.700">
+                                                        {accomplishment.properties.name}
+                                                    </Text>
+                                                    <Badge colorScheme="blue" fontSize="10px">
+                                                        Completed
+                                                    </Badge>
+                                                </HStack>
+                                                <Text fontSize="xs" color="gray.700">
+                                                    {accomplishment.properties.description}
+                                                </Text>
+                                            </Box>
+                                        ))}
+                                    </Stack>
+                                </Box>
+                            )}
+                        </Box>
+                        <Divider my={4} />
+                    </>
+                )}
+
 
                 {/* Notes */}
                 {filteredNotes.length > 0 && (

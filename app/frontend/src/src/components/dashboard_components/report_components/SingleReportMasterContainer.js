@@ -109,7 +109,8 @@ const SingleReportMasterContainer = () => {
         has_messages: evidenceItem.has_messages || [],
         has_metrics: evidenceItem.has_metrics || [],
         evidenceTypes: evidenceItem.evidenceTypes || [],
-        plans: evidenceItem.plans || []
+        plans: evidenceItem.plans || [],
+        accomplishments: evidenceItem.accomplishments || []
     };
 
     return (

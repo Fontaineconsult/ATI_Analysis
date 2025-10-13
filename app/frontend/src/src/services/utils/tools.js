@@ -30,6 +30,18 @@ function workingGroupCodeFromName(workingGroupName) {
     return workingGroupMap[workingGroupName] || workingGroupName;
 }
 
+function workingGroupWebSafe(workingGroupName) {
+    const workingGroupMap = {
+        'web': 'web',
+        'procurement': 'pro',
+        'instructionalMaterials': 'instructional-materials',
+
+    }
+
+    return workingGroupMap[workingGroupName] || workingGroupName;
+}
+
+
 
 // Helper function to get status color
 const getStatusColor = (statusLevel) => {
@@ -95,4 +107,5 @@ export { getUrlFromCompositeKey,
     year_difference,
     getEditUrlFromCompositeKey,
     getImplementationURL,
-    workingGroupCodeFromName};
+    workingGroupCodeFromName,
+    workingGroupWebSafe};

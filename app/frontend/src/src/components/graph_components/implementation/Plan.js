@@ -20,6 +20,9 @@ import {
 import { FaEdit, FaSave, FaTimes } from 'react-icons/fa';
 import { updatePlan } from '../../../services/api/put';
 import { createPlan } from '../../../services/api/post';
+import {workingGroupCodeFromName} from "../../../services/utils/tools";
+
+
 
 function Plan({
                   planData,
@@ -41,7 +44,7 @@ function Plan({
         abandoned: planData?.properties?.abandoned || false,
         abandoned_notes: planData?.properties?.abandoned_notes || '',
         furthered_goal_number: goalNumber,
-        furthered_working_group: workingGroup,
+        furthered_working_group: workingGroupCodeFromName(workingGroup),
         academic_year_name: academicYear,
         unique_id: planData?.properties?.unique_id || null
     });

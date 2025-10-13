@@ -23,6 +23,9 @@ class EvidenceAPI(MethodView):
         """
         Fetches evidence for a specific working group and academic year.
         """
+        # Validate the working group
+        if working_group not in working_group_names_web_query:
+            return make_response(status="error", error=f"Invalid working group '{working_group}', one of {working_group_names_web_query.keys()}"), 400
 
         try:
             results = fetch_evidence_for_working_group(working_group_names_web_query[working_group], academic_year)

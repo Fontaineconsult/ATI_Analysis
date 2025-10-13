@@ -35,6 +35,7 @@ function SubNavbar() {
             { label: 'Instructional Materials', path: '/ati-explorer/instructional-materials/goal/1' },
             { label: 'Procurement', path: '/ati-explorer/procurement/goal/1' },
             { label: 'Implementations', path: '/ati-explorer/implementations' },
+            { label: 'Plans', path: '/ati-explorer/plans' },
         ];
     } else if (location.pathname.includes('/dashboard')) {
         subNavItems = [
