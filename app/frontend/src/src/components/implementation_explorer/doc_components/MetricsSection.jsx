@@ -146,8 +146,7 @@ function MetricForm({ metric, onSubmit, onCancel, isNewMetric }) {
 const MetricsViewer = ({ metrics = [], implementation_id, implementation_type }) => {
     const [isAddingNew, setIsAddingNew] = useState(false);
     const [editingIndex, setEditingIndex] = useState(null);
-    const { loadSingleWorkingGroupData } = useContext(DataContext);
-    const { currentWorkingGroup } = useSettings();
+    const { refreshImplementations } = useContext(DataContext);
     const { user } = useContext(UserContext);
     const toast = useToast();
 
@@ -167,7 +166,7 @@ const MetricsViewer = ({ metrics = [], implementation_id, implementation_type })
                 isClosable: true,
             });
 
-            await loadSingleWorkingGroupData(currentWorkingGroup);
+            await refreshImplementations()
             setIsAddingNew(false);
         } catch (error) {
             toast({
@@ -196,7 +195,7 @@ const MetricsViewer = ({ metrics = [], implementation_id, implementation_type })
                 isClosable: true,
             });
 
-            await loadSingleWorkingGroupData(currentWorkingGroup);
+            await refreshImplementations()
             setEditingIndex(null);
         } catch (error) {
             toast({

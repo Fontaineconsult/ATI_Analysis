@@ -119,8 +119,7 @@ function WebpageForm({ webpage, onSubmit, onCancel, isNewWebpage }) {
 export default function WebpagesViewer({ webpages = [], implementation_id, implementation_type }) {
     const [isAddingNew, setIsAddingNew] = useState(false);
     const [editingIndex, setEditingIndex] = useState(null);
-    const { loadSingleWorkingGroupData } = useContext(DataContext);
-    const { currentWorkingGroup } = useSettings();
+    const { refreshImplementations } = useContext(DataContext);
     const { user } = useContext(UserContext);
     const toast = useToast();
 
@@ -140,7 +139,7 @@ export default function WebpagesViewer({ webpages = [], implementation_id, imple
                 isClosable: true,
             });
 
-            await loadSingleWorkingGroupData(currentWorkingGroup);
+            await refreshImplementations()
             setIsAddingNew(false);
         } catch (error) {
             toast({
@@ -169,7 +168,7 @@ export default function WebpagesViewer({ webpages = [], implementation_id, imple
                 isClosable: true,
             });
 
-            await loadSingleWorkingGroupData(currentWorkingGroup);
+            await refreshImplementations()
             setEditingIndex(null);
         } catch (error) {
             toast({

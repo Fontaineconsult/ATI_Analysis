@@ -19,7 +19,7 @@ import {
     Td
 } from '@chakra-ui/react';
 import {useNavigate} from "react-router-dom";
-import {getEditUrlFromCompositeKey} from "./utils/tools";
+import {getEditUrlFromCompositeKey, getStatusColor} from "./utils/tools";
 
 let datas = {
     "persons": [
@@ -536,7 +536,7 @@ function GenerateReportComponent({ evidenceItem }) {
                             </Text>
                             {evidenceItem.statusLevel?.properties && (
                                 <Text fontSize="xs" color="gray.700" mb={1}>
-                                    <Text as="span" fontWeight="semibold">Status Level:</Text> {evidenceItem.statusLevel.properties.status_level}
+                                    <Text as="span" fontWeight="semibold">Status Level:</Text> <Badge color={"white"} bg={getStatusColor(evidenceItem.statusLevel.properties.status_level)}>{evidenceItem.statusLevel.properties.status_level}</Badge>
                                 </Text>
                             )}
                             {'administrative_review_complete' in evidenceItem.evidence.properties && (

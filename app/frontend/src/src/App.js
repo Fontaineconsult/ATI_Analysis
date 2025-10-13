@@ -28,6 +28,10 @@ import { useSettings } from "./context/SettingsContext";
 // Theme extension
 import { extendTheme } from '@chakra-ui/react'
 
+
+
+
+
 const theme = extendTheme({
     fontSizes: {
         xs: "0.75rem",

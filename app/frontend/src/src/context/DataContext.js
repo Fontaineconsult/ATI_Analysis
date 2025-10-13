@@ -129,10 +129,18 @@ export const DataProvider = ({ children }) => {
     const refreshImplementations = async () => {
         try {
             setUpdating(true);
-            const implementationsData = await fetchAllImplementations();
+            const [webData, instructionalMaterialsData, procurementData, implementationsData] = await Promise.all([
+                fetchPrimaryData("web", selectedYear),
+                fetchPrimaryData("instructional-materials", selectedYear),
+                fetchPrimaryData("procurement", selectedYear),
+                fetchAllImplementations()
+            ]);
 
             setData((prevData) => ({
                 ...prevData,
+                web: webData.data,
+                instructionalMaterials: instructionalMaterialsData.data,
+                procurement: procurementData.data,
                 implementations: implementationsData.status?.data || implementationsData.data || {}
             }));
         } catch (err) {

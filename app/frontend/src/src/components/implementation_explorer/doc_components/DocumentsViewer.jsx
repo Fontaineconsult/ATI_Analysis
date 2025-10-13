@@ -132,7 +132,7 @@ function DocumentForm({ document, onSubmit, onCancel, isNewDocument }) {
 export default function DocumentsViewer({ documents = [], implementation_id, implementation_type }) {
     const [isAddingNew, setIsAddingNew] = useState(false);
     const [editingIndex, setEditingIndex] = useState(null);
-    const { loadSingleWorkingGroupData } = useContext(DataContext);
+    const { refreshImplementations } = useContext(DataContext);
     const { currentWorkingGroup } = useSettings();
     const { user } = useContext(UserContext);
     const toast = useToast();
@@ -154,7 +154,7 @@ export default function DocumentsViewer({ documents = [], implementation_id, imp
                 isClosable: true,
             });
 
-            await loadSingleWorkingGroupData(currentWorkingGroup);
+            await refreshImplementations()
             setIsAddingNew(false);
         } catch (error) {
             toast({
@@ -183,7 +183,7 @@ export default function DocumentsViewer({ documents = [], implementation_id, imp
                 isClosable: true,
             });
 
-            await loadSingleWorkingGroupData(currentWorkingGroup);
+            await refreshImplementations()
             setEditingIndex(null);
         } catch (error) {
             toast({

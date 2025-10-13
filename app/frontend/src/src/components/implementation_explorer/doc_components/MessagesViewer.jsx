@@ -140,7 +140,7 @@ function MessageForm({ message, onSubmit, onCancel, isNewMessage }) {
 const MessagesViewer = ({ messages = [], implementation_id, implementation_type, formatDate }) => {
     const [isAddingNew, setIsAddingNew] = useState(false);
     const [editingIndex, setEditingIndex] = useState(null);
-    const { loadSingleWorkingGroupData } = useContext(DataContext);
+    const { refreshImplementations } = useContext(DataContext);
     const { currentWorkingGroup } = useSettings();
     const { user } = useContext(UserContext);
     const toast = useToast();
@@ -156,7 +156,7 @@ const MessagesViewer = ({ messages = [], implementation_id, implementation_type,
                 isClosable: true,
             });
 
-            await loadSingleWorkingGroupData(currentWorkingGroup);
+            await refreshImplementations()
             setIsAddingNew(false);
         } catch (error) {
             toast({
@@ -180,7 +180,7 @@ const MessagesViewer = ({ messages = [], implementation_id, implementation_type,
                 isClosable: true,
             });
 
-            await loadSingleWorkingGroupData(currentWorkingGroup);
+            await refreshImplementations()
             setEditingIndex(null);
         } catch (error) {
             toast({

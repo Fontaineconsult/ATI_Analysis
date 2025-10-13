@@ -35,6 +35,7 @@ import WebpagesViewer from './doc_components/WebpagesViewer';
 import NotesViewer from './doc_components/NotesViewer';
 import MessagesViewer from './doc_components/MessagesViewer';
 import MetricsViewer from './doc_components/MetricsSection';
+import {getEditUrlFromCompositeKey} from "../../services/utils/tools";
 
 function ImplementationTypeOverview({ implementationType, initialImplementationId }) {
     const { data, refreshImplementations } = useContext(DataContext);
@@ -372,7 +373,38 @@ function ImplementationTypeOverview({ implementationType, initialImplementationI
                                                 transition="box-shadow 0.2s"
                                             >
                                                 <VStack align="stretch" spacing={3}>
-                                                    <Text fontWeight="bold" fontSize="sm" color="teal.700">
+                                                    <Text
+                                                        fontWeight="bold"
+                                                        fontSize="sm"
+                                                        color="teal.700"
+                                                        cursor="pointer"
+                                                        _hover={{ color: 'teal.600', textDecoration: 'underline' }}
+                                                        onClick={() => {
+                                                            console.log("SDFSDF", yse)
+                                                            const editUrl = getEditUrlFromCompositeKey(yse.indicator_composite_key);
+
+
+                                                            const [pathname, hash] = editUrl.split('#');
+
+                                                            navigate(pathname + '#' + hash);
+
+                                                            setTimeout(() => {
+                                                                if (hash) {
+                                                                    const element = document.getElementById(hash);
+                                                                    if (element) {
+                                                                        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                                                    } else {
+                                                                        setTimeout(() => {
+                                                                            const retryElement = document.getElementById(hash);
+                                                                            if (retryElement) {
+                                                                                retryElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                                                            }
+                                                                        }, 300);
+                                                                    }
+                                                                }
+                                                            }, 100);
+                                                        }}
+                                                    >
                                                         {yse.year_identifier}
                                                     </Text>
 
