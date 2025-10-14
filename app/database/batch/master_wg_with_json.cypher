@@ -20,12 +20,12 @@ WITH wg, goal, indicator, evidence
 OPTIONAL MATCH (evidence)-[:has_note]->(evidenceNote:Note)
 OPTIONAL MATCH (evidenceNote)-[:created_by]->(noteCreator:Person)
 
-// Collect the notes and their creators per evidence
+// Collect the notes and their creators per evidence, filtering out nulls
 WITH wg, goal, indicator, evidence,
-     collect(DISTINCT {
+     [note IN collect(DISTINCT {
        note: evidenceNote,
        created_by: noteCreator
-     }) AS evidenceNotes
+     }) WHERE note.note IS NOT NULL] AS evidenceNotes
 
 // Match messages connected to the evidence and their creators
 OPTIONAL MATCH (evidence)-[:has_message]->(evidenceMessage:Message)
@@ -71,6 +71,13 @@ WITH wg, goal, indicator, evidence, evidenceNotes, evidenceMessages, evidenceMet
      collect(DISTINCT person) AS persons,
      collect(DISTINCT adminReviewer) AS adminReviewers
 
+// Match plans connected to the evidence
+OPTIONAL MATCH (evidence)<-[:furthers_yse]-(evidencePlan:Plan)
+
+// Collect the plans per evidence
+WITH wg, goal, indicator, evidence, evidenceNotes, evidenceMessages, evidenceMetrics, statusLevel, adminReviewers, persons,
+     collect(DISTINCT evidencePlan) AS plans
+
 // Match evidence types and their documentation
 OPTIONAL MATCH (evidence)<-[:is_evidence_for]-(evidenceType)
   WHERE evidenceType:InternalPolicy OR
@@ -83,21 +90,37 @@ OPTIONAL MATCH (evidence)<-[:is_evidence_for]-(evidenceType)
 
 // Match documentation and metrics associated with evidence types
 OPTIONAL MATCH (evidenceType)-[:is_documented_by]->(doc:Document)
+OPTIONAL MATCH (doc)-[:maintained_by]->(docMaintainer:Person)
+
 OPTIONAL MATCH (evidenceType)-[:is_documented_by]->(web:Webpage)
+OPTIONAL MATCH (web)-[:maintained_by]->(webMaintainer:Person)
+
 OPTIONAL MATCH (evidenceType)-[:is_documented_by]->(etNote:Note)
 OPTIONAL MATCH (evidenceType)-[:is_documented_by]->(etMsg:Message)
 OPTIONAL MATCH (evidenceType)-[:has_metric]->(etMetric:Metric)
 
 // Aggregate documentation and metrics under each evidence type
-WITH wg, goal, indicator, evidence, evidenceNotes, evidenceMessages, evidenceMetrics, statusLevel, adminReviewers, persons, evidenceType,
-     collect(DISTINCT doc) AS docs,
-     collect(DISTINCT web) AS webs,
+WITH wg, goal, indicator, evidence, evidenceNotes, evidenceMessages, evidenceMetrics, statusLevel, adminReviewers, persons, plans, evidenceType,
+     collect(DISTINCT {
+       document: doc,
+       maintained_by: docMaintainer
+     }) AS docs,
+     collect(DISTINCT {
+       webpage: web,
+       maintained_by: webMaintainer
+     }) AS webs,
      collect(DISTINCT etNote) AS notes,
      collect(DISTINCT etMsg) AS msgs,
      collect(DISTINCT etMetric) AS metrics
 
+// Filter out null documents and webpages while preserving structure
+WITH wg, goal, indicator, evidence, evidenceNotes, evidenceMessages, evidenceMetrics, statusLevel, adminReviewers, persons, plans, evidenceType,
+     [d IN docs WHERE d.document IS NOT NULL] AS docs,
+     [w IN webs WHERE w.webpage IS NOT NULL] AS webs,
+     notes, msgs, metrics
+
 // Create a map for each evidence type with its documentation and metrics
-WITH wg, goal, indicator, evidence, evidenceNotes, evidenceMessages, evidenceMetrics, statusLevel, adminReviewers, persons,
+WITH wg, goal, indicator, evidence, evidenceNotes, evidenceMessages, evidenceMetrics, statusLevel, adminReviewers, persons, plans,
      {
        type: labels(evidenceType)[0],
        evidenceType: evidenceType,
@@ -109,11 +132,11 @@ WITH wg, goal, indicator, evidence, evidenceNotes, evidenceMessages, evidenceMet
      } AS evidenceTypeData
 
 // Collect all evidence types under each evidence
-WITH wg, goal, indicator, evidence, evidenceNotes, evidenceMessages, evidenceMetrics, statusLevel, adminReviewers, persons,
+WITH wg, goal, indicator, evidence, evidenceNotes, evidenceMessages, evidenceMetrics, statusLevel, adminReviewers, persons, plans,
      collect(evidenceTypeData) AS evidenceTypes
 
-// Create a map for each evidence with its data
-WITH wg, goal, indicator, statusLevel, adminReviewers, persons, evidenceTypes, evidence, evidenceNotes, evidenceMessages, evidenceMetrics,
+// Create a map for each evidence with its data, including plans
+WITH wg, goal, indicator, statusLevel, adminReviewers, persons, plans, evidenceTypes, evidence, evidenceNotes, evidenceMessages, evidenceMetrics,
      {
        evidence: evidence,
        statusLevel: statusLevel,
@@ -122,13 +145,12 @@ WITH wg, goal, indicator, statusLevel, adminReviewers, persons, evidenceTypes, e
        adminReviewers: adminReviewers,
        has_notes: evidenceNotes,
        has_messages: evidenceMessages,
-       has_metrics: evidenceMetrics
+       has_metrics: evidenceMetrics,
+       plans: plans
      } AS evidenceData
 
 // Collect all evidences under each indicator
 WITH wg, goal, indicator, collect(evidenceData) AS evidences
-
-// Note: We no longer filter out indicators without evidences
 
 // Create a map for each indicator with its evidences
 WITH wg, goal, indicator, evidences,

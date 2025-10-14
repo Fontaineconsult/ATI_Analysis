@@ -11,7 +11,7 @@ def fetch_evidence_for_working_group(working_group, academic_year):
     if working_group not in working_groups:
         raise ValidationError(f"Invalid working group '{working_group}'.")
     # Prepare the query
-    query = query = """
+    query = """
     MATCH (wg:ATIWorkingGroup)-[:responsible_for]->(goal:Goal)
       WHERE wg.name = $working_group
     
@@ -104,18 +104,34 @@ def fetch_evidence_for_working_group(working_group, academic_year):
     
     // Match documentation and metrics associated with evidence types
     OPTIONAL MATCH (evidenceType)-[:is_documented_by]->(doc:Document)
+    OPTIONAL MATCH (doc)-[:maintained_by]->(docMaintainer:Person)
+    
     OPTIONAL MATCH (evidenceType)-[:is_documented_by]->(web:Webpage)
+    OPTIONAL MATCH (web)-[:maintained_by]->(webMaintainer:Person)
+    
     OPTIONAL MATCH (evidenceType)-[:is_documented_by]->(etNote:Note)
     OPTIONAL MATCH (evidenceType)-[:is_documented_by]->(etMsg:Message)
     OPTIONAL MATCH (evidenceType)-[:has_metric]->(etMetric:Metric)
     
     // Aggregate documentation and metrics under each evidence type
     WITH wg, goal, indicator, evidence, evidenceNotes, evidenceMessages, evidenceMetrics, statusLevel, adminReviewers, persons, plans, evidenceType,
-         collect(DISTINCT doc) AS docs,
-         collect(DISTINCT web) AS webs,
+         collect(DISTINCT {
+           document: doc,
+           maintained_by: docMaintainer
+         }) AS docs,
+         collect(DISTINCT {
+           webpage: web,
+           maintained_by: webMaintainer
+         }) AS webs,
          collect(DISTINCT etNote) AS notes,
          collect(DISTINCT etMsg) AS msgs,
          collect(DISTINCT etMetric) AS metrics
+    
+    // Filter out null documents and webpages while preserving structure
+    WITH wg, goal, indicator, evidence, evidenceNotes, evidenceMessages, evidenceMetrics, statusLevel, adminReviewers, persons, plans, evidenceType,
+         [d IN docs WHERE d.document IS NOT NULL] AS docs,
+         [w IN webs WHERE w.webpage IS NOT NULL] AS webs,
+         notes, msgs, metrics
     
     // Create a map for each evidence type with its documentation and metrics
     WITH wg, goal, indicator, evidence, evidenceNotes, evidenceMessages, evidenceMetrics, statusLevel, adminReviewers, persons, plans,
