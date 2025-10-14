@@ -1,7 +1,7 @@
 import React, { useState, useContext } from 'react';
 import {
     Box, VStack, Heading, Text, Badge, Link, HStack, Button, Input, Switch,
-    FormControl, FormLabel, Flex, Collapse, useToast
+    FormControl, FormLabel, Flex, Collapse, useToast, Select
 } from '@chakra-ui/react';
 import { ExternalLinkIcon } from '@chakra-ui/icons';
 import { addDocumentToImplementation } from '../../../services/api/post';
@@ -16,19 +16,22 @@ function formatDate(dateString) {
 }
 
 function DocumentForm({ document, onSubmit, onCancel, isNewDocument }) {
-    const { user } = useContext(UserContext);
+    const { user, individuals } = useContext(UserContext);
+
+    // Initialize with the existing maintainer's unique_id if available
     const [documentData, setDocumentData] = useState({
         unique_id: document?.unique_id || '',
         name: document?.name || '',
         file_path: document?.file_path || '',
         uri_path: document?.uri_path || '',
+        description: document?.description || '',
         is_administrative_review_documentation: document?.is_administrative_review_documentation || false,
         is_milestone_and_measures_documentation: document?.is_milestone_and_measures_documentation || false,
         include_in_report: document?.include_in_report ?? true,
         depreciated: document?.depreciated || false,
         depreciated_date: document?.depreciated_date || '',
         date_created: document?.date_created || new Date().toISOString().split('T')[0],
-        created_by: user || {}
+        maintainer_id: document?.maintained_by?.unique_id || ''  // Pre-populate with existing maintainer
     });
 
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -51,11 +54,56 @@ function DocumentForm({ document, onSubmit, onCancel, isNewDocument }) {
         }
     };
 
+    // Sort individuals alphabetically by name for the dropdown
+    const sortedIndividuals = individuals ?
+        [...individuals].sort((a, b) => a.name.localeCompare(b.name)) :
+        [];
+
+    // Find the current maintainer to show their name if individuals haven't loaded yet
+    const currentMaintainer = document?.maintained_by;
+
     return (
         <Box as="form" onSubmit={handleSubmit} p={4} bg="white" borderRadius="lg" borderWidth="1px" borderColor="teal.300">
             <FormControl mb={3}>
                 <FormLabel fontSize="sm">Document Name</FormLabel>
                 <Input size="sm" name="name" value={documentData.name} onChange={handleChange} required />
+            </FormControl>
+
+            <FormControl mb={3}>
+                <FormLabel fontSize="sm">Description</FormLabel>
+                <Input size="sm" name="description" value={documentData.description} onChange={handleChange} />
+            </FormControl>
+
+            <FormControl mb={3}>
+                <FormLabel fontSize="sm">
+                    Maintained By
+                    {currentMaintainer && !individuals && (
+                        <Text as="span" fontSize="xs" color="gray.500" ml={2}>
+                            (Current: {currentMaintainer.name})
+                        </Text>
+                    )}
+                </FormLabel>
+                <Select
+                    size="sm"
+                    name="maintainer_id"
+                    value={documentData.maintainer_id}
+                    onChange={handleChange}
+                    placeholder="Select a maintainer"
+                >
+                    {/* If we have a current maintainer but individuals haven't loaded, show the current one */}
+                    {currentMaintainer && !sortedIndividuals.find(p => p.unique_id === currentMaintainer.unique_id) && (
+                        <option key={currentMaintainer.unique_id} value={currentMaintainer.unique_id}>
+                            {currentMaintainer.name} {currentMaintainer.title ? `(${currentMaintainer.title})` : ''}
+                        </option>
+                    )}
+
+                    {/* Show all available individuals */}
+                    {sortedIndividuals.map(person => (
+                        <option key={person.unique_id} value={person.unique_id}>
+                            {person.name} {person.title ? `(${person.title})` : ''}
+                        </option>
+                    ))}
+                </Select>
             </FormControl>
 
             <FormControl mb={3}>
@@ -77,22 +125,34 @@ function DocumentForm({ document, onSubmit, onCancel, isNewDocument }) {
                 <Box flex="1">
                     <FormControl mb={2}>
                         <HStack>
-                            <Switch size="sm" name="is_administrative_review_documentation"
-                                    isChecked={documentData.is_administrative_review_documentation} onChange={handleChange} />
+                            <Switch
+                                size="sm"
+                                name="is_administrative_review_documentation"
+                                isChecked={documentData.is_administrative_review_documentation === true || documentData.is_administrative_review_documentation === "True"}
+                                onChange={handleChange}
+                            />
                             <FormLabel fontSize="sm" mb={0}>Admin Review Doc</FormLabel>
                         </HStack>
                     </FormControl>
                     <FormControl mb={2}>
                         <HStack>
-                            <Switch size="sm" name="is_milestone_and_measures_documentation"
-                                    isChecked={documentData.is_milestone_and_measures_documentation} onChange={handleChange} />
+                            <Switch
+                                size="sm"
+                                name="is_milestone_and_measures_documentation"
+                                isChecked={documentData.is_milestone_and_measures_documentation === true || documentData.is_milestone_and_measures_documentation === "True"}
+                                onChange={handleChange}
+                            />
                             <FormLabel fontSize="sm" mb={0}>Milestones Doc</FormLabel>
                         </HStack>
                     </FormControl>
                     <FormControl mb={2}>
                         <HStack>
-                            <Switch size="sm" name="include_in_report"
-                                    isChecked={documentData.include_in_report} onChange={handleChange} />
+                            <Switch
+                                size="sm"
+                                name="include_in_report"
+                                isChecked={documentData.include_in_report}
+                                onChange={handleChange}
+                            />
                             <FormLabel fontSize="sm" mb={0}>Include in Report</FormLabel>
                         </HStack>
                     </FormControl>
@@ -101,27 +161,46 @@ function DocumentForm({ document, onSubmit, onCancel, isNewDocument }) {
                 <Box flex="1">
                     <FormControl mb={2}>
                         <HStack>
-                            <Switch size="sm" name="depreciated"
-                                    isChecked={documentData.depreciated} onChange={handleChange} />
+                            <Switch
+                                size="sm"
+                                name="depreciated"
+                                isChecked={documentData.depreciated}
+                                onChange={handleChange}
+                            />
                             <FormLabel fontSize="sm" mb={0}>Depreciated</FormLabel>
                         </HStack>
                     </FormControl>
                     {documentData.depreciated && (
                         <FormControl mb={2}>
                             <FormLabel fontSize="sm">Depreciation Date</FormLabel>
-                            <Input size="sm" type="date" name="depreciated_date"
-                                   value={documentData.depreciated_date} onChange={handleChange} />
+                            <Input
+                                size="sm"
+                                type="date"
+                                name="depreciated_date"
+                                value={documentData.depreciated_date}
+                                onChange={handleChange}
+                            />
                         </FormControl>
                     )}
                 </Box>
             </Flex>
 
             <HStack spacing={2}>
-                <Button size="sm" type="submit" colorScheme="teal"
-                        isLoading={isSubmitting} loadingText={isNewDocument ? 'Adding...' : 'Updating...'}>
+                <Button
+                    size="sm"
+                    type="submit"
+                    colorScheme="teal"
+                    isLoading={isSubmitting}
+                    loadingText={isNewDocument ? 'Adding...' : 'Updating...'}
+                >
                     {isNewDocument ? 'Add Document' : 'Update Document'}
                 </Button>
-                <Button size="sm" variant="outline" onClick={onCancel} isDisabled={isSubmitting}>
+                <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={onCancel}
+                    isDisabled={isSubmitting}
+                >
                     Cancel
                 </Button>
             </HStack>
@@ -140,11 +219,15 @@ export default function DocumentsViewer({ documents = [], implementation_id, imp
     const handleAddDocument = async (documentData) => {
         try {
             documentData.date_created = new Date().toISOString().split('T')[0];
+
+            // Remove maintainer_id from documentData and pass it separately
+            const { maintainer_id, ...documentDataWithoutMaintainer } = documentData;
+
             const response = await addDocumentToImplementation(
                 implementation_id,
                 implementation_type,
-                documentData,
-                user?.employee_id || ''
+                documentDataWithoutMaintainer,
+                maintainer_id  // Pass maintainer_id as separate parameter
             );
 
             toast({
@@ -169,11 +252,14 @@ export default function DocumentsViewer({ documents = [], implementation_id, imp
 
     const handleUpdateDocument = async (documentData, index) => {
         try {
+            // Extract maintainer_id to pass separately
+            const { maintainer_id, ...documentDataWithoutMaintainer } = documentData;
+
             const response = await updateDocument(
                 implementation_id,
                 implementation_type,
-                documentData,
-                user?.employee_id || ''
+                documentDataWithoutMaintainer,
+                maintainer_id  // Pass maintainer_id as separate parameter
             );
 
             toast({
@@ -257,6 +343,12 @@ export default function DocumentsViewer({ documents = [], implementation_id, imp
                                             {doc.description && (
                                                 <Text fontSize="xs" color="gray.700" mt={2}>
                                                     {doc.description}
+                                                </Text>
+                                            )}
+
+                                            {doc.maintained_by && (
+                                                <Text fontSize="xs" color="gray.600" mt={1}>
+                                                    Maintained by: {doc.maintained_by.name || 'Unknown'}
                                                 </Text>
                                             )}
 

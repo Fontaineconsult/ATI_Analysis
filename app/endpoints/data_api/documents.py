@@ -294,6 +294,7 @@ class DocumentsAPI(MethodView):
                     return make_response(status="error", error="An unexpected error occurred."), 500
 
             elif action == 'update_document':
+
                 required_fields = ['document_dict']
                 if not all(field in data for field in required_fields):
                     return make_response(status="error", error="Missing required fields for document update."), 400
@@ -306,7 +307,7 @@ class DocumentsAPI(MethodView):
                 year_success_evidence = data.get('year_success_evidence')
                 implementation_id = data.get('implementation_id')
                 implementation_type = data.get('implementation_type')
-                created_by = data.get('created_by')
+                maintainer_id = data.get('maintained_by')  # Changed from created_by to maintainer_id
 
                 try:
                     if update_document(
@@ -314,7 +315,7 @@ class DocumentsAPI(MethodView):
                             year_success_evidence=year_success_evidence,
                             implementation_id=implementation_id,
                             implementation_type=implementation_type,
-                            # created_by=created_by # Todo: add to schema if needed
+                            maintainer_id=maintainer_id  # Now passing maintainer_id
                     ):
                         return make_response(status="success", data="Document updated successfully."), 200
                     else:
@@ -340,6 +341,7 @@ class DocumentsAPI(MethodView):
                 year_success_evidence = data.get('year_success_evidence')
                 implementation_id = data.get('implementation_id')
                 implementation_type = data.get('implementation_type')
+                maintainer_id = data.get('maintained_by')  # Added maintainer_id
 
                 try:
                     if update_webpage(
@@ -347,6 +349,7 @@ class DocumentsAPI(MethodView):
                             year_success_evidence=year_success_evidence,
                             implementation_id=implementation_id,
                             implementation_type=implementation_type,
+                            maintainer_id=maintainer_id  # Now passing maintainer_id
                     ):
                         return make_response(status="success", message="Webpage updated successfully."), 200
                     else:

@@ -75,10 +75,10 @@ export const updateMessageForImplementation = async (implementation_id, implemen
 
 
 
-export const updateDocument = async (implementation_id, implementation_type, document_dict, created_by) => {
+export const updateDocument = async (implementation_id, implementation_type, document_dict, maintained_by) => {
     try {
         const response = await axios.put(`${process.env.REACT_APP_API_URL}/documents/documents`,
-            updateDocumentPayload(implementation_id, implementation_type, document_dict, created_by));
+            updateDocumentPayload(implementation_id, implementation_type, document_dict, maintained_by));
         return response.data;
     } catch (error) {
         console.error('Error updating message:', error);

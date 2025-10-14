@@ -153,25 +153,25 @@ export function updateMessagePayload(yearSuccessEvidence, message_dict, created_
 
 
 
-export function updateDocumentPayload(implementation_id, implementation_type, document_dict, created_by) {
+export function updateDocumentPayload(implementation_id, implementation_type, document_dict, maintained_by) {
     return {
         action: "update_document",
         implementation_id: implementation_id,
         implementation_type: implementation_type,
         document_dict: document_dict,
-        created_by:created_by
+        maintained_by:maintained_by
     }
 
 }
 
 
-export function updateWebsitePayload(implementation_id, implementation_type, update_webpage, created_by) {
+export function updateWebsitePayload(implementation_id, implementation_type, update_webpage, maintained_by) {
     return {
         action: "update_webpage",
         implementation_id: implementation_id,
         implementation_type: implementation_type,
         webpage_dict: update_webpage,
-        created_by:created_by
+        maintained_by:maintained_by
     }
 
 }

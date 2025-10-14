@@ -194,9 +194,19 @@ def get_all_implementations() -> dict:
                         'hash': doc.hash,
                         'file_path': doc.file_path,
                         'uri_path': doc.uri_path,
+                        'description': doc.description,  # Added description field
+                        'depreciated': doc.depreciated,  # Added depreciated field
+                        'depreciated_date': doc.depreciated_date.isoformat() if doc.depreciated_date else None,  # Added depreciated_date
                         'include_in_report': doc.include_in_report,
                         'is_administrative_review_documentation': doc.is_administrative_review_documentation,
-                        'is_milestone_and_measures_documentation': doc.is_milestone_and_measures_documentation
+                        'is_milestone_and_measures_documentation': doc.is_milestone_and_measures_documentation,
+                        'maintained_by': {
+                            'unique_id': maintainer.unique_id,
+                            'name': maintainer.name,
+                            'email': maintainer.email,
+                            'employee_id': maintainer.employee_id,
+                            'title': maintainer.title
+                        } if (maintainer := doc.maintained_by.single()) else None
                     } for doc in impl.supporting_documents.all()],
                     'supporting_webpages': [{
                         'unique_id': wp.unique_id,
@@ -205,7 +215,15 @@ def get_all_implementations() -> dict:
                         'description': wp.description,
                         'no_longer_exists': wp.no_longer_exists,
                         'depreciated': wp.depreciated,
-                        'include_in_report': wp.include_in_report
+                        'depreciated_date': wp.depreciated_date.isoformat() if wp.depreciated_date else None,  # Added depreciated_date
+                        'include_in_report': wp.include_in_report,
+                        'maintained_by': {
+                            'unique_id': maintainer.unique_id,
+                            'name': maintainer.name,
+                            'email': maintainer.email,
+                            'employee_id': maintainer.employee_id,
+                            'title': maintainer.title
+                        } if (maintainer := wp.maintained_by.single()) else None
                     } for wp in impl.supporting_webpages.all()],
                     'supporting_notes': [{
                         'unique_id': note.unique_id,
@@ -213,7 +231,15 @@ def get_all_implementations() -> dict:
                         'content': note.content,
                         'date_created': note.date_created.isoformat() if note.date_created else None,
                         'depreciated': note.depreciated,
-                        'include_in_report': note.include_in_report
+                        'depreciated_date': note.depreciated_date.isoformat() if note.depreciated_date else None,  # Added depreciated_date
+                        'include_in_report': note.include_in_report,
+                        'created_by': {
+                            'unique_id': creator.unique_id,
+                            'name': creator.name,
+                            'email': creator.email,
+                            'employee_id': creator.employee_id,
+                            'title': creator.title
+                        } if (creator := note.created_by.single()) else None
                     } for note in impl.supporting_notes.all()],
                     'supporting_messages': [{
                         'unique_id': msg.unique_id,
@@ -224,7 +250,15 @@ def get_all_implementations() -> dict:
                         'date_created': msg.date_created.isoformat() if msg.date_created else None,
                         'type': msg.type,
                         'depreciated': msg.depreciated,
-                        'include_in_report': msg.include_in_report
+                        'depreciated_date': msg.depreciated_date.isoformat() if msg.depreciated_date else None,  # Added depreciated_date
+                        'include_in_report': msg.include_in_report,
+                        'created_by': {
+                            'unique_id': creator.unique_id,
+                            'name': creator.name,
+                            'email': creator.email,
+                            'employee_id': creator.employee_id,
+                            'title': creator.title
+                        } if (creator := msg.created_by.single()) else None
                     } for msg in impl.supporting_messages.all()],
                     'supporting_metrics': [{
                         'unique_id': metric.unique_id,
@@ -236,7 +270,14 @@ def get_all_implementations() -> dict:
                         'description': metric.description,
                         'single_value': metric.single_value,
                         'comment': metric.comment,
-                        'include_in_report': metric.include_in_report
+                        'include_in_report': metric.include_in_report,
+                        'created_by': {
+                            'unique_id': creator.unique_id,
+                            'name': creator.name,
+                            'email': creator.email,
+                            'employee_id': creator.employee_id,
+                            'title': creator.title
+                        } if (creator := metric.created_by.single()) else None
                     } for metric in impl.supporting_metrics.all()],
                     'is_evidence_for': []
                 }

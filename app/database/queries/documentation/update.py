@@ -232,7 +232,7 @@ def update_document(
         year_success_evidence: str = None,
         implementation_id: str = None,
         implementation_type: str = None,
-        created_by: str = None
+        maintainer_id: str = None  # Changed from created_by to maintainer_id using unique_id
 ) -> bool:
     """
     Updates an existing document. The document can be associated with a YearSuccessEvidence, an implementation, or both.
@@ -241,9 +241,10 @@ def update_document(
     :param year_success_evidence: (Optional) The year identifier of the YearSuccessEvidence to associate the document with.
     :param implementation_id: (Optional) The unique_id of the implementation to associate the document with.
     :param implementation_type: (Optional) The type of the implementation (e.g., "Process", "Project").
-    :param created_by: (Optional) The employee_id of the person who created the document.
+    :param maintainer_id: (Optional) The unique_id of the person who maintains the document.
     :return: True if the document was updated successfully.
     """
+
     try:
         # Fetch the document by unique_id
         unique_id = document_dict.get('unique_id')
@@ -262,6 +263,7 @@ def update_document(
             'name',
             'file_path',
             'uri_path',
+            'description',  # Added description field
             'is_administrative_review_documentation',
             'is_milestone_and_measures_documentation',
             'include_in_report'
@@ -281,16 +283,16 @@ def update_document(
                 document.depreciated_date = date.fromisoformat(new_depreciated_date_str) if new_depreciated_date_str else None
                 updated_fields = True
 
-        # Update the created_by relationship
-        if created_by:
+        # Update the maintained_by relationship using unique_id
+        if maintainer_id:
             try:
-                person = Person.nodes.get(employee_id=created_by)
-                if not document.created_by.is_connected(person):
-                    document.created_by.disconnect_all()
-                    document.created_by.connect(person)
+                person = Person.nodes.get(unique_id=maintainer_id)  # Changed to use unique_id
+                if not document.maintained_by.is_connected(person):  # Changed from created_by to maintained_by
+                    document.maintained_by.disconnect_all()
+                    document.maintained_by.connect(person)
                     updated_fields = True
             except Person.DoesNotExist:
-                raise NotFoundError(f"Person with employee_id {created_by} not found.")
+                raise NotFoundError(f"Person with unique_id {maintainer_id} not found.")
 
         # Save the document if any fields were updated
         if updated_fields:
@@ -334,7 +336,7 @@ def update_webpage(
         year_success_evidence: str = None,
         implementation_id: str = None,
         implementation_type: str = None,
-        created_by: str = None
+        maintainer_id: str = None  # Changed to maintainer_id using unique_id
 ) -> bool:
     """
     Updates an existing webpage. The webpage can be associated with a YearSuccessEvidence, an implementation, or both.
@@ -343,7 +345,7 @@ def update_webpage(
     :param year_success_evidence: (Optional) The year identifier of the YearSuccessEvidence to associate the webpage with.
     :param implementation_id: (Optional) The unique_id of the implementation to associate the webpage with.
     :param implementation_type: (Optional) The type of the implementation (e.g., "Process", "Project").
-    :param created_by: (Optional) The employee_id of the person who created the webpage.
+    :param maintainer_id: (Optional) The unique_id of the person who maintains the webpage.
     :return: True if the webpage was updated successfully.
     """
     try:
@@ -388,16 +390,16 @@ def update_webpage(
                 )
                 updated_fields = True
 
-        # Update the created_by relationship
-        if created_by:
+        # Update the maintained_by relationship using unique_id
+        if maintainer_id:
             try:
-                person = Person.nodes.get(employee_id=created_by)
-                if not webpage.created_by.is_connected(person):
-                    webpage.created_by.disconnect_all()
-                    webpage.created_by.connect(person)
+                person = Person.nodes.get(unique_id=maintainer_id)  # Changed to use unique_id
+                if not webpage.maintained_by.is_connected(person):  # Fixed to use maintained_by
+                    webpage.maintained_by.disconnect_all()
+                    webpage.maintained_by.connect(person)
                     updated_fields = True
             except Person.DoesNotExist:
-                raise NotFoundError(f"Person with employee_id {created_by} not found.")
+                raise NotFoundError(f"Person with unique_id {maintainer_id} not found.")
 
         # Save the webpage if any fields were updated
         if updated_fields:
