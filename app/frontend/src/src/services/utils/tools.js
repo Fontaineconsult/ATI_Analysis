@@ -33,7 +33,7 @@ function workingGroupCodeFromName(workingGroupName) {
 function workingGroupWebSafe(workingGroupName) {
     const workingGroupMap = {
         'web': 'web',
-        'procurement': 'pro',
+        'procurement': 'procurement',
         'instructionalMaterials': 'instructional-materials',
 
     }

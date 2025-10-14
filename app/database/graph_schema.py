@@ -703,49 +703,6 @@ class StatusLevel(StructuredNode):
 
         }
 
-class ProcedureDescription(StructuredNode):
-    unique_id = UniqueIdProperty()
-    description = StringProperty(unique_index=True)
-    display_name = StringProperty(default="Description of Procedures")
-
-
-class ProcedureRequirement(StructuredNode):
-    unique_id = UniqueIdProperty()
-    requirement_description = StringProperty(unique_index=True)
-
-
-class ResourceDescription(StructuredNode):
-    unique_id = UniqueIdProperty()
-    description = StringProperty(unique_index=True)
-    display_name = StringProperty(default="Description of Resources")
-
-
-class ResourceRequirement(StructuredNode):
-    unique_id = UniqueIdProperty()
-    requirement_description = StringProperty(unique_index=True)
-
-
-class DocumentationDescription(StructuredNode):
-    unique_id = UniqueIdProperty()
-    description = StringProperty(unique_index=True)
-    display_name = StringProperty(default="Description of Documentation")
-
-
-class DocumentationRequirement(StructuredNode):
-    unique_id = UniqueIdProperty()
-    requirement_description = StringProperty(unique_index=True)
-
-
-class DocumentationEvidenceDescription(StructuredNode):
-    unique_id = UniqueIdProperty()
-    description = StringProperty(unique_index=True)
-    display_name = StringProperty(default="Description of Documentation Evidence")
-
-
-class DocumentationEvidenceRequirement(StructuredNode):
-    unique_id = UniqueIdProperty()
-    requirement_description = StringProperty(unique_index=True)
-
 
 class YearSuccessEvidence(StructuredNode):
 
@@ -883,6 +840,7 @@ class Person(StructuredNode):
     active = BooleanProperty(default=True)
     can_approve_yse = BooleanProperty(default=False)
     ati_role = StringProperty()
+    non_committee_member_active = BooleanProperty(default=False) # For people who are not in a committee but are active in the ATI in various capacities
     in_ati_working_group = RelationshipTo('ATIWorkingGroup', 'participates_in')
     implements_yse = RelationshipTo("YearSuccessEvidence", "implements")
 
@@ -896,7 +854,8 @@ class Person(StructuredNode):
             "can_approve_yse": self.can_approve_yse,
             "active": self.active,
             "ati_role": self.ati_role,
-            "unique_id": self.unique_id
+            "unique_id": self.unique_id,
+            "non_committee_member_active": self.non_committee_member_active
         }
 
 
@@ -1012,10 +971,13 @@ class Document(StructuredNode):
     description = StringProperty()
     is_administrative_review_documentation = StringProperty()
     is_milestone_and_measures_documentation = StringProperty()
-    depreciated = BooleanProperty() #Todo this needs to placed in an edge
-    depreciated_date = DateProperty() #Todo this needs to placed in an edge
-    include_in_report = BooleanProperty(default=True) #Todo this needs to placed in an edge
+    depreciated = BooleanProperty()
+    depreciated_date = DateProperty()
+    include_in_report = BooleanProperty(default=True)
+    maintained_by = RelationshipTo("Person", "maintained_by")
     notes = RelationshipTo("Note", "has_note")
+
+
 
     def serialize(self):
         """
@@ -1032,6 +994,7 @@ class Document(StructuredNode):
             "include_in_report": self.include_in_report,
             "is_administrative_review_documentation": self.is_administrative_review_documentation,
             "is_milestone_and_measures_documentation": self.is_milestone_and_measures_documentation,
+            "maintained_by": self.maintained_by,
             "unique_id": self.unique_id
 
         }
@@ -1055,6 +1018,7 @@ class Webpage(StructuredNode):
     depreciated = BooleanProperty()
     depreciated_date = DateProperty()
     include_in_report = BooleanProperty(default=True)
+    maintained_by = RelationshipTo("Person", "maintained_by")
     notes = RelationshipTo("Note", "has_note")
 
     def serialize(self):
@@ -1071,6 +1035,7 @@ class Webpage(StructuredNode):
             "depreciated": self.depreciated,
             "depreciated_date": self.depreciated_date,
             "unique_id": self.unique_id,
+            "maintained_by": self.maintained_by,
             "include_in_report": self.include_in_report
 
         }
@@ -1256,6 +1221,7 @@ def update_remote():
 
     config.DATABASE_NAME = neo4j_database
     config.DATABASE_URL = database_connector
+    install_all_labels()
 
     print(f"Config set - DATABASE_NAME: {config.DATABASE_NAME}, DATABASE_URL: {config.DATABASE_URL}")
 
@@ -1281,3 +1247,52 @@ if __name__=="__main__":
     load_dotenv(dotenv_path)
     set_connection()
     install_all_labels()
+
+
+
+#######################
+# Review Later
+#######################
+
+# class ProcedureDescription(StructuredNode):
+#     unique_id = UniqueIdProperty()
+#     description = StringProperty(unique_index=True)
+#     display_name = StringProperty(default="Description of Procedures")
+#
+#
+# class ProcedureRequirement(StructuredNode):
+#     unique_id = UniqueIdProperty()
+#     requirement_description = StringProperty(unique_index=True)
+#
+#
+# class ResourceDescription(StructuredNode):
+#     unique_id = UniqueIdProperty()
+#     description = StringProperty(unique_index=True)
+#     display_name = StringProperty(default="Description of Resources")
+#
+#
+# class ResourceRequirement(StructuredNode):
+#     unique_id = UniqueIdProperty()
+#     requirement_description = StringProperty(unique_index=True)
+#
+#
+# class DocumentationDescription(StructuredNode):
+#     unique_id = UniqueIdProperty()
+#     description = StringProperty(unique_index=True)
+#     display_name = StringProperty(default="Description of Documentation")
+#
+#
+# class DocumentationRequirement(StructuredNode):
+#     unique_id = UniqueIdProperty()
+#     requirement_description = StringProperty(unique_index=True)
+#
+#
+# class DocumentationEvidenceDescription(StructuredNode):
+#     unique_id = UniqueIdProperty()
+#     description = StringProperty(unique_index=True)
+#     display_name = StringProperty(default="Description of Documentation Evidence")
+#
+#
+# class DocumentationEvidenceRequirement(StructuredNode):
+#     unique_id = UniqueIdProperty()
+#     requirement_description = StringProperty(unique_index=True)

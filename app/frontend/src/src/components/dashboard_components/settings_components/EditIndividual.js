@@ -13,7 +13,10 @@ import {
     Input,
     Checkbox,
     VStack,
-    useToast, CheckboxGroup,
+    useToast,
+    CheckboxGroup,
+    HStack,
+    Divider
 } from '@chakra-ui/react';
 import { updateIndividual } from '../../../services/api/put';
 import { createIndividual } from '../../../services/api/post';
@@ -26,6 +29,7 @@ const EditIndividual = ({ isOpen, onClose, individualData, onSave }) => {
         title: '',
         ati_role: '',
         active: true,
+        non_committee_member_active: false,
         can_approve_yse: false,
         workingGroups: [],
     });
@@ -46,6 +50,7 @@ const EditIndividual = ({ isOpen, onClose, individualData, onSave }) => {
                 title: '',
                 ati_role: '',
                 active: true,
+                non_committee_member_active: false,
                 can_approve_yse: false,
                 workingGroups: [],
             });
@@ -69,7 +74,6 @@ const EditIndividual = ({ isOpen, onClose, individualData, onSave }) => {
 
     const handleWorkingGroupChange = (wgName, isChecked) => {
         setFormData((prev) => {
-
             const prevWorkingGroups = Array.isArray(prev.workingGroups) ? prev.workingGroups : [];
 
             let updatedWorkingGroups;
@@ -128,101 +132,162 @@ const EditIndividual = ({ isOpen, onClose, individualData, onSave }) => {
         <Modal isOpen={isOpen} onClose={onClose} size="lg">
             <ModalOverlay />
             <ModalContent>
-                <ModalHeader>{isEditMode ? 'Edit Individual' : 'Add Individual'}</ModalHeader>
+                <ModalHeader color="gray.800" fontWeight="bold">
+                    {isEditMode ? 'Edit Individual' : 'Add Individual'}
+                </ModalHeader>
                 <ModalCloseButton />
                 <ModalBody>
                     <VStack spacing={4} align="stretch">
                         <FormControl isRequired>
-                            <FormLabel>Name</FormLabel>
+                            <FormLabel fontSize="sm" color="gray.800" fontWeight="bold">
+                                Name
+                            </FormLabel>
                             <Input
+                                size="sm"
                                 name="name"
                                 value={formData.name}
                                 onChange={handleInputChange}
                                 placeholder="Enter name"
+                                borderColor="gray.300"
+                                _hover={{ borderColor: "gray.400" }}
+                                _focus={{ borderColor: "teal.500", boxShadow: "0 0 0 1px teal.500" }}
                             />
                         </FormControl>
 
                         <FormControl isRequired>
-                            <FormLabel>Employee ID</FormLabel>
+                            <FormLabel fontSize="sm" color="gray.800" fontWeight="bold">
+                                Employee ID
+                            </FormLabel>
                             <Input
+                                size="sm"
                                 name="employee_id"
                                 value={formData.employee_id}
                                 onChange={handleInputChange}
                                 placeholder="Enter employee ID"
-                                isReadOnly={isEditMode} // Prevent changing employee_id in edit mode
+                                isReadOnly={isEditMode}
+                                borderColor="gray.300"
+                                bg={isEditMode ? "gray.50" : "white"}
+                                _hover={{ borderColor: isEditMode ? "gray.300" : "gray.400" }}
+                                _focus={{ borderColor: "teal.500", boxShadow: "0 0 0 1px teal.500" }}
                             />
                         </FormControl>
 
                         <FormControl>
-                            <FormLabel>Email</FormLabel>
+                            <FormLabel fontSize="sm" color="gray.800" fontWeight="bold">
+                                Email
+                            </FormLabel>
                             <Input
+                                size="sm"
                                 name="email"
+                                type="email"
                                 value={formData.email}
                                 onChange={handleInputChange}
                                 placeholder="Enter email"
+                                borderColor="gray.300"
+                                _hover={{ borderColor: "gray.400" }}
+                                _focus={{ borderColor: "teal.500", boxShadow: "0 0 0 1px teal.500" }}
                             />
                         </FormControl>
 
                         <FormControl>
-                            <FormLabel>Title</FormLabel>
+                            <FormLabel fontSize="sm" color="gray.800" fontWeight="bold">
+                                Title
+                            </FormLabel>
                             <Input
+                                size="sm"
                                 name="title"
                                 value={formData.title}
                                 onChange={handleInputChange}
                                 placeholder="Enter title"
+                                borderColor="gray.300"
+                                _hover={{ borderColor: "gray.400" }}
+                                _focus={{ borderColor: "teal.500", boxShadow: "0 0 0 1px teal.500" }}
                             />
                         </FormControl>
 
                         <FormControl>
-                            <FormLabel>ATI Role</FormLabel>
+                            <FormLabel fontSize="sm" color="gray.800" fontWeight="bold">
+                                ATI Role
+                            </FormLabel>
                             <Input
+                                size="sm"
                                 name="ati_role"
                                 value={formData.ati_role}
                                 onChange={handleInputChange}
                                 placeholder="Enter ATI role"
+                                borderColor="gray.300"
+                                _hover={{ borderColor: "gray.400" }}
+                                _focus={{ borderColor: "teal.500", boxShadow: "0 0 0 1px teal.500" }}
                             />
                         </FormControl>
 
-                        <FormControl>
-                            <Checkbox
-                                name="active"
-                                isChecked={formData.active}
-                                onChange={handleInputChange}
-                            >
-                                Active
-                            </Checkbox>
-                        </FormControl>
+                        <Divider />
 
                         <FormControl>
-                            <Checkbox
-                                name="can_approve_yse"
-                                isChecked={formData.can_approve_yse}
-                                onChange={handleInputChange}
-                            >
-                                Can Approve YSE
-                            </Checkbox>
-                        </FormControl>
-
-                        <CheckboxGroup>
-                            <FormLabel>Working Groups</FormLabel>
+                            <FormLabel fontSize="sm" color="gray.800" fontWeight="bold" mb={3}>
+                                Status Options
+                            </FormLabel>
                             <VStack align="start" spacing={2}>
                                 <Checkbox
-                                    isChecked={formData.workingGroups.some((wg) => wg.name === 'Instructional Materials')}
+                                    size="sm"
+                                    colorScheme="teal"
+                                    name="active"
+                                    isChecked={formData.active}
+                                    onChange={handleInputChange}
+                                >
+                                    Active Member
+                                </Checkbox>
+                                <Checkbox
+                                    size="sm"
+                                    colorScheme="teal"
+                                    name="non_committee_member_active"
+                                    isChecked={formData.non_committee_member_active}
+                                    onChange={handleInputChange}
+                                >
+                                    Active Non-Committee Member
+                                </Checkbox>
+                                <Checkbox
+                                    size="sm"
+                                    colorScheme="teal"
+                                    name="can_approve_yse"
+                                    isChecked={formData.can_approve_yse}
+                                    onChange={handleInputChange}
+                                >
+                                    Can Approve YSE
+                                </Checkbox>
+                            </VStack>
+                        </FormControl>
+
+                        <Divider />
+
+                        <CheckboxGroup>
+                            <FormLabel fontSize="sm" color="gray.800" fontWeight="bold" mb={3}>
+                                Working Groups
+                            </FormLabel>
+                            <VStack align="start" spacing={2}>
+                                <Checkbox
+                                    size="sm"
+                                    colorScheme="teal"
+                                    isChecked={formData.workingGroups?.some((wg) => wg.name === 'Web')}
+                                    onChange={(e) => handleWorkingGroupChange('Web', e.target.checked)}
+                                >
+                                    Web
+                                </Checkbox>
+                                <Checkbox
+                                    size="sm"
+                                    colorScheme="teal"
+                                    isChecked={formData.workingGroups?.some((wg) => wg.name === 'Instructional Materials')}
                                     onChange={(e) => handleWorkingGroupChange('Instructional Materials', e.target.checked)}
                                 >
                                     Instructional Materials
                                 </Checkbox>
                                 <Checkbox
-                                    isChecked={formData.workingGroups.some((wg) => wg.name === 'Procurement')}
+                                    size="sm"
+                                    colorScheme="teal"
+                                    isChecked={formData.workingGroups?.some((wg) => wg.name === 'Procurement')}
                                     onChange={(e) => handleWorkingGroupChange('Procurement', e.target.checked)}
                                 >
                                     Procurement
-                                </Checkbox>
-                                <Checkbox
-                                    isChecked={formData.workingGroups.some((wg) => wg.name === 'Web')}
-                                    onChange={(e) => handleWorkingGroupChange('Web', e.target.checked)}
-                                >
-                                    Web
                                 </Checkbox>
                             </VStack>
                         </CheckboxGroup>
@@ -230,11 +295,19 @@ const EditIndividual = ({ isOpen, onClose, individualData, onSave }) => {
                 </ModalBody>
 
                 <ModalFooter>
-                    <Button onClick={onClose} mr={3}>
+                    <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={onClose}
+                        mr={3}
+                        borderColor="gray.300"
+                        _hover={{ bg: "gray.50" }}
+                    >
                         Cancel
                     </Button>
                     <Button
-                        colorScheme="blue"
+                        size="sm"
+                        colorScheme="teal"
                         onClick={handleSubmit}
                         isLoading={isSubmitting}
                         disabled={!formData.name || !formData.employee_id}

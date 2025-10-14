@@ -1,5 +1,3 @@
-// src/components/dashboard_components/settings_components/Members.js
-
 import React, { useContext, useEffect, useState, useCallback } from 'react';
 import {
     Box,
@@ -16,13 +14,13 @@ import {
     Text,
     useToast,
     Button,
-    HStack,
+    HStack, Center,
 } from '@chakra-ui/react';
 import { useTable } from 'react-table';
 import { DataContext } from '../../../context/DataContext';
 import { UserContext } from '../../../context/UserContext';
-import { updateIndividual } from '../../../services/api/put'; // Import the update function
-import EditIndividual from './EditIndividual'; // Import the new component
+import { updateIndividual } from '../../../services/api/put';
+import EditIndividual from './EditIndividual';
 
 // Memoized Table Component
 const MembersTable = React.memo(({ columns, data }) => {
@@ -31,13 +29,16 @@ const MembersTable = React.memo(({ columns, data }) => {
     return (
         <TableContainer overflowX="auto">
             <Table variant="simple" {...getTableProps()} size="sm">
-                <Thead>
+                <Thead bg="gray.50">
                     {headerGroups.map((headerGroup) => (
                         <Tr {...headerGroup.getHeaderGroupProps()}>
                             {headerGroup.headers.map((column) => (
                                 <Th
                                     {...column.getHeaderProps()}
                                     style={{ whiteSpace: 'nowrap', padding: '8px' }}
+                                    color="gray.700"
+                                    fontWeight="semibold"
+                                    fontSize="xs"
                                 >
                                     {column.render('Header')}
                                 </Th>
@@ -49,7 +50,7 @@ const MembersTable = React.memo(({ columns, data }) => {
                     {rows.map((row) => {
                         prepareRow(row);
                         return (
-                            <Tr {...row.getRowProps()}>
+                            <Tr {...row.getRowProps()} _hover={{ bg: "gray.50" }}>
                                 {row.cells.map((cell) => (
                                     <Td
                                         {...cell.getCellProps()}
@@ -59,6 +60,8 @@ const MembersTable = React.memo(({ columns, data }) => {
                                             textOverflow: 'ellipsis',
                                             maxWidth: '150px',
                                         }}
+                                        fontSize="xs"
+                                        color="gray.700"
                                     >
                                         {cell.render('Cell')}
                                     </Td>
@@ -74,16 +77,16 @@ const MembersTable = React.memo(({ columns, data }) => {
 
 function Members() {
     const { data, loading } = useContext(DataContext);
-    const {loadAllIndividuals,individuals } = useContext(UserContext);
+    const { loadAllIndividuals, individuals } = useContext(UserContext);
     const [individualsData, setIndividualsData] = useState([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [selectedIndividual, setSelectedIndividual] = useState(null); // For edit mode
+    const [selectedIndividual, setSelectedIndividual] = useState(null);
     const toast = useToast();
 
     // Load individuals on component mount
     useEffect(() => {
         loadAllIndividuals();
-    }, []); // Empty dependency array since loadAllIndividuals is memoized
+    }, []);
 
     // Update individualsData when data.individuals changes
     useEffect(() => {
@@ -114,7 +117,7 @@ function Members() {
         async (individual, key) => {
             let updatedIndividual;
 
-            if (key === 'active' || key === 'can_approve_yse' || key === 'ati_role') {
+            if (key === 'active' || key === 'can_approve_yse' || key === 'non_committee_member_active' || key === 'ati_role') {
                 // For simple boolean or string properties
                 const newValue = !individual[key];
 
@@ -198,7 +201,7 @@ function Members() {
                 Header: 'Name',
                 accessor: 'name',
                 Cell: ({ value }) => (
-                    <Text as="span" isTruncated maxWidth="150px" title={value}>
+                    <Text as="span" isTruncated maxWidth="150px" title={value} fontWeight="medium">
                         {value}
                     </Text>
                 ),
@@ -207,7 +210,7 @@ function Members() {
                 Header: 'EID',
                 accessor: 'employee_id',
                 Cell: ({ value }) => (
-                    <Text as="span" isTruncated maxWidth="120px" title={value}>
+                    <Text as="span" isTruncated maxWidth="100px" title={value}>
                         {value}
                     </Text>
                 ),
@@ -216,8 +219,8 @@ function Members() {
                 Header: 'Role',
                 accessor: 'ati_role',
                 Cell: ({ value }) => (
-                    <Text as="span" isTruncated maxWidth="120px" title={value}>
-                        {value}
+                    <Text as="span" isTruncated maxWidth="100px" title={value}>
+                        {value || '-'}
                     </Text>
                 ),
             },
@@ -226,8 +229,23 @@ function Members() {
                 accessor: 'active',
                 Cell: ({ row: { original } }) => (
                     <Checkbox
+                        size="sm"
+                        colorScheme="teal"
                         isChecked={original.active}
                         onChange={() => handleCheckboxChange(original, 'active')}
+                    />
+                ),
+            },
+            {
+                Header: 'Non-Member',
+                accessor: 'non_committee_member_active',
+                Cell: ({ row: { original } }) => (
+                    <Checkbox
+                        size="sm"
+                        colorScheme="teal"
+                        isChecked={original.non_committee_member_active}
+                        onChange={() => handleCheckboxChange(original, 'non_committee_member_active')}
+                        title="Active non-committee member"
                     />
                 ),
             },
@@ -237,6 +255,8 @@ function Members() {
                 id: 'web',
                 Cell: ({ row: { original } }) => (
                     <Checkbox
+                        size="sm"
+                        colorScheme="teal"
                         isChecked={original.workingGroups?.some((wg) => wg.name === 'Web')}
                         onChange={() => handleCheckboxChange(original, 'web')}
                     />
@@ -249,6 +269,8 @@ function Members() {
                 id: 'ins',
                 Cell: ({ row: { original } }) => (
                     <Checkbox
+                        size="sm"
+                        colorScheme="teal"
                         isChecked={original.workingGroups?.some((wg) => wg.name === 'Instructional Materials')}
                         onChange={() => handleCheckboxChange(original, 'ins')}
                     />
@@ -260,6 +282,8 @@ function Members() {
                 id: 'pro',
                 Cell: ({ row: { original } }) => (
                     <Checkbox
+                        size="sm"
+                        colorScheme="teal"
                         isChecked={original.workingGroups?.some((wg) => wg.name === 'Procurement')}
                         onChange={() => handleCheckboxChange(original, 'pro')}
                     />
@@ -270,6 +294,8 @@ function Members() {
                 accessor: 'can_approve_yse',
                 Cell: ({ row: { original } }) => (
                     <Checkbox
+                        size="sm"
+                        colorScheme="teal"
                         isChecked={original.can_approve_yse}
                         onChange={() => handleCheckboxChange(original, 'can_approve_yse')}
                     />
@@ -279,7 +305,7 @@ function Members() {
                 Header: 'Email',
                 accessor: 'email',
                 Cell: ({ value }) => (
-                    <Text as="span" isTruncated maxWidth="200px" title={value}>
+                    <Text as="span" isTruncated maxWidth="180px" title={value} fontSize="xs">
                         {value}
                     </Text>
                 ),
@@ -288,7 +314,12 @@ function Members() {
                 Header: 'Actions',
                 id: 'actions',
                 Cell: ({ row: { original } }) => (
-                    <Button size="sm" onClick={() => openEditModal(original)}>
+                    <Button
+                        size="xs"
+                        colorScheme="teal"
+                        variant="ghost"
+                        onClick={() => openEditModal(original)}
+                    >
                         Edit
                     </Button>
                 ),
@@ -298,7 +329,11 @@ function Members() {
     );
 
     if (loading) {
-        return <Spinner size="xl" />;
+        return (
+            <Center h="400px">
+                <Spinner size="xl" color="teal.500" thickness="3px" />
+            </Center>
+        );
     }
 
     if (!individualsData || individualsData.length === 0) {
@@ -308,12 +343,21 @@ function Members() {
     return (
         <Box>
             <HStack justifyContent="space-between" mb={4}>
-                <Heading size="md">Members</Heading>
-                <Button colorScheme="blue" onClick={openCreateModal}>
+                <Heading size="md" color="gray.800">Members</Heading>
+                <Button colorScheme="teal" size="sm" onClick={openCreateModal}>
                     Add Person
                 </Button>
             </HStack>
-            <MembersTable columns={columns} data={individualsData} />
+            <Box
+                borderWidth="1px"
+                borderColor="gray.200"
+                borderRadius="lg"
+                overflow="hidden"
+                bg="white"
+                boxShadow="sm"
+            >
+                <MembersTable columns={columns} data={individualsData} />
+            </Box>
             <EditIndividual
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}

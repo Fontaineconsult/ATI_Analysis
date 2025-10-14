@@ -357,6 +357,9 @@ function ResponsiblePersons({ persons, compositeKey, evidenceData }) {
                                     <Th borderBottom="2px solid" borderColor="teal.200" color="teal.700" fontSize="xs">
                                         Title
                                     </Th>
+                                    <Th borderBottom="2px solid" borderColor="teal.200" color="teal.700" fontSize="xs">
+                                        Type
+                                    </Th>
                                 </Tr>
                             </Thead>
                             <Tbody>
@@ -367,6 +370,9 @@ function ResponsiblePersons({ persons, compositeKey, evidenceData }) {
                                         </Td>
                                         <Td color="gray.600" fontSize="xs" borderBottom="1px solid" borderColor="gray.100">
                                             {person.properties.title}
+                                        </Td>
+                                        <Td color="gray.600" fontSize="xs" borderBottom="1px solid" borderColor="gray.100">
+                                            {person.properties.active ? "Member" : "Support"}
                                         </Td>
                                     </Tr>
                                 ))}
