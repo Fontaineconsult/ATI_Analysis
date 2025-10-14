@@ -38,6 +38,8 @@ def update_person_by_employee_id(data: dict) -> Person:
                 person.name = data['name']
             if 'title' in data and data['title'] is not None:
                 person.title = data['title']
+            if 'non_committee_member_active' in data and data['non_committee_member_active'] is not None:
+                person.non_committee_member_active = data['non_committee_member_active']
 
             # Save updated person node
             person.save()

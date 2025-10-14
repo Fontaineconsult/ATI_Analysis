@@ -37,6 +37,11 @@ def add_person(data: dict) -> Person:
             else:
                 person.active = True  # Default value
 
+            if 'non_committee_member_active' in data and data['non_committee_member_active'] is not None:
+                person.active = data['non_committee_member_active']
+            else:
+                person.non_committee_member_active = False  # Default value
+
             if 'ati_role' in data and data['ati_role'] is not None:
                 person.ati_role = data['ati_role']
 

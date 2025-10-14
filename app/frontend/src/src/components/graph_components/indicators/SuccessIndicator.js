@@ -531,7 +531,7 @@ const ImplementingPersonsManager = React.memo(({ yearIdentifier }) => {
     };
 
     // Filter out individuals with the 'active' flag set to false
-    const availableIndividuals = individuals?.filter(individual => individual.active) || [];
+    const availableIndividuals = individuals?.filter(individual => individual.active || individual.non_committee_member_active) || [];
 
     return (
         <Box>
