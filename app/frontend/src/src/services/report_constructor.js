@@ -459,16 +459,15 @@ function GenerateReportComponent({ evidenceItem }) {
     const filteredMessages = filterByIncludeInReport(evidenceItem.has_messages || [], 'message.properties');
     const filteredMetrics = filterByIncludeInReport(evidenceItem.has_metrics || [], 'metric.properties');
 
-    // Filter evidenceTypes and their nested content
+    // Filter evidenceTypes and their nested content - FIXED
     const filteredEvidenceTypes = (evidenceItem.evidenceTypes || []).map((etype) => {
         return {
             ...etype,
-            docs: filterByIncludeInReport(etype.docs, 'properties'),
-            webs: filterByIncludeInReport(etype.webs, 'properties'),
-            notes: filterByIncludeInReport(etype.notes, 'properties'),
-            msgs: filterByIncludeInReport(etype.msgs, 'properties'),
-            metrics: filterByIncludeInReport(etype.metrics, 'properties'),
-
+            docs: filterByIncludeInReport(etype.docs || [], 'document.properties'),
+            webs: filterByIncludeInReport(etype.webs || [], 'webpage.properties'),
+            notes: filterByIncludeInReport(etype.notes || [], 'properties'),
+            msgs: filterByIncludeInReport(etype.msgs || [], 'properties'),
+            metrics: filterByIncludeInReport(etype.metrics || [], 'properties'),
         };
     }).filter(et => {
         const hasContent = et.docs?.length || et.webs?.length ||
@@ -479,8 +478,6 @@ function GenerateReportComponent({ evidenceItem }) {
     return (
         <Box p={4} bg="white" fontSize="sm" textAlign="left">
             <VStack align="stretch" spacing={0}>
-
-
 
                 {/* Indicator Information */}
                 {evidenceItem.indicator?.properties && (
@@ -531,9 +528,6 @@ function GenerateReportComponent({ evidenceItem }) {
                     </>
                 )}
 
-
-
-
                 {/* Evidence Information */}
                 {evidenceItem.evidence?.properties && (
                     <>
@@ -569,7 +563,9 @@ function GenerateReportComponent({ evidenceItem }) {
                                     </Heading>
                                     {evidenceItem.persons.map((person) => (
                                         <Text key={person.id} fontSize="xs" color="gray.700" pl={3}>
-                                            • {person.properties.name} - {person.properties.title} ({person.properties.email})
+                                            • {person.properties.name} - {person.properties.title}
+                                            {person.properties.ati_role && ` (${person.properties.ati_role})`}
+                                            {person.properties.email && ` - ${person.properties.email}`}
                                         </Text>
                                     ))}
                                 </Box>
@@ -592,7 +588,8 @@ function GenerateReportComponent({ evidenceItem }) {
                         <Box height="16px" />
                     </>
                 )}
-                {/* Plans and Accomplishments Section - Add this at the top */}
+
+                {/* Plans and Accomplishments Section */}
                 {(filteredPlans.length > 0 || filteredAccomplishments.length > 0) && (
                     <>
                         <Box>
@@ -608,7 +605,7 @@ function GenerateReportComponent({ evidenceItem }) {
                                     </Heading>
                                     <Stack spacing={2}>
                                         {filteredPlans.map((plan, index) => (
-                                            <Box key={index} pl={3} borderLeft="3px solid" borderLeftColor="teal.200">
+                                            <Box key={plan.id || index} pl={3} borderLeft="3px solid" borderLeftColor="teal.200">
                                                 <HStack spacing={2} mb={1}>
                                                     <Text fontSize="xs" fontWeight="semibold" color="gray.700">
                                                         {plan.properties.name}
@@ -652,7 +649,7 @@ function GenerateReportComponent({ evidenceItem }) {
                                     </Heading>
                                     <Stack spacing={2}>
                                         {filteredAccomplishments.map((accomplishment, index) => (
-                                            <Box key={index} pl={3} borderLeft="3px solid" borderLeftColor="blue.200">
+                                            <Box key={accomplishment.id || index} pl={3} borderLeft="3px solid" borderLeftColor="blue.200">
                                                 <HStack spacing={1} mb={1}>
                                                     <Text fontSize="xs" fontWeight="semibold" color="gray.700">
                                                         {accomplishment.properties.name}
@@ -674,7 +671,6 @@ function GenerateReportComponent({ evidenceItem }) {
                     </>
                 )}
 
-
                 {/* Notes */}
                 {filteredNotes.length > 0 && (
                     <>
@@ -686,7 +682,7 @@ function GenerateReportComponent({ evidenceItem }) {
                                 {filteredNotes.map((noteItem, index) => {
                                     const noteProps = noteItem.note.properties;
                                     return (
-                                        <Box key={index} pl={3} borderLeft="3px solid" borderLeftColor="gray.200">
+                                        <Box key={noteItem.note.id || index} pl={3} borderLeft="3px solid" borderLeftColor="gray.200">
                                             <Text fontSize="xs" fontWeight="semibold" color="gray.700">
                                                 {noteProps.date_created || 'No date'}
                                                 {noteItem.created_by?.properties &&
@@ -728,7 +724,7 @@ function GenerateReportComponent({ evidenceItem }) {
                                 {filteredMessages.map((messageItem, index) => {
                                     const messageProps = messageItem.message.properties;
                                     return (
-                                        <Box key={index} pl={3} borderLeft="3px solid" borderLeftColor="gray.200">
+                                        <Box key={messageItem.message.id || index} pl={3} borderLeft="3px solid" borderLeftColor="gray.200">
                                             <Text fontSize="xs" fontWeight="semibold" color="gray.700">
                                                 {messageProps.date_sent || 'No date'}
                                                 {messageItem.created_by?.properties &&
@@ -756,9 +752,9 @@ function GenerateReportComponent({ evidenceItem }) {
                             </Heading>
                             <Stack spacing={1}>
                                 {filteredMetrics.map((metricItem, index) => (
-                                    <Text key={index} fontSize="xs" color="gray.700" pl={3}>
+                                    <Text key={metricItem.metric.id || index} fontSize="xs" color="gray.700" pl={3}>
                                         • <Text as="span" fontWeight="semibold">{metricItem.metric.properties.name}:</Text>{' '}
-                                        {metricItem.metric.properties.value}
+                                        {metricItem.metric.properties.value || metricItem.metric.properties.single_value}
                                         {metricItem.created_by?.properties &&
                                             <Text as="span" color="gray.700"> ({metricItem.created_by.properties.name})</Text>
                                         }
@@ -808,76 +804,84 @@ function GenerateReportComponent({ evidenceItem }) {
                                         )}
 
                                         <Stack spacing={2}>
-                                            {/* Documents */}
+                                            {/* Documents - FIXED */}
                                             {etype.docs?.length > 0 && (
                                                 <Box>
                                                     <Text fontSize="xs" color="gray.700" fontWeight="semibold">
                                                         Documents:
                                                     </Text>
                                                     <Stack spacing={1} pl={3}>
-                                                        {etype.docs.map((doc) => (
-                                                            <Box key={doc.id}>
-                                                                <HStack spacing={2} align="baseline">
-                                                                    <Link
-                                                                        href={doc.properties.file_path || doc.properties.uri_path}
-                                                                        isExternal
-                                                                        color="teal.600"
-                                                                        fontSize="xs"
-                                                                    >
-                                                                        • {doc.properties.name}
-                                                                    </Link>
-                                                                    <HStack spacing={1}>
-                                                                        {(doc.properties.is_administrative_review_documentation === "True" || doc.properties.is_administrative_review_documentation === true) &&
-                                                                            <Badge colorScheme="purple" fontSize="10px">Admin Review</Badge>
-                                                                        }
-                                                                        {(doc.properties.is_milestone_and_measures_documentation === "True" || doc.properties.is_milestone_and_measures_documentation === true) &&
-                                                                            <Badge colorScheme="blue" fontSize="10px">Milestones</Badge>
-                                                                        }
-                                                                        {(doc.properties.depreciated === true) &&
-                                                                            <Badge colorScheme="orange" fontSize="10px">Depreciated</Badge>
-                                                                        }
+                                                        {etype.docs.map((doc) => {
+                                                            const docProps = doc.document?.properties;
+                                                            if (!docProps) return null;
+                                                            return (
+                                                                <Box key={doc.document.id}>
+                                                                    <HStack spacing={2} align="baseline">
+                                                                        <Link
+                                                                            href={docProps.file_path || docProps.uri_path}
+                                                                            isExternal
+                                                                            color="teal.600"
+                                                                            fontSize="xs"
+                                                                        >
+                                                                            • {docProps.name}
+                                                                        </Link>
+                                                                        <HStack spacing={1}>
+                                                                            {(docProps.is_administrative_review_documentation === "True" || docProps.is_administrative_review_documentation === true) &&
+                                                                                <Badge colorScheme="purple" fontSize="10px">Admin Review</Badge>
+                                                                            }
+                                                                            {(docProps.is_milestone_and_measures_documentation === "True" || docProps.is_milestone_and_measures_documentation === true) &&
+                                                                                <Badge colorScheme="blue" fontSize="10px">Milestones</Badge>
+                                                                            }
+                                                                            {(docProps.depreciated === true) &&
+                                                                                <Badge colorScheme="orange" fontSize="10px">Depreciated</Badge>
+                                                                            }
+                                                                        </HStack>
                                                                     </HStack>
-                                                                </HStack>
-                                                            </Box>
-                                                        ))}
+                                                                </Box>
+                                                            );
+                                                        })}
                                                     </Stack>
                                                 </Box>
                                             )}
 
-                                            {/* Webpages */}
+                                            {/* Webpages - FIXED */}
                                             {etype.webs?.length > 0 && (
                                                 <Box>
                                                     <Text fontSize="xs" color="gray.700" fontWeight="semibold">
                                                         Webpages:
                                                     </Text>
                                                     <Stack spacing={1} pl={3}>
-                                                        {etype.webs.map((web) => (
-                                                            <Box key={web.id}>
-                                                                <HStack spacing={2} align="baseline">
-                                                                    <Link
-                                                                        href={web.properties.url}
-                                                                        isExternal
-                                                                        color="teal.600"
-                                                                        fontSize="xs"
-                                                                    >
-                                                                        • {web.properties.name || web.properties.title}
-                                                                    </Link>
-                                                                    <HStack spacing={1}>
-                                                                        {(web.properties.no_longer_exists === true) &&
-                                                                            <Badge colorScheme="red" fontSize="10px">No Longer Exists</Badge>
-                                                                        }
-                                                                        {(web.properties.depreciated === true) &&
-                                                                            <Badge colorScheme="orange" fontSize="10px">Depreciated</Badge>
-                                                                        }
+                                                        {etype.webs.map((web) => {
+                                                            const webProps = web.webpage?.properties;
+                                                            if (!webProps) return null;
+                                                            return (
+                                                                <Box key={web.webpage.id}>
+                                                                    <HStack spacing={2} align="baseline">
+                                                                        <Link
+                                                                            href={webProps.url}
+                                                                            isExternal
+                                                                            color="teal.600"
+                                                                            fontSize="xs"
+                                                                        >
+                                                                            • {webProps.name || webProps.title}
+                                                                        </Link>
+                                                                        <HStack spacing={1}>
+                                                                            {(webProps.no_longer_exists === true) &&
+                                                                                <Badge colorScheme="red" fontSize="10px">No Longer Exists</Badge>
+                                                                            }
+                                                                            {(webProps.depreciated === true) &&
+                                                                                <Badge colorScheme="orange" fontSize="10px">Depreciated</Badge>
+                                                                            }
+                                                                        </HStack>
                                                                     </HStack>
-                                                                </HStack>
-                                                                {web.properties.description && (
-                                                                    <Text fontSize="xs" color="gray.700" pl={3} mt={1}>
-                                                                        {web.properties.description}
-                                                                    </Text>
-                                                                )}
-                                                            </Box>
-                                                        ))}
+                                                                    {webProps.description && (
+                                                                        <Text fontSize="xs" color="gray.700" pl={3} mt={1}>
+                                                                            {webProps.description}
+                                                                        </Text>
+                                                                    )}
+                                                                </Box>
+                                                            );
+                                                        })}
                                                     </Stack>
                                                 </Box>
                                             )}
@@ -916,7 +920,7 @@ function GenerateReportComponent({ evidenceItem }) {
                                                     </Text>
                                                     {etype.metrics.map((metric, idx) => (
                                                         <Text key={idx} fontSize="xs" color="gray.700" pl={3}>
-                                                            • {metric.properties.name}: <Text as="span" fontWeight="semibold">{metric.properties.value}</Text>
+                                                            • {metric.properties.name}: <Text as="span" fontWeight="semibold">{metric.properties.value || metric.properties.single_value}</Text>
                                                         </Text>
                                                     ))}
                                                 </Box>

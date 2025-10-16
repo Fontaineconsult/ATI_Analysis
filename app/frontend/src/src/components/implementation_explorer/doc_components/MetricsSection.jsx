@@ -14,6 +14,7 @@ const metricTypes = ["tabular", "graphical", "descriptive"];
 
 function MetricForm({ metric, onSubmit, onCancel, isNewMetric }) {
     const { user } = useContext(UserContext);
+    const { currentAcademicYear } = useSettings();
     const [metricData, setMetricData] = useState({
         unique_id: metric?.unique_id || '',
         name: metric?.name || '',
@@ -28,6 +29,7 @@ function MetricForm({ metric, onSubmit, onCancel, isNewMetric }) {
         depreciated_date: metric?.depreciated_date || '',
         include_in_report: metric?.include_in_report ?? true,
         date_created: metric?.date_created || new Date().toISOString().split('T')[0],
+        academic_year: metric?.academic_year || currentAcademicYear,
         created_by: user || {}
     });
 

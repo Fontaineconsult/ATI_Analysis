@@ -272,7 +272,7 @@ class DocumentsAPI(MethodView):
                     return make_response(status="error", error="An unexpected error occurred."), 500
 
             elif action == 'update_metric':
-                required_fields = ['year_success_evidence', 'metric_dict']
+                required_fields = ['metric_dict']
                 if not all(field in data for field in required_fields):
                     return make_response(status="error", error="Missing required fields for metric update."), 400
 
@@ -280,8 +280,22 @@ class DocumentsAPI(MethodView):
                 if 'unique_id' not in metric_dict:
                     return make_response(status="error", error="The 'unique_id' field is required in 'metric_dict'."), 400
 
+                # Extract optional parameters
+                year_success_evidence = data.get('year_success_evidence')
+                implementation_id = data.get('implementation_id')
+                implementation_type = data.get('implementation_type')
+                created_by_id = data.get('created_by')  # Person who created the metric
+                academic_year = data.get('academic_year')  # Academic year association
+
                 try:
-                    if update_metric(metric_dict, data['year_success_evidence'], metric_dict.get('created_by')):
+                    if update_metric(
+                            metric_dict=metric_dict,
+                            year_success_evidence=year_success_evidence,
+                            implementation_id=implementation_id,
+                            implementation_type=implementation_type,
+                            created_by_id=created_by_id,
+                            academic_year=academic_year
+                    ):
                         return make_response(status="success", data="Metric updated successfully."), 200
                     else:
                         return make_response(status="error", error="Failed to update metric."), 500

@@ -1125,7 +1125,7 @@ class Message(StructuredNode):
                 "type": self.type,
                 "depreciated": self.depreciated,
                 "include_in_report": self.include_in_report,
-            "unique_id": self.unique_id
+                "unique_id": self.unique_id
 
         }
 
@@ -1148,7 +1148,6 @@ class Metric(StructuredNode):
 
     """
     unique_id = UniqueIdProperty()
-
     name = StringProperty()
     composite_key = StringProperty(unique_index=True)
     metric_type = StringProperty()
@@ -1175,9 +1174,9 @@ class Metric(StructuredNode):
         """
         Serializes the Message object to a dictionary format, making it suitable for JSON representation,
         storage, or API response.
-
         """
         return {
+
             "name": self.name,
             "composite_key": self.composite_key,
             "metric_type": self.metric_type,
@@ -1188,7 +1187,8 @@ class Metric(StructuredNode):
             "comment": self.comment,
             "data": self.get_data() if self.value_dict else None,
             "include_in_report": self.include_in_report,
-            "unique_id": self.unique_id
+            "unique_id": self.unique_id,
+            "academic_year": self.academic_year
 
         }
 
@@ -1254,45 +1254,45 @@ if __name__=="__main__":
 # Review Later
 #######################
 
-# class ProcedureDescription(StructuredNode):
-#     unique_id = UniqueIdProperty()
-#     description = StringProperty(unique_index=True)
-#     display_name = StringProperty(default="Description of Procedures")
-#
-#
-# class ProcedureRequirement(StructuredNode):
-#     unique_id = UniqueIdProperty()
-#     requirement_description = StringProperty(unique_index=True)
-#
-#
-# class ResourceDescription(StructuredNode):
-#     unique_id = UniqueIdProperty()
-#     description = StringProperty(unique_index=True)
-#     display_name = StringProperty(default="Description of Resources")
-#
-#
-# class ResourceRequirement(StructuredNode):
-#     unique_id = UniqueIdProperty()
-#     requirement_description = StringProperty(unique_index=True)
-#
-#
-# class DocumentationDescription(StructuredNode):
-#     unique_id = UniqueIdProperty()
-#     description = StringProperty(unique_index=True)
-#     display_name = StringProperty(default="Description of Documentation")
-#
-#
-# class DocumentationRequirement(StructuredNode):
-#     unique_id = UniqueIdProperty()
-#     requirement_description = StringProperty(unique_index=True)
-#
-#
-# class DocumentationEvidenceDescription(StructuredNode):
-#     unique_id = UniqueIdProperty()
-#     description = StringProperty(unique_index=True)
-#     display_name = StringProperty(default="Description of Documentation Evidence")
-#
-#
-# class DocumentationEvidenceRequirement(StructuredNode):
-#     unique_id = UniqueIdProperty()
-#     requirement_description = StringProperty(unique_index=True)
+class ProcedureDescription(StructuredNode):
+    unique_id = UniqueIdProperty()
+    description = StringProperty(unique_index=True)
+    display_name = StringProperty(default="Description of Procedures")
+
+
+class ProcedureRequirement(StructuredNode):
+    unique_id = UniqueIdProperty()
+    requirement_description = StringProperty(unique_index=True)
+
+
+class ResourceDescription(StructuredNode):
+    unique_id = UniqueIdProperty()
+    description = StringProperty(unique_index=True)
+    display_name = StringProperty(default="Description of Resources")
+
+
+class ResourceRequirement(StructuredNode):
+    unique_id = UniqueIdProperty()
+    requirement_description = StringProperty(unique_index=True)
+
+
+class DocumentationDescription(StructuredNode):
+    unique_id = UniqueIdProperty()
+    description = StringProperty(unique_index=True)
+    display_name = StringProperty(default="Description of Documentation")
+
+
+class DocumentationRequirement(StructuredNode):
+    unique_id = UniqueIdProperty()
+    requirement_description = StringProperty(unique_index=True)
+
+
+class DocumentationEvidenceDescription(StructuredNode):
+    unique_id = UniqueIdProperty()
+    description = StringProperty(unique_index=True)
+    display_name = StringProperty(default="Description of Documentation Evidence")
+
+
+class DocumentationEvidenceRequirement(StructuredNode):
+    unique_id = UniqueIdProperty()
+    requirement_description = StringProperty(unique_index=True)

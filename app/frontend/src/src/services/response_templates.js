@@ -107,12 +107,12 @@ export function updateMetricForImplementationPayload(implementation_id, implemen
 }
 
 
-export function createMetricPayloadForImplementation(implementation_id, implementation_type, document_dict, created_by) {
+export function createMetricPayloadForImplementation(implementation_id, implementation_type, metric_dict, created_by) {
     return {
-        action: "create_metric",
+        action: "add_metric",
         implementation_id: implementation_id,
         implementation_type: implementation_type,
-        document_dict: document_dict,
+        metric_dict: metric_dict,
         created_by:created_by
     }
 

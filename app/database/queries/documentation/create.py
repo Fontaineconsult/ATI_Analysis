@@ -407,10 +407,10 @@ def add_metric(
         # Handle the academic_year relationship
         if 'academic_year' in metric_dict:
             academic_year_identifier = metric_dict['academic_year']
-            academic_year_node = AcademicYear.nodes.get_or_none(identifier=academic_year_identifier)
+            academic_year_node = AcademicYear.nodes.get(name=academic_year_identifier)
             if not academic_year_node:
                 # Create a new AcademicYear node if it doesn't exist
-                academic_year_node = AcademicYear(identifier=academic_year_identifier)
+                academic_year_node = AcademicYear(name=academic_year_identifier)
                 academic_year_node.save()
             metric.academic_year.connect(academic_year_node)
 

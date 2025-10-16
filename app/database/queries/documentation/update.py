@@ -445,5 +445,137 @@ def update_webpage(
 
 #
 # unassign_note_from_yse("Measures of success: Stored in compliance sheriff", "2022-2023-1.6-web")
-def update_metric():
-    return None
+def update_metric(
+        metric_dict: dict,
+        year_success_evidence: str = None,
+        implementation_id: str = None,
+        implementation_type: str = None,
+        created_by_id: str = None,
+        academic_year: str = None
+) -> bool:
+    """
+    Updates an existing metric. The metric can be associated with a YearSuccessEvidence, an implementation, or both.
+
+    :param metric_dict: Dictionary containing metric properties to update.
+    :param year_success_evidence: (Optional) The year identifier of the YearSuccessEvidence to associate the metric with.
+    :param implementation_id: (Optional) The unique_id of the implementation to associate the metric with.
+    :param implementation_type: (Optional) The type of the implementation (e.g., "Process", "Project").
+    :param created_by_id: (Optional) The unique_id of the person who created the metric.
+    :param academic_year: (Optional) The name of the academic year to associate the metric with.
+    :return: True if the metric was updated successfully.
+    """
+    try:
+        # Fetch the metric by unique_id
+        unique_id = metric_dict.get('unique_id')
+        if not unique_id:
+            raise ValidationError("Missing 'unique_id' in metric_dict.")
+
+        try:
+            metric = Metric.nodes.get(unique_id=unique_id)
+        except Metric.DoesNotExist:
+            raise NotFoundError(f"Metric with unique_id {unique_id} not found.")
+
+        # Update metric properties
+        updated_fields = False
+
+        for field in [
+            'name',
+            'composite_key',
+            'metric_type',
+            'file_path',
+            'uri_path',
+            'description',
+            'single_value',
+            'comment',
+            'include_in_report'
+        ]:
+            if field in metric_dict and getattr(metric, field) != metric_dict[field]:
+                setattr(metric, field, metric_dict[field])
+                updated_fields = True
+
+        # Handle value_dict (JSON field) separately
+        if 'value_dict' in metric_dict:
+            new_value_dict = metric_dict['value_dict']
+            if metric.value_dict != new_value_dict:
+                metric.value_dict = new_value_dict
+                updated_fields = True
+
+        # Update the created_by relationship using unique_id
+        if created_by_id:
+            try:
+                person = Person.nodes.get(unique_id=created_by_id)
+                if not metric.created_by.is_connected(person):
+                    metric.created_by.disconnect_all()
+                    metric.created_by.connect(person)
+                    updated_fields = True
+            except Person.DoesNotExist:
+                raise NotFoundError(f"Person with unique_id {created_by_id} not found.")
+
+        # Update the academic_year relationship
+        if academic_year:
+            try:
+                ay = AcademicYear.nodes.get(name=academic_year)
+                if not metric.academic_year.is_connected(ay):
+                    metric.academic_year.disconnect_all()
+                    metric.academic_year.connect(ay)
+                    updated_fields = True
+            except AcademicYear.DoesNotExist:
+                raise NotFoundError(f"AcademicYear with name {academic_year} not found.")
+
+        # Save the metric if any fields were updated
+        if updated_fields:
+            metric.save()
+
+        # Handle YearSuccessEvidence association
+        if year_success_evidence:
+            try:
+                yse = YearSuccessEvidence.nodes.get(year_identifier=year_success_evidence)
+                if not yse.metrics.is_connected(metric):
+                    yse.metrics.connect(metric)
+            except YearSuccessEvidence.DoesNotExist:
+                raise NotFoundError(f"YearSuccessEvidence with identifier {year_success_evidence} not found.")
+
+        # Handle Implementation association
+        if implementation_id and implementation_type:
+            # Get the implementation model class
+            implementation_model = get_implementation_model(implementation_type)
+            if not implementation_model:
+                raise ValidationError(f"Invalid implementation type: {implementation_type}")
+
+            try:
+                implementation = implementation_model.nodes.get(unique_id=implementation_id)
+                if not implementation.supporting_metrics.is_connected(metric):
+                    implementation.supporting_metrics.connect(metric)
+            except implementation_model.DoesNotExist:
+                raise NotFoundError(f"{implementation_type} with unique_id {implementation_id} not found.")
+
+        return True
+
+    except ValidationError as e:
+        raise CrudError(f"Failed to update metric: {e}")
+
+    except NotFoundError as e:
+        raise CrudError(f"Failed to update metric: {e}")
+
+    except Exception as e:
+        print(f"Error during metric update: {e}")
+        raise CrudError(f"Failed to update metric: {e}")
+
+
+def get_implementation_model(implementation_type: str):
+    """
+    Helper function to get the implementation model class based on the type.
+
+    :param implementation_type: The type of implementation (e.g., "Process", "Project").
+    :return: The model class or None if invalid.
+    """
+    implementation_models = {
+        "Process": Process,
+        "Project": Project,
+        "Procedure": Procedure,
+        "Service": Service,
+        "Guidance": Guidance,
+        "Tracking": Tracking,
+        "InternalPolicy": InternalPolicy
+    }
+    return implementation_models.get(implementation_type)
