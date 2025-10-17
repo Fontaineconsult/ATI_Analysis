@@ -153,28 +153,32 @@ export function updateMessagePayload(yearSuccessEvidence, message_dict, created_
 
 
 
-export function updateDocumentPayload(implementation_id, implementation_type, document_dict, maintained_by) {
+export function updateDocumentPayload(implementation_id, implementation_type, document_dict, maintained_by, academic_year, include_in_year) {
     return {
         action: "update_document",
         implementation_id: implementation_id,
         implementation_type: implementation_type,
         document_dict: document_dict,
-        maintained_by:maintained_by
+        maintained_by: maintained_by,
+        academic_year: academic_year,
+        include_in_year: include_in_year
     }
-
 }
 
 
-export function updateWebsitePayload(implementation_id, implementation_type, update_webpage, maintained_by) {
+export function updateWebsitePayload(implementation_id, implementation_type, webpage_dict, maintained_by, academic_year, include_in_year) {
     return {
         action: "update_webpage",
         implementation_id: implementation_id,
         implementation_type: implementation_type,
-        webpage_dict: update_webpage,
-        maintained_by:maintained_by
+        webpage_dict: webpage_dict,
+        maintained_by: maintained_by,
+        academic_year: academic_year,
+        include_in_year: include_in_year
     }
-
 }
+
+
 
 export function updateMetricPayload(implementation_id, implementation_type, metric_dict, created_by) {
     return {

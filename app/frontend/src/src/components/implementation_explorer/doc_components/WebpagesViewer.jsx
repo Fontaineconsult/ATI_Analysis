@@ -1,7 +1,7 @@
 import React, { useState, useContext } from 'react';
 import {
     Box, VStack, Heading, Text, Badge, Link, HStack, Button, Input, Switch,
-    FormControl, FormLabel, Flex, Collapse, useToast, Textarea
+    FormControl, FormLabel, Flex, Collapse, useToast, Textarea, Select
 } from '@chakra-ui/react';
 import { ExternalLinkIcon } from '@chakra-ui/icons';
 import { addWebpageToImplementation } from '../../../services/api/post';
@@ -16,7 +16,22 @@ function formatDate(dateString) {
 }
 
 function WebpageForm({ webpage, onSubmit, onCancel, isNewWebpage }) {
-    const { user } = useContext(UserContext);
+    const { user, individuals } = useContext(UserContext);
+    const { currentAcademicYear } = useSettings();
+
+    // Check if webpage is included for current year
+    const isIncludedInCurrentYear = () => {
+        if (!webpage?.relationship) return true; // Default to included for new webpages
+        const { included_in_years = [], excluded_from_years = [] } = webpage.relationship;
+
+        if (!included_in_years.length && !excluded_from_years.length) {
+            return true;
+        }
+
+        return included_in_years.includes(currentAcademicYear) &&
+            !excluded_from_years.includes(currentAcademicYear);
+    };
+
     const [webpageData, setWebpageData] = useState({
         unique_id: webpage?.unique_id || '',
         url: webpage?.url || '',
@@ -26,8 +41,9 @@ function WebpageForm({ webpage, onSubmit, onCancel, isNewWebpage }) {
         depreciated: webpage?.depreciated || false,
         depreciated_date: webpage?.depreciated_date || '',
         include_in_report: webpage?.include_in_report ?? true,
+        include_in_current_year: isIncludedInCurrentYear(),
         date_created: webpage?.date_created || new Date().toISOString().split('T')[0],
-        created_by: user || {}
+        maintainer_id: webpage?.maintained_by?.unique_id || ''
     });
 
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -44,11 +60,22 @@ function WebpageForm({ webpage, onSubmit, onCancel, isNewWebpage }) {
         e.preventDefault();
         setIsSubmitting(true);
         try {
-            await onSubmit(webpageData);
+            await onSubmit({
+                ...webpageData,
+                academic_year: currentAcademicYear,
+                include_in_year: webpageData.include_in_current_year
+            });
         } finally {
             setIsSubmitting(false);
         }
     };
+
+    // Sort individuals alphabetically
+    const sortedIndividuals = individuals ?
+        [...individuals].sort((a, b) => a.name.localeCompare(b.name)) :
+        [];
+
+    const currentMaintainer = webpage?.maintained_by;
 
     return (
         <Box as="form" onSubmit={handleSubmit} p={4} bg="white" borderRadius="lg" borderWidth="1px" borderColor="teal.300">
@@ -67,15 +94,64 @@ function WebpageForm({ webpage, onSubmit, onCancel, isNewWebpage }) {
                 <Textarea size="sm" name="description" value={webpageData.description} onChange={handleChange} rows={2} />
             </FormControl>
 
+            <FormControl mb={3}>
+                <FormLabel fontSize="sm">
+                    Maintained By
+                    {currentMaintainer && !individuals && (
+                        <Text as="span" fontSize="xs" color="gray.500" ml={2}>
+                            (Current: {currentMaintainer.name})
+                        </Text>
+                    )}
+                </FormLabel>
+                <Select
+                    size="sm"
+                    name="maintainer_id"
+                    value={webpageData.maintainer_id}
+                    onChange={handleChange}
+                    placeholder="Select a maintainer"
+                >
+                    {currentMaintainer && !sortedIndividuals.find(p => p.unique_id === currentMaintainer.unique_id) && (
+                        <option key={currentMaintainer.unique_id} value={currentMaintainer.unique_id}>
+                            {currentMaintainer.name} {currentMaintainer.title ? `(${currentMaintainer.title})` : ''}
+                        </option>
+                    )}
+                    {sortedIndividuals.map(person => (
+                        <option key={person.unique_id} value={person.unique_id}>
+                            {person.name} {person.title ? `(${person.title})` : ''}
+                        </option>
+                    ))}
+                </Select>
+            </FormControl>
+
             <Flex gap={4} mb={4}>
                 <Box flex="1">
+                    {/* Year-specific inclusion */}
+                    <FormControl mb={2}>
+                        <HStack>
+                            <Switch
+                                size="sm"
+                                name="include_in_current_year"
+                                isChecked={webpageData.include_in_current_year}
+                                onChange={handleChange}
+                                colorScheme="teal"
+                            />
+                            <FormLabel fontSize="sm" mb={0} fontWeight="bold">
+                                Include in {currentAcademicYear} Report
+                            </FormLabel>
+                        </HStack>
+                    </FormControl>
+
+                    {/* Global inclusion (optional) */}
                     <FormControl mb={2}>
                         <HStack>
                             <Switch size="sm" name="include_in_report"
                                     isChecked={webpageData.include_in_report} onChange={handleChange} />
-                            <FormLabel fontSize="sm" mb={0}>Include in Report</FormLabel>
+                            <FormLabel fontSize="sm" mb={0} color="gray.600">
+                                Include in All Reports (Global)
+                            </FormLabel>
                         </HStack>
                     </FormControl>
+
                     <FormControl mb={2}>
                         <HStack>
                             <Switch size="sm" name="no_longer_exists"
@@ -83,6 +159,9 @@ function WebpageForm({ webpage, onSubmit, onCancel, isNewWebpage }) {
                             <FormLabel fontSize="sm" mb={0}>No Longer Exists</FormLabel>
                         </HStack>
                     </FormControl>
+                </Box>
+
+                <Box flex="1">
                     <FormControl mb={2}>
                         <HStack>
                             <Switch size="sm" name="depreciated"
@@ -90,9 +169,6 @@ function WebpageForm({ webpage, onSubmit, onCancel, isNewWebpage }) {
                             <FormLabel fontSize="sm" mb={0}>Depreciated</FormLabel>
                         </HStack>
                     </FormControl>
-                </Box>
-
-                <Box flex="1">
                     {webpageData.depreciated && (
                         <FormControl>
                             <FormLabel fontSize="sm">Depreciation Date</FormLabel>
@@ -120,16 +196,21 @@ export default function WebpagesViewer({ webpages = [], implementation_id, imple
     const [isAddingNew, setIsAddingNew] = useState(false);
     const [editingIndex, setEditingIndex] = useState(null);
     const { refreshImplementations } = useContext(DataContext);
+    const { currentAcademicYear } = useSettings();
     const { user } = useContext(UserContext);
     const toast = useToast();
 
     const handleAddWebpage = async (webpageData) => {
         try {
+            const { maintainer_id, academic_year, include_in_year, ...webpageDataForAPI } = webpageData;
+
             await addWebpageToImplementation(
                 implementation_id,
                 implementation_type,
-                webpageData,
-                user?.employee_id || ''
+                webpageDataForAPI,
+                maintainer_id,
+                academic_year,
+                include_in_year
             );
 
             toast({
@@ -139,7 +220,7 @@ export default function WebpagesViewer({ webpages = [], implementation_id, imple
                 isClosable: true,
             });
 
-            await refreshImplementations()
+            await refreshImplementations();
             setIsAddingNew(false);
         } catch (error) {
             toast({
@@ -154,11 +235,15 @@ export default function WebpagesViewer({ webpages = [], implementation_id, imple
 
     const handleUpdateWebpage = async (webpageData, index) => {
         try {
+            const { maintainer_id, academic_year, include_in_year, ...webpageDataForAPI } = webpageData;
+
             await updateWebpage(
                 implementation_id,
                 implementation_type,
-                webpageData,
-                user?.employee_id || ''
+                webpageDataForAPI,
+                maintainer_id,
+                academic_year,
+                include_in_year
             );
 
             toast({
@@ -168,7 +253,7 @@ export default function WebpagesViewer({ webpages = [], implementation_id, imple
                 isClosable: true,
             });
 
-            await refreshImplementations()
+            await refreshImplementations();
             setEditingIndex(null);
         } catch (error) {
             toast({
@@ -179,6 +264,19 @@ export default function WebpagesViewer({ webpages = [], implementation_id, imple
                 isClosable: true,
             });
         }
+    };
+
+    // Helper to check if webpage is included in current year
+    const isWebpageIncludedInCurrentYear = (wp) => {
+        if (!wp.relationship) return wp.include_in_report !== false;
+        const { included_in_years = [], excluded_from_years = [] } = wp.relationship;
+
+        if (!included_in_years.length && !excluded_from_years.length) {
+            return wp.include_in_report !== false;
+        }
+
+        return included_in_years.includes(currentAcademicYear) &&
+            !excluded_from_years.includes(currentAcademicYear);
     };
 
     return (
@@ -253,15 +351,26 @@ export default function WebpagesViewer({ webpages = [], implementation_id, imple
                                                 </Text>
                                             )}
 
+                                            {wp.maintained_by && (
+                                                <Text fontSize="xs" color="gray.600" mt={1}>
+                                                    Maintained by: {wp.maintained_by.name || 'Unknown'}
+                                                </Text>
+                                            )}
+
                                             <HStack mt={3} spacing={2} flexWrap="wrap">
-                                                {(wp.no_longer_exists === true) && (
+                                                {wp.no_longer_exists === true && (
                                                     <Badge colorScheme="red" fontSize="xs">No Longer Exists</Badge>
                                                 )}
-                                                {(wp.depreciated === true) && (
+                                                {wp.depreciated === true && (
                                                     <Badge colorScheme="orange" fontSize="xs">Depreciated</Badge>
                                                 )}
-                                                {(wp.include_in_report !== false) && (
-                                                    <Badge colorScheme="green" fontSize="xs">In Report</Badge>
+                                                {isWebpageIncludedInCurrentYear(wp) && (
+                                                    <Badge colorScheme="green" fontSize="xs">
+                                                        In {currentAcademicYear} Report
+                                                    </Badge>
+                                                )}
+                                                {wp.include_in_report !== false && (
+                                                    <Badge colorScheme="gray" fontSize="xs">Global Include</Badge>
                                                 )}
                                             </HStack>
                                         </Box>

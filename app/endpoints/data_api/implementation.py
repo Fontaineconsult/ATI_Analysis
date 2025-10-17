@@ -123,6 +123,7 @@ class ImplementationAPI(MethodView):
             # Get query parameters
             implementation_type = request.args.get('implementation_type')
             title = request.args.get('title')
+            academic_year = request.args.get('academic_year')  # Optional filter
 
             # If only type provided, get all of that type
             if implementation_type and not title:
@@ -149,13 +150,68 @@ class ImplementationAPI(MethodView):
             try:
                 implementation_node = implementation_class.nodes.get(title=title)
 
-                # Serialize the node data
+                # Build comprehensive node data
                 node_data = {
                     "unique_id": implementation_node.unique_id,
                     "title": implementation_node.title,
                     "description": implementation_node.description,
-                    "type": implementation_type
+                    "type": implementation_type,
+                    "supporting_documents": [],
+                    "supporting_webpages": [],
+                    "supporting_notes": [],
+                    "supporting_messages": [],
+                    "supporting_metrics": []
                 }
+
+                # Helper function to check if doc should be included for specific year
+                def should_include_for_year(rel, year):
+                    if not year or not rel:
+                        return True
+                    included = rel.included_in_years or []
+                    excluded = rel.excluded_from_years or []
+                    if not included and not excluded:
+                        return True
+                    return year in included and year not in excluded
+
+                # Add supporting documents with relationship data
+                for doc in implementation_node.supporting_documents.all():
+                    rel = implementation_node.supporting_documents.relationship(doc)
+                    if academic_year and not should_include_for_year(rel, academic_year):
+                        continue
+
+                    doc_data = {
+                        'unique_id': doc.unique_id,
+                        'name': doc.name,
+                        'file_path': doc.file_path,
+                        'include_in_report': doc.include_in_report,
+                        'relationship': {
+                            'included_in_years': rel.included_in_years if rel else [],
+                            'excluded_from_years': rel.excluded_from_years if rel else [],
+                            'added_date': rel.added_date.isoformat() if rel and rel.added_date else None,
+                            'modified_date': rel.modified_date.isoformat() if rel and rel.modified_date else None
+                        }
+                    }
+                    node_data['supporting_documents'].append(doc_data)
+
+                # Add supporting webpages with relationship data
+                for wp in implementation_node.supporting_webpages.all():
+                    rel = implementation_node.supporting_webpages.relationship(wp)
+                    if academic_year and not should_include_for_year(rel, academic_year):
+                        continue
+
+                    wp_data = {
+                        'unique_id': wp.unique_id,
+                        'name': wp.name,
+                        'url': wp.url,
+                        'include_in_report': wp.include_in_report,
+                        'relationship': {
+                            'included_in_years': rel.included_in_years if rel else [],
+                            'excluded_from_years': rel.excluded_from_years if rel else [],
+                            'added_date': rel.added_date.isoformat() if rel and rel.added_date else None,
+                            'modified_date': rel.modified_date.isoformat() if rel and rel.modified_date else None
+                        }
+                    }
+                    node_data['supporting_webpages'].append(wp_data)
 
                 return make_response({"status": "success", "data": node_data}), 200
 
@@ -294,6 +350,10 @@ class ImplementationAPI(MethodView):
                 return self.handle_update_implementation(data)
             elif action == "assign_implementation_to_yse":
                 return self.handle_assign_implementation_to_yse(data)
+            elif action == "update_documentation_year":
+                return self.handle_update_documentation_year(data)
+            elif action == "get_documents_for_year":
+                return self.handle_get_documents_for_year(data)
             else:
                 return make_response({"status": "error", "error": f"Unknown action '{action}' in request."}), 400
 
@@ -305,6 +365,93 @@ class ImplementationAPI(MethodView):
             return make_response({"status": "error", "error": str(e)}), 500
         except Exception as e:
             return make_response({"status": "error", "error": "Failed to process request"}), 500
+
+
+    def handle_update_documentation_year(self, data):
+        """
+        Update year-specific inclusion for existing documentation relationships.
+
+        Request Body:
+        {
+            "action": "update_documentation_year",
+            "implementation_id": str,
+            "implementation_type": str,
+            "documentation_type": str,
+            "documentation_id": str,
+            "academic_year": str,  # e.g., "2024-2025"
+            "include": bool  # true to include, false to exclude
+        }
+        """
+        from app.database.queries.implementation.update import update_documentation_year_inclusion
+
+        implementation_id = data.get('implementation_id')
+        implementation_type = data.get('implementation_type')
+        documentation_type = data.get('documentation_type')
+        documentation_id = data.get('documentation_id')
+        academic_year = data.get('academic_year')
+        include = data.get('include', True)
+
+        if not all([implementation_id, implementation_type, documentation_type,
+                    documentation_id, academic_year]):
+            raise ValidationError("Missing required fields for year update")
+
+        success = update_documentation_year_inclusion(
+            implementation_id=implementation_id,
+            implementation_type=implementation_type,
+            documentation_type=documentation_type,
+            documentation_id=documentation_id,
+            academic_year=academic_year,
+            include=include
+        )
+
+        if success:
+            action = "included in" if include else "excluded from"
+            return make_response({
+                "status": "success",
+                "message": f"Documentation {action} {academic_year}"
+            }), 200
+        else:
+            return make_response({
+                "status": "error",
+                "error": "Failed to update documentation year"
+            }), 500
+
+    def handle_get_documents_for_year(self, data):
+        """
+        Get all documents for an implementation in a specific academic year.
+
+        Request Body:
+        {
+            "action": "get_documents_for_year",
+            "implementation_id": str,
+            "implementation_type": str,
+            "academic_year": str,  # e.g., "2024-2025"
+            "document_type": str (optional)  # "all", "document", "webpage", "note", "message"
+        }
+        """
+        from app.database.queries.implementation.read import get_documents_for_year
+
+        implementation_id = data.get('implementation_id')
+        implementation_type = data.get('implementation_type')
+        academic_year = data.get('academic_year')
+        document_type = data.get('document_type', 'all')
+
+        if not all([implementation_id, implementation_type, academic_year]):
+            raise ValidationError("Missing required fields")
+
+        documents = get_documents_for_year(
+            implementation_id=implementation_id,
+            implementation_type=implementation_type,
+            academic_year=academic_year,
+            document_type=document_type
+        )
+
+        return make_response({
+            "status": "success",
+            "data": documents
+        }), 200
+
+
 
     def handle_assign_implementation_to_yse(self, data):
         from app.database.queries.evidence.update import assign_implementation_to_year_success_indicator
@@ -375,20 +522,48 @@ class ImplementationAPI(MethodView):
 
     def handle_assign_documentation_to_implementation(self, data):
         """
-        Handle the assign_documentation_to_implementation action.
-        """
-        required_fields = ['implementation_id', 'implementation_type', 'documentation_type', 'documentation_id']
-        for field in required_fields:
-            if field not in data:
-                raise ValidationError(f"Missing required field: '{field}'")
+        Assign documentation to an implementation with optional year-specific inclusion.
 
-        assign_documentation_to_implementation(
-            implementation_id=data['implementation_id'],
-            implementation_type=data['implementation_type'],
-            documentation_type=data['documentation_type'],
-            documentation_id=data['documentation_id']
+        Request Body:
+        {
+            "action": "assign_documentation_to_implementation",
+            "implementation_id": str,
+            "implementation_type": str,
+            "documentation_type": str,
+            "documentation_id": str,
+            "academic_year": str (optional),  # e.g., "2024-2025"
+            "include_in_year": bool (optional, default: true)
+        }
+        """
+        from app.database.queries.implementation.update import assign_documentation_to_implementation
+
+        implementation_id = data.get('implementation_id')
+        implementation_type = data.get('implementation_type')
+        documentation_type = data.get('documentation_type')
+        documentation_id = data.get('documentation_id')
+        academic_year = data.get('academic_year')
+        include_in_year = data.get('include_in_year', True)
+
+        if not all([implementation_id, implementation_type, documentation_type, documentation_id]):
+            raise ValidationError("Missing required fields for documentation assignment")
+
+        success = assign_documentation_to_implementation(
+            implementation_id=implementation_id,
+            implementation_type=implementation_type,
+            documentation_type=documentation_type,
+            documentation_id=documentation_id,
+            academic_year=academic_year,
+            include_in_year=include_in_year
         )
-        return make_response({"status": "success", "message": "Documentation assigned to implementation successfully"}), 200
+
+        if success:
+            message = "Documentation assigned successfully"
+            if academic_year:
+                action = "included in" if include_in_year else "excluded from"
+                message = f"Documentation assigned and {action} {academic_year}"
+            return make_response({"status": "success", "message": message}), 200
+        else:
+            return make_response({"status": "error", "error": "Failed to assign documentation"}), 500
 
 
 class ImplementationPlanAPI(MethodView):

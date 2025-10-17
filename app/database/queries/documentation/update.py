@@ -4,7 +4,8 @@
 from app.database.graph_schema import *
 from datetime import date
 
-from app.database.queries.implementation.update import assign_documentation_to_implementation
+from app.database.queries.implementation.update import assign_documentation_to_implementation, \
+    update_documentation_year_inclusion
 from app.endpoints.data_api.errors.custom_exceptions import NotFoundError, CrudError, ValidationError
 
 
@@ -232,7 +233,9 @@ def update_document(
         year_success_evidence: str = None,
         implementation_id: str = None,
         implementation_type: str = None,
-        maintainer_id: str = None  # Changed from created_by to maintainer_id using unique_id
+        maintainer_id: str = None,
+        academic_year: str = None,
+        include_in_year: bool = None
 ) -> bool:
     """
     Updates an existing document. The document can be associated with a YearSuccessEvidence, an implementation, or both.
@@ -242,11 +245,12 @@ def update_document(
     :param implementation_id: (Optional) The unique_id of the implementation to associate the document with.
     :param implementation_type: (Optional) The type of the implementation (e.g., "Process", "Project").
     :param maintainer_id: (Optional) The unique_id of the person who maintains the document.
+    :param academic_year: (Optional) The name of the academic year to associate the document with.
+    :param include_in_year: (Optional) Boolean indicating whether to include the document in the specified academic year.
     :return: True if the document was updated successfully.
     """
 
     try:
-        # Fetch the document by unique_id
         unique_id = document_dict.get('unique_id')
         if not unique_id:
             raise ValidationError("Missing 'unique_id' in document_dict.")
@@ -263,42 +267,55 @@ def update_document(
             'name',
             'file_path',
             'uri_path',
-            'description',  # Added description field
+            'description',
             'is_administrative_review_documentation',
             'is_milestone_and_measures_documentation',
-            'include_in_report'
+            'include_in_report',
+            'depreciated'
         ]:
             if field in document_dict and getattr(document, field) != document_dict[field]:
                 setattr(document, field, document_dict[field])
                 updated_fields = True
 
-        # Handle depreciated and depreciated_date
-        if 'depreciated' in document_dict and document.depreciated != document_dict['depreciated']:
-            document.depreciated = document_dict['depreciated']
-            updated_fields = True
-
+        # Handle depreciated_date
         if 'depreciated_date' in document_dict:
             new_depreciated_date_str = document_dict['depreciated_date']
-            if new_depreciated_date_str != (document.depreciated_date.isoformat() if document.depreciated_date else None):
-                document.depreciated_date = date.fromisoformat(new_depreciated_date_str) if new_depreciated_date_str else None
+            current_depreciated_date_str = (
+                document.depreciated_date.isoformat() if document.depreciated_date else None
+            )
+            if new_depreciated_date_str != current_depreciated_date_str:
+                document.depreciated_date = (
+                    date.fromisoformat(new_depreciated_date_str)
+                    if new_depreciated_date_str else None
+                )
                 updated_fields = True
 
-        # Update the maintained_by relationship using unique_id
+        # Update maintainer
         if maintainer_id:
             try:
-                person = Person.nodes.get(unique_id=maintainer_id)  # Changed to use unique_id
-                if not document.maintained_by.is_connected(person):  # Changed from created_by to maintained_by
+                person = Person.nodes.get(unique_id=maintainer_id)
+                if not document.maintained_by.is_connected(person):
                     document.maintained_by.disconnect_all()
                     document.maintained_by.connect(person)
                     updated_fields = True
             except Person.DoesNotExist:
                 raise NotFoundError(f"Person with unique_id {maintainer_id} not found.")
 
-        # Save the document if any fields were updated
         if updated_fields:
             document.save()
 
-        # Handle YearSuccessEvidence association
+        # Handle year-specific inclusion in relationship
+        if implementation_id and implementation_type and academic_year is not None and include_in_year is not None:
+            update_documentation_year_inclusion(
+                implementation_id=implementation_id,
+                implementation_type=implementation_type,
+                documentation_type='document',
+                documentation_id=unique_id,
+                academic_year=academic_year,
+                include=include_in_year
+            )
+
+        # Handle YearSuccessEvidence association (existing code)
         if year_success_evidence:
             try:
                 yse = YearSuccessEvidence.nodes.get(year_identifier=year_success_evidence)
@@ -307,28 +324,15 @@ def update_document(
             except YearSuccessEvidence.DoesNotExist:
                 raise NotFoundError(f"YearSuccessEvidence with identifier {year_success_evidence} not found.")
 
-        # Handle Implementation association
-        if implementation_id and implementation_type:
-            # Assign the document to the implementation
-            assign_documentation_to_implementation(
-                implementation_id=implementation_id,
-                implementation_type=implementation_type,
-                documentation_type="document",
-                documentation_id=document.unique_id
-            )
-
         return True
 
     except ValidationError as e:
         raise CrudError(f"Failed to update document: {e}")
-
     except NotFoundError as e:
         raise CrudError(f"Failed to update document: {e}")
-
     except Exception as e:
         print(f"Error during document update: {e}")
         raise CrudError(f"Failed to update document: {e}")
-
 
 
 def update_webpage(
@@ -336,20 +340,14 @@ def update_webpage(
         year_success_evidence: str = None,
         implementation_id: str = None,
         implementation_type: str = None,
-        maintainer_id: str = None  # Changed to maintainer_id using unique_id
+        maintainer_id: str = None,
+        academic_year: str = None,
+        include_in_year: bool = None
 ) -> bool:
     """
-    Updates an existing webpage. The webpage can be associated with a YearSuccessEvidence, an implementation, or both.
-
-    :param webpage_dict: Dictionary containing webpage properties to update.
-    :param year_success_evidence: (Optional) The year identifier of the YearSuccessEvidence to associate the webpage with.
-    :param implementation_id: (Optional) The unique_id of the implementation to associate the webpage with.
-    :param implementation_type: (Optional) The type of the implementation (e.g., "Process", "Project").
-    :param maintainer_id: (Optional) The unique_id of the person who maintains the webpage.
-    :return: True if the webpage was updated successfully.
+    Updates an existing webpage and optionally its year-specific inclusion.
     """
     try:
-        # Fetch the webpage by unique_id
         unique_id = webpage_dict.get('unique_id')
         if not unique_id:
             raise ValidationError("Missing 'unique_id' in webpage_dict.")
@@ -390,20 +388,31 @@ def update_webpage(
                 )
                 updated_fields = True
 
-        # Update the maintained_by relationship using unique_id
+        # Update the maintained_by relationship
         if maintainer_id:
             try:
-                person = Person.nodes.get(unique_id=maintainer_id)  # Changed to use unique_id
-                if not webpage.maintained_by.is_connected(person):  # Fixed to use maintained_by
+                person = Person.nodes.get(unique_id=maintainer_id)
+                if not webpage.maintained_by.is_connected(person):
                     webpage.maintained_by.disconnect_all()
                     webpage.maintained_by.connect(person)
                     updated_fields = True
             except Person.DoesNotExist:
                 raise NotFoundError(f"Person with unique_id {maintainer_id} not found.")
 
-        # Save the webpage if any fields were updated
         if updated_fields:
             webpage.save()
+
+        # Handle year-specific inclusion in relationship
+        if implementation_id and implementation_type and academic_year is not None and include_in_year is not None:
+            from app.database.queries.implementation.update import update_documentation_year_inclusion
+            update_documentation_year_inclusion(
+                implementation_id=implementation_id,
+                implementation_type=implementation_type,
+                documentation_type='webpage',
+                documentation_id=unique_id,
+                academic_year=academic_year,
+                include=include_in_year
+            )
 
         # Handle YearSuccessEvidence association
         if year_success_evidence:
@@ -414,31 +423,15 @@ def update_webpage(
             except YearSuccessEvidence.DoesNotExist:
                 raise NotFoundError(f"YearSuccessEvidence with identifier {year_success_evidence} not found.")
 
-        # Handle Implementation association
-        if implementation_id and implementation_type:
-            # Assign the webpage to the implementation
-            try:
-                assign_documentation_to_implementation(
-                    implementation_id=implementation_id,
-                    implementation_type=implementation_type,
-                    documentation_type="webpage",
-                    documentation_id=webpage.unique_id
-                )
-            except Exception as e:
-                raise CrudError(f"Error assigning webpage to implementation: {e}")
-
         return True
 
     except ValidationError as e:
         raise CrudError(f"Failed to update webpage: {e}")
-
     except NotFoundError as e:
         raise CrudError(f"Failed to update webpage: {e}")
-
     except Exception as e:
         print(f"Error during webpage update: {e}")
         raise CrudError(f"Failed to update webpage: {e}")
-
 
 
 

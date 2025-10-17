@@ -75,27 +75,30 @@ export const updateMessageForImplementation = async (implementation_id, implemen
 
 
 
-export const updateDocument = async (implementation_id, implementation_type, document_dict, maintained_by) => {
+export const updateDocument = async (implementation_id, implementation_type, document_dict, maintained_by, academic_year, include_in_year) => {
     try {
-        const response = await axios.put(`${process.env.REACT_APP_API_URL}/documents/documents`,
-            updateDocumentPayload(implementation_id, implementation_type, document_dict, maintained_by));
+        const response = await axios.put(
+            `${process.env.REACT_APP_API_URL}/documents/documents`,
+            updateDocumentPayload(implementation_id, implementation_type, document_dict, maintained_by, academic_year, include_in_year)
+        );
         return response.data;
     } catch (error) {
-        console.error('Error updating message:', error);
+        console.error('Error updating document:', error);
         throw error;
     }
-
 }
 
-export const updateWebpage = async (year_success_evidence, website_dict, created_by) => {
+export const updateWebpage = async (implementation_id, implementation_type, webpage_dict, maintained_by, academic_year, include_in_year) => {
     try {
-        const response = await axios.put(`${process.env.REACT_APP_API_URL}/documents/websites`, updateWebsitePayload(year_success_evidence, website_dict, created_by));
+        const response = await axios.put(
+            `${process.env.REACT_APP_API_URL}/documents/webpages`,
+            updateWebsitePayload(implementation_id, implementation_type, webpage_dict, maintained_by, academic_year, include_in_year)
+        );
         return response.data;
     } catch (error) {
-        console.error('Error updating message:', error);
+        console.error('Error updating webpage:', error);
         throw error;
     }
-
 }
 
 export const updateMetric = async (year_success_evidence, metric_dict, created_by) => {

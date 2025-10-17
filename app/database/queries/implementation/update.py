@@ -1,6 +1,8 @@
 #
 # IMPLEMENTATION UPDATE QUERIES
 #
+from datetime import date
+
 from pycparser.c_ast import Return
 
 from app.database.graph_schema import *
@@ -9,7 +11,26 @@ from app.database.queries.implementation.read import get_goal_node
 from app.endpoints.data_api.errors.custom_exceptions import NotFoundError, ValidationError, CrudError
 
 
-def assign_documentation_to_implementation(implementation_id, implementation_type, documentation_type, documentation_id):
+def assign_documentation_to_implementation(
+        implementation_id: str,
+        implementation_type: str,
+        documentation_type: str,
+        documentation_id: str,
+        academic_year: str = None,
+        include_in_year: bool = True
+) -> bool:
+    """
+    Assigns documentation to an implementation with optional year-specific inclusion.
+
+    Parameters:
+    - implementation_id: unique_id of the implementation
+    - implementation_type: type of implementation (Process, Project, etc.)
+    - documentation_type: type of documentation (document, webpage, note, message)
+    - documentation_id: unique_id of the documentation
+    - academic_year: optional academic year (e.g., "2024-2025") for year-specific inclusion
+    - include_in_year: if True and academic_year provided, adds to included_in_years;
+                       if False, adds to excluded_from_years
+    """
     # Validate the implementation_type and documentation_type
     if implementation_type not in implementation_classes:
         raise ValidationError(f"Invalid implementation_type: {implementation_type}")
@@ -32,11 +53,113 @@ def assign_documentation_to_implementation(implementation_id, implementation_typ
 
     # Check if the relationship already exists
     if relationship.is_connected(documentation_node):
+        # Update existing relationship if academic_year is provided
+        if academic_year:
+            rel = relationship.relationship(documentation_node)
+
+            included = rel.included_in_years or []
+            excluded = rel.excluded_from_years or []
+
+            if include_in_year:
+                if academic_year not in included:
+                    included.append(academic_year)
+                if academic_year in excluded:
+                    excluded.remove(academic_year)
+            else:
+                if academic_year in included:
+                    included.remove(academic_year)
+                if academic_year not in excluded:
+                    excluded.append(academic_year)
+
+            rel.included_in_years = included
+            rel.excluded_from_years = excluded
+            rel.modified_date = date.today()
+            rel.save()
+
         return True
 
-    relationship.connect(documentation_node)
+    # Create new relationship
+    relationship_data = {
+        'added_date': date.today(),
+        'modified_date': date.today()
+    }
+
+    # Only add year-specific data if academic_year is provided
+    if academic_year:
+        if include_in_year:
+            relationship_data['included_in_years'] = [academic_year]
+            relationship_data['excluded_from_years'] = []
+        else:
+            relationship_data['included_in_years'] = []
+            relationship_data['excluded_from_years'] = [academic_year]
+    else:
+        # Default behavior - no year-specific inclusion/exclusion
+        relationship_data['included_in_years'] = []
+        relationship_data['excluded_from_years'] = []
+
+    relationship.connect(documentation_node, relationship_data)
 
     return True
+
+
+def update_documentation_year_inclusion(
+        implementation_id: str,
+        implementation_type: str,
+        documentation_type: str,
+        documentation_id: str,
+        academic_year: str,
+        include: bool = True
+) -> bool:
+    """
+    Updates year-specific inclusion for existing documentation relationships.
+    """
+    from datetime import date
+
+    if implementation_type not in implementation_classes:
+        raise ValidationError(f"Invalid implementation_type: {implementation_type}")
+    if documentation_type not in documentation_classes:
+        raise ValidationError(f"Invalid documentation_type: {documentation_type}")
+
+    try:
+        implementation_class = implementation_classes[implementation_type]
+        implementation_node = implementation_class.nodes.get(unique_id=implementation_id)
+    except implementation_class.DoesNotExist:
+        raise NotFoundError(f"No implementation node found with id: {implementation_id}")
+
+    try:
+        documentation_class = documentation_classes[documentation_type]
+        documentation_node = documentation_class.nodes.get(unique_id=documentation_id)
+    except documentation_class.DoesNotExist:
+        raise NotFoundError(f"No documentation node found with id: {documentation_id}")
+
+    relationship = getattr(implementation_node, documentation_relationships[documentation_type])
+
+    if not relationship.is_connected(documentation_node):
+        raise NotFoundError(f"No existing relationship between implementation and documentation")
+
+    rel = relationship.relationship(documentation_node)
+
+    included = rel.included_in_years or []
+    excluded = rel.excluded_from_years or []
+
+    if include:
+        if academic_year not in included:
+            included.append(academic_year)
+        if academic_year in excluded:
+            excluded.remove(academic_year)
+    else:
+        if academic_year in included:
+            included.remove(academic_year)
+        if academic_year not in excluded:
+            excluded.append(academic_year)
+
+    rel.included_in_years = included
+    rel.excluded_from_years = excluded
+    rel.modified_date = date.today()
+    rel.save()
+
+    return True
+
 
 
 def assign_person_as_implementor(unique_id, year_identifier):

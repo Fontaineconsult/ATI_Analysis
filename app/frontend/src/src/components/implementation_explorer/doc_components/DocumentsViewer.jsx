@@ -17,8 +17,24 @@ function formatDate(dateString) {
 
 function DocumentForm({ document, onSubmit, onCancel, isNewDocument }) {
     const { user, individuals } = useContext(UserContext);
+    const { currentAcademicYear } = useSettings();
 
-    // Initialize with the existing maintainer's unique_id if available
+    // Check if document is included for current year
+    const isIncludedInCurrentYear = () => {
+        if (!document?.relationship) return true; // Default to included for new documents
+        const { included_in_years = [], excluded_from_years = [] } = document.relationship;
+
+        // If no year data exists, default to included
+        if (!included_in_years.length && !excluded_from_years.length) {
+            return true;
+        }
+
+        // Check if current year is explicitly included and not excluded
+        return included_in_years.includes(currentAcademicYear) &&
+            !excluded_from_years.includes(currentAcademicYear);
+    };
+
+    // Initialize form data
     const [documentData, setDocumentData] = useState({
         unique_id: document?.unique_id || '',
         name: document?.name || '',
@@ -27,11 +43,12 @@ function DocumentForm({ document, onSubmit, onCancel, isNewDocument }) {
         description: document?.description || '',
         is_administrative_review_documentation: document?.is_administrative_review_documentation || false,
         is_milestone_and_measures_documentation: document?.is_milestone_and_measures_documentation || false,
-        include_in_report: document?.include_in_report ?? true,
+        include_in_report: document?.include_in_report ?? true, // Global flag
+        include_in_current_year: isIncludedInCurrentYear(), // Year-specific flag
         depreciated: document?.depreciated || false,
         depreciated_date: document?.depreciated_date || '',
         date_created: document?.date_created || new Date().toISOString().split('T')[0],
-        maintainer_id: document?.maintained_by?.unique_id || ''  // Pre-populate with existing maintainer
+        maintainer_id: document?.maintained_by?.unique_id || ''
     });
 
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -48,7 +65,12 @@ function DocumentForm({ document, onSubmit, onCancel, isNewDocument }) {
         e.preventDefault();
         setIsSubmitting(true);
         try {
-            await onSubmit(documentData);
+            // Pass the academic year and inclusion flag along with the document data
+            await onSubmit({
+                ...documentData,
+                academic_year: currentAcademicYear,
+                include_in_year: documentData.include_in_current_year
+            });
         } finally {
             setIsSubmitting(false);
         }
@@ -145,6 +167,24 @@ function DocumentForm({ document, onSubmit, onCancel, isNewDocument }) {
                             <FormLabel fontSize="sm" mb={0}>Milestones Doc</FormLabel>
                         </HStack>
                     </FormControl>
+
+                    {/* Year-specific inclusion switch */}
+                    <FormControl mb={2}>
+                        <HStack>
+                            <Switch
+                                size="sm"
+                                name="include_in_current_year"
+                                isChecked={documentData.include_in_current_year}
+                                onChange={handleChange}
+                                colorScheme="teal"
+                            />
+                            <FormLabel fontSize="sm" mb={0} fontWeight="bold">
+                                Include in {currentAcademicYear} Report
+                            </FormLabel>
+                        </HStack>
+                    </FormControl>
+
+                    {/* Global inclusion switch (optional - you might want to hide this) */}
                     <FormControl mb={2}>
                         <HStack>
                             <Switch
@@ -153,7 +193,9 @@ function DocumentForm({ document, onSubmit, onCancel, isNewDocument }) {
                                 isChecked={documentData.include_in_report}
                                 onChange={handleChange}
                             />
-                            <FormLabel fontSize="sm" mb={0}>Include in Report</FormLabel>
+                            <FormLabel fontSize="sm" mb={0} color="gray.600">
+                                Include in All Reports (Global)
+                            </FormLabel>
                         </HStack>
                     </FormControl>
                 </Box>
@@ -212,22 +254,21 @@ export default function DocumentsViewer({ documents = [], implementation_id, imp
     const [isAddingNew, setIsAddingNew] = useState(false);
     const [editingIndex, setEditingIndex] = useState(null);
     const { refreshImplementations } = useContext(DataContext);
-    const { currentWorkingGroup } = useSettings();
+    const { currentWorkingGroup, currentAcademicYear } = useSettings();
     const { user } = useContext(UserContext);
     const toast = useToast();
 
     const handleAddDocument = async (documentData) => {
         try {
-            documentData.date_created = new Date().toISOString().split('T')[0];
-
-            // Remove maintainer_id from documentData and pass it separately
-            const { maintainer_id, ...documentDataWithoutMaintainer } = documentData;
+            const { maintainer_id, academic_year, include_in_year, ...documentDataForAPI } = documentData;
 
             const response = await addDocumentToImplementation(
                 implementation_id,
                 implementation_type,
-                documentDataWithoutMaintainer,
-                maintainer_id  // Pass maintainer_id as separate parameter
+                documentDataForAPI,
+                maintainer_id,
+                academic_year,
+                include_in_year
             );
 
             toast({
@@ -237,7 +278,7 @@ export default function DocumentsViewer({ documents = [], implementation_id, imp
                 isClosable: true,
             });
 
-            await refreshImplementations()
+            await refreshImplementations();
             setIsAddingNew(false);
         } catch (error) {
             toast({
@@ -252,14 +293,15 @@ export default function DocumentsViewer({ documents = [], implementation_id, imp
 
     const handleUpdateDocument = async (documentData, index) => {
         try {
-            // Extract maintainer_id to pass separately
-            const { maintainer_id, ...documentDataWithoutMaintainer } = documentData;
+            const { maintainer_id, academic_year, include_in_year, ...documentDataForAPI } = documentData;
 
             const response = await updateDocument(
                 implementation_id,
                 implementation_type,
-                documentDataWithoutMaintainer,
-                maintainer_id  // Pass maintainer_id as separate parameter
+                documentDataForAPI,
+                maintainer_id,
+                academic_year,
+                include_in_year
             );
 
             toast({
@@ -269,7 +311,7 @@ export default function DocumentsViewer({ documents = [], implementation_id, imp
                 isClosable: true,
             });
 
-            await refreshImplementations()
+            await refreshImplementations();
             setEditingIndex(null);
         } catch (error) {
             toast({
@@ -280,6 +322,19 @@ export default function DocumentsViewer({ documents = [], implementation_id, imp
                 isClosable: true,
             });
         }
+    };
+
+    // Helper to check if document is included in current year
+    const isDocumentIncludedInCurrentYear = (doc) => {
+        if (!doc.relationship) return doc.include_in_report !== false;
+        const { included_in_years = [], excluded_from_years = [] } = doc.relationship;
+
+        if (!included_in_years.length && !excluded_from_years.length) {
+            return doc.include_in_report !== false;
+        }
+
+        return included_in_years.includes(currentAcademicYear) &&
+            !excluded_from_years.includes(currentAcademicYear);
     };
 
     return (
@@ -377,8 +432,13 @@ export default function DocumentsViewer({ documents = [], implementation_id, imp
                                                 {doc.depreciated === true && (
                                                     <Badge colorScheme="orange" fontSize="xs">Depreciated</Badge>
                                                 )}
+                                                {isDocumentIncludedInCurrentYear(doc) && (
+                                                    <Badge colorScheme="green" fontSize="xs">
+                                                        In {currentAcademicYear} Report
+                                                    </Badge>
+                                                )}
                                                 {doc.include_in_report !== false && (
-                                                    <Badge colorScheme="green" fontSize="xs">In Report</Badge>
+                                                    <Badge colorScheme="gray" fontSize="xs">Global Include</Badge>
                                                 )}
                                             </HStack>
                                         </Box>

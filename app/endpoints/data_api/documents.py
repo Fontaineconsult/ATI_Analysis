@@ -308,7 +308,6 @@ class DocumentsAPI(MethodView):
                     return make_response(status="error", error="An unexpected error occurred."), 500
 
             elif action == 'update_document':
-
                 required_fields = ['document_dict']
                 if not all(field in data for field in required_fields):
                     return make_response(status="error", error="Missing required fields for document update."), 400
@@ -321,7 +320,9 @@ class DocumentsAPI(MethodView):
                 year_success_evidence = data.get('year_success_evidence')
                 implementation_id = data.get('implementation_id')
                 implementation_type = data.get('implementation_type')
-                maintainer_id = data.get('maintained_by')  # Changed from created_by to maintainer_id
+                maintainer_id = data.get('maintained_by')
+                academic_year = data.get('academic_year')
+                include_in_year = data.get('include_in_year')
 
                 try:
                     if update_document(
@@ -329,7 +330,9 @@ class DocumentsAPI(MethodView):
                             year_success_evidence=year_success_evidence,
                             implementation_id=implementation_id,
                             implementation_type=implementation_type,
-                            maintainer_id=maintainer_id  # Now passing maintainer_id
+                            maintainer_id=maintainer_id,
+                            academic_year=academic_year,
+                            include_in_year=include_in_year
                     ):
                         return make_response(status="success", data="Document updated successfully."), 200
                     else:
@@ -339,7 +342,7 @@ class DocumentsAPI(MethodView):
                 except NotFoundError as e:
                     return make_response(status="error", error=str(e)), 404
                 except Exception as e:
-                    print(f"Unexpected error: {e}")
+                    print(f"Unexpected error during document update: {e}")
                     return make_response(status="error", error="An unexpected error occurred."), 500
 
             elif action == 'update_webpage':
@@ -355,7 +358,9 @@ class DocumentsAPI(MethodView):
                 year_success_evidence = data.get('year_success_evidence')
                 implementation_id = data.get('implementation_id')
                 implementation_type = data.get('implementation_type')
-                maintainer_id = data.get('maintained_by')  # Added maintainer_id
+                maintainer_id = data.get('maintained_by')
+                academic_year = data.get('academic_year')
+                include_in_year = data.get('include_in_year')
 
                 try:
                     if update_webpage(
@@ -363,7 +368,9 @@ class DocumentsAPI(MethodView):
                             year_success_evidence=year_success_evidence,
                             implementation_id=implementation_id,
                             implementation_type=implementation_type,
-                            maintainer_id=maintainer_id  # Now passing maintainer_id
+                            maintainer_id=maintainer_id,
+                            academic_year=academic_year,
+                            include_in_year=include_in_year
                     ):
                         return make_response(status="success", message="Webpage updated successfully."), 200
                     else:

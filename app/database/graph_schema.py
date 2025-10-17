@@ -6,7 +6,7 @@ from neomodel import (StructuredNode, StringProperty,
                       IntegerProperty, RelationshipTo,
                       RelationshipFrom, UniqueIdProperty,
                       StructuredRel, Relationship, DateProperty,
-                      install_all_labels, BooleanProperty, IntegerProperty, JSONProperty)
+                      install_all_labels, BooleanProperty, IntegerProperty, JSONProperty, ArrayProperty)
 from dotenv import load_dotenv
 import os
 
@@ -303,6 +303,16 @@ Relationships
 
 """
 
+
+class DocumentedByRel(StructuredRel):
+    """Relationship between implementations and their supporting documents/webpages"""
+    included_in_years = ArrayProperty(StringProperty(), default=list)  # List of academic years like ["2022-2023", "2023-2024"]
+    excluded_from_years = ArrayProperty(StringProperty(), default=list)  # List of academic years to exclude
+    added_date = DateProperty()
+    modified_date = DateProperty()
+    added_by = StringProperty()  # unique_id of the Person who added it
+
+
 class Accomplishment(StructuredNode):
 
     """    Class representing an accomplishment node.
@@ -399,10 +409,10 @@ class InternalPolicy(StructuredNode):
     description = StringProperty()
     effective_date = DateProperty()
     last_updated = DateProperty()
-    supporting_documents = RelationshipTo("Document", "is_documented_by")
-    supporting_webpages = RelationshipTo("Webpage", "is_documented_by")
-    supporting_notes = RelationshipTo("Note", "is_documented_by")
-    supporting_messages = RelationshipTo("Message", "is_documented_by")
+    supporting_documents = RelationshipTo("Document", "is_documented_by", model=DocumentedByRel)
+    supporting_webpages = RelationshipTo("Webpage", "is_documented_by", model=DocumentedByRel)
+    supporting_notes = RelationshipTo("Note", "is_documented_by", model=DocumentedByRel)
+    supporting_messages = RelationshipTo("Message", "is_documented_by", model=DocumentedByRel)
     supporting_metrics = RelationshipTo("Metric", "has_metric")
     is_evidence_for = RelationshipTo("YearSuccessEvidence", "is_evidence_for")
 
@@ -433,10 +443,10 @@ class Process(StructuredNode):
 
     title = StringProperty(unique_index=True, required=True)
     description = StringProperty()
-    supporting_documents = RelationshipTo("Document", "is_documented_by")
-    supporting_webpages = RelationshipTo("Webpage", "is_documented_by")
-    supporting_notes = RelationshipTo("Note", "is_documented_by")
-    supporting_messages = RelationshipTo("Message", "is_documented_by")
+    supporting_documents = RelationshipTo("Document", "is_documented_by", model=DocumentedByRel)
+    supporting_webpages = RelationshipTo("Webpage", "is_documented_by", model=DocumentedByRel)
+    supporting_notes = RelationshipTo("Note", "is_documented_by", model=DocumentedByRel)
+    supporting_messages = RelationshipTo("Message", "is_documented_by", model=DocumentedByRel)
     supporting_metrics = RelationshipTo("Metric", "has_metric")
     is_evidence_for = RelationshipTo("YearSuccessEvidence", "is_evidence_for")
 
@@ -467,10 +477,10 @@ class Project(StructuredNode):
 
     title = StringProperty(unique_index=True, required=True)
     description = StringProperty()
-    supporting_documents = RelationshipTo("Document", "is_documented_by")
-    supporting_webpages = RelationshipTo("Webpage", "is_documented_by")
-    supporting_notes = RelationshipTo("Note", "is_documented_by")
-    supporting_messages = RelationshipTo("Message", "is_documented_by")
+    supporting_documents = RelationshipTo("Document", "is_documented_by", model=DocumentedByRel)
+    supporting_webpages = RelationshipTo("Webpage", "is_documented_by", model=DocumentedByRel)
+    supporting_notes = RelationshipTo("Note", "is_documented_by", model=DocumentedByRel)
+    supporting_messages = RelationshipTo("Message", "is_documented_by", model=DocumentedByRel)
     supporting_metrics = RelationshipTo("Metric", "has_metric")
     is_evidence_for = RelationshipTo("YearSuccessEvidence", "is_evidence_for")
 
@@ -498,10 +508,10 @@ class Procedure(StructuredNode):
 
     title = StringProperty(unique_index=True, required=True)
     description = StringProperty()
-    supporting_documents = RelationshipTo("Document", "is_documented_by")
-    supporting_webpages = RelationshipTo("Webpage", "is_documented_by")
-    supporting_notes = RelationshipTo("Note", "is_documented_by")
-    supporting_messages = RelationshipTo("Message", "is_documented_by")
+    supporting_documents = RelationshipTo("Document", "is_documented_by", model=DocumentedByRel)
+    supporting_webpages = RelationshipTo("Webpage", "is_documented_by", model=DocumentedByRel)
+    supporting_notes = RelationshipTo("Note", "is_documented_by", model=DocumentedByRel)
+    supporting_messages = RelationshipTo("Message", "is_documented_by", model=DocumentedByRel)
     supporting_metrics = RelationshipTo("Metric", "has_metric")
     is_evidence_for = RelationshipTo("YearSuccessEvidence", "is_evidence_for")
 
@@ -529,10 +539,10 @@ class Service(StructuredNode):
 
     title = StringProperty(unique_index=True, required=True)
     description = StringProperty()
-    supporting_documents = RelationshipTo("Document", "is_documented_by")
-    supporting_webpages = RelationshipTo("Webpage", "is_documented_by")
-    supporting_notes = RelationshipTo("Note", "is_documented_by")
-    supporting_messages = RelationshipTo("Message", "is_documented_by")
+    supporting_documents = RelationshipTo("Document", "is_documented_by", model=DocumentedByRel)
+    supporting_webpages = RelationshipTo("Webpage", "is_documented_by", model=DocumentedByRel)
+    supporting_notes = RelationshipTo("Note", "is_documented_by", model=DocumentedByRel)
+    supporting_messages = RelationshipTo("Message", "is_documented_by", model=DocumentedByRel)
     supporting_metrics = RelationshipTo("Metric", "has_metric")
     is_evidence_for = RelationshipTo("YearSuccessEvidence", "is_evidence_for")
 
@@ -562,10 +572,10 @@ class Guidance(StructuredNode):
 
     title = StringProperty(unique_index=True, required=True)
     description = StringProperty()
-    supporting_documents = RelationshipTo("Document", "is_documented_by")
-    supporting_webpages = RelationshipTo("Webpage", "is_documented_by")
-    supporting_notes = RelationshipTo("Note", "is_documented_by")
-    supporting_messages = RelationshipTo("Message", "is_documented_by")
+    supporting_documents = RelationshipTo("Document", "is_documented_by", model=DocumentedByRel)
+    supporting_webpages = RelationshipTo("Webpage", "is_documented_by", model=DocumentedByRel)
+    supporting_notes = RelationshipTo("Note", "is_documented_by", model=DocumentedByRel)
+    supporting_messages = RelationshipTo("Message", "is_documented_by", model=DocumentedByRel)
     supporting_metrics = RelationshipTo("Metric", "has_metric")
     is_evidence_for = RelationshipTo("YearSuccessEvidence", "is_evidence_for")
 
@@ -589,10 +599,10 @@ class Tracking(StructuredNode):
 
     title = StringProperty(unique_index=True, required=True)
     description = StringProperty()
-    supporting_documents = RelationshipTo("Document", "is_documented_by")
-    supporting_webpages = RelationshipTo("Webpage", "is_documented_by")
-    supporting_notes = RelationshipTo("Note", "is_documented_by")
-    supporting_messages = RelationshipTo("Message", "is_documented_by")
+    supporting_documents = RelationshipTo("Document", "is_documented_by", model=DocumentedByRel)
+    supporting_webpages = RelationshipTo("Webpage", "is_documented_by", model=DocumentedByRel)
+    supporting_notes = RelationshipTo("Note", "is_documented_by", model=DocumentedByRel)
+    supporting_messages = RelationshipTo("Message", "is_documented_by", model=DocumentedByRel)
     supporting_metrics = RelationshipTo("Metric", "has_metric")
     is_evidence_for = RelationshipTo("YearSuccessEvidence", "is_evidence_for")
 
