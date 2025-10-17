@@ -884,6 +884,11 @@ function GenerateReportComponent({ evidenceItem }) {
                                                                             }
                                                                         </HStack>
                                                                     </HStack>
+                                                                    {docProps.description && (
+                                                                        <Text fontSize="xs" color="gray.700" pl={3} mt={1}>
+                                                                            {docProps.description}
+                                                                        </Text>
+                                                                    )}
                                                                 </Box>
                                                             );
                                                         })}

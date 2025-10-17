@@ -43,7 +43,7 @@ function DocumentForm({ document, onSubmit, onCancel, isNewDocument }) {
         description: document?.description || '',
         is_administrative_review_documentation: document?.is_administrative_review_documentation || false,
         is_milestone_and_measures_documentation: document?.is_milestone_and_measures_documentation || false,
-        include_in_report: document?.include_in_report ?? true, // Global flag
+        include_in_report: document?.include_in_report ?? false, // Global flag
         include_in_current_year: isIncludedInCurrentYear(), // Year-specific flag
         depreciated: document?.depreciated || false,
         depreciated_date: document?.depreciated_date || '',

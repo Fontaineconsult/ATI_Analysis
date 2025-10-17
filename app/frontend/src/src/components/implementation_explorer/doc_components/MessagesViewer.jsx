@@ -48,7 +48,7 @@ function MessageForm({ message, onSubmit, onCancel, isNewMessage }) {
         type: message?.type || messageTypes[0],
         depreciated: message?.depreciated || false,
         depreciated_date: message?.depreciated_date || '',
-        include_in_report: message?.include_in_report ?? true,
+        include_in_report: message?.include_in_report ?? false,
         include_in_current_year: isIncludedInCurrentYear(), // Add year-specific flag
         created_by: user || {}
     });

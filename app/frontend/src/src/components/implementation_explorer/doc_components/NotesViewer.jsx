@@ -36,7 +36,7 @@ function NoteForm({ note, onSubmit, onCancel, isNewNote }) {
         uri_path: note?.uri_path || '',
         depreciated: note?.depreciated || false,
         depreciated_date: note?.depreciated_date || '',
-        include_in_report: note?.include_in_report ?? true,
+        include_in_report: note?.include_in_report ?? false,
         include_in_current_year: isIncludedInCurrentYear(), // Add year-specific flag
         created_by: user || {}
     });

@@ -29,6 +29,9 @@ export const DataProvider = ({ children }) => {
     const [error, setError] = useState(null);
     const [selectedYear, setSelectedYear] = useState('2024-2025');
 
+    // Add a simple version counter to force re-renders
+    const [dataVersion, setDataVersion] = useState(0);
+
     const toast = useToast();
 
     useEffect(() => {
@@ -55,6 +58,9 @@ export const DataProvider = ({ children }) => {
                 yoyTrends: yoyTrends.data,
                 implementations: implementationsData.status?.data || implementationsData.data || {}
             });
+
+            // Increment version to trigger re-renders
+            setDataVersion(v => v + 1);
         } catch (err) {
             setError(err.message);
             toast({
@@ -80,6 +86,9 @@ export const DataProvider = ({ children }) => {
                 [dataKey]: groupData.data,
             }));
 
+            // Increment version to trigger re-renders
+            setDataVersion(v => v + 1);
+
         } catch (err) {
             setError(err.message);
             toast({
@@ -103,6 +112,9 @@ export const DataProvider = ({ children }) => {
                 ...prevData,
                 indicators: indicatorsData.data,
             }));
+
+            // Increment version to trigger re-renders
+            setDataVersion(v => v + 1);
         } catch (err) {
             toast({
                 title: "Error refreshing indicators data.",
@@ -143,6 +155,9 @@ export const DataProvider = ({ children }) => {
                 procurement: procurementData.data,
                 implementations: implementationsData.status?.data || implementationsData.data || {}
             }));
+
+            // Increment version to trigger re-renders
+            setDataVersion(v => v + 1);
         } catch (err) {
             toast({
                 title: "Error refreshing implementations.",
@@ -166,9 +181,12 @@ export const DataProvider = ({ children }) => {
             updateYear,
             loadSingleWorkingGroupData,
             refreshIndicators,
-            refreshImplementations
+            refreshImplementations,
+            dataVersion  // Expose version for components to use as a dependency or key
         }}>
             {children}
         </DataContext.Provider>
     );
 }
+
+export default DataProvider;

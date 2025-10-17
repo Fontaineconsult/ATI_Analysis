@@ -140,7 +140,7 @@ function ImplementationExplorer() {
             {selectedType && (
                 <ImplementationTypeOverview
                     implementationType={selectedType}
-                    initialImplementationId={implementationId}
+                 initialImplementationId={implementationId}
                 />
             )}
 

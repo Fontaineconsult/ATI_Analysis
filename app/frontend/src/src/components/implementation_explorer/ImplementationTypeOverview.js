@@ -39,7 +39,7 @@ import {getEditUrlFromCompositeKey} from "../../services/utils/tools";
 
 function ImplementationTypeOverview({ implementationType, initialImplementationId }) {
     const { data, refreshImplementations } = useContext(DataContext);
-    const [selectedImpl, setSelectedImpl] = useState(null);
+    const [selectedImplId, setSelectedImplId] = useState(null);
     const [isEditing, setIsEditing] = useState(false);
     const [editForm, setEditForm] = useState({ title: '', description: '' });
     const toast = useToast();
@@ -47,33 +47,40 @@ function ImplementationTypeOverview({ implementationType, initialImplementationI
 
     const implementations = data.implementations?.[implementationType] || [];
 
-    // Handle initial selection based on URL parameter
+    // Derive the *current* selected implementation from the freshest data
+    const selectedImpl = selectedImplId
+        ? implementations.find(i => i.unique_id === selectedImplId) || null
+        : null;
+
+    // Initial selection + keep selection valid across data refreshes
     useEffect(() => {
-        if (implementations.length > 0) {
-            let implToSelect = null;
+        if (implementations.length === 0) {
+            setSelectedImplId(null);
+            return;
+        }
 
-            if (initialImplementationId) {
-                // Find implementation by unique_id
-                implToSelect = implementations.find(impl =>
-                    impl.unique_id === initialImplementationId
-                );
-            }
-
-            // Default to first implementation if none found or no ID provided
-            if (!implToSelect && implementations.length > 0) {
-                implToSelect = implementations[0];
-            }
-
-            if (implToSelect && (!selectedImpl || selectedImpl.unique_id !== implToSelect.unique_id)) {
-                setSelectedImpl(implToSelect);
+        // Prefer explicit ID from URL if present and exists
+        if (initialImplementationId) {
+            const fromParam = implementations.find(i => i.unique_id === initialImplementationId);
+            if (fromParam) {
+                setSelectedImplId(fromParam.unique_id);
+                return;
             }
         }
+
+        // Preserve previous selection if still present
+        if (selectedImplId) {
+            const stillExists = implementations.some(i => i.unique_id === selectedImplId);
+            if (stillExists) return;
+        }
+
+        // Fallback to first item
+        setSelectedImplId(implementations[0].unique_id);
     }, [implementations, initialImplementationId]); // eslint-disable-line react-hooks/exhaustive-deps
 
     // Update URL when implementation is selected
     const handleImplementationSelect = (impl) => {
-        setSelectedImpl(impl);
-        // Update URL with the unique_id
+        setSelectedImplId(impl.unique_id);
         navigate(`/ati-explorer/implementations/${implementationType}/${impl.unique_id}`,
             { replace: true }
         );
@@ -81,6 +88,7 @@ function ImplementationTypeOverview({ implementationType, initialImplementationI
 
     // Copy link function
     const copyImplementationLink = () => {
+        if (!selectedImpl) return;
         const url = `${window.location.origin}/ati-explorer/implementations/${implementationType}/${selectedImpl.unique_id}`;
 
         navigator.clipboard.writeText(url);
@@ -94,6 +102,7 @@ function ImplementationTypeOverview({ implementationType, initialImplementationI
     };
 
     const handleEdit = () => {
+        if (!selectedImpl) return;
         setEditForm({
             title: selectedImpl.title,
             description: selectedImpl.description,
@@ -102,6 +111,7 @@ function ImplementationTypeOverview({ implementationType, initialImplementationI
     };
 
     const handleSave = async () => {
+        if (!selectedImpl) return;
         try {
             await updateImplementation(
                 implementationType,
@@ -118,7 +128,7 @@ function ImplementationTypeOverview({ implementationType, initialImplementationI
                 isClosable: true,
             });
             setIsEditing(false);
-            await refreshImplementations();
+            await refreshImplementations(); // Re-render pulls fresh data; selectedImpl re-derives
         } catch (error) {
             toast({
                 title: 'Error',
@@ -166,51 +176,43 @@ function ImplementationTypeOverview({ implementationType, initialImplementationI
                 </Heading>
                 {implementations.length > 0 ? (
                     <VStack align="stretch" spacing={3}>
-                        {implementations.map((impl) => (
-                            <Button
-                                key={impl.unique_id}
-                                variant={
-                                    selectedImpl?.unique_id === impl.unique_id ? 'solid' : 'outline'
-                                }
-                                colorScheme="teal"
-                                size="sm"
-                                justifyContent="space-between"
-                                onClick={() => handleImplementationSelect(impl)}
-                                textAlign="left"
-                                whiteSpace="normal"
-                                h="auto"
-                                py={3}
-                                px={4}
-                                bg={
-                                    selectedImpl?.unique_id === impl.unique_id ? 'teal.500' : 'white'
-                                }
-                                _hover={{
-                                    bg:
-                                        selectedImpl?.unique_id === impl.unique_id
-                                            ? 'teal.600'
-                                            : 'gray.50',
-                                    boxShadow: 'md',
-                                }}
-                                transition="all 0.2s"
-                            >
-                                <VStack align="start" spacing={1} flex="1">
-                                    <Text
-                                        fontSize="sm"
-                                        color={
-                                            selectedImpl?.unique_id === impl.unique_id
-                                                ? 'white'
-                                                : 'gray.700'
-                                        }
-                                        noOfLines={2}
-                                    >
-                                        {impl.title}
-                                    </Text>
-                                    <Badge colorScheme="teal" fontSize="xs" px={2} py={1} borderRadius="md">
-                                        {impl.is_evidence_for?.length || 0} YSE
-                                    </Badge>
-                                </VStack>
-                            </Button>
-                        ))}
+                        {implementations.map((impl) => {
+                            const isSelected = selectedImpl?.unique_id === impl.unique_id;
+                            return (
+                                <Button
+                                    key={impl.unique_id}
+                                    variant={isSelected ? 'solid' : 'outline'}
+                                    colorScheme="teal"
+                                    size="sm"
+                                    justifyContent="space-between"
+                                    onClick={() => handleImplementationSelect(impl)}
+                                    textAlign="left"
+                                    whiteSpace="normal"
+                                    h="auto"
+                                    py={3}
+                                    px={4}
+                                    bg={isSelected ? 'teal.500' : 'white'}
+                                    _hover={{
+                                        bg: isSelected ? 'teal.600' : 'gray.50',
+                                        boxShadow: 'md',
+                                    }}
+                                    transition="all 0.2s"
+                                >
+                                    <VStack align="start" spacing={1} flex="1">
+                                        <Text
+                                            fontSize="sm"
+                                            color={isSelected ? 'white' : 'gray.700'}
+                                            noOfLines={2}
+                                        >
+                                            {impl.title}
+                                        </Text>
+                                        <Badge colorScheme="teal" fontSize="xs" px={2} py={1} borderRadius="md">
+                                            {impl.is_evidence_for?.length || 0} YSE
+                                        </Badge>
+                                    </VStack>
+                                </Button>
+                            );
+                        })}
                     </VStack>
                 ) : (
                     <Alert status="info" borderRadius="lg" fontSize="sm">
@@ -380,10 +382,7 @@ function ImplementationTypeOverview({ implementationType, initialImplementationI
                                                         cursor="pointer"
                                                         _hover={{ color: 'teal.600', textDecoration: 'underline' }}
                                                         onClick={() => {
-                                                            console.log("SDFSDF", yse)
                                                             const editUrl = getEditUrlFromCompositeKey(yse.indicator_composite_key);
-
-
                                                             const [pathname, hash] = editUrl.split('#');
 
                                                             navigate(pathname + '#' + hash);

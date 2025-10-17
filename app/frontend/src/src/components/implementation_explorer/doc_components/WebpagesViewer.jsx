@@ -40,7 +40,7 @@ function WebpageForm({ webpage, onSubmit, onCancel, isNewWebpage }) {
         no_longer_exists: webpage?.no_longer_exists || false,
         depreciated: webpage?.depreciated || false,
         depreciated_date: webpage?.depreciated_date || '',
-        include_in_report: webpage?.include_in_report ?? true,
+        include_in_report: webpage?.include_in_report ?? false,
         include_in_current_year: isIncludedInCurrentYear(),
         date_created: webpage?.date_created || new Date().toISOString().split('T')[0],
         maintainer_id: webpage?.maintained_by?.unique_id || ''
