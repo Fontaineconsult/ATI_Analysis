@@ -5,7 +5,7 @@ import {
 } from '@chakra-ui/react';
 import { ExternalLinkIcon } from '@chakra-ui/icons';
 import {addMessageToImplementation, addNewMessage} from '../../../services/api/post';
-import { updateMessage } from '../../../services/api/put';
+import {updateMessage, updateMessageForImplementation} from '../../../services/api/put';
 import { DataContext } from '../../../context/DataContext';
 import { useSettings } from '../../../context/SettingsContext';
 import { UserContext } from '../../../context/UserContext';
@@ -23,6 +23,21 @@ const messageTypes = [
 
 function MessageForm({ message, onSubmit, onCancel, isNewMessage }) {
     const { user } = useContext(UserContext);
+    const { currentAcademicYear } = useSettings();
+
+    // Check if message is included for current year
+    const isIncludedInCurrentYear = () => {
+        if (!message?.relationship) return true; // Default to included for new messages
+        const { included_in_years = [], excluded_from_years = [] } = message.relationship;
+
+        if (!included_in_years.length && !excluded_from_years.length) {
+            return true;
+        }
+
+        return included_in_years.includes(currentAcademicYear) &&
+            !excluded_from_years.includes(currentAcademicYear);
+    };
+
     const [messageData, setMessageData] = useState({
         unique_id: message?.unique_id || '',
         name: message?.name || '',
@@ -34,6 +49,7 @@ function MessageForm({ message, onSubmit, onCancel, isNewMessage }) {
         depreciated: message?.depreciated || false,
         depreciated_date: message?.depreciated_date || '',
         include_in_report: message?.include_in_report ?? true,
+        include_in_current_year: isIncludedInCurrentYear(), // Add year-specific flag
         created_by: user || {}
     });
 
@@ -51,7 +67,11 @@ function MessageForm({ message, onSubmit, onCancel, isNewMessage }) {
         e.preventDefault();
         setIsSubmitting(true);
         try {
-            await onSubmit(messageData);
+            await onSubmit({
+                ...messageData,
+                academic_year: currentAcademicYear,
+                include_in_year: messageData.include_in_current_year
+            });
         } finally {
             setIsSubmitting(false);
         }
@@ -97,13 +117,33 @@ function MessageForm({ message, onSubmit, onCancel, isNewMessage }) {
 
             <Flex gap={4} mb={4}>
                 <Box flex="1">
+                    {/* Year-specific inclusion */}
+                    <FormControl mb={2}>
+                        <HStack>
+                            <Switch
+                                size="sm"
+                                name="include_in_current_year"
+                                isChecked={messageData.include_in_current_year}
+                                onChange={handleChange}
+                                colorScheme="teal"
+                            />
+                            <FormLabel fontSize="sm" mb={0} fontWeight="bold">
+                                Include in {currentAcademicYear} Report
+                            </FormLabel>
+                        </HStack>
+                    </FormControl>
+
+                    {/* Global inclusion (optional) */}
                     <FormControl mb={2}>
                         <HStack>
                             <Switch size="sm" name="include_in_report"
                                     isChecked={messageData.include_in_report} onChange={handleChange} />
-                            <FormLabel fontSize="sm" mb={0}>Include in Report</FormLabel>
+                            <FormLabel fontSize="sm" mb={0} color="gray.600">
+                                Include in All Reports (Global)
+                            </FormLabel>
                         </HStack>
                     </FormControl>
+
                     <FormControl mb={2}>
                         <HStack>
                             <Switch size="sm" name="depreciated"
@@ -141,13 +181,22 @@ const MessagesViewer = ({ messages = [], implementation_id, implementation_type,
     const [isAddingNew, setIsAddingNew] = useState(false);
     const [editingIndex, setEditingIndex] = useState(null);
     const { refreshImplementations } = useContext(DataContext);
-    const { currentWorkingGroup } = useSettings();
+    const { currentAcademicYear } = useSettings();
     const { user } = useContext(UserContext);
     const toast = useToast();
 
     const handleAddMessage = async (messageData) => {
         try {
-            await addMessageToImplementation(implementation_id, implementation_type, messageData, user?.employee_id || '', implementation_id, implementation_type);
+            const { academic_year, include_in_year, created_by, ...messageDataForAPI } = messageData;
+
+            await addMessageToImplementation(
+                implementation_id,
+                implementation_type,
+                messageDataForAPI,
+                user?.employee_id || '',
+                academic_year,
+                include_in_year
+            );
 
             toast({
                 title: "Message added successfully",
@@ -156,7 +205,7 @@ const MessagesViewer = ({ messages = [], implementation_id, implementation_type,
                 isClosable: true,
             });
 
-            await refreshImplementations()
+            await refreshImplementations();
             setIsAddingNew(false);
         } catch (error) {
             toast({
@@ -171,7 +220,16 @@ const MessagesViewer = ({ messages = [], implementation_id, implementation_type,
 
     const handleUpdateMessage = async (messageData, index) => {
         try {
-            await updateMessage(null, messageData, user?.employee_id || '', implementation_id, implementation_type);
+            const { academic_year, include_in_year, created_by, ...messageDataForAPI } = messageData;
+            console.log("FDEEEEEE", messageData)
+            await updateMessageForImplementation(
+                implementation_id,
+                implementation_type,
+                messageDataForAPI,
+                user?.employee_id || '',
+                academic_year,
+                include_in_year
+            );
 
             toast({
                 title: "Message updated successfully",
@@ -180,7 +238,7 @@ const MessagesViewer = ({ messages = [], implementation_id, implementation_type,
                 isClosable: true,
             });
 
-            await refreshImplementations()
+            await refreshImplementations();
             setEditingIndex(null);
         } catch (error) {
             toast({
@@ -191,6 +249,19 @@ const MessagesViewer = ({ messages = [], implementation_id, implementation_type,
                 isClosable: true,
             });
         }
+    };
+
+    // Helper to check if message is included in current year
+    const isMessageIncludedInCurrentYear = (msg) => {
+        if (!msg.relationship) return msg.include_in_report !== false;
+        const { included_in_years = [], excluded_from_years = [] } = msg.relationship;
+
+        if (!included_in_years.length && !excluded_from_years.length) {
+            return msg.include_in_report !== false;
+        }
+
+        return included_in_years.includes(currentAcademicYear) &&
+            !excluded_from_years.includes(currentAcademicYear);
     };
 
     return (
@@ -292,8 +363,13 @@ const MessagesViewer = ({ messages = [], implementation_id, implementation_type,
                                                 {msg.depreciated === true && (
                                                     <Badge colorScheme="orange" fontSize="xs">Depreciated</Badge>
                                                 )}
+                                                {isMessageIncludedInCurrentYear(msg) && (
+                                                    <Badge colorScheme="green" fontSize="xs">
+                                                        In {currentAcademicYear} Report
+                                                    </Badge>
+                                                )}
                                                 {msg.include_in_report !== false && (
-                                                    <Badge colorScheme="green" fontSize="xs">In Report</Badge>
+                                                    <Badge colorScheme="gray" fontSize="xs">Global Include</Badge>
                                                 )}
                                             </HStack>
                                         </Box>

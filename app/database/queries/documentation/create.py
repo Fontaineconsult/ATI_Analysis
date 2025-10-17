@@ -16,15 +16,20 @@ def add_note(
         note_dict: dict,
         year_success_evidence: str = None,
         implementation_id: str = None,
-        implementation_type: str = None
+        implementation_type: str = None,
+        academic_year: str = None,  # Add this parameter
+        include_in_year: bool = True  # Add this parameter
 ) -> bool:
     """
-    Adds a new note to the graph. The note can be assigned to a YearSuccessEvidence or an implementation.
+    Adds a new note to the graph. The note can be assigned to a YearSuccessEvidence or an implementation
+    with year-specific inclusion.
 
     :param note_dict: Dictionary containing note properties.
     :param year_success_evidence: (Optional) The year identifier of the YearSuccessEvidence to assign the note to.
     :param implementation_id: (Optional) The unique_id of the implementation to assign the note to.
     :param implementation_type: (Optional) The type of the implementation (e.g., "Process", "Project").
+    :param academic_year: (Optional) The academic year for year-specific inclusion (e.g., "2024-2025").
+    :param include_in_year: (Optional) Whether to include in the specified academic year (default: True).
     :return: True if the note was added successfully.
     """
     try:
@@ -38,6 +43,17 @@ def add_note(
         existing_note = Note.nodes.get_or_none(name=note_dict.get('name'))
         if existing_note:
             note = existing_note
+            # If note exists and we're assigning to implementation, update the year inclusion
+            if implementation_id and implementation_type:
+                assign_documentation_to_implementation(
+                    implementation_id=implementation_id,
+                    implementation_type=implementation_type,
+                    documentation_type="note",  # lowercase to match the convention
+                    documentation_id=note.unique_id,
+                    academic_year=academic_year,
+                    include_in_year=include_in_year
+                )
+                return True
         else:
             # Create and save the new note
             note = Note(
@@ -46,7 +62,9 @@ def add_note(
                 depreciated=note_dict.get('depreciated', False),
                 depreciated_date=date.fromisoformat(note_dict.get('depreciated_date')) if note_dict.get('depreciated_date') else None,
                 include_in_report=note_dict.get('include_in_report', True),
-                date_created=date.fromisoformat(note_dict['date_created']) if note_dict.get('date_created') else None
+                date_created=date.fromisoformat(note_dict['date_created']) if note_dict.get('date_created') else None,
+                file_path=note_dict.get('file_path'),  # Add if your Note model supports this
+                uri_path=note_dict.get('uri_path')  # Add if your Note model supports this
             )
             note.save()
 
@@ -68,22 +86,22 @@ def add_note(
 
         # Optionally connect the note to YearSuccessEvidence
         if year_success_evidence:
-            # Fetch the YearSuccessEvidence node
             yse = YearSuccessEvidence.nodes.get_or_none(year_identifier=year_success_evidence)
             if not yse:
                 raise NotFoundError(f"YearSuccessEvidence {year_success_evidence} not found.")
 
-            # Attach the note to the YSE if not already attached
             if not yse.notes.is_connected(note):
                 yse.notes.connect(note)
 
-        # Optionally assign the note to an implementation
+        # Optionally assign the note to an implementation with year-specific inclusion
         if implementation_id and implementation_type:
             assign_documentation_to_implementation(
                 implementation_id=implementation_id,
                 implementation_type=implementation_type,
-                documentation_type="Note",
-                documentation_id=note.unique_id
+                documentation_type="note",  # lowercase to match the convention
+                documentation_id=note.unique_id,
+                academic_year=academic_year,
+                include_in_year=include_in_year
             )
 
         return True
@@ -91,15 +109,12 @@ def add_note(
     except ValidationError as e:
         print(f"Validation error: {e}")
         raise
-
     except NotFoundError as e:
         print(f"Not found: {e}")
         raise
-
     except Exception as e:
         print(f"Error during note creation: {e}")
         raise CrudError("Failed to add note", e)
-
 
 
 
@@ -107,15 +122,20 @@ def add_message(
         message_dict: dict,
         year_success_evidence: str = None,
         implementation_id: str = None,
-        implementation_type: str = None
+        implementation_type: str = None,
+        academic_year: str = None,  # Add this parameter
+        include_in_year: bool = True  # Add this parameter
 ) -> bool:
     """
-    Adds a new message to the graph. The message can be assigned to a YearSuccessEvidence or an implementation.
+    Adds a new message to the graph. The message can be assigned to a YearSuccessEvidence or an implementation
+    with year-specific inclusion.
 
     :param message_dict: Dictionary containing message properties.
     :param year_success_evidence: (Optional) The year identifier of the YearSuccessEvidence to assign the message to.
     :param implementation_id: (Optional) The unique_id of the implementation to assign the message to.
     :param implementation_type: (Optional) The type of the implementation (e.g., "Process", "Project").
+    :param academic_year: (Optional) The academic year for year-specific inclusion (e.g., "2024-2025").
+    :param include_in_year: (Optional) Whether to include in the specified academic year (default: True).
     :return: True if the message was added successfully.
     """
     try:
@@ -134,7 +154,7 @@ def add_message(
         message = Message(
             name=message_dict['name'],
             type=message_dict.get('message_type'),
-            date_created=date.fromisoformat(message_dict['date_created']) if message_dict.get('date_created') else None,
+            date_created=date.fromisoformat(message_dict['date_created']) if message_dict.get('date_created') else datetime.now().date(),
             content=message_dict.get('content'),
             file_path=message_dict.get('file_path'),
             uri_path=message_dict.get('uri_path'),
@@ -142,8 +162,6 @@ def add_message(
             depreciated_date=date.fromisoformat(message_dict['depreciated_date']) if message_dict.get('depreciated_date') else None,
             include_in_report=message_dict.get('include_in_report', True),
         )
-
-
         message.save()
 
         # Handle the created_by relationship
@@ -164,20 +182,20 @@ def add_message(
 
         # Optionally connect the message to YearSuccessEvidence
         if year_success_evidence:
-            # Fetch the YearSuccessEvidence node
             yse = YearSuccessEvidence.nodes.get_or_none(year_identifier=year_success_evidence)
             if not yse:
                 raise NotFoundError(f"YearSuccessEvidence {year_success_evidence} not found.")
-            # Connect the message to YearSuccessEvidence
             yse.messages.connect(message)
 
-        # Optionally assign the message to an implementation
+        # Optionally assign the message to an implementation with year-specific inclusion
         if implementation_id and implementation_type:
             assign_documentation_to_implementation(
                 implementation_id=implementation_id,
                 implementation_type=implementation_type,
                 documentation_type="message",
-                documentation_id=message.unique_id
+                documentation_id=message.unique_id,
+                academic_year=academic_year,  # Pass academic year
+                include_in_year=include_in_year  # Pass inclusion flag
             )
 
         return True
@@ -185,11 +203,9 @@ def add_message(
     except ValidationError as e:
         print(f"Validation error: {e}")
         raise
-
     except NotFoundError as e:
         print(f"Not found: {e}")
         raise
-
     except Exception as e:
         print(f"Error during message creation: {e}")
         raise CrudError("Failed to add message", e)
@@ -204,21 +220,13 @@ def add_document(
         is_administrative_review_documentation=False,
         is_milestone_and_measures_documentation=False,
         implementation_id=None,
-        implementation_type=None
+        implementation_type=None,
+        academic_year=None,  # Add this parameter
+        include_in_year=True  # Add this parameter
 ) -> bool:
     """
-    Adds a document node to the graph. Optionally assigns the document to an implementation if implementation_id is provided.
-
-    :param name: The name of the document.
-    :param file_path: The file path of the document.
-    :param uri_path: The URI path of the document.
-    :param depreciated: Boolean indicating if the document is depreciated.
-    :param depreciated_date: The date the document was depreciated (format: YYYY-MM-DD).
-    :param is_administrative_review_documentation: Boolean indicating if the document is administrative review documentation.
-    :param is_milestone_and_measures_documentation: Boolean indicating if the document is milestone and measures documentation.
-    :param implementation_id: (Optional) The unique_id of the implementation to assign this document to.
-    :param implementation_type: (Optional) The type of the implementation (e.g., "Process", "Project").
-    :return: True if the document was added successfully.
+    Adds a document node to the graph. Optionally assigns the document to an implementation
+    with year-specific inclusion if implementation_id is provided.
     """
     try:
         if not file_path and not uri_path:
@@ -226,8 +234,8 @@ def add_document(
 
         # Calculate hash if file_path is provided
         hash = get_file_hash(file_path) if file_path else None
+        hash = None  # Todo implement when get_file_hash is implemented
 
-        hash = None # Todo implement when get_file_hash is implemented
         # Check if a document with the same hash already exists
         if hash:
             existing_document = Document.nodes.get_or_none(hash=hash)
@@ -251,14 +259,15 @@ def add_document(
         )
         new_document.save()
 
-        # Optionally assign to an implementation
+        # Assign to implementation with year-specific inclusion
         if implementation_id and implementation_type:
-            # Assign the new document to the implementation
             assign_documentation_to_implementation(
                 implementation_id=implementation_id,
                 implementation_type=implementation_type,
                 documentation_type="document",
-                documentation_id=new_document.unique_id
+                documentation_id=new_document.unique_id,
+                academic_year=academic_year,  # Pass the academic year
+                include_in_year=include_in_year  # Pass the inclusion flag
             )
 
         return True
@@ -266,11 +275,9 @@ def add_document(
     except ValidationError as e:
         print(f"Validation error: {e}")
         raise
-
     except Exception as e:
         print(f"Failed to add document: {e}")
         raise CrudError("Failed to add document", e)
-
 
 
 def add_webpage(
@@ -284,18 +291,25 @@ def add_webpage(
         created_by=None,
         implementation_id=None,
         implementation_type=None,
+        academic_year=None,  # Add this parameter
+        include_in_year=True  # Add this parameter
 ) -> bool:
     """
-    Adds a webpage node to the graph. Optionally assigns the webpage to an implementation if implementation_id is provided.
+    Adds a webpage node to the graph. Optionally assigns the webpage to an implementation
+    with year-specific inclusion if implementation_id is provided.
 
     :param url: The URL of the webpage.
     :param name: The name of the webpage.
     :param no_longer_exists: Boolean indicating if the webpage no longer exists.
     :param depreciated: Boolean indicating if the webpage is depreciated.
-    :param depreciated_year: The year the webpage was depreciated (format: YYYY-MM-DD).
+    :param depreciated_date: The date the webpage was depreciated (format: YYYY-MM-DD).
     :param description: A description of the webpage.
+    :param include_in_report: Global include in report flag.
+    :param created_by: (Optional) The person who created/maintains the webpage.
     :param implementation_id: (Optional) The unique_id of the implementation to assign this webpage to.
     :param implementation_type: (Optional) The type of the implementation (e.g., "Process", "Project").
+    :param academic_year: (Optional) The academic year for year-specific inclusion (e.g., "2024-2025").
+    :param include_in_year: (Optional) Whether to include in the specified academic year (default: True).
     :return: True if the webpage was added successfully.
     """
     try:
@@ -307,38 +321,57 @@ def add_webpage(
                     implementation_id=implementation_id,
                     implementation_type=implementation_type,
                     documentation_type="webpage",
-                    documentation_id=existing_webpage.unique_id
+                    documentation_id=existing_webpage.unique_id,
+                    academic_year=academic_year,
+                    include_in_year=include_in_year
                 )
                 return True
+            else:
+                raise ValidationError(f"A webpage with URL {url} already exists.")
 
         # Create and save the webpage
         new_webpage = Webpage(
             url=url,
             name=name,
             depreciated=depreciated,
-            depreciated_date=datetime.strptime(depreciated_date, "%Y-%m-%d").date() if depreciated_date else None, # just get the year
+            depreciated_date=datetime.strptime(depreciated_date, "%Y-%m-%d").date() if depreciated_date else None,
             no_longer_exists=no_longer_exists,
             description=description,
             include_in_report=include_in_report
         )
         new_webpage.save()
 
-        # Optionally assign to an implementation
+        # Handle the created_by/maintained_by relationship
+        if created_by:
+            try:
+                # Assuming created_by is an employee_id or unique_id
+                person = Person.nodes.get_or_none(unique_id=created_by) or \
+                         Person.nodes.get_or_none(employee_id=created_by)
+                if person:
+                    new_webpage.maintained_by.connect(person)
+            except Exception as e:
+                print(f"Warning: Could not connect created_by person: {e}")
+                # Continue even if person connection fails
+
+        # Assign to implementation with year-specific inclusion
         if implementation_id and implementation_type:
-            # Assign the new webpage to the implementation
-            assign_documentation_to_implementation(
+            result = assign_documentation_to_implementation(
                 implementation_id=implementation_id,
                 implementation_type=implementation_type,
                 documentation_type="webpage",
-                documentation_id=new_webpage.unique_id
+                documentation_id=new_webpage.unique_id,
+                academic_year=academic_year,
+                include_in_year=include_in_year
             )
+
+            if not result:
+                print(f"Warning: Failed to assign webpage to implementation")
 
         return True
 
     except ValidationError as e:
         print(f"Validation error: {e}")
         raise
-
     except Exception as e:
         print(f"Failed to add webpage: {e}")
         raise CrudError("Failed to add webpage", e)

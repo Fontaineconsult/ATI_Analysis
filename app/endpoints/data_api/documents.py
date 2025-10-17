@@ -66,8 +66,10 @@ class DocumentsAPI(MethodView):
                 year_success_evidence = data.get('year_success_evidence')
                 implementation_id = data.get('implementation_id')
                 implementation_type = data.get('implementation_type')
+                academic_year = data.get('academic_year')  # Add this
+                include_in_year = data.get('include_in_year', True)  # Add this with default True
 
-                # At least one assignment target must be provided, but not necessarily both
+                # At least one assignment target must be provided
                 has_yse = bool(year_success_evidence)
                 has_implementation = bool(implementation_id and implementation_type)
 
@@ -82,7 +84,9 @@ class DocumentsAPI(MethodView):
                         note_dict=data['note_dict'],
                         year_success_evidence=year_success_evidence,
                         implementation_id=implementation_id,
-                        implementation_type=implementation_type
+                        implementation_type=implementation_type,
+                        academic_year=academic_year,  # Pass academic year
+                        include_in_year=include_in_year  # Pass inclusion flag
                 ):
                     return make_response({"status": "success", "message": "Note created successfully."}), 201
 
@@ -91,19 +95,23 @@ class DocumentsAPI(MethodView):
                 if not all(field in data for field in required_fields):
                     return make_response({"status": "error", "error": "Missing 'message_dict' field for message creation."}), 400
 
+                message_dict = data['message_dict']
+
                 # Optional fields
                 year_success_evidence = data.get('year_success_evidence')
                 implementation_id = data.get('implementation_id')
                 implementation_type = data.get('implementation_type')
+                academic_year = data.get('academic_year')  # Add this
+                include_in_year = data.get('include_in_year', True)  # Add this with default True
 
-                if not (year_success_evidence or (implementation_id and implementation_type)):
-                    return make_response({"status": "error", "error": "Either 'year_success_evidence' or both 'implementation_id' and 'implementation_type' must be provided."}), 400
-
+                # Call add_message with year parameters
                 if add_message(
-                        message_dict=data['message_dict'],
+                        message_dict=message_dict,
                         year_success_evidence=year_success_evidence,
                         implementation_id=implementation_id,
-                        implementation_type=implementation_type
+                        implementation_type=implementation_type,
+                        academic_year=academic_year,  # Add this
+                        include_in_year=include_in_year  # Add this
                 ):
                     return make_response({"status": "success", "message": "Message created successfully."}), 201
 
@@ -118,6 +126,8 @@ class DocumentsAPI(MethodView):
                 # Optional fields
                 implementation_id = data.get('implementation_id')
                 implementation_type = data.get('implementation_type')
+                academic_year = data.get('academic_year')  # Add this
+                include_in_year = data.get('include_in_year', True)  # Add this with default True
 
                 # Extract fields from document_dict
                 name = document_dict.get('name')
@@ -130,7 +140,7 @@ class DocumentsAPI(MethodView):
                 include_in_report = document_dict.get('include_in_report', True)
                 created_by = data.get('created_by')
 
-                # Now call add_document with the correct parameters
+                # Now call add_document with the year parameters
                 if add_document(
                         name=name,
                         file_path=file_path,
@@ -139,36 +149,37 @@ class DocumentsAPI(MethodView):
                         depreciated_date=depreciated_date,
                         is_administrative_review_documentation=is_administrative_review_documentation,
                         is_milestone_and_measures_documentation=is_milestone_and_measures_documentation,
-
                         implementation_id=implementation_id,
                         implementation_type=implementation_type,
-
+                        academic_year=academic_year,  # Add this
+                        include_in_year=include_in_year  # Add this
                 ):
                     return make_response({"status": "success", "message": "Document created successfully."}), 201
 
             elif action == 'add_webpage':
                 required_fields = ['webpage_dict']
                 if not all(field in data for field in required_fields):
-                    return make_response({"status": "error", "error": "Missing required fields for webpage creation."}), 400
+                    return make_response({"status": "error", "error": "Missing 'webpage_dict' field for webpage creation."}), 400
 
-                website_dict = data['webpage_dict']
+                webpage_dict = data['webpage_dict']
 
+                # Extract all fields
+                url = webpage_dict.get('url')
+                name = webpage_dict.get('name')
+                no_longer_exists = webpage_dict.get('no_longer_exists', False)
+                depreciated = webpage_dict.get('depreciated', False)
+                depreciated_date = webpage_dict.get('depreciated_date')
+                description = webpage_dict.get('description', '')
+                include_in_report = webpage_dict.get('include_in_report', True)
 
-                # Optional fields
+                # Get these from the main data, not webpage_dict
                 implementation_id = data.get('implementation_id')
                 implementation_type = data.get('implementation_type')
-                created_by = website_dict.get('created_by')
+                academic_year = data.get('academic_year')
+                include_in_year = data.get('include_in_year', True)
+                created_by = data.get('created_by')
 
-                # Extract fields from website_dict
-                url = website_dict.get('url')
-                name = website_dict.get('name')
-                no_longer_exists = website_dict.get('no_longer_exists', False)
-                depreciated = website_dict.get('depreciated', False)
-                depreciated_date = website_dict.get('depreciated_date')
-                description = website_dict.get('description', '')
-                include_in_report = website_dict.get('include_in_report', True)
-
-                # Now call add_webpage with the correct parameters
+                # Call add_webpage with all parameters
                 if add_webpage(
                         url=url,
                         name=name,
@@ -177,11 +188,13 @@ class DocumentsAPI(MethodView):
                         depreciated_date=depreciated_date,
                         description=description,
                         include_in_report=include_in_report,
+                        created_by=created_by,
                         implementation_id=implementation_id,
                         implementation_type=implementation_type,
-                        created_by=created_by
+                        academic_year=academic_year,
+                        include_in_year=include_in_year
                 ):
-                    return make_response(status="success", message="Webpage created successfully"), 201
+                    return make_response({"status": "success", "message": "Webpage created successfully."}), 201
 
             elif action == 'add_metric':
                 required_fields = ['metric_dict']
@@ -228,7 +241,7 @@ class DocumentsAPI(MethodView):
                 return make_response(status="error", error="The 'action' field is required."), 400
 
             if action == 'update_note':
-                required_fields = ['year_success_evidence', 'note_dict']
+                required_fields = ['note_dict']
                 if not all(field in data for field in required_fields):
                     return make_response(status="error", error="Missing required fields for note update."), 400
 
@@ -236,8 +249,22 @@ class DocumentsAPI(MethodView):
                 if 'unique_id' not in note_dict:
                     return make_response(status="error", error="The 'unique_id' field is required in 'note_dict'."), 400
 
+                # Extract year-specific inclusion parameters
+                year_success_evidence = data.get('year_success_evidence')
+                implementation_id = data.get('implementation_id')
+                implementation_type = data.get('implementation_type')
+                academic_year = data.get('academic_year')
+                include_in_year = data.get('include_in_year', True)
+
                 try:
-                    if update_note(note_dict, data['year_success_evidence'], note_dict.get('created_by')):
+                    if update_note(
+                            note_dict,
+                            year_success_evidence,
+                            implementation_id=implementation_id,
+                            implementation_type=implementation_type,
+                            academic_year=academic_year,
+                            include_in_year=include_in_year
+                    ):
                         return make_response(status="success", data="Note updated successfully."), 200
                     else:
                         return make_response(status="error", error="Failed to update note."), 500
@@ -249,8 +276,8 @@ class DocumentsAPI(MethodView):
                     print(f"Unexpected error during note update: {e}")
                     return make_response(status="error", error="An unexpected error occurred."), 500
 
-            elif action == 'update_message':
-                required_fields = ['year_success_evidence', 'message_dict']
+            if action == 'update_message':
+                required_fields = ['message_dict']
                 if not all(field in data for field in required_fields):
                     return make_response(status="error", error="Missing required fields for message update."), 400
 
@@ -258,8 +285,23 @@ class DocumentsAPI(MethodView):
                 if 'unique_id' not in message_dict:
                     return make_response(status="error", error="The 'unique_id' field is required in 'message_dict'."), 400
 
+                # Extract year-specific inclusion parameters
+                implementation_id = data.get('implementation_id')
+                implementation_type = data.get('implementation_type')
+                academic_year = data.get('academic_year')
+                include_in_year = data.get('include_in_year', True)
+                year_success_evidence = data.get('year_success_evidence')
+
                 try:
-                    if update_message(message_dict, data['year_success_evidence'], message_dict.get('created_by')):
+                    if update_message(
+                            message_dict,
+                            year_success_evidence=year_success_evidence,
+                            implementation_id=implementation_id,
+                            implementation_type=implementation_type,
+                            created_by=message_dict.get('created_by'),
+                            academic_year=academic_year,
+                            include_in_year=include_in_year
+                    ):
                         return make_response(status="success", data="Message updated successfully."), 200
                     else:
                         return make_response(status="error", error="Failed to update message."), 500
@@ -267,9 +309,9 @@ class DocumentsAPI(MethodView):
                     return make_response(status="error", error=str(e)), 400
                 except NotFoundError as e:
                     return make_response(status="error", error=str(e)), 404
-                except Exception as e:
-                    print(f"Unexpected error during message update: {e}")
-                    return make_response(status="error", error="An unexpected error occurred."), 500
+                # except Exception as e:
+                #     print(f"Unexpected error during message update: {e}")
+                #     return make_response(status="error", error="An unexpected error occurred."), 500
 
             elif action == 'update_metric':
                 required_fields = ['metric_dict']
@@ -389,8 +431,8 @@ class DocumentsAPI(MethodView):
             return make_response(status='error', error=str(e)), 404
         except CrudError as e:
             return make_response(status='error', error=str(e)), 500
-        except Exception as e:
-            return make_response(status='error', error=f"An unexpected error occurred: {str(e)}"), 500
+        # except Exception as e:
+        #     return make_response(status='error', error=f"An unexpected error occurred: {str(e)}"), 500
 
 
 

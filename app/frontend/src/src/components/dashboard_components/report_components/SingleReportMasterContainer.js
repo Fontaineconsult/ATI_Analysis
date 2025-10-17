@@ -3,10 +3,12 @@ import { useParams } from 'react-router-dom';
 import { DataContext } from "../../../context/DataContext";
 import { Spinner, Text, Box, Alert, AlertIcon } from "@chakra-ui/react";
 import {GenerateReportComponent} from "../../../services/report_constructor";
+import {SettingsContext} from "../../../context/SettingsContext";
 
 
 const SingleReportMasterContainer = () => {
     const { data, loading, error } = useContext(DataContext);
+    const { currentAcademicYear } = useContext(SettingsContext);
     const { workingGroup, goalNumber, indicatorNumber } = useParams();
 
     if (loading) {
@@ -110,7 +112,9 @@ const SingleReportMasterContainer = () => {
         has_metrics: evidenceItem.has_metrics || [],
         evidenceTypes: evidenceItem.evidenceTypes || [],
         plans: evidenceItem.plans || [],
-        accomplishments: evidenceItem.accomplishments || []
+        accomplishments: evidenceItem.accomplishments || [],
+        currentAcademicYear: currentAcademicYear
+
     };
 
     return (

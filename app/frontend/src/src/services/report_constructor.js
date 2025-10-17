@@ -423,6 +423,9 @@ function GenerateReportComponent({ evidenceItem }) {
 
     const navigate = useNavigate();
 
+    // Get academic year from evidenceItem
+    const academicYear = evidenceItem.currentAcademicYear || "2024-2025";
+
     const handleImplementationClick = (type, uniqueId) => {
         if (uniqueId) {
             navigate(`/ati-explorer/implementations/${type}/${uniqueId}`);
@@ -459,14 +462,59 @@ function GenerateReportComponent({ evidenceItem }) {
     const filteredMessages = filterByIncludeInReport(evidenceItem.has_messages || [], 'message.properties');
     const filteredMetrics = filterByIncludeInReport(evidenceItem.has_metrics || [], 'metric.properties');
 
-    // Filter evidenceTypes and their nested content - FIXED
+    // Filter evidenceTypes with year-based filtering for docs and webs
     const filteredEvidenceTypes = (evidenceItem.evidenceTypes || []).map((etype) => {
         return {
             ...etype,
-            docs: filterByIncludeInReport(etype.docs || [], 'document.properties'),
-            webs: filterByIncludeInReport(etype.webs || [], 'webpage.properties'),
-            notes: filterByIncludeInReport(etype.notes || [], 'properties'),
-            msgs: filterByIncludeInReport(etype.msgs || [], 'properties'),
+            // Filter docs based on included_in_years
+            docs: (etype.docs || []).filter(doc => {
+                // If no relationship data or included_in_years is null/undefined, include the doc
+                if (!doc.relationship || !doc.relationship.included_in_years) {
+                    return true;
+                }
+                // Check if current academic year is in the included_in_years array
+                return doc.relationship.included_in_years.includes(academicYear);
+            }),
+
+            // Filter webs based on included_in_years
+            webs: (etype.webs || []).filter(web => {
+                // If no relationship data or included_in_years is null/undefined, include the web
+                if (!web.relationship || !web.relationship.included_in_years) {
+                    return true;
+                }
+                // Check if current academic year is in the included_in_years array
+                return web.relationship.included_in_years.includes(academicYear);
+            }),
+
+            // For notes with relationship data, apply same logic
+            notes: (etype.notes || []).filter(note => {
+                // If the note itself doesn't exist, filter it out
+                if (!note || !note.note) return false;
+
+                // If it has relationship data with included_in_years, check the year
+                if (note.relationship && note.relationship.included_in_years) {
+                    return note.relationship.included_in_years.includes(academicYear);
+                }
+
+                // If no relationship data, include it
+                return true;
+            }),
+
+            // For messages with relationship data, apply same logic
+            msgs: (etype.msgs || []).filter(msg => {
+                // If the message itself doesn't exist, filter it out
+                if (!msg || !msg.message) return false;
+
+                // If it has relationship data with included_in_years, check the year
+                if (msg.relationship && msg.relationship.included_in_years) {
+                    return msg.relationship.included_in_years.includes(academicYear);
+                }
+
+                // If no relationship data, include it
+                return true;
+            }),
+
+            // Keep metrics as is for now (they don't have year filtering in your data)
             metrics: filterByIncludeInReport(etype.metrics || [], 'properties'),
         };
     }).filter(et => {
@@ -474,7 +522,6 @@ function GenerateReportComponent({ evidenceItem }) {
             et.notes?.length || et.msgs?.length || et.metrics?.length;
         return hasContent;
     });
-
     return (
         <Box p={4} bg="white" fontSize="sm" textAlign="left">
             <VStack align="stretch" spacing={0}>
@@ -726,7 +773,7 @@ function GenerateReportComponent({ evidenceItem }) {
                                     return (
                                         <Box key={messageItem.message.id || index} pl={3} borderLeft="3px solid" borderLeftColor="gray.200">
                                             <Text fontSize="xs" fontWeight="semibold" color="gray.700">
-                                                {messageProps.date_sent || 'No date'}
+                                                {messageProps.date_sent || 'No date'}  {/* FIXED: was relationship.date_added */}
                                                 {messageItem.created_by?.properties &&
                                                     <Text as="span" fontWeight="normal"> - {messageItem.created_by.properties.name}</Text>
                                                 }
@@ -894,7 +941,7 @@ function GenerateReportComponent({ evidenceItem }) {
                                                     </Text>
                                                     {etype.notes.map((note, idx) => (
                                                         <Text key={idx} fontSize="xs" color="gray.700" pl={3}>
-                                                            • {note.properties.date_created || 'No date'}: {note.properties.content}
+                                                            • {note.note?.properties?.date_created || 'No date'}: {note.note?.properties?.content}
                                                         </Text>
                                                     ))}
                                                 </Box>
@@ -907,7 +954,7 @@ function GenerateReportComponent({ evidenceItem }) {
                                                     </Text>
                                                     {etype.msgs.map((msg, idx) => (
                                                         <Text key={idx} fontSize="xs" color="gray.700" pl={3}>
-                                                            • {msg.properties.date_sent || 'No date'}: {msg.properties.content}
+                                                            • {msg.message?.properties?.date_sent || 'No date'}: {msg.message?.properties?.content}
                                                         </Text>
                                                     ))}
                                                 </Box>

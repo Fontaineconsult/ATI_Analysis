@@ -12,7 +12,10 @@ import {
     assignResponsiblePersonPayload,
     updateDocumentPayload,
     updateWebsitePayload,
-    updateMetricPayload, updateMessageForImplementationPayload, updateAccomplishmentPayload
+    updateMetricPayload,
+    updateMessageForImplementationPayload,
+    updateAccomplishmentPayload,
+    updateNoteForImplementationPayload
 } from "../response_templates";
 
 export const updateStatusLevel = async (yse, statusLevel) => {
@@ -61,11 +64,33 @@ export const updateMessage = async (year_success_evidence, message_dict, created
     }
 }
 
-
-export const updateMessageForImplementation = async (implementation_id, implementation_type, message_dict, created_by) => {
+export const updateNoteForImplementation = async (implementation_id,
+                                                     implementation_type,
+                                                     message_dict,
+                                                     created_by,
+                                                     academic_year,
+                                                     include_in_year) => {
     try {
         const response = await axios.put(`${process.env.REACT_APP_API_URL}/documents/messages`,
-            updateMessageForImplementationPayload(implementation_id, implementation_type, message_dict, created_by));
+            updateNoteForImplementationPayload(implementation_id, implementation_type, message_dict, created_by, academic_year, include_in_year));
+        return response.data;
+    } catch (error) {
+        console.error('Error updating message:', error);
+        throw error;
+    }
+}
+
+
+
+export const updateMessageForImplementation = async (implementation_id,
+                                                     implementation_type,
+                                                     message_dict,
+                                                     created_by,
+                                                     academic_year,
+                                                     include_in_year) => {
+    try {
+        const response = await axios.put(`${process.env.REACT_APP_API_URL}/documents/messages`,
+            updateMessageForImplementationPayload(implementation_id, implementation_type, message_dict, created_by, academic_year, include_in_year));
         return response.data;
     } catch (error) {
         console.error('Error updating message:', error);

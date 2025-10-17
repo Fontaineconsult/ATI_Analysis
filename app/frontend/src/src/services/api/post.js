@@ -21,10 +21,10 @@ export const addNewNote = async (year_success_evidence, note_dict, created_by) =
     }
 }
 
-export const addImplementationNote = async (implementation_id, implementation_type, note_dict, created_by) => {
+export const addImplementationNote = async (implementation_id, implementation_type, note_dict, created_by, academic_year, include_in_year) => {
     try {
         const response = await axios.post(`${process.env.REACT_APP_API_URL}/documents`,
-            createImplementationNotePayload(implementation_id, implementation_type, note_dict, created_by));
+            createImplementationNotePayload(implementation_id, implementation_type, note_dict, created_by, academic_year, include_in_year));
         return response.data;
     } catch (error) {
         console.error('Error adding new note:', error);
@@ -51,15 +51,40 @@ export const addNewMessage = async (yearSuccessEvidence, messageContent, created
 
 
 // Create Functions for Implementation Evidence
-export const addDocumentToImplementation = async (implementation_id, implementation_type, document_dict, created_by) => {
-    console.log("ZZZ", createDocumentPayloadForImplementation(implementation_id, implementation_type, document_dict, created_by));
+export const addDocumentToImplementation = async (implementation_id, implementation_type, document_dict, created_by, academic_year, include_in_year) => {
+    try {
+        const response = await axios.post(
+            `${process.env.REACT_APP_API_URL}/documents`,
+            createDocumentPayloadForImplementation(
+                implementation_id,
+                implementation_type,
+                document_dict,
+                created_by,
+                academic_year,
+                include_in_year
+            )
+        );
+        return response.data;
+    } catch (error) {
+        console.error('Error adding new document:', error);
+        throw error;
+    }
+}
+
+
+export const addWebpageToImplementation = async (implementation_id, implementation_type, webpage_dict, created_by, academic_year, include_in_year) => {
 
     try {
 
         // Send the POST request with the payload
         const response = await axios.post(`${process.env.REACT_APP_API_URL}/documents`,
-
-            createDocumentPayloadForImplementation(implementation_id, implementation_type, document_dict, created_by));
+            createWebpagePayloadForImplementation(
+                implementation_id,
+                implementation_type,
+                webpage_dict,
+                created_by,
+                academic_year,
+                include_in_year));
 
         return response.data;
     } catch (error) {
@@ -67,29 +92,8 @@ export const addDocumentToImplementation = async (implementation_id, implementat
         throw error;
     }
 
-}
-
-
-export const addWebpageToImplementation = async (implementation_id, implementation_type, webpage_dict, created_by) => {
-
-    try {
-
-        // Send the POST request with the payload
-        const response = await axios.post(`${process.env.REACT_APP_API_URL}/documents`,
-            createWebpagePayloadForImplementation(implementation_id, implementation_type, webpage_dict, created_by));
-
-        return response.data;
-    } catch (error) {
-        console.error('Error adding new message:', error);
-        throw error;
-    }
-
-
-
 
 }
-
-
 
 export const addNoteToImplementation = async (implementation_id, implementation_type, webpage_dict, created_by) => {
 
@@ -112,13 +116,13 @@ export const addNoteToImplementation = async (implementation_id, implementation_
 
 
 
-export const addMessageToImplementation = async (implementation_id, implementation_type, message_dict, created_by) => {
+export const addMessageToImplementation = async (implementation_id, implementation_type, message_dict, created_by, academic_year, include_in_year) => {
 
     try {
 
         // Send the POST request with the payload
         const response = await axios.post(`${process.env.REACT_APP_API_URL}/documents`,
-            createMessagePayloadForImplementation(implementation_id, implementation_type, message_dict, created_by));
+            createMessagePayloadForImplementation(implementation_id, implementation_type, message_dict, created_by, academic_year, include_in_year));
 
         return response.data;
     } catch (error) {

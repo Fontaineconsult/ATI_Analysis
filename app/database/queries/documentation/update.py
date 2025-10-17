@@ -36,21 +36,25 @@ def update_note(
         year_success_evidence: str = None,
         implementation_id: str = None,
         implementation_type: str = None,
-        created_by: str = None
+        created_by: str = None,
+        academic_year: str = None,  # Add this parameter
+        include_in_year: bool = True  # Add this parameter
 ) -> bool:
     """
     Updates an existing note. The note can be associated with a YearSuccessEvidence, an implementation, or both.
+    Can update year-specific inclusion for implementation relationships.
 
     :param note_dict: Dictionary containing note properties to update.
     :param year_success_evidence: (Optional) The year identifier of the YearSuccessEvidence to associate the note with.
     :param implementation_id: (Optional) The unique_id of the implementation to associate the note with.
     :param implementation_type: (Optional) The type of the implementation (e.g., "Process", "Project").
     :param created_by: (Optional) The employee_id of the person who created the note.
+    :param academic_year: (Optional) The academic year for year-specific inclusion (e.g., "2024-2025").
+    :param include_in_year: (Optional) Whether to include in the specified academic year (default: True).
     :return: True if the note was updated successfully.
     """
     try:
         # Fetch the note by unique_id
-
         unique_id = note_dict.get('unique_id')
         if not unique_id:
             raise ValidationError("Missing 'unique_id' in note_dict.")
@@ -63,8 +67,8 @@ def update_note(
         # Update note properties
         updated_fields = False
 
-        for field in ['name', 'content', 'include_in_report']:
-            if field in note_dict and getattr(note, field) != note_dict[field]:
+        for field in ['name', 'content', 'include_in_report', 'file_path', 'uri_path']:
+            if field in note_dict and getattr(note, field, None) != note_dict[field]:
                 setattr(note, field, note_dict[field])
                 updated_fields = True
 
@@ -77,6 +81,13 @@ def update_note(
             new_depreciated_date = note_dict['depreciated_date']
             if new_depreciated_date != (note.depreciated_date.isoformat() if note.depreciated_date else None):
                 note.depreciated_date = date.fromisoformat(new_depreciated_date) if new_depreciated_date else None
+                updated_fields = True
+
+        # Handle date_created if provided
+        if 'date_created' in note_dict:
+            new_date_created = note_dict['date_created']
+            if new_date_created != (note.date_created.isoformat() if note.date_created else None):
+                note.date_created = date.fromisoformat(new_date_created) if new_date_created else None
                 updated_fields = True
 
         # Update the created_by relationship
@@ -103,26 +114,47 @@ def update_note(
             except YearSuccessEvidence.DoesNotExist:
                 raise NotFoundError(f"YearSuccessEvidence with identifier {year_success_evidence} not found.")
 
-        # Handle Implementation association
+        # Handle Implementation association with year-specific inclusion
         if implementation_id and implementation_type:
-            # Assign the note to the implementation
-            assign_documentation_to_implementation(
-                implementation_id=implementation_id,
-                implementation_type=implementation_type,
-                documentation_type="note",
-                documentation_id=note.unique_id
-            )
+            if academic_year:
+                # Use update_documentation_year_inclusion for existing relationships
+                # or assign_documentation_to_implementation for new ones
+                try:
+                    update_documentation_year_inclusion(
+                        implementation_id=implementation_id,
+                        implementation_type=implementation_type,
+                        documentation_type="note",
+                        documentation_id=note.unique_id,
+                        academic_year=academic_year,
+                        include=include_in_year
+                    )
+                except NotFoundError:
+                    # If no existing relationship, create one with year inclusion
+                    assign_documentation_to_implementation(
+                        implementation_id=implementation_id,
+                        implementation_type=implementation_type,
+                        documentation_type="note",
+                        documentation_id=note.unique_id,
+                        academic_year=academic_year,
+                        include_in_year=include_in_year
+                    )
+            else:
+                # No year specified, just assign normally
+                assign_documentation_to_implementation(
+                    implementation_id=implementation_id,
+                    implementation_type=implementation_type,
+                    documentation_type="note",
+                    documentation_id=note.unique_id
+                )
 
         return True
 
     except ValidationError as e:
         print(f"Validation error: {e}")
         raise
-
     except NotFoundError as e:
         print(f"Not found: {e}")
         raise
-
     except Exception as e:
         import traceback
         print(f"Error during note update: {e}")
@@ -136,16 +168,21 @@ def update_message(
         year_success_evidence: str = None,
         implementation_id: str = None,
         implementation_type: str = None,
-        created_by: str = None
+        created_by: str = None,
+        academic_year: str = None,  # Add this parameter
+        include_in_year: bool = True  # Add this parameter
 ) -> bool:
     """
     Updates an existing message. The message can be associated with a YearSuccessEvidence, an implementation, or both.
+    Can update year-specific inclusion for implementation relationships.
 
     :param message_dict: Dictionary containing message properties to update.
     :param year_success_evidence: (Optional) The year identifier of the YearSuccessEvidence to associate the message with.
     :param implementation_id: (Optional) The unique_id of the implementation to associate the message with.
     :param implementation_type: (Optional) The type of the implementation (e.g., "Process", "Project").
     :param created_by: (Optional) The employee_id of the person who created the message.
+    :param academic_year: (Optional) The academic year for year-specific inclusion (e.g., "2024-2025").
+    :param include_in_year: (Optional) Whether to include in the specified academic year (default: True).
     :return: True if the message was updated successfully.
     """
     try:
@@ -162,8 +199,8 @@ def update_message(
         # Update message properties
         updated_fields = False
 
-        for field in ['name', 'content', 'file_path', 'uri_path', 'include_in_report']:
-            if field in message_dict and getattr(message, field) != message_dict[field]:
+        for field in ['name', 'content', 'file_path', 'uri_path', 'include_in_report', 'type']:
+            if field in message_dict and getattr(message, field, None) != message_dict[field]:
                 setattr(message, field, message_dict[field])
                 updated_fields = True
 
@@ -176,6 +213,13 @@ def update_message(
             new_depreciated_date = message_dict['depreciated_date']
             if new_depreciated_date != (message.depreciated_date.isoformat() if message.depreciated_date else None):
                 message.depreciated_date = date.fromisoformat(new_depreciated_date) if new_depreciated_date else None
+                updated_fields = True
+
+        # Handle date_created if provided
+        if 'date_created' in message_dict:
+            new_date_created = message_dict['date_created']
+            if new_date_created != (message.date_created.isoformat() if message.date_created else None):
+                message.date_created = date.fromisoformat(new_date_created) if new_date_created else None
                 updated_fields = True
 
         # Update the created_by relationship
@@ -202,29 +246,47 @@ def update_message(
             except YearSuccessEvidence.DoesNotExist:
                 raise NotFoundError(f"YearSuccessEvidence with identifier {year_success_evidence} not found.")
 
-        # Handle Implementation association
+        # Handle Implementation association with year-specific inclusion
         if implementation_id and implementation_type:
-            # Assign the message to the implementation
-            assign_documentation_to_implementation(
-                implementation_id=implementation_id,
-                implementation_type=implementation_type,
-                documentation_type="message",
-                documentation_id=message.unique_id
-            )
+            if academic_year:
+                # Use update_documentation_year_inclusion for existing relationships
+                # or assign_documentation_to_implementation for new ones
+                try:
+                    update_documentation_year_inclusion(
+                        implementation_id=implementation_id,
+                        implementation_type=implementation_type,
+                        documentation_type="message",
+                        documentation_id=message.unique_id,
+                        academic_year=academic_year,
+                        include=include_in_year
+                    )
+                except NotFoundError:
+                    # If no existing relationship, create one with year inclusion
+                    assign_documentation_to_implementation(
+                        implementation_id=implementation_id,
+                        implementation_type=implementation_type,
+                        documentation_type="message",
+                        documentation_id=message.unique_id,
+                        academic_year=academic_year,
+                        include_in_year=include_in_year
+                    )
+            else:
+                # No year specified, just assign normally
+                assign_documentation_to_implementation(
+                    implementation_id=implementation_id,
+                    implementation_type=implementation_type,
+                    documentation_type="message",
+                    documentation_id=message.unique_id
+                )
 
         return True
 
     except ValidationError as e:
         print(f"Validation error: {e}")
         raise
-
     except NotFoundError as e:
         print(f"Not found: {e}")
         raise
-
-    except Exception as e:
-        print(f"Error during message update: {e}")
-        raise CrudError(f"Failed to update message: {e}")
 
 
 

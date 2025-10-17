@@ -8,16 +8,6 @@ export function createNotePayload(yearSuccessEvidence, noteContent, created_by) 
     };
 }
 
-export function createImplementationNotePayload(implementation_id, implementation_type, noteContent, created_by) {
-    return {
-        action: "add_note",
-        implementation_id: implementation_id,
-        implementation_type: implementation_type,
-        note_dict: noteContent,
-        created_by:created_by
-
-    };
-}
 
 
 export function createMessagePayload(yearSuccessEvidence, messageContent, created_by) {
@@ -31,61 +21,93 @@ export function createMessagePayload(yearSuccessEvidence, messageContent, create
     };
 }
 
-export function createDocumentPayloadForImplementation(implementation_id, implementation_type, document_dict, created_by) {
+
+
+
+
+export function createDocumentPayloadForImplementation(implementation_id, implementation_type, document_dict, created_by, academic_year, include_in_year) {
     return {
         action: "add_document",
         implementation_id: implementation_id,
         implementation_type: implementation_type,
         document_dict: document_dict,
-        created_by:created_by
+        created_by: created_by,
+        academic_year: academic_year,
+        include_in_year: include_in_year
+    };
+}
+
+
+
+export function createImplementationNotePayload(implementation_id, implementation_type, noteContent, created_by, academic_year, include_in_year) {
+    return {
+        action: "add_note",
+        implementation_id: implementation_id,
+        implementation_type: implementation_type,
+        note_dict: noteContent,
+        created_by:created_by,
+        academic_year: academic_year,
+        include_in_year:include_in_year
 
     };
 }
 
 
-export function createWebpagePayloadForImplementation(implementation_id, implementation_type, webpage_dict, created_by) {
+
+
+export function createWebpagePayloadForImplementation(implementation_id, implementation_type, webpage_dict, created_by, academic_year, include_in_year) {
     return {
         action: "add_webpage",
         implementation_id: implementation_id,
         implementation_type: implementation_type,
         webpage_dict: webpage_dict,
-        created_by:created_by
+        created_by:created_by,
+        academic_year: academic_year,
+        include_in_year: include_in_year
 
     };
 }
 
 
 
-export function createMessagePayloadForImplementation(implementation_id, implementation_type, message_dict, created_by) {
+export function createMessagePayloadForImplementation(implementation_id, implementation_type, message_dict, created_by, academic_year, include_in_year) {
     return {
         action: "add_message",
         implementation_id: implementation_id,
         implementation_type: implementation_type,
         message_dict: message_dict,
-        created_by:created_by
-    }
-
-}
-
-export function createNotePayloadForImplementation(implementation_id, implementation_type, note_dict, created_by) {
-    return {
-        action: "add_note",
-        implementation_id: implementation_id,
-        implementation_type: implementation_type,
-        message_dict: note_dict,
-        created_by:created_by
+        created_by:created_by,
+        academic_year: academic_year,
+        include_in_year: include_in_year
     }
 
 }
 
 
-export function updateMessageForImplementationPayload(implementation_id, implementation_type, message_dict, created_by) {
+
+export function updateMessageForImplementationPayload(implementation_id, implementation_type, message_dict, created_by, academic_year, include_in_year) {
     return {
         action: "update_message",
         implementation_id: implementation_id,
         implementation_type: implementation_type,
         message_dict: message_dict,
-        created_by:created_by
+        created_by:created_by,
+        academic_year: academic_year,
+        include_in_year: include_in_year
+    }
+
+}
+
+
+export function updateNoteForImplementationPayload(implementation_id, implementation_type, message_dict, created_by, academic_year, include_in_year) {
+    return {
+        action: "update_note",
+        implementation_id: implementation_id,
+        implementation_type: implementation_type,
+        note_dict: message_dict,
+        created_by:created_by,
+        academic_year: academic_year,
+        include_in_year: include_in_year
     }
 
 }
@@ -120,13 +142,15 @@ export function createMetricPayloadForImplementation(implementation_id, implemen
 
 
 
-export function updateNotePayloadForImplementation(implementation_id, implementation_type, note_dict, created_by) {
+export function updateNotePayloadForImplementation(implementation_id, implementation_type, note_dict, created_by, academic_year, include_in_year) {
     return {
         action: "update_note",
         implementation_id: implementation_id,
         implementation_type: implementation_type,
         note_dict: note_dict,
-        created_by:created_by
+        created_by:created_by,
+        academic_year: academic_year,
+        include_in_year: include_in_year
     }
 }
 
@@ -136,7 +160,8 @@ export function updateNotePayload(yearSuccessEvidence, note_dict, created_by) {
         action: "update_note",
         year_success_evidence: yearSuccessEvidence,
         note_dict: note_dict,
-        created_by:created_by
+        created_by:created_by,
+
         }
 
 }

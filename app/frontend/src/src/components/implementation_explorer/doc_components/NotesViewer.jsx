@@ -5,13 +5,28 @@ import {
 } from '@chakra-ui/react';
 import { ExternalLinkIcon } from '@chakra-ui/icons';
 import {addImplementationNote, addNewNote} from '../../../services/api/post';
-import { updateNote } from '../../../services/api/put';
+import {updateNoteForImplementation} from '../../../services/api/put';
 import { DataContext } from '../../../context/DataContext';
 import { useSettings } from '../../../context/SettingsContext';
 import { UserContext } from '../../../context/UserContext';
 
 function NoteForm({ note, onSubmit, onCancel, isNewNote }) {
     const { user } = useContext(UserContext);
+    const { currentAcademicYear } = useSettings();
+
+    // Check if note is included for current year
+    const isIncludedInCurrentYear = () => {
+        if (!note?.relationship) return true; // Default to included for new notes
+        const { included_in_years = [], excluded_from_years = [] } = note.relationship;
+
+        if (!included_in_years.length && !excluded_from_years.length) {
+            return true;
+        }
+
+        return included_in_years.includes(currentAcademicYear) &&
+            !excluded_from_years.includes(currentAcademicYear);
+    };
+
     const [noteData, setNoteData] = useState({
         unique_id: note?.unique_id || '',
         name: note?.name || '',
@@ -22,6 +37,7 @@ function NoteForm({ note, onSubmit, onCancel, isNewNote }) {
         depreciated: note?.depreciated || false,
         depreciated_date: note?.depreciated_date || '',
         include_in_report: note?.include_in_report ?? true,
+        include_in_current_year: isIncludedInCurrentYear(), // Add year-specific flag
         created_by: user || {}
     });
 
@@ -39,7 +55,11 @@ function NoteForm({ note, onSubmit, onCancel, isNewNote }) {
         e.preventDefault();
         setIsSubmitting(true);
         try {
-            await onSubmit(noteData);
+            await onSubmit({
+                ...noteData,
+                academic_year: currentAcademicYear,
+                include_in_year: noteData.include_in_current_year
+            });
         } finally {
             setIsSubmitting(false);
         }
@@ -76,13 +96,33 @@ function NoteForm({ note, onSubmit, onCancel, isNewNote }) {
 
             <Flex gap={4} mb={4}>
                 <Box flex="1">
+                    {/* Year-specific inclusion */}
+                    <FormControl mb={2}>
+                        <HStack>
+                            <Switch
+                                size="sm"
+                                name="include_in_current_year"
+                                isChecked={noteData.include_in_current_year}
+                                onChange={handleChange}
+                                colorScheme="teal"
+                            />
+                            <FormLabel fontSize="sm" mb={0} fontWeight="bold">
+                                Include in {currentAcademicYear} Report
+                            </FormLabel>
+                        </HStack>
+                    </FormControl>
+
+                    {/* Global inclusion */}
                     <FormControl mb={2}>
                         <HStack>
                             <Switch size="sm" name="include_in_report"
                                     isChecked={noteData.include_in_report} onChange={handleChange} />
-                            <FormLabel fontSize="sm" mb={0}>Include in Report</FormLabel>
+                            <FormLabel fontSize="sm" mb={0} color="gray.600">
+                                Include in All Reports (Global)
+                            </FormLabel>
                         </HStack>
                     </FormControl>
+
                     <FormControl mb={2}>
                         <HStack>
                             <Switch size="sm" name="depreciated"
@@ -120,12 +160,22 @@ const NotesViewer = ({ notes = [], implementation_id, implementation_type, forma
     const [isAddingNew, setIsAddingNew] = useState(false);
     const [editingIndex, setEditingIndex] = useState(null);
     const { refreshImplementations } = useContext(DataContext);
+    const { currentAcademicYear } = useSettings();
     const { user } = useContext(UserContext);
     const toast = useToast();
 
     const handleAddNote = async (noteData) => {
         try {
-            await addImplementationNote(implementation_id, implementation_type, noteData, user?.employee_id || '', implementation_id, implementation_type);
+            const { academic_year, include_in_year, created_by, ...noteDataForAPI } = noteData;
+
+            await addImplementationNote(
+                implementation_id,
+                implementation_type,
+                noteDataForAPI,
+                user?.employee_id || '',
+                academic_year,
+                include_in_year
+            );
 
             toast({
                 title: "Note added successfully",
@@ -134,7 +184,7 @@ const NotesViewer = ({ notes = [], implementation_id, implementation_type, forma
                 isClosable: true,
             });
 
-            await refreshImplementations()
+            await refreshImplementations();
             setIsAddingNew(false);
         } catch (error) {
             toast({
@@ -149,7 +199,16 @@ const NotesViewer = ({ notes = [], implementation_id, implementation_type, forma
 
     const handleUpdateNote = async (noteData, index) => {
         try {
-            await updateNote(null, noteData, user?.employee_id || '', implementation_id, implementation_type);
+            const { academic_year, include_in_year, created_by, ...noteDataForAPI } = noteData;
+
+            await updateNoteForImplementation(
+                implementation_id,
+                implementation_type,
+                noteDataForAPI,
+                user?.employee_id || '',
+                academic_year,
+                include_in_year
+            );
 
             toast({
                 title: "Note updated successfully",
@@ -158,7 +217,7 @@ const NotesViewer = ({ notes = [], implementation_id, implementation_type, forma
                 isClosable: true,
             });
 
-            await refreshImplementations()
+            await refreshImplementations();
             setEditingIndex(null);
         } catch (error) {
             toast({
@@ -169,6 +228,19 @@ const NotesViewer = ({ notes = [], implementation_id, implementation_type, forma
                 isClosable: true,
             });
         }
+    };
+
+    // Helper to check if note is included in current year
+    const isNoteIncludedInCurrentYear = (note) => {
+        if (!note.relationship) return note.include_in_report !== false;
+        const { included_in_years = [], excluded_from_years = [] } = note.relationship;
+
+        if (!included_in_years.length && !excluded_from_years.length) {
+            return note.include_in_report !== false;
+        }
+
+        return included_in_years.includes(currentAcademicYear) &&
+            !excluded_from_years.includes(currentAcademicYear);
     };
 
     return (
@@ -260,11 +332,16 @@ const NotesViewer = ({ notes = [], implementation_id, implementation_type, forma
                                             )}
 
                                             <HStack mt={3} spacing={2}>
-                                                {note.include_in_report !== false && (
-                                                    <Badge colorScheme="green" fontSize="xs">In Report</Badge>
-                                                )}
                                                 {note.depreciated === true && (
                                                     <Badge colorScheme="orange" fontSize="xs">Depreciated</Badge>
+                                                )}
+                                                {isNoteIncludedInCurrentYear(note) && (
+                                                    <Badge colorScheme="green" fontSize="xs">
+                                                        In {currentAcademicYear} Report
+                                                    </Badge>
+                                                )}
+                                                {note.include_in_report !== false && (
+                                                    <Badge colorScheme="gray" fontSize="xs">Global Include</Badge>
                                                 )}
                                             </HStack>
                                         </Box>

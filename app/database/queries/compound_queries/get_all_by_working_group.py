@@ -92,46 +92,100 @@ def fetch_evidence_for_working_group(working_group, academic_year):
     WITH wg, goal, indicator, evidence, evidenceNotes, evidenceMessages, evidenceMetrics, statusLevel, adminReviewers, persons,
          collect(DISTINCT evidencePlan) AS plans
     
-    // Match evidence types and their documentation
+    // Match evidence types and their documentation with relationship properties
     OPTIONAL MATCH (evidence)<-[:is_evidence_for]-(evidenceType)
       WHERE evidenceType:InternalPolicy OR
-            evidenceType:Process OR
-            evidenceType:Project OR
-            evidenceType:Procedure OR
-            evidenceType:Service OR
-            evidenceType:Guidance OR
-            evidenceType:Tracking
+      evidenceType:Process OR
+      evidenceType:Project OR
+      evidenceType:Procedure OR
+      evidenceType:Service OR
+      evidenceType:Guidance OR
+      evidenceType:Tracking
     
-    // Match documentation and metrics associated with evidence types
-    OPTIONAL MATCH (evidenceType)-[:is_documented_by]->(doc:Document)
+    // Match documentation with relationship properties
+    OPTIONAL MATCH (evidenceType)-[docRel:is_documented_by]->(doc:Document)
     OPTIONAL MATCH (doc)-[:maintained_by]->(docMaintainer:Person)
     
-    OPTIONAL MATCH (evidenceType)-[:is_documented_by]->(web:Webpage)
+    OPTIONAL MATCH (evidenceType)-[webRel:is_documented_by]->(web:Webpage)
     OPTIONAL MATCH (web)-[:maintained_by]->(webMaintainer:Person)
     
-    OPTIONAL MATCH (evidenceType)-[:is_documented_by]->(etNote:Note)
-    OPTIONAL MATCH (evidenceType)-[:is_documented_by]->(etMsg:Message)
+    OPTIONAL MATCH (evidenceType)-[noteRel:is_documented_by]->(etNote:Note)
+    OPTIONAL MATCH (evidenceType)-[msgRel:is_documented_by]->(etMsg:Message)
     OPTIONAL MATCH (evidenceType)-[:has_metric]->(etMetric:Metric)
     
-    // Aggregate documentation and metrics under each evidence type
+    // Aggregate documentation with relationship data
     WITH wg, goal, indicator, evidence, evidenceNotes, evidenceMessages, evidenceMetrics, statusLevel, adminReviewers, persons, plans, evidenceType,
          collect(DISTINCT {
            document: doc,
-           maintained_by: docMaintainer
+           maintained_by: docMaintainer,
+           relationship: {
+             included_in_years: docRel.included_in_years,
+             excluded_from_years: docRel.excluded_from_years,
+             added_date: docRel.added_date,
+             modified_date: docRel.modified_date,
+             added_by: docRel.added_by
+           }
          }) AS docs,
          collect(DISTINCT {
            webpage: web,
-           maintained_by: webMaintainer
+           maintained_by: webMaintainer,
+           relationship: {
+             included_in_years: webRel.included_in_years,
+             excluded_from_years: webRel.excluded_from_years,
+             added_date: webRel.added_date,
+             modified_date: webRel.modified_date,
+             added_by: webRel.added_by
+           }
          }) AS webs,
-         collect(DISTINCT etNote) AS notes,
-         collect(DISTINCT etMsg) AS msgs,
+         collect(DISTINCT {
+           note: etNote,
+           relationship: {
+             included_in_years: noteRel.included_in_years,
+             excluded_from_years: noteRel.excluded_from_years,
+             added_date: noteRel.added_date,
+             modified_date: noteRel.modified_date,
+             added_by: noteRel.added_by
+           }
+         }) AS notes,
+         collect(DISTINCT {
+           message: etMsg,
+           relationship: {
+             included_in_years: msgRel.included_in_years,
+             excluded_from_years: msgRel.excluded_from_years,
+             added_date: msgRel.added_date,
+             modified_date: msgRel.modified_date,
+             added_by: msgRel.added_by
+           }
+         }) AS msgs,
          collect(DISTINCT etMetric) AS metrics
     
     // Filter out null documents and webpages while preserving structure
     WITH wg, goal, indicator, evidence, evidenceNotes, evidenceMessages, evidenceMetrics, statusLevel, adminReviewers, persons, plans, evidenceType,
          [d IN docs WHERE d.document IS NOT NULL] AS docs,
          [w IN webs WHERE w.webpage IS NOT NULL] AS webs,
-         notes, msgs, metrics
+         [n IN notes WHERE n.note IS NOT NULL] AS notes,
+         [m IN msgs WHERE m.message IS NOT NULL] AS msgs,
+         metrics
+    
+    // Apply year filtering based on relationship properties
+    WITH wg, goal, indicator, evidence, evidenceNotes, evidenceMessages, evidenceMetrics, statusLevel, adminReviewers, persons, plans, evidenceType,
+         [d IN docs WHERE 
+           (d.relationship.included_in_years IS NULL OR size(d.relationship.included_in_years) = 0 OR $academic_year IN d.relationship.included_in_years)
+           AND (d.relationship.excluded_from_years IS NULL OR NOT $academic_year IN d.relationship.excluded_from_years)
+         ] AS docs,
+         [w IN webs WHERE 
+           (w.relationship.included_in_years IS NULL OR size(w.relationship.included_in_years) = 0 OR $academic_year IN w.relationship.included_in_years)
+           AND (w.relationship.excluded_from_years IS NULL OR NOT $academic_year IN w.relationship.excluded_from_years)
+         ] AS webs,
+         [n IN notes WHERE 
+           (n.relationship.included_in_years IS NULL OR size(n.relationship.included_in_years) = 0 OR $academic_year IN n.relationship.included_in_years)
+           AND (n.relationship.excluded_from_years IS NULL OR NOT $academic_year IN n.relationship.excluded_from_years)
+         ] AS notes,
+         [m IN msgs WHERE 
+           (m.relationship.included_in_years IS NULL OR size(m.relationship.included_in_years) = 0 OR $academic_year IN m.relationship.included_in_years)
+           AND (m.relationship.excluded_from_years IS NULL OR NOT $academic_year IN m.relationship.excluded_from_years)
+         ] AS msgs,
+         metrics
     
     // Create a map for each evidence type with its documentation and metrics
     WITH wg, goal, indicator, evidence, evidenceNotes, evidenceMessages, evidenceMetrics, statusLevel, adminReviewers, persons, plans,
@@ -178,12 +232,12 @@ def fetch_evidence_for_working_group(working_group, academic_year):
     
     // Match accomplishments for each goal in the specified academic year
     OPTIONAL MATCH (goal)<-[:advances_goal]-(accomplishment:Accomplishment)
-                         -[:in_academic_year]->(accomplishmentYear:AcademicYear)
+                     -[:in_academic_year]->(accomplishmentYear:AcademicYear)
       WHERE accomplishmentYear.name = $academic_year
     
     // Match plans for each goal in the specified academic year
     OPTIONAL MATCH (goal)<-[:furthers_goal]-(plan:Plan)
-                         -[:in_academic_year]->(planYear:AcademicYear)
+                     -[:in_academic_year]->(planYear:AcademicYear)
       WHERE planYear.name = $academic_year
     
     // Collect accomplishments and plans per goal
