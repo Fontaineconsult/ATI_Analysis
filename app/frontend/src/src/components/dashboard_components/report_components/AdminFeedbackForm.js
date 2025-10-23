@@ -163,16 +163,17 @@ function AdminFeedbackForm({ yearIdentifier, adminReviewNotes = [], onUpdate }) 
 
             {/* Add new note form */}
             {!isAdding ? (
-                <Button
-                    size="sm"
-                    colorScheme="teal"
-                    onClick={() => setIsAdding(true)}
-                    alignSelf="flex-start"
-                    boxShadow="sm"
-                    _hover={{ boxShadow: "md" }}
-                >
-                    Add Feedback
-                </Button>
+                <HStack justify="flex-end" mb={4}>
+                    <Button
+                        size="sm"
+                        colorScheme="teal"
+                        onClick={() => setIsAdding(true)}
+                        boxShadow="sm"
+                        _hover={{ boxShadow: "md" }}
+                    >
+                        Add Feedback
+                    </Button>
+                </HStack>
             ) : (
                 <VStack align="stretch" spacing={4}>
                     <Textarea
@@ -186,7 +187,7 @@ function AdminFeedbackForm({ yearIdentifier, adminReviewNotes = [], onUpdate }) 
                         borderColor="gray.200"
                         _focus={{ borderColor: "teal.400", boxShadow: "0 0 0 1px teal.400" }}
                     />
-                    <HStack spacing={3}>
+                    <HStack spacing={3} justify="flex-end">
                         <Button
                             size="sm"
                             colorScheme="teal"

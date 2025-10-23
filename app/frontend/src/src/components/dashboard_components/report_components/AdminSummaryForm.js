@@ -114,7 +114,7 @@ function AdminSummaryForm({ yearIdentifier, currentValue, onUpdate }) {
                         size="sm"
                         colorScheme="teal"
                         onClick={() => setIsEditing(true)}
-                        alignSelf="flex-start"
+                        alignSelf="flex-end"
                         boxShadow="sm"
                         _hover={{ boxShadow: "md" }}
                     >
@@ -133,7 +133,7 @@ function AdminSummaryForm({ yearIdentifier, currentValue, onUpdate }) {
                         borderColor="gray.200"
                         _focus={{ borderColor: "teal.400", boxShadow: "0 0 0 1px teal.400" }}
                     />
-                    <HStack spacing={3}>
+                    <HStack spacing={3} w="100%" justify="flex-end">
                         <Button
                             size="sm"
                             colorScheme="teal"

@@ -1,5 +1,5 @@
-import React, { useContext, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useContext, useState, useEffect, useRef } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { DataContext } from "../../../context/DataContext";
 import {
     Box,
@@ -46,7 +46,11 @@ import ApprovalMasterContainer from "../../ati_explorer_containers/ApprovalMaste
 const ReportMasterList = () => {
     const { data, loading, error } = useContext(DataContext);
     const navigate = useNavigate();
+    const location = useLocation();
     const { isOpen, onOpen, onClose } = useDisclosure();
+
+    // Ref to store table row elements
+    const rowRefs = useRef({});
 
     // State for modal context
     const [approvalContext, setApprovalContext] = useState({
@@ -54,6 +58,33 @@ const ReportMasterList = () => {
         goalNumber: null,
         indicatorNumber: null
     });
+
+    // Hash-based navigation effect
+    useEffect(() => {
+        if (location.hash && data) {
+            // Remove the # from the hash
+            const hash = location.hash.substring(1);
+
+            // Wait for DOM to be ready
+            const timer = setTimeout(() => {
+                const targetRow = rowRefs.current[hash];
+                if (targetRow) {
+                    // Scroll to the target row
+                    targetRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+                    // Add highlight class
+                    targetRow.classList.add('highlight-row');
+
+                    // Remove highlight after 30 seconds
+                    setTimeout(() => {
+                        targetRow.classList.remove('highlight-row');
+                    }, 30000);
+                }
+            }, 100);
+
+            return () => clearTimeout(timer);
+        }
+    }, [location.hash, data]);
 
     // Function to open approval modal with context
     const openApprovalModal = (workingGroup, goalNumber, indicatorNumber) => {
@@ -227,9 +258,9 @@ const ReportMasterList = () => {
                                     // Check if evidence summary exists and has valid content
                                     const evidenceSummary = indicator.evidences?.[0]?.evidence?.properties?.admin_review_description;
                                     const hasSummary = evidenceSummary &&
-                                                      evidenceSummary !== "No Review" &&
-                                                      evidenceSummary !== "None" &&
-                                                      evidenceSummary.trim() !== "";
+                                        evidenceSummary !== "No Review" &&
+                                        evidenceSummary !== "None" &&
+                                        evidenceSummary.trim() !== "";
 
                                     // Button logic: gray if approved, yellow if no summary, green if has summary
                                     const approveButtonText = hasReviewers ? 'Approved' : 'Approve';
@@ -237,7 +268,16 @@ const ReportMasterList = () => {
                                     const isButtonDisabled = hasReviewers;
 
                                     return (
-                                        <Tr key={indicator.indicator?.id} _hover={{ bg: "gray.50" }}>
+                                        <Tr
+                                            key={indicator.indicator?.id}
+                                            _hover={{ bg: "gray.50" }}
+                                            ref={(el) => {
+                                                if (el && compositeKey) {
+                                                    rowRefs.current[compositeKey] = el;
+                                                }
+                                            }}
+                                            id={compositeKey}
+                                        >
                                             <Td fontWeight="medium" color="gray.700" fontSize="xs">{indicatorNumber}</Td>
                                             <Td color="gray.700" fontSize="xs">{indicator.indicator?.properties?.success_indicator}</Td>
                                             <Td>
@@ -407,6 +447,22 @@ const ReportMasterList = () => {
 
     return (
         <Box w="100%" p={4}>
+            <style>
+                {`
+                    @keyframes highlight-fade {
+                        0% {
+                            background-color: rgba(49, 130, 206, 0.3);
+                        }
+                        100% {
+                            background-color: transparent;
+                        }
+                    }
+
+                    .highlight-row {
+                        animation: highlight-fade 30s ease-out;
+                    }
+                `}
+            </style>
             <Flex gap={6} w="100%">
                 {/* Main Content - 75% width */}
                 <Box

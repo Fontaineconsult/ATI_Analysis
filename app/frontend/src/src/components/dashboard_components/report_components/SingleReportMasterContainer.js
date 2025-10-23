@@ -114,6 +114,7 @@ const SingleReportMasterContainer = ({ workingGroup: propWorkingGroup,
         statusLevel: evidenceItem.statusLevel,
         persons: evidenceItem.persons || [],
         adminReviewers: evidenceItem.adminReviewers || [],
+        adminReviewNotes: evidenceItem.adminReviewNotes || [],
         has_notes: evidenceItem.has_notes || [],
         has_messages: evidenceItem.has_messages || [],
         has_metrics: evidenceItem.has_metrics || [],
@@ -121,6 +122,7 @@ const SingleReportMasterContainer = ({ workingGroup: propWorkingGroup,
         plans: evidenceItem.plans || [],
         accomplishments: evidenceItem.accomplishments || [],
         currentAcademicYear: currentAcademicYear
+
 
     };
 
