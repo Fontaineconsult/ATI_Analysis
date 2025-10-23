@@ -4,7 +4,10 @@ from flask.views import MethodView
 from app.database.queries.compound_queries.get_all_by_working_group import fetch_evidence_for_working_group
 from app.database.queries.evidence.read import get_all_status_level_nodes, get_connected_status_levels, \
     get_evidence_trends
-from app.database.queries.evidence.update import assign_status_to_yse, assign_approver_to_yse
+from app.database.queries.evidence.update import (assign_status_to_yse,
+                                                   assign_approver_to_yse,
+                                                   update_admin_reviewer_description,
+                                                   add_admin_reviewer_note)
 from . import data_api_endpoints
 from ...database.class_factory import working_group_names_web_query, status_levels
 from app.endpoints.data_api.util.response import make_response
@@ -52,6 +55,8 @@ class EvidenceAPI(MethodView):
         # Handle different actions
         if action == "create_year_success_evidence_node":
             return self.handle_create_year_success_evidence(data)
+        elif action == "add_admin_reviewer_note":
+            return self.handle_add_admin_reviewer_note(data)
         else:
             return make_response(status="error", error=f"Unknown action '{action}' in request."), 400
 
@@ -70,6 +75,8 @@ class EvidenceAPI(MethodView):
         # Handle the assign_approver action
         if action == "assign_approver":
             return self.handle_assign_approver(data)
+        elif action == "update_admin_reviewer_description":
+            return self.handle_update_admin_reviewer_description(data)
         else:
             return make_response(status="error", error=f"Unknown action '{action}' in request."), 400
 
@@ -117,6 +124,56 @@ class EvidenceAPI(MethodView):
             return make_response(status="success", message="YearSuccessEvidence node created successfully"), 201
         except ValidationError as e:
             return make_response(status="error", error=str(e)), 400
+        except NotFoundError as e:
+            return make_response(status="error", error=str(e)), 404
+        except CrudError as e:
+            return make_response(status="error", error=str(e)), 500
+
+    def handle_update_admin_reviewer_description(self, data):
+        """
+        Update the admin_reviewer_description field for a YSE.
+        Example PUT request body:
+        {
+            "action": "update_admin_reviewer_description",
+            "year_success_evidence": "2023-2024-1.2-ins",
+            "description": "Summary of evidence..."
+        }
+        """
+        yse = data.get('year_success_evidence')
+        description = data.get('description')
+
+        if not yse or description is None:
+            return make_response(status="error", error="Missing 'year_success_evidence' or 'description' in request."), 400
+
+        try:
+            update_admin_reviewer_description(yse, description)
+            return make_response(status="success", data="Admin reviewer description updated successfully."), 200
+        except NotFoundError as e:
+            return make_response(status="error", error=str(e)), 404
+        except CrudError as e:
+            return make_response(status="error", error=str(e)), 500
+
+    def handle_add_admin_reviewer_note(self, data):
+        """
+        Add a new admin reviewer note to a YSE.
+        Example POST request body:
+        {
+            "action": "add_admin_reviewer_note",
+            "year_success_evidence": "2023-2024-1.2-ins",
+            "note_content": "Feedback from reviewer...",
+            "created_by_employee_id": "12345"
+        }
+        """
+        yse = data.get('year_success_evidence')
+        note_content = data.get('note_content')
+        created_by_employee_id = data.get('created_by_employee_id')
+
+        if not yse or not note_content or not created_by_employee_id:
+            return make_response(status="error", error="Missing required fields: 'year_success_evidence', 'note_content', or 'created_by_employee_id'"), 400
+
+        try:
+            note_data = add_admin_reviewer_note(yse, note_content, created_by_employee_id)
+            return make_response(status="success", data=note_data), 201
         except NotFoundError as e:
             return make_response(status="error", error=str(e)), 404
         except CrudError as e:

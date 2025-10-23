@@ -6,10 +6,17 @@ import {GenerateReportComponent} from "../../../services/report_constructor";
 import {SettingsContext} from "../../../context/SettingsContext";
 
 
-const SingleReportMasterContainer = () => {
+const SingleReportMasterContainer = ({ workingGroup: propWorkingGroup,
+                                         goalNumber: propGoalNumber,
+                                         indicatorNumber: propIndicatorNumber }) => {
     const { data, loading, error } = useContext(DataContext);
     const { currentAcademicYear } = useContext(SettingsContext);
-    const { workingGroup, goalNumber, indicatorNumber } = useParams();
+    const { workingGroup: urlWorkingGroup, goalNumber: urlGoalNumber, indicatorNumber: urlIndicatorNumber } = useParams();
+
+    // Use props if provided, otherwise fall back to URL params
+    const workingGroup = propWorkingGroup || urlWorkingGroup;
+    const goalNumber = propGoalNumber || urlGoalNumber;
+    const indicatorNumber = propIndicatorNumber || urlIndicatorNumber;
 
     if (loading) {
         return (

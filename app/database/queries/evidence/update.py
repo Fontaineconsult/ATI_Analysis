@@ -152,7 +152,7 @@ def assign_approver_to_yse(year_success_identifier: str, employee_id: str) -> bo
 
         # Assign the approver
         year_success_evidence.administrative_review_completed_by.connect(person)
-        year_success_evidence.administrative_review_completed = True
+        year_success_evidence.administrative_review_complete = True
         year_success_evidence.administrative_review_completed_date = datetime.now().date()
         year_success_evidence.save()
 
@@ -166,4 +166,86 @@ def assign_approver_to_yse(year_success_identifier: str, employee_id: str) -> bo
     except Exception as e:
         # Catch any other exceptions and raise them as a CrudError
         raise CrudError(f"Error assigning approver {employee_id} to success indicator {year_success_identifier}: {e}")
+
+
+def update_admin_reviewer_description(year_success_identifier: str, description: str) -> bool:
+    """Update the admin_review_description field for a YearSuccessEvidence node"""
+    try:
+        try:
+            year_success_evidence = YearSuccessEvidence.nodes.get(year_identifier=year_success_identifier)
+        except YearSuccessEvidence.DoesNotExist:
+            raise NotFoundError(f"YearSuccessEvidence with identifier '{year_success_identifier}' not found.")
+
+        year_success_evidence.admin_review_description = description
+        year_success_evidence.save()
+
+        print(f"Admin reviewer description updated for {year_success_identifier}")
+        return True
+
+    except NotFoundError as e:
+        raise e
+    except Exception as e:
+        raise CrudError(f"Error updating admin reviewer description for {year_success_identifier}: {e}")
+
+
+def add_admin_reviewer_note(year_success_identifier: str, note_content: str, created_by_employee_id: str) -> dict:
+    """
+    Add a new admin reviewer note to a YearSuccessEvidence node.
+    Creates a Note node and connects it via the admin_reviewer_note relationship.
+
+    :param year_success_identifier: The year_identifier of the YSE
+    :param note_content: The content of the note
+    :param created_by_employee_id: The employee_id of the person creating the note
+    :return: Dictionary with the created note data
+    """
+    try:
+        # Get the YSE node
+        try:
+            yse = YearSuccessEvidence.nodes.get(year_identifier=year_success_identifier)
+        except YearSuccessEvidence.DoesNotExist:
+            raise NotFoundError(f"YearSuccessEvidence with identifier '{year_success_identifier}' not found.")
+
+        # Get the person creating the note
+        try:
+            person = Person.nodes.get(employee_id=created_by_employee_id)
+        except Person.DoesNotExist:
+            raise NotFoundError(f"Person with employee_id '{created_by_employee_id}' not found.")
+
+        # Create a unique name for the note
+        note_name = f"Admin Review Note - {year_success_identifier} - {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
+
+        # Create the note
+        note = Note(
+            name=note_name,
+            content=note_content,
+            date_created=datetime.now().date(),
+            depreciated=False,
+            include_in_report=True
+        )
+        note.save()
+
+        # Connect the note to the person who created it
+        note.created_by.connect(person)
+
+        # Connect the note to the YSE via admin_reviewer_note relationship
+        yse.admin_reviewer_note.connect(note)
+
+        print(f"Admin reviewer note added to {year_success_identifier} by {person.name}")
+
+        return {
+            "unique_id": note.unique_id,
+            "name": note.name,
+            "content": note.content,
+            "date_created": note.date_created.isoformat() if note.date_created else None,
+            "created_by": {
+                "name": person.name,
+                "employee_id": person.employee_id,
+                "email": person.email
+            }
+        }
+
+    except NotFoundError as e:
+        raise e
+    except Exception as e:
+        raise CrudError(f"Error adding admin reviewer note for {year_success_identifier}: {e}")
 

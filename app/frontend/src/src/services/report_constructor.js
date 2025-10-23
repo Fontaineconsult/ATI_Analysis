@@ -522,6 +522,8 @@ function GenerateReportComponent({ evidenceItem }) {
             et.notes?.length || et.msgs?.length || et.metrics?.length;
         return hasContent;
     });
+    console.log("EEE", evidenceItem)
+
     return (
         <Box p={4} bg="white" fontSize="sm" textAlign="left">
             <VStack align="stretch" spacing={0}>
@@ -599,6 +601,22 @@ function GenerateReportComponent({ evidenceItem }) {
                                     {evidenceItem.evidence.properties.administrative_review_completed_date &&
                                         ` (${evidenceItem.evidence.properties.administrative_review_completed_date})`
                                     }
+                                </Text>
+                            )}
+
+                            {'admin_reviewer_description' in evidenceItem.evidence.properties && (
+                                <Text fontSize="xs" color="gray.700" mb={2}>
+                                    <Text as="span" fontWeight="semibold">Evidence Summary:</Text> {
+                                    evidenceItem.evidence.properties.admin_reviewer_description
+                                }
+                                </Text>
+                            )}
+
+                            {'admin_reviewer_note' in evidenceItem.evidence.properties && (
+                                <Text fontSize="xs" color="gray.700" mb={2}>
+                                    <Text as="span" fontWeight="semibold">Reviewer Note:</Text> {
+                                    evidenceItem.evidence.properties.admin_reviewer_note
+                                }
                                 </Text>
                             )}
 

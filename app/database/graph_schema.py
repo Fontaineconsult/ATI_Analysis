@@ -332,6 +332,7 @@ class Accomplishment(StructuredNode):
     academic_year = RelationshipTo("AcademicYear", "in_academic_year")
     advanced_goals = RelationshipTo("Goal", "advances_goal")
     advanced_year_success_indicators = RelationshipTo("YearSuccessEvidence", "advances_yse")
+    achieved_through = RelationshipTo("Plan", "achieved_through")
 
     #serialize
     def serialize(self):
@@ -368,7 +369,9 @@ class Plan(StructuredNode):
     description = StringProperty(unique_index=True, required=True)
     abandoned = BooleanProperty(default=False)
     abandoned_notes = StringProperty()
+    completion_notes = StringProperty()
     plan_status = StringProperty()
+    progress_updates = RelationshipTo("Note", "progress_documented_by")
 
     completed_year = RelationshipTo("AcademicYear", "completed_in_year")
     supporting_documents = RelationshipTo("Document", "is_documented_by")
@@ -385,6 +388,7 @@ class Plan(StructuredNode):
             'is_campus_plan': self.is_campus_plan,
             'abandoned': self.abandoned,
             'abandoned_notes': self.abandoned_notes,
+            'completion_notes': self.completion_notes,
             'plan_status': self.plan_status,
             "unique_id": self.unique_id
         }
@@ -744,6 +748,12 @@ class YearSuccessEvidence(StructuredNode):
     administrative_review_complete = BooleanProperty(default=False)
     administrative_review_completed_date = DateProperty()
     administrative_review_completed_by = RelationshipTo("Person", "admin_review_completed_by")
+    assigned_reviewers = RelationshipTo("Person", "can_be_reviewed_by")
+    admin_review_description = StringProperty()
+    admin_reviewer_note = RelationshipTo("Note", "admin_review_note")
+    ready_for_admin_review = BooleanProperty(default=False)
+
+
     notes = RelationshipTo("Note", "has_note")
     messages = RelationshipTo("Message", "has_message")
     metrics = RelationshipTo("Metric", "has_metric")

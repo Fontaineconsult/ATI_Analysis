@@ -1,4 +1,4 @@
-import React, { useContext } from 'react';
+import React, { useContext, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { DataContext } from "../../../context/DataContext";
 import {
@@ -21,7 +21,14 @@ import {
     HStack,
     Icon,
     Tooltip,
-    Flex
+    Flex,
+    Modal,
+    ModalOverlay,
+    ModalContent,
+    ModalHeader,
+    ModalBody,
+    ModalCloseButton,
+    useDisclosure
 } from "@chakra-ui/react";
 import {
     TrendingUp,
@@ -33,10 +40,30 @@ import {getStatusColor} from "../../../services/utils/tools";
 import AtiStats from "./atistats";
 import StatusLevels from "./StatusLevelDefs";
 import Members from "./members";
+import ApprovalMasterContainer from "../../ati_explorer_containers/ApprovalMasterContainer";
+
 
 const ReportMasterList = () => {
     const { data, loading, error } = useContext(DataContext);
     const navigate = useNavigate();
+    const { isOpen, onOpen, onClose } = useDisclosure();
+
+    // State for modal context
+    const [approvalContext, setApprovalContext] = useState({
+        workingGroup: null,
+        goalNumber: null,
+        indicatorNumber: null
+    });
+
+    // Function to open approval modal with context
+    const openApprovalModal = (workingGroup, goalNumber, indicatorNumber) => {
+        setApprovalContext({
+            workingGroup,
+            goalNumber,
+            indicatorNumber
+        });
+        onOpen();
+    };
 
     // Helper function to get trend data for a specific indicator
     const getTrendForIndicator = (compositeKey) => {
@@ -193,6 +220,22 @@ const ReportMasterList = () => {
                                     const indicatorNumber = compositeKey?.split('-')[0]?.split('.')[1];
                                     const statusLevel = indicator.evidences?.[0]?.statusLevel?.properties?.status_level;
 
+                                    // Check for admin reviewers and evidence summary
+                                    const adminReviewers = indicator.evidences?.[0]?.adminReviewers || [];
+                                    const hasReviewers = adminReviewers.length > 0;
+
+                                    // Check if evidence summary exists and has valid content
+                                    const evidenceSummary = indicator.evidences?.[0]?.evidence?.properties?.admin_review_description;
+                                    const hasSummary = evidenceSummary &&
+                                                      evidenceSummary !== "No Review" &&
+                                                      evidenceSummary !== "None" &&
+                                                      evidenceSummary.trim() !== "";
+
+                                    // Button logic: gray if approved, yellow if no summary, green if has summary
+                                    const approveButtonText = hasReviewers ? 'Approved' : 'Approve';
+                                    const approveButtonColor = hasReviewers ? 'gray' : (hasSummary ? 'green' : 'yellow');
+                                    const isButtonDisabled = hasReviewers;
+
                                     return (
                                         <Tr key={indicator.indicator?.id} _hover={{ bg: "gray.50" }}>
                                             <Td fontWeight="medium" color="gray.700" fontSize="xs">{indicatorNumber}</Td>
@@ -256,6 +299,32 @@ const ReportMasterList = () => {
                                                     >
                                                         Edit
                                                     </Button>
+                                                    <Tooltip
+                                                        label={!hasReviewers && !hasSummary ? "Summary Needed" : ""}
+                                                        placement="top"
+                                                        hasArrow
+                                                    >
+                                                        <Button
+                                                            size="xs"
+                                                            colorScheme={approveButtonColor}
+                                                            variant="solid"
+                                                            isDisabled={isButtonDisabled}
+                                                            onClick={() => {
+                                                                if (!isButtonDisabled) {
+                                                                    const workingGroupKey = workingGroupName === "Web" ? "web" :
+                                                                        workingGroupName === "Procurement" ? "procurement" :
+                                                                            "instructional-materials";
+                                                                    const goalNum = goal.goal?.properties?.goal_number;
+                                                                    const indicatorNum = indicatorNumber;
+
+                                                                    openApprovalModal(workingGroupKey, goalNum, indicatorNum);
+                                                                }
+                                                            }}
+                                                            _hover={!isButtonDisabled ? { bg: `${approveButtonColor}.600` } : {}}
+                                                        >
+                                                            {approveButtonText}
+                                                        </Button>
+                                                    </Tooltip>
                                                 </HStack>
                                             </Td>
                                         </Tr>
@@ -390,6 +459,30 @@ const ReportMasterList = () => {
                     </VStack>
                 </Box>
             </Flex>
+
+            {/* Approval Modal */}
+            <Modal isOpen={isOpen} onClose={onClose} size="xl" isCentered scrollBehavior="inside">
+                <ModalOverlay />
+                <ModalContent
+                    maxW="900px"
+                    w="calc(100% - 32px)"
+                    maxH="calc(100vh - 80px)"
+                    overflow="hidden"
+                    borderRadius="md"
+                >
+                    <ModalHeader>
+                        Approve Success Indicator
+                    </ModalHeader>
+                    <ModalCloseButton />
+                    <ModalBody pb={6} overflowY="auto" maxH="calc(100vh - 200px)">
+                        <ApprovalMasterContainer
+                            workingGroup={approvalContext.workingGroup}
+                            goalNumber={approvalContext.goalNumber}
+                            indicatorNumber={approvalContext.indicatorNumber}
+                        />
+                    </ModalBody>
+                </ModalContent>
+            </Modal>
         </Box>
     );
 };

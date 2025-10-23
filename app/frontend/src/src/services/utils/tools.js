@@ -45,7 +45,8 @@ function workingGroupWebSafe(workingGroupName) {
 
 // Helper function to get status color
 const getStatusColor = (statusLevel) => {
-    const level = statusLevel?.toLowerCase();
+    console.log("AAA", statusLevel, typeof statusLevel);
+    const level = String(statusLevel || '').toLowerCase();
     switch(level) {
         case 'not started':
             return '#E53E3E'; // red.500
