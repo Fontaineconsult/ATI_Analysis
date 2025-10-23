@@ -28,13 +28,16 @@ import {
     ModalHeader,
     ModalBody,
     ModalCloseButton,
-    useDisclosure
+    useDisclosure,
+    useToast,
+    IconButton
 } from "@chakra-ui/react";
 import {
     TrendingUp,
     TrendingDown,
     Minus,
-    HelpCircle
+    HelpCircle,
+    Copy
 } from "lucide-react";
 import {getStatusColor} from "../../../services/utils/tools";
 import AtiStats from "./atistats";
@@ -48,6 +51,7 @@ const ReportMasterList = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const { isOpen, onOpen, onClose } = useDisclosure();
+    const toast = useToast();
 
     // Ref to store table row elements
     const rowRefs = useRef({});
@@ -192,6 +196,113 @@ const ReportMasterList = () => {
         return `/ati-explorer/${workingGroupSegment}/goal/${goalNumber}#${compositeKey}`;
     };
 
+    // Function to generate HTML for copying goal group to clipboard
+    const generateGoalHTML = (goal, workingGroupName) => {
+        const baseUrl = window.location.origin;
+        const goalNumber = goal.goal?.properties?.goal_number;
+        const goalName = goal.goal?.properties?.name;
+
+        if (!goal.indicators || goal.indicators.length === 0) {
+            return `<p>No indicators available for Goal ${goalNumber}: ${goalName}</p>`;
+        }
+
+        const sortedIndicators = [...goal.indicators].sort((a, b) => {
+            const aNum = parseInt(a.indicator?.properties?.composite_key?.split('-')[0]?.split('.')[1] || 0);
+            const bNum = parseInt(b.indicator?.properties?.composite_key?.split('-')[0]?.split('.')[1] || 0);
+            return aNum - bNum;
+        });
+
+        // Start HTML
+        let html = `<div style="font-family: Arial, sans-serif;">`;
+        html += `<h3 style="color: #2C7A7B; margin-bottom: 10px;">Goal ${goalNumber}: ${goalName}</h3>`;
+        html += `<table style="border-collapse: collapse; width: 100%; margin-bottom: 20px; font-size: 12px;">`;
+        html += `<thead>`;
+        html += `<tr style="background-color: #F7FAFC; border-bottom: 2px solid #E2E8F0;">`;
+        html += `<th style="padding: 8px; text-align: left; font-weight: 600; color: #4A5568;">ID</th>`;
+        html += `<th style="padding: 8px; text-align: left; font-weight: 600; color: #4A5568;">Description</th>`;
+        html += `<th style="padding: 8px; text-align: left; font-weight: 600; color: #4A5568;">View</th>`;
+        html += `<th style="padding: 8px; text-align: left; font-weight: 600; color: #4A5568;">Direct Link</th>`;
+        html += `</tr>`;
+        html += `</thead>`;
+        html += `<tbody>`;
+
+        sortedIndicators.forEach((indicator) => {
+            const compositeKey = indicator.indicator?.properties?.composite_key;
+            const indicatorNumber = compositeKey?.split('-')[0]?.split('.')[1];
+            const description = indicator.indicator?.properties?.success_indicator || '';
+
+            // Generate View URL
+            const [numbers, suffix] = compositeKey.split('-');
+            const [gNum, iNum] = numbers.split('.');
+            const workingGroupMap = {
+                'web': 'web',
+                'pro': 'procurement',
+                'ins': 'instructional-materials'
+            };
+            const workingGroupSegment = workingGroupMap[suffix] || suffix;
+            const viewUrl = `${baseUrl}/ati/dashboard/reports/${workingGroupSegment}/${gNum}/${iNum}`;
+
+            // Generate Direct Link (with hash)
+            const directLinkUrl = `${baseUrl}/ati/dashboard/reports#${compositeKey}`;
+
+            html += `<tr style="border-bottom: 1px solid #E2E8F0;">`;
+            html += `<td style="padding: 8px; color: #2D3748;">${goalNumber}.${indicatorNumber}</td>`;
+            html += `<td style="padding: 8px; color: #2D3748;">${description}</td>`;
+            html += `<td style="padding: 8px;"><a href="${viewUrl}" style="color: #319795; text-decoration: none;">View Report</a></td>`;
+            html += `<td style="padding: 8px;"><a href="${directLinkUrl}" style="color: #319795; text-decoration: none;">Direct Link</a></td>`;
+            html += `</tr>`;
+        });
+
+        html += `</tbody>`;
+        html += `</table>`;
+        html += `</div>`;
+
+        return html;
+    };
+
+    // Function to copy goal group to clipboard
+    const copyGoalToClipboard = async (goal, workingGroupName) => {
+        try {
+            const html = generateGoalHTML(goal, workingGroupName);
+            const plainText = `Goal ${goal.goal?.properties?.goal_number}: ${goal.goal?.properties?.name}\n\n` +
+                goal.indicators.map((indicator) => {
+                    const compositeKey = indicator.indicator?.properties?.composite_key;
+                    const indicatorNumber = compositeKey?.split('-')[0]?.split('.')[1];
+                    const description = indicator.indicator?.properties?.success_indicator || '';
+                    return `${goal.goal?.properties?.goal_number}.${indicatorNumber} - ${description}`;
+                }).join('\n');
+
+            // Create ClipboardItem with both HTML and plain text
+            const blob = new Blob([html], { type: 'text/html' });
+            const textBlob = new Blob([plainText], { type: 'text/plain' });
+            const clipboardItem = new ClipboardItem({
+                'text/html': blob,
+                'text/plain': textBlob
+            });
+
+            await navigator.clipboard.write([clipboardItem]);
+
+            toast({
+                title: 'Copied to clipboard',
+                description: `Goal ${goal.goal?.properties?.goal_number} copied as HTML`,
+                status: 'success',
+                duration: 3000,
+                isClosable: true,
+                position: 'top'
+            });
+        } catch (error) {
+            console.error('Failed to copy:', error);
+            toast({
+                title: 'Copy failed',
+                description: 'Unable to copy to clipboard',
+                status: 'error',
+                duration: 3000,
+                isClosable: true,
+                position: 'top'
+            });
+        }
+    };
+
     // Function to render a table for a single goal
     const renderGoalTable = (goal, workingGroupName) => {
         if (!goal.indicators || goal.indicators.length === 0) {
@@ -225,14 +336,26 @@ const ReportMasterList = () => {
                 transition="box-shadow 0.2s"
             >
                 <VStack align="stretch" spacing={3}>
-                    <Box>
-                        <Heading size="sm" color="gray.700" mb={2}>
-                            Goal {goal.goal?.properties?.goal_number}: {goal.goal?.properties?.name}
-                        </Heading>
-                        <Text fontSize="xs" color="gray.600">
-                            {goal.goal?.properties?.goal}
-                        </Text>
-                    </Box>
+                    <HStack justify="space-between" align="start">
+                        <Box flex="1">
+                            <Heading size="sm" color="gray.700" mb={2}>
+                                Goal {goal.goal?.properties?.goal_number}: {goal.goal?.properties?.name}
+                            </Heading>
+                            <Text fontSize="xs" color="gray.600">
+                                {goal.goal?.properties?.goal}
+                            </Text>
+                        </Box>
+                        <Tooltip label="Copy goal group as HTML" placement="top">
+                            <IconButton
+                                icon={<Icon as={Copy} />}
+                                size="sm"
+                                colorScheme="teal"
+                                variant="ghost"
+                                aria-label="Copy goal to clipboard"
+                                onClick={() => copyGoalToClipboard(goal, workingGroupName)}
+                            />
+                        </Tooltip>
+                    </HStack>
 
                     <Box overflowX="auto">
                         <Table variant="simple" size="sm">

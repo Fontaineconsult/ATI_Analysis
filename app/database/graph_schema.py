@@ -1263,7 +1263,10 @@ def set_connection():
 
 if __name__=="__main__":
 
-    update_remote()
+    dotenv_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), '.env.development')
+    load_dotenv(dotenv_path)
+    set_connection()
+    install_all_labels()
 
 
 
