@@ -100,9 +100,29 @@ def fetch_evidence_for_working_group(working_group, academic_year):
     // Match plans connected to the evidence
     OPTIONAL MATCH (evidence)<-[:furthers_yse]-(evidencePlan:Plan)
 
-    // Collect the plans per evidence
+    // Match progress notes for each plan
+    OPTIONAL MATCH (evidencePlan)-[:progress_documented_by]->(planProgressNote:Note)
+    OPTIONAL MATCH (planProgressNote)-[:created_by]->(planNoteCreator:Person)
+
+    // Collect the plans with their progress notes per evidence
     WITH wg, goal, indicator, evidence, evidenceNotes, evidenceMessages, evidenceMetrics, statusLevel, adminReviewers, adminReviewNotes, persons,
-         collect(DISTINCT evidencePlan) AS plans
+         evidencePlan,
+         collect(DISTINCT {
+           note: planProgressNote,
+           created_by: planNoteCreator
+         }) AS progressNotes
+
+    // Filter out null progress notes and aggregate plans
+    WITH wg, goal, indicator, evidence, evidenceNotes, evidenceMessages, evidenceMetrics, statusLevel, adminReviewers, adminReviewNotes, persons,
+         collect(DISTINCT {
+           plan: evidencePlan,
+           progress_notes: [pn IN progressNotes WHERE pn.note IS NOT NULL]
+         }) AS plansWithNotes
+
+    // Extract just the plans for backward compatibility
+    WITH wg, goal, indicator, evidence, evidenceNotes, evidenceMessages, evidenceMetrics, statusLevel, adminReviewers, adminReviewNotes, persons,
+         [p IN plansWithNotes WHERE p.plan IS NOT NULL | p.plan] AS plans,
+         plansWithNotes
     
     // Match evidence types and their documentation with relationship properties
     OPTIONAL MATCH (evidence)<-[:is_evidence_for]-(evidenceType)
@@ -126,7 +146,7 @@ def fetch_evidence_for_working_group(working_group, academic_year):
     OPTIONAL MATCH (evidenceType)-[:has_metric]->(etMetric:Metric)
     
     // Aggregate documentation with relationship data
-    WITH wg, goal, indicator, evidence, evidenceNotes, evidenceMessages, evidenceMetrics, statusLevel, adminReviewers, adminReviewNotes, persons, plans, evidenceType,
+    WITH wg, goal, indicator, evidence, evidenceNotes, evidenceMessages, evidenceMetrics, statusLevel, adminReviewers, adminReviewNotes, persons, plans, plansWithNotes, evidenceType,
          collect(DISTINCT {
            document: doc,
            maintained_by: docMaintainer,
@@ -172,7 +192,7 @@ def fetch_evidence_for_working_group(working_group, academic_year):
          collect(DISTINCT etMetric) AS metrics
     
     // Filter out null documents and webpages while preserving structure
-    WITH wg, goal, indicator, evidence, evidenceNotes, evidenceMessages, evidenceMetrics, statusLevel, adminReviewers, adminReviewNotes, persons, plans, evidenceType,
+    WITH wg, goal, indicator, evidence, evidenceNotes, evidenceMessages, evidenceMetrics, statusLevel, adminReviewers, adminReviewNotes, persons, plans, plansWithNotes, evidenceType,
          [d IN docs WHERE d.document IS NOT NULL] AS docs,
          [w IN webs WHERE w.webpage IS NOT NULL] AS webs,
          [n IN notes WHERE n.note IS NOT NULL] AS notes,
@@ -180,7 +200,7 @@ def fetch_evidence_for_working_group(working_group, academic_year):
          metrics
     
     // Apply year filtering based on relationship properties
-    WITH wg, goal, indicator, evidence, evidenceNotes, evidenceMessages, evidenceMetrics, statusLevel, adminReviewers, adminReviewNotes, persons, plans, evidenceType,
+    WITH wg, goal, indicator, evidence, evidenceNotes, evidenceMessages, evidenceMetrics, statusLevel, adminReviewers, adminReviewNotes, persons, plans, plansWithNotes, evidenceType,
          [d IN docs WHERE 
            (d.relationship.included_in_years IS NULL OR size(d.relationship.included_in_years) = 0 OR $academic_year IN d.relationship.included_in_years)
            AND (d.relationship.excluded_from_years IS NULL OR NOT $academic_year IN d.relationship.excluded_from_years)
@@ -200,7 +220,7 @@ def fetch_evidence_for_working_group(working_group, academic_year):
          metrics
     
     // Create a map for each evidence type with its documentation and metrics
-    WITH wg, goal, indicator, evidence, evidenceNotes, evidenceMessages, evidenceMetrics, statusLevel, adminReviewers, adminReviewNotes, persons, plans,
+    WITH wg, goal, indicator, evidence, evidenceNotes, evidenceMessages, evidenceMetrics, statusLevel, adminReviewers, adminReviewNotes, persons, plans, plansWithNotes,
          {
            type: labels(evidenceType)[0],
            evidenceType: evidenceType,
@@ -212,11 +232,11 @@ def fetch_evidence_for_working_group(working_group, academic_year):
          } AS evidenceTypeData
     
     // Collect all evidence types under each evidence
-    WITH wg, goal, indicator, evidence, evidenceNotes, evidenceMessages, evidenceMetrics, statusLevel, adminReviewers, adminReviewNotes, persons, plans,
+    WITH wg, goal, indicator, evidence, evidenceNotes, evidenceMessages, evidenceMetrics, statusLevel, adminReviewers, adminReviewNotes, persons, plans, plansWithNotes,
          collect(evidenceTypeData) AS evidenceTypes
 
     // Create a map for each evidence with its data, including plans
-    WITH wg, goal, indicator, statusLevel, adminReviewers, adminReviewNotes, persons, plans, evidenceTypes, evidence, evidenceNotes, evidenceMessages, evidenceMetrics,
+    WITH wg, goal, indicator, statusLevel, adminReviewers, adminReviewNotes, persons, plans, plansWithNotes, evidenceTypes, evidence, evidenceNotes, evidenceMessages, evidenceMetrics,
          {
            evidence: evidence,
            statusLevel: statusLevel,
@@ -227,7 +247,8 @@ def fetch_evidence_for_working_group(working_group, academic_year):
            has_notes: evidenceNotes,
            has_messages: evidenceMessages,
            has_metrics: evidenceMetrics,
-           plans: plans
+           plans: plans,
+           plans_with_notes: plansWithNotes
          } AS evidenceData
     
     // Collect all evidences under each indicator
@@ -252,19 +273,39 @@ def fetch_evidence_for_working_group(working_group, academic_year):
     OPTIONAL MATCH (goal)<-[:furthers_goal]-(plan:Plan)
                      -[:in_academic_year]->(planYear:AcademicYear)
       WHERE planYear.name = $academic_year
-    
+
+    // Match progress notes for goal-level plans
+    OPTIONAL MATCH (plan)-[:progress_documented_by]->(goalPlanProgressNote:Note)
+    OPTIONAL MATCH (goalPlanProgressNote)-[:created_by]->(goalPlanNoteCreator:Person)
+
+    // Collect progress notes per plan
+    WITH wg, goal, indicators, accomplishment, plan,
+         collect(DISTINCT {
+           note: goalPlanProgressNote,
+           created_by: goalPlanNoteCreator
+         }) AS goalPlanProgressNotes
+
+    // Create plan objects with progress notes
+    WITH wg, goal, indicators, accomplishment,
+         {
+           plan: plan,
+           progress_notes: [pn IN goalPlanProgressNotes WHERE pn.note IS NOT NULL]
+         } AS planWithNotes
+
     // Collect accomplishments and plans per goal
     WITH wg.name AS workingGroupName, goal, indicators,
          collect(DISTINCT accomplishment) AS accomplishments,
-         collect(DISTINCT plan) AS plans
+         collect(DISTINCT planWithNotes.plan) AS plans,
+         collect(DISTINCT CASE WHEN planWithNotes.plan IS NOT NULL THEN planWithNotes ELSE NULL END) AS plansWithProgressNotes
     
     // Create a map for each goal with its indicators, accomplishments, and plans
-    WITH workingGroupName, goal, indicators, accomplishments, plans,
+    WITH workingGroupName, goal, indicators, accomplishments, plans, plansWithProgressNotes,
          {
            goal: goal,
            indicators: indicators,
            accomplishments: accomplishments,
-           plans: plans
+           plans: plans,
+           plans_with_progress_notes: [p IN plansWithProgressNotes WHERE p IS NOT NULL]
          } AS goalData
     
     // Collect all goals under the working group

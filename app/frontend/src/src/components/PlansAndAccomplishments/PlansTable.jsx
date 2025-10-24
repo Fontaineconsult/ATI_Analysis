@@ -10,10 +10,13 @@ import {
     HStack,
     IconButton,
     Collapse,
-    Box
+    Box,
+    Grid,
+    GridItem
 } from '@chakra-ui/react';
 import { FaEdit } from 'react-icons/fa';
 import PlanEditForm from './PlanEditForm';
+import PlanProgressNotes from './PlanProgressNotes';
 
 function PlansTable({ plans, onUpdate }) {
     const [editingRows, setEditingRows] = useState(new Set());
@@ -137,19 +140,30 @@ function PlansTable({ plans, onUpdate }) {
                             >
                                 <Collapse in={editingRows.has(plan.unique_id)} animateOpacity>
                                     <Box
-                                        p={6}
+                                        p={3}
                                         bg="gray.50"
                                         borderBottomWidth="2px"
                                         borderBottomColor="gray.200"
                                     >
-                                        <PlanEditForm
-                                            plan={plan}
-                                            onClose={() => toggleEdit(plan.unique_id)}
-                                            onSuccess={() => {
-                                                toggleEdit(plan.unique_id);
-                                                onUpdate(plan.workingGroup);
-                                            }}
-                                        />
+                                        <Grid templateColumns="2fr 1fr" gap={3}>
+                                            <GridItem>
+                                                <PlanEditForm
+                                                    plan={plan}
+                                                    onClose={() => toggleEdit(plan.unique_id)}
+                                                    onSuccess={() => {
+                                                        toggleEdit(plan.unique_id);
+                                                        onUpdate(plan.workingGroup);
+                                                    }}
+                                                />
+                                            </GridItem>
+                                            <GridItem>
+                                                <PlanProgressNotes
+                                                    planUniqueId={plan.unique_id}
+                                                    planName={plan.name}
+                                                    progressNotesData={plan.progress_notes || []}
+                                                />
+                                            </GridItem>
+                                        </Grid>
                                     </Box>
                                 </Collapse>
                             </Td>

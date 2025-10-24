@@ -102,6 +102,61 @@ def assign_documentation_to_implementation(
     return True
 
 
+def add_progress_note_to_plan(
+        plan_id: str,
+        note_name: str,
+        note_content: str,
+        created_by_id: str = None
+) -> dict:
+    """
+    Adds a progress note to a plan.
+
+    Parameters:
+    - plan_id: unique_id of the plan
+    - note_name: name/title of the note
+    - note_content: content of the progress note
+    - created_by_id: unique_id of the Person creating the note (optional)
+
+    Returns:
+    - Dictionary containing the created note and relationships
+    """
+    # Get the Plan node
+    try:
+        plan_node = Plan.nodes.get(unique_id=plan_id)
+    except Plan.DoesNotExist:
+        raise NotFoundError(f"No Plan found with id: {plan_id}")
+
+    # Create the Note node
+    note = Note(
+        name=note_name,
+        content=note_content,
+        date_created=date.today(),
+        include_in_report=True,
+        depreciated=False
+    )
+    note.save()
+
+    # Connect the note to the plan using progress_updates relationship
+    plan_node.progress_updates.connect(note)
+
+    # If created_by_id is provided, connect to Person
+    created_by_person = None
+    if created_by_id:
+        try:
+            person = Person.nodes.get(unique_id=created_by_id)
+            note.created_by.connect(person)
+            created_by_person = person.serialize()
+        except Person.DoesNotExist:
+            # Log warning but don't fail - note is still created
+            print(f"Warning: Person with id {created_by_id} not found")
+
+    return {
+        "note": note.serialize(),
+        "plan": plan_node.serialize(),
+        "created_by": created_by_person
+    }
+
+
 def update_documentation_year_inclusion(
         implementation_id: str,
         implementation_type: str,

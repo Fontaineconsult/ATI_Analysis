@@ -169,11 +169,26 @@ function PlansAccomplishmentsManager() {
         ['web', 'instructionalMaterials', 'procurement'].forEach(wg => {
             if (data[wg]?.goals) {
                 data[wg].goals.forEach(goal => {
-                    // Goal-level plans
-                    if (goal.plans && Array.isArray(goal.plans)) {
+                    // Goal-level plans with progress notes
+                    if (goal.plans_with_progress_notes && Array.isArray(goal.plans_with_progress_notes)) {
+                        goal.plans_with_progress_notes.forEach(planData => {
+                            if (planData.plan) {
+                                plans.push({
+                                    ...planData.plan.properties,
+                                    progress_notes: planData.progress_notes || [],
+                                    workingGroup: workingGroupWebSafe(wg),
+                                    goalNumber: goal.goal?.properties?.goal_number,
+                                    level: 'goal'
+                                });
+                            }
+                        });
+                    }
+                    // Fallback for backward compatibility
+                    else if (goal.plans && Array.isArray(goal.plans)) {
                         goal.plans.forEach(plan => {
                             plans.push({
                                 ...plan.properties,
+                                progress_notes: [],
                                 workingGroup: workingGroupWebSafe(wg),
                                 goalNumber: goal.goal?.properties?.goal_number,
                                 level: 'goal'
@@ -189,10 +204,29 @@ function PlansAccomplishmentsManager() {
                             // Check within evidences for plans
                             if (indicator.evidences && Array.isArray(indicator.evidences)) {
                                 indicator.evidences.forEach(evidence => {
-                                    if (evidence.plans && Array.isArray(evidence.plans)) {
+                                    // Check for plans with notes first
+                                    if (evidence.plans_with_notes && Array.isArray(evidence.plans_with_notes)) {
+                                        evidence.plans_with_notes.forEach(planData => {
+                                            if (planData.plan) {
+                                                plans.push({
+                                                    ...planData.plan.properties,
+                                                    progress_notes: planData.progress_notes || [],
+                                                    workingGroup: workingGroupWebSafe(wg),
+                                                    goalNumber: goal.goal?.properties?.goal_number,
+                                                    yearIdentifier: evidence.evidence?.properties?.year_identifier,
+                                                    indicatorKey: indicatorInfo?.composite_key,
+                                                    indicatorDescription: indicatorInfo?.success_indicator,
+                                                    level: 'evidence'
+                                                });
+                                            }
+                                        });
+                                    }
+                                    // Fallback for backward compatibility
+                                    else if (evidence.plans && Array.isArray(evidence.plans)) {
                                         evidence.plans.forEach(plan => {
                                             plans.push({
                                                 ...plan.properties,
+                                                progress_notes: [],
                                                 workingGroup: workingGroupWebSafe(wg),
                                                 goalNumber: goal.goal?.properties?.goal_number,
                                                 yearIdentifier: evidence.evidence?.properties?.year_identifier,

@@ -143,10 +143,10 @@ function PlanEditForm({ plan, onClose, onSuccess }) {
     };
 
     return (
-        <Grid templateColumns="2fr 1fr" gap={4}>
+        <Grid templateColumns="2fr 1fr" gap={3}>
             {/* Left Column - Form */}
             <GridItem>
-                <VStack spacing={4} align="stretch">
+                <VStack spacing={2} align="stretch">
                     <FormControl>
                         <FormLabel fontSize="sm" color="gray.800" fontWeight="bold" mb={1}>
                             Name
@@ -244,9 +244,9 @@ function PlanEditForm({ plan, onClose, onSuccess }) {
                         </FormControl>
                     )}
 
-                    <HStack spacing={6}>
+                    <HStack spacing={3}>
                         <FormControl display="flex" alignItems="center">
-                            <FormLabel fontSize="sm" color="gray.800" fontWeight="bold" mb="0" mr={3}>
+                            <FormLabel fontSize="sm" color="gray.800" fontWeight="bold" mb="0" mr={2}>
                                 Key Plan
                             </FormLabel>
                             <Switch
@@ -257,7 +257,7 @@ function PlanEditForm({ plan, onClose, onSuccess }) {
                             />
                         </FormControl>
                         <FormControl display="flex" alignItems="center">
-                            <FormLabel fontSize="sm" color="gray.800" fontWeight="bold" mb="0" mr={3}>
+                            <FormLabel fontSize="sm" color="gray.800" fontWeight="bold" mb="0" mr={2}>
                                 Campus Plan
                             </FormLabel>
                             <Switch
@@ -269,7 +269,7 @@ function PlanEditForm({ plan, onClose, onSuccess }) {
                         </FormControl>
                     </HStack>
 
-                    <HStack justify="flex-end" pt={2}>
+                    <HStack justify="flex-end" pt={1}>
                         <Button
                             size="sm"
                             variant="outline"
@@ -302,21 +302,21 @@ function PlanEditForm({ plan, onClose, onSuccess }) {
                     borderWidth="1px"
                     borderColor="gray.300"
                     borderRadius="lg"
-                    p={4}
+                    p={3}
                     bg="white"
-                    height="400px"
+                    maxHeight="50vh"
                     overflowY="auto"
                     boxShadow="sm"
                 >
                     <Heading
                         size="sm"
-                        mb={4}
+                        mb={2}
                         color="gray.800"
                         fontWeight="bold"
                         position="sticky"
-                        top={-4}
+                        top={-3}
                         bg="white"
-                        pb={2}
+                        pb={1}
                         borderBottomWidth="1px"
                         borderBottomColor="gray.200"
                     >
@@ -324,11 +324,11 @@ function PlanEditForm({ plan, onClose, onSuccess }) {
                     </Heading>
 
                     {relatedEvidences.length > 0 ? (
-                        <VStack spacing={3} align="stretch">
+                        <VStack spacing={2} align="stretch">
                             {relatedEvidences.map((evidence, index) => (
                                 <Box
                                     key={evidence.uniqueId}
-                                    p={3}
+                                    p={2}
                                     borderRadius="lg"
                                     borderWidth="1px"
                                     borderColor={index === 0 ? "teal.400" : "gray.300"}
@@ -337,7 +337,7 @@ function PlanEditForm({ plan, onClose, onSuccess }) {
                                     transition="all 0.2s"
                                     _hover={{ boxShadow: "sm", borderColor: index === 0 ? "teal.500" : "gray.400" }}
                                 >
-                                    <HStack justify="space-between" mb={2}>
+                                    <HStack justify="space-between" mb={1}>
                                         <Text fontWeight="bold" color={index === 0 ? "teal.800" : "gray.800"} fontSize="sm">
                                             {evidence.yearIdentifier}
                                         </Text>
@@ -374,7 +374,7 @@ function PlanEditForm({ plan, onClose, onSuccess }) {
                             ))}
                         </VStack>
                     ) : (
-                        <Text fontSize="sm" color="gray.700" textAlign="center" mt={8}>
+                        <Text fontSize="sm" color="gray.700" textAlign="center" mt={4}>
                             This plan is not associated with any Year Success Evidence
                         </Text>
                     )}

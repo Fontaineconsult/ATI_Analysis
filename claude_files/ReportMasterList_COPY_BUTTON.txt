@@ -1,0 +1,233 @@
+=================================================================
+ADD COPY TO CLIPBOARD BUTTON TO GOAL GROUPS
+=================================================================
+
+## STEP 1: Update Imports (Lines 1-43)
+
+ADD to the Chakra UI imports (around line 31):
+----------------------------------
+import {
+    Box,
+    Table,
+    Thead,
+    Tbody,
+    Tr,
+    Th,
+    Td,
+    Button,
+    Heading,
+    VStack,
+    Badge,
+    Spinner,
+    Alert,
+    AlertIcon,
+    Text,
+    Divider,
+    HStack,
+    Icon,
+    Tooltip,
+    Flex,
+    Modal,
+    ModalOverlay,
+    ModalContent,
+    ModalHeader,
+    ModalBody,
+    ModalCloseButton,
+    useDisclosure,
+    useToast,        // ADD THIS
+    IconButton       // ADD THIS
+} from "@chakra-ui/react";
+
+ADD to lucide-react imports (around line 38):
+----------------------------------
+import {
+    TrendingUp,
+    TrendingDown,
+    Minus,
+    HelpCircle,
+    Copy           // ADD THIS
+} from "lucide-react";
+
+
+## STEP 2: Add useToast Hook (After line 50)
+
+AFTER this line:
+    const { isOpen, onOpen, onClose } = useDisclosure();
+
+ADD:
+    const toast = useToast();
+
+
+## STEP 3: Add Copy Function (Before renderGoalTable, around line 195)
+
+ADD THIS ENTIRE FUNCTION before renderGoalTable:
+
+    // Function to generate HTML for copying goal group to clipboard
+    const generateGoalHTML = (goal, workingGroupName) => {
+        const baseUrl = window.location.origin;
+        const goalNumber = goal.goal?.properties?.goal_number;
+        const goalName = goal.goal?.properties?.name;
+
+        if (!goal.indicators || goal.indicators.length === 0) {
+            return `<p>No indicators available for Goal ${goalNumber}: ${goalName}</p>`;
+        }
+
+        const sortedIndicators = [...goal.indicators].sort((a, b) => {
+            const aNum = parseInt(a.indicator?.properties?.composite_key?.split('-')[0]?.split('.')[1] || 0);
+            const bNum = parseInt(b.indicator?.properties?.composite_key?.split('-')[0]?.split('.')[1] || 0);
+            return aNum - bNum;
+        });
+
+        // Start HTML
+        let html = `<div style="font-family: Arial, sans-serif;">`;
+        html += `<h3 style="color: #2C7A7B; margin-bottom: 10px;">Goal ${goalNumber}: ${goalName}</h3>`;
+        html += `<table style="border-collapse: collapse; width: 100%; margin-bottom: 20px; font-size: 12px;">`;
+        html += `<thead>`;
+        html += `<tr style="background-color: #F7FAFC; border-bottom: 2px solid #E2E8F0;">`;
+        html += `<th style="padding: 8px; text-align: left; font-weight: 600; color: #4A5568;">ID</th>`;
+        html += `<th style="padding: 8px; text-align: left; font-weight: 600; color: #4A5568;">Description</th>`;
+        html += `<th style="padding: 8px; text-align: left; font-weight: 600; color: #4A5568;">View</th>`;
+        html += `<th style="padding: 8px; text-align: left; font-weight: 600; color: #4A5568;">Direct Link</th>`;
+        html += `</tr>`;
+        html += `</thead>`;
+        html += `<tbody>`;
+
+        sortedIndicators.forEach((indicator) => {
+            const compositeKey = indicator.indicator?.properties?.composite_key;
+            const indicatorNumber = compositeKey?.split('-')[0]?.split('.')[1];
+            const description = indicator.indicator?.properties?.success_indicator || '';
+
+            // Generate View URL
+            const [numbers, suffix] = compositeKey.split('-');
+            const [gNum, iNum] = numbers.split('.');
+            const workingGroupMap = {
+                'web': 'web',
+                'pro': 'procurement',
+                'ins': 'instructional-materials'
+            };
+            const workingGroupSegment = workingGroupMap[suffix] || suffix;
+            const viewUrl = `${baseUrl}/dashboard/reports/${workingGroupSegment}/${gNum}/${iNum}`;
+
+            // Generate Direct Link (with hash)
+            const directLinkUrl = `${baseUrl}/dashboard/reports#${compositeKey}`;
+
+            html += `<tr style="border-bottom: 1px solid #E2E8F0;">`;
+            html += `<td style="padding: 8px; color: #2D3748;">${goalNumber}.${indicatorNumber}</td>`;
+            html += `<td style="padding: 8px; color: #2D3748;">${description}</td>`;
+            html += `<td style="padding: 8px;"><a href="${viewUrl}" style="color: #319795; text-decoration: none;">View Report</a></td>`;
+            html += `<td style="padding: 8px;"><a href="${directLinkUrl}" style="color: #319795; text-decoration: none;">Direct Link</a></td>`;
+            html += `</tr>`;
+        });
+
+        html += `</tbody>`;
+        html += `</table>`;
+        html += `</div>`;
+
+        return html;
+    };
+
+    // Function to copy goal group to clipboard
+    const copyGoalToClipboard = async (goal, workingGroupName) => {
+        try {
+            const html = generateGoalHTML(goal, workingGroupName);
+            const plainText = `Goal ${goal.goal?.properties?.goal_number}: ${goal.goal?.properties?.name}\n\n` +
+                goal.indicators.map((indicator) => {
+                    const compositeKey = indicator.indicator?.properties?.composite_key;
+                    const indicatorNumber = compositeKey?.split('-')[0]?.split('.')[1];
+                    const description = indicator.indicator?.properties?.success_indicator || '';
+                    return `${goal.goal?.properties?.goal_number}.${indicatorNumber} - ${description}`;
+                }).join('\n');
+
+            // Create ClipboardItem with both HTML and plain text
+            const blob = new Blob([html], { type: 'text/html' });
+            const textBlob = new Blob([plainText], { type: 'text/plain' });
+            const clipboardItem = new ClipboardItem({
+                'text/html': blob,
+                'text/plain': textBlob
+            });
+
+            await navigator.clipboard.write([clipboardItem]);
+
+            toast({
+                title: 'Copied to clipboard',
+                description: `Goal ${goal.goal?.properties?.goal_number} copied as HTML`,
+                status: 'success',
+                duration: 3000,
+                isClosable: true,
+                position: 'top'
+            });
+        } catch (error) {
+            console.error('Failed to copy:', error);
+            toast({
+                title: 'Copy failed',
+                description: 'Unable to copy to clipboard',
+                status: 'error',
+                duration: 3000,
+                isClosable: true,
+                position: 'top'
+            });
+        }
+    };
+
+
+## STEP 4: Add Copy Button to Goal Header (Around line 228-235)
+
+FIND this section in renderGoalTable:
+----------------------------------
+                <VStack align="stretch" spacing={3}>
+                    <Box>
+                        <Heading size="sm" color="gray.700" mb={2}>
+                            Goal {goal.goal?.properties?.goal_number}: {goal.goal?.properties?.name}
+                        </Heading>
+                        <Text fontSize="xs" color="gray.600">
+                            {goal.goal?.properties?.goal}
+                        </Text>
+                    </Box>
+
+REPLACE WITH:
+----------------------------------
+                <VStack align="stretch" spacing={3}>
+                    <HStack justify="space-between" align="start">
+                        <Box flex="1">
+                            <Heading size="sm" color="gray.700" mb={2}>
+                                Goal {goal.goal?.properties?.goal_number}: {goal.goal?.properties?.name}
+                            </Heading>
+                            <Text fontSize="xs" color="gray.600">
+                                {goal.goal?.properties?.goal}
+                            </Text>
+                        </Box>
+                        <Tooltip label="Copy goal group as HTML" placement="top">
+                            <IconButton
+                                icon={<Icon as={Copy} />}
+                                size="sm"
+                                colorScheme="teal"
+                                variant="ghost"
+                                aria-label="Copy goal to clipboard"
+                                onClick={() => copyGoalToClipboard(goal, workingGroupName)}
+                            />
+                        </Tooltip>
+                    </HStack>
+
+
+=================================================================
+WHAT THIS DOES:
+=================================================================
+
+1. Adds a copy button (📋) to each goal group header
+2. When clicked, copies the goal group as HTML to clipboard
+3. HTML includes:
+   - Goal number and name
+   - Table with indicator ID, description, and links
+   - View Report link (to detailed view)
+   - Direct Link (to reports page with hash anchor)
+4. Can be pasted into MS Outlook, Word, or any app that accepts HTML
+5. Shows success/error toast notification
+
+=================================================================
+TESTING:
+=================================================================
+
+1. Click the copy button on any goal group
+2. Paste into MS Outlook email (Ctrl+V)
+3. Should see formatted table with clickable links
+4. Test "View Report" and "Direct Link" URLs work correctly

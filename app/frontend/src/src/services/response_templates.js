@@ -8,6 +8,16 @@ export function createNotePayload(yearSuccessEvidence, noteContent, created_by) 
     };
 }
 
+export function addProgressNoteToPlanPayload(planId, noteName, noteContent, createdById) {
+    return {
+        action: "add_progress_note",
+        plan_id: planId,
+        note_name: noteName,
+        note_content: noteContent,
+        created_by_id: createdById
+    };
+}
+
 
 
 export function createMessagePayload(yearSuccessEvidence, messageContent, created_by) {

@@ -5,7 +5,7 @@ from app.database.queries.implementation.create import add_plan
 from . import data_api_endpoints
 from ...database.queries.implementation.delete import unassign_person_as_implementor
 from ...database.queries.implementation.update import update_plan, assign_person_as_implementor, \
-    assign_documentation_to_implementation
+    assign_documentation_to_implementation, add_progress_note_to_plan
 from app.endpoints.data_api.util.response import make_response
 from app.endpoints.data_api.errors.custom_exceptions import ApiError, ValidationError, CrudError, NotFoundError
 
@@ -725,6 +725,8 @@ class ImplementationPlanAPI(MethodView):
             # Handle different actions
             if action == "update_plan":
                 return self.handle_update_plan(data)
+            elif action == "add_progress_note":
+                return self.handle_add_progress_note(data)
             else:
                 return make_response({"status": "error", "error": f"Unknown action '{action}' in request."}), 400
 
@@ -749,6 +751,39 @@ class ImplementationPlanAPI(MethodView):
         update_plan(data)
 
         return make_response({"status": "success", "message": "Plan updated successfully"}), 200
+
+    def handle_add_progress_note(self, data):
+        """
+        Handle the add_progress_note action.
+
+        Expected payload:
+        {
+            "action": "add_progress_note",
+            "plan_id": "UUID of the plan",
+            "note_name": "Note title",
+            "note_content": "Note content",
+            "created_by_id": "UUID of the person" (optional)
+        }
+        """
+        # Validate required fields
+        required_fields = ['plan_id', 'note_name', 'note_content']
+        for field in required_fields:
+            if field not in data:
+                raise ValidationError(f"Missing required field: '{field}'")
+
+        # Call the add_progress_note_to_plan function
+        result = add_progress_note_to_plan(
+            plan_id=data['plan_id'],
+            note_name=data['note_name'],
+            note_content=data['note_content'],
+            created_by_id=data.get('created_by_id')
+        )
+
+        return make_response({
+            "status": "success",
+            "message": "Progress note added successfully",
+            "data": result
+        }), 200
 
     def delete(self):
         """

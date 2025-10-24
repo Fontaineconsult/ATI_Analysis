@@ -15,7 +15,8 @@ import {
     updateMetricPayload,
     updateMessageForImplementationPayload,
     updateAccomplishmentPayload,
-    updateNoteForImplementationPayload
+    updateNoteForImplementationPayload,
+    addProgressNoteToPlanPayload
 } from "../response_templates";
 
 export const updateStatusLevel = async (yse, statusLevel) => {
@@ -236,6 +237,19 @@ export const assignImplementationToYSE = async (yearIdentifier, implementationTy
         return response.data;
     } catch (error) {
         console.error('Error assigning implementation to YSE:', error);
+        throw error;
+    }
+}
+
+export const addProgressNoteToPlan = async (planId, noteName, noteContent, createdById = null) => {
+    try {
+        const response = await axios.put(
+            `${process.env.REACT_APP_API_URL}/implementations/plans`,
+            addProgressNoteToPlanPayload(planId, noteName, noteContent, createdById)
+        );
+        return response.data;
+    } catch (error) {
+        console.error('Error adding progress note to plan:', error);
         throw error;
     }
 }
