@@ -259,7 +259,18 @@ function ImplementationMasterContainer({ evidenceData = {}, compositeKey, yearId
                                 </Flex>
 
                                 {filteredEvidence.length > 0 ? (
-                                    <EvidenceTypeMasterList evidence={filteredEvidence} />
+                                    <EvidenceTypeMasterList
+                                        evidence={filteredEvidence}
+                                        yearIdentifier={yearIdentifier}
+                                        onRefresh={() => {
+                                            if (refreshImplementations) {
+                                                refreshImplementations();
+                                            }
+                                            if (loadSingleWorkingGroupData && currentWorkingGroup) {
+                                                loadSingleWorkingGroupData(currentWorkingGroup);
+                                            }
+                                        }}
+                                    />
                                 ) : (
                                     <Text color="gray.500" fontSize="sm" textAlign="center" py={2}>
                                         No implementations found

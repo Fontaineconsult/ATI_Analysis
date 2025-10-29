@@ -77,6 +77,8 @@ class EvidenceAPI(MethodView):
             return self.handle_assign_approver(data)
         elif action == "update_admin_reviewer_description":
             return self.handle_update_admin_reviewer_description(data)
+        elif action == "unassign_implementation":
+            return self.handle_unassign_implementation(data)
         else:
             return make_response(status="error", error=f"Unknown action '{action}' in request."), 400
 
@@ -174,6 +176,34 @@ class EvidenceAPI(MethodView):
         try:
             note_data = add_admin_reviewer_note(yse, note_content, created_by_employee_id)
             return make_response(status="success", data=note_data), 201
+        except NotFoundError as e:
+            return make_response(status="error", error=str(e)), 404
+        except CrudError as e:
+            return make_response(status="error", error=str(e)), 500
+
+    def handle_unassign_implementation(self, data):
+        """
+        Unassign an implementation from a YearSuccessEvidence node.
+        Example PUT request body:
+        {
+            "action": "unassign_implementation",
+            "year_success_identifier": "2023-2024-1.2-ins",
+            "implementation_type": "Process",
+            "implementation_title": "Some Process Title"
+        }
+        """
+        from app.database.queries.evidence.delete import unassign_implementation_from_yse
+
+        year_success_identifier = data.get('year_success_identifier')
+        implementation_type = data.get('implementation_type')
+        implementation_title = data.get('implementation_title')
+
+        if not all([year_success_identifier, implementation_type, implementation_title]):
+            return make_response(status="error", error="Missing required fields: 'year_success_identifier', 'implementation_type', or 'implementation_title'"), 400
+
+        try:
+            unassign_implementation_from_yse(year_success_identifier, implementation_type, implementation_title)
+            return make_response(status="success", message="Implementation unassigned successfully"), 200
         except NotFoundError as e:
             return make_response(status="error", error=str(e)), 404
         except CrudError as e:
