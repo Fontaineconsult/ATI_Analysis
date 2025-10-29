@@ -399,12 +399,11 @@ class InternalPolicy(StructuredNode):
 
     """    Class representing an internal policy node.
 
-    An Internal Policy in the context of the Accessible Technology Initiative (ATI) represents a set of rules,
-    procedures, and guidelines developed by an organization to ensure compliance with accessibility standards.
-    Internal policies are tailored to the specific needs and requirements of the institution, providing detailed
-    instructions on how to implement accessibility practices and procedures. These policies help align the
-    organization's activities with broader accessibility goals and ensure that all members of the institution
-    are aware of their roles and responsibilities in maintaining accessibility standards.
+    Internal Policy represents formal institutional rules and requirements that mandate accessibility standards
+    and practices across the organization. Policies establish the authoritative framework that defines what must
+    be done to maintain compliance with accessibility laws and institutional values. They create enforceable
+    obligations that govern behavior, decisions, and resource allocation related to accessibility.
+    Policies provide the mandate and authority that drives all other implementation activities.
 
     """
     unique_id = UniqueIdProperty()
@@ -436,11 +435,11 @@ class Process(StructuredNode):
 
     """    Class representing a process node.
 
-    Represents a series of actions or steps taken to achieve a specific goal or outcome related to accessibility.
-    Processes are essential for systematically implementing accessibility policies, plans, and guidelines.
-    These processes ensure continuous quality improvement, prioritize accessibility tasks, and document progress
-    through annual reports. Each process involves collaboration among various stakeholders, adherence
-    to timelines, and regular monitoring to address challenges and track achievements
+     Represents an ongoing, repeatable workflow that continuously ensures accessibility standards are met through
+     regular activities. Processes operate indefinitely without a defined endpoint, executing systematic steps that
+     maintain compliance over time. They transform inputs into consistent accessibility outcomes through established
+     patterns and checkpoints. Organizations rely on processes to operationalize their accessibility commitments
+    in daily operations.
 
      """
     unique_id = UniqueIdProperty()
@@ -453,6 +452,7 @@ class Process(StructuredNode):
     supporting_messages = RelationshipTo("Message", "is_documented_by", model=DocumentedByRel)
     supporting_metrics = RelationshipTo("Metric", "has_metric")
     is_evidence_for = RelationshipTo("YearSuccessEvidence", "is_evidence_for")
+    includes_procedures = RelationshipTo("Procedure", "includes_procedure")
 
     #serialize
     def serialize(self):
@@ -487,6 +487,7 @@ class Project(StructuredNode):
     supporting_messages = RelationshipTo("Message", "is_documented_by", model=DocumentedByRel)
     supporting_metrics = RelationshipTo("Metric", "has_metric")
     is_evidence_for = RelationshipTo("YearSuccessEvidence", "is_evidence_for")
+    includes_procedures = RelationshipTo("Procedure", "includes_procedure")
 
     #serialize
     def serialize(self):
@@ -501,11 +502,11 @@ class Procedure(StructuredNode):
 
     """    Class representing a procedure node.
 
-    Represents a detailed set of instructions or steps that must be followed to perform a specific task or achieve
-    a particular objective related to accessibility. Procedures ensure consistency and compliance with accessibility
-    standards by providing clear guidelines on how to implement policies and processes. These procedures help
-    standardize actions across the organization, ensuring that all activities align with the ATI goals and success
-    indicators. They are regularly reviewed and updated to reflect best practices and changes in technology
+   Procedure represents documented step-by-step instructions that must be followed consistently to ensure accessibility
+   requirements are met in specific scenarios. Procedures standardize how tasks are performed, eliminating variability
+   that could compromise accessibility outcomes. They serve as the operational blueprint that staff follow when
+   creating, modifying, or evaluating content and systems. Procedures transform policy requirements into actionable,
+   repeatable tasks that any qualified person can execute.
 
     """
     unique_id = UniqueIdProperty()
@@ -518,6 +519,7 @@ class Procedure(StructuredNode):
     supporting_messages = RelationshipTo("Message", "is_documented_by", model=DocumentedByRel)
     supporting_metrics = RelationshipTo("Metric", "has_metric")
     is_evidence_for = RelationshipTo("YearSuccessEvidence", "is_evidence_for")
+
 
     #serialize
     def serialize(self):
@@ -532,11 +534,11 @@ class Service(StructuredNode):
 
     """    Class representing a service node.
 
-    A Service in the context of the Accessible Technology Initiative (ATI) represents an ongoing support or
-    assistance provided to ensure accessibility for individuals with disabilities. Services are designed to
-    facilitate access to programs, activities, and resources within the institution. Services are integral to
-    implementing ATI policies and goals, ensuring that accessibility is embedded in the daily operations
-    and offerings of the institution.
+    Service represents an ongoing capability or function that provides accessibility support to users, systems,
+     or processes on demand. Services remain continuously available as organizational resources that others can
+     utilize when accessibility expertise or assistance is needed. They operate as utility functions that enable
+      accessibility across the institution without being tied to specific projects or timelines.
+       Services scale to meet demand while maintaining consistent quality and availability.
 
     """
     unique_id = UniqueIdProperty()
@@ -549,6 +551,7 @@ class Service(StructuredNode):
     supporting_messages = RelationshipTo("Message", "is_documented_by", model=DocumentedByRel)
     supporting_metrics = RelationshipTo("Metric", "has_metric")
     is_evidence_for = RelationshipTo("YearSuccessEvidence", "is_evidence_for")
+    includes_procedures = RelationshipTo("Procedure", "includes_procedure")
 
     #serialize
     def serialize(self):
@@ -564,12 +567,12 @@ class Guidance(StructuredNode):
 
     """    Class representing a Guidance node.
 
-    Represents straightforward, practical information designed to help users navigate accessibility resources,
-    understand procedures, or take necessary actions. This category includes tips, instructions, FAQs,
-    and other forms of guidance that provide clear and concise directions to ensure users can effectively
-    access and utilize accessibility-related services and resources. Guidance helps bridge the gap between
-    complex policies and everyday practice, making it easier for individuals to comply with accessibility
-    standards and best practices.
+   Guidance represents advisory documentation that provides recommendations, best practices, and educational
+   resources to help stakeholders understand and implement accessibility effectively. Guidance translates
+   complex technical requirements into practical advice that non-specialists can understand and apply.
+   It supplements mandatory requirements with helpful context, examples, and strategies that improve accessibility
+   outcomes. Guidance empowers individuals to make informed decisions about accessibility without prescribing
+   specific actions.
 
     """
     unique_id = UniqueIdProperty()
@@ -582,6 +585,12 @@ class Guidance(StructuredNode):
     supporting_messages = RelationshipTo("Message", "is_documented_by", model=DocumentedByRel)
     supporting_metrics = RelationshipTo("Metric", "has_metric")
     is_evidence_for = RelationshipTo("YearSuccessEvidence", "is_evidence_for")
+    references_procedure = RelationshipTo("Procedure", "references_procedure")
+    references_process = RelationshipTo("Process", "references_process")
+    references_service = RelationshipTo("Service", "references_service")
+    references_project = RelationshipTo("Project", "references_project")
+
+
 
     #serialize
     def serialize(self):
