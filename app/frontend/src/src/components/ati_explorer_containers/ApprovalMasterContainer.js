@@ -1,5 +1,5 @@
 import React, { useContext, useState } from 'react';
-import { Box, Button, Text, Spinner, useToast, Heading, Alert, AlertIcon, VStack, HStack, Divider } from '@chakra-ui/react';
+import { Box, Button, Text, Spinner, useToast, Heading, Alert, AlertIcon, VStack, HStack, Divider, Tooltip } from '@chakra-ui/react';
 import { UserContext } from '../../context/UserContext';
 import { assignApprover } from '../../services/api/put';
 import { GenerateReportComponent } from '../../services/report_constructor';
@@ -251,18 +251,30 @@ function ApprovalMasterContainer({
                 {loading ? (
                     <Spinner size="lg" color="teal.500" thickness="3px" />
                 ) : (
-                    <Button
-                        colorScheme={isApproved ? "green" : "teal"}
-                        size="md"
-                        onClick={handleApprove}
-                        isDisabled={isApproved}
-                        boxShadow="sm"
-                        _hover={!isApproved ? { boxShadow: "md" } : {}}
-                        transition="box-shadow 0.2s"
-                        leftIcon={isApproved ? <Text>✓</Text> : null}
+                    <Tooltip
+                        label={
+                            !currentUserId
+                                ? "Please select a user to approve this indicator"
+                                : isApproved
+                                    ? "This indicator has already been approved"
+                                    : "Click to approve this indicator"
+                        }
+                        placement="top"
+                        hasArrow
                     >
-                        {isApproved ? "Approved" : "Approve Indicator"}
-                    </Button>
+                        <Button
+                            colorScheme={isApproved ? "green" : "teal"}
+                            size="md"
+                            onClick={handleApprove}
+                            isDisabled={isApproved || !currentUserId}
+                            boxShadow="sm"
+                            _hover={!isApproved && currentUserId ? { boxShadow: "md" } : {}}
+                            transition="box-shadow 0.2s"
+                            leftIcon={isApproved ? <Text>✓</Text> : null}
+                        >
+                            {isApproved ? "Approved" : "Approve Indicator"}
+                        </Button>
+                    </Tooltip>
                 )}
             </HStack>
         </Box>
