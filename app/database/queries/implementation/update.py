@@ -478,7 +478,18 @@ def update_plan(data: dict) -> dict:
                     print(f"Warning: Failed to create accomplishment automatically: {e}")
                     # The plan is still marked as completed even if accomplishment creation fails
             else:
-                print(f"Plan '{plan.name}' already has an accomplishment, skipping creation")
+                print(f"Plan '{plan.name}' already has an accomplishment, updating its year")
+                # Update the existing accomplishment's academic year to match the new completion year
+                try:
+                    existing_acc_id = existing_accomplishment[0][0]
+                    existing_acc = Accomplishment.nodes.get(unique_id=existing_acc_id)
+
+                    # Update the accomplishment's academic year to match the new completion year
+                    existing_acc.academic_year.disconnect_all()
+                    existing_acc.academic_year.connect(completed_year)
+                    print(f"Updated existing accomplishment's year to '{completed_year_name}'")
+                except Exception as e:
+                    print(f"Warning: Failed to update accomplishment's year: {e}")
 
         elif new_plan_status != "Completed" and previous_status == "Completed":
             # Status changed from Completed to something else - remove completion year

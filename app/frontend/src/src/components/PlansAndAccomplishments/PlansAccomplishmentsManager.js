@@ -257,9 +257,9 @@ function PlansAccomplishmentsManager() {
         return uniquePlans.filter(plan => showAbandoned || !plan.abandoned);
     };
 
-    // Extract all accomplishments from data
     const getAllAccomplishments = () => {
         const accomplishments = [];
+
         ['web', 'instructionalMaterials', 'procurement'].forEach(wg => {
             if (data[wg]?.goals) {
                 data[wg].goals.forEach(goal => {

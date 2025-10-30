@@ -323,7 +323,7 @@ def fetch_evidence_for_working_group(working_group, academic_year):
     
     // Collect all goals under the working group
     WITH workingGroupName, collect(goalData) AS goals
-    
+
     // Convert to JSON
     RETURN apoc.convert.toJson({
       workingGroup: workingGroupName,
