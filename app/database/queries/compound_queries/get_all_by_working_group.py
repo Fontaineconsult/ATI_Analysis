@@ -324,10 +324,33 @@ def fetch_evidence_for_working_group(working_group, academic_year):
     // Collect all goals under the working group
     WITH workingGroupName, collect(goalData) AS goals
 
+    // Get ALL accomplishments for this academic year (including those without goal relationships)
+    OPTIONAL MATCH (allAcc:Accomplishment)-[:in_academic_year]->(ay:AcademicYear {name: $academic_year})
+
+    // Get YSE relationships for all accomplishments
+    OPTIONAL MATCH (allAcc)-[:advances_yse]->(allYse:YearSuccessEvidence)
+
+    // Get goal relationships if they exist
+    OPTIONAL MATCH (allAcc)-[:advances_goal]->(accGoal:Goal)
+
+    // Group by accomplishment to collect all YSE
+    WITH workingGroupName, goals, allAcc, accGoal,
+         collect(DISTINCT allYse) AS allYseList
+    WHERE allAcc IS NOT NULL
+
+    // Create accomplishment objects with all their relationships
+    WITH workingGroupName, goals,
+         collect(DISTINCT {
+           accomplishment: allAcc,
+           advances_yse_list: allYseList,
+           goal: accGoal
+         }) AS allAccomplishments
+
     // Convert to JSON
     RETURN apoc.convert.toJson({
       workingGroup: workingGroupName,
-      goals: goals
+      goals: goals,
+      allAccomplishments: allAccomplishments
     }) AS jsonResults
 """
 

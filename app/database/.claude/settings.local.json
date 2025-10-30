@@ -3,7 +3,8 @@
     "allow": [
       "Read(//c/Users/913678186/IdeaProjects/ATI_Analysis/**)",
       "Bash(del \"C:\\Users\\913678186\\IdeaProjects\\ATI_Analysis\\app\\database\\debug_accomplishments.py\")",
-      "Bash(Remove-Item \"C:\\Users\\913678186\\IdeaProjects\\ATI_Analysis\\app\\database\\debug_accomplishments.py\" -Force)"
+      "Bash(Remove-Item \"C:\\Users\\913678186\\IdeaProjects\\ATI_Analysis\\app\\database\\debug_accomplishments.py\" -Force)",
+      "Bash(python:*)"
     ],
     "deny": [],
     "ask": []

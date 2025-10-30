@@ -261,6 +261,7 @@ function PlansAccomplishmentsManager() {
         const accomplishments = [];
 
         ['web', 'instructionalMaterials', 'procurement'].forEach(wg => {
+            // First, get accomplishments from goals (existing structure)
             if (data[wg]?.goals) {
                 data[wg].goals.forEach(goal => {
                     // Goal-level accomplishments
@@ -299,6 +300,43 @@ function PlansAccomplishmentsManager() {
                             });
                         });
                     }
+                });
+            }
+
+            // Second, get ALL accomplishments from the new allAccomplishments field
+            if (data[wg]?.allAccomplishments && Array.isArray(data[wg].allAccomplishments)) {
+                data[wg].allAccomplishments.forEach(accData => {
+                    const acc = accData.accomplishment || accData;
+                    const yseList = accData.advances_yse_list || [];
+                    const goal = accData.goal;
+
+                    // Process YSE list to extract identifiers and descriptions
+                    const yseIdentifiers = [];
+                    const yseDescriptions = [];
+
+                    if (Array.isArray(yseList)) {
+                        yseList.forEach(yse => {
+                            if (yse?.properties?.year_identifier) {
+                                yseIdentifiers.push(yse.properties.year_identifier);
+                                if (yse.properties.description) {
+                                    yseDescriptions.push({
+                                        identifier: yse.properties.year_identifier,
+                                        description: yse.properties.description
+                                    });
+                                }
+                            }
+                        });
+                    }
+
+                    accomplishments.push({
+                        ...(acc.properties || acc),
+                        workingGroup: wg,
+                        goalNumber: goal?.properties?.goal_number || null,
+                        level: goal ? 'goal' : 'standalone',
+                        // Include YSE information as arrays
+                        yse_identifiers: yseIdentifiers,
+                        yse_descriptions: yseDescriptions
+                    });
                 });
             }
         });

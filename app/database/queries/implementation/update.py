@@ -492,9 +492,36 @@ def update_plan(data: dict) -> dict:
                     print(f"Warning: Failed to update accomplishment's year: {e}")
 
         elif new_plan_status != "Completed" and previous_status == "Completed":
-            # Status changed from Completed to something else - remove completion year
+            # Status changed from Completed to something else - remove completion year and delete accomplishment
             plan.completed_year.disconnect_all()
             print(f"Plan '{plan.name}' no longer marked as completed - removed completion year")
+
+            # Delete the accomplishment that was created from this plan
+            try:
+                # Check if an accomplishment exists that was achieved through this plan
+                check_accomplishment_query = """
+                MATCH (p:Plan {unique_id: $plan_id})<-[:achieved_through]-(acc:Accomplishment)
+                RETURN acc.unique_id
+                """
+                existing_accomplishment, _ = db.cypher_query(
+                    check_accomplishment_query,
+                    {'plan_id': plan.unique_id}
+                )
+
+                if existing_accomplishment:
+                    # Delete the accomplishment
+                    accomplishment_id = existing_accomplishment[0][0]
+                    delete_accomplishment_query = """
+                    MATCH (acc:Accomplishment {unique_id: $acc_id})
+                    DETACH DELETE acc
+                    """
+                    db.cypher_query(
+                        delete_accomplishment_query,
+                        {'acc_id': accomplishment_id}
+                    )
+                    print(f"Deleted accomplishment associated with plan '{plan.name}'")
+            except Exception as e:
+                print(f"Warning: Failed to delete accomplishment: {e}")
 
         elif 'completed_year_name' in data:
             # Explicit completed_year_name provided (regardless of status)
