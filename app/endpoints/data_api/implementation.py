@@ -742,15 +742,29 @@ class ImplementationPlanAPI(MethodView):
     def handle_update_plan(self, data):
         """
         Handle the update_plan action.
+
+        When a plan is marked as completed, an accomplishment is automatically created.
         """
         # Ensure required field 'unique_id' is present
         if 'unique_id' not in data:
             raise ValidationError("Missing required field: 'unique_id'")
 
         # Call the update_plan function
-        update_plan(data)
+        result = update_plan(data)
 
-        return make_response({"status": "success", "message": "Plan updated successfully"}), 200
+        # Build response message
+        response_data = {
+            "status": "success",
+            "message": "Plan updated successfully"
+        }
+
+        # Add accomplishment info if one was created
+        if isinstance(result, dict) and result.get('accomplishment_created'):
+            response_data["accomplishment_created"] = True
+            response_data["accomplishment"] = result.get('accomplishment_details', {})
+            response_data["message"] = "Plan updated and accomplishment created successfully"
+
+        return make_response(response_data), 200
 
     def handle_add_progress_note(self, data):
         """
@@ -1021,12 +1035,99 @@ class ImplementationAccomplishmentAPI(MethodView):
             return make_response({"status": "error", "error": f"Failed to update accomplishment: {str(e)}"}), 500
 
 
+class PlansToAccomplishmentsAPI(MethodView):
+    """
+    API endpoint for converting completed Plans to Accomplishments.
+
+    POST /implementations/plans-to-accomplishments
+    ----------------------------------------------
+    Convert completed plans to accomplishments for a given academic year.
+
+    Request Body:
+        {
+            "academic_year": str (required),
+            "dry_run": bool (optional, default: false)
+        }
+
+    Returns:
+        200: Summary of accomplishments created
+        400: Invalid request
+        404: Academic year not found
+    """
+
+    def post(self):
+        """
+        Convert completed plans to accomplishments.
+        """
+        try:
+            from app.database.queries.implementation.create_accomplishments_from_plans import (
+                create_accomplishments_from_completed_plans
+            )
+
+            data = request.get_json()
+
+            # Validate required fields
+            academic_year = data.get('academic_year')
+            if not academic_year:
+                raise ValidationError("Missing required field: 'academic_year'")
+
+            dry_run = data.get('dry_run', False)
+
+            # Execute the conversion
+            result = create_accomplishments_from_completed_plans(
+                academic_year=academic_year,
+                dry_run=dry_run
+            )
+
+            return make_response({"status": "success", "data": result}), 200
+
+        except ValidationError as e:
+            return make_response({"status": "error", "error": str(e)}), 400
+        except NotFoundError as e:
+            return make_response({"status": "error", "error": str(e)}), 404
+        except Exception as e:
+            return make_response({"status": "error", "error": f"Failed to create accomplishments: {str(e)}"}), 500
+
+    def get(self):
+        """
+        Get completed plans without accomplishments.
+
+        Query Parameters:
+            - academic_year (optional): Filter by specific academic year
+
+        Returns:
+            200: List of completed plans without accomplishments
+        """
+        try:
+            from app.database.queries.implementation.create_accomplishments_from_plans import (
+                get_completed_plans_without_accomplishments
+            )
+
+            academic_year = request.args.get('academic_year')
+
+            plans = get_completed_plans_without_accomplishments(academic_year)
+
+            return make_response({
+                "status": "success",
+                "data": {
+                    "academic_year": academic_year,
+                    "plans": plans,
+                    "total": len(plans)
+                }
+            }), 200
+
+        except Exception as e:
+            return make_response({"status": "error", "error": f"Failed to fetch plans: {str(e)}"}), 500
+
+
 
 
 # Register the views
 implementations_view = ImplementationAPI.as_view('implementations_view')
 plans_view = ImplementationPlanAPI.as_view('plans_view')
 accomplishments_view = ImplementationAccomplishmentAPI.as_view('accomplishments_view')
+plans_to_accomplishments_view = PlansToAccomplishmentsAPI.as_view('plans_to_accomplishments_view')
 data_api_endpoints.add_url_rule('/implementations', view_func=implementations_view, methods=['GET', 'POST', 'PUT', 'DELETE'])
 data_api_endpoints.add_url_rule('/implementations/plans', view_func=plans_view, methods=['GET', 'POST', 'PUT', 'DELETE'])
 data_api_endpoints.add_url_rule('/implementations/accomplishments', view_func=accomplishments_view, methods=['GET', 'POST', 'PUT', 'DELETE'])
+data_api_endpoints.add_url_rule('/implementations/plans-to-accomplishments', view_func=plans_to_accomplishments_view, methods=['GET', 'POST'])

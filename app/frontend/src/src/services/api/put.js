@@ -167,7 +167,8 @@ export const updateIndividual = async (individual) => {
 
 export const updatePlan = async (formData) => {
     try {
-        await axios.put(`${process.env.REACT_APP_API_URL}/implementations/plans`, updatePlanPayload(formData));
+        const response = await axios.put(`${process.env.REACT_APP_API_URL}/implementations/plans`, updatePlanPayload(formData));
+        return response;
     } catch (error) {
         console.error('Error updating plan:', error);
         throw error;

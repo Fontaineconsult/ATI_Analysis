@@ -8,7 +8,11 @@ import {
     Td,
     IconButton,
     Collapse,
-    Box
+    Box,
+    Badge,
+    HStack,
+    VStack,
+    Text
 } from '@chakra-ui/react';
 import { FaEdit, FaChevronDown, FaChevronUp } from 'react-icons/fa';
 import AccomplishmentEditForm from './AccomplishmentEditForm';
@@ -53,6 +57,7 @@ function AccomplishmentsTable({ accomplishments, onUpdate }) {
                     <Th>Name</Th>
                     <Th>Working Group</Th>
                     <Th>Goal</Th>
+                    <Th>Advances YSE</Th>
                     <Th>Actions</Th>
                 </Tr>
             </Thead>
@@ -74,6 +79,29 @@ function AccomplishmentsTable({ accomplishments, onUpdate }) {
                             <Td>{acc.workingGroup}</Td>
                             <Td>{acc.goalNumber}</Td>
                             <Td>
+                                {acc.yse_identifiers && acc.yse_identifiers.length > 0 ? (
+                                    <HStack spacing={1} flexWrap="wrap">
+                                        {acc.yse_identifiers.map((identifier, idx) => {
+                                            const description = acc.yse_descriptions?.find(
+                                                d => d.identifier === identifier
+                                            )?.description;
+                                            return (
+                                                <Badge
+                                                    key={identifier}
+                                                    colorScheme="purple"
+                                                    fontSize="xs"
+                                                    title={description || identifier}
+                                                >
+                                                    {identifier}
+                                                </Badge>
+                                            );
+                                        })}
+                                    </HStack>
+                                ) : (
+                                    <Text fontSize="xs" color="gray.400">—</Text>
+                                )}
+                            </Td>
+                            <Td>
                                 <IconButton
                                     size="xs"
                                     icon={<FaEdit />}
@@ -85,7 +113,7 @@ function AccomplishmentsTable({ accomplishments, onUpdate }) {
                             </Td>
                         </Tr>
                         <Tr>
-                            <Td colSpan={5} p={0} borderWidth={0}>
+                            <Td colSpan={6} p={0} borderWidth={0}>
                                 <Collapse in={expandedRows.has(acc.unique_id)} animateOpacity>
                                     <Box p={4} bg="blue.50" borderBottomWidth="1px">
                                         {editingRows.has(acc.unique_id) ? (
@@ -98,9 +126,38 @@ function AccomplishmentsTable({ accomplishments, onUpdate }) {
                                                 }}
                                             />
                                         ) : (
-                                            <Box>
-                                                <strong>Description:</strong> {acc.description}
-                                            </Box>
+                                            <VStack align="stretch" spacing={2}>
+                                                <Box>
+                                                    <Text fontWeight="bold" fontSize="sm" mb={1}>Description:</Text>
+                                                    <Text fontSize="sm">{acc.description}</Text>
+                                                </Box>
+                                                {acc.yse_identifiers && acc.yse_identifiers.length > 0 && (
+                                                    <Box>
+                                                        <Text fontWeight="bold" fontSize="sm" mb={1}>
+                                                            Advances Year Success Evidence ({acc.yse_identifiers.length}):
+                                                        </Text>
+                                                        <VStack align="stretch" spacing={1}>
+                                                            {acc.yse_identifiers.map(identifier => {
+                                                                const description = acc.yse_descriptions?.find(
+                                                                    d => d.identifier === identifier
+                                                                )?.description;
+                                                                return (
+                                                                    <HStack key={identifier} spacing={2}>
+                                                                        <Badge colorScheme="purple" fontSize="xs">
+                                                                            {identifier}
+                                                                        </Badge>
+                                                                        {description && (
+                                                                            <Text fontSize="xs" color="gray.600">
+                                                                                {description}
+                                                                            </Text>
+                                                                        )}
+                                                                    </HStack>
+                                                                );
+                                                            })}
+                                                        </VStack>
+                                                    </Box>
+                                                )}
+                                            </VStack>
                                         )}
                                     </Box>
                                 </Collapse>

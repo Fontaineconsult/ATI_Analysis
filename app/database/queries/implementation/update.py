@@ -9,6 +9,7 @@ from app.database.graph_schema import *
 from app.database.class_factory import implementation_classes, documentation_classes, documentation_relationships
 from app.database.queries.implementation.read import get_goal_node
 from app.endpoints.data_api.errors.custom_exceptions import NotFoundError, ValidationError, CrudError
+from neomodel import db
 
 
 def assign_documentation_to_implementation(
@@ -253,9 +254,55 @@ def assign_note_to_implementation(implementation_title, implementation_type, not
     return True
 
 
-def update_plan(data: dict) -> bool:
+def get_current_academic_year() -> str:
+    """
+    Determines the current academic year based on the current date.
+
+    Academic years typically run from August/September to May/June.
+    This function assumes:
+    - If current month >= 8 (August), we're in year YYYY-(YYYY+1)
+    - If current month < 8, we're in year (YYYY-1)-YYYY
+
+    Returns
+    -------
+    str
+        Academic year in format "YYYY-YYYY" (e.g., "2024-2025")
+
+    Examples
+    --------
+    >>> # If run in October 2024
+    >>> get_current_academic_year()
+    "2024-2025"
+
+    >>> # If run in March 2025
+    >>> get_current_academic_year()
+    "2024-2025"
+    """
+    from datetime import datetime
+
+    now = datetime.now()
+
+    # Academic year starts in August (month 8)
+    if now.month >= 8:
+        # We're in the fall/winter of the academic year
+        start_year = now.year
+        end_year = now.year + 1
+    else:
+        # We're in the spring/summer of the academic year
+        start_year = now.year - 1
+        end_year = now.year
+
+    return f"{start_year}-{end_year}"
+
+
+def update_plan(data: dict) -> dict:
     """
     Updates an existing Plan node in the graph database.
+
+    When a plan's status is changed to "Completed", this function will:
+    1. Automatically set the completed_in_year relationship
+    2. Create an Accomplishment node linked to the plan
+    3. Link the accomplishment to the completion year
 
     Parameters
     ----------
@@ -274,15 +321,21 @@ def update_plan(data: dict) -> bool:
         - plan_status : str - New status (e.g., "Completed", "In Progress")
         - abandoned : bool - Mark as abandoned or not
         - abandoned_notes : str - Notes about abandonment
-        - completed_year_name : str - Academic year of completion
+        - completion_notes : str - Notes about completion (used for accomplishment description)
+        - completed_year_name : str - Academic year of completion (auto-set when status becomes Completed)
+        - current_academic_year : str - Override for current academic year (defaults to calculated year)
         - furthered_goal_number : int - Goal number (use with furthered_working_group)
         - furthered_working_group : str - Working group (use with furthered_goal_number)
         - furthered_yse_identifier : str - YearSuccessEvidence identifier
 
     Returns
     -------
-    bool
-        True if plan was successfully updated
+    dict
+        Dictionary containing:
+        - success : bool - Whether the update was successful
+        - plan_updated : bool - Whether the plan was updated
+        - accomplishment_created : bool - Whether an accomplishment was created
+        - accomplishment_details : dict - Details of created accomplishment (if applicable)
 
     Raises
     ------
@@ -295,11 +348,18 @@ def update_plan(data: dict) -> bool:
 
     Examples
     --------
-    >>> # Update status and mark as completed
+    >>> # Update status to completed (auto-sets completion year)
+    >>> update_plan({
+    ...     'unique_id': 'plan_67890',
+    ...     'plan_status': 'Completed'
+    ... })
+    True
+
+    >>> # Update status with explicit completion year
     >>> update_plan({
     ...     'unique_id': 'plan_67890',
     ...     'plan_status': 'Completed',
-    ...     'completed_year_name': '2023-2024'
+    ...     'completed_year_name': '2024-2025'
     ... })
     True
 
@@ -314,6 +374,8 @@ def update_plan(data: dict) -> bool:
 
     Notes
     -----
+    - When plan_status changes to "Completed", completed_year is automatically set
+    - When plan_status changes from "Completed" to something else, completed_year is removed
     - Only provided fields will be updated; others remain unchanged
     - Relationships are replaced entirely (existing connections disconnected first)
     - Validation ensures data integrity with existing nodes
@@ -328,11 +390,14 @@ def update_plan(data: dict) -> bool:
             raise ValidationError("Missing required field: 'unique_id'")
 
         # Validate plan_status if provided
-        plan_status = data.get('plan_status')
-        if plan_status is not None and plan_status not in VALID_PLAN_STATUSES:
-            raise ValidationError(f"Invalid plan_status: '{plan_status}'. Must be one of: {', '.join(VALID_PLAN_STATUSES)}")
+        new_plan_status = data.get('plan_status')
+        if new_plan_status is not None and new_plan_status not in VALID_PLAN_STATUSES:
+            raise ValidationError(f"Invalid plan_status: '{new_plan_status}'. Must be one of: {', '.join(VALID_PLAN_STATUSES)}")
 
         plan = Plan.nodes.get(unique_id=unique_id)
+
+        # Store the previous status to detect changes
+        previous_status = plan.plan_status
 
         # Update plan properties
         plan.description = data.get('description', plan.description)
@@ -342,6 +407,10 @@ def update_plan(data: dict) -> bool:
         plan.abandoned = data.get('abandoned', plan.abandoned)
         plan.abandoned_notes = data.get('abandoned_notes', plan.abandoned_notes)
         plan.name = data.get('name', plan.name)
+
+        # If status is changed to "Completed", also add completion_notes if provided
+        if new_plan_status == "Completed" and 'completion_notes' in data:
+            plan.completion_notes = data['completion_notes']
 
         plan.save()
 
@@ -353,13 +422,77 @@ def update_plan(data: dict) -> bool:
                 plan.academic_year.disconnect_all()
                 plan.academic_year.connect(academic_year)
 
-        # Update completed year relationship
-        completed_year_name = data.get('completed_year_name')
-        if completed_year_name:
+        # Handle completed_year relationship based on status change
+        # Check if status changed to "Completed"
+        accomplishment_created = None
+        if new_plan_status == "Completed" and previous_status != "Completed":
+            # Status changed to Completed - set completion year
+            # Use provided completed_year_name, or current_academic_year, or calculate it
+            completed_year_name = data.get('completed_year_name') or \
+                                  data.get('current_academic_year') or \
+                                  get_current_academic_year()
+
             completed_year = AcademicYear.nodes.get_or_none(name=completed_year_name)
             if completed_year:
                 plan.completed_year.disconnect_all()
                 plan.completed_year.connect(completed_year)
+                print(f"Plan '{plan.name}' marked as completed in academic year '{completed_year_name}'")
+            else:
+                # Create the academic year if it doesn't exist
+                completed_year = AcademicYear(name=completed_year_name)
+                completed_year.save()
+                plan.completed_year.disconnect_all()
+                plan.completed_year.connect(completed_year)
+                print(f"Plan '{plan.name}' marked as completed in new academic year '{completed_year_name}'")
+
+            # Automatically create an accomplishment from the completed plan
+            # Check if accomplishment already exists (shouldn't happen, but let's be safe)
+            existing_accomplishment = db.cypher_query(
+                """
+                MATCH (p:Plan {unique_id: $plan_id})<-[:achieved_through]-(a:Accomplishment)
+                RETURN a.unique_id
+                """,
+                {"plan_id": plan.unique_id}
+            )[0]
+
+            if not existing_accomplishment:
+                try:
+                    # Import here to avoid circular dependency
+                    from app.database.queries.implementation.create_accomplishments_from_plans import create_single_accomplishment_from_plan
+
+                    # Use completion_notes from the data if provided, otherwise None
+                    completion_notes = data.get('completion_notes') or plan.completion_notes
+
+                    # Create the accomplishment
+                    accomplishment_result = create_single_accomplishment_from_plan(
+                        plan_id=plan.unique_id,
+                        accomplishment_name=None,  # Auto-generate name
+                        accomplishment_description=completion_notes  # Use completion notes if available
+                    )
+
+                    accomplishment_created = accomplishment_result
+                    print(f"Accomplishment '{accomplishment_result['accomplishment_name']}' created automatically from completed plan")
+
+                except Exception as e:
+                    # Log the error but don't fail the plan update
+                    print(f"Warning: Failed to create accomplishment automatically: {e}")
+                    # The plan is still marked as completed even if accomplishment creation fails
+            else:
+                print(f"Plan '{plan.name}' already has an accomplishment, skipping creation")
+
+        elif new_plan_status != "Completed" and previous_status == "Completed":
+            # Status changed from Completed to something else - remove completion year
+            plan.completed_year.disconnect_all()
+            print(f"Plan '{plan.name}' no longer marked as completed - removed completion year")
+
+        elif 'completed_year_name' in data:
+            # Explicit completed_year_name provided (regardless of status)
+            completed_year_name = data['completed_year_name']
+            if completed_year_name:
+                completed_year = AcademicYear.nodes.get_or_none(name=completed_year_name)
+                if completed_year:
+                    plan.completed_year.disconnect_all()
+                    plan.completed_year.connect(completed_year)
 
         # Update furthered goal relationship
         furthered_goal_number = data.get('furthered_goal_number')
@@ -382,7 +515,21 @@ def update_plan(data: dict) -> bool:
                 plan.furthered_year_success_indicators.connect(furthered_yse)
 
         print(f"Plan '{plan.name}' updated successfully")
-        return True
+
+        # Return accomplishment info if one was created
+        if accomplishment_created:
+            return {
+                'success': True,
+                'plan_updated': True,
+                'accomplishment_created': True,
+                'accomplishment_details': accomplishment_created
+            }
+        else:
+            return {
+                'success': True,
+                'plan_updated': True,
+                'accomplishment_created': False
+            }
 
     except Plan.DoesNotExist:
         raise NotFoundError(f"Plan with unique_id '{unique_id}' not found.")
@@ -471,15 +618,29 @@ def update_accomplishment(data: dict) -> bool:
                 accomplishment.advanced_goals.disconnect_all()
                 accomplishment.advanced_goals.connect(advanced_goal)
 
-        # Update furthered YearSuccessEvidence relationship
-        furthered_yse_identifier = data.get('furthered_yse_identifier')
-        if furthered_yse_identifier:
+        # Update furthered YearSuccessEvidence relationships (now supports multiple)
+        # Handle both single identifier (backward compatibility) and multiple identifiers
+        furthered_yse_identifiers = data.get('furthered_yse_identifiers', [])
+
+        # Also check for single identifier for backward compatibility
+        if not furthered_yse_identifiers:
+            single_identifier = data.get('furthered_yse_identifier')
+            if single_identifier:
+                furthered_yse_identifiers = [single_identifier]
+
+        # Disconnect all existing YSE relationships first
+        accomplishment.advanced_year_success_indicators.disconnect_all()
+
+        # Connect all provided YSE identifiers
+        for identifier in furthered_yse_identifiers:
             furthered_yse = YearSuccessEvidence.nodes.get_or_none(
-                year_identifier=furthered_yse_identifier
+                year_identifier=identifier
             )
             if furthered_yse:
-                accomplishment.advanced_year_success_indicators.disconnect_all()
                 accomplishment.advanced_year_success_indicators.connect(furthered_yse)
+                print(f"Connected accomplishment to YSE: {identifier}")
+            else:
+                print(f"Warning: YSE with identifier {identifier} not found")
 
         print(f"Accomplishment '{accomplishment.name}' updated successfully")
         return True

@@ -6,6 +6,7 @@ from datetime import datetime
 from app.database.graph_schema import *
 from app.database.graph_schema import Process
 from app.database.queries.implementation.read import get_goal_node
+from app.database.queries.implementation.update import get_current_academic_year
 
 
 from app.endpoints.data_api.errors.custom_exceptions import CrudError, ValidationError
@@ -231,9 +232,12 @@ def add_plan(plan_data: dict) -> bool:
         - is_key_plan : bool - Whether this is a key strategic plan (default: False)
         - is_campus_plan : bool - Whether this is a campus-wide plan (default: False)
         - plan_status : str - Current status of the plan (e.g., "In Progress", "Completed")
+                              If "Completed", completed_year is auto-set if not provided
         - abandoned : bool - Whether the plan was abandoned (default: False)
         - abandoned_notes : str - Notes explaining why plan was abandoned
         - completed_year_name : str - Name of academic year when plan was completed
+                                     (auto-set when plan_status is "Completed" if not provided)
+        - current_academic_year : str - Override for current academic year calculation
 
     Returns
     -------
@@ -329,9 +333,49 @@ def add_plan(plan_data: dict) -> bool:
         if furthered_yse:
             plan.furthered_year_success_indicators.connect(furthered_yse)
 
-        # If a completed year is specified, establish a relationship with the completed year
-        if completed_year_name:
-            completed_year = AcademicYear.nodes.get(name=completed_year_name)
+        # Handle completed_year relationship
+        # If plan is created with "Completed" status, auto-set completion year if not provided
+        if plan_status == "Completed":
+            # Use provided completed_year_name, or current_academic_year from data, or calculate it
+            if not completed_year_name:
+                completed_year_name = plan_data.get('current_academic_year') or get_current_academic_year()
+
+            completed_year = AcademicYear.nodes.get_or_none(name=completed_year_name)
+            if not completed_year:
+                # Create the academic year if it doesn't exist
+                completed_year = AcademicYear(name=completed_year_name)
+                completed_year.save()
+
+            plan.completed_year.connect(completed_year)
+            print(f"Plan '{name}' created with completed status in academic year '{completed_year_name}'")
+
+            # If plan is created as completed, also create an accomplishment
+            try:
+                from app.database.queries.implementation.create_accomplishments_from_plans import create_single_accomplishment_from_plan
+
+                # Use completion_notes if provided
+                completion_notes = plan_data.get('completion_notes')
+
+                # Create the accomplishment
+                accomplishment_result = create_single_accomplishment_from_plan(
+                    plan_id=plan.unique_id,
+                    accomplishment_name=None,  # Auto-generate name
+                    accomplishment_description=completion_notes  # Use completion notes if available
+                )
+
+                print(f"Accomplishment '{accomplishment_result['accomplishment_name']}' created automatically for completed plan")
+
+            except Exception as e:
+                # Log the error but don't fail the plan creation
+                print(f"Warning: Failed to create accomplishment automatically: {e}")
+
+        elif completed_year_name:
+            # If a completed year is explicitly specified (regardless of status)
+            completed_year = AcademicYear.nodes.get_or_none(name=completed_year_name)
+            if not completed_year:
+                # Create the academic year if it doesn't exist
+                completed_year = AcademicYear(name=completed_year_name)
+                completed_year.save()
             plan.completed_year.connect(completed_year)
 
         print(f"Plan '{name}' added successfully")

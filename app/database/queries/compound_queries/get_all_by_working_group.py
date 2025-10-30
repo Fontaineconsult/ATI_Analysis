@@ -266,9 +266,11 @@ def fetch_evidence_for_working_group(working_group, academic_year):
     
     // Match accomplishments for each goal in the specified academic year
     OPTIONAL MATCH (goal)<-[:advances_goal]-(accomplishment:Accomplishment)
-                     -[:in_academic_year]->(accomplishmentYear:AcademicYear)
-      WHERE accomplishmentYear.name = $academic_year
-    
+                     -[:in_academic_year]->(:AcademicYear {name: $academic_year})
+
+    // Match ALL YearSuccessEvidence that the accomplishment advances (1:many relationship)
+    OPTIONAL MATCH (accomplishment)-[:advances_yse]->(yse:YearSuccessEvidence)
+
     // Match plans for each goal in the specified academic year
     OPTIONAL MATCH (goal)<-[:furthers_goal]-(plan:Plan)
                      -[:in_academic_year]->(planYear:AcademicYear)
@@ -279,31 +281,42 @@ def fetch_evidence_for_working_group(working_group, academic_year):
     OPTIONAL MATCH (goalPlanProgressNote)-[:created_by]->(goalPlanNoteCreator:Person)
 
     // Collect progress notes per plan
-    WITH wg, goal, indicators, accomplishment, plan,
+    WITH wg, goal, indicators, accomplishment, yse, plan,
          collect(DISTINCT {
            note: goalPlanProgressNote,
            created_by: goalPlanNoteCreator
          }) AS goalPlanProgressNotes
 
+    // Collect all YSE nodes for each accomplishment
+    WITH wg, goal, indicators, accomplishment, plan, goalPlanProgressNotes,
+         collect(DISTINCT yse) AS yseList
+
     // Create plan objects with progress notes
-    WITH wg, goal, indicators, accomplishment,
+    WITH wg, goal, indicators, accomplishment, yseList,
          {
            plan: plan,
            progress_notes: [pn IN goalPlanProgressNotes WHERE pn.note IS NOT NULL]
          } AS planWithNotes
 
+    // Create accomplishment objects with their associated YSE list
+    WITH wg, goal, indicators, planWithNotes,
+         CASE WHEN accomplishment IS NOT NULL THEN {
+           accomplishment: accomplishment,
+           advances_yse_list: yseList
+         } ELSE NULL END AS accomplishmentWithYSE
+
     // Collect accomplishments and plans per goal
     WITH wg.name AS workingGroupName, goal, indicators,
-         collect(DISTINCT accomplishment) AS accomplishments,
+         collect(DISTINCT accomplishmentWithYSE) AS accomplishmentsWithYSE,
          collect(DISTINCT planWithNotes.plan) AS plans,
          collect(DISTINCT CASE WHEN planWithNotes.plan IS NOT NULL THEN planWithNotes ELSE NULL END) AS plansWithProgressNotes
     
     // Create a map for each goal with its indicators, accomplishments, and plans
-    WITH workingGroupName, goal, indicators, accomplishments, plans, plansWithProgressNotes,
+    WITH workingGroupName, goal, indicators, accomplishmentsWithYSE, plans, plansWithProgressNotes,
          {
            goal: goal,
            indicators: indicators,
-           accomplishments: accomplishments,
+           accomplishments: [a IN accomplishmentsWithYSE WHERE a IS NOT NULL],
            plans: plans,
            plans_with_progress_notes: [p IN plansWithProgressNotes WHERE p IS NOT NULL]
          } AS goalData

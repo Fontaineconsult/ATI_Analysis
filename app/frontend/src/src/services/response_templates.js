@@ -314,12 +314,18 @@ export function createAccomplishmentPayload(accomplishment) {
 
 
 export function updateAccomplishmentPayload(accomplishment) {
-
-    return {
+    // Ensure furthered_yse_identifiers is always an array in the payload
+    const payload = {
         action: "update_accomplishment",
         ...accomplishment
+    };
+
+    // If we have furthered_yse_identifiers, ensure it's properly formatted
+    if (payload.furthered_yse_identifiers && !Array.isArray(payload.furthered_yse_identifiers)) {
+        payload.furthered_yse_identifiers = [payload.furthered_yse_identifiers];
     }
 
+    return payload;
 }
 
 

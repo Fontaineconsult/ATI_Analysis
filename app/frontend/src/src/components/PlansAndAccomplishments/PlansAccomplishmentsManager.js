@@ -121,7 +121,11 @@ function PlansAccomplishmentsManager() {
 
         setIsSubmitting(true);
         try {
-            await createPlan(newPlanData);
+            // Include current_academic_year for automatic completion year tracking
+            await createPlan({
+                ...newPlanData,
+                current_academic_year: currentAcademicYear
+            });
             toast({
                 title: "Plan created successfully",
                 status: "success",
@@ -261,12 +265,37 @@ function PlansAccomplishmentsManager() {
                 data[wg].goals.forEach(goal => {
                     // Goal-level accomplishments
                     if (goal.accomplishments && Array.isArray(goal.accomplishments)) {
-                        goal.accomplishments.forEach(acc => {
+                        goal.accomplishments.forEach(accData => {
+                            // Handle new structure with YSE information
+                            const acc = accData.accomplishment || accData;
+                            const yseList = accData.advances_yse_list || [];
+
+                            // Process YSE list to extract identifiers and descriptions
+                            const yseIdentifiers = [];
+                            const yseDescriptions = [];
+
+                            if (Array.isArray(yseList)) {
+                                yseList.forEach(yse => {
+                                    if (yse?.properties?.year_identifier) {
+                                        yseIdentifiers.push(yse.properties.year_identifier);
+                                        if (yse.properties.description) {
+                                            yseDescriptions.push({
+                                                identifier: yse.properties.year_identifier,
+                                                description: yse.properties.description
+                                            });
+                                        }
+                                    }
+                                });
+                            }
+
                             accomplishments.push({
-                                ...acc.properties,
+                                ...(acc.properties || acc),
                                 workingGroup: wg,
                                 goalNumber: goal.goal?.properties?.goal_number,
-                                level: 'goal'
+                                level: 'goal',
+                                // Include YSE information as arrays
+                                yse_identifiers: yseIdentifiers,
+                                yse_descriptions: yseDescriptions
                             });
                         });
                     }

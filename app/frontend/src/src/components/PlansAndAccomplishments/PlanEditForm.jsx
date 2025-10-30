@@ -19,9 +19,11 @@ import {
 } from '@chakra-ui/react';
 import { updatePlan } from '../../services/api/put';
 import { DataContext } from '../../context/DataContext';
+import { SettingsContext } from '../../context/SettingsContext';
 
 function PlanEditForm({ plan, onClose, onSuccess }) {
     const { data } = useContext(DataContext);
+    const { currentAcademicYear } = useContext(SettingsContext);
     const [formData, setFormData] = useState({
         unique_id: plan.unique_id,
         name: plan.name,
@@ -30,7 +32,8 @@ function PlanEditForm({ plan, onClose, onSuccess }) {
         is_key_plan: plan.is_key_plan || false,
         is_campus_plan: plan.is_campus_plan || false,
         abandoned: plan.abandoned || false,
-        abandoned_notes: plan.abandoned_notes || ''
+        abandoned_notes: plan.abandoned_notes || '',
+        completion_notes: plan.completion_notes || ''
     });
     const [isSubmitting, setIsSubmitting] = useState(false);
     const toast = useToast();
@@ -107,14 +110,32 @@ function PlanEditForm({ plan, onClose, onSuccess }) {
 
         setIsSubmitting(true);
         try {
-            await updatePlan(formData);
-            toast({
-                title: "Plan updated successfully",
-                status: "success",
-                duration: 3000,
-                isClosable: true,
-                position: "top-right"
+            // Include current_academic_year for automatic completion year tracking
+            const response = await updatePlan({
+                ...formData,
+                current_academic_year: currentAcademicYear
             });
+
+            // Check if an accomplishment was created
+            if (response?.data?.accomplishment_created) {
+                const accName = response.data.accomplishment?.accomplishment_name || "New accomplishment";
+                toast({
+                    title: "Plan Completed!",
+                    description: `${accName} has been created automatically`,
+                    status: "success",
+                    duration: 5000,
+                    isClosable: true,
+                    position: "top-right"
+                });
+            } else {
+                toast({
+                    title: "Plan updated successfully",
+                    status: "success",
+                    duration: 3000,
+                    isClosable: true,
+                    position: "top-right"
+                });
+            }
             onSuccess();
         } catch (error) {
             toast({
@@ -215,6 +236,34 @@ function PlanEditForm({ plan, onClose, onSuccess }) {
                             <option value="Abandoned">Abandoned</option>
                         </Select>
                     </FormControl>
+
+                    {formData.plan_status === 'Completed' && (
+                        <FormControl>
+                            <FormLabel fontSize="sm" color="green.700" fontWeight="bold" mb={1}>
+                                Completion Notes
+                            </FormLabel>
+                            <Textarea
+                                size="sm"
+                                borderColor="green.300"
+                                bg="green.50"
+                                color="gray.800"
+                                _placeholder={{ color: "green.400" }}
+                                _hover={{ borderColor: "green.400", bg: "green.100" }}
+                                _focus={{
+                                    borderColor: "green.500",
+                                    boxShadow: "0 0 0 1px green.500",
+                                    bg: "green.50"
+                                }}
+                                value={formData.completion_notes}
+                                onChange={(e) => setFormData({...formData, completion_notes: e.target.value})}
+                                rows={2}
+                                placeholder="Optional notes about the completion of this plan..."
+                            />
+                            <Text fontSize="xs" color="green.600" mt={1}>
+                                These notes will be used when creating an accomplishment from this plan
+                            </Text>
+                        </FormControl>
+                    )}
 
                     {(formData.abandoned || formData.plan_status === 'Abandoned') && (
                         <FormControl isRequired>

@@ -163,9 +163,8 @@ WITH wg, goal, indicator, evidences,
 WITH wg, goal, collect(indicatorData) AS indicators
 
 // Match accomplishments for each goal in the specified academic year
-OPTIONAL MATCH (goal)<-[:advances_goal]-(accomplishment:Accomplishment)
-                 -[:in_academic_year]->(accomplishmentYear:AcademicYear)
-  WHERE accomplishmentYear.name = $academic_year
+OPTIONAL MATCH (accomplishment:Accomplishment)-[:in_academic_year]->(:AcademicYear {name: $academic_year})
+
 
 // Match plans for each goal in the specified academic year
 OPTIONAL MATCH (goal)<-[:furthers_goal]-(plan:Plan)
