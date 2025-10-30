@@ -76,8 +76,26 @@ function ApprovalMasterContainer({
         const evidence = specificIndicator.evidences?.[0];
         if (!evidence) return null;
 
-        // Return the complete evidence object with all its properties
-        return evidence;
+        // Add accomplishments from goal level since they're not stored at evidence level
+        const goalAccomplishments = specificGoal.accomplishments || [];
+        const allAccomplishments = workingGroupData.allAccomplishments || [];
+
+        // Combine goal-level accomplishments with all accomplishments
+        const combinedAccomplishments = [
+            ...goalAccomplishments,
+            ...allAccomplishments.filter(acc =>
+                !goalAccomplishments.some(ga =>
+                    ga.accomplishment?.id === acc.accomplishment?.id ||
+                    ga.accomplishment?.properties?.unique_id === acc.accomplishment?.properties?.unique_id
+                )
+            )
+        ];
+
+        // Return the complete evidence object with accomplishments added
+        return {
+            ...evidence,
+            accomplishments: combinedAccomplishments
+        };
     };
 
     const evidenceData = getEvidenceData();

@@ -419,8 +419,6 @@ function generateReport(evidenceItem) {
 }
 
 function GenerateReportComponent({ evidenceItem }) {
-    console.log("ZINNGG", evidenceItem)
-
     const navigate = useNavigate();
 
     // Get academic year from evidenceItem
@@ -455,7 +453,21 @@ function GenerateReportComponent({ evidenceItem }) {
     };
 
     const filteredPlans = filterByIncludeInReport(evidenceItem?.plans || [], 'properties');
-    const filteredAccomplishments = filterByIncludeInReport(evidenceItem?.accomplishments || [], 'properties');
+
+    // Accomplishments may be wrapped in an accomplishment property or directly have properties
+    const filteredAccomplishments = (evidenceItem?.accomplishments || []).filter((item) => {
+        if (!item) return false;
+
+        // Handle nested accomplishment structure
+        const acc = item.accomplishment || item;
+        const props = acc.properties || acc;
+
+        // Check include_in_report flag (default to true if not specified)
+        if (props.include_in_report === false) return false;
+
+        return true;
+    });
+
 
     // Filter main-level items
     const filteredNotes = filterByIncludeInReport(evidenceItem.has_notes || [], 'note.properties');
@@ -522,7 +534,6 @@ function GenerateReportComponent({ evidenceItem }) {
             et.notes?.length || et.msgs?.length || et.metrics?.length;
         return hasContent;
     });
-    console.log("EEE", evidenceItem)
 
     return (
         <Box p={6} bg="gray.50" fontSize="sm" textAlign="left">
@@ -752,83 +763,106 @@ function GenerateReportComponent({ evidenceItem }) {
                                         Plans ({filteredPlans.length})
                                     </Heading>
                                     <Stack spacing={3}>
-                                        {filteredPlans.map((plan, index) => (
-                                            <Box
-                                                key={plan.id || index}
-                                                p={3}
-                                                bg="gray.50"
-                                                borderRadius="md"
-                                                borderLeft="3px solid"
-                                                borderLeftColor="teal.300"
-                                            >
-                                                <HStack spacing={2} mb={2} flexWrap="wrap">
-                                                    <Text fontSize="xs" fontWeight="semibold" color="gray.700">
-                                                        {plan.properties.name}
+                                        {filteredPlans.map((plan, index) => {
+                                            // Find if this plan has an associated accomplishment
+                                            // Accomplishments created from plans have names like "Accomplished: [plan name]"
+                                            const relatedAccomplishment = plan.properties.plan_status === 'Completed'
+                                                ? filteredAccomplishments.find(accData => {
+                                                    const acc = accData.accomplishment || accData;
+                                                    const accProps = acc.properties || acc;
+                                                    return (
+                                                        accProps.name === `Accomplished: ${plan.properties.name}` ||
+                                                        accProps.name?.includes(plan.properties.name) ||
+                                                        accProps.description?.includes(plan.properties.name) ||
+                                                        accProps.description?.includes(plan.properties.description)
+                                                    );
+                                                  })
+                                                : null;
+
+                                            return (
+                                                <Box
+                                                    key={plan.id || index}
+                                                    p={3}
+                                                    bg="gray.50"
+                                                    borderRadius="md"
+                                                    borderLeft="3px solid"
+                                                    borderLeftColor={plan.properties.plan_status === 'Completed' ? "green.400" : "teal.300"}
+                                                >
+                                                    <HStack spacing={2} mb={2} flexWrap="wrap">
+                                                        <Text fontSize="xs" fontWeight="semibold" color="gray.700">
+                                                            {plan.properties.name}
+                                                        </Text>
+                                                        <Badge
+                                                            fontSize="10px"
+                                                            colorScheme={
+                                                                plan.properties.plan_status === 'Completed' ? 'green' :
+                                                                    plan.properties.plan_status === 'In Progress' ? 'blue' :
+                                                                        plan.properties.abandoned ? 'red' : 'gray'
+                                                            }
+                                                        >
+                                                            {plan.properties.abandoned ? 'Abandoned' : plan.properties.plan_status}
+                                                        </Badge>
+                                                        {plan.properties.is_key_plan && (
+                                                            <Badge colorScheme="purple" fontSize="10px">Key Plan</Badge>
+                                                        )}
+                                                        {plan.properties.is_campus_plan && (
+                                                            <Badge colorScheme="green" fontSize="10px">Campus Plan</Badge>
+                                                        )}
+                                                    </HStack>
+                                                    <Text fontSize="xs" color="gray.700">
+                                                        {plan.properties.description}
                                                     </Text>
-                                                    <Badge
-                                                        fontSize="10px"
-                                                        colorScheme={
-                                                            plan.properties.plan_status === 'Completed' ? 'green' :
-                                                                plan.properties.plan_status === 'In Progress' ? 'blue' :
-                                                                    plan.properties.abandoned ? 'red' : 'gray'
-                                                        }
-                                                    >
-                                                        {plan.properties.abandoned ? 'Abandoned' : plan.properties.plan_status}
-                                                    </Badge>
-                                                    {plan.properties.is_key_plan && (
-                                                        <Badge colorScheme="purple" fontSize="10px">Key Plan</Badge>
+
+                                                    {/* Show completion notes if available */}
+                                                    {plan.properties.plan_status === 'Completed' && plan.properties.completion_notes && (
+                                                        <Box mt={2} p={2} bg="green.50" borderRadius="md">
+                                                            <Text fontSize="xs" color="green.700">
+                                                                <Text as="span" fontWeight="semibold">Completion Notes:</Text>{' '}
+                                                                {plan.properties.completion_notes}
+                                                            </Text>
+                                                        </Box>
                                                     )}
-                                                    {plan.properties.is_campus_plan && (
-                                                        <Badge colorScheme="green" fontSize="10px">Campus Plan</Badge>
+
+                                                    {/* Show associated accomplishment if plan is completed */}
+                                                    {plan.properties.plan_status === 'Completed' && relatedAccomplishment && (
+                                                        <Box
+                                                            mt={2}
+                                                            p={2}
+                                                            bg="purple.50"
+                                                            borderRadius="md"
+                                                            borderLeft="2px solid"
+                                                            borderLeftColor="purple.400"
+                                                        >
+                                                            <HStack spacing={2} mb={1}>
+                                                                <Text fontSize="xs" fontWeight="semibold" color="purple.700">
+                                                                    Accomplishment ✓
+                                                                </Text>
+                                                                {plan.properties.completed_year_name && (
+                                                                    <Badge colorScheme="purple" fontSize="10px">
+                                                                        {plan.properties.completed_year_name}
+                                                                    </Badge>
+                                                                )}
+                                                            </HStack>
+                                                            <Text fontSize="xs" color="gray.700">
+                                                                {(relatedAccomplishment.accomplishment || relatedAccomplishment).properties?.description ||
+                                                                 relatedAccomplishment.description}
+                                                            </Text>
+                                                        </Box>
                                                     )}
-                                                </HStack>
-                                                <Text fontSize="xs" color="gray.700">
-                                                    {plan.properties.description}
-                                                </Text>
-                                                {plan.properties.abandoned && plan.properties.abandoned_notes && (
-                                                    <Text fontSize="xs" color="red.600" mt={2}>
-                                                        <Text as="span" fontWeight="semibold">Abandonment Notes:</Text>{' '}
-                                                        {plan.properties.abandoned_notes}
-                                                    </Text>
-                                                )}
-                                            </Box>
-                                        ))}
+
+                                                    {plan.properties.abandoned && plan.properties.abandoned_notes && (
+                                                        <Text fontSize="xs" color="red.600" mt={2}>
+                                                            <Text as="span" fontWeight="semibold">Abandonment Notes:</Text>{' '}
+                                                            {plan.properties.abandoned_notes}
+                                                        </Text>
+                                                    )}
+                                                </Box>
+                                            );
+                                        })}
                                     </Stack>
                                 </Box>
                             )}
 
-                            {/* Accomplishments */}
-                            {filteredAccomplishments.length > 0 && (
-                                <Box>
-                                    <Heading as="h4" size="xs" color="gray.700" mb={3}>
-                                        Accomplishments ({filteredAccomplishments.length})
-                                    </Heading>
-                                    <Stack spacing={3}>
-                                        {filteredAccomplishments.map((accomplishment, index) => (
-                                            <Box
-                                                key={accomplishment.id || index}
-                                                p={3}
-                                                bg="gray.50"
-                                                borderRadius="md"
-                                                borderLeft="3px solid"
-                                                borderLeftColor="blue.300"
-                                            >
-                                                <HStack spacing={2} mb={2}>
-                                                    <Text fontSize="xs" fontWeight="semibold" color="gray.700">
-                                                        {accomplishment.properties.name}
-                                                    </Text>
-                                                    <Badge colorScheme="blue" fontSize="10px">
-                                                        Completed
-                                                    </Badge>
-                                                </HStack>
-                                                <Text fontSize="xs" color="gray.700">
-                                                    {accomplishment.properties.description}
-                                                </Text>
-                                            </Box>
-                                        ))}
-                                    </Stack>
-                                </Box>
-                            )}
                         </VStack>
                     </Box>
                 )}

@@ -108,6 +108,21 @@ const SingleReportMasterContainer = ({ workingGroup: propWorkingGroup,
     const evidenceItem = specificIndicator.evidences?.[0] || {};
 
     // Prepare the data structure that GenerateReportComponent expects
+    // Note: accomplishments are stored at the goal level, not evidence level
+    const goalAccomplishments = specificGoal.accomplishments || [];
+    const allAccomplishments = workingGroupData.allAccomplishments || [];
+
+    // Combine goal-level accomplishments with all accomplishments for this working group
+    const combinedAccomplishments = [
+        ...goalAccomplishments,
+        ...allAccomplishments.filter(acc =>
+            !goalAccomplishments.some(ga =>
+                ga.accomplishment?.id === acc.accomplishment?.id ||
+                ga.accomplishment?.properties?.unique_id === acc.accomplishment?.properties?.unique_id
+            )
+        )
+    ];
+
     const reportData = {
         indicator: specificIndicator.indicator,
         evidence: evidenceItem.evidence,
@@ -120,7 +135,7 @@ const SingleReportMasterContainer = ({ workingGroup: propWorkingGroup,
         has_metrics: evidenceItem.has_metrics || [],
         evidenceTypes: evidenceItem.evidenceTypes || [],
         plans: evidenceItem.plans || [],
-        accomplishments: evidenceItem.accomplishments || [],
+        accomplishments: combinedAccomplishments,
         currentAcademicYear: currentAcademicYear
 
 
