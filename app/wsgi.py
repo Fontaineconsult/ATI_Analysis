@@ -8,70 +8,57 @@ from datetime import datetime
 sys.path.insert(0, r"C:\www\ati")
 sys.path.insert(0, r"C:\www\ati\app")
 
-# Setup logging with IIS compatibility
-app_dir = os.path.dirname(os.path.abspath(__file__))
-log_dir = os.path.join(app_dir, 'logs')
+# Setup logging to wfastcgi.log only
+log_file = r"C:\www\ati\wfastcgi.log"
 
-# Try to create logs directory with fallback
-try:
-    if not os.path.exists(log_dir):
-        os.makedirs(log_dir)
-    log_file = os.path.join(log_dir, f'wfastcgi.log')
-except Exception:
-    # Fallback to same directory as wfastcgi.log
-    log_dir = r"C:\www\ati"
-    log_file = os.path.join(log_dir, f'wfastcgi.log')
-
-# Configure logging - ERROR level only
+# Configure basic logging to wfastcgi.log - set to DEBUG to capture everything
 logging.basicConfig(
-    level=logging.ERROR,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    level=logging.DEBUG,  # Changed to DEBUG to capture all levels
+    format='%(asctime)s - %(levelname)s - %(message)s',
     handlers=[
         logging.FileHandler(log_file, mode='a')
     ]
 )
 
+# Add Seq handler
+try:
+    from seqlog.structured_logging import SeqLogHandler
+    seq_handler = SeqLogHandler('http://localhost:5341', api_key=None)
+    seq_handler.setLevel(logging.DEBUG)  # Changed to DEBUG to send all levels to Seq
+    logging.getLogger().addHandler(seq_handler)
+except Exception as e:
+    # If Seq fails, just continue with file logging
+    logging.error(f"Failed to setup Seq: {e}")
+
 logger = logging.getLogger(__name__)
 
 try:
     from app import create_app
+    from flask import request, has_request_context
+
     app = create_app()
 
     @app.errorhandler(Exception)
     def handle_exception(e):
-        error_msg = f"Unhandled exception: {str(e)}\n{traceback.format_exc()}"
-        logger.error(error_msg)
+        # Build context if in a request
+        extra = {}
+        if has_request_context():
+            extra = {
+                'RequestPath': request.path,
+                'RequestMethod': request.method
+            }
 
-        # Return detailed error in debug mode
-        if app.config.get('DEBUG'):
-            return f"<pre>{error_msg}</pre>", 500
+        logger.error(f"Unhandled exception: {str(e)}", exc_info=True, extra=extra)
         return "Internal Server Error", 500
 
-    # Remove the @app.before_request logger since it uses debug level
-
-    # CRITICAL FOR IIS: This is what wfastcgi imports
     application = app
 
+    # Now you can use different log levels
+    logger.debug("Application starting up")
+    logger.info("Application initialized")
+    logger.warning("This is a warning")
+    logger.error("Application started successfully")  # Using error level to ensure it shows
+
 except Exception as e:
-    error_msg = f"Failed to start application: {str(e)}\n{traceback.format_exc()}"
-    logger.error(error_msg)  # This WILL be logged (it's ERROR level)
-
-    # Also write to startup_error.txt for visibility
-    try:
-        with open(r"C:\www\ati\startup_error.txt", 'w') as f:
-            f.write(error_msg)
-    except:
-        pass
-
+    logger.error(f"Failed to start application: {str(e)}", exc_info=True)
     raise
-
-# This won't run under IIS, only for direct testing
-if __name__ == '__main__':
-    try:
-        app.run(host="127.0.0.1",
-                port=app.config.get('FLASK_RUN_PORT', 5000),
-                threaded=app.config.get('THREADED', True),
-                debug=True)
-    except Exception as e:
-        logger.error(f"Failed to run Flask app: {str(e)}\n{traceback.format_exc()}")
-        raise
