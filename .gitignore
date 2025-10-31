@@ -3,3 +3,5 @@
 /.idea/
 /app/.env.production
 /app/.env.remote
+__pycache__/
+*.pyc
