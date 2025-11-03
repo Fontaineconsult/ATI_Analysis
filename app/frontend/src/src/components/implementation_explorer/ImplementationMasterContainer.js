@@ -74,7 +74,7 @@ function ImplementationExplorer() {
         <Box maxW="1400px" mx="auto" p={4}>
             <Flex justify="space-between" align="center" mb={4}>
                 <Box>
-                    <Heading size="lg" color="gray.800">Implementation Explorer</Heading>
+                    <Heading size="lg" color="gray.800">IImplementation Explorer</Heading>
                     <Text color="gray.600" mt={2}>Select an implementation type to view details</Text>
                 </Box>
                 <IconButton

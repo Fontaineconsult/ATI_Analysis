@@ -226,7 +226,8 @@ def add_plan(plan_data: dict) -> bool:
         Required (at least one):
         - furthered_goal_number : int - Goal number the plan furthers (use with furthered_working_group)
         - furthered_working_group : str - Working group name (use with furthered_goal_number)
-        - furthered_yse_identifier : str - YearSuccessEvidence identifier the plan furthers
+        - furthered_yse_identifier : str - Single YearSuccessEvidence identifier (backward compatibility)
+        - furthered_yse_identifiers : list[str] - Multiple YearSuccessEvidence identifiers (preferred)
 
         Optional fields:
         - is_key_plan : bool - Whether this is a key strategic plan (default: False)
@@ -289,14 +290,15 @@ def add_plan(plan_data: dict) -> bool:
         furthered_goal_number = plan_data.get('furthered_goal_number', None)
         furthered_working_group = plan_data.get('furthered_working_group', None)
         furthered_yse_identifier = plan_data.get('furthered_yse_identifier', None)
+        furthered_yse_identifiers = plan_data.get('furthered_yse_identifiers', [])
 
         # Validate plan_status if provided
         if plan_status is not None and plan_status not in VALID_PLAN_STATUSES:
             raise ValidationError(f"Invalid plan_status: '{plan_status}'. Must be one of: {', '.join(VALID_PLAN_STATUSES)}")
 
         # Validate that at least one of the furthering fields is provided
-        if not (furthered_goal_number or furthered_working_group or furthered_yse_identifier):
-            raise ValidationError("At least one of 'furthered_goal_number', 'furthered_working_group', or 'furthered_yse_identifier' must be specified.")
+        if not (furthered_goal_number or furthered_working_group or furthered_yse_identifier or furthered_yse_identifiers):
+            raise ValidationError("At least one of 'furthered_goal_number', 'furthered_working_group', 'furthered_yse_identifier', or 'furthered_yse_identifiers' must be specified.")
 
         # Get or create the academic year node
         academic_year = AcademicYear.nodes.get(name=academic_year_name)
@@ -306,10 +308,19 @@ def add_plan(plan_data: dict) -> bool:
         if furthered_goal_number and furthered_working_group:
             furthered_goal = get_goal_node(furthered_goal_number, furthered_working_group)
 
-        # Find the YearSuccessEvidence node if a furthered YSE is specified
-        furthered_yse = None
-        if furthered_yse_identifier:
-            furthered_yse = YearSuccessEvidence.nodes.get(year_identifier=furthered_yse_identifier)
+        # Find YearSuccessEvidence nodes if furthered YSEs are specified
+        # Support both single identifier and multiple identifiers
+        furthered_yse_identifiers = plan_data.get('furthered_yse_identifiers', [])
+
+        # Also check for single identifier for backward compatibility
+        if not furthered_yse_identifiers and furthered_yse_identifier:
+            furthered_yse_identifiers = [furthered_yse_identifier]
+
+        furthered_yses = []
+        for identifier in furthered_yse_identifiers:
+            yse = YearSuccessEvidence.nodes.get_or_none(year_identifier=identifier)
+            if yse:
+                furthered_yses.append(yse)
 
         # Create a new plan node with the updated fields
         plan = Plan(
@@ -329,9 +340,9 @@ def add_plan(plan_data: dict) -> bool:
         if furthered_goal:
             plan.furthered_goals.connect(furthered_goal)
 
-        # If a YSE is specified, connect the plan to the furthered YearSuccessEvidence
-        if furthered_yse:
-            plan.furthered_year_success_indicators.connect(furthered_yse)
+        # If YSEs are specified, connect the plan to the furthered YearSuccessEvidence nodes
+        for yse in furthered_yses:
+            plan.furthered_year_success_indicators.connect(yse)
 
         # Handle completed_year relationship
         # If plan is created with "Completed" status, auto-set completion year if not provided

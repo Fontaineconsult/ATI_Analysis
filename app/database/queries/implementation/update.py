@@ -326,7 +326,8 @@ def update_plan(data: dict) -> dict:
         - current_academic_year : str - Override for current academic year (defaults to calculated year)
         - furthered_goal_number : int - Goal number (use with furthered_working_group)
         - furthered_working_group : str - Working group (use with furthered_goal_number)
-        - furthered_yse_identifier : str - YearSuccessEvidence identifier
+        - furthered_yse_identifier : str - Single YearSuccessEvidence identifier (backward compatibility)
+        - furthered_yse_identifiers : list[str] - Multiple YearSuccessEvidence identifiers (preferred)
 
     Returns
     -------
@@ -542,15 +543,31 @@ def update_plan(data: dict) -> dict:
                 plan.furthered_goals.disconnect_all()
                 plan.furthered_goals.connect(furthered_goal)
 
-        # Update furthered YearSuccessEvidence relationship
-        furthered_yse_identifier = data.get('furthered_yse_identifier')
-        if furthered_yse_identifier:
-            furthered_yse = YearSuccessEvidence.nodes.get_or_none(
-                year_identifier=furthered_yse_identifier
-            )
-            if furthered_yse:
-                plan.furthered_year_success_indicators.disconnect_all()
-                plan.furthered_year_success_indicators.connect(furthered_yse)
+        # Update furthered YearSuccessEvidence relationships (supports multiple)
+        # Handle both single identifier (backward compatibility) and multiple identifiers
+        furthered_yse_identifiers = data.get('furthered_yse_identifiers', [])
+
+        # Also check for single identifier for backward compatibility
+        if not furthered_yse_identifiers:
+            single_identifier = data.get('furthered_yse_identifier')
+            if single_identifier:
+                furthered_yse_identifiers = [single_identifier]
+
+        # If YSE identifiers were provided, update the relationships
+        if furthered_yse_identifiers is not None:
+            # Disconnect all existing YSE relationships first
+            plan.furthered_year_success_indicators.disconnect_all()
+
+            # Connect all provided YSE identifiers
+            for identifier in furthered_yse_identifiers:
+                furthered_yse = YearSuccessEvidence.nodes.get_or_none(
+                    year_identifier=identifier
+                )
+                if furthered_yse:
+                    plan.furthered_year_success_indicators.connect(furthered_yse)
+                    print(f"Connected plan to YSE: {identifier}")
+                else:
+                    print(f"Warning: YSE with identifier {identifier} not found")
 
         print(f"Plan '{plan.name}' updated successfully")
 

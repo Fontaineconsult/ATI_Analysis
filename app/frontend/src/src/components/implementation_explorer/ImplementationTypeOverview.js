@@ -35,13 +35,20 @@ import WebpagesViewer from './doc_components/WebpagesViewer';
 import NotesViewer from './doc_components/NotesViewer';
 import MessagesViewer from './doc_components/MessagesViewer';
 import MetricsViewer from './doc_components/MetricsSection';
+import YSECheckboxSelector from '../../services/utils/YSECheckboxSelector';
 import {getEditUrlFromCompositeKey} from "../../services/utils/tools";
+import { assignImplementationToYSE } from '../../services/api/put';
+import { unassignImplementationFromYSE } from '../../services/api/delete';
 
 function ImplementationTypeOverview({ implementationType, initialImplementationId }) {
     const { data, refreshImplementations } = useContext(DataContext);
     const [selectedImplId, setSelectedImplId] = useState(null);
     const [isEditing, setIsEditing] = useState(false);
     const [editForm, setEditForm] = useState({ title: '', description: '' });
+    const [selectedYSEs, setSelectedYSEs] = useState([]);
+    const [originalYSEs, setOriginalYSEs] = useState([]);
+    const [isUpdatingYSE, setIsUpdatingYSE] = useState(false);
+    const [hasYSEChanges, setHasYSEChanges] = useState(false);
     const toast = useToast();
     const navigate = useNavigate();
 
@@ -78,8 +85,95 @@ function ImplementationTypeOverview({ implementationType, initialImplementationI
         setSelectedImplId(implementations[0].unique_id);
     }, [implementations, initialImplementationId]); // eslint-disable-line react-hooks/exhaustive-deps
 
+    // Initialize selected YSEs when implementation changes
+    useEffect(() => {
+        if (selectedImpl?.is_evidence_for) {
+            const currentYSEIds = selectedImpl.is_evidence_for.map(yse => yse.year_identifier);
+            setSelectedYSEs(currentYSEIds);
+            setOriginalYSEs(currentYSEIds);
+            setHasYSEChanges(false);
+        } else {
+            setSelectedYSEs([]);
+            setOriginalYSEs([]);
+            setHasYSEChanges(false);
+        }
+    }, [selectedImpl]);
+
+    // Handle YSE selection change (local state only)
+    const handleYSEChange = (selectedIdentifiers) => {
+        if (!selectedImpl) return;
+
+        setSelectedYSEs(selectedIdentifiers);
+
+        // Check if there are any changes from the original
+        const hasChanges =
+            selectedIdentifiers.length !== originalYSEs.length ||
+            selectedIdentifiers.some(id => !originalYSEs.includes(id)) ||
+            originalYSEs.some(id => !selectedIdentifiers.includes(id));
+
+        setHasYSEChanges(hasChanges);
+    };
+
+    // Handle saving YSE changes to API
+    const handleSaveYSE = async () => {
+        if (!selectedImpl || !hasYSEChanges) return;
+
+        setIsUpdatingYSE(true);
+
+        try {
+            // Find what was added or removed
+            const added = selectedYSEs.filter(id => !originalYSEs.includes(id));
+            const removed = originalYSEs.filter(id => !selectedYSEs.includes(id));
+
+            // Process additions
+            for (const yseId of added) {
+                await assignImplementationToYSE(yseId, implementationType, selectedImpl.title);
+            }
+
+            // Process removals
+            for (const yseId of removed) {
+                await unassignImplementationFromYSE(yseId, implementationType, selectedImpl.title);
+            }
+
+            await refreshImplementations();
+            setOriginalYSEs(selectedYSEs);
+            setHasYSEChanges(false);
+
+            toast({
+                title: 'Success',
+                description: 'Year Success Indicators updated',
+                status: 'success',
+                duration: 2000,
+                isClosable: true,
+            });
+        } catch (error) {
+            console.error('Error updating YSE associations:', error);
+            toast({
+                title: 'Error',
+                description: 'Failed to update Year Success Indicators',
+                status: 'error',
+                duration: 3000,
+                isClosable: true,
+            });
+        } finally {
+            setIsUpdatingYSE(false);
+        }
+    };
+
+    // Handle canceling YSE changes
+    const handleCancelYSE = () => {
+        setSelectedYSEs(originalYSEs);
+        setHasYSEChanges(false);
+    };
+
     // Update URL when implementation is selected
     const handleImplementationSelect = (impl) => {
+        // If there are unsaved YSE changes, reset them
+        if (hasYSEChanges) {
+            setSelectedYSEs(originalYSEs);
+            setHasYSEChanges(false);
+        }
+
         setSelectedImplId(impl.unique_id);
         navigate(`/ati-explorer/implementations/${implementationType}/${impl.unique_id}`,
             { replace: true }
@@ -250,7 +344,16 @@ function ImplementationTypeOverview({ implementationType, initialImplementationI
                                 color="gray.600"
                                 _selected={{ color: 'teal.600', borderColor: 'teal.500' }}
                             >
-                                Evidence For ({selectedImpl.is_evidence_for?.length || 0})
+                                <HStack spacing={1}>
+                                    <Text>
+                                        Evidence For ({hasYSEChanges ? selectedYSEs.length : selectedImpl.is_evidence_for?.length || 0})
+                                    </Text>
+                                    {hasYSEChanges && (
+                                        <Badge colorScheme="orange" fontSize="xs">
+                                            Unsaved
+                                        </Badge>
+                                    )}
+                                </HStack>
                             </Tab>
                             <Tab
                                 fontSize="sm"
@@ -358,79 +461,47 @@ function ImplementationTypeOverview({ implementationType, initialImplementationI
                             {/* Evidence For Tab */}
                             <TabPanel px={0} py={4}>
                                 <VStack align="stretch" spacing={4}>
-                                    <Heading size="sm" color="gray.700" fontWeight="bold">
-                                        Success Indicators This Evidences
-                                    </Heading>
-                                    {selectedImpl.is_evidence_for?.length > 0 ? (
-                                        selectedImpl.is_evidence_for.map((yse) => (
-                                            <Box
-                                                key={yse.unique_id}
-                                                p={4}
-                                                borderWidth="1px"
-                                                borderColor="gray.200"
-                                                borderRadius="lg"
-                                                bg="white"
-                                                boxShadow="sm"
-                                                _hover={{ boxShadow: 'md' }}
-                                                transition="box-shadow 0.2s"
-                                            >
-                                                <VStack align="stretch" spacing={3}>
-                                                    <Text
-                                                        fontWeight="bold"
-                                                        fontSize="sm"
-                                                        color="teal.700"
-                                                        cursor="pointer"
-                                                        _hover={{ color: 'teal.600', textDecoration: 'underline' }}
-                                                        onClick={() => {
-                                                            const editUrl = getEditUrlFromCompositeKey(yse.indicator_composite_key);
-                                                            const [pathname, hash] = editUrl.split('#');
+                                    <YSECheckboxSelector
+                                        value={selectedYSEs}
+                                        onChange={handleYSEChange}
+                                        isDisabled={isUpdatingYSE}
+                                        maxHeight={400}
+                                    />
 
-                                                            navigate(pathname + '#' + hash);
-
-                                                            setTimeout(() => {
-                                                                if (hash) {
-                                                                    const element = document.getElementById(hash);
-                                                                    if (element) {
-                                                                        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                                                                    } else {
-                                                                        setTimeout(() => {
-                                                                            const retryElement = document.getElementById(hash);
-                                                                            if (retryElement) {
-                                                                                retryElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                                                                            }
-                                                                        }, 300);
-                                                                    }
-                                                                }
-                                                            }, 100);
-                                                        }}
+                                    {/* Action Buttons */}
+                                    {hasYSEChanges && (
+                                        <Box
+                                            p={3}
+                                            bg="orange.50"
+                                            borderRadius="md"
+                                            borderWidth="1px"
+                                            borderColor="orange.200"
+                                        >
+                                            <HStack justify="space-between">
+                                                <Text fontSize="sm" color="orange.700" fontWeight="semibold">
+                                                    You have unsaved changes
+                                                </Text>
+                                                <HStack>
+                                                    <Button
+                                                        size="sm"
+                                                        variant="outline"
+                                                        onClick={handleCancelYSE}
+                                                        isDisabled={isUpdatingYSE}
                                                     >
-                                                        {yse.year_identifier}
-                                                    </Text>
-
-                                                    {yse.success_indicator && (
-                                                        <Box>
-                                                            <Text
-                                                                fontSize="xs"
-                                                                color="teal.600"
-                                                                fontWeight="semibold"
-                                                                textTransform="uppercase"
-                                                                mb={1}
-                                                            >
-                                                                Success Indicator
-                                                            </Text>
-                                                            <Text fontSize="sm" color="gray.700">
-                                                                {yse.indicator_number ? `${yse.indicator_number}. ` : ''}
-                                                                {yse.success_indicator}
-                                                            </Text>
-                                                        </Box>
-                                                    )}
-                                                </VStack>
-                                            </Box>
-                                        ))
-                                    ) : (
-                                        <Text fontSize="xs" color="gray.500" fontStyle="italic">
-                                            No success indicators linked to this {implementationType}
-                                        </Text>
+                                                        Cancel
+                                                    </Button>
+                                                    <Button
+                                                        size="sm"
+                                                        colorScheme="teal"
+                                                        onClick={handleSaveYSE}
+                                                        isLoading={isUpdatingYSE}
+                                                        loadingText="Saving..."
+                                                    >
+                                                        Save Changes
+                                                    </Button>
+                                                </HStack>
+                                            </HStack>
+                                        </Box>
                                     )}
                                 </VStack>
                             </TabPanel>

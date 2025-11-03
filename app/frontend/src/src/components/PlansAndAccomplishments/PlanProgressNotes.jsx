@@ -17,7 +17,7 @@ import { addProgressNoteToPlan } from '../../services/api/put';
 import { DataContext } from '../../context/DataContext';
 import { UserContext } from '../../context/UserContext';
 
-function PlanProgressNotes({ planUniqueId, planName, progressNotesData }) {
+function PlanProgressNotes({ planUniqueId, planName, progressNotesData, onUpdate }) {
     const { refreshImplementations } = useContext(DataContext);
     const { currentUser } = useContext(UserContext);
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -109,8 +109,10 @@ function PlanProgressNotes({ planUniqueId, planName, progressNotesData }) {
             setNewNote({ name: '', content: '' });
             setShowAddForm(false);
 
-            // Always refresh all implementations after successful response
-            if (refreshImplementations) {
+            // Use specific onUpdate if provided, otherwise fall back to refreshImplementations
+            if (onUpdate) {
+                await onUpdate();
+            } else if (refreshImplementations) {
                 await refreshImplementations();
             }
 
@@ -141,17 +143,14 @@ function PlanProgressNotes({ planUniqueId, planName, progressNotesData }) {
     return (
         <Box
             borderWidth="1px"
-            borderColor="gray.300"
+            borderColor="gray.200"
             borderRadius="lg"
-            p={3}
+            p={4}
             bg="white"
-            maxHeight="50vh"
-            overflowY="auto"
-            boxShadow="sm"
         >
             <VStack spacing={3} align="stretch">
-                <HStack justify="space-between" position="sticky" top={0} bg="white" pb={1} zIndex={1}>
-                    <Heading size="sm" color="gray.800" fontWeight="bold">
+                <HStack justify="space-between">
+                    <Heading size="sm" color="gray.700">
                         Progress Updates
                     </Heading>
                     <Button
@@ -218,15 +217,16 @@ function PlanProgressNotes({ planUniqueId, planName, progressNotesData }) {
 
                 <Divider />
 
-                {progressNotes.length === 0 ? (
-                    <Box py={4} textAlign="center">
-                        <Text fontSize="sm" color="gray.500">
-                            No progress notes yet. Add your first update!
-                        </Text>
-                    </Box>
-                ) : (
-                    <VStack spacing={2} align="stretch">
-                        {progressNotes.map((note, index) => (
+                <Box maxHeight="300px" overflowY="auto">
+                    {progressNotes.length === 0 ? (
+                        <Box py={4} textAlign="center">
+                            <Text fontSize="sm" color="gray.500">
+                                No progress notes yet. Add your first update!
+                            </Text>
+                        </Box>
+                    ) : (
+                        <VStack spacing={2} align="stretch" pr={1}>
+                            {progressNotes.map((note, index) => (
                             <Box
                                 key={note.unique_id || index}
                                 p={2}
@@ -259,9 +259,10 @@ function PlanProgressNotes({ planUniqueId, planName, progressNotesData }) {
                                     )}
                                 </VStack>
                             </Box>
-                        ))}
-                    </VStack>
-                )}
+                            ))}
+                        </VStack>
+                    )}
+                </Box>
             </VStack>
         </Box>
     );

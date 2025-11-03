@@ -31,12 +31,14 @@ import {
     Checkbox
 } from '@chakra-ui/react';
 import { FaPlus } from 'react-icons/fa';
+import { ChevronDownIcon, ChevronUpIcon } from '@chakra-ui/icons';
 import { DataContext } from '../../context/DataContext';
 import { SettingsContext } from '../../context/SettingsContext';
 import PlansTable from './PlansTable';
 import AccomplishmentsTable from './AccomplishmentsTable';
 import { createPlan } from '../../services/api/post';
 import { workingGroupWebSafe } from "../../services/utils/tools";
+import YSECheckboxSelector from '../../services/utils/YSECheckboxSelector';
 
 function PlansAccomplishmentsManager() {
     const { data, loading, loadSingleWorkingGroupData } = useContext(DataContext);
@@ -59,51 +61,10 @@ function PlansAccomplishmentsManager() {
         academic_year_name: currentAcademicYear,
         furthered_goal_number: '',
         working_group: '',
-        furthered_yse_identifier: ''
+        furthered_yse_identifier: '',
+        furthered_yse_identifiers: []  // Support multiple YSE selections
     });
 
-    // Get available YSE identifiers for dropdown
-    const getAvailableYSEs = () => {
-        const yses = [];
-        ['web', 'instructionalMaterials', 'procurement'].forEach(wg => {
-            if (data[wg]?.goals) {
-                data[wg].goals.forEach(goal => {
-                    if (goal.indicators) {
-                        goal.indicators.forEach(indicator => {
-                            if (indicator.evidences) {
-                                indicator.evidences.forEach(evidence => {
-                                    if (evidence.evidence?.properties?.year_identifier) {
-                                        yses.push({
-                                            identifier: evidence.evidence.properties.year_identifier,
-                                            workingGroup: workingGroupWebSafe(wg),
-                                            goalNumber: goal.goal?.properties?.goal_number,
-                                            indicatorKey: indicator.indicator?.properties?.composite_key,
-                                            indicatorDescription: indicator.indicator?.properties?.success_indicator
-                                        });
-                                    }
-                                });
-                            }
-                        });
-                    }
-                });
-            }
-        });
-        return yses;
-    };
-
-    const availableYSEs = getAvailableYSEs();
-
-    const handleYSEChange = (yseIdentifier) => {
-        const selectedYSE = availableYSEs.find(yse => yse.identifier === yseIdentifier);
-        if (selectedYSE) {
-            setNewPlanData({
-                ...newPlanData,
-                furthered_yse_identifier: yseIdentifier,
-                working_group: workingGroupWebSafe(selectedYSE.workingGroup),
-                furthered_goal_number: selectedYSE.goalNumber
-            });
-        }
-    };
 
     const handleSubmitNewPlan = async () => {
         // Validate required fields
@@ -122,9 +83,12 @@ function PlansAccomplishmentsManager() {
         setIsSubmitting(true);
         try {
             // Include current_academic_year for automatic completion year tracking
+            // Send both single and multiple YSE identifiers
             await createPlan({
                 ...newPlanData,
-                current_academic_year: currentAcademicYear
+                current_academic_year: currentAcademicYear,
+                furthered_yse_identifier: newPlanData.furthered_yse_identifiers?.[0] || null,
+                furthered_yse_identifiers: newPlanData.furthered_yse_identifiers || []
             });
             toast({
                 title: "Plan created successfully",
@@ -151,7 +115,8 @@ function PlansAccomplishmentsManager() {
                 academic_year_name: currentAcademicYear,
                 furthered_goal_number: '',
                 working_group: '',
-                furthered_yse_identifier: ''
+                furthered_yse_identifier: '',
+                furthered_yse_identifiers: []
             });
             onClose();
         } catch (error) {
@@ -180,6 +145,7 @@ function PlansAccomplishmentsManager() {
                                 plans.push({
                                     ...planData.plan.properties,
                                     progress_notes: planData.progress_notes || [],
+                                    furthered_yse_identifiers: planData.furthered_yse_identifiers || [],
                                     workingGroup: workingGroupWebSafe(wg),
                                     goalNumber: goal.goal?.properties?.goal_number,
                                     level: 'goal'
@@ -215,6 +181,7 @@ function PlansAccomplishmentsManager() {
                                                 plans.push({
                                                     ...planData.plan.properties,
                                                     progress_notes: planData.progress_notes || [],
+                                                    furthered_yse_identifiers: planData.furthered_yse_identifiers || [],
                                                     workingGroup: workingGroupWebSafe(wg),
                                                     goalNumber: goal.goal?.properties?.goal_number,
                                                     yearIdentifier: evidence.evidence?.properties?.year_identifier,
@@ -519,21 +486,17 @@ function PlansAccomplishmentsManager() {
 
                             <FormControl>
                                 <FormLabel fontSize="sm" color="gray.800" fontWeight="bold">
-                                    Year Success Evidence
+                                    Associated Year Success Evidence
                                 </FormLabel>
-                                <Select
-                                    size="sm"
-                                    borderColor="gray.300"
-                                    value={newPlanData.furthered_yse_identifier}
-                                    onChange={(e) => handleYSEChange(e.target.value)}
-                                    placeholder="Select a Year Success Evidence (optional)"
-                                >
-                                    {availableYSEs.map((yse) => (
-                                        <option key={yse.identifier} value={yse.identifier}>
-                                            {yse.identifier} - {yse.indicatorKey}
-                                        </option>
-                                    ))}
-                                </Select>
+                                <YSECheckboxSelector
+                                    value={newPlanData.furthered_yse_identifiers}
+                                    onChange={(selectedIdentifiers) =>
+                                        setNewPlanData({ ...newPlanData, furthered_yse_identifiers: selectedIdentifiers })
+                                    }
+                                    isDisabled={isSubmitting}
+                                    label=""
+                                    maxHeight={200}
+                                />
                             </FormControl>
 
                             <FormControl>

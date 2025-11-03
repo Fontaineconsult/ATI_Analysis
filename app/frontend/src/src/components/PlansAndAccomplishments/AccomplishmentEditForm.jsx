@@ -1,4 +1,4 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useMemo } from 'react';
 import {
     VStack,
     HStack,
@@ -14,14 +14,12 @@ import {
     Grid,
     GridItem,
     Heading,
-    Badge,
-    Checkbox,
-    CheckboxGroup,
-    Stack
+    Badge
 } from '@chakra-ui/react';
 import { updateAccomplishment } from '../../services/api/put';
 import { DataContext } from '../../context/DataContext';
 import { SettingsContext } from '../../context/SettingsContext';
+import YSECheckboxSelector from '../../services/utils/YSECheckboxSelector';
 
 function AccomplishmentEditForm({ accomplishment, onClose, onSuccess }) {
     const { data } = useContext(DataContext);
@@ -40,8 +38,8 @@ function AccomplishmentEditForm({ accomplishment, onClose, onSuccess }) {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const toast = useToast();
 
-    // Get available academic years
-    const getAcademicYears = () => {
+    // Get available academic years - memoized for performance
+    const availableYears = useMemo(() => {
         const years = new Set();
         years.add(currentAcademicYear); // Always include current year
 
@@ -67,47 +65,16 @@ function AccomplishmentEditForm({ accomplishment, onClose, onSuccess }) {
         });
 
         return Array.from(years).sort().reverse();
-    };
+    }, [data, currentAcademicYear]);
 
-    // Get available YSE identifiers
-    const getAvailableYSEs = () => {
-        const yses = [];
-        ['web', 'instructionalMaterials', 'procurement'].forEach(wg => {
-            if (data[wg]?.goals) {
-                data[wg].goals.forEach(goal => {
-                    if (goal.indicators) {
-                        goal.indicators.forEach(indicator => {
-                            if (indicator.evidences) {
-                                indicator.evidences.forEach(evidence => {
-                                    if (evidence.evidence?.properties?.year_identifier) {
-                                        yses.push({
-                                            identifier: evidence.evidence.properties.year_identifier,
-                                            workingGroup: wg,
-                                            goalNumber: goal.goal?.properties?.goal_number,
-                                            indicatorKey: indicator.indicator?.properties?.composite_key,
-                                            indicatorDescription: indicator.indicator?.properties?.success_indicator
-                                        });
-                                    }
-                                });
-                            }
-                        });
-                    }
-                });
-            }
-        });
-        return yses;
-    };
+    // Removed getAvailableYSEs - now handled by YSECheckboxSelector component
 
     // Get source plan info if accomplishment was created from a plan
-    const getSourcePlanInfo = () => {
+    const sourcePlan = useMemo(() => {
         // This would need backend support to fetch the relationship
         // For now, return null
         return null;
-    };
-
-    const availableYears = getAcademicYears();
-    const availableYSEs = getAvailableYSEs();
-    const sourcePlan = getSourcePlanInfo();
+    }, []);
 
     const handleSubmit = async () => {
         setIsSubmitting(true);
@@ -141,18 +108,6 @@ function AccomplishmentEditForm({ accomplishment, onClose, onSuccess }) {
             ...formData,
             furthered_yse_identifiers: selectedIdentifiers
         });
-
-        // If there's at least one YSE selected, use the first one for working group and goal
-        if (selectedIdentifiers.length > 0) {
-            const firstYSE = availableYSEs.find(yse => yse.identifier === selectedIdentifiers[0]);
-            if (firstYSE) {
-                setFormData(prev => ({
-                    ...prev,
-                    working_group: firstYSE.workingGroup,
-                    advanced_goal_number: firstYSE.goalNumber
-                }));
-            }
-        }
     };
 
     return (
@@ -227,49 +182,11 @@ function AccomplishmentEditForm({ accomplishment, onClose, onSuccess }) {
                         </Select>
                     </FormControl>
 
-                    <FormControl>
-                        <FormLabel fontSize="sm" color="gray.800" fontWeight="bold" mb={1}>
-                            Related Year Success Indicators (Select All That Apply)
-                        </FormLabel>
-                        <Box
-                            maxHeight="200px"
-                            overflowY="auto"
-                            borderWidth="1px"
-                            borderColor="gray.300"
-                            borderRadius="md"
-                            p={2}
-                            bg="white"
-                        >
-                            <CheckboxGroup
-                                value={formData.furthered_yse_identifiers}
-                                onChange={handleYSEChange}
-                            >
-                                <Stack spacing={2}>
-                                    {availableYSEs.map(yse => (
-                                        <Checkbox
-                                            key={yse.identifier}
-                                            value={yse.identifier}
-                                            size="sm"
-                                        >
-                                            <VStack align="start" spacing={0}>
-                                                <Text fontSize="sm" fontWeight="semibold">
-                                                    {yse.identifier}
-                                                </Text>
-                                                <Text fontSize="xs" color="gray.600">
-                                                    {yse.indicatorDescription}
-                                                </Text>
-                                            </VStack>
-                                        </Checkbox>
-                                    ))}
-                                </Stack>
-                            </CheckboxGroup>
-                        </Box>
-                        {formData.furthered_yse_identifiers.length > 0 && (
-                            <Text fontSize="xs" color="gray.600" mt={1}>
-                                {formData.furthered_yse_identifiers.length} indicator{formData.furthered_yse_identifiers.length !== 1 ? 's' : ''} selected
-                            </Text>
-                        )}
-                    </FormControl>
+                    <YSECheckboxSelector
+                        value={formData.furthered_yse_identifiers}
+                        onChange={handleYSEChange}
+                        isDisabled={isSubmitting}
+                    />
 
                     <HStack justify="flex-end" pt={1}>
                         <Button

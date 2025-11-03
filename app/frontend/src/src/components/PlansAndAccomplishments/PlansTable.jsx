@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
     Table,
     Thead,
@@ -8,18 +8,80 @@ import {
     Td,
     Badge,
     HStack,
+    VStack,
     IconButton,
     Collapse,
-    Box,
-    Grid,
-    GridItem
+    Box
 } from '@chakra-ui/react';
 import { FaEdit } from 'react-icons/fa';
 import PlanEditForm from './PlanEditForm';
 import PlanProgressNotes from './PlanProgressNotes';
 
+const STORAGE_KEY_EXPANDED = 'plansTable_expandedRows';
+const STORAGE_KEY_SCROLL = 'plansTable_scrollPosition';
+
 function PlansTable({ plans, onUpdate }) {
-    const [editingRows, setEditingRows] = useState(new Set());
+    // Initialize editingRows from sessionStorage if available
+    const [editingRows, setEditingRows] = useState(() => {
+        try {
+            const saved = sessionStorage.getItem(STORAGE_KEY_EXPANDED);
+            if (saved) {
+                const parsed = JSON.parse(saved);
+                return new Set(parsed);
+            }
+        } catch (e) {
+            console.error('Error loading expanded rows from storage:', e);
+        }
+        return new Set();
+    });
+
+    const containerRef = useRef(null);
+
+    // Save editingRows to sessionStorage whenever it changes
+    useEffect(() => {
+        try {
+            sessionStorage.setItem(STORAGE_KEY_EXPANDED, JSON.stringify([...editingRows]));
+        } catch (e) {
+            console.error('Error saving expanded rows to storage:', e);
+        }
+    }, [editingRows]);
+
+    // Save scroll position before unmount
+    useEffect(() => {
+        const saveScrollPosition = () => {
+            if (containerRef.current) {
+                const scrollY = window.scrollY || window.pageYOffset;
+                sessionStorage.setItem(STORAGE_KEY_SCROLL, scrollY.toString());
+            }
+        };
+
+        // Save on navigation events
+        window.addEventListener('beforeunload', saveScrollPosition);
+
+        return () => {
+            saveScrollPosition();
+            window.removeEventListener('beforeunload', saveScrollPosition);
+        };
+    }, []);
+
+    // Restore scroll position on mount
+    useEffect(() => {
+        try {
+            const savedScroll = sessionStorage.getItem(STORAGE_KEY_SCROLL);
+            if (savedScroll) {
+                const scrollY = parseInt(savedScroll, 10);
+                // Delay restoration to ensure content is rendered
+                setTimeout(() => {
+                    window.scrollTo({
+                        top: scrollY,
+                        behavior: 'auto'
+                    });
+                }, 100);
+            }
+        } catch (e) {
+            console.error('Error restoring scroll position:', e);
+        }
+    }, []);
 
     const toggleEdit = (id) => {
         const newEditing = new Set(editingRows);
@@ -32,8 +94,9 @@ function PlansTable({ plans, onUpdate }) {
     };
 
     return (
-        <Table variant="simple" size="sm">
-            <Thead bg="gray.50">
+        <Box ref={containerRef}>
+            <Table variant="simple" size="sm">
+                <Thead bg="gray.50">
                 <Tr>
                     <Th color="gray.700" fontWeight="semibold" fontSize="xs" textTransform="uppercase">
                         Name
@@ -139,32 +202,33 @@ function PlansTable({ plans, onUpdate }) {
                                 bg={editingRows.has(plan.unique_id) ? "gray.50" : "transparent"}
                             >
                                 <Collapse in={editingRows.has(plan.unique_id)} animateOpacity>
-                                    <Box
-                                        p={3}
-                                        bg="gray.50"
-                                        borderBottomWidth="2px"
-                                        borderBottomColor="gray.200"
-                                    >
-                                        <Grid templateColumns="2fr 1fr" gap={3}>
-                                            <GridItem>
-                                                <PlanEditForm
-                                                    plan={plan}
-                                                    onClose={() => toggleEdit(plan.unique_id)}
-                                                    onSuccess={() => {
-                                                        toggleEdit(plan.unique_id);
-                                                        onUpdate(plan.workingGroup);
-                                                    }}
-                                                />
-                                            </GridItem>
-                                            <GridItem>
-                                                <PlanProgressNotes
-                                                    planUniqueId={plan.unique_id}
-                                                    planName={plan.name}
-                                                    progressNotesData={plan.progress_notes || []}
-                                                />
-                                            </GridItem>
-                                        </Grid>
-                                    </Box>
+                                    {/* Only render the expensive components when actually expanded */}
+                                    {editingRows.has(plan.unique_id) && (
+                                        <Box
+                                            p={3}
+                                            bg="gray.50"
+                                            borderBottomWidth="2px"
+                                            borderBottomColor="gray.200"
+                                        >
+                                            <PlanEditForm
+                                                key={`plan-edit-${plan.unique_id}-${JSON.stringify(plan.furthered_yse_identifiers || [])}`}
+                                                plan={plan}
+                                                onClose={() => toggleEdit(plan.unique_id)}
+                                                onSuccess={() => {
+                                                    // Keep the row expanded after saving
+                                                    onUpdate(plan.workingGroup);
+                                                }}
+                                                progressNotesComponent={
+                                                    <PlanProgressNotes
+                                                        planUniqueId={plan.unique_id}
+                                                        planName={plan.name}
+                                                        progressNotesData={plan.progress_notes || []}
+                                                        onUpdate={() => onUpdate(plan.workingGroup)}
+                                                    />
+                                                }
+                                            />
+                                        </Box>
+                                    )}
                                 </Collapse>
                             </Td>
                         </Tr>
@@ -172,6 +236,7 @@ function PlansTable({ plans, onUpdate }) {
                 ))}
             </Tbody>
         </Table>
+        </Box>
     );
 }
 

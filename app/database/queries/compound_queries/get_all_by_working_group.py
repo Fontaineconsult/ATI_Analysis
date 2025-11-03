@@ -104,19 +104,24 @@ def fetch_evidence_for_working_group(working_group, academic_year):
     OPTIONAL MATCH (evidencePlan)-[:progress_documented_by]->(planProgressNote:Note)
     OPTIONAL MATCH (planProgressNote)-[:created_by]->(planNoteCreator:Person)
 
-    // Collect the plans with their progress notes per evidence
+    // Match YSE relationships for each evidence-level plan
+    OPTIONAL MATCH (evidencePlan)-[:furthers_yse]->(evidencePlanYse:YearSuccessEvidence)
+
+    // Collect the plans with their progress notes and YSE identifiers per evidence
     WITH wg, goal, indicator, evidence, evidenceNotes, evidenceMessages, evidenceMetrics, statusLevel, adminReviewers, adminReviewNotes, persons,
          evidencePlan,
          collect(DISTINCT {
            note: planProgressNote,
            created_by: planNoteCreator
-         }) AS progressNotes
+         }) AS progressNotes,
+         collect(DISTINCT evidencePlanYse.year_identifier) AS evidencePlanYseIdentifiers
 
-    // Filter out null progress notes and aggregate plans
+    // Filter out null progress notes and aggregate plans with YSE identifiers
     WITH wg, goal, indicator, evidence, evidenceNotes, evidenceMessages, evidenceMetrics, statusLevel, adminReviewers, adminReviewNotes, persons,
          collect(DISTINCT {
            plan: evidencePlan,
-           progress_notes: [pn IN progressNotes WHERE pn.note IS NOT NULL]
+           progress_notes: [pn IN progressNotes WHERE pn.note IS NOT NULL],
+           furthered_yse_identifiers: [yseId IN evidencePlanYseIdentifiers WHERE yseId IS NOT NULL]
          }) AS plansWithNotes
 
     // Extract just the plans for backward compatibility
@@ -280,22 +285,27 @@ def fetch_evidence_for_working_group(working_group, academic_year):
     OPTIONAL MATCH (plan)-[:progress_documented_by]->(goalPlanProgressNote:Note)
     OPTIONAL MATCH (goalPlanProgressNote)-[:created_by]->(goalPlanNoteCreator:Person)
 
-    // Collect progress notes per plan
+    // Match YSE relationships for each plan
+    OPTIONAL MATCH (plan)-[:furthers_yse]->(planYse:YearSuccessEvidence)
+
+    // Collect progress notes and YSE identifiers per plan
     WITH wg, goal, indicators, accomplishment, yse, plan,
          collect(DISTINCT {
            note: goalPlanProgressNote,
            created_by: goalPlanNoteCreator
-         }) AS goalPlanProgressNotes
+         }) AS goalPlanProgressNotes,
+         collect(DISTINCT planYse.year_identifier) AS planYseIdentifiers
 
     // Collect all YSE nodes for each accomplishment
-    WITH wg, goal, indicators, accomplishment, plan, goalPlanProgressNotes,
+    WITH wg, goal, indicators, accomplishment, plan, goalPlanProgressNotes, planYseIdentifiers,
          collect(DISTINCT yse) AS yseList
 
-    // Create plan objects with progress notes
+    // Create plan objects with progress notes and YSE identifiers
     WITH wg, goal, indicators, accomplishment, yseList,
          {
            plan: plan,
-           progress_notes: [pn IN goalPlanProgressNotes WHERE pn.note IS NOT NULL]
+           progress_notes: [pn IN goalPlanProgressNotes WHERE pn.note IS NOT NULL],
+           furthered_yse_identifiers: [yseId IN planYseIdentifiers WHERE yseId IS NOT NULL]
          } AS planWithNotes
 
     // Create accomplishment objects with their associated YSE list
