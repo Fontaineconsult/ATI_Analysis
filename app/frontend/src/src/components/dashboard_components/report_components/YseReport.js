@@ -31,6 +31,16 @@ function PlainTextReport({ evidenceItem, indicatorItem }) {
         const filteredNotes = filterByIncludeInReport(evidenceItem?.has_notes || [], 'note.properties');
         const filteredMessages = filterByIncludeInReport(evidenceItem?.has_messages || [], 'message.properties');
         const filteredMetrics = filterByIncludeInReport(evidenceItem?.has_metrics || [], 'metric.properties');
+        const filteredPlans = filterByIncludeInReport(evidenceItem?.plans || [], 'properties');
+        const filteredAdminReviewNotes = filterByIncludeInReport(evidenceItem?.adminReviewNotes || [], 'note.properties');
+
+        // Accomplishments may be wrapped in an accomplishment property or directly have properties
+        const filteredAccomplishments = (evidenceItem?.accomplishments || []).filter((item) => {
+            if (!item) return false;
+            const acc = item.accomplishment || item;
+            const props = acc.properties || acc;
+            return props.include_in_report !== false;
+        });
 
         // Filter evidenceTypes and their nested content
         const filteredEvidenceTypes = (evidenceItem?.evidenceTypes || []).map((etype) => {
@@ -99,6 +109,20 @@ function PlainTextReport({ evidenceItem, indicatorItem }) {
                 evidenceItem.adminReviewers.forEach((reviewer) => {
                     const reviewerProps = reviewer.properties;
                     report += `  • ${reviewerProps.name} - ${reviewerProps.title}\n`;
+                });
+            }
+
+            // Admin Review Notes
+            if (filteredAdminReviewNotes.length > 0) {
+                report += `\nAdmin Review Notes:\n`;
+                filteredAdminReviewNotes.forEach((noteItem) => {
+                    const noteProps = noteItem.note.properties;
+                    report += `  • ${noteProps.date_created || 'No date'}`;
+                    if (noteItem.created_by?.properties) {
+                        report += ` - ${noteItem.created_by.properties.name}`;
+                    }
+                    report += '\n';
+                    report += `    ${noteProps.content}\n`;
                 });
             }
             report += '\n';
@@ -248,6 +272,109 @@ function PlainTextReport({ evidenceItem, indicatorItem }) {
                     });
                 }
             });
+        }
+
+        // Plans and Accomplishments
+        if (filteredPlans.length > 0 || filteredAccomplishments.length > 0) {
+            report += `\nPLANS AND ACCOMPLISHMENTS\n`;
+            report += `${'='.repeat(50)}\n`;
+
+            // Plans
+            if (filteredPlans.length > 0) {
+                report += `\nPlans (${filteredPlans.length})\n`;
+                report += `${'-'.repeat(20)}\n`;
+                filteredPlans.forEach((plan) => {
+                    const planProps = plan.properties;
+
+                    // Find related accomplishment if plan is completed
+                    const relatedAccomplishment = planProps.plan_status === 'Completed'
+                        ? filteredAccomplishments.find(accData => {
+                            const acc = accData.accomplishment || accData;
+                            const accProps = acc.properties || acc;
+                            return (
+                                accProps.name === `Accomplished: ${planProps.name}` ||
+                                accProps.name?.includes(planProps.name) ||
+                                accProps.description?.includes(planProps.name) ||
+                                accProps.description?.includes(planProps.description)
+                            );
+                        })
+                        : null;
+
+                    report += `\n• ${planProps.name}\n`;
+                    report += `  Status: ${planProps.abandoned ? 'Abandoned' : planProps.plan_status}`;
+
+                    // Add badges/flags
+                    const flags = [];
+                    if (planProps.is_key_plan) flags.push('Key Plan');
+                    if (planProps.is_campus_plan) flags.push('Campus Plan');
+                    if (flags.length > 0) {
+                        report += ` [${flags.join(', ')}]`;
+                    }
+                    report += '\n';
+
+                    if (planProps.description) {
+                        report += `  Description: ${planProps.description}\n`;
+                    }
+
+                    // Show completion notes if available
+                    if (planProps.plan_status === 'Completed' && planProps.completion_notes) {
+                        report += `  Completion Notes: ${planProps.completion_notes}\n`;
+                    }
+
+                    // Show associated accomplishment if plan is completed
+                    if (planProps.plan_status === 'Completed' && relatedAccomplishment) {
+                        const accData = relatedAccomplishment.accomplishment || relatedAccomplishment;
+                        const accProps = accData.properties || accData;
+                        report += `  → Accomplishment: ${accProps.description || accProps.name}`;
+                        if (planProps.completed_year_name) {
+                            report += ` (${planProps.completed_year_name})`;
+                        }
+                        report += '\n';
+                    }
+
+                    // Show abandonment notes if abandoned
+                    if (planProps.abandoned && planProps.abandoned_notes) {
+                        report += `  Abandonment Notes: ${planProps.abandoned_notes}\n`;
+                    }
+                });
+            }
+
+            // Accomplishments (standalone - not related to plans)
+            const standaloneAccomplishments = filteredAccomplishments.filter(accData => {
+                const acc = accData.accomplishment || accData;
+                const accProps = acc.properties || acc;
+                // Filter out accomplishments that are already shown with plans
+                return !filteredPlans.some(plan =>
+                    plan.properties.plan_status === 'Completed' &&
+                    (accProps.name === `Accomplished: ${plan.properties.name}` ||
+                     accProps.name?.includes(plan.properties.name) ||
+                     accProps.description?.includes(plan.properties.name))
+                );
+            });
+
+            if (standaloneAccomplishments.length > 0) {
+                report += `\nAccomplishments (${standaloneAccomplishments.length})\n`;
+                report += `${'-'.repeat(20)}\n`;
+                standaloneAccomplishments.forEach((accData) => {
+                    const acc = accData.accomplishment || accData;
+                    const accProps = acc.properties || acc;
+
+                    report += `\n• ${accProps.name}\n`;
+                    if (accProps.description) {
+                        report += `  Description: ${accProps.description}\n`;
+                    }
+                    if (accProps.academic_year || acc.academic_year) {
+                        report += `  Academic Year: ${accProps.academic_year || acc.academic_year}\n`;
+                    }
+
+                    // Show advanced YSE list if available
+                    if (accData.advances_yse_list && accData.advances_yse_list.length > 0) {
+                        report += `  Advances YSE: ${accData.advances_yse_list.map(yse =>
+                            yse.properties?.year_identifier || yse.year_identifier || yse
+                        ).join(', ')}\n`;
+                    }
+                });
+            }
         }
 
         return report;
