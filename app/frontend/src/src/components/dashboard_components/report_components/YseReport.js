@@ -43,13 +43,32 @@ function PlainTextReport({ evidenceItem, indicatorItem }) {
         });
 
         // Filter evidenceTypes and their nested content
+        // Documents and webpages come wrapped in objects with document/webpage properties
+        // IMPORTANT: Deprecated items ARE included unless explicitly excluded via include_in_report=false
         const filteredEvidenceTypes = (evidenceItem?.evidenceTypes || []).map((etype) => {
             return {
                 ...etype,
-                docs: filterByIncludeInReport(etype.docs, 'properties'),
-                webs: filterByIncludeInReport(etype.webs, 'properties'),
-                notes: filterByIncludeInReport(etype.notes, 'properties'),
-                msgs: filterByIncludeInReport(etype.msgs, 'properties'),
+                docs: (etype.docs || []).filter(d => {
+                    const doc = d.document || d;
+                    // Include deprecated docs as long as include_in_report is not false
+                    return doc && doc.properties?.include_in_report !== false;
+                }),
+                webs: (etype.webs || []).filter(w => {
+                    const web = w.webpage || w;
+                    // Webpages may not have include_in_report flag, so include by default
+                    // Include deprecated webpages as long as include_in_report is not false
+                    return web && (web.properties?.include_in_report !== false);
+                }),
+                notes: (etype.notes || []).filter(n => {
+                    const note = n.note || n;
+                    // Include deprecated notes as long as include_in_report is not false
+                    return note && note.properties?.include_in_report !== false;
+                }),
+                msgs: (etype.msgs || []).filter(m => {
+                    const msg = m.message || m;
+                    // Include deprecated messages as long as include_in_report is not false
+                    return msg && msg.properties?.include_in_report !== false;
+                }),
                 metrics: filterByIncludeInReport(etype.metrics, 'properties'),
             };
         }).filter(et => {
@@ -138,6 +157,12 @@ function PlainTextReport({ evidenceItem, indicatorItem }) {
                 if (noteItem.created_by?.properties) {
                     report += ` - ${noteItem.created_by.properties.name}`;
                 }
+                if (noteProps.depreciated === true) {
+                    const depreciatedInfo = noteProps.depreciated_date
+                        ? ` [Depreciated (${noteProps.depreciated_date})]`
+                        : ' [Depreciated]';
+                    report += depreciatedInfo;
+                }
                 report += '\n';
                 report += `  ${noteProps.content}\n`;
                 if (noteProps.file_path || noteProps.uri_path) {
@@ -157,6 +182,12 @@ function PlainTextReport({ evidenceItem, indicatorItem }) {
                 if (messageItem.created_by?.properties) {
                     report += ` - ${messageItem.created_by.properties.name}`;
                 }
+                if (messageProps.depreciated === true) {
+                    const depreciatedInfo = messageProps.depreciated_date
+                        ? ` [Depreciated (${messageProps.depreciated_date})]`
+                        : ' [Depreciated]';
+                    report += depreciatedInfo;
+                }
                 report += '\n';
                 report += `  ${messageProps.content}\n\n`;
             });
@@ -167,8 +198,8 @@ function PlainTextReport({ evidenceItem, indicatorItem }) {
             report += `METRICS (${filteredMetrics.length})\n`;
             report += `${'='.repeat(50)}\n`;
             filteredMetrics.forEach((metricItem) => {
-                const metricProps = metricItem.metric.properties;
-                report += `  • ${metricProps.name}: ${metricProps.value}`;
+                const metricProps = metricItem.metric?.properties || metricItem.metric || {};
+                report += `  • ${metricProps.name}: ${metricProps.value || metricProps.single_value}`;
                 if (metricItem.created_by?.properties) {
                     report += ` (${metricItem.created_by.properties.name})`;
                 }
@@ -196,8 +227,8 @@ function PlainTextReport({ evidenceItem, indicatorItem }) {
                 // Documents
                 if (etype.docs?.length > 0) {
                     report += `\n  Documents:\n`;
-                    etype.docs.forEach((doc) => {
-                        const docProps = doc.properties;
+                    etype.docs.forEach((docWrapper) => {
+                        const docProps = docWrapper.document?.properties || docWrapper.properties || {};
                         report += `    • ${docProps.name}`;
 
                         // Add badges as text
@@ -209,7 +240,10 @@ function PlainTextReport({ evidenceItem, indicatorItem }) {
                             badges.push('Milestones');
                         }
                         if (docProps.depreciated === true) {
-                            badges.push('Depreciated');
+                            const depreciatedBadge = docProps.depreciated_date
+                                ? `Depreciated (${docProps.depreciated_date})`
+                                : 'Depreciated';
+                            badges.push(depreciatedBadge);
                         }
                         if (badges.length > 0) {
                             report += ` [${badges.join(', ')}]`;
@@ -222,8 +256,8 @@ function PlainTextReport({ evidenceItem, indicatorItem }) {
                 // Webpages
                 if (etype.webs?.length > 0) {
                     report += `\n  Webpages:\n`;
-                    etype.webs.forEach((web) => {
-                        const webProps = web.properties;
+                    etype.webs.forEach((webWrapper) => {
+                        const webProps = webWrapper.webpage?.properties || webWrapper.properties || {};
                         report += `    • ${webProps.name || webProps.title}`;
 
                         // Add badges as text
@@ -232,7 +266,10 @@ function PlainTextReport({ evidenceItem, indicatorItem }) {
                             badges.push('No Longer Exists');
                         }
                         if (webProps.depreciated === true) {
-                            badges.push('Depreciated');
+                            const depreciatedBadge = webProps.depreciated_date
+                                ? `Depreciated (${webProps.depreciated_date})`
+                                : 'Depreciated';
+                            badges.push(depreciatedBadge);
                         }
                         if (badges.length > 0) {
                             report += ` [${badges.join(', ')}]`;
@@ -248,18 +285,32 @@ function PlainTextReport({ evidenceItem, indicatorItem }) {
                 // Implementation Notes
                 if (etype.notes?.length > 0) {
                     report += `\n  Notes:\n`;
-                    etype.notes.forEach((note) => {
-                        const noteProps = note.properties;
-                        report += `    • ${noteProps.date_created || 'No date'}: ${noteProps.content}\n`;
+                    etype.notes.forEach((noteWrapper) => {
+                        const noteProps = noteWrapper.note?.properties || noteWrapper.properties || {};
+                        let noteEntry = `    • ${noteProps.date_created || 'No date'}: ${noteProps.content}`;
+                        if (noteProps.depreciated === true) {
+                            const depreciatedInfo = noteProps.depreciated_date
+                                ? ` [Depreciated (${noteProps.depreciated_date})]`
+                                : ' [Depreciated]';
+                            noteEntry += depreciatedInfo;
+                        }
+                        report += noteEntry + '\n';
                     });
                 }
 
                 // Implementation Messages
                 if (etype.msgs?.length > 0) {
                     report += `\n  Messages:\n`;
-                    etype.msgs.forEach((msg) => {
-                        const msgProps = msg.properties;
-                        report += `    • ${msgProps.date_sent || 'No date'}: ${msgProps.content}\n`;
+                    etype.msgs.forEach((msgWrapper) => {
+                        const msgProps = msgWrapper.message?.properties || msgWrapper.properties || {};
+                        let msgEntry = `    • ${msgProps.date_sent || 'No date'}: ${msgProps.content}`;
+                        if (msgProps.depreciated === true) {
+                            const depreciatedInfo = msgProps.depreciated_date
+                                ? ` [Depreciated (${msgProps.depreciated_date})]`
+                                : ' [Depreciated]';
+                            msgEntry += depreciatedInfo;
+                        }
+                        report += msgEntry + '\n';
                     });
                 }
 
@@ -267,8 +318,8 @@ function PlainTextReport({ evidenceItem, indicatorItem }) {
                 if (etype.metrics?.length > 0) {
                     report += `\n  Metrics:\n`;
                     etype.metrics.forEach((metric) => {
-                        const metricProps = metric.properties;
-                        report += `    • ${metricProps.name}: ${metricProps.value}\n`;
+                        const metricProps = metric.properties || metric;
+                        report += `    • ${metricProps.name}: ${metricProps.value || metricProps.single_value}\n`;
                     });
                 }
             });

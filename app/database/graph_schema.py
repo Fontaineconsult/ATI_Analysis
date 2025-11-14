@@ -1255,17 +1255,49 @@ def update_remote():
     print(f"Config set - DATABASE_NAME: {config.DATABASE_NAME}, DATABASE_URL: {config.DATABASE_URL}")
 
 
-def set_connection():
+def set_connection(remote=False):
 
     from neomodel import config
 
-    dotenv_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), '.env.development')
-    load_dotenv(dotenv_path)
+    if remote:
+        print("Using remote connection")
 
+        # Construct path to .env.remote file
+        dotenv_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), '.env.remote')
+        print(f"Loading environment from: {dotenv_path}")
 
-    config.DATABASE_NAME = os.environ.get('NEO4J_DATABASE')
+        # Load environment variables and check if file exists
+        if not os.path.exists(dotenv_path):
+            raise FileNotFoundError(f"Remote environment file not found at {dotenv_path}")
 
-    config.DATABASE_URL = os.environ.get('DATABASE_CONNECTOR')
+        load_dotenv(dotenv_path, override=True)
+        print("Environment file loaded successfully")
+
+        # Get environment variables
+        neo4j_database = os.environ.get('NEO4J_DATABASE')
+        database_connector = os.environ.get('DATABASE_CONNECTOR')
+
+        print(f"NEO4J_DATABASE: {neo4j_database}")
+        print(f"DATABASE_CONNECTOR: {database_connector}")
+
+        # Ensure environment variables are set before configuring
+        if not neo4j_database or not database_connector:
+            raise ValueError("Required environment variables NEO4J_DATABASE and DATABASE_CONNECTOR must be set in .env.remote")
+
+        config.DATABASE_NAME = neo4j_database
+        config.DATABASE_URL = database_connector
+
+        print(f"Config set - DATABASE_NAME: {config.DATABASE_NAME}, DATABASE_URL: {config.DATABASE_URL}")
+    if not remote:
+        print("Using local/development connection")
+
+        dotenv_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), '.env.development')
+        load_dotenv(dotenv_path, override=True)
+
+        config.DATABASE_NAME = os.environ.get('NEO4J_DATABASE')
+        config.DATABASE_URL = os.environ.get('DATABASE_CONNECTOR')
+
+        print(f"Config set - DATABASE_NAME: {config.DATABASE_NAME}, DATABASE_URL: {config.DATABASE_URL}")
 
 
 # set_connection()

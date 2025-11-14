@@ -2,7 +2,7 @@ from app.database.class_factory import working_groups
 from app.database.graph_schema import *
 from app.endpoints.data_api.errors.custom_exceptions import NotFoundError, CrudError, ValidationError
 
-set_connection()
+
 from neomodel import db
 
 def fetch_evidence_for_working_group(working_group, academic_year):
@@ -365,6 +365,7 @@ def fetch_evidence_for_working_group(working_group, academic_year):
 """
 
     try:
+        set_connection(remote=False)
         results, meta = db.cypher_query(query, {'working_group': working_group, 'academic_year': academic_year})
         if not results:
             raise NotFoundError(f"No data found for the working group '{working_group}' and academic year '{academic_year}'.")
@@ -373,4 +374,4 @@ def fetch_evidence_for_working_group(working_group, academic_year):
         raise CrudError(f"Failed to fetch evidence: {str(e)}")
 
 if __name__=='__main__':
-    print(fetch_evidence_for_working_group("Procurement", "2023-2024"))
+    print(fetch_evidence_for_working_group("Procurement", "2024-2025"))

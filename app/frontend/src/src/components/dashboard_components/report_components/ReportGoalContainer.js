@@ -35,19 +35,57 @@ function ReportGoalContainer({ goalData }) {
                     {indicators && indicators.length > 0 ? (
                         indicators
                             .sort(sortCompositeKeys)
-                            .map((indicator, index) => (
-                                indicator ? (
+                            .map((indicator, index) => {
+                                if (!indicator) {
+                                    return (
+                                        <Text key={index} color="gray.500" fontSize="sm">
+                                            No indicator data available
+                                        </Text>
+                                    );
+                                }
+
+                                // Get the evidence item (first evidence for this indicator)
+                                const evidenceItem = indicator.evidences?.[0] || {};
+
+                                // Prepare the data structure that YseReport expects
+                                // This matches the structure from SingleReportMasterContainer
+                                const reportData = {
+                                    indicator: indicator.indicator,
+                                    evidence: evidenceItem.evidence,
+                                    statusLevel: evidenceItem.statusLevel,
+                                    persons: evidenceItem.persons || [],
+                                    adminReviewers: evidenceItem.adminReviewers || [],
+                                    adminReviewNotes: evidenceItem.adminReviewNotes || [],
+                                    has_notes: evidenceItem.has_notes || [],
+                                    has_messages: evidenceItem.has_messages || [],
+                                    has_metrics: evidenceItem.has_metrics || [],
+                                    evidenceTypes: evidenceItem.evidenceTypes || [],
+                                    plans: evidenceItem.plans || [],
+                                    accomplishments: [
+                                        ...(accomplishments || []),
+                                        ...(goalData.accomplishments || [])
+                                    ].filter((acc, idx, arr) => {
+                                        // Remove duplicates based on unique_id
+                                        const accId = acc?.accomplishment?.properties?.unique_id ||
+                                                     acc?.properties?.unique_id ||
+                                                     acc?.unique_id;
+                                        return arr.findIndex(a => {
+                                            const aId = a?.accomplishment?.properties?.unique_id ||
+                                                       a?.properties?.unique_id ||
+                                                       a?.unique_id;
+                                            return aId === accId;
+                                        }) === idx;
+                                    })
+                                };
+
+                                return (
                                     <YseReport
                                         key={index}
-                                        evidenceItem={indicator.evidences[0]}
+                                        evidenceItem={reportData}
                                         indicatorItem={indicator.indicator}
                                     />
-                                ) : (
-                                    <Text key={index} color="gray.500" fontSize="sm">
-                                        No indicator data available
-                                    </Text>
-                                )
-                            ))
+                                );
+                            })
                     ) : (
                         <Text color="gray.500" fontSize="sm">
                             No indicators available for this goal

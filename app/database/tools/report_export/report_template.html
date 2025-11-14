@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ATI Evidence Report - {{ evidence.properties.year_identifier }}</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #2d3748;
+            background-color: #f7fafc;
+            padding: 1.5rem;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background: white;
+            border-radius: 0.5rem;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+            padding: 1.25rem;
+            margin-bottom: 1.5rem;
+        }
+
+        h1 {
+            color: #285e61;
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        h2 {
+            color: #285e61;
+            font-size: 1.25rem;
+            margin-bottom: 0.75rem;
+            cursor: pointer;
+        }
+
+        h2:hover {
+            color: #2c5282;
+            text-decoration: underline;
+        }
+
+        h3 {
+            color: #285e61;
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+        }
+
+        h4 {
+            color: #4a5568;
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-right: 0.5rem;
+        }
+
+        .badge-green {
+            background-color: #c6f6d5;
+            color: #22543d;
+        }
+
+        .badge-blue {
+            background-color: #bee3f8;
+            color: #2c5282;
+        }
+
+        .badge-yellow {
+            background-color: #fef5e7;
+            color: #783f03;
+        }
+
+        .badge-red {
+            background-color: #fed7d7;
+            color: #742a2a;
+        }
+
+        .badge-purple {
+            background-color: #e9d8fd;
+            color: #44337a;
+        }
+
+        .badge-gray {
+            background-color: #edf2f7;
+            color: #4a5568;
+        }
+
+        .badge-teal {
+            background-color: #b2f5ea;
+            color: #234e52;
+        }
+
+        .badge-orange {
+            background-color: #feebc8;
+            color: #7c2d12;
+        }
+
+        .info-row {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            font-size: 0.875rem;
+            color: #718096;
+            margin-bottom: 0.5rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.25rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: #4a5568;
+        }
+
+        .summary-box {
+            background-color: #ebf8ff;
+            border-left: 4px solid #3182ce;
+            padding: 0.75rem;
+            border-radius: 0.25rem;
+            margin: 1rem 0;
+        }
+
+        .summary-title {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #2c5282;
+            margin-bottom: 0.25rem;
+        }
+
+        .summary-text {
+            font-size: 0.875rem;
+            color: #4a5568;
+        }
+
+        .note-box {
+            background-color: #f7f1fd;
+            border-left: 3px solid #9f7aea;
+            padding: 0.75rem;
+            border-radius: 0.25rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .plan-box {
+            background-color: #f7fafc;
+            border-left: 3px solid #38b2ac;
+            padding: 0.75rem;
+            border-radius: 0.25rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .plan-completed {
+            border-left-color: #48bb78;
+        }
+
+        .accomplishment-box {
+            background-color: #f7f1fd;
+            border-left: 2px solid #9f7aea;
+            padding: 0.5rem;
+            border-radius: 0.25rem;
+            margin-top: 0.5rem;
+        }
+
+        .completion-notes {
+            background-color: #c6f6d5;
+            padding: 0.5rem;
+            border-radius: 0.25rem;
+            margin-top: 0.5rem;
+        }
+
+        .implementation-box {
+            background-color: #f7fafc;
+            border-left: 4px solid #38b2ac;
+            padding: 1rem;
+            border-radius: 0.25rem;
+            margin-bottom: 1rem;
+        }
+
+        .doc-link {
+            color: #319795;
+            text-decoration: none;
+            font-size: 0.875rem;
+        }
+
+        .doc-link:hover {
+            color: #2c5282;
+            text-decoration: underline;
+        }
+
+        .list-item {
+            font-size: 0.875rem;
+            color: #4a5568;
+            padding-left: 1rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .persons-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .divider {
+            border: none;
+            border-top: 1px solid #e2e8f0;
+            margin: 1rem 0;
+        }
+
+        .text-xs {
+            font-size: 0.75rem;
+        }
+
+        .text-sm {
+            font-size: 0.875rem;
+        }
+
+        .text-gray-600 {
+            color: #718096;
+        }
+
+        .text-gray-700 {
+            color: #4a5568;
+        }
+
+        .text-red-600 {
+            color: #e53e3e;
+        }
+
+        .mt-2 {
+            margin-top: 0.5rem;
+        }
+
+        .mb-2 {
+            margin-bottom: 0.5rem;
+        }
+
+        .mb-3 {
+            margin-bottom: 0.75rem;
+        }
+
+        .pl-3 {
+            padding-left: 0.75rem;
+        }
+
+        @media print {
+            body {
+                background-color: white;
+                padding: 0;
+            }
+
+            .card {
+                box-shadow: none;
+                break-inside: avoid;
+            }
+
+            h2 {
+                cursor: default;
+            }
+
+            h2:hover {
+                color: #285e61;
+                text-decoration: none;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <!-- Indicator Information Header -->
+    {% if indicator and indicator.properties %}
+    <div class="card">
+        <h2>{{ evidence.properties.year_identifier }}</h2>
+        <div>
+            <p class="text-sm text-gray-700">{{ indicator.properties.success_indicator }}</p>
+            <div class="info-row text-xs">
+                <div class="info-item">
+                    <span class="info-label">Composite Key:</span>
+                    <span>{{ indicator.properties.composite_key }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Status:</span>
+                    <span>{% if indicator.properties.removed %}Removed{% else %}Active{% endif %}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Date Added:</span>
+                    <span>{{ indicator.properties.date_added }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Evidence Information Section -->
+    {% if evidence and evidence.properties %}
+    <div class="card">
+        <h3>Evidence Information</h3>
+
+        <!-- Basic Evidence Info -->
+        <div class="info-row text-xs">
+            <div class="info-item">
+                <span class="info-label">Year:</span>
+                <span>{{ evidence.properties.year_identifier }}</span>
+            </div>
+            {% if status_level and status_level.properties %}
+            <div class="info-item">
+                <span class="info-label">Status Level:</span>
+                <span class="badge badge-{{ get_status_color(status_level.properties.status_level) }}">
+                        {{ status_level.properties.status_level }}
+                    </span>
+            </div>
+            {% endif %}
+            {% if 'administrative_review_complete' in evidence.properties %}
+            <div class="info-item">
+                <span class="info-label">Admin Review:</span>
+                <span>
+                        {% if evidence.properties.administrative_review_complete %}Complete{% else %}Pending{% endif %}
+                        {% if evidence.properties.administrative_review_completed_date %}
+                        ({{ evidence.properties.administrative_review_completed_date }})
+                        {% endif %}
+                    </span>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Evidence Summary -->
+        {% if 'admin_review_description' in evidence.properties and
+        evidence.properties.admin_review_description and
+        evidence.properties.admin_review_description != "No Review" %}
+        <div class="summary-box">
+            <div class="summary-title">Evidence Summary</div>
+            <div class="summary-text">{{ evidence.properties.admin_review_description }}</div>
+        </div>
+        {% endif %}
+
+        <!-- Admin Review Notes -->
+        {% if admin_review_notes %}
+        <div class="mt-2">
+            <h4>Reviewer Notes</h4>
+            {% for note_item in admin_review_notes %}
+            <div class="note-box">
+                <div class="text-xs">
+                    <strong>{{ note_item.note.properties.date_created|default('No date', true) }}</strong>
+                    {% if note_item.created_by and note_item.created_by.properties %}
+                    <span class="text-gray-600"> - {{ note_item.created_by.properties.name }}</span>
+                    {% endif %}
+                </div>
+                <div class="text-xs text-gray-700">{{ note_item.note.properties.content }}</div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <hr class="divider">
+
+        <!-- Persons and Reviewers -->
+        <div class="persons-grid">
+            {% if persons %}
+            <div>
+                <h4>Persons Involved</h4>
+                {% for person in persons %}
+                <div class="list-item">
+                    • {{ person.properties.name }} - {{ person.properties.title }}
+                    {% if person.properties.ati_role %}({{ person.properties.ati_role }}){% endif %}
+                    {% if person.properties.email %} - {{ person.properties.email }}{% endif %}
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            {% if admin_reviewers %}
+            <div>
+                <h4>Admin Reviewers</h4>
+                {% for reviewer in admin_reviewers %}
+                <div class="list-item">
+                    • {{ reviewer.properties.name }} - {{ reviewer.properties.title }}
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Plans and Accomplishments Section -->
+    {% if plans or accomplishments %}
+    <div class="card">
+        <h3>Plans and Accomplishments</h3>
+
+        <!-- Plans -->
+        {% if plans %}
+        <div class="mb-3">
+            <h4>Plans ({{ plans|length }})</h4>
+            {% for plan in plans %}
+            <div class="plan-box {% if plan.properties.plan_status == 'Completed' %}plan-completed{% endif %}">
+                <div class="mb-2">
+                    <span class="text-xs"><strong>{{ plan.properties.name }}</strong></span>
+                    <span class="badge badge-{% if plan.properties.plan_status == 'Completed' %}green{% elif plan.properties.plan_status == 'In Progress' %}blue{% elif plan.properties.abandoned %}red{% else %}gray{% endif %}">
+                            {% if plan.properties.abandoned %}Abandoned{% else %}{{ plan.properties.plan_status }}{% endif %}
+                        </span>
+                    {% if plan.properties.is_key_plan %}
+                    <span class="badge badge-purple">Key Plan</span>
+                    {% endif %}
+                    {% if plan.properties.is_campus_plan %}
+                    <span class="badge badge-green">Campus Plan</span>
+                    {% endif %}
+                </div>
+                <div class="text-xs text-gray-700">{{ plan.properties.description }}</div>
+
+                {% if plan.properties.plan_status == 'Completed' and plan.properties.completion_notes %}
+                <div class="completion-notes text-xs">
+                    <strong>Completion Notes:</strong> {{ plan.properties.completion_notes }}
+                </div>
+                {% endif %}
+
+                {% if plan.related_accomplishment %}
+                <div class="accomplishment-box">
+                    <div class="text-xs">
+                        <strong class="text-purple-700">Accomplishment ✓</strong>
+                        {% if plan.properties.completed_year_name %}
+                        <span class="badge badge-purple">{{ plan.properties.completed_year_name }}</span>
+                        {% endif %}
+                    </div>
+                    <div class="text-xs text-gray-700">
+                        {{ plan.related_accomplishment.accomplishment.properties.description|default(plan.related_accomplishment.properties.description, true) }}
+                    </div>
+                </div>
+                {% endif %}
+
+                {% if plan.properties.abandoned and plan.properties.abandoned_notes %}
+                <div class="text-xs text-red-600 mt-2">
+                    <strong>Abandonment Notes:</strong> {{ plan.properties.abandoned_notes }}
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    <!-- Notes Section -->
+    {% if notes %}
+    <div class="card">
+        <h3>Notes ({{ notes|length }})</h3>
+        {% for note_item in notes %}
+        <div class="note-box">
+            <div class="text-xs">
+                <strong>{{ note_item.note.properties.date_created|default('No date', true) }}</strong>
+                {% if note_item.created_by and note_item.created_by.properties %}
+                <span class="text-gray-600"> - {{ note_item.created_by.properties.name }}</span>
+                {% endif %}
+            </div>
+            <div class="text-xs text-gray-700">{{ note_item.note.properties.content }}</div>
+            {% if note_item.note.properties.file_path or note_item.note.properties.uri_path %}
+            <a href="{{ note_item.note.properties.file_path|default(note_item.note.properties.uri_path, true) }}"
+               class="doc-link text-xs mt-2" target="_blank">
+                📎 {{ note_item.note.properties.name|default('Attachment', true) }}
+            </a>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Messages Section -->
+    {% if messages %}
+    <div class="card">
+        <h3>Messages ({{ messages|length }})</h3>
+        {% for message_item in messages %}
+        <div class="note-box">
+            <div class="text-xs">
+                <strong>{{ message_item.message.properties.date_sent|default('No date', true) }}</strong>
+                {% if message_item.created_by and message_item.created_by.properties %}
+                <span class="text-gray-600"> - {{ message_item.created_by.properties.name }}</span>
+                {% endif %}
+            </div>
+            <div class="text-xs text-gray-700">{{ message_item.message.properties.content }}</div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Metrics Section -->
+    {% if metrics %}
+    <div class="card">
+        <h3>Metrics ({{ metrics|length }})</h3>
+        {% for metric_item in metrics %}
+        <div style="background-color: #f7fafc; padding: 0.5rem; border-radius: 0.25rem; margin-bottom: 0.5rem;">
+            <div class="text-xs text-gray-700">
+                <strong>{{ metric_item.metric.properties.name }}:</strong>
+                {{ metric_item.metric.properties.value|default(metric_item.metric.properties.single_value, true) }}
+                {% if metric_item.created_by and metric_item.created_by.properties %}
+                <span class="text-gray-600">({{ metric_item.created_by.properties.name }})</span>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Implementation Evidence Section -->
+    {% if evidence_types %}
+    <div class="card">
+        <h3>Implementation Evidence</h3>
+        {% for etype in evidence_types %}
+        <div class="implementation-box">
+            <div class="mb-3">
+                <span class="badge badge-teal">{{ etype.type }}</span>
+                {% if etype.evidenceType and etype.evidenceType.properties and etype.evidenceType.properties.title %}
+                <h4 style="display: inline; margin-left: 0.5rem;">{{ etype.evidenceType.properties.title }}</h4>
+                {% endif %}
+            </div>
+
+            {% if etype.evidenceType and etype.evidenceType.properties and etype.evidenceType.properties.description %}
+            <p class="text-xs text-gray-700 mb-3">{{ etype.evidenceType.properties.description }}</p>
+            {% endif %}
+
+            <!-- Documents -->
+            {% if etype.docs %}
+            <div class="mb-3">
+                <div class="text-xs text-gray-700 info-label mb-2">Documents</div>
+                <div class="pl-3">
+                    {% for doc in etype.docs %}
+                    {% if doc.document and doc.document.properties %}
+                    <div class="mb-2">
+                        <div>
+                            <a href="{{ doc.document.properties.file_path|default(doc.document.properties.uri_path, true) }}"
+                               class="doc-link" target="_blank">
+                                • {{ doc.document.properties.name }}
+                            </a>
+                            {% if doc.document.properties.is_administrative_review_documentation == "True" or doc.document.properties.is_administrative_review_documentation == true %}
+                            <span class="badge badge-purple">Admin Review</span>
+                            {% endif %}
+                            {% if doc.document.properties.is_milestone_and_measures_documentation == "True" or doc.document.properties.is_milestone_and_measures_documentation == true %}
+                            <span class="badge badge-blue">Milestones</span>
+                            {% endif %}
+                            {% if doc.document.properties.depreciated == true %}
+                            <span class="badge badge-orange">Depreciated</span>
+                            {% endif %}
+                        </div>
+                        {% if doc.document.properties.description %}
+                        <div class="text-xs text-gray-600 pl-3 mt-1">{{ doc.document.properties.description }}</div>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Webpages -->
+            {% if etype.webs %}
+            <div class="mb-3">
+                <div class="text-xs text-gray-700 info-label mb-2">Webpages</div>
+                <div class="pl-3">
+                    {% for web in etype.webs %}
+                    {% if web.webpage and web.webpage.properties %}
+                    <div class="mb-2">
+                        <div>
+                            <a href="{{ web.webpage.properties.url }}" class="doc-link" target="_blank">
+                                • {{ web.webpage.properties.name|default(web.webpage.properties.title, true) }}
+                            </a>
+                            {% if web.webpage.properties.no_longer_exists == true %}
+                            <span class="badge badge-red">No Longer Exists</span>
+                            {% endif %}
+                            {% if web.webpage.properties.depreciated == true %}
+                            <span class="badge badge-orange">Depreciated</span>
+                            {% endif %}
+                        </div>
+                        {% if web.webpage.properties.description %}
+                        <div class="text-xs text-gray-600 pl-3 mt-1">{{ web.webpage.properties.description }}</div>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Implementation Notes -->
+            {% if etype.notes %}
+            <div class="mb-3">
+                <div class="text-xs text-gray-700 info-label mb-2">Notes</div>
+                <div class="pl-3">
+                    {% for note in etype.notes %}
+                    <div class="text-xs text-gray-700">
+                        • {{ note.note.properties.date_created|default('No date', true) }}: {{ note.note.properties.content }}
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Implementation Messages -->
+            {% if etype.msgs %}
+            <div class="mb-3">
+                <div class="text-xs text-gray-700 info-label mb-2">Messages</div>
+                <div class="pl-3">
+                    {% for msg in etype.msgs %}
+                    <div class="text-xs text-gray-700">
+                        • {{ msg.message.properties.date_sent|default('No date', true) }}: {{ msg.message.properties.content }}
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Implementation Metrics -->
+            {% if etype.metrics %}
+            <div>
+                <div class="text-xs text-gray-700 info-label mb-2">Metrics</div>
+                <div class="pl-3">
+                    {% for metric in etype.metrics %}
+                    <div class="text-xs text-gray-700">
+                        • {{ metric.properties.name }}:
+                        <strong>{{ metric.properties.value|default(metric.properties.single_value, true) }}</strong>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+</div>
+</body>
+</html>
