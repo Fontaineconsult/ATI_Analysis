@@ -232,6 +232,7 @@ def add_plan(plan_data: dict) -> bool:
         Optional fields:
         - is_key_plan : bool - Whether this is a key strategic plan (default: False)
         - is_campus_plan : bool - Whether this is a campus-wide plan (default: False)
+        - for_next_year : bool - Whether this plan should be moved to next academic year (default: False)
         - plan_status : str - Current status of the plan (e.g., "In Progress", "Completed")
                               If "Completed", completed_year is auto-set if not provided
         - abandoned : bool - Whether the plan was abandoned (default: False)
@@ -283,6 +284,7 @@ def add_plan(plan_data: dict) -> bool:
         academic_year_name = plan_data.get('academic_year_name')
         is_key_plan = plan_data.get('is_key_plan', False)
         is_campus_plan = plan_data.get('is_campus_plan', False)
+        for_next_year = plan_data.get('for_next_year', False)  # Added for_next_year field
         plan_status = plan_data.get('plan_status', None)
         abandoned = plan_data.get('abandoned', False)
         abandoned_notes = plan_data.get('abandoned_notes', None)
@@ -328,6 +330,7 @@ def add_plan(plan_data: dict) -> bool:
             description=description,              # Using "description" from dict
             is_key_plan=is_key_plan,
             is_campus_plan=is_campus_plan,
+            for_next_year=for_next_year,         # Added for_next_year field
             plan_status=plan_status,              # Optional plan status
             abandoned=abandoned,                 # Optional abandoned status
             abandoned_notes=abandoned_notes       # Optional abandoned notes

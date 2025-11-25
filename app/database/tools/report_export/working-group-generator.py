@@ -850,5 +850,5 @@ def create_index_html(report_files: List[str], working_group: str, output_dir: P
 
 if __name__ == "__main__":
     # Fetch data directly from Neo4j
-    data = fetch_evidence_for_working_group("Procurement", "2024-2025")
+    data = fetch_evidence_for_working_group("Instructional Materials", "2024-2025")
     generate_indicator_html_reports(data, "reports")

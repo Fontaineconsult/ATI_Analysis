@@ -371,6 +371,7 @@ class Plan(StructuredNode):
     abandoned_notes = StringProperty()
     completion_notes = StringProperty()
     plan_status = StringProperty()
+    for_next_year = BooleanProperty(default=False) # new ay query should assign this plan to the following year (academic_year) and detach it from the previous year when run.
     progress_updates = RelationshipTo("Note", "progress_documented_by")
 
     completed_year = RelationshipTo("AcademicYear", "completed_in_year")

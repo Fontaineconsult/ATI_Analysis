@@ -5,7 +5,7 @@ from app.endpoints.data_api.errors.custom_exceptions import NotFoundError, CrudE
 
 from neomodel import db
 
-def fetch_evidence_for_working_group(working_group, academic_year):
+def fetch_evidence_for_working_group(working_group, academic_year, use_remote=None):
     # Validate working group
 
     if working_group not in working_groups:
@@ -365,7 +365,9 @@ def fetch_evidence_for_working_group(working_group, academic_year):
 """
 
     try:
-        set_connection(remote=False)
+        # Only set connection if explicitly specified
+        if use_remote is not None:
+            set_connection(remote=use_remote)
         results, meta = db.cypher_query(query, {'working_group': working_group, 'academic_year': academic_year})
         if not results:
             raise NotFoundError(f"No data found for the working group '{working_group}' and academic year '{academic_year}'.")

@@ -287,7 +287,7 @@ if __name__ == "__main__":
         print("\nFor help: python export_to_pdf.py --help")
 
         # Demo with example if running without arguments
-        demo_html = Path("reports/index.html")
+        demo_html = Path("reports/pro/index.html")
         if demo_html.exists():
             print(f"\nDemo: Converting {demo_html}...")
             try:

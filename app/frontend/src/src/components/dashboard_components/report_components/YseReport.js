@@ -27,6 +27,9 @@ function PlainTextReport({ evidenceItem, indicatorItem }) {
     const generateReportText = () => {
         let report = '';
 
+        // Get academic year from evidenceItem
+        const academicYear = evidenceItem?.currentAcademicYear || "2024-2025";
+
         // Filter main-level items
         const filteredNotes = filterByIncludeInReport(evidenceItem?.has_notes || [], 'note.properties');
         const filteredMessages = filterByIncludeInReport(evidenceItem?.has_messages || [], 'message.properties');
@@ -42,34 +45,57 @@ function PlainTextReport({ evidenceItem, indicatorItem }) {
             return props.include_in_report !== false;
         });
 
-        // Filter evidenceTypes and their nested content
+        // Filter evidenceTypes with year-based filtering for docs and webs
         // Documents and webpages come wrapped in objects with document/webpage properties
-        // IMPORTANT: Deprecated items ARE included unless explicitly excluded via include_in_report=false
         const filteredEvidenceTypes = (evidenceItem?.evidenceTypes || []).map((etype) => {
             return {
                 ...etype,
-                docs: (etype.docs || []).filter(d => {
-                    const doc = d.document || d;
-                    // Include deprecated docs as long as include_in_report is not false
-                    return doc && doc.properties?.include_in_report !== false;
+                // Filter docs based on included_in_years
+                docs: (etype.docs || []).filter(doc => {
+                    // If no relationship data or included_in_years is null/undefined, include the doc
+                    if (!doc.relationship || !doc.relationship.included_in_years) {
+                        return true;
+                    }
+                    // Check if current academic year is in the included_in_years array
+                    return doc.relationship.included_in_years.includes(academicYear);
                 }),
-                webs: (etype.webs || []).filter(w => {
-                    const web = w.webpage || w;
-                    // Webpages may not have include_in_report flag, so include by default
-                    // Include deprecated webpages as long as include_in_report is not false
-                    return web && (web.properties?.include_in_report !== false);
+                // Filter webs based on included_in_years
+                webs: (etype.webs || []).filter(web => {
+                    // If no relationship data or included_in_years is null/undefined, include the web
+                    if (!web.relationship || !web.relationship.included_in_years) {
+                        return true;
+                    }
+                    // Check if current academic year is in the included_in_years array
+                    return web.relationship.included_in_years.includes(academicYear);
                 }),
-                notes: (etype.notes || []).filter(n => {
-                    const note = n.note || n;
-                    // Include deprecated notes as long as include_in_report is not false
-                    return note && note.properties?.include_in_report !== false;
+                // For notes with relationship data, apply same logic
+                notes: (etype.notes || []).filter(note => {
+                    // If the note itself doesn't exist, filter it out
+                    if (!note || !note.note) return false;
+
+                    // If it has relationship data with included_in_years, check the year
+                    if (note.relationship && note.relationship.included_in_years) {
+                        return note.relationship.included_in_years.includes(academicYear);
+                    }
+
+                    // If no relationship data, include it
+                    return true;
                 }),
-                msgs: (etype.msgs || []).filter(m => {
-                    const msg = m.message || m;
-                    // Include deprecated messages as long as include_in_report is not false
-                    return msg && msg.properties?.include_in_report !== false;
+                // For messages with relationship data, apply same logic
+                msgs: (etype.msgs || []).filter(msg => {
+                    // If the message itself doesn't exist, filter it out
+                    if (!msg || !msg.message) return false;
+
+                    // If it has relationship data with included_in_years, check the year
+                    if (msg.relationship && msg.relationship.included_in_years) {
+                        return msg.relationship.included_in_years.includes(academicYear);
+                    }
+
+                    // If no relationship data, include it
+                    return true;
                 }),
-                metrics: filterByIncludeInReport(etype.metrics, 'properties'),
+                // Keep metrics as is (they don't have year filtering in the data)
+                metrics: filterByIncludeInReport(etype.metrics || [], 'properties'),
             };
         }).filter(et => {
             const hasContent = et.docs?.length || et.webs?.length ||
@@ -118,7 +144,14 @@ function PlainTextReport({ evidenceItem, indicatorItem }) {
                 report += `\nPersons Involved:\n`;
                 evidenceItem.persons.forEach((person) => {
                     const personProps = person.properties;
-                    report += `  • ${personProps.name} - ${personProps.title} (${personProps.email})\n`;
+                    report += `  • ${personProps.name} - ${personProps.title}`;
+                    if (personProps.ati_role) {
+                        report += ` (${personProps.ati_role})`;
+                    }
+                    if (personProps.email) {
+                        report += ` - ${personProps.email}`;
+                    }
+                    report += '\n';
                 });
             }
 
@@ -131,9 +164,17 @@ function PlainTextReport({ evidenceItem, indicatorItem }) {
                 });
             }
 
-            // Admin Review Notes
+            // Evidence Summary (admin_review_description)
+            if ('admin_review_description' in evidenceProps &&
+                evidenceProps.admin_review_description &&
+                evidenceProps.admin_review_description !== "No Review") {
+                report += `\nEvidence Summary:\n`;
+                report += `  ${evidenceProps.admin_review_description}\n`;
+            }
+
+            // Admin Review Notes (Reviewer Notes)
             if (filteredAdminReviewNotes.length > 0) {
-                report += `\nAdmin Review Notes:\n`;
+                report += `\nReviewer Notes:\n`;
                 filteredAdminReviewNotes.forEach((noteItem) => {
                     const noteProps = noteItem.note.properties;
                     report += `  • ${noteProps.date_created || 'No date'}`;
@@ -227,8 +268,10 @@ function PlainTextReport({ evidenceItem, indicatorItem }) {
                 // Documents
                 if (etype.docs?.length > 0) {
                     report += `\n  Documents:\n`;
-                    etype.docs.forEach((docWrapper) => {
-                        const docProps = docWrapper.document?.properties || docWrapper.properties || {};
+                    etype.docs.forEach((doc) => {
+                        const docProps = doc.document?.properties || doc.properties || doc;
+                        if (!docProps.name && !docProps.file_path && !docProps.uri_path) return; // Skip if no valid document data
+
                         report += `    • ${docProps.name}`;
 
                         // Add badges as text
@@ -250,14 +293,19 @@ function PlainTextReport({ evidenceItem, indicatorItem }) {
                         }
                         report += '\n';
                         report += `      ${docProps.file_path || docProps.uri_path}\n`;
+                        if (docProps.description) {
+                            report += `      ${docProps.description}\n`;
+                        }
                     });
                 }
 
                 // Webpages
                 if (etype.webs?.length > 0) {
                     report += `\n  Webpages:\n`;
-                    etype.webs.forEach((webWrapper) => {
-                        const webProps = webWrapper.webpage?.properties || webWrapper.properties || {};
+                    etype.webs.forEach((web) => {
+                        const webProps = web.webpage?.properties || web.properties || web;
+                        if (!webProps.name && !webProps.title && !webProps.url) return; // Skip if no valid webpage data
+
                         report += `    • ${webProps.name || webProps.title}`;
 
                         // Add badges as text
@@ -285,8 +333,10 @@ function PlainTextReport({ evidenceItem, indicatorItem }) {
                 // Implementation Notes
                 if (etype.notes?.length > 0) {
                     report += `\n  Notes:\n`;
-                    etype.notes.forEach((noteWrapper) => {
-                        const noteProps = noteWrapper.note?.properties || noteWrapper.properties || {};
+                    etype.notes.forEach((note) => {
+                        const noteProps = note.note?.properties || note.properties || note;
+                        if (!noteProps.content) return; // Skip if no valid note data
+
                         let noteEntry = `    • ${noteProps.date_created || 'No date'}: ${noteProps.content}`;
                         if (noteProps.depreciated === true) {
                             const depreciatedInfo = noteProps.depreciated_date
@@ -301,8 +351,10 @@ function PlainTextReport({ evidenceItem, indicatorItem }) {
                 // Implementation Messages
                 if (etype.msgs?.length > 0) {
                     report += `\n  Messages:\n`;
-                    etype.msgs.forEach((msgWrapper) => {
-                        const msgProps = msgWrapper.message?.properties || msgWrapper.properties || {};
+                    etype.msgs.forEach((msg) => {
+                        const msgProps = msg.message?.properties || msg.properties || msg;
+                        if (!msgProps.content) return; // Skip if no valid message data
+
                         let msgEntry = `    • ${msgProps.date_sent || 'No date'}: ${msgProps.content}`;
                         if (msgProps.depreciated === true) {
                             const depreciatedInfo = msgProps.depreciated_date
@@ -319,6 +371,8 @@ function PlainTextReport({ evidenceItem, indicatorItem }) {
                     report += `\n  Metrics:\n`;
                     etype.metrics.forEach((metric) => {
                         const metricProps = metric.properties || metric;
+                        if (!metricProps.name) return; // Skip if no valid metric data
+
                         report += `    • ${metricProps.name}: ${metricProps.value || metricProps.single_value}\n`;
                     });
                 }

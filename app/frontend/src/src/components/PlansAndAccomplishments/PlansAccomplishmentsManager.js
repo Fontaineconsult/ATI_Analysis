@@ -56,6 +56,7 @@ function PlansAccomplishmentsManager() {
         plan_status: 'Not Started',
         is_key_plan: false,
         is_campus_plan: false,
+        for_next_year: false,  // Added for_next_year field
         abandoned: false,
         abandoned_notes: '',
         academic_year_name: currentAcademicYear,
@@ -110,6 +111,7 @@ function PlansAccomplishmentsManager() {
                 plan_status: 'Not Started',
                 is_key_plan: false,
                 is_campus_plan: false,
+                for_next_year: false,  // Reset for_next_year field
                 abandoned: false,
                 abandoned_notes: '',
                 academic_year_name: currentAcademicYear,
@@ -538,6 +540,22 @@ function PlansAccomplishmentsManager() {
                                     />
                                 </FormControl>
                             </HStack>
+
+                            <FormControl display="flex" alignItems="center">
+                                <FormLabel fontSize="sm" color="gray.800" fontWeight="bold" mb="0" mr={3}>
+                                    For Next Year
+                                </FormLabel>
+                                <Checkbox
+                                    size="sm"
+                                    colorScheme="blue"
+                                    isChecked={newPlanData.for_next_year}
+                                    onChange={(e) => setNewPlanData({...newPlanData, for_next_year: e.target.checked})}
+                                >
+                                    <Text fontSize="xs" color="gray.600">
+                                        This plan should be moved to the next academic year
+                                    </Text>
+                                </Checkbox>
+                            </FormControl>
                         </VStack>
                     </ModalBody>
 
