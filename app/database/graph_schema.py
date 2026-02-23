@@ -769,6 +769,9 @@ class YearSuccessEvidence(StructuredNode):
     worked_on_in_current_year = BooleanProperty(default=False)
     will_work_on_next_year = BooleanProperty(default=False)
 
+    # Campus relationship
+    campus = RelationshipTo("Campus", "evidence_at_campus")
+
     # Relationships from implementation nodes
     processes_that_evidence = RelationshipFrom("Process", "is_evidence_for")
     projects_that_evidence = RelationshipFrom("Project", "is_evidence_for")
@@ -958,6 +961,7 @@ class Campus(StructuredNode):
 
     unique_id = UniqueIdProperty()
     name = StringProperty(unique_index=True)
+    abbreviation = StringProperty(unique_index=True)
 
 
 
