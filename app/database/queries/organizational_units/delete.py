@@ -51,3 +51,19 @@ def delete_college(name: str) -> bool:
         raise NotFoundError(f"College '{name}' does not exist.")
     except Exception as e:
         raise CrudError(f"Failed to delete college '{name}': {e}")
+
+def delete_campus(name: str) -> bool:
+    """
+    Deletes a campus node from the graph
+    :param name: Name of the campus
+    :return: True if the campus node is deleted successfully, False otherwise
+    """
+    try:
+        campus = Campus.nodes.get(name=name)
+        campus.delete()
+        print("Deleted campus")
+        return True
+    except Campus.DoesNotExist:
+        raise NotFoundError(f"Campus '{name}' does not exist.")
+    except Exception as e:
+        raise CrudError(f"Failed to delete campus '{name}': {e}")

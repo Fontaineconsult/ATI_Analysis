@@ -57,3 +57,19 @@ def add_college(name: str, location: str) -> bool:
         return True
     except Exception as e:
         raise CrudError(f"Failed to add college: {e}")
+
+def add_campus(name: str) -> bool:
+    """
+    Adds a campus node to the graph
+    :param name: Name of the campus
+    :return: True if the campus node is added successfully, False otherwise
+    """
+    try:
+        new_campus = Campus(
+            name=name
+        )
+        new_campus.save()
+        print("Added campus")
+        return True
+    except Exception as e:
+        raise CrudError(f"Failed to add campus: {e}")
