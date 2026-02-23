@@ -929,6 +929,7 @@ class Department(StructuredNode):
     location = StringProperty()
     employs = RelationshipTo("Person", "employs")
     implements_yse = RelationshipTo("YearSuccessEvidence", "implements")
+    operates_under_campus = RelationshipTo("Campus", "operates_under_campus")
 
 
 
@@ -950,6 +951,14 @@ class College(StructuredNode):
     location = StringProperty()
     employs = RelationshipTo("Person", "employs")
     implements_yse = RelationshipTo("YearSuccessEvidence", "implements")
+    operates_under_campus = RelationshipTo("Campus", "operates_under_campus")
+
+
+class Campus(StructuredNode):
+
+    unique_id = UniqueIdProperty()
+    name = StringProperty(unique_index=True)
+
 
 
 class Vendor(StructuredNode):
@@ -1227,7 +1236,7 @@ def update_remote():
     print("Updating remote connection")
 
     # Construct path to .env.remote file
-    dotenv_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), '.env.remote')
+    dotenv_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), '.env.development')
     print(f"Loading environment from: {dotenv_path}")
 
     # Load environment variables and check if file exists
@@ -1238,18 +1247,18 @@ def update_remote():
         print(f"Warning: Environment file not found at {dotenv_path}")
 
     # Get environment variables with fallback values
-    neo4j_database = os.environ.get('NEO4J_DATABASE')
-    database_connector = os.environ.get('DATABASE_CONNECTOR')
+    neo4j_database = os.environ.get('NEO4J_DATABASE', 'neo4j')
+    database_url = os.environ.get('DATABASE_URL')
 
     print(f"NEO4J_DATABASE: {neo4j_database}")
-    print(f"DATABASE_CONNECTOR: {database_connector}")
+    print(f"DATABASE_URL: {database_url}")
 
     # Ensure environment variables are set before configuring
-    if not neo4j_database or not database_connector:
-        raise ValueError("Required environment variables NEO4J_DATABASE and DATABASE_CONNECTOR must be set")
+    if not database_url:
+        raise ValueError("Required environment variable DATABASE_URL must be set")
 
     config.DATABASE_NAME = neo4j_database
-    config.DATABASE_URL = database_connector
+    config.DATABASE_URL = database_url
     install_all_labels()
 
     print(f"Config set - DATABASE_NAME: {config.DATABASE_NAME}, DATABASE_URL: {config.DATABASE_URL}")
@@ -1263,9 +1272,11 @@ def set_connection():
     load_dotenv(dotenv_path)
 
 
-    config.DATABASE_NAME = os.environ.get('NEO4J_DATABASE')
+    config.DATABASE_NAME = os.environ.get('NEO4J_DATABASE', 'ati')
 
-    config.DATABASE_URL = os.environ.get('DATABASE_CONNECTOR')
+    config.DATABASE_URL = os.environ.get('DATABASE_URL')
+    print(config.DATABASE_NAME)
+    print(f"NEO4J_DATABASE: {config.DATABASE_URL}")
 
 
 # set_connection()
