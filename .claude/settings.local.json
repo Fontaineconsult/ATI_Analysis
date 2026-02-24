@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(head:*)",
+      "Bash(cd /c/Users/Fonta/PycharmProjects/ATI_Analysis && python -c \"import openpyxl; print\\(openpyxl.__version__\\)\" 2>&1)",
+      "Bash(cd /c/Users/Fonta/PycharmProjects/ATI_Analysis && pip install openpyxl 2>&1)",
+      "Bash(cd:*)"
+    ]
+  }
+}
