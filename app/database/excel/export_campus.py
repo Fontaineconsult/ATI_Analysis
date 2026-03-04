@@ -45,6 +45,12 @@ THIN_BORDER = Border(
     bottom=Side(style="thin", color="D9D9D9"),
 )
 
+SECTION_BOTTOM_BORDER = Border(
+    bottom=Side(style="medium", color="2F5496"),
+)
+
+SPACER_FILL = PatternFill(start_color="F5F5F5", end_color="F5F5F5", fill_type="solid")
+
 # Status level colors: Red (Not Started) -> Green (Optimizing)
 STATUS_FILLS = {
     "Not Started": PatternFill(start_color="FF4D4D", end_color="FF4D4D", fill_type="solid"),
@@ -214,6 +220,11 @@ def _build_campus_sheet(wb: Workbook, campus_label: str, campus_abbreviation: st
         if not wg['rows']:
             ws.cell(row=current_row, column=1, value="No data")
             ws.cell(row=current_row, column=1).font = Font(italic=True, color="999999")
+            current_row += 1
+            # Spacer row
+            for col_idx in range(1, len(COLUMNS) + 1):
+                ws.cell(row=current_row, column=col_idx).fill = SPACER_FILL
+            ws.row_dimensions[current_row].height = 8
             current_row += 2
             continue
 
@@ -277,8 +288,22 @@ def _build_campus_sheet(wb: Workbook, campus_label: str, campus_abbreviation: st
                 dv_person.add(f"{add_impl_col}{r}")
             ws.add_data_validation(dv_person)
 
-        # Blank row between working groups
-        current_row += 1
+        # Divider: medium bottom border on last table row
+        for col_idx in range(1, len(COLUMNS) + 1):
+            cell = ws.cell(row=table_end_row, column=col_idx)
+            cell.border = Border(
+                left=cell.border.left,
+                right=cell.border.right,
+                top=cell.border.top,
+                bottom=Side(style="medium", color="2F5496"),
+            )
+
+        # Spacer row with subtle grey fill
+        for col_idx in range(1, len(COLUMNS) + 1):
+            cell = ws.cell(row=current_row, column=col_idx)
+            cell.fill = SPACER_FILL
+        ws.row_dimensions[current_row].height = 8
+        current_row += 2
 
     # Freeze below title
     ws.freeze_panes = "A3"
