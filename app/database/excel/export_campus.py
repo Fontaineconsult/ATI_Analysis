@@ -14,6 +14,8 @@ COLUMNS = [
     'Status',
     'Assigned Implementors',
     'Organizations',
+    'Evidence',
+    'SI Notes',
     'Add Implementor',
 ]
 
@@ -24,6 +26,8 @@ ROW_KEYS = [
     'status',
     'implementors',
     'organizations',
+    'evidence',
+    'si_notes',
     None,  # Add Implementor — left blank for dropdown selection
 ]
 

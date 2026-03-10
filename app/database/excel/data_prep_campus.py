@@ -1,3 +1,5 @@
+from neomodel import db
+
 from app.database.class_factory import working_groups
 from app.database.queries.compound_queries.persons_assigned_to_yse import fetch_persons_assigned_to_yse
 from app.database.queries.individuals.read import get_all_persons_basic
@@ -49,10 +51,13 @@ def prepare_export_data(academic_year: str) -> dict:
 
     for campus_info in CAMPUS_LIST:
         abbrev = campus_info["abbreviation"]
+        evidence_map = _fetch_evidence_summary(academic_year, abbrev)
+        si_notes_map = _fetch_si_notes(academic_year, abbrev)
         wg_data = []
 
         for wg_name in working_groups:
-            rows = _fetch_working_group_rows(wg_name, academic_year, abbrev)
+            rows = _fetch_working_group_rows(wg_name, academic_year, abbrev,
+                                             evidence_map, si_notes_map)
             wg_data.append({
                 'name': wg_name,
                 'rows': rows
@@ -77,7 +82,10 @@ def prepare_export_data(academic_year: str) -> dict:
     }
 
 
-def _fetch_working_group_rows(working_group: str, academic_year: str, campus_abbreviation: str) -> list:
+def _fetch_working_group_rows(working_group: str, academic_year: str,
+                              campus_abbreviation: str,
+                              evidence_map: dict = None,
+                              si_notes_map: dict = None) -> list:
     """Fetch and format rows for a single working group filtered by campus."""
     try:
         results, meta = fetch_persons_assigned_to_yse(working_group, academic_year, campus_abbreviation)
@@ -87,10 +95,14 @@ def _fetch_working_group_rows(working_group: str, academic_year: str, campus_abb
     if not results:
         return []
 
+    evidence_map = evidence_map or {}
+    si_notes_map = si_notes_map or {}
+
     # meta columns: goal_description, goal, goal_number, indicator, indicator_id,
     # yse, academic_year, status, implementors, organizations, campus, campus_abbreviation
     rows = []
     for row in results:
+        yi = row[5] or ''
         rows.append({
             'goal_description': row[0],
             'goal': row[1],
@@ -99,13 +111,121 @@ def _fetch_working_group_rows(working_group: str, academic_year: str, campus_abb
             'status': row[7],
             'implementors': row[8],
             'organizations': row[9],
+            'evidence': evidence_map.get(yi, ''),
+            'si_notes': si_notes_map.get(yi, ''),
         })
     return rows
 
 
+def _fetch_evidence_summary(academic_year: str, campus_abbreviation: str) -> dict:
+    """Fetch implementation → documentation evidence per YSE, returned as {year_identifier: formatted_string}."""
+    try:
+        query = """
+        MATCH (yse:YearSuccessEvidence)-[:evidence_in_year]->(year:AcademicYear)
+        MATCH (yse)-[:evidence_at_campus]->(campus:Campus)
+        WHERE year.name = $academic_year AND campus.abbreviation = $campus_abbreviation
+
+        OPTIONAL MATCH (impl)-[:is_evidence_for]->(yse)
+        WHERE impl:Process OR impl:Project OR impl:Procedure OR impl:Service
+           OR impl:Guidance OR impl:Tracking OR impl:InternalPolicy
+
+        OPTIONAL MATCH (impl)-[docRel:is_documented_by]->(doc)
+        WHERE (doc:Document OR doc:Webpage OR doc:Note OR doc:Message)
+          AND ($academic_year IN docRel.included_in_years
+               OR size(docRel.included_in_years) = 0)
+          AND NOT $academic_year IN docRel.excluded_from_years
+
+        WITH yse.year_identifier AS yi,
+             impl, labels(impl) AS implLabels, impl.title AS implTitle,
+             collect(DISTINCT {type: labels(doc)[0], name: doc.name}) AS docs
+
+        WITH yi,
+             collect(DISTINCT {
+               type: CASE
+                 WHEN 'Process' IN implLabels THEN 'Process'
+                 WHEN 'Project' IN implLabels THEN 'Project'
+                 WHEN 'Procedure' IN implLabels THEN 'Procedure'
+                 WHEN 'Service' IN implLabels THEN 'Service'
+                 WHEN 'Guidance' IN implLabels THEN 'Guidance'
+                 WHEN 'Tracking' IN implLabels THEN 'Tracking'
+                 WHEN 'InternalPolicy' IN implLabels THEN 'Policy'
+                 ELSE 'Other'
+               END,
+               title: implTitle,
+               docs: docs
+             }) AS implementations
+
+        RETURN yi, implementations
+        """
+        results, _ = db.cypher_query(query, {
+            'academic_year': academic_year,
+            'campus_abbreviation': campus_abbreviation
+        })
+        evidence_map = {}
+        for yi, implementations in results:
+            text = _format_evidence(implementations)
+            if text:
+                evidence_map[yi] = text
+        return evidence_map
+    except Exception:
+        return {}
+
+
+def _format_evidence(implementations: list) -> str:
+    """Format implementation + documentation list into a multi-line string."""
+    lines = []
+    for impl in implementations:
+        if not impl.get('title'):
+            continue
+        lines.append(f"[{impl['type']}] {impl['title']}")
+        for doc in impl.get('docs', []):
+            if doc.get('name'):
+                dtype = (doc.get('type') or '')[:3]
+                lines.append(f"  {dtype}: {doc['name']}")
+    return '\n'.join(lines)
+
+
+def _fetch_si_notes(academic_year: str, campus_abbreviation: str) -> dict:
+    """Fetch notes directly connected to YSE nodes, returned as {year_identifier: formatted_string}."""
+    try:
+        query = """
+        MATCH (yse:YearSuccessEvidence)-[:evidence_in_year]->(year:AcademicYear)
+        MATCH (yse)-[:evidence_at_campus]->(campus:Campus)
+        WHERE year.name = $academic_year AND campus.abbreviation = $campus_abbreviation
+        OPTIONAL MATCH (yse)-[:has_note]->(note:Note)
+        WHERE note.depreciated IS NULL OR note.depreciated = false
+        WITH yse.year_identifier AS yi,
+             collect(DISTINCT {name: note.name, content: note.content, date: toString(note.date_created)}) AS notes
+        RETURN yi, notes
+        """
+        results, _ = db.cypher_query(query, {
+            'academic_year': academic_year,
+            'campus_abbreviation': campus_abbreviation
+        })
+        notes_map = {}
+        for yi, notes in results:
+            text = _format_si_notes(notes)
+            if text:
+                notes_map[yi] = text
+        return notes_map
+    except Exception:
+        return {}
+
+
+def _format_si_notes(notes: list) -> str:
+    """Format YSE notes into a multi-line string with date prefixes."""
+    lines = []
+    for n in notes:
+        if not n.get('name'):
+            continue
+        prefix = f"[{n['date']}] " if n.get('date') else ''
+        content = n.get('content', '') or ''
+        lines.append(f"{prefix}{content or n['name']}")
+    return '\n'.join(lines)
+
+
 def _fetch_all_persons() -> list:
     """Fetch all persons with their organization and campus for the reference sheet."""
-    from neomodel import db
     try:
         query = """
         MATCH (p:Person)
