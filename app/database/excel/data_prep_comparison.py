@@ -6,7 +6,6 @@ from app.database.excel.data_prep_campus import (
     CAMPUS_LIST,
     _fetch_evidence_summary,
     _fetch_si_notes,
-    _fetch_all_persons,
     _fetch_all_status_levels,
 )
 
@@ -45,7 +44,7 @@ def prepare_comparison_data(academic_year: str) -> dict:
         ]
     }
     """
-    all_persons = _fetch_all_persons()
+    all_persons = _fetch_persons_for_year(academic_year)
     all_status_levels = _fetch_all_status_levels()
     all_documents = _fetch_all_documents(academic_year)
 
@@ -252,6 +251,35 @@ def _fetch_all_documents(academic_year: str) -> list:
                 'indicators': ', '.join(sorted(entry['indicator_ids'])),
             }
             for entry in doc_key_map.values()
+        ]
+    except Exception:
+        return []
+
+
+def _fetch_persons_for_year(academic_year: str) -> list:
+    """Fetch persons who are assigned as implementors to at least one YSE in the given academic year."""
+    try:
+        query = """
+        MATCH (p:Person)-[:implements]->(yse:YearSuccessEvidence)
+              -[:evidence_in_year]->(year:AcademicYear {name: $academic_year})
+        OPTIONAL MATCH (org)-[:employs]->(p)
+          WHERE org:Department OR org:College
+        OPTIONAL MATCH (org)-[:operates_under_campus]->(c:Campus)
+        RETURN DISTINCT p.name AS name,
+               p.employee_id AS employee_id,
+               org.name AS organization,
+               c.name AS campus
+        ORDER BY p.name
+        """
+        results, _ = db.cypher_query(query, {'academic_year': academic_year})
+        return [
+            {
+                'name': row[0] or '',
+                'employee_id': row[1] or '',
+                'organization': row[2] or '',
+                'campus': row[3] or '',
+            }
+            for row in results
         ]
     except Exception:
         return []

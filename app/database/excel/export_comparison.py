@@ -151,16 +151,19 @@ def build_workbook(data: dict, output_dir: str = None) -> str:
     wb = Workbook()
     wb.remove(wb.active)
 
-    # Tab 1: Status Levels reference
+    # Tab 1: Stats dashboard
+    _build_stats_sheet(wb, data["working_groups"])
+
+    # Tab 2: Status Levels reference
     _build_status_levels_sheet(wb, data.get("all_status_levels", []))
 
-    # Tab 2: People reference
+    # Tab 3: People reference
     _build_persons_sheet(wb, data["all_persons"])
 
-    # Tab 3: Documents reference with hyperlinks
+    # Tab 4: Documents reference with hyperlinks
     _build_documents_sheet(wb, data.get("all_documents", []))
 
-    # Tabs 4-6: Working group comparison sheets
+    # Tabs 5-7: Working group comparison sheets
     for wg in data["working_groups"]:
         _build_comparison_sheet(wb, wg["name"], wg["goals"])
 
@@ -279,6 +282,182 @@ def _build_documents_sheet(wb: Workbook, documents: list):
     _auto_fit_columns(ws, max_width=60)
 
 
+def _build_stats_sheet(wb: Workbook, working_groups: list):
+    """Build a Stats dashboard with status distribution and unassigned YSE."""
+    ws = wb.create_sheet("Stats")
+
+    # ── Collect stats from working group data ──
+    # Status counts per campus
+    status_counts = {a: {} for a in CAMPUS_ORDER}
+    campus_totals = {a: 0 for a in CAMPUS_ORDER}
+    # Unassigned: indicators where a campus has no people
+    unassigned = []
+
+    for wg in working_groups:
+        for goal in wg["goals"]:
+            for ind in goal["indicators"]:
+                missing_campuses = []
+                for abbrev in CAMPUS_ORDER:
+                    campus_data = ind["campuses"][abbrev]
+                    status = campus_data["status"] or "(No Status)"
+                    status_counts[abbrev][status] = status_counts[abbrev].get(status, 0) + 1
+                    campus_totals[abbrev] += 1
+                    if not campus_data["people_and_orgs"].strip():
+                        missing_campuses.append(abbrev)
+                if missing_campuses:
+                    unassigned.append({
+                        "indicator_id": ind["indicator_id"],
+                        "indicator_name": ind["indicator_name"],
+                        "working_group": wg["name"],
+                        "missing": missing_campuses,
+                    })
+
+    # Collect all status levels across campuses, ordered by the standard list
+    status_order = list(STATUS_FILLS.keys()) + ["(No Status)"]
+    all_statuses = set()
+    for counts in status_counts.values():
+        all_statuses.update(counts.keys())
+    # Keep known statuses in order, then any extras
+    ordered_statuses = [s for s in status_order if s in all_statuses]
+    ordered_statuses += sorted(all_statuses - set(ordered_statuses))
+
+    # ── Section 1: Status Level Distribution by Campus ──
+    ws.cell(row=1, column=1, value="Status Level Distribution by Campus")
+    ws.cell(row=1, column=1).font = Font(bold=True, size=14)
+    ws.merge_cells(start_row=1, start_column=1, end_row=1, end_column=7)
+
+    dist_headers = ["Status Level",
+                    "SSU Count", "SSU %",
+                    "SFSU Count", "SFSU %",
+                    "CSUEB Count", "CSUEB %"]
+    for col_idx, h in enumerate(dist_headers, 1):
+        cell = ws.cell(row=3, column=col_idx, value=h)
+        cell.font = HEADER_FONT
+        cell.alignment = HEADER_ALIGNMENT
+        # Color the campus header pairs
+        if col_idx in (2, 3):
+            cell.fill = CAMPUS_HEADER_FILLS["ssu"]
+            cell.font = CAMPUS_HEADER_FONTS["ssu"]
+        elif col_idx in (4, 5):
+            cell.fill = CAMPUS_HEADER_FILLS["sfsu"]
+            cell.font = CAMPUS_HEADER_FONTS["sfsu"]
+        elif col_idx in (6, 7):
+            cell.fill = CAMPUS_HEADER_FILLS["csueb"]
+            cell.font = CAMPUS_HEADER_FONTS["csueb"]
+        else:
+            cell.fill = HEADER_FILL
+
+    for row_offset, status in enumerate(ordered_statuses):
+        row = 4 + row_offset
+        # Status label with color fill
+        cell = ws.cell(row=row, column=1, value=status)
+        cell.alignment = Alignment(horizontal="center", vertical="center")
+        if status in STATUS_FILLS:
+            cell.fill = STATUS_FILLS[status]
+            cell.font = STATUS_FONTS[status]
+
+        for i, abbrev in enumerate(CAMPUS_ORDER):
+            count = status_counts[abbrev].get(status, 0)
+            total = campus_totals[abbrev]
+            pct = (count / total * 100) if total > 0 else 0
+            count_col = 2 + i * 2
+            pct_col = 3 + i * 2
+            ws.cell(row=row, column=count_col, value=count).alignment = Alignment(horizontal="center")
+            pct_cell = ws.cell(row=row, column=pct_col, value=pct / 100)
+            pct_cell.number_format = '0.0%'
+            pct_cell.alignment = Alignment(horizontal="center")
+            # Light campus background
+            ws.cell(row=row, column=count_col).fill = CAMPUS_BG_FILLS[abbrev]
+            pct_cell.fill = CAMPUS_BG_FILLS[abbrev]
+
+    dist_end_row = 3 + len(ordered_statuses)
+
+    # Add totals row
+    totals_row = dist_end_row + 1
+    ws.cell(row=totals_row, column=1, value="Total").font = Font(bold=True)
+    for i, abbrev in enumerate(CAMPUS_ORDER):
+        count_col = 2 + i * 2
+        pct_col = 3 + i * 2
+        ws.cell(row=totals_row, column=count_col, value=campus_totals[abbrev]).font = Font(bold=True)
+        ws.cell(row=totals_row, column=count_col).alignment = Alignment(horizontal="center")
+        pct_cell = ws.cell(row=totals_row, column=pct_col, value=1.0)
+        pct_cell.number_format = '0.0%'
+        pct_cell.font = Font(bold=True)
+        pct_cell.alignment = Alignment(horizontal="center")
+
+    # Excel Table for distribution
+    table_ref = f"A3:G{totals_row}"
+    table = Table(displayName="StatusDistribution", ref=table_ref)
+    table.tableStyleInfo = TableStyleInfo(
+        name="TableStyleMedium2", showFirstColumn=True,
+        showLastColumn=False, showRowStripes=True, showColumnStripes=False,
+    )
+    ws.add_table(table)
+
+    # ── Section 2: YSE with No People Assigned ──
+    section2_start = totals_row + 3
+    ws.cell(row=section2_start, column=1, value="Success Indicators with No People Assigned")
+    ws.cell(row=section2_start, column=1).font = Font(bold=True, size=14)
+    ws.merge_cells(start_row=section2_start, start_column=1,
+                   end_row=section2_start, end_column=6)
+
+    ua_header_row = section2_start + 1
+    ua_headers = ["#", "Success Indicator", "Working Group", "SSU", "SFSU", "CSUEB"]
+    for col_idx, h in enumerate(ua_headers, 1):
+        cell = ws.cell(row=ua_header_row, column=col_idx, value=h)
+        cell.font = HEADER_FONT
+        cell.alignment = HEADER_ALIGNMENT
+        if col_idx == 4:
+            cell.fill = CAMPUS_HEADER_FILLS["ssu"]
+            cell.font = CAMPUS_HEADER_FONTS["ssu"]
+        elif col_idx == 5:
+            cell.fill = CAMPUS_HEADER_FILLS["sfsu"]
+            cell.font = CAMPUS_HEADER_FONTS["sfsu"]
+        elif col_idx == 6:
+            cell.fill = CAMPUS_HEADER_FILLS["csueb"]
+            cell.font = CAMPUS_HEADER_FONTS["csueb"]
+        else:
+            cell.fill = HEADER_FILL
+
+    missing_fill = PatternFill(start_color="FFC7CE", end_color="FFC7CE", fill_type="solid")
+    missing_font = Font(color="9C0006", bold=True)
+
+    if unassigned:
+        for row_offset, entry in enumerate(unassigned):
+            row = ua_header_row + 1 + row_offset
+            ws.cell(row=row, column=1, value=entry["indicator_id"])
+            ws.cell(row=row, column=2, value=entry["indicator_name"]).alignment = Alignment(wrap_text=True)
+            ws.cell(row=row, column=3, value=entry["working_group"])
+            for i, abbrev in enumerate(CAMPUS_ORDER):
+                cell = ws.cell(row=row, column=4 + i)
+                cell.alignment = Alignment(horizontal="center")
+                if abbrev in entry["missing"]:
+                    cell.value = "Missing"
+                    cell.fill = missing_fill
+                    cell.font = missing_font
+                else:
+                    cell.value = "OK"
+                    cell.fill = CAMPUS_BG_FILLS[abbrev]
+
+        ua_end_row = ua_header_row + len(unassigned)
+    else:
+        ws.cell(row=ua_header_row + 1, column=1, value="All indicators have people assigned.")
+        ws.cell(row=ua_header_row + 1, column=1).font = Font(italic=True, color="999999")
+        ua_end_row = ua_header_row + 1
+
+    # Excel Table for unassigned
+    ua_table_ref = f"A{ua_header_row}:F{ua_end_row}"
+    ua_table = Table(displayName="UnassignedYSE", ref=ua_table_ref)
+    ua_table.tableStyleInfo = TableStyleInfo(
+        name="TableStyleMedium2", showFirstColumn=False,
+        showLastColumn=False, showRowStripes=True, showColumnStripes=False,
+    )
+    ws.add_table(ua_table)
+
+    _auto_fit_columns(ws, max_width=50)
+    ws.column_dimensions["A"].width = 8
+
+
 def _build_comparison_sheet(wb: Workbook, wg_name: str, goals: list):
     """Build a working-group comparison sheet with one Excel Table per goal."""
     ws = wb.create_sheet(wg_name)
@@ -295,6 +474,7 @@ def _build_comparison_sheet(wb: Workbook, wg_name: str, goals: list):
 
     ws.freeze_panes = "A3"
     _auto_fit_columns(ws)
+    ws.column_dimensions["A"].width = 6  # Indicator IDs are short (e.g. "12.34")
 
 
 def _write_goal_table(ws, goal: dict, start_row: int, wg_name: str) -> int:
