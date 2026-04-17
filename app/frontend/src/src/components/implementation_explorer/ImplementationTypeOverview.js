@@ -25,7 +25,7 @@ import {
     AlertIcon,
 } from '@chakra-ui/react';
 import { EditIcon, CheckIcon, CloseIcon, LinkIcon } from '@chakra-ui/icons';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { updateImplementation } from '../../services/api/put';
 import { DataContext } from '../../context/DataContext';
 
@@ -44,6 +44,7 @@ function ImplementationTypeOverview({ implementationType, initialImplementationI
     const [editForm, setEditForm] = useState({ title: '', description: '' });
     const toast = useToast();
     const navigate = useNavigate();
+    const { campus } = useParams();
 
     const implementations = data.implementations?.[implementationType] || [];
 
@@ -81,7 +82,7 @@ function ImplementationTypeOverview({ implementationType, initialImplementationI
     // Update URL when implementation is selected
     const handleImplementationSelect = (impl) => {
         setSelectedImplId(impl.unique_id);
-        navigate(`/ati-explorer/implementations/${implementationType}/${impl.unique_id}`,
+        navigate(`/${campus}/ati-explorer/implementations/${implementationType}/${impl.unique_id}`,
             { replace: true }
         );
     };
@@ -89,7 +90,7 @@ function ImplementationTypeOverview({ implementationType, initialImplementationI
     // Copy link function
     const copyImplementationLink = () => {
         if (!selectedImpl) return;
-        const url = `${window.location.origin}/ati-explorer/implementations/${implementationType}/${selectedImpl.unique_id}`;
+        const url = `${window.location.origin}/ati/${campus}/ati-explorer/implementations/${implementationType}/${selectedImpl.unique_id}`;
 
         navigator.clipboard.writeText(url);
         toast({
@@ -382,7 +383,7 @@ function ImplementationTypeOverview({ implementationType, initialImplementationI
                                                         cursor="pointer"
                                                         _hover={{ color: 'teal.600', textDecoration: 'underline' }}
                                                         onClick={() => {
-                                                            const editUrl = getEditUrlFromCompositeKey(yse.indicator_composite_key);
+                                                            const editUrl = getEditUrlFromCompositeKey(yse.indicator_composite_key, campus);
                                                             const [pathname, hash] = editUrl.split('#');
 
                                                             navigate(pathname + '#' + hash);

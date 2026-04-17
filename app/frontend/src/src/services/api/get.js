@@ -1,11 +1,12 @@
 import axios from 'axios';
 
 // Function to fetch primary data from API
-export const fetchPrimaryData = async (wg, ay) => {
+export const fetchPrimaryData = async (wg, ay, campus) => {
     const apiUrl = process.env.REACT_APP_API_URL;  // Pull API URL from environment
 
     try {
-        const response = await axios.get(`${apiUrl}/evidence/${wg}/${ay}`);
+        const params = campus ? { campus } : {};
+        const response = await axios.get(`${apiUrl}/evidence/${wg}/${ay}`, { params });
 
         if (response.status === 200) {
             return response.data;  // Return the entire response data
@@ -81,9 +82,11 @@ export const fetchAllIndividuals = async () => {
     }
 }
 
-export const fetchTrends = async (previous_year, current_year) => {
+export const fetchTrends = async (previous_year, current_year, campus) => {
     try {
-        const response = await axios.get(`${process.env.REACT_APP_API_URL}/evidence/trends?previous_year=${previous_year}&current_year=${current_year}`);
+        let url = `${process.env.REACT_APP_API_URL}/evidence/trends?previous_year=${previous_year}&current_year=${current_year}`;
+        if (campus) url += `&campus=${campus}`;
+        const response = await axios.get(url);
 
         if (response.status === 200) {
             return response.data;  // Return the entire response data
@@ -131,6 +134,22 @@ export const fetchAllImplementations = async () => {
         return response.data;
     } catch (error) {
         console.error('Error fetching all implementations:', error);
+        throw error;
+    }
+}
+
+export const fetchCampuses = async () => {
+    try {
+        const response = await axios.get(`${process.env.REACT_APP_API_URL}/organizational-units`, {
+            params: { type: 'campuses' }
+        });
+        if (response.status === 200) {
+            return response.data;
+        } else {
+            throw new Error(`Failed to fetch campuses: ${response.data.error}`);
+        }
+    } catch (error) {
+        console.error('Error fetching campuses:', error.message);
         throw error;
     }
 }

@@ -34,7 +34,7 @@ function ImplementationExplorer() {
         'InternalPolicy'
     ];
 
-    const { implementationType, implementationId } = useParams();
+    const { implementationType, implementationId, campus } = useParams();
     const navigate = useNavigate();
     const [selectedType, setSelectedType] = useState(implementationType || implementationTypes[0]);
     const { isOpen, onOpen, onClose } = useDisclosure();
@@ -50,13 +50,13 @@ function ImplementationExplorer() {
     // Navigate when type is selected
     const handleTypeSelect = (type) => {
         setSelectedType(type);
-        navigate(`/ati-explorer/implementations/${type}`);
+        navigate(`/${campus}/ati-explorer/implementations/${type}`);
     };
 
     // If no type in URL, redirect to first type
     useEffect(() => {
         if (!implementationType) {
-            navigate(`/ati-explorer/implementations/${implementationTypes[0]}`, { replace: true });
+            navigate(`/${campus}/ati-explorer/implementations/${implementationTypes[0]}`, { replace: true });
         }
     }, [implementationType, navigate]);
 

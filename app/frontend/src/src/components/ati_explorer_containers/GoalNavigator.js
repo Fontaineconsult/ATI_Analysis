@@ -6,7 +6,7 @@ import InstructionalMaterialsData from '../ati_explorer_containers/Instructional
 import ProcurementData from '../ati_explorer_containers/ProcurementData';
 
 function GoalNavigator({ data }) {
-    const { workingGroup, goalId } = useParams();
+    const { workingGroup, goalId, campus } = useParams();
     const navigate = useNavigate();
 
     // Helper function to get the working group display name
@@ -59,7 +59,7 @@ function GoalNavigator({ data }) {
     const currentIndex = allGoalNumbers.indexOf(currentGoalNumber);
 
     const handleGoalNavigation = (goalNumber) => {
-        navigate(`/ati-explorer/${workingGroup}/goal/${goalNumber}`);
+        navigate(`/${campus}/ati-explorer/${workingGroup}/goal/${goalNumber}`);
     };
 
     // Function to render the appropriate working group component

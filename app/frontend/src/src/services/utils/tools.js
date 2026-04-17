@@ -1,7 +1,7 @@
 import {useNavigate} from "react-router-dom";
 
 
-function getUrlFromCompositeKey(compositeKey) {
+function getUrlFromCompositeKey(compositeKey, campus) {
     // Parse composite key like "1.2-ins" or "5.14-web"
     const [numbers, suffix] = compositeKey.split('-');
     const [goalNumber, indicatorNumber] = numbers.split('.');
@@ -15,6 +15,9 @@ function getUrlFromCompositeKey(compositeKey) {
 
     const workingGroupSegment = workingGroupMap[suffix] || suffix;
 
+    if (campus) {
+        return `/${campus}/${workingGroupSegment}/${goalNumber}/${indicatorNumber}`;
+    }
     // Return the URL segment
     return `${workingGroupSegment}/${goalNumber}/${indicatorNumber}`;
 }
@@ -83,7 +86,7 @@ const year_difference = (current_year) => {
 
 
 // Helper function to get Edit URL for ATI Explorer
-const getEditUrlFromCompositeKey = (compositeKey) => {
+const getEditUrlFromCompositeKey = (compositeKey, campus) => {
     const [numbers, suffix] = compositeKey.split('-');
     const [goalNumber, indicatorNumber] = numbers.split('.');
 
@@ -94,12 +97,14 @@ const getEditUrlFromCompositeKey = (compositeKey) => {
     };
 
     const workingGroupSegment = workingGroupMap[suffix] || suffix;
-    return `/ati-explorer/${workingGroupSegment}/goal/${goalNumber}#${compositeKey}`;
+    const campusPrefix = campus ? `/${campus}` : '';
+    return `${campusPrefix}/ati-explorer/${workingGroupSegment}/goal/${goalNumber}#${compositeKey}`;
 };
 
 
-const getImplementationURL = (type, uniqueId) => {
-        return `/ati-explorer/implementations/${type}/${uniqueId}`
+const getImplementationURL = (type, uniqueId, campus) => {
+    const campusPrefix = campus ? `/${campus}` : '';
+    return `${campusPrefix}/ati-explorer/implementations/${type}/${uniqueId}`;
 };
 
 

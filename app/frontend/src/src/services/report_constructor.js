@@ -18,7 +18,7 @@ import {
     Th,
     Td
 } from '@chakra-ui/react';
-import {useNavigate} from "react-router-dom";
+import {useNavigate, useParams} from "react-router-dom";
 import {getEditUrlFromCompositeKey, getStatusColor} from "./utils/tools";
 
 let datas = {
@@ -422,13 +422,14 @@ function GenerateReportComponent({ evidenceItem }) {
     console.log("ZINNGG", evidenceItem)
 
     const navigate = useNavigate();
+    const { campus } = useParams();
 
     // Get academic year from evidenceItem
     const academicYear = evidenceItem.currentAcademicYear || "2024-2025";
 
     const handleImplementationClick = (type, uniqueId) => {
         if (uniqueId) {
-            navigate(`/ati-explorer/implementations/${type}/${uniqueId}`);
+            navigate(`/${campus}/ati-explorer/implementations/${type}/${uniqueId}`);
         }
     };
 
@@ -546,7 +547,7 @@ function GenerateReportComponent({ evidenceItem }) {
                             cursor="pointer"
                             _hover={{ color: 'teal.600', textDecoration: 'underline' }}
                             onClick={() => {
-                                const editUrl = getEditUrlFromCompositeKey(evidenceItem.indicator.properties.composite_key);
+                                const editUrl = getEditUrlFromCompositeKey(evidenceItem.indicator.properties.composite_key, campus);
                                 const [pathname, hash] = editUrl.split('#');
                                 navigate(pathname + '#' + hash);
                                 setTimeout(() => {

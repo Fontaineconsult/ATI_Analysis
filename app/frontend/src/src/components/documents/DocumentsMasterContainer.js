@@ -24,7 +24,7 @@ const DOCUMENT_TYPES = [
 ];
 
 function DocumentsMasterContainer() {
-    const { documentType, documentId } = useParams();
+    const { documentType, documentId, campus } = useParams();
     const navigate = useNavigate();
     const [data, setData] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -63,18 +63,18 @@ function DocumentsMasterContainer() {
     const handleTypeSelect = (typeKey) => {
         setSelectedType(typeKey);
         setSelectedItemId(null);
-        navigate(`/ati-explorer/documents/${typeKey}`);
+        navigate(`/${campus}/ati-explorer/documents/${typeKey}`);
     };
 
     const handleItemSelect = (item) => {
         setSelectedItemId(item.unique_id);
-        navigate(`/ati-explorer/documents/${selectedType}/${item.unique_id}`, { replace: true });
+        navigate(`/${campus}/ati-explorer/documents/${selectedType}/${item.unique_id}`, { replace: true });
     };
 
     // Redirect to default type if none specified
     useEffect(() => {
         if (!documentType) {
-            navigate(`/ati-explorer/documents/documents`, { replace: true });
+            navigate(`/${campus}/ati-explorer/documents/documents`, { replace: true });
         }
     }, [documentType, navigate]);
 

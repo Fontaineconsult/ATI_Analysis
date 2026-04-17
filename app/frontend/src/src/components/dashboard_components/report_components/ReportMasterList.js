@@ -1,5 +1,5 @@
 import React, { useContext, useState, useEffect, useRef } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import { DataContext } from "../../../context/DataContext";
 import {
     Box,
@@ -50,6 +50,7 @@ const ReportMasterList = () => {
     const { data, loading, error } = useContext(DataContext);
     const navigate = useNavigate();
     const location = useLocation();
+    const { campus } = useParams();
     const { isOpen, onOpen, onClose } = useDisclosure();
     const toast = useToast();
 
@@ -426,7 +427,7 @@ const ReportMasterList = () => {
                                                         variant="solid"
                                                         onClick={() => {
                                                             const urlSegment = getUrlFromCompositeKey(compositeKey);
-                                                            navigate(`/dashboard/reports/${urlSegment}`);
+                                                            navigate(`/${campus}/dashboard/reports/${urlSegment}`);
                                                         }}
                                                         _hover={{ bg: "teal.600" }}
                                                     >
@@ -437,7 +438,7 @@ const ReportMasterList = () => {
                                                         colorScheme="gray"
                                                         variant="outline"
                                                         onClick={() => {
-                                                            const editUrl = getEditUrlFromCompositeKey(compositeKey);
+                                                            const editUrl = getEditUrlFromCompositeKey(compositeKey, campus);
                                                             const [pathname, hash] = editUrl.split('#');
 
                                                             navigate(pathname + '#' + hash);

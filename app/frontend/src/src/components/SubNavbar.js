@@ -1,13 +1,14 @@
 
 import { Flex, Button, Box } from '@chakra-ui/react';
 import React, { useEffect, useContext } from 'react';
-import { useLocation, Link } from 'react-router-dom';
+import { useLocation, Link, useParams } from 'react-router-dom';
 import { useSettings } from "../context/SettingsContext";
 
 import {UserContext} from "../context/UserContext";
 
 function SubNavbar() {
     const location = useLocation();
+    const { campus } = useParams();
     const { updateCurrentWorkingGroup, currentWorkingGroup } = useSettings();
     const { isUserAdmin } = useContext(UserContext);
 
@@ -28,26 +29,26 @@ function SubNavbar() {
         }
     }, [location.pathname, updateCurrentWorkingGroup]);
 
+    const campusPrefix = campus ? `/${campus}` : '';
+
     let subNavItems;
     if (location.pathname.includes('/ati-explorer')) {
         subNavItems = [
-            { label: 'Web', path: '/ati-explorer/web/goal/1' },
-            { label: 'Instructional Materials', path: '/ati-explorer/instructional-materials/goal/1' },
-            { label: 'Procurement', path: '/ati-explorer/procurement/goal/1' },
-            { label: 'Implementations', path: '/ati-explorer/implementations' },
-            { label: 'Plans', path: '/ati-explorer/plans' },
+            { label: 'Web', path: `${campusPrefix}/ati-explorer/web/goal/1` },
+            { label: 'Instructional Materials', path: `${campusPrefix}/ati-explorer/instructional-materials/goal/1` },
+            { label: 'Procurement', path: `${campusPrefix}/ati-explorer/procurement/goal/1` },
+            { label: 'Implementations', path: `${campusPrefix}/ati-explorer/implementations` },
+            { label: 'Plans', path: `${campusPrefix}/ati-explorer/plans` },
         ];
     } else if (location.pathname.includes('/dashboard')) {
         subNavItems = [
-            { label: 'View Reports', path: '/dashboard/reports' },
-            { label: 'Copy Report', path: '/dashboard/report-overview' },
-            // { label: 'Implementations', path: '/dashboard/implementations' },
-            { label: 'Settings', path: '/dashboard/settings', requiresAdmin: true },
+            { label: 'View Reports', path: `${campusPrefix}/dashboard/reports` },
+            { label: 'Copy Report', path: `${campusPrefix}/dashboard/report-overview` },
+            { label: 'Settings', path: `${campusPrefix}/dashboard/settings` },
         ];
     } else if (location.pathname.includes('/about')) {
         subNavItems = [
-            // { label: 'ATI Working Group', path: '/about/ati-working-group' },
-            { label: 'SF State ATI Overview', path: '/about/sf-state-ati-overview' },
+            { label: 'ATI Overview', path: `${campusPrefix}/about/sf-state-ati-overview` },
         ];
     } else {
         subNavItems = [];

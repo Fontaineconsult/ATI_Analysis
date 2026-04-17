@@ -161,10 +161,10 @@ export const createSuccessIndicator = async (indicator_number, goal_number, sub_
     }
 }
 
-export const createYearSuccessEvidence = async (academic_year, composite_key) => {
+export const createYearSuccessEvidence = async (academic_year, composite_key, campus_abbreviation) => {
     try {
         const response = await axios.post(`${process.env.REACT_APP_API_URL}/evidence`,
-            create_year_success_evidence_node(academic_year, composite_key)
+            create_year_success_evidence_node(academic_year, composite_key, campus_abbreviation)
         );
         return response.data;
     } catch (error) {

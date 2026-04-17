@@ -2,6 +2,7 @@ import React, { createContext, useState, useEffect } from 'react';
 import {fetchPrimaryData, fetchCurrentYearIndicator, fetchTrends, fetchAllImplementations} from '../services/api/get';
 import { useToast } from '@chakra-ui/react';
 import {year_difference} from "../services/utils/tools";
+import { useSettings } from './SettingsContext';
 
 const transformWorkingGroup = (workingGroup) => {
     const mapping = {
@@ -17,6 +18,8 @@ export const DataContext = createContext();
 
 // DataProvider component to wrap the app
 export const DataProvider = ({ children }) => {
+    const { currentCampus } = useSettings();
+
     const [data, setData] = useState({
         web: null,
         instructionalMaterials: null,
@@ -35,18 +38,21 @@ export const DataProvider = ({ children }) => {
     const toast = useToast();
 
     useEffect(() => {
-        loadData();
-    }, [selectedYear]);
+        // Don't load data until campus is set
+        if (currentCampus) {
+            loadData();
+        }
+    }, [selectedYear, currentCampus]);
 
     const loadData = async () => {
         try {
             setLoading(true);
             const [webData, instructionalMaterialsData, procurementData, indicatorsData, yoyTrends, implementationsData] = await Promise.all([
-                fetchPrimaryData("web", selectedYear),
-                fetchPrimaryData("instructional-materials", selectedYear),
-                fetchPrimaryData("procurement", selectedYear),
-                fetchCurrentYearIndicator(),
-                fetchTrends(year_difference(selectedYear), selectedYear),
+                fetchPrimaryData("web", selectedYear, currentCampus),
+                fetchPrimaryData("instructional-materials", selectedYear, currentCampus),
+                fetchPrimaryData("procurement", selectedYear, currentCampus),
+                fetchCurrentYearIndicator(selectedYear),
+                fetchTrends(year_difference(selectedYear), selectedYear, currentCampus),
                 fetchAllImplementations()
             ]);
 
@@ -79,7 +85,7 @@ export const DataProvider = ({ children }) => {
         const dataKey = transformWorkingGroup(workingGroup);
         try {
             setUpdating(true);
-            const groupData = await fetchPrimaryData(workingGroup, selectedYear);
+            const groupData = await fetchPrimaryData(workingGroup, selectedYear, currentCampus);
 
             setData((prevData) => ({
                 ...prevData,
@@ -142,9 +148,9 @@ export const DataProvider = ({ children }) => {
         try {
             setUpdating(true);
             const [webData, instructionalMaterialsData, procurementData, implementationsData] = await Promise.all([
-                fetchPrimaryData("web", selectedYear),
-                fetchPrimaryData("instructional-materials", selectedYear),
-                fetchPrimaryData("procurement", selectedYear),
+                fetchPrimaryData("web", selectedYear, currentCampus),
+                fetchPrimaryData("instructional-materials", selectedYear, currentCampus),
+                fetchPrimaryData("procurement", selectedYear, currentCampus),
                 fetchAllImplementations()
             ]);
 
@@ -182,7 +188,7 @@ export const DataProvider = ({ children }) => {
             loadSingleWorkingGroupData,
             refreshIndicators,
             refreshImplementations,
-            dataVersion  // Expose version for components to use as a dependency or key
+            dataVersion
         }}>
             {children}
         </DataContext.Provider>

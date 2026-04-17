@@ -84,7 +84,7 @@ const StatusLevels = () => {
                 Status Level Definitions
             </Heading>
             <Accordion allowMultiple>
-                {statusLevels
+                {(statusLevels || [])
                     .sort((a, b) => a.status_value - b.status_value)
                     .map((level) => {
                         // Prepare categories array

@@ -5,7 +5,7 @@ data_api_endpoints = Blueprint('data_api', __name__)
 
 from . import (committees,
                documents,
-               evidence,
+               evidence_campus as evidence,
                governance,
                implementation,
                indicators,

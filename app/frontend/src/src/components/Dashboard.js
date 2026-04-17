@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { Box, Heading } from '@chakra-ui/react';
-import { Routes, Route, useLocation, useNavigate } from 'react-router-dom';
+import { Routes, Route, useLocation, useNavigate, useParams } from 'react-router-dom';
 import ReportOverviewMasterContainer from './dashboard_components/report_components/ReportOverviewMasterContainer';
 import ImplementationsMasterContainer from './dashboard_components/implementation_components/ImplementationsMasterContainer';
 import SettingsMasterContainer from './dashboard_components/settings_components/SettingsMasterContainer';
@@ -13,13 +13,15 @@ import PlansAccomplishmentsManager from "./PlansAndAccomplishments/PlansAccompli
 function Dashboard() {
     const location = useLocation();
     const navigate = useNavigate();
+    const { campus } = useParams();
 
-    // Redirect from /dashboard to /dashboard/reports
+    // Redirect from /campus/dashboard to /campus/dashboard/reports
     useEffect(() => {
-        if (location.pathname === '/dashboard' || location.pathname === '/dashboard/') {
-            navigate('/dashboard/reports', { replace: true });
+        const dashBase = `/${campus}/dashboard`;
+        if (location.pathname === dashBase || location.pathname === `${dashBase}/`) {
+            navigate(`${dashBase}/reports`, { replace: true });
         }
-    }, [location.pathname, navigate]);
+    }, [location.pathname, navigate, campus]);
 
     return (
         <Box className="dashboard-container" ml={0} mx="auto" p={4} textAlign="center">

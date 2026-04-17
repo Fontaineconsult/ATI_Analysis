@@ -34,7 +34,7 @@ import ApprovalMasterContainer from '../../ati_explorer_containers/ApprovalMaste
 import { updateStatusLevel, assignPersonAsImplementor, unassignPersonAsImplementor } from '../../../services/api/put';
 import { DataContext } from '../../../context/DataContext';
 import {getUrlFromCompositeKey} from '../../../services/utils/tools';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 
 
 function SuccessIndicator({ indicatorData, evidenceData, bgColor }) {
@@ -303,6 +303,7 @@ function IndicatorDetails({ description, persons, compositeKey, evidenceData }) 
 // ResponsiblePersons Component with Table
 function ResponsiblePersons({ persons, compositeKey, evidenceData }) {
     const navigate = useNavigate();
+    const { campus } = useParams();
 
     // Count implementation types from evidenceTypes
     const implementationCounts = {
@@ -431,7 +432,7 @@ function ResponsiblePersons({ persons, compositeKey, evidenceData }) {
                                 width="100%"
                                 onClick={() => {
                                     const urlSegment = getUrlFromCompositeKey(compositeKey);
-                                    navigate(`/dashboard/reports/${urlSegment}`);
+                                    navigate(`/${campus}/dashboard/reports/${urlSegment}`);
                                 }}
                                 _hover={{ bg: "blue.600" }}
                             >

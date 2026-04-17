@@ -260,3 +260,33 @@ class TrendsAPI(MethodView):
             raise ApiError(message=f"Error retrieving evidence trends: {e}")
         except Exception as e:
             raise ApiError(message=f"An unexpected error occurred: {e}")
+
+
+# Register the view for the working group evidence functionality
+evidence_view = EvidenceAPI.as_view('evidence_api')
+trends_view = TrendsAPI.as_view('trends_api')
+
+data_api_endpoints.add_url_rule(
+    '/evidence/<string:working_group>/<string:academic_year>',
+    view_func=evidence_view,
+    methods=['GET', 'POST']
+)
+
+data_api_endpoints.add_url_rule(
+    '/evidence',
+    view_func=evidence_view,
+    methods=['POST', 'PUT']
+)
+
+data_api_endpoints.add_url_rule(
+    '/evidence/trends',
+    view_func=trends_view,
+    methods=['GET']
+)
+
+# Register the view for the status level functionality
+status_level_view = StatusLevelAPI.as_view('status_level_api')
+
+data_api_endpoints.add_url_rule(
+    '/evidence/status-levels', view_func=status_level_view, methods=['GET', 'PUT']
+)

@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import {
     Box,
     Text,
@@ -88,6 +88,7 @@ const AtiStats = () => {
     const { data, loading } = useContext(DataContext);
     const [stats, setStats] = useState(null);
     const navigate = useNavigate();
+    const { campus } = useParams();
 
     useEffect(() => {
         if (data && !loading) {
@@ -111,7 +112,7 @@ const AtiStats = () => {
             element.scrollIntoView({ behavior: 'smooth', block: 'start' });
         } else {
             // If element doesn't exist yet, navigate to the page first then scroll
-            navigate('/dashboard/reports#' + anchorId);
+            navigate(`/${campus}/dashboard/reports#` + anchorId);
             setTimeout(() => {
                 const retryElement = document.getElementById(anchorId);
                 if (retryElement) {

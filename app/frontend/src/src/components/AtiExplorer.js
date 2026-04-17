@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { Box, Spinner } from '@chakra-ui/react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import WorkingGroupMasterContainer from './ati_explorer_containers/WorkingGroupMasterContainer';
 import { useData } from '../hooks/useData';
 import '../styles/App.css';
@@ -8,14 +8,16 @@ import '../styles/App.css';
 function AtiExplorer() {
     const location = useLocation();
     const navigate = useNavigate();
+    const { campus } = useParams();
     const { data, loading, updating, error, selectedYear } = useData();
 
-    // Redirect from /ati-explorer to /ati-explorer/web/goal/1
+    // Redirect from /campus/ati-explorer to /campus/ati-explorer/web/goal/1
     useEffect(() => {
-        if (location.pathname === '/ati-explorer' || location.pathname === '/ati-explorer/') {
-            navigate('/ati-explorer/web/goal/1', { replace: true });
+        const atiExplorerBase = `/${campus}/ati-explorer`;
+        if (location.pathname === atiExplorerBase || location.pathname === `${atiExplorerBase}/`) {
+            navigate(`${atiExplorerBase}/web/goal/1`, { replace: true });
         }
-    }, [location.pathname, navigate]);
+    }, [location.pathname, navigate, campus]);
 
     // Check if all data fields are null, indicating an empty state
     const isDataEmpty = !data.web && !data.instructionalMaterials && !data.procurement;

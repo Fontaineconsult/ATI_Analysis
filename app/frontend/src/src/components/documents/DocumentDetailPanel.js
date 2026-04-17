@@ -12,10 +12,11 @@ import {
     AlertIcon,
 } from '@chakra-ui/react';
 import { ExternalLinkIcon } from '@chakra-ui/icons';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 
 function DocumentDetailPanel({ item, documentType }) {
     const navigate = useNavigate();
+    const { campus } = useParams();
 
     if (!item) {
         return (
@@ -27,7 +28,7 @@ function DocumentDetailPanel({ item, documentType }) {
     }
 
     const handleImplClick = (impl) => {
-        navigate(`/ati-explorer/implementations/${impl.type}/${impl.unique_id}`);
+        navigate(`/${campus}/ati-explorer/implementations/${impl.type}/${impl.unique_id}`);
     };
 
     const formatDate = (dateString) => {

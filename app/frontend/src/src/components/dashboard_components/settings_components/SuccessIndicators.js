@@ -1,4 +1,5 @@
 import React, { useContext, useState } from 'react';
+import { useParams } from 'react-router-dom';
 import {
     Box,
     Heading,
@@ -17,6 +18,7 @@ import {SettingsContext} from "../../../context/SettingsContext";  // Import the
 import '../../../styles/App.css';
 
 const SuccessIndicators = () => {
+    const { campus } = useParams();
     const { data, refreshIndicators } = useContext(DataContext);
     const { indicators } = data;
     const { currentAcademicYear } = useContext(SettingsContext);
@@ -63,7 +65,7 @@ const SuccessIndicators = () => {
             if (action === "attach") {
                 // Call the API to create a YearSuccessEvidence node
 
-                await createYearSuccessEvidence(academicYear, indicator.composite_key);
+                await createYearSuccessEvidence(academicYear, indicator.composite_key, campus);
             } else {
                 // Call the detach API for detaching YearSuccessEvidence if required
                 await detachYearSuccessEvidence(indicator.composite_key); // Assuming detach API exists

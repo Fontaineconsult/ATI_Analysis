@@ -258,12 +258,14 @@ export function createSuccessIndicatorPayload(number, goalNumber, subCommittee, 
 
 export function create_year_success_evidence_node(academic_year,
                                              success_indicator_composite_key,
+                                             campus_abbreviation,
                                              ) {
     return {
         action:"create_year_success_evidence_node",
         academic_year: academic_year,
         success_indicator_composite_key: success_indicator_composite_key,
-        status_level: "Not Started" //defaulting
+        status_level: "Not Started", //defaulting
+        campus_abbreviation: campus_abbreviation
     };
 }
 
