@@ -61,6 +61,87 @@ def create_year_success_evidence_node(academic_year, success_indicator_composite
 #                                   "Established")
 
 
+SUB_NODE_MAP = {
+    'procedure_descriptions': (ProcedureDescription, 'procedure_descriptions', 'description'),
+    'procedure_requirements': (ProcedureRequirement, 'procedure_requirements', 'requirement_description'),
+    'resource_descriptions': (ResourceDescription, 'resource_descriptions', 'description'),
+    'resource_requirements': (ResourceRequirement, 'resource_requirements', 'requirement_description'),
+    'documentation_descriptions': (DocumentationDescription, 'documentation_descriptions', 'description'),
+    'documentation_requirements': (DocumentationRequirement, 'documentation_requirements', 'requirement_description'),
+    'documentation_evidence_descriptions': (DocumentationEvidenceDescription, 'documentation_evidence_descriptions', 'description'),
+    'documentation_evidence_requirements': (DocumentationEvidenceRequirement, 'documentation_evidence_requirements', 'requirement_description'),
+}
+
+
+def get_all_sub_nodes(category):
+    """
+    Fetch all existing nodes of a given sub-node type.
+    """
+    if category not in SUB_NODE_MAP:
+        raise CrudError(f"Invalid category '{category}'.")
+
+    node_class, _, text_field = SUB_NODE_MAP[category]
+    try:
+        nodes = node_class.nodes.all()
+        return [{'unique_id': n.unique_id, text_field: getattr(n, text_field)} for n in nodes]
+    except Exception as e:
+        raise CrudError(f"Failed to fetch {node_class.__name__} nodes: {e}")
+
+
+def add_status_level_sub_node(status_level_unique_id, category, text):
+    """
+    Create a new sub-node and connect it to a StatusLevel.
+    """
+    if category not in SUB_NODE_MAP:
+        raise CrudError(f"Invalid category '{category}'. Valid: {list(SUB_NODE_MAP.keys())}")
+
+    node_class, rel_attr, text_field = SUB_NODE_MAP[category]
+
+    try:
+        status_level = StatusLevel.nodes.get(unique_id=status_level_unique_id)
+    except StatusLevel.DoesNotExist:
+        raise NotFoundError(f"StatusLevel with unique_id '{status_level_unique_id}' not found.")
+
+    try:
+        sub_node = node_class(**{text_field: text})
+        sub_node.save()
+        rel = getattr(status_level, rel_attr)
+        rel.connect(sub_node)
+        return {'unique_id': sub_node.unique_id, text_field: text}
+    except Exception as e:
+        raise CrudError(f"Failed to create {node_class.__name__}: {e}")
+
+
+def connect_sub_node_to_status_level(status_level_unique_id, category, sub_node_unique_id):
+    """
+    Connect an existing sub-node to a StatusLevel.
+    """
+    if category not in SUB_NODE_MAP:
+        raise CrudError(f"Invalid category '{category}'.")
+
+    node_class, rel_attr, text_field = SUB_NODE_MAP[category]
+
+    try:
+        status_level = StatusLevel.nodes.get(unique_id=status_level_unique_id)
+    except StatusLevel.DoesNotExist:
+        raise NotFoundError(f"StatusLevel with unique_id '{status_level_unique_id}' not found.")
+
+    try:
+        sub_node = node_class.nodes.get(unique_id=sub_node_unique_id)
+    except node_class.DoesNotExist:
+        raise NotFoundError(f"{node_class.__name__} with unique_id '{sub_node_unique_id}' not found.")
+
+    rel = getattr(status_level, rel_attr)
+    if rel.is_connected(sub_node):
+        raise CrudError(f"{node_class.__name__} is already connected to this StatusLevel.")
+
+    try:
+        rel.connect(sub_node)
+        return {'unique_id': sub_node.unique_id, text_field: getattr(sub_node, text_field)}
+    except Exception as e:
+        raise CrudError(f"Failed to connect {node_class.__name__}: {e}")
+
+
 def create_status_level(data):
     """
     Create a new StatusLevel node.

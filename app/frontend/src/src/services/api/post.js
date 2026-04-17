@@ -150,6 +150,36 @@ export const addMetricToImplementation = async (implementation_id, implementatio
 
 
 
+export const connectStatusLevelSubNode = async (statusLevelId, category, subNodeId) => {
+    try {
+        const response = await axios.post(`${process.env.REACT_APP_API_URL}/evidence/status-levels`, {
+            action: 'connect_sub_node',
+            status_level_unique_id: statusLevelId,
+            category,
+            sub_node_unique_id: subNodeId
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error connecting sub-node:', error);
+        throw error;
+    }
+}
+
+export const addStatusLevelSubNode = async (statusLevelId, category, text) => {
+    try {
+        const response = await axios.post(`${process.env.REACT_APP_API_URL}/evidence/status-levels`, {
+            action: 'add_sub_node',
+            status_level_unique_id: statusLevelId,
+            category,
+            text
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error adding sub-node:', error);
+        throw error;
+    }
+}
+
 export const createSuccessIndicator = async (indicator_number, goal_number, sub_committee, success_indicator_text, date_added, removed) => {
     try {
         const response = await axios.post(`${process.env.REACT_APP_API_URL}/indicators`,

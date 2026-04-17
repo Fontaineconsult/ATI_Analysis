@@ -5,6 +5,37 @@ from app.database.class_factory import implementation_classes
 from app.database.graph_schema import *
 from app.endpoints.data_api.errors.custom_exceptions import NotFoundError, CrudError
 
+from app.database.queries.evidence.create import SUB_NODE_MAP
+
+
+def disconnect_sub_node_from_status_level(status_level_unique_id, category, sub_node_unique_id):
+    """
+    Disconnect a sub-node from a StatusLevel (does not delete the node itself,
+    since it may be shared across multiple status levels).
+    """
+    if category not in SUB_NODE_MAP:
+        raise CrudError(f"Invalid category '{category}'.")
+
+    node_class, rel_attr, _ = SUB_NODE_MAP[category]
+
+    try:
+        status_level = StatusLevel.nodes.get(unique_id=status_level_unique_id)
+    except StatusLevel.DoesNotExist:
+        raise NotFoundError(f"StatusLevel with unique_id '{status_level_unique_id}' not found.")
+
+    try:
+        sub_node = node_class.nodes.get(unique_id=sub_node_unique_id)
+    except node_class.DoesNotExist:
+        raise NotFoundError(f"{node_class.__name__} with unique_id '{sub_node_unique_id}' not found.")
+
+    try:
+        rel = getattr(status_level, rel_attr)
+        rel.disconnect(sub_node)
+        return True
+    except Exception as e:
+        raise CrudError(f"Failed to disconnect {node_class.__name__}: {e}")
+
+
 def unassign_person_from_yse(year_success_identifier: str, person_name: str) -> bool:
     try:
         year_success_evidence = YearSuccessEvidence.nodes.get(year_identifier=year_success_identifier)

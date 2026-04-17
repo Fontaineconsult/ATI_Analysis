@@ -194,8 +194,21 @@ class StatusLevelAPI(MethodView):
 
     def get(self):
         """
-        Fetch all status levels along with their connected nodes from the database.
+        Fetch all status levels, or fetch all sub-nodes of a given category.
+        Use ?category=procedure_descriptions to fetch all nodes of that type.
         """
+        category = request.args.get('category', None)
+
+        if category:
+            from app.database.queries.evidence.create import get_all_sub_nodes
+            try:
+                result = get_all_sub_nodes(category)
+                return make_response(status='success', data=result), 200
+            except CrudError as e:
+                return make_response(status='error', error=str(e)), 400
+            except Exception as e:
+                raise ApiError(message=f"An unexpected error occurred: {e}")
+
         try:
             status_levels_data = get_connected_status_levels()
             return make_response(status='success', data=status_levels_data), 200
@@ -206,23 +219,57 @@ class StatusLevelAPI(MethodView):
 
     def post(self):
         """
-        Create a new StatusLevel node.
+        Handle POST actions for status levels.
         """
-        from app.database.queries.evidence.create import create_status_level
-
         data = request.get_json()
         action = data.get('action')
 
-        if action != "create_status_level":
-            return make_response(status="error", error=f"Unknown action '{action}'."), 400
+        if action == "create_status_level":
+            from app.database.queries.evidence.create import create_status_level
+            try:
+                result = create_status_level(data)
+                return make_response(status='success', data=result), 201
+            except CrudError as e:
+                return make_response(status='error', error=str(e)), 400
+            except Exception as e:
+                raise ApiError(message=f"An unexpected error occurred: {e}")
 
-        try:
-            result = create_status_level(data)
-            return make_response(status='success', data=result), 201
-        except CrudError as e:
-            return make_response(status='error', error=str(e)), 400
-        except Exception as e:
-            raise ApiError(message=f"An unexpected error occurred: {e}")
+        elif action == "add_sub_node":
+            from app.database.queries.evidence.create import add_status_level_sub_node
+            status_level_unique_id = data.get('status_level_unique_id')
+            category = data.get('category')
+            text = data.get('text')
+
+            if not all([status_level_unique_id, category, text]):
+                return make_response(status="error", error="Missing required fields: 'status_level_unique_id', 'category', 'text'"), 400
+
+            try:
+                result = add_status_level_sub_node(status_level_unique_id, category, text)
+                return make_response(status='success', data=result), 201
+            except (CrudError, NotFoundError) as e:
+                return make_response(status='error', error=str(e)), 400
+            except Exception as e:
+                raise ApiError(message=f"An unexpected error occurred: {e}")
+
+        elif action == "connect_sub_node":
+            from app.database.queries.evidence.create import connect_sub_node_to_status_level
+            status_level_unique_id = data.get('status_level_unique_id')
+            category = data.get('category')
+            sub_node_unique_id = data.get('sub_node_unique_id')
+
+            if not all([status_level_unique_id, category, sub_node_unique_id]):
+                return make_response(status="error", error="Missing required fields: 'status_level_unique_id', 'category', 'sub_node_unique_id'"), 400
+
+            try:
+                result = connect_sub_node_to_status_level(status_level_unique_id, category, sub_node_unique_id)
+                return make_response(status='success', data=result), 201
+            except (CrudError, NotFoundError) as e:
+                return make_response(status='error', error=str(e)), 400
+            except Exception as e:
+                raise ApiError(message=f"An unexpected error occurred: {e}")
+
+        else:
+            return make_response(status="error", error=f"Unknown action '{action}'."), 400
 
     def put(self):
         """
@@ -246,6 +293,9 @@ class StatusLevelAPI(MethodView):
 
         elif action == "update_status_level_node":
             return self._update_status_level_node(data)
+
+        elif action == "remove_sub_node":
+            return self._remove_sub_node(data)
 
         else:
             return make_response(status="error", error=f"Unknown action '{action}'."), 400
@@ -283,6 +333,26 @@ class StatusLevelAPI(MethodView):
         except CrudError as e:
             return make_response(status='error', error=str(e)), 500
 
+    def _remove_sub_node(self, data):
+        """
+        Disconnect a sub-node from a StatusLevel (node is preserved for other levels).
+        """
+        from app.database.queries.evidence.delete import disconnect_sub_node_from_status_level
+
+        status_level_unique_id = data.get('status_level_unique_id')
+        category = data.get('category')
+        sub_node_unique_id = data.get('sub_node_unique_id')
+
+        if not all([status_level_unique_id, category, sub_node_unique_id]):
+            return make_response(status="error", error="Missing required fields: 'status_level_unique_id', 'category', 'sub_node_unique_id'"), 400
+
+        try:
+            disconnect_sub_node_from_status_level(status_level_unique_id, category, sub_node_unique_id)
+            return make_response(status='success', data="Sub-node disconnected successfully"), 200
+        except NotFoundError as e:
+            return make_response(status='error', error=str(e)), 404
+        except CrudError as e:
+            return make_response(status='error', error=str(e)), 500
 
 
 class TrendsAPI(MethodView):

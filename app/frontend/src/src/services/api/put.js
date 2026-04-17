@@ -32,6 +32,21 @@ export const updateStatusLevel = async (yse, statusLevel) => {
 };
 
 
+export const removeStatusLevelSubNode = async (statusLevelId, category, subNodeId) => {
+    try {
+        const response = await axios.put(`${process.env.REACT_APP_API_URL}/evidence/status-levels`, {
+            action: 'remove_sub_node',
+            status_level_unique_id: statusLevelId,
+            category,
+            sub_node_unique_id: subNodeId
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error removing sub-node:', error);
+        throw error;
+    }
+};
+
 export const updateStatusLevelNode = async (formData) => {
     try {
         const response = await axios.put(`${process.env.REACT_APP_API_URL}/evidence/status-levels`, {

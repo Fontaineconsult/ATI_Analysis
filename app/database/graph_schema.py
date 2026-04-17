@@ -709,7 +709,7 @@ class StatusLevel(StructuredNode):
     resource_descriptions = RelationshipTo('ResourceDescription', 'is_a_resource_description')
     resource_requirements = RelationshipTo('ResourceRequirement', 'is_a_resource_requirement')
     documentation_descriptions = RelationshipTo('DocumentationDescription', 'is_a_documentation_description')
-    documentation_requirements = RelationshipTo('ResourceRequirement', 'is_a_documentation_requirement')
+    documentation_requirements = RelationshipTo('DocumentationRequirement', 'is_a_documentation_requirement')
     documentation_evidence_descriptions = RelationshipTo('DocumentationEvidenceDescription', 'is_a_documentation_evidence_description')
     documentation_evidence_requirements = RelationshipTo('DocumentationEvidenceRequirement', 'is_a_documentation_evidence_requirement')
     notes = RelationshipTo("Note", "has_note")

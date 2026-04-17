@@ -3,18 +3,13 @@ import {
     Box,
     Heading,
     Text,
-    Table,
-    Thead,
-    Tbody,
-    Tr,
-    Th,
-    Td,
-    TableContainer,
     Badge,
     Button,
     HStack,
+    VStack,
     Spinner,
     Center,
+    Divider,
 } from '@chakra-ui/react';
 import { StatusLevelContext } from '../../../context/StatusLevelContext';
 import EditStatusLevel from './EditStatusLevel';
@@ -26,6 +21,45 @@ const STATUS_COLORS = {
     '3': 'green',
     '4': 'green',
     '5': 'teal',
+};
+
+const SubNodeColumn = ({ label, descriptions, requirements, descField, reqField }) => {
+    const hasContent = (descriptions?.length > 0) || (requirements?.length > 0);
+
+    return (
+        <Box flex={1} minW="0">
+            <Text fontSize="xs" fontWeight="bold" color="teal.700" mb={1}>{label}</Text>
+            {!hasContent && (
+                <Text fontSize="xs" color="gray.400" fontStyle="italic">—</Text>
+            )}
+            {descriptions?.length > 0 && (
+                <Box mb={requirements?.length > 0 ? 2 : 0}>
+                    <Text fontSize="2xs" fontWeight="semibold" color="gray.500" mb={1}>Descriptions</Text>
+                    <VStack align="stretch" spacing={1}>
+                        {descriptions.map((item) => (
+                            <HStack key={item.unique_id} spacing={2} align="flex-start">
+                                <Box w="6px" h="6px" borderRadius="full" bg="teal.400" mt="5px" flexShrink={0} />
+                                <Text fontSize="xs" color="gray.700">{item[descField]}</Text>
+                            </HStack>
+                        ))}
+                    </VStack>
+                </Box>
+            )}
+            {requirements?.length > 0 && (
+                <Box>
+                    <Text fontSize="2xs" fontWeight="semibold" color="gray.500" mb={1}>Requirements</Text>
+                    <VStack align="stretch" spacing={1}>
+                        {requirements.map((item) => (
+                            <HStack key={item.unique_id} spacing={2} align="flex-start">
+                                <Box w="6px" h="6px" borderRadius="full" bg="gray.400" mt="5px" flexShrink={0} />
+                                <Text fontSize="xs" color="gray.700">{item[reqField]}</Text>
+                            </HStack>
+                        ))}
+                    </VStack>
+                </Box>
+            )}
+        </Box>
+    );
 };
 
 function StatusLevels() {
@@ -68,87 +102,59 @@ function StatusLevels() {
     );
 
     return (
-        <Box>
-            <HStack justifyContent="space-between" mb={4}>
+        <Box textAlign="left">
+            <HStack justifyContent="space-between" mb={3}>
                 <Heading size="md" color="gray.800">Status Levels</Heading>
                 <Button colorScheme="teal" size="sm" onClick={openCreateModal}>
                     Add Status Level
                 </Button>
             </HStack>
 
-            <Box
-                borderWidth="1px"
-                borderColor="gray.200"
-                borderRadius="lg"
-                overflow="hidden"
-                bg="white"
-                boxShadow="sm"
-            >
-                <TableContainer>
-                    <Table variant="simple" size="sm">
-                        <Thead bg="gray.50">
-                            <Tr>
-                                <Th color="gray.600" fontSize="xs" fontWeight="semibold" w="50px">Level</Th>
-                                <Th color="gray.600" fontSize="xs" fontWeight="semibold" w="130px">Status</Th>
-                                <Th color="gray.600" fontSize="xs" fontWeight="semibold">Procedures</Th>
-                                <Th color="gray.600" fontSize="xs" fontWeight="semibold">Documentation</Th>
-                                <Th color="gray.600" fontSize="xs" fontWeight="semibold">Resources</Th>
-                                <Th color="gray.600" fontSize="xs" fontWeight="semibold" w="80px">Actions</Th>
-                            </Tr>
-                        </Thead>
-                        <Tbody>
-                            {levels.map((level) => (
-                                <Tr key={level.status_level} _hover={{ bg: 'gray.50' }}>
-                                    <Td>
-                                        <Badge
-                                            fontSize="xs"
-                                            colorScheme={STATUS_COLORS[level.status_value] || 'gray'}
-                                            variant="solid"
-                                            borderRadius="full"
-                                            px={2}
-                                        >
-                                            {level.status_value}
-                                        </Badge>
-                                    </Td>
-                                    <Td>
-                                        <Text fontSize="sm" fontWeight="medium" color="gray.700">
-                                            {level.status_level}
-                                        </Text>
-                                    </Td>
-                                    <Td>
-                                        <Text fontSize="xs" color="gray.600" whiteSpace="normal" maxW="250px">
-                                            {level.description_of_procedures || '-'}
-                                        </Text>
-                                    </Td>
-                                    <Td>
-                                        <Text fontSize="xs" color="gray.600" whiteSpace="normal" maxW="250px">
-                                            {level.description_of_documentation || '-'}
-                                        </Text>
-                                    </Td>
-                                    <Td>
-                                        <Text fontSize="xs" color="gray.600" whiteSpace="normal" maxW="250px">
-                                            {level.description_of_resources || '-'}
-                                        </Text>
-                                    </Td>
-                                    <Td>
-                                        <Button
-                                            size="xs"
-                                            colorScheme="teal"
-                                            variant="ghost"
-                                            onClick={() => openEditModal(level)}
-                                        >
-                                            Edit
-                                        </Button>
-                                    </Td>
-                                </Tr>
-                            ))}
-                        </Tbody>
-                    </Table>
-                </TableContainer>
-            </Box>
+            <VStack align="stretch" spacing={2}>
+                {levels.map((level) => (
+                    <Box
+                        key={level.status_level}
+                        borderWidth="1px"
+                        borderColor="gray.200"
+                        borderRadius="md"
+                        bg="white"
+                        boxShadow="sm"
+                    >
+                        <HStack px={3} py={2} bg="gray.50" borderBottomWidth="1px" borderColor="gray.200" justify="space-between">
+                            <HStack spacing={2}>
+                                <Badge
+                                    fontSize="xs"
+                                    colorScheme={STATUS_COLORS[level.status_value] || 'gray'}
+                                    variant="solid"
+                                    borderRadius="full"
+                                    px={2}
+                                >
+                                    {level.status_value}
+                                </Badge>
+                                <Text fontSize="sm" fontWeight="semibold" color="gray.800">
+                                    {level.status_level}
+                                </Text>
+                            </HStack>
+                            <Button size="xs" colorScheme="teal" variant="ghost" onClick={() => openEditModal(level)}>
+                                Edit
+                            </Button>
+                        </HStack>
+
+                        <HStack px={3} py={2} spacing={3} align="flex-start">
+                            <SubNodeColumn label="Procedures" descriptions={level.procedure_descriptions} requirements={level.procedure_requirements} descField="description" reqField="requirement_description" />
+                            <Divider orientation="vertical" h="auto" alignSelf="stretch" borderColor="gray.200" />
+                            <SubNodeColumn label="Resources" descriptions={level.resource_descriptions} requirements={level.resource_requirements} descField="description" reqField="requirement_description" />
+                            <Divider orientation="vertical" h="auto" alignSelf="stretch" borderColor="gray.200" />
+                            <SubNodeColumn label="Documentation" descriptions={level.documentation_descriptions} requirements={level.documentation_requirements} descField="description" reqField="requirement_description" />
+                            <Divider orientation="vertical" h="auto" alignSelf="stretch" borderColor="gray.200" />
+                            <SubNodeColumn label="Doc. Evidence" descriptions={level.documentation_evidence_descriptions} requirements={level.documentation_evidence_requirements} descField="description" reqField="requirement_description" />
+                        </HStack>
+                    </Box>
+                ))}
+            </VStack>
 
             {levels.length === 0 && (
-                <Box p={6} textAlign="center">
+                <Box p={4} textAlign="center">
                     <Text fontSize="sm" color="gray.500">No status levels available.</Text>
                 </Box>
             )}

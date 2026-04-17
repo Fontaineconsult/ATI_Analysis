@@ -138,6 +138,22 @@ export const fetchAllImplementations = async () => {
     }
 }
 
+export const fetchSubNodes = async (category) => {
+    try {
+        const response = await axios.get(`${process.env.REACT_APP_API_URL}/evidence/status-levels`, {
+            params: { category }
+        });
+        if (response.status === 200) {
+            return response.data;
+        } else {
+            throw new Error(`Failed to fetch sub-nodes: ${response.data.error}`);
+        }
+    } catch (error) {
+        console.error('Error fetching sub-nodes:', error.message);
+        throw error;
+    }
+}
+
 export const fetchCampuses = async () => {
     try {
         const response = await axios.get(`${process.env.REACT_APP_API_URL}/organizational-units`, {
