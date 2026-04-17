@@ -60,3 +60,32 @@ def create_year_success_evidence_node(academic_year, success_indicator_composite
 #                                   "2.4-ins",
 #                                   "Established")
 
+
+def create_status_level(data):
+    """
+    Create a new StatusLevel node.
+    """
+    status_level_name = data.get('status_level')
+    if not status_level_name:
+        raise CrudError("Missing required field: 'status_level'")
+
+    # Check uniqueness
+    existing = StatusLevel.nodes.filter(status_level=status_level_name)
+    if existing:
+        raise CrudError(f"StatusLevel '{status_level_name}' already exists.")
+
+    try:
+        node = StatusLevel(
+            status_level=status_level_name,
+            status_value=data.get('status_value', ''),
+            description_of_procedures=data.get('description_of_procedures', ''),
+            description_of_documentation=data.get('description_of_documentation', ''),
+            description_of_documentation_evidence=data.get('description_of_documentation_evidence', ''),
+            description_of_resources=data.get('description_of_resources', ''),
+            ati_report_evidence_column=data.get('ati_report_evidence_column', ''),
+        )
+        node.save()
+        return node.serialize()
+    except Exception as e:
+        raise CrudError(f"Failed to create StatusLevel: {e}")
+

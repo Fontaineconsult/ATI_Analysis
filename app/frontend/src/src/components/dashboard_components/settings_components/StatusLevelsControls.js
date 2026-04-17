@@ -1,4 +1,4 @@
-import React, { useContext } from 'react';
+import React, { useContext, useState } from 'react';
 import {
     Box,
     Heading,
@@ -11,10 +11,13 @@ import {
     Td,
     TableContainer,
     Badge,
+    Button,
+    HStack,
     Spinner,
     Center,
 } from '@chakra-ui/react';
 import { StatusLevelContext } from '../../../context/StatusLevelContext';
+import EditStatusLevel from './EditStatusLevel';
 
 const STATUS_COLORS = {
     '0': 'red',
@@ -26,7 +29,23 @@ const STATUS_COLORS = {
 };
 
 function StatusLevels() {
-    const { statusLevels, loading, error } = useContext(StatusLevelContext);
+    const { statusLevels, loading, error, refreshStatusLevels } = useContext(StatusLevelContext);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [selectedLevel, setSelectedLevel] = useState(null);
+
+    const openCreateModal = () => {
+        setSelectedLevel(null);
+        setIsModalOpen(true);
+    };
+
+    const openEditModal = (level) => {
+        setSelectedLevel(level);
+        setIsModalOpen(true);
+    };
+
+    const handleSave = () => {
+        refreshStatusLevels();
+    };
 
     if (loading) {
         return (
@@ -50,7 +69,12 @@ function StatusLevels() {
 
     return (
         <Box>
-            <Heading size="md" color="gray.800" mb={6}>Status Levels</Heading>
+            <HStack justifyContent="space-between" mb={4}>
+                <Heading size="md" color="gray.800">Status Levels</Heading>
+                <Button colorScheme="teal" size="sm" onClick={openCreateModal}>
+                    Add Status Level
+                </Button>
+            </HStack>
 
             <Box
                 borderWidth="1px"
@@ -69,6 +93,7 @@ function StatusLevels() {
                                 <Th color="gray.600" fontSize="xs" fontWeight="semibold">Procedures</Th>
                                 <Th color="gray.600" fontSize="xs" fontWeight="semibold">Documentation</Th>
                                 <Th color="gray.600" fontSize="xs" fontWeight="semibold">Resources</Th>
+                                <Th color="gray.600" fontSize="xs" fontWeight="semibold" w="80px">Actions</Th>
                             </Tr>
                         </Thead>
                         <Tbody>
@@ -105,6 +130,16 @@ function StatusLevels() {
                                             {level.description_of_resources || '-'}
                                         </Text>
                                     </Td>
+                                    <Td>
+                                        <Button
+                                            size="xs"
+                                            colorScheme="teal"
+                                            variant="ghost"
+                                            onClick={() => openEditModal(level)}
+                                        >
+                                            Edit
+                                        </Button>
+                                    </Td>
                                 </Tr>
                             ))}
                         </Tbody>
@@ -117,6 +152,13 @@ function StatusLevels() {
                     <Text fontSize="sm" color="gray.500">No status levels available.</Text>
                 </Box>
             )}
+
+            <EditStatusLevel
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+                statusLevelData={selectedLevel}
+                onSave={handleSave}
+            />
         </Box>
     );
 }

@@ -218,6 +218,20 @@ export const createImplementation = async (implementation_type, title, descripti
 
 
 
+// STATUS LEVEL CREATE FUNCTIONS
+export const createStatusLevel = async (formData) => {
+    try {
+        const response = await axios.post(`${process.env.REACT_APP_API_URL}/evidence/status-levels`, {
+            action: 'create_status_level',
+            ...formData
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error creating status level:', error);
+        throw error;
+    }
+}
+
 // ACCOMPLISHMENT CREATE FUNCTIONS
 export const createAccomplishment = async (formData) => {
     try {

@@ -28,6 +28,34 @@ def assign_implementation_to_year_success_indicator(year_success_identifier: str
         raise CrudError(f"Error assigning implementation {implementation_title} to success indicator {year_success_identifier}: {e}")
 
 
+def update_status_level_node(unique_id, data):
+    """
+    Update an existing StatusLevel node's description fields.
+    """
+    try:
+        node = StatusLevel.nodes.get(unique_id=unique_id)
+    except StatusLevel.DoesNotExist:
+        raise NotFoundError(f"StatusLevel with unique_id '{unique_id}' not found.")
+    except Exception as e:
+        raise CrudError(f"Failed to retrieve StatusLevel: {e}")
+
+    try:
+        if 'description_of_procedures' in data:
+            node.description_of_procedures = data['description_of_procedures']
+        if 'description_of_documentation' in data:
+            node.description_of_documentation = data['description_of_documentation']
+        if 'description_of_documentation_evidence' in data:
+            node.description_of_documentation_evidence = data['description_of_documentation_evidence']
+        if 'description_of_resources' in data:
+            node.description_of_resources = data['description_of_resources']
+        if 'ati_report_evidence_column' in data:
+            node.ati_report_evidence_column = data['ati_report_evidence_column']
+        node.save()
+        return node.serialize()
+    except Exception as e:
+        raise CrudError(f"Failed to update StatusLevel: {e}")
+
+
 def assign_status_to_yse(year_success_identifier: str, status: str) -> bool:
     try:
         year_success_evidence = YearSuccessEvidence.nodes.get(year_identifier=year_success_identifier)

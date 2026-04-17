@@ -197,35 +197,60 @@ class StatusLevelAPI(MethodView):
         Fetch all status levels along with their connected nodes from the database.
         """
         try:
-            status_levels = get_connected_status_levels()
-            return make_response(status='success', data=status_levels), 200
+            status_levels_data = get_connected_status_levels()
+            return make_response(status='success', data=status_levels_data), 200
         except CrudError as e:
             raise ApiError(message=f"Error retrieving connected status levels: {e}")
         except Exception as e:
             raise ApiError(message=f"An unexpected error occurred: {e}")
 
+    def post(self):
+        """
+        Create a new StatusLevel node.
+        """
+        from app.database.queries.evidence.create import create_status_level
+
+        data = request.get_json()
+        action = data.get('action')
+
+        if action != "create_status_level":
+            return make_response(status="error", error=f"Unknown action '{action}'."), 400
+
+        try:
+            result = create_status_level(data)
+            return make_response(status='success', data=result), 201
+        except CrudError as e:
+            return make_response(status='error', error=str(e)), 400
+        except Exception as e:
+            raise ApiError(message=f"An unexpected error occurred: {e}")
+
     def put(self):
         """
-        Updates the status level of a YearSuccessEvidence node based on a structured payload.
+        Handle PUT actions for status levels.
         """
         data = request.get_json()
         action = data.get('action')
-        yse = data.get('yse')
-        status_level = data.get('status_level')
 
-        if action != "update_status_level":
-            raise ValidationError(
-                message="Invalid action. Expected 'update_status_level'."
-            )
+        if not action:
+            return make_response(status="error", error="Missing 'action' field in request."), 400
 
-        if not yse or not status_level:
-            raise ValidationError(
-                message="Missing 'yse' or 'status_level' in the request."
-            )
+        if action == "update_status_level":
+            yse = data.get('yse')
+            status_level = data.get('status_level')
 
-        return self.update_status_level(yse, status_level)
+            if not yse or not status_level:
+                raise ValidationError(
+                    message="Missing 'yse' or 'status_level' in the request."
+                )
+            return self._update_yse_status(yse, status_level)
 
-    def update_status_level(self, yse, status_level):
+        elif action == "update_status_level_node":
+            return self._update_status_level_node(data)
+
+        else:
+            return make_response(status="error", error=f"Unknown action '{action}'."), 400
+
+    def _update_yse_status(self, yse, status_level):
         """
         Helper method to update the status level of the given YearSuccessEvidence node.
         """
@@ -239,6 +264,24 @@ class StatusLevelAPI(MethodView):
             return make_response(status='success', data="Status level updated successfully"), 200
         except CrudError as e:
             raise ApiError(message=f"Error assigning status {status_level} to YSE {yse}: {e}")
+
+    def _update_status_level_node(self, data):
+        """
+        Update properties of a StatusLevel node.
+        """
+        from app.database.queries.evidence.update import update_status_level_node
+
+        unique_id = data.get('unique_id')
+        if not unique_id:
+            return make_response(status="error", error="Missing 'unique_id' in request."), 400
+
+        try:
+            result = update_status_level_node(unique_id, data)
+            return make_response(status='success', data=result), 200
+        except NotFoundError as e:
+            return make_response(status='error', error=str(e)), 404
+        except CrudError as e:
+            return make_response(status='error', error=str(e)), 500
 
 
 
@@ -288,5 +331,5 @@ data_api_endpoints.add_url_rule(
 status_level_view = StatusLevelAPI.as_view('status_level_api')
 
 data_api_endpoints.add_url_rule(
-    '/evidence/status-levels', view_func=status_level_view, methods=['GET', 'PUT']
+    '/evidence/status-levels', view_func=status_level_view, methods=['GET', 'POST', 'PUT']
 )

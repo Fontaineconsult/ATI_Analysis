@@ -30,14 +30,23 @@ export const StatusLevelProvider = ({ children }) => {
     const updateStatus = async (yse, statusLevel) => {
         try {
             await updateStatusLevel(yse, statusLevel);
-            // Optionally, update the local status levels if needed (e.g., add a success notification)
         } catch (error) {
             console.error('Failed to update status level:', error);
         }
     };
 
+    // Re-fetch status levels from the API
+    const refreshStatusLevels = async () => {
+        try {
+            const levels = await fetchStatusLevels();
+            setStatusLevels(levels.data || []);
+        } catch (error) {
+            console.error('Failed to refresh status levels:', error);
+        }
+    };
+
     return (
-        <StatusLevelContext.Provider value={{ statusLevels, loading, error, updateStatus }}>
+        <StatusLevelContext.Provider value={{ statusLevels, loading, error, updateStatus, refreshStatusLevels }}>
             {children}
         </StatusLevelContext.Provider>
     );

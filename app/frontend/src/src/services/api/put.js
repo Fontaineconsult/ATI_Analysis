@@ -32,6 +32,20 @@ export const updateStatusLevel = async (yse, statusLevel) => {
 };
 
 
+export const updateStatusLevelNode = async (formData) => {
+    try {
+        const response = await axios.put(`${process.env.REACT_APP_API_URL}/evidence/status-levels`, {
+            action: 'update_status_level_node',
+            ...formData
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error updating status level node:', error);
+        throw error;
+    }
+};
+
+
 export const assignApprover = async (employeeId, yearSuccessEvidence) => {
     try {
         const response = await axios.put(`${process.env.REACT_APP_API_URL}/evidence`,
