@@ -5,17 +5,26 @@ import {
     Heading,
     Button,
     Select,
-    useDisclosure,
+    Text,
+    Table,
+    Thead,
+    Tbody,
+    Tr,
+    Th,
+    Td,
+    TableContainer,
+    Badge,
+    HStack,
+    Divider,
+    Spinner,
+    Center,
 } from '@chakra-ui/react';
-import { useTable } from 'react-table';
 import { DataContext } from '../../../context/DataContext';
-import { useColorModeValue } from '@chakra-ui/react';
-import { updateRemovedStatus, attachYearSuccessEvidence, detachYearSuccessEvidence } from '../../../services/api/put';
-import { createYearSuccessEvidence } from '../../../services/api/post'; // Import API call
+import { updateRemovedStatus } from '../../../services/api/put';
+import { createYearSuccessEvidence } from '../../../services/api/post';
 import { sortGoals, sortSuccessIndicators } from "../../../services/utils/sorters";
 import AddIndicator from './AddIndicator';
-import {SettingsContext} from "../../../context/SettingsContext";  // Import the AddIndicator component
-import '../../../styles/App.css';
+import { SettingsContext } from "../../../context/SettingsContext";
 
 const SuccessIndicators = () => {
     const { campus } = useParams();
@@ -27,12 +36,10 @@ const SuccessIndicators = () => {
     const [actionType, setActionType] = useState('');
     const [isLoading, setIsLoading] = useState(false);
 
-    // Open modal for adding an indicator to a specific category
     const onAddOpen = (categoryName) => {
         setOpenModals((prev) => ({ ...prev, [categoryName]: true }));
     };
 
-    // Close modal for adding an indicator to a specific category
     const onAddClose = (categoryName) => {
         setOpenModals((prev) => ({ ...prev, [categoryName]: false }));
     };
@@ -63,14 +70,11 @@ const SuccessIndicators = () => {
 
         try {
             if (action === "attach") {
-                // Call the API to create a YearSuccessEvidence node
-
                 await createYearSuccessEvidence(academicYear, indicator.composite_key, campus);
             } else {
-                // Call the detach API for detaching YearSuccessEvidence if required
-                await detachYearSuccessEvidence(indicator.composite_key); // Assuming detach API exists
+                // Detach not yet implemented
             }
-            refreshIndicators(); // Refresh indicators to reflect new YSE state
+            refreshIndicators();
         } catch (error) {
             console.error(`Failed to ${action} year success evidence:`, error);
         } finally {
@@ -83,77 +87,52 @@ const SuccessIndicators = () => {
     const handleActionClick = (indicator) => {
         setSelectedIndicator(indicator);
         setActionType(indicator.yearSuccessIndicators.length > 0 ? 'Detach YSE' : 'Attach YSE');
-        toggleYearSuccessEvidence(indicator, currentAcademicYear); // Trigger the toggle action with academicYear
+        toggleYearSuccessEvidence(indicator, currentAcademicYear);
     };
 
     const handleAddIndicatorSubmit = (indicatorData) => {
         console.log("New indicator data:", indicatorData);
-        // Add API call to save the indicator data
     };
 
-    const columns = React.useMemo(
-        () => [
-            {
-                Header: 'Success Indicator',
-                accessor: 'success_indicator',
-            },
-            {
-                Header: 'Composite Key',
-                accessor: 'composite_key',
-            },
-            {
-                Header: 'Status',
-                accessor: 'status',
-                Cell: ({ row }) => {
-                    const currentStatus = row.original.removed ? 'Removed' : 'Active';
-
-                    return (
-                        <Select
-                            value={currentStatus}
-                            onChange={(e) => handleStatusChange(row.original, e.target.value)}
-                            size="sm"
-                            width="120px"
-                        >
-                            <option value="Active">Active</option>
-                            <option value="Removed">Removed</option>
-                        </Select>
-                    );
-                },
-            },
-            {
-                Header: 'Actions',
-                accessor: 'actions',
-                Cell: ({ row }) => {
-                    const buttonLabel = row.original.yearSuccessIndicators.length > 0 ? 'Detach YSE' : 'Attach YSE';
-
-                    return (
-                        <Button
-                            size="sm"
-                            onClick={() => handleActionClick(row.original)} // Connect toggle action to button
-                            colorScheme={row.original.yearSuccessIndicators.length > 0 ? 'red' : 'green'}
-                        >
-                            {buttonLabel}
-                        </Button>
-                    );
-                },
-            },
-        ],
-        [refreshIndicators, currentAcademicYear]
-    );
-
     if (!indicators) {
-        return <Box>Loading...</Box>;
+        return (
+            <Center h="400px">
+                <Spinner size="xl" color="teal.500" thickness="3px" />
+            </Center>
+        );
     }
 
     return (
         <Box>
-            <Heading size="md" mb={4}>Success Indicators</Heading>
+            <HStack justifyContent="space-between" mb={6}>
+                <Heading size="md" color="gray.800">Success Indicators</Heading>
+                {isLoading && <Spinner size="sm" color="teal.500" />}
+            </HStack>
 
             {indicators
                 .sort(sortGoals)
                 .map((category) => (
                     <Box key={category.name} mb={8}>
-                        <Heading size="md" mb={4}>{category.name}</Heading>
+                        <Box
+                            bg="teal.50"
+                            px={4}
+                            py={3}
+                            borderRadius="lg"
+                            borderWidth="1px"
+                            borderColor="teal.100"
+                            mb={4}
+                        >
+                            <HStack justifyContent="space-between" align="center">
+                                <Heading size="sm" color="teal.700">{category.name}</Heading>
+                                <Button
+                                    colorScheme="teal"
+                                    size="sm"
+                                    onClick={() => onAddOpen(category.name)}
+                                >
+                                    Add Indicator
+                                </Button>
+                            </HStack>
+                        </Box>
 
                         <AddIndicator
                             indicators={category}
@@ -163,28 +142,127 @@ const SuccessIndicators = () => {
                             onSubmit={handleAddIndicatorSubmit}
                         />
 
-                        <Button colorScheme="blue" onClick={() => onAddOpen(category.name)} mb={4}>Add Indicator</Button>
-
                         {category.goals && category.goals.length > 0 ? (
                             category.goals
                                 .sort(sortGoals)
                                 .map((goal) => (
-                                    <Box key={goal.goal_number} mb={6}>
-                                        <Heading size="sm" mb={2}>{`Goal ${goal.goal_number}: ${goal.goal}`}</Heading>
-                                        <p>{goal.name}</p>
+                                    <Box
+                                        key={goal.goal_number}
+                                        mb={6}
+                                        borderWidth="1px"
+                                        borderColor="gray.200"
+                                        borderRadius="lg"
+                                        overflow="hidden"
+                                        bg="white"
+                                        boxShadow="sm"
+                                    >
+                                        <Box
+                                            bg="gray.50"
+                                            px={4}
+                                            py={3}
+                                            borderBottomWidth="1px"
+                                            borderColor="gray.200"
+                                        >
+                                            <Heading size="sm" color="gray.700">
+                                                Goal {goal.goal_number}: {goal.goal}
+                                            </Heading>
+                                            {goal.name && (
+                                                <Text fontSize="xs" color="gray.500" mt={1}>
+                                                    {goal.name}
+                                                </Text>
+                                            )}
+                                        </Box>
 
                                         {goal.successIndicators && goal.successIndicators.length > 0 ? (
-                                            <SuccessIndicatorTable
-                                                data={goal.successIndicators.sort(sortSuccessIndicators)}
-                                                columns={columns}
-                                            />
+                                            <TableContainer overflowX="unset">
+                                                <Table variant="simple" size="sm" layout="fixed">
+                                                    <Thead bg="gray.50">
+                                                        <Tr>
+                                                            <Th color="gray.600" fontSize="xs" fontWeight="semibold">Success Indicator</Th>
+                                                            <Th color="gray.600" fontSize="xs" fontWeight="semibold" w="120px">Key</Th>
+                                                            <Th color="gray.600" fontSize="xs" fontWeight="semibold" w="130px">Status</Th>
+                                                            <Th color="gray.600" fontSize="xs" fontWeight="semibold" w="130px">Actions</Th>
+                                                        </Tr>
+                                                    </Thead>
+                                                    <Tbody>
+                                                        {goal.successIndicators
+                                                            .sort(sortSuccessIndicators)
+                                                            .map((indicator) => {
+                                                                const isRemoved = indicator.removed;
+                                                                const hasYse = indicator.yearSuccessIndicators?.length > 0;
+
+                                                                return (
+                                                                    <Tr
+                                                                        key={indicator.composite_key}
+                                                                        opacity={isRemoved ? 0.5 : 1}
+                                                                        bg={isRemoved ? 'gray.50' : 'white'}
+                                                                        _hover={{ bg: isRemoved ? 'gray.100' : 'gray.50' }}
+                                                                    >
+                                                                        <Td fontSize="xs" color="gray.700" whiteSpace="normal" wordBreak="break-word">
+                                                                            {indicator.success_indicator}
+                                                                        </Td>
+                                                                        <Td>
+                                                                            <Badge
+                                                                                fontSize="xs"
+                                                                                colorScheme={isRemoved ? 'gray' : 'teal'}
+                                                                                variant="subtle"
+                                                                            >
+                                                                                {indicator.composite_key}
+                                                                            </Badge>
+                                                                        </Td>
+                                                                        <Td>
+                                                                            <Select
+                                                                                value={isRemoved ? 'Removed' : 'Active'}
+                                                                                onChange={(e) => handleStatusChange(indicator, e.target.value)}
+                                                                                size="xs"
+                                                                                w="110px"
+                                                                                borderColor="gray.300"
+                                                                                _hover={{ borderColor: 'gray.400' }}
+                                                                                _focus={{ borderColor: 'teal.500' }}
+                                                                                bg="white"
+                                                                            >
+                                                                                <option value="Active">Active</option>
+                                                                                <option value="Removed">Removed</option>
+                                                                            </Select>
+                                                                        </Td>
+                                                                        <Td>
+                                                                            <Button
+                                                                                size="xs"
+                                                                                colorScheme={hasYse ? 'red' : 'green'}
+                                                                                variant={hasYse ? 'outline' : 'solid'}
+                                                                                onClick={() => handleActionClick(indicator)}
+                                                                                _hover={{
+                                                                                    transform: 'translateY(-1px)',
+                                                                                    boxShadow: 'sm'
+                                                                                }}
+                                                                                transition="all 0.2s"
+                                                                            >
+                                                                                {hasYse ? 'Detach YSE' : 'Attach YSE'}
+                                                                            </Button>
+                                                                        </Td>
+                                                                    </Tr>
+                                                                );
+                                                            })}
+                                                    </Tbody>
+                                                </Table>
+                                            </TableContainer>
                                         ) : (
-                                            <Box>No success indicators available.</Box>
+                                            <Box p={4}>
+                                                <Text fontSize="sm" color="gray.500">No success indicators available.</Text>
+                                            </Box>
                                         )}
                                     </Box>
                                 ))
                         ) : (
-                            <Box>No goals available for {category.name}.</Box>
+                            <Box
+                                p={4}
+                                borderWidth="1px"
+                                borderColor="gray.200"
+                                borderRadius="lg"
+                                bg="white"
+                            >
+                                <Text fontSize="sm" color="gray.500">No goals available for {category.name}.</Text>
+                            </Box>
                         )}
                     </Box>
                 ))}
@@ -192,57 +270,4 @@ const SuccessIndicators = () => {
     );
 };
 
-
-
-const SuccessIndicatorTable = React.memo(({ data, columns }) => {
-    const {
-        getTableProps,
-        getTableBodyProps,
-        headerGroups,
-        rows,
-        prepareRow,
-    } = useTable({ columns, data });
-
-    const removedRowBg = useColorModeValue('gray.100', 'gray.700');
-    const removedRowText = useColorModeValue('gray.500', 'gray.400');
-
-    return (
-        <table {...getTableProps()} className="success-indicator-table">
-            <thead>
-            {headerGroups.map(headerGroup => (
-                <tr {...headerGroup.getHeaderGroupProps()}>
-                    {headerGroup.headers.map(column => (
-                        <th {...column.getHeaderProps()} className="success-indicator-table-header">
-                            {column.render('Header')}
-                        </th>
-                    ))}
-                </tr>
-            ))}
-            </thead>
-            <tbody {...getTableBodyProps()}>
-            {rows.map(row => {
-                prepareRow(row);
-                const isRemoved = row.original.removed;
-
-                return (
-                    <tr
-                        {...row.getRowProps()}
-                        className={isRemoved ? 'success-indicator-row-removed' : ''}
-                        style={{
-                            backgroundColor: isRemoved ? removedRowBg : 'inherit',
-                            color: isRemoved ? removedRowText : 'inherit',
-                        }}
-                    >
-                        {row.cells.map(cell => (
-                            <td {...cell.getCellProps()} className="success-indicator-table-cell">
-                                {cell.render('Cell')}
-                            </td>
-                        ))}
-                    </tr>
-                );
-            })}
-            </tbody>
-        </table>
-    );
-});
 export default SuccessIndicators;
