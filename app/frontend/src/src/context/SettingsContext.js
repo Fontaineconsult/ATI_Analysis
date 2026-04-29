@@ -16,7 +16,7 @@ export const useSettings = () => {
 // SettingsProvider component that wraps the app
 export const SettingsProvider = ({ children }) => {
     // Global settings state for current academic year and working group
-    const [currentAcademicYear, setCurrentAcademicYear] = useState('2024-2025');  // Default year
+    const [currentAcademicYear, setCurrentAcademicYear] = useState('2025-2026');  // Default year
     const [currentWorkingGroup, setCurrentWorkingGroup] = useState('web');  // Default working group
     const [currentCampus, setCurrentCampus] = useState(null);  // Campus abbreviation, set from URL
     const [campuses, setCampuses] = useState([]);  // List of {name, abbreviation}

@@ -1,4 +1,5 @@
 from app.database.graph_schema import *
+from app.database.identifiers import YEAR_PREFIX_LENGTH
 from neomodel import db
 
 
@@ -19,7 +20,7 @@ def duplicate_year_success_evidence(old_year, new_year):
     # Now let's do the duplication with a different approach
     query = """
         MATCH (e:YearSuccessEvidence)-[:evidence_in_year]->(oldYear:AcademicYear {name: $old_year})
-        WITH e, $new_year + substring(e.year_identifier, 9) AS new_year_identifier
+        WITH e, $new_year + substring(e.year_identifier, $year_prefix_length) AS new_year_identifier
         
         // Check if a node with this year_identifier already exists
         OPTIONAL MATCH (existing:YearSuccessEvidence {year_identifier: new_year_identifier})
@@ -74,7 +75,7 @@ def duplicate_year_success_evidence(old_year, new_year):
         RETURN e2, e2.year_identifier AS created_identifier
     """
 
-    results, meta = db.cypher_query(query, {'old_year': old_year, 'new_year': new_year})
+    results, meta = db.cypher_query(query, {'old_year': old_year, 'new_year': new_year, 'year_prefix_length': YEAR_PREFIX_LENGTH})
 
     print(f"\nDuplicated {len(results)} YearSuccessEvidence nodes from {old_year} to {new_year}")
     if results:

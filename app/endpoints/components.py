@@ -7,7 +7,7 @@ component_endpoints = Blueprint('components', __name__)
 
 # Configure your Neo4j database connection
 
-
+### DEPRECIATED CLAUDE IGNORE ####
 
 @component_endpoints.route('/indicator_selector', methods=['GET'])
 def get_indicator_selector():

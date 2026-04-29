@@ -20,6 +20,7 @@ import {
 } from '@chakra-ui/react';
 import {useNavigate, useParams} from "react-router-dom";
 import {getEditUrlFromCompositeKey, getStatusColor} from "./utils/tools";
+import EvidenceQualityPanel from "../components/dashboard_components/report_components/EvidenceQualityPanel";
 
 let datas = {
     "persons": [
@@ -729,6 +730,13 @@ function GenerateReportComponent({ evidenceItem }) {
                             </HStack>
                         </VStack>
                     </Box>
+                )}
+
+                {/* Evidence Quality Criteria (driven by StatusLevel sub-nodes) */}
+                {evidenceItem.statusLevel?.properties?.status_level && (
+                    <EvidenceQualityPanel
+                        currentStatusLevelName={evidenceItem.statusLevel.properties.status_level}
+                    />
                 )}
 
                 {/* Plans and Accomplishments Section */}

@@ -2,7 +2,9 @@
 // Duplicates all YSE nodes from $old_year to $new_year across all campuses.
 // Copies all relationships except evidence_in_year (which gets pointed to the new year).
 // Skips any YSE that already exists in the new year.
-// Run with parameters: {old_year: "2024-2025", new_year: "2025-2026"}
+// Run with parameters: {old_year: "2024-2025", new_year: "2025-2026", year_prefix_length: 9}
+// $year_prefix_length is the length of the "YYYY-YYYY" academic-year prefix.
+// Canonical value lives in app/database/identifiers.py (YEAR_PREFIX_LENGTH).
 
 // Step 1: Ensure the new AcademicYear node exists
 MERGE (newYear:AcademicYear {name: $new_year})
@@ -13,7 +15,7 @@ WITH newYear
 MATCH (e:YearSuccessEvidence)-[:evidence_in_year]->(oldYear:AcademicYear {name: $old_year})
 OPTIONAL MATCH (e)-[:evidence_at_campus]->(campus:Campus)
 WITH e, newYear, campus,
-     $new_year + substring(e.year_identifier, 9) AS new_year_identifier
+     $new_year + substring(e.year_identifier, $year_prefix_length) AS new_year_identifier
 
 // Skip if already exists
 OPTIONAL MATCH (existing:YearSuccessEvidence {year_identifier: new_year_identifier})

@@ -91,6 +91,7 @@ function AppContent() {
         '2022-2023',
         '2023-2024',
         '2024-2025',
+        '2025-2026',
     ];
 
     const handleYearChange = (year) => {

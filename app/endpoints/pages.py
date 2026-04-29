@@ -4,6 +4,7 @@ from neomodel import db
 from app.database.queries.read import full_year_report
 
 
+### DEPRECIATED -- CLAUDE IGNORE THIS FILE ###
 
 page_endpoints = Blueprint('pages', __name__)
 

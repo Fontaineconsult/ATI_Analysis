@@ -10,6 +10,7 @@ Run with: python -m app.database.tools.seed_campus_yse_stubs
 from app.database.graph_schema import (
     set_connection, SuccessIndicator, AcademicYear, Campus, StatusLevel, YearSuccessEvidence
 )
+from app.database.identifiers import make_yse_identifier
 from neomodel import db
 
 
@@ -44,7 +45,7 @@ def seed_yse_stubs():
     for indicator in active_indicators:
         for year_name in ACADEMIC_YEARS:
             for abbrev in CAMPUSES:
-                year_identifier = f"{year_name}-{indicator.composite_key}-{abbrev}"
+                year_identifier = make_yse_identifier(year_name, indicator.composite_key, abbrev)
 
                 # Check if already exists
                 existing = YearSuccessEvidence.nodes.filter(year_identifier=year_identifier)

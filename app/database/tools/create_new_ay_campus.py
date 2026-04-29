@@ -11,6 +11,7 @@ Creates a new AcademicYear node (if needed), then for each campus:
 Run with: python -m app.database.tools.create_new_ay_campus
 """
 from app.database.graph_schema import set_connection, AcademicYear, Campus, SuccessIndicator, YearSuccessEvidence, StatusLevel
+from app.database.identifiers import make_yse_identifier, YEAR_PREFIX_LENGTH
 from neomodel import db
 
 
@@ -51,7 +52,7 @@ def duplicate_year_success_evidence(old_year, new_year):
 
     query = """
         MATCH (e:YearSuccessEvidence)-[:evidence_in_year]->(oldYear:AcademicYear {name: $old_year})
-        WITH e, $new_year + substring(e.year_identifier, 9) AS new_year_identifier
+        WITH e, $new_year + substring(e.year_identifier, $year_prefix_length) AS new_year_identifier
 
         // Skip if already exists
         OPTIONAL MATCH (existing:YearSuccessEvidence {year_identifier: new_year_identifier})
@@ -103,7 +104,7 @@ def duplicate_year_success_evidence(old_year, new_year):
         RETURN e2.year_identifier AS created_identifier
     """
 
-    results, _ = db.cypher_query(query, {'old_year': old_year, 'new_year': new_year})
+    results, _ = db.cypher_query(query, {'old_year': old_year, 'new_year': new_year, 'year_prefix_length': YEAR_PREFIX_LENGTH})
     print(f"  Duplicated {len(results)} YSE nodes from {old_year} to {new_year}")
     if results:
         print("  Sample:")
@@ -147,7 +148,7 @@ def create_stub_yse_for_missing_campuses(new_year):
         print(f"  {abbrev}: has {existing_count} YSE nodes, creating stubs for missing indicators...")
 
         for indicator in active_indicators:
-            year_identifier = f"{new_year}-{indicator.composite_key}-{abbrev}"
+            year_identifier = make_yse_identifier(new_year, indicator.composite_key, abbrev)
 
             existing = YearSuccessEvidence.nodes.filter(year_identifier=year_identifier)
             if existing:

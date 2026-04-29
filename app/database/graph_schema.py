@@ -10,6 +10,8 @@ from neomodel import (StructuredNode, StringProperty,
 from dotenv import load_dotenv
 import os
 
+from app.data_config import trajectory_choices
+
 dotenv_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'app', '.env.development')
 load_dotenv(dotenv_path)
 
@@ -312,6 +314,13 @@ class DocumentedByRel(StructuredRel):
     modified_date = DateProperty()
     added_by = StringProperty()  # unique_id of the Person who added it
 
+class YseProgressRel(StructuredRel):
+    """Relationship between Plans and YearSuccessEvidence to track progress updates"""
+    update_date = DateProperty()
+    update_note = StringProperty()
+    updated_by = StringProperty()  # unique_id of the Person who added the update
+
+
 
 class Accomplishment(StructuredNode):
 
@@ -391,6 +400,70 @@ class Plan(StructuredNode):
             'completion_notes': self.completion_notes,
             'plan_status': self.plan_status,
             "unique_id": self.unique_id
+        }
+
+class CampusPlan(StructuredNode):
+
+    """
+
+    ATI plans indicate specific success indicators which will be the focus of efforts for each of the three priority areas - instructional materials, web, and procurement. When developing each ATI plan, the ATI Executive Sponsor and ATI committee will consider the following information:
+
+        * Current progress on selected list of success indicators subject to timelines.
+        * Current progress as described in the annual report, with particular attention to success indicators with a status level of “Not Started” or “Initiated.”
+        * Select ATI implementation activities across all three priority areas that will result in the greatest reduction of accessibility barriers.
+        * Use the ATI Prioritization Framework or a comparable process to consider factors such as impact, probability and capacity when prioritizing ATI implementation activities.
+        * Adopt deliverables associated with systemwide ATI activities that would advance campus progress.
+        * Collaborations that may accelerate or improve the quality of ATI activities.
+
+    """
+    unique_id = UniqueIdProperty()
+    plan_identifier = StringProperty(unique_index=True)
+
+
+
+    # academic_year + campus required for uniqueness; enforced via factory function — neomodel can't enforce required relationships at save time
+    academic_year = RelationshipTo("AcademicYear", "in_academic_year")
+    campus = RelationshipTo("Campus", "is_campus_plan_for")
+
+    prioritized_success_indicators = RelationshipTo("SuccessIndicator", "prioritizes_success_indicator")
+    plans_that_further_success_indicators = RelationshipTo("Plan", "furthers_yse")
+    executive_sponsors = RelationshipTo("Person", "has_executive_sponsor")
+
+    executive_summary = StringProperty()
+
+    general_note = RelationshipTo("Note", "is_documented_by")
+    prioritization_rationales = RelationshipTo("Note", "rationale_for_prioritization")
+    yse_progress_notes = RelationshipTo("YearSuccessEvidence", "yse_progress_notated_by", model=YseProgressRel)
+    progress_updates = RelationshipTo("ProgressUpdate", "has_progress_update")
+
+    def serialize(self):
+        return {
+            "name": self.name,
+            "unique_id": self.unique_id,
+        }
+
+
+class ProgressUpdate(StructuredNode):
+    """
+    A dated progress entry for a CampusPlan, scoped to a specific YearSuccessEvidence.
+    Use for append-only history that may carry attachments — distinct from the lighter
+    edge-as-note pattern in YseProgressRel.
+    """
+    unique_id = UniqueIdProperty()
+    update_date = DateProperty()
+    note = StringProperty()
+    trajectory = StringProperty(choices=trajectory_choices)
+
+    author = RelationshipTo("Person", "authored_by")
+    about_yse = RelationshipTo("YearSuccessEvidence", "about_yse")
+    supporting_documents = RelationshipTo("Document", "is_documented_by")
+
+    def serialize(self):
+        return {
+            "unique_id": self.unique_id,
+            "update_date": self.update_date,
+            "note": self.note,
+            "trajectory": self.trajectory,
         }
 
 
