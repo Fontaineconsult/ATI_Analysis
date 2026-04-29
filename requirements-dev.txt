@@ -1,0 +1,7 @@
+# Dev / test-only dependencies. Install with:
+#   pip install -r requirements-dev.txt
+#
+# Kept separate from app/requirements.txt so production deploys don't pull
+# pytest, mocks, etc.
+pytest>=8.0
+pytest-flask>=1.3

@@ -1,0 +1,1033 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ATI Working Groups Report - {{ academic_year }}</title>
+    <style>
+        :root {
+            --primary-color: #2c5282;
+            --secondary-color: #3182ce;
+            --success-color: #22c55e;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+            --info-color: #3b82f6;
+            --bg-gray: #f5f5f5;
+            --card-bg: white;
+            --text-primary: #333;
+            --text-secondary: #666;
+            --border-color: #e2e8f0;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background: var(--bg-gray);
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Header Styles */
+        .header {
+            background: var(--card-bg);
+            padding: 30px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            color: var(--primary-color);
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+
+        .header .meta {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        /* Navigation Styles */
+        .navigation {
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 20px;
+            z-index: 100;
+        }
+
+        .nav-tabs {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+
+        .nav-tab {
+            padding: 10px 20px;
+            background: var(--bg-gray);
+            border: 2px solid transparent;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+
+        .nav-tab:hover {
+            background: var(--secondary-color);
+            color: white;
+        }
+
+        .nav-tab.active {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+
+        /* Statistics Section */
+        .statistics {
+            background: var(--card-bg);
+            padding: 30px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .statistics h2 {
+            color: var(--primary-color);
+            margin-bottom: 20px;
+            font-size: 1.8em;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, var(--bg-gray) 0%, white 100%);
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid var(--secondary-color);
+        }
+
+        .stat-card h3 {
+            color: var(--text-secondary);
+            font-size: 0.9em;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-value {
+            font-size: 2em;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+
+        .stat-detail {
+            font-size: 0.85em;
+            color: var(--text-secondary);
+            margin-top: 5px;
+        }
+
+        /* Table of Contents */
+        .toc {
+            background: var(--card-bg);
+            padding: 25px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .toc h2 {
+            color: var(--primary-color);
+            margin-bottom: 20px;
+            font-size: 1.5em;
+        }
+
+        .toc-section {
+            margin-bottom: 20px;
+        }
+
+        .toc-section h3 {
+            color: var(--secondary-color);
+            margin-bottom: 10px;
+            font-size: 1.2em;
+        }
+
+        .toc-list {
+            list-style: none;
+            padding-left: 20px;
+        }
+
+        .toc-list li {
+            margin: 5px 0;
+        }
+
+        .toc-list a {
+            color: var(--text-primary);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            padding: 5px 10px;
+            border-radius: 4px;
+            transition: background 0.3s;
+        }
+
+        .toc-list a:hover {
+            background: var(--bg-gray);
+            color: var(--secondary-color);
+        }
+
+        .toc-list a:before {
+            content: "▸";
+            margin-right: 8px;
+            color: var(--secondary-color);
+        }
+
+        /* Working Group Sections */
+        .working-group {
+            display: none;
+        }
+
+        .working-group.active {
+            display: block;
+        }
+
+        .working-group-header {
+            background: var(--card-bg);
+            padding: 25px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            border-top: 4px solid var(--secondary-color);
+        }
+
+        .working-group-header h2 {
+            color: var(--primary-color);
+            margin-bottom: 15px;
+            font-size: 2em;
+        }
+
+        /* Goal Sections */
+        .goal-section {
+            background: var(--card-bg);
+            padding: 25px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .goal-header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+        }
+
+        .goal-header h3 {
+            color: var(--primary-color);
+            font-size: 1.5em;
+            margin-bottom: 5px;
+        }
+
+        /* Indicator Sections */
+        .indicator-section {
+            background: var(--bg-gray);
+            padding: 20px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            border-left: 3px solid var(--secondary-color);
+        }
+
+        .indicator-header {
+            margin-bottom: 15px;
+        }
+
+        .indicator-header h4 {
+            color: var(--text-primary);
+            font-size: 1.2em;
+            margin-bottom: 8px;
+        }
+
+        .indicator-key {
+            font-family: 'Courier New', monospace;
+            background: var(--card-bg);
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.9em;
+            color: var(--text-secondary);
+        }
+
+        /* Evidence Cards */
+        .evidence-card {
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .evidence-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .evidence-title {
+            font-weight: bold;
+            color: var(--text-primary);
+        }
+
+        /* Status Badges */
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .status-Implemented {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+
+        .status-Established {
+            background: #bee3f8;
+            color: #2c5282;
+        }
+
+        .status-Initiated {
+            background: #fef5e7;
+            color: #783f03;
+        }
+
+        .status-Not-Started {
+            background: #fed7d7;
+            color: #742a2a;
+        }
+
+        .status-Managed {
+            background: #e9d5ff;
+            color: #6b21a8;
+        }
+
+        .status-Defined {
+            background: #fed7e2;
+            color: #9f1239;
+        }
+
+        .badge-admin {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .badge-milestone {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .badge-deprecated {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        /* Collapsible Sections */
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+            position: relative;
+            padding-left: 25px;
+        }
+
+        .collapsible:before {
+            content: '▼';
+            position: absolute;
+            left: 0;
+            transition: transform 0.3s;
+        }
+
+        .collapsible.collapsed:before {
+            transform: rotate(-90deg);
+        }
+
+        .collapsible-content {
+            max-height: none;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+
+        .collapsible-content.collapsed {
+            max-height: 0;
+        }
+
+        /* Lists and Details */
+        .detail-list {
+            list-style: none;
+            padding-left: 20px;
+            margin: 10px 0;
+        }
+
+        .detail-list li {
+            margin: 8px 0;
+            position: relative;
+            padding-left: 20px;
+        }
+
+        .detail-list li:before {
+            content: "•";
+            position: absolute;
+            left: 0;
+            color: var(--secondary-color);
+            font-weight: bold;
+        }
+
+        /* Links */
+        a {
+            color: var(--secondary-color);
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+
+            .header h1 {
+                font-size: 1.8em;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .navigation {
+                position: static;
+            }
+        }
+
+        /* Print Styles */
+        @media print {
+            .navigation {
+                display: none;
+            }
+
+            .working-group {
+                display: block !important;
+                page-break-before: always;
+            }
+
+            .working-group:first-child {
+                page-break-before: avoid;
+            }
+        }
+
+        /* Summary Cards */
+        .summary-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .summary-card h3 {
+            color: white;
+            margin-bottom: 10px;
+        }
+
+        .summary-card .value {
+            font-size: 1.5em;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>ATI Working Groups Comprehensive Report</h1>
+            <div class="meta">
+                <strong>Academic Year:</strong> {{ academic_year }} |
+                <strong>Generated:</strong> {{ generation_date }} |
+                <strong>Total Working Groups:</strong> {{ working_groups|length }}
+            </div>
+        </div>
+
+        <!-- Navigation -->
+        <div class="navigation">
+            <div class="nav-tabs">
+                <div class="nav-tab active" onclick="showSection('overview')">Overview</div>
+                {% for wg in working_groups %}
+                <div class="nav-tab" onclick="showSection('{{ wg.name|lower|replace(' ', '-') }}')">{{ wg.name }}</div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Overview Section -->
+        <div id="overview" class="section active">
+            <!-- Statistics Dashboard -->
+            <div class="statistics">
+                <h2>📊 Executive Summary</h2>
+
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <h3>Working Groups</h3>
+                        <div class="stat-value">{{ working_groups|length }}</div>
+                        <div class="stat-detail">Active groups reporting</div>
+                    </div>
+
+                    <div class="stat-card">
+                        <h3>Total Goals</h3>
+                        <div class="stat-value">
+                            {% set ns = namespace(total=0) %}
+                            {% for wg in working_groups %}
+                                {% set ns.total = ns.total + wg.goals|length %}
+                            {% endfor %}
+                            {{ ns.total }}
+                        </div>
+                        <div class="stat-detail">Across all groups</div>
+                    </div>
+
+                    <div class="stat-card">
+                        <h3>Success Indicators</h3>
+                        <div class="stat-value">
+                            {% set ns = namespace(total=0) %}
+                            {% for wg in working_groups %}
+                                {% for goal in wg.goals %}
+                                    {% set ns.total = ns.total + goal.indicators|length %}
+                                {% endfor %}
+                            {% endfor %}
+                            {{ ns.total }}
+                        </div>
+                        <div class="stat-detail">Being tracked</div>
+                    </div>
+
+                    <div class="stat-card">
+                        <h3>Evidence Items</h3>
+                        <div class="stat-value">
+                            {% set ns = namespace(total=0) %}
+                            {% for wg in working_groups %}
+                                {% for goal in wg.goals %}
+                                    {% for indicator in goal.indicators %}
+                                        {% set ns.total = ns.total + indicator.evidences|length %}
+                                    {% endfor %}
+                                {% endfor %}
+                            {% endfor %}
+                            {{ ns.total }}
+                        </div>
+                        <div class="stat-detail">Documented for {{ academic_year }}</div>
+                    </div>
+
+                    <div class="stat-card">
+                        <h3>Total Plans</h3>
+                        <div class="stat-value">
+                            {% set ns = namespace(total=0) %}
+                            {% for wg in working_groups %}
+                                {% for goal in wg.goals %}
+                                    {% set ns.total = ns.total + (goal.plans|default([])|length) %}
+                                    {% for indicator in goal.indicators %}
+                                        {% for evidence in indicator.evidences %}
+                                            {% set ns.total = ns.total + (evidence.plans|default([])|length) %}
+                                        {% endfor %}
+                                    {% endfor %}
+                                {% endfor %}
+                            {% endfor %}
+                            {{ ns.total }}
+                        </div>
+                        <div class="stat-detail">Active and completed</div>
+                    </div>
+
+                    <div class="stat-card">
+                        <h3>Accomplishments</h3>
+                        <div class="stat-value">
+                            {% set ns = namespace(total=0) %}
+                            {% for wg in working_groups %}
+                                {% set ns.total = ns.total + (wg.allAccomplishments|default([])|length) %}
+                            {% endfor %}
+                            {{ ns.total }}
+                        </div>
+                        <div class="stat-detail">Achieved this year</div>
+                    </div>
+                </div>
+
+                <!-- Status Distribution -->
+                <h3 style="margin-top: 30px; margin-bottom: 15px;">Status Distribution</h3>
+                <div class="stats-grid">
+                    {% set status_counts = {} %}
+                    {% for wg in working_groups %}
+                        {% for goal in wg.goals %}
+                            {% for indicator in goal.indicators %}
+                                {% for evidence in indicator.evidences %}
+                                    {% if evidence.statusLevel %}
+                                        {% set status = evidence.statusLevel.properties.status_level %}
+                                        {% if status in status_counts %}
+                                            {% set _ = status_counts.update({status: status_counts[status] + 1}) %}
+                                        {% else %}
+                                            {% set _ = status_counts.update({status: 1}) %}
+                                        {% endif %}
+                                    {% endif %}
+                                {% endfor %}
+                            {% endfor %}
+                        {% endfor %}
+                    {% endfor %}
+
+                    {% for status, count in status_counts.items() %}
+                    <div class="stat-card">
+                        <h3>{{ status }}</h3>
+                        <div class="stat-value">{{ count }}</div>
+                        <div class="badge status-{{ status|replace(' ', '-') }}">{{ status }}</div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Table of Contents -->
+            <div class="toc">
+                <h2>📑 Table of Contents</h2>
+
+                {% for wg in working_groups %}
+                <div class="toc-section">
+                    <h3>{{ wg.name }}</h3>
+                    <ul class="toc-list">
+                        {% for goal in wg.goals %}
+                        <li>
+                            <a href="#{{ wg.name|lower|replace(' ', '-') }}-goal-{{ loop.index }}">
+                                {{ goal.goal.properties.name }}
+                                <span style="color: #999; font-size: 0.9em; margin-left: 10px;">
+                                    ({{ goal.indicators|length }} indicators)
+                                </span>
+                            </a>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Working Group Sections -->
+        {% for wg in working_groups %}
+        <div id="{{ wg.name|lower|replace(' ', '-') }}" class="working-group">
+            <div class="working-group-header">
+                <h2>{{ wg.name }} Working Group</h2>
+                <div class="summary-card">
+                    <h3>Working Group Statistics</h3>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px;">
+                        <div>
+                            <div class="value">{{ wg.goals|length }}</div>
+                            <div>Goals</div>
+                        </div>
+                        <div>
+                            <div class="value">
+                                {% set ns = namespace(total=0) %}
+                                {% for goal in wg.goals %}
+                                    {% set ns.total = ns.total + goal.indicators|length %}
+                                {% endfor %}
+                                {{ ns.total }}
+                            </div>
+                            <div>Indicators</div>
+                        </div>
+                        <div>
+                            <div class="value">{{ wg.allAccomplishments|default([])|length }}</div>
+                            <div>Accomplishments</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Goals -->
+            {% for goal in wg.goals %}
+            <div id="{{ wg.name|lower|replace(' ', '-') }}-goal-{{ loop.index }}" class="goal-section">
+                <div class="goal-header">
+                    <h3>Goal: {{ goal.goal.properties.name }}</h3>
+                    <p style="color: #666; margin-top: 5px;">{{ goal.goal.properties.description|default('') }}</p>
+                </div>
+
+                <!-- Goal-level Plans -->
+                {% if goal.plans %}
+                <div style="margin-bottom: 20px;">
+                    <h4 class="collapsible">📋 Goal Plans ({{ goal.plans|length }})</h4>
+                    <div class="collapsible-content">
+                        {% for plan in goal.plans %}
+                        <div style="background: #f7f9fc; padding: 15px; margin: 10px 0; border-left: 3px solid #3b82f6; border-radius: 4px;">
+                            <strong>{{ plan.properties.name }}</strong>
+                            {% if plan.properties.plan_status %}
+                            <span class="badge" style="margin-left: 10px;">{{ plan.properties.plan_status }}</span>
+                            {% endif %}
+                            {% if plan.properties.is_key_plan %}
+                            <span class="badge badge-admin">Key Plan</span>
+                            {% endif %}
+                            <p style="margin-top: 8px; color: #666;">{{ plan.properties.description|default('') }}</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Goal-level Accomplishments -->
+                {% if goal.accomplishments %}
+                <div style="margin-bottom: 20px;">
+                    <h4 class="collapsible">🏆 Goal Accomplishments ({{ goal.accomplishments|length }})</h4>
+                    <div class="collapsible-content">
+                        {% for acc_item in goal.accomplishments %}
+                        {% set acc = acc_item.accomplishment %}
+                        <div style="background: #faf5ff; padding: 15px; margin: 10px 0; border-left: 3px solid #a855f7; border-radius: 4px;">
+                            <strong>{{ acc.properties.name }}</strong>
+                            <p style="margin-top: 8px; color: #666;">{{ acc.properties.description|default('') }}</p>
+                            {% if acc_item.advances_yse_list %}
+                            <p style="margin-top: 5px; font-size: 0.9em; color: #999;">
+                                Advances YSE:
+                                {% for yse in acc_item.advances_yse_list %}
+                                    {{ yse.properties.year_identifier }}{% if not loop.last %}, {% endif %}
+                                {% endfor %}
+                            </p>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Indicators -->
+                {% for indicator in goal.indicators %}
+                <div class="indicator-section">
+                    <div class="indicator-header">
+                        <h4>{{ indicator.indicator.properties.success_indicator }}</h4>
+                        <span class="indicator-key">{{ indicator.indicator.properties.composite_key }}</span>
+                        {% if indicator.indicator.properties.removed %}
+                        <span class="badge badge-deprecated">Removed</span>
+                        {% endif %}
+                    </div>
+
+                    <!-- Evidences -->
+                    {% for evidence in indicator.evidences %}
+                    {% if evidence.evidence %}
+                    <div class="evidence-card">
+                        <div class="evidence-header">
+                            <span class="evidence-title">{{ evidence.evidence.properties.year_identifier }}</span>
+                            {% if evidence.statusLevel %}
+                            <span class="badge status-{{ evidence.statusLevel.properties.status_level|replace(' ', '-') }}">
+                                {{ evidence.statusLevel.properties.status_level }}
+                            </span>
+                            {% endif %}
+                        </div>
+
+                        <!-- Admin Review Status -->
+                        {% if evidence.evidence.properties.administrative_review_complete %}
+                        <p style="color: green; font-size: 0.9em;">
+                            ✓ Admin Review Complete
+                            {% if evidence.evidence.properties.administrative_review_completed_date %}
+                            ({{ evidence.evidence.properties.administrative_review_completed_date }})
+                            {% endif %}
+                        </p>
+                        {% else %}
+                        <p style="color: orange; font-size: 0.9em;">⏳ Admin Review Pending</p>
+                        {% endif %}
+
+                        <!-- Evidence Summary -->
+                        {% if evidence.evidence.properties.admin_review_description and evidence.evidence.properties.admin_review_description != "No Review" %}
+                        <div style="background: #e0f2fe; padding: 10px; border-radius: 4px; margin: 10px 0;">
+                            <strong>Evidence Summary:</strong>
+                            <p>{{ evidence.evidence.properties.admin_review_description }}</p>
+                        </div>
+                        {% endif %}
+
+                        <!-- Persons Involved -->
+                        {% if evidence.persons %}
+                        <details style="margin: 10px 0;">
+                            <summary style="cursor: pointer; font-weight: bold;">👥 Persons Involved ({{ evidence.persons|length }})</summary>
+                            <ul class="detail-list">
+                                {% for person in evidence.persons %}
+                                <li>
+                                    {{ person.properties.name }} - {{ person.properties.title }}
+                                    {% if person.properties.ati_role %}({{ person.properties.ati_role }}){% endif %}
+                                    {% if person.properties.email %} - {{ person.properties.email }}{% endif %}
+                                </li>
+                                {% endfor %}
+                            </ul>
+                        </details>
+                        {% endif %}
+
+                        <!-- Evidence Plans -->
+                        {% if evidence.plans %}
+                        <details style="margin: 10px 0;">
+                            <summary style="cursor: pointer; font-weight: bold;">📋 Plans ({{ evidence.plans|length }})</summary>
+                            {% for plan in evidence.plans %}
+                            {% if plan.properties.include_in_report != false %}
+                            <div style="background: #f0f9ff; padding: 10px; margin: 10px 20px; border-left: 3px solid #0284c7; border-radius: 4px;">
+                                <strong>{{ plan.properties.name }}</strong>
+                                <span class="badge" style="margin-left: 10px;">{{ plan.properties.plan_status|default('Pending') }}</span>
+                                {% if plan.properties.is_key_plan %}
+                                <span class="badge badge-admin">Key Plan</span>
+                                {% endif %}
+                                {% if plan.properties.is_campus_plan %}
+                                <span class="badge" style="background: #dcfce7; color: #166534;">Campus Plan</span>
+                                {% endif %}
+                                <p style="margin-top: 5px;">{{ plan.properties.description|default('') }}</p>
+
+                                {% if plan.properties.completion_notes %}
+                                <div style="margin-top: 8px; padding: 8px; background: #dcfce7; border-radius: 4px;">
+                                    <strong>Completion Notes:</strong> {{ plan.properties.completion_notes }}
+                                </div>
+                                {% endif %}
+
+                                {% if plan.properties.abandoned and plan.properties.abandoned_notes %}
+                                <div style="margin-top: 8px; padding: 8px; background: #fee2e2; border-radius: 4px;">
+                                    <strong>Abandonment Notes:</strong> {{ plan.properties.abandoned_notes }}
+                                </div>
+                                {% endif %}
+                            </div>
+                            {% endif %}
+                            {% endfor %}
+                        </details>
+                        {% endif %}
+
+                        <!-- Notes -->
+                        {% if evidence.has_notes %}
+                        {% set filtered_notes = evidence.has_notes|selectattr('note.properties.include_in_report', 'ne', false)|list %}
+                        {% if filtered_notes %}
+                        <details style="margin: 10px 0;">
+                            <summary style="cursor: pointer; font-weight: bold;">📝 Notes ({{ filtered_notes|length }})</summary>
+                            {% for note_item in filtered_notes %}
+                            <div style="background: #faf5ff; padding: 10px; margin: 10px 20px; border-left: 3px solid #a855f7; border-radius: 4px;">
+                                <strong>{{ note_item.note.properties.date_created|default('No date') }}</strong>
+                                {% if note_item.created_by %}
+                                - {{ note_item.created_by.properties.name }}
+                                {% endif %}
+                                <p style="margin-top: 5px;">{{ note_item.note.properties.content }}</p>
+                            </div>
+                            {% endfor %}
+                        </details>
+                        {% endif %}
+                        {% endif %}
+
+                        <!-- Messages -->
+                        {% if evidence.has_messages %}
+                        {% set filtered_messages = evidence.has_messages|selectattr('message.properties.include_in_report', 'ne', false)|list %}
+                        {% if filtered_messages %}
+                        <details style="margin: 10px 0;">
+                            <summary style="cursor: pointer; font-weight: bold;">💬 Messages ({{ filtered_messages|length }})</summary>
+                            {% for msg_item in filtered_messages %}
+                            <div style="background: #fdf5ff; padding: 10px; margin: 10px 20px; border-left: 3px solid #d946ef; border-radius: 4px;">
+                                <strong>{{ msg_item.message.properties.date_sent|default('No date') }}</strong>
+                                {% if msg_item.created_by %}
+                                - {{ msg_item.created_by.properties.name }}
+                                {% endif %}
+                                <p style="margin-top: 5px;">{{ msg_item.message.properties.content }}</p>
+                            </div>
+                            {% endfor %}
+                        </details>
+                        {% endif %}
+                        {% endif %}
+
+                        <!-- Implementation Evidence -->
+                        {% if evidence.evidenceTypes %}
+                        <details style="margin: 10px 0;">
+                            <summary style="cursor: pointer; font-weight: bold;">📁 Implementation Evidence</summary>
+                            {% for et in evidence.evidenceTypes %}
+                            {% if et.evidenceType %}
+                            <div style="margin: 15px 20px; padding: 15px; background: #f8f9fa; border-radius: 4px;">
+                                <h5 style="color: #2563eb; margin-bottom: 10px;">
+                                    [{{ et.type }}] {{ et.evidenceType.properties.title|default('') }}
+                                </h5>
+                                {% if et.evidenceType.properties.description %}
+                                <p style="color: #666; margin-bottom: 10px;">{{ et.evidenceType.properties.description }}</p>
+                                {% endif %}
+
+                                <!-- Documents -->
+                                {% if et.docs %}
+                                <div style="margin: 10px 0;">
+                                    <strong>Documents:</strong>
+                                    <ul style="margin: 5px 0 5px 20px;">
+                                        {% for doc in et.docs %}
+                                        {% if doc.document %}
+                                        <li>
+                                            <a href="{{ doc.document.properties.file_path|default(doc.document.properties.uri_path) }}">
+                                                {{ doc.document.properties.name }}
+                                            </a>
+                                            {% if doc.document.properties.is_administrative_review_documentation %}
+                                            <span class="badge badge-admin">Admin Review</span>
+                                            {% endif %}
+                                            {% if doc.document.properties.is_milestone_and_measures_documentation %}
+                                            <span class="badge badge-milestone">Milestones</span>
+                                            {% endif %}
+                                            {% if doc.document.properties.depreciated %}
+                                            <span class="badge badge-deprecated">Depreciated</span>
+                                            {% endif %}
+                                        </li>
+                                        {% endif %}
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                                {% endif %}
+
+                                <!-- Webpages -->
+                                {% if et.webs %}
+                                <div style="margin: 10px 0;">
+                                    <strong>Webpages:</strong>
+                                    <ul style="margin: 5px 0 5px 20px;">
+                                        {% for web in et.webs %}
+                                        {% if web.webpage %}
+                                        <li>
+                                            <a href="{{ web.webpage.properties.url }}">
+                                                {{ web.webpage.properties.name|default(web.webpage.properties.title) }}
+                                            </a>
+                                            {% if web.webpage.properties.no_longer_exists %}
+                                            <span class="badge badge-deprecated">No Longer Exists</span>
+                                            {% endif %}
+                                        </li>
+                                        {% endif %}
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                                {% endif %}
+
+                                <!-- Implementation Notes -->
+                                {% if et.notes %}
+                                <div style="margin: 10px 0;">
+                                    <strong>Notes:</strong>
+                                    <ul style="margin: 5px 0 5px 20px;">
+                                        {% for note in et.notes %}
+                                        {% if note.note %}
+                                        <li>{{ note.note.properties.date_created|default('No date') }}: {{ note.note.properties.content }}</li>
+                                        {% endif %}
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                                {% endif %}
+
+                                <!-- Implementation Messages -->
+                                {% if et.msgs %}
+                                <div style="margin: 10px 0;">
+                                    <strong>Messages:</strong>
+                                    <ul style="margin: 5px 0 5px 20px;">
+                                        {% for msg in et.msgs %}
+                                        {% if msg.message %}
+                                        <li>{{ msg.message.properties.date_sent|default('No date') }}: {{ msg.message.properties.content }}</li>
+                                        {% endif %}
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                                {% endif %}
+
+                                <!-- Metrics -->
+                                {% if et.metrics %}
+                                <div style="margin: 10px 0;">
+                                    <strong>Metrics:</strong>
+                                    <ul style="margin: 5px 0 5px 20px;">
+                                        {% for metric in et.metrics %}
+                                        <li>{{ metric.properties.name }}: <strong>{{ metric.properties.value|default(metric.properties.single_value) }}</strong></li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                                {% endif %}
+                            </div>
+                            {% endif %}
+                            {% endfor %}
+                        </details>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                    {% endfor %}
+                </div>
+                {% endfor %}
+            </div>
+            {% endfor %}
+
+            <!-- All Accomplishments Section -->
+            {% if wg.allAccomplishments %}
+            <div class="goal-section">
+                <h3>🏆 All Accomplishments for {{ wg.name }}</h3>
+                <div style="margin-top: 20px;">
+                    {% for acc_item in wg.allAccomplishments %}
+                    {% set acc = acc_item.accomplishment %}
+                    <div style="background: #faf5ff; padding: 15px; margin: 10px 0; border-left: 3px solid #a855f7; border-radius: 4px;">
+                        <strong>{{ acc.properties.name }}</strong>
+                        <p style="margin-top: 8px; color: #666;">{{ acc.properties.description|default('') }}</p>
+                        {% if acc_item.advances_yse_list %}
+                        <p style="margin-top: 5px; font-size: 0.9em; color: #999;">
+                            Advances YSE:
+                            {% for yse in acc_item.advances_yse_list %}
+                                {{ yse.properties.year_identifier }}{% if not loop.last %}, {% endif %}
+                            {% endfor %}
+                        </p>
+                        {% endif %}
+                        {% if acc_item.goal %}
+                        <p style="margin-top: 5px; font-size: 0.9em; color: #999;">
+                            Related Goal: {{ acc_item.goal.properties.name }}
+                        </p>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+
+    <script>
+        function showSection(sectionId) {
+            // Hide all sections
+            document.querySelectorAll('.section, .working-group').forEach(section => {
+                section.classList.remove('active');
+            });
+
+            // Remove active class from all tabs
+            document.querySelectorAll('.nav-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+
+            // Show selected section
+            const targetSection = document.getElementById(sectionId);
+            if (targetSection) {
+                targetSection.classList.add('active');
+            }
+
+            // Add active class to clicked tab
+            event.target.classList.add('active');
+        }
+
+        // Add collapsible functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.collapsible').forEach(element => {
+                element.addEventListener('click', function() {
+                    this.classList.toggle('collapsed');
+                    const content = this.nextElementSibling;
+                    if (content) {
+                        content.classList.toggle('collapsed');
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>

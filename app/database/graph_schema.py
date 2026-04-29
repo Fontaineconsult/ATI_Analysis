@@ -6,7 +6,7 @@ from neomodel import (StructuredNode, StringProperty,
                       IntegerProperty, RelationshipTo,
                       RelationshipFrom, UniqueIdProperty,
                       StructuredRel, Relationship, DateProperty,
-                      install_all_labels, BooleanProperty, IntegerProperty, JSONProperty, ArrayProperty)
+                      install_all_labels, BooleanProperty, IntegerProperty, JSONProperty, ArrayProperty, ZeroOrOne)
 from dotenv import load_dotenv
 import os
 
@@ -431,6 +431,8 @@ class CampusPlan(StructuredNode):
 
     general_note = RelationshipTo("Note", "is_documented_by")
 
+    presidents_report = RelationshipTo("Document", "has_presidents_report", cardinality=ZeroOrOne)
+
     def serialize(self):
         return {
             "plan_identifier": self.plan_identifier,
@@ -460,6 +462,7 @@ class WorkingGroupPlan(StructuredNode):
     prioritization_rationales = RelationshipTo("Note", "rationale_for_prioritization")
     yse_progress_notes = RelationshipTo("YearSuccessEvidence", "yse_progress_notated_by", model=YseProgressRel)
     progress_updates = RelationshipTo("ProgressUpdate", "has_progress_update")
+
 
     def serialize(self):
         return {
