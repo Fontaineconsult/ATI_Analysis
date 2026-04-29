@@ -8,6 +8,7 @@ import SingleReportMasterContainer from "./dashboard_components/report_component
 import ReportMasterList from "./dashboard_components/report_components/ReportMasterList";
 import ImplementationTypeOverviewWrapper from './implementation_explorer/ImplementationTypeOverviewWrapper';
 import PlansAccomplishmentsManager from "./PlansAndAccomplishments/PlansAccomplishmentsManager";
+import CampusPlanContainer from "./dashboard_components/campus_plan_components/CampusPlanContainer";
 
 // Main Dashboard component containing route-based subcomponents
 function Dashboard() {
@@ -49,6 +50,8 @@ function Dashboard() {
                     path="implementations/:implementationType"
                     element={<ImplementationsMasterContainer />}
                 />
+
+                <Route path="campus-plan" element={<CampusPlanContainer />} />
 
                 <Route path="settings" element={<SettingsMasterContainer />} />
                 <Route path="/" element={<ReportMasterList />} />

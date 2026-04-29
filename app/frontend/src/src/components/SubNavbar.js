@@ -44,6 +44,7 @@ function SubNavbar() {
         subNavItems = [
             { label: 'View Reports', path: `${campusPrefix}/dashboard/reports` },
             { label: 'Copy Report', path: `${campusPrefix}/dashboard/report-overview` },
+            { label: 'Campus Plan', path: `${campusPrefix}/dashboard/campus-plan` },
             { label: 'Settings', path: `${campusPrefix}/dashboard/settings` },
         ];
     } else if (location.pathname.includes('/about')) {
