@@ -314,6 +314,8 @@ class DocumentedByRel(StructuredRel):
     modified_date = DateProperty()
     added_by = StringProperty()  # unique_id of the Person who added it
 
+
+
 class YseProgressRel(StructuredRel):
     """Relationship between Plans and YearSuccessEvidence to track progress updates"""
     update_date = DateProperty()
@@ -417,28 +419,51 @@ class CampusPlan(StructuredNode):
 
     """
     unique_id = UniqueIdProperty()
-    plan_identifier = StringProperty(unique_index=True)
-
-
+    plan_identifier = StringProperty(unique_index=True)  # e.g. "2025-2026-sfsu"
+    executive_summary = StringProperty()
 
     # academic_year + campus required for uniqueness; enforced via factory function — neomodel can't enforce required relationships at save time
     academic_year = RelationshipTo("AcademicYear", "in_academic_year")
     campus = RelationshipTo("Campus", "is_campus_plan_for")
 
-    prioritized_success_indicators = RelationshipTo("SuccessIndicator", "prioritizes_success_indicator")
-    plans_that_further_success_indicators = RelationshipTo("Plan", "furthers_yse")
+    working_group_plans = RelationshipTo("WorkingGroupPlan", "has_working_group_plan")
     executive_sponsors = RelationshipTo("Person", "has_executive_sponsor")
 
-    executive_summary = StringProperty()
-
     general_note = RelationshipTo("Note", "is_documented_by")
+
+    def serialize(self):
+        return {
+            "plan_identifier": self.plan_identifier,
+            "executive_summary": self.executive_summary,
+            "unique_id": self.unique_id,
+        }
+
+
+class WorkingGroupPlan(StructuredNode):
+    """
+    The per-working-group child of a CampusPlan. Three exist per (campus, year):
+    one for Web, one for Procurement, one for Instructional Materials.
+
+    Carries the group-scoped concerns: prioritized indicators (homogeneous within
+    the group), per-group leads, group rationales, and progress on this group's
+    YearSuccessEvidence.
+    """
+    unique_id = UniqueIdProperty()
+    plan_identifier = StringProperty(unique_index=True)  # e.g. "2025-2026-sfsu-web"
+
+    working_group = RelationshipTo("ATIWorkingGroup", "for_working_group")
+
+    prioritized_success_indicators = RelationshipTo("SuccessIndicator", "prioritizes_success_indicator")
+    included_plans = RelationshipTo("Plan", "includes_plan")
+    group_leads = RelationshipTo("Person", "has_group_lead")
+
     prioritization_rationales = RelationshipTo("Note", "rationale_for_prioritization")
     yse_progress_notes = RelationshipTo("YearSuccessEvidence", "yse_progress_notated_by", model=YseProgressRel)
     progress_updates = RelationshipTo("ProgressUpdate", "has_progress_update")
 
     def serialize(self):
         return {
-            "name": self.name,
+            "plan_identifier": self.plan_identifier,
             "unique_id": self.unique_id,
         }
 
@@ -799,6 +824,50 @@ class StatusLevel(StructuredNode):
             "unique_id": self.unique_id
 
         }
+
+
+class ProcedureDescription(StructuredNode):
+    unique_id = UniqueIdProperty()
+    description = StringProperty(unique_index=True)
+    display_name = StringProperty(default="Description of Procedures")
+
+
+class ProcedureRequirement(StructuredNode):
+    unique_id = UniqueIdProperty()
+    requirement_description = StringProperty(unique_index=True)
+
+
+class ResourceDescription(StructuredNode):
+    unique_id = UniqueIdProperty()
+    description = StringProperty(unique_index=True)
+    display_name = StringProperty(default="Description of Resources")
+
+
+class ResourceRequirement(StructuredNode):
+    unique_id = UniqueIdProperty()
+    requirement_description = StringProperty(unique_index=True)
+
+
+class DocumentationDescription(StructuredNode):
+    unique_id = UniqueIdProperty()
+    description = StringProperty(unique_index=True)
+    display_name = StringProperty(default="Description of Documentation")
+
+
+class DocumentationRequirement(StructuredNode):
+    unique_id = UniqueIdProperty()
+    requirement_description = StringProperty(unique_index=True)
+
+
+class DocumentationEvidenceDescription(StructuredNode):
+    unique_id = UniqueIdProperty()
+    description = StringProperty(unique_index=True)
+    display_name = StringProperty(default="Description of Documentation Evidence")
+
+
+class DocumentationEvidenceRequirement(StructuredNode):
+    unique_id = UniqueIdProperty()
+    requirement_description = StringProperty(unique_index=True)
 
 
 class YearSuccessEvidence(StructuredNode):
@@ -1367,50 +1436,3 @@ if __name__=="__main__":
     install_all_labels()
 
 
-
-#######################
-# Review Later
-#######################
-
-class ProcedureDescription(StructuredNode):
-    unique_id = UniqueIdProperty()
-    description = StringProperty(unique_index=True)
-    display_name = StringProperty(default="Description of Procedures")
-
-
-class ProcedureRequirement(StructuredNode):
-    unique_id = UniqueIdProperty()
-    requirement_description = StringProperty(unique_index=True)
-
-
-class ResourceDescription(StructuredNode):
-    unique_id = UniqueIdProperty()
-    description = StringProperty(unique_index=True)
-    display_name = StringProperty(default="Description of Resources")
-
-
-class ResourceRequirement(StructuredNode):
-    unique_id = UniqueIdProperty()
-    requirement_description = StringProperty(unique_index=True)
-
-
-class DocumentationDescription(StructuredNode):
-    unique_id = UniqueIdProperty()
-    description = StringProperty(unique_index=True)
-    display_name = StringProperty(default="Description of Documentation")
-
-
-class DocumentationRequirement(StructuredNode):
-    unique_id = UniqueIdProperty()
-    requirement_description = StringProperty(unique_index=True)
-
-
-class DocumentationEvidenceDescription(StructuredNode):
-    unique_id = UniqueIdProperty()
-    description = StringProperty(unique_index=True)
-    display_name = StringProperty(default="Description of Documentation Evidence")
-
-
-class DocumentationEvidenceRequirement(StructuredNode):
-    unique_id = UniqueIdProperty()
-    requirement_description = StringProperty(unique_index=True)

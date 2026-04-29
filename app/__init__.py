@@ -1,32 +1,25 @@
-import logging
-from logging.handlers import RotatingFileHandler
-
-from app.endpoints.data_api import data_api_endpoints
-from app.endpoints.react_endpoints import react_pages
-from app.web_config import Config
-from neomodel import config, db
 from urllib.parse import urlencode
-from app.endpoints.data_api.util.response import make_response
-
-from app.endpoints.data_api.errors.custom_exceptions import (
-    DatabaseError,
-    NotFoundError,
-    ValidationError,
-    CrudError,
-    ApiError
-)
-
 
 
 def merge_query_params(*dict1):
     print(dict1)
     return urlencode(dict1)
 
-from flask import Flask, send_from_directory
-from flask_cors import CORS
-
 
 def create_app():
+    # All project-internal imports are deferred to here.
+    # Hoisting them to module scope causes a circular load: any module
+    # that does `from app.X import Y` triggers app/__init__.py, which
+    # would in turn import graph_schema via the Flask blueprints — and
+    # if graph_schema is being run as __main__ at the same time, neomodel
+    # raises NodeClassAlreadyDefined.
+    from flask import Flask
+    from flask_cors import CORS
+    from neomodel import config, db
+    from app.endpoints.data_api import data_api_endpoints
+    from app.endpoints.react_endpoints import react_pages
+    from app.web_config import Config
+
     app = Flask(__name__,
                 static_folder='frontend/src/build/static',
                 template_folder='frontend/src/build',

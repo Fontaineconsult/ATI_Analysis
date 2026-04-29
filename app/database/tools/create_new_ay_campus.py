@@ -10,8 +10,10 @@ Creates a new AcademicYear node (if needed), then for each campus:
 
 Run with: python -m app.database.tools.create_new_ay_campus
 """
-from app.database.graph_schema import set_connection, AcademicYear, Campus, SuccessIndicator, YearSuccessEvidence, StatusLevel
-from app.database.identifiers import make_yse_identifier, YEAR_PREFIX_LENGTH
+from app.database.graph_schema import set_connection, AcademicYear, Campus, SuccessIndicator, YearSuccessEvidence, StatusLevel, CampusPlan
+from app.database.identifiers import make_yse_identifier, YEAR_PREFIX_LENGTH, make_campus_plan_identifier
+from app.database.queries.committees.create import create_campus_plan
+from app.endpoints.data_api.errors.custom_exceptions import ValidationError
 from neomodel import db
 
 
@@ -219,6 +221,36 @@ def verify(new_year):
     print(f"  TOTAL: {total}")
 
 
+def create_campus_plans_for_year(year_name):
+    """
+    For each campus in ALL_CAMPUSES, ensure a CampusPlan + its three
+    WorkingGroupPlans exist for the given year. Idempotent: skips any
+    campus that already has a CampusPlan with the canonical identifier.
+    """
+    print(f"\nCreating CampusPlans for {year_name}...")
+
+    created = 0
+    skipped = 0
+    for abbrev in ALL_CAMPUSES:
+        plan_identifier = make_campus_plan_identifier(year_name, abbrev)
+        if CampusPlan.nodes.filter(plan_identifier=plan_identifier):
+            print(f"  {abbrev}: CampusPlan {plan_identifier!r} already exists, skipping.")
+            skipped += 1
+            continue
+
+        try:
+            create_campus_plan(abbrev, year_name)
+            print(f"  {abbrev}: created CampusPlan {plan_identifier!r} + 3 WorkingGroupPlans")
+            created += 1
+        except ValidationError as e:
+            # Race against the existence check above, or a partial run leaving
+            # children behind. Surface and continue.
+            print(f"  {abbrev}: skipped — {e}")
+            skipped += 1
+
+    print(f"  Created {created} CampusPlans, skipped {skipped}.")
+
+
 def run_migration(old_year, new_year):
     print("=" * 60)
     print(f"Academic Year Migration: {old_year} -> {new_year}")
@@ -228,6 +260,7 @@ def run_migration(old_year, new_year):
     duplicate_year_success_evidence(old_year, new_year)
     create_stub_yse_for_missing_campuses(new_year)
     reset_admin_review_for_year(new_year)
+    create_campus_plans_for_year(new_year)
     verify(new_year)
 
     print("\nMigration complete.")

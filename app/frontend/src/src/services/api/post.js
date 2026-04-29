@@ -275,3 +275,21 @@ export const createAccomplishment = async (formData) => {
         throw error;
     }
 }
+
+// CAMPUS PLAN CREATE FUNCTIONS
+export const createCampusPlan = async (campusAbbrev, yearName) => {
+    try {
+        const response = await axios.post(
+            `${process.env.REACT_APP_API_URL}/campus-plans`,
+            {
+                action: 'create_campus_plan',
+                campus_abbrev: campusAbbrev,
+                year_name: yearName,
+            }
+        );
+        return response.data;
+    } catch (error) {
+        console.error('Error creating campus plan:', error);
+        throw error;
+    }
+}

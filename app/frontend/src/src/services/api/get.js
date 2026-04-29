@@ -169,3 +169,19 @@ export const fetchCampuses = async () => {
         throw error;
     }
 }
+
+export const fetchCampusPlan = async (campusAbbrev, academicYear) => {
+    try {
+        const response = await axios.get(
+            `${process.env.REACT_APP_API_URL}/campus-plans/${campusAbbrev}/${academicYear}`
+        );
+        if (response.status === 200) {
+            return response.data;
+        } else {
+            throw new Error(`Failed to fetch campus plan: ${response.data.error}`);
+        }
+    } catch (error) {
+        console.error('Error fetching campus plan:', error.message);
+        throw error;
+    }
+}
