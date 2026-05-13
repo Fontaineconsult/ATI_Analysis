@@ -221,6 +221,45 @@ def verify(new_year):
     print(f"  TOTAL: {total}")
 
 
+def propagate_documentation_years_for(new_year):
+    """
+    For every implementation that has YearSuccessEvidence in `new_year`, find
+    its `is_documented_by` rels whose `included_in_years` is non-empty AND
+    missing `new_year`, and append `new_year` to that list.
+
+    Empty `included_in_years` lists are intentionally left alone: they already
+    mean "applies to all years" per DocumentedByRel's default. We only act on
+    rels whose curators populated the whitelist in a prior year — those edges
+    silently drop out of the master query for the new year unless the new
+    year is added to the whitelist.
+
+    Idempotent: re-running adds no duplicates because of `NOT $new_year IN ...`.
+    Safe to backfill prior years too — pass any year that's been rolled over.
+    """
+    print(f"\nPropagating documentation years to {new_year}...")
+
+    # WITH DISTINCT r is critical: an implementation that's evidence for many
+    # YSEs in the same year will surface here once per (impl, yse) pair, and
+    # without dedup the SET would append $new_year to the same rel multiple
+    # times, accumulating duplicate entries in included_in_years.
+    query = """
+        MATCH (impl)-[:is_evidence_for]->(yse:YearSuccessEvidence)
+                      -[:evidence_in_year]->(:AcademicYear {name: $new_year})
+        WHERE impl:Process OR impl:Project OR impl:Procedure OR impl:Service
+           OR impl:Guidance OR impl:Tracking OR impl:InternalPolicy
+        MATCH (impl)-[r:is_documented_by]->()
+        WHERE size(r.included_in_years) > 0
+          AND NOT $new_year IN r.included_in_years
+        WITH DISTINCT r
+        SET r.included_in_years = r.included_in_years + $new_year
+        RETURN count(r) AS updated
+    """
+    results, _ = db.cypher_query(query, {"new_year": new_year})
+    updated = results[0][0] if results else 0
+    print(f"  Appended {new_year!r} to {updated} is_documented_by rel(s).")
+    return updated
+
+
 def create_campus_plans_for_year(year_name):
     """
     For each campus in ALL_CAMPUSES, ensure a CampusPlan + its three
@@ -260,6 +299,7 @@ def run_migration(old_year, new_year):
     duplicate_year_success_evidence(old_year, new_year)
     create_stub_yse_for_missing_campuses(new_year)
     reset_admin_review_for_year(new_year)
+    propagate_documentation_years_for(new_year)
     create_campus_plans_for_year(new_year)
     verify(new_year)
 

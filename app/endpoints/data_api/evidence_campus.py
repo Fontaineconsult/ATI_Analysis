@@ -2,6 +2,7 @@ import json
 from flask import request
 from flask.views import MethodView
 from app.database.queries.compound_queries.get_all_by_working_group_campus import fetch_evidence_for_working_group
+from app.database.queries.compound_queries.get_yses_by_campus_for_year import get_yses_by_campus_for_year
 from app.database.queries.evidence.read_campus import get_all_status_level_nodes, get_connected_status_levels, \
     get_evidence_trends
 from app.database.queries.evidence.update import (assign_status_to_yse,
@@ -355,6 +356,24 @@ class StatusLevelAPI(MethodView):
             return make_response(status='error', error=str(e)), 500
 
 
+class YsesByCampusAPI(MethodView):
+    """
+    Returns every YSE in a given academic year, grouped by campus + working group.
+    Drives the YSE-assignment selector mounted from the implementation side
+    (inverse of the YSE-side attach flow). Reusable for the Plan -[:furthers_yse]->
+    YSE selector.
+    """
+
+    def get(self, academic_year):
+        try:
+            data = get_yses_by_campus_for_year(academic_year)
+            return make_response(status='success', data=data), 200
+        except CrudError as e:
+            return make_response(status='error', error=str(e)), 500
+        except Exception as e:
+            raise ApiError(message=f"An unexpected error occurred: {e}")
+
+
 class TrendsAPI(MethodView):
 
     def get(self):
@@ -378,6 +397,13 @@ class TrendsAPI(MethodView):
 # Register the view for the working group evidence functionality
 evidence_view = EvidenceAPI.as_view('evidence_api')
 trends_view = TrendsAPI.as_view('trends_api')
+yses_by_campus_view = YsesByCampusAPI.as_view('yses_by_campus_api')
+
+data_api_endpoints.add_url_rule(
+    '/evidence/yses-by-campus/<string:academic_year>',
+    view_func=yses_by_campus_view,
+    methods=['GET']
+)
 
 data_api_endpoints.add_url_rule(
     '/evidence/<string:working_group>/<string:academic_year>',

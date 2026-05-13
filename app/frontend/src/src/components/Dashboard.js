@@ -44,6 +44,7 @@ function Dashboard() {
                     element={<ImplementationsMasterContainer />}
                 />
                 <Route path="plans" element={<PlansAccomplishmentsManager />} />
+                <Route path="plans/:planId" element={<PlansAccomplishmentsManager />} />
 
 
                 <Route

@@ -293,3 +293,108 @@ export const createCampusPlan = async (campusAbbrev, yearName) => {
         throw error;
     }
 }
+
+export const addPrioritizedIndicator = async (workingGroupPlanIdentifier, indicatorCompositeKey) => {
+    try {
+        const response = await axios.post(
+            `${process.env.REACT_APP_API_URL}/campus-plans`,
+            {
+                action: 'add_prioritized_indicator',
+                working_group_plan_identifier: workingGroupPlanIdentifier,
+                indicator_composite_key: indicatorCompositeKey,
+            }
+        );
+        return response.data;
+    } catch (error) {
+        console.error('Error adding prioritized indicator:', error);
+        throw error;
+    }
+}
+
+export const assignExecutiveSponsor = async (planIdentifier, personUniqueId) => {
+    try {
+        const response = await axios.post(
+            `${process.env.REACT_APP_API_URL}/campus-plans`,
+            {
+                action: 'assign_executive_sponsor',
+                plan_identifier: planIdentifier,
+                person_unique_id: personUniqueId,
+            }
+        );
+        return response.data;
+    } catch (error) {
+        console.error('Error assigning executive sponsor:', error);
+        throw error;
+    }
+};
+
+export const unassignExecutiveSponsor = async (planIdentifier, personUniqueId) => {
+    try {
+        const response = await axios.post(
+            `${process.env.REACT_APP_API_URL}/campus-plans`,
+            {
+                action: 'unassign_executive_sponsor',
+                plan_identifier: planIdentifier,
+                person_unique_id: personUniqueId,
+            }
+        );
+        return response.data;
+    } catch (error) {
+        console.error('Error unassigning executive sponsor:', error);
+        throw error;
+    }
+};
+
+export const assignGroupLead = async (workingGroupPlanIdentifier, personUniqueId) => {
+    try {
+        const response = await axios.post(
+            `${process.env.REACT_APP_API_URL}/campus-plans`,
+            {
+                action: 'assign_group_lead',
+                working_group_plan_identifier: workingGroupPlanIdentifier,
+                person_unique_id: personUniqueId,
+            }
+        );
+        return response.data;
+    } catch (error) {
+        console.error('Error assigning group lead:', error);
+        throw error;
+    }
+};
+
+export const unassignGroupLead = async (workingGroupPlanIdentifier, personUniqueId) => {
+    try {
+        const response = await axios.post(
+            `${process.env.REACT_APP_API_URL}/campus-plans`,
+            {
+                action: 'unassign_group_lead',
+                working_group_plan_identifier: workingGroupPlanIdentifier,
+                person_unique_id: personUniqueId,
+            }
+        );
+        return response.data;
+    } catch (error) {
+        console.error('Error unassigning group lead:', error);
+        throw error;
+    }
+};
+
+export const addProgressUpdate = async (workingGroupPlanIdentifier, yseIdentifier, { note, trajectory, authorUniqueId } = {}) => {
+    try {
+        const response = await axios.post(
+            `${process.env.REACT_APP_API_URL}/campus-plans`,
+            {
+                action: 'add_progress_update',
+                working_group_plan_identifier: workingGroupPlanIdentifier,
+                yse_identifier: yseIdentifier,
+                note,
+                trajectory,
+                author_unique_id: authorUniqueId,
+            }
+        );
+        return response.data;
+    } catch (error) {
+        console.error('Error adding progress update:', error);
+        throw error;
+    }
+}

@@ -14,13 +14,15 @@ from app.database.graph_schema import (
     AcademicYear,
     Campus,
     Plan,
+    StatusLevel,
     SuccessIndicator,
+    WorkingGroupPlan,
     YearSuccessEvidence,
 )
-from app.database.identifiers import make_yse_identifier
+from app.database.identifiers import make_working_group_plan_identifier, make_yse_identifier
 from app.database.queries.committees.create import create_campus_plan
 from app.data_config import working_group_names
-from tests.conftest import TEST_ACADEMIC_YEAR_NAME
+from tests.conftest import TEST_ACADEMIC_YEAR_NAME, TEST_PREVIOUS_ACADEMIC_YEAR_NAME
 
 
 def _find_active_indicator_for_group(working_group_abbrev: str) -> SuccessIndicator:
@@ -136,6 +138,10 @@ def test_get_campus_plan_returns_200_with_full_shape(
         assert wgp["prioritized_success_indicators"] == []
         assert wgp["group_leads"] == []
         assert wgp["plans"] == []  # No campus-plan plans attached yet
+        # Available indicators are populated from real reference data — at least
+        # one active indicator should exist for each working group.
+        assert isinstance(wgp["available_indicators"], list)
+        assert len(wgp["available_indicators"]) > 0
 
 
 @pytest.mark.integration
@@ -188,6 +194,72 @@ def test_get_campus_plan_surfaces_completed_year_when_set(
 
     assert web_wgp["plans"][0]["academic_year"] == TEST_ACADEMIC_YEAR_NAME
     assert web_wgp["plans"][0]["completed_year"] == TEST_ACADEMIC_YEAR_NAME
+
+
+@pytest.mark.integration
+@pytest.mark.api
+def test_get_campus_plan_surfaces_companion_plans_per_prioritized_indicator(
+    flask_client, sentinel_academic_year, cleanup_plan_family, cleanup_yse_family
+):
+    """A prioritized SI's companion_plans list contains every campus-plan Plan
+    that furthers a YSE (for this campus + year) tracking that SI."""
+    create_campus_plan(CAMPUS_ABBREV, TEST_ACADEMIC_YEAR_NAME)
+
+    si = _find_active_indicator_for_group("web")
+    web_wgp_id = make_working_group_plan_identifier(TEST_ACADEMIC_YEAR_NAME, CAMPUS_ABBREV, "web")
+    web_wgp = WorkingGroupPlan.nodes.get(plan_identifier=web_wgp_id)
+    web_wgp.prioritized_success_indicators.connect(si)
+
+    # Build a sentinel-year YSE for this SI + campus, then a campus-plan Plan
+    # that furthers it — the SI now has a companion plan via the YSE bridge.
+    year_id = make_yse_identifier(TEST_ACADEMIC_YEAR_NAME, si.composite_key, CAMPUS_ABBREV)
+    yse = YearSuccessEvidence(year_identifier=year_id)
+    yse.save()
+    yse.tracks_success_indicator.connect(si)
+    yse.campus.connect(Campus.nodes.get(abbreviation=CAMPUS_ABBREV))
+    yse.academic_year.connect(AcademicYear.nodes.get(name=TEST_ACADEMIC_YEAR_NAME))
+
+    plan = Plan(
+        description=f"{TEST_ACADEMIC_YEAR_NAME}-test-plan-{uuid.uuid4()}",
+        name="Companion Plan A",
+        is_campus_plan=True,
+    )
+    plan.save()
+    plan.furthered_year_success_indicators.connect(yse)
+
+    resp = flask_client.get(f"{URL_PREFIX}/campus-plans/{CAMPUS_ABBREV}/{TEST_ACADEMIC_YEAR_NAME}")
+    web_wgp_resp = next(
+        w for w in resp.get_json()["data"]["working_group_plans"] if w["working_group"] == "Web"
+    )
+
+    assert len(web_wgp_resp["prioritized_success_indicators"]) == 1
+    surfaced = web_wgp_resp["prioritized_success_indicators"][0]
+    assert surfaced["unique_id"] == si.unique_id
+    assert len(surfaced["companion_plans"]) == 1
+    assert surfaced["companion_plans"][0]["unique_id"] == plan.unique_id
+    assert surfaced["companion_plans"][0]["name"] == "Companion Plan A"
+
+
+@pytest.mark.integration
+@pytest.mark.api
+def test_get_campus_plan_companion_plans_empty_when_no_match(
+    flask_client, sentinel_academic_year, cleanup_plan_family, cleanup_yse_family
+):
+    """A prioritized SI with no matching campus-plan Plan returns []."""
+    create_campus_plan(CAMPUS_ABBREV, TEST_ACADEMIC_YEAR_NAME)
+
+    si = _find_active_indicator_for_group("web")
+    web_wgp_id = make_working_group_plan_identifier(TEST_ACADEMIC_YEAR_NAME, CAMPUS_ABBREV, "web")
+    web_wgp = WorkingGroupPlan.nodes.get(plan_identifier=web_wgp_id)
+    web_wgp.prioritized_success_indicators.connect(si)
+
+    resp = flask_client.get(f"{URL_PREFIX}/campus-plans/{CAMPUS_ABBREV}/{TEST_ACADEMIC_YEAR_NAME}")
+    web_wgp_resp = next(
+        w for w in resp.get_json()["data"]["working_group_plans"] if w["working_group"] == "Web"
+    )
+
+    assert len(web_wgp_resp["prioritized_success_indicators"]) == 1
+    assert web_wgp_resp["prioritized_success_indicators"][0]["companion_plans"] == []
 
 
 @pytest.mark.integration
@@ -313,6 +385,380 @@ def test_post_duplicate_campus_plan_returns_400(
     second = flask_client.post(f"{URL_PREFIX}/campus-plans", json=payload)
     assert second.status_code == 400
     assert "already exists" in second.get_json()["error"]
+
+
+@pytest.mark.integration
+@pytest.mark.api
+def test_post_add_prioritized_indicator_returns_201(
+    flask_client, sentinel_academic_year, cleanup_plan_family
+):
+    """Adding a prioritized indicator wires the WGP-SI edge and surfaces in GET."""
+    create_campus_plan(CAMPUS_ABBREV, TEST_ACADEMIC_YEAR_NAME)
+    si = _find_active_indicator_for_group("web")
+    web_wgp_id = make_working_group_plan_identifier(TEST_ACADEMIC_YEAR_NAME, CAMPUS_ABBREV, "web")
+
+    resp = flask_client.post(
+        f"{URL_PREFIX}/campus-plans",
+        json={
+            "action": "add_prioritized_indicator",
+            "working_group_plan_identifier": web_wgp_id,
+            "indicator_composite_key": si.composite_key,
+        },
+    )
+    assert resp.status_code == 201
+
+    # GET reflects the new prioritization.
+    get_resp = flask_client.get(f"{URL_PREFIX}/campus-plans/{CAMPUS_ABBREV}/{TEST_ACADEMIC_YEAR_NAME}")
+    web_wgp = next(
+        w for w in get_resp.get_json()["data"]["working_group_plans"] if w["working_group"] == "Web"
+    )
+    assert any(
+        s["composite_key"] == si.composite_key
+        for s in web_wgp["prioritized_success_indicators"]
+    )
+
+
+@pytest.mark.integration
+@pytest.mark.api
+def test_post_add_prioritized_indicator_is_idempotent(
+    flask_client, sentinel_academic_year, cleanup_plan_family
+):
+    """Re-adding the same indicator does not duplicate the edge."""
+    create_campus_plan(CAMPUS_ABBREV, TEST_ACADEMIC_YEAR_NAME)
+    si = _find_active_indicator_for_group("web")
+    web_wgp_id = make_working_group_plan_identifier(TEST_ACADEMIC_YEAR_NAME, CAMPUS_ABBREV, "web")
+    payload = {
+        "action": "add_prioritized_indicator",
+        "working_group_plan_identifier": web_wgp_id,
+        "indicator_composite_key": si.composite_key,
+    }
+
+    assert flask_client.post(f"{URL_PREFIX}/campus-plans", json=payload).status_code == 201
+    assert flask_client.post(f"{URL_PREFIX}/campus-plans", json=payload).status_code == 201
+
+    get_resp = flask_client.get(f"{URL_PREFIX}/campus-plans/{CAMPUS_ABBREV}/{TEST_ACADEMIC_YEAR_NAME}")
+    web_wgp = next(
+        w for w in get_resp.get_json()["data"]["working_group_plans"] if w["working_group"] == "Web"
+    )
+    matches = [s for s in web_wgp["prioritized_success_indicators"] if s["composite_key"] == si.composite_key]
+    assert len(matches) == 1
+
+
+@pytest.mark.integration
+@pytest.mark.api
+def test_post_add_prioritized_indicator_unknown_wgp_returns_404(
+    flask_client, sentinel_academic_year, cleanup_plan_family
+):
+    create_campus_plan(CAMPUS_ABBREV, TEST_ACADEMIC_YEAR_NAME)
+    si = _find_active_indicator_for_group("web")
+
+    resp = flask_client.post(
+        f"{URL_PREFIX}/campus-plans",
+        json={
+            "action": "add_prioritized_indicator",
+            "working_group_plan_identifier": "nonexistent-wgp",
+            "indicator_composite_key": si.composite_key,
+        },
+    )
+    assert resp.status_code == 404
+
+
+@pytest.mark.integration
+@pytest.mark.api
+def test_post_add_prioritized_indicator_unknown_indicator_returns_404(
+    flask_client, sentinel_academic_year, cleanup_plan_family
+):
+    create_campus_plan(CAMPUS_ABBREV, TEST_ACADEMIC_YEAR_NAME)
+    web_wgp_id = make_working_group_plan_identifier(TEST_ACADEMIC_YEAR_NAME, CAMPUS_ABBREV, "web")
+
+    resp = flask_client.post(
+        f"{URL_PREFIX}/campus-plans",
+        json={
+            "action": "add_prioritized_indicator",
+            "working_group_plan_identifier": web_wgp_id,
+            "indicator_composite_key": "9.9-bogus",
+        },
+    )
+    assert resp.status_code == 404
+
+
+def _prioritize_si_with_yse(year_name: str, campus_abbrev: str, working_group_abbrev: str):
+    """Helper for progress-update tests: prioritize an SI on the matching WGP
+    and ensure a sentinel-year YSE exists for it. Returns (wgp_id, yse_id, si)."""
+    si = _find_active_indicator_for_group(working_group_abbrev)
+    wgp_id = make_working_group_plan_identifier(year_name, campus_abbrev, working_group_abbrev)
+    wgp = WorkingGroupPlan.nodes.get(plan_identifier=wgp_id)
+    wgp.prioritized_success_indicators.connect(si)
+
+    yse_id = make_yse_identifier(year_name, si.composite_key, campus_abbrev)
+    existing = YearSuccessEvidence.nodes.filter(year_identifier=yse_id)
+    if existing:
+        yse = existing[0]
+    else:
+        yse = YearSuccessEvidence(year_identifier=yse_id)
+        yse.save()
+        yse.tracks_success_indicator.connect(si)
+        yse.campus.connect(Campus.nodes.get(abbreviation=campus_abbrev))
+        yse.academic_year.connect(AcademicYear.nodes.get(name=year_name))
+
+    return wgp_id, yse_id, si
+
+
+@pytest.mark.integration
+@pytest.mark.api
+def test_post_add_progress_update_returns_201_and_surfaces_in_get(
+    flask_client, sentinel_academic_year, cleanup_plan_family, cleanup_yse_family
+):
+    """A logged ProgressUpdate surfaces under the prioritized indicator's `progress`."""
+    create_campus_plan(CAMPUS_ABBREV, TEST_ACADEMIC_YEAR_NAME)
+    wgp_id, yse_id, si = _prioritize_si_with_yse(TEST_ACADEMIC_YEAR_NAME, CAMPUS_ABBREV, "web")
+
+    resp = flask_client.post(
+        f"{URL_PREFIX}/campus-plans",
+        json={
+            "action": "add_progress_update",
+            "working_group_plan_identifier": wgp_id,
+            "yse_identifier": yse_id,
+            "note": "Started audit of top 100 pages",
+            "trajectory": "improving",
+        },
+    )
+    assert resp.status_code == 201
+    assert "unique_id" in resp.get_json()["data"]
+
+    get_resp = flask_client.get(f"{URL_PREFIX}/campus-plans/{CAMPUS_ABBREV}/{TEST_ACADEMIC_YEAR_NAME}")
+    web_wgp_resp = next(
+        w for w in get_resp.get_json()["data"]["working_group_plans"] if w["working_group"] == "Web"
+    )
+    surfaced = next(
+        s for s in web_wgp_resp["prioritized_success_indicators"] if s["unique_id"] == si.unique_id
+    )
+    progress = surfaced["progress"]
+    assert progress["yse_identifier"] == yse_id
+    assert progress["update_count"] == 1
+    assert len(progress["updates"]) == 1
+    assert progress["updates"][0]["trajectory"] == "improving"
+    assert progress["updates"][0]["note"] == "Started audit of top 100 pages"
+    assert progress["updates"][0]["author_name"] is None  # no author_unique_id passed
+
+
+@pytest.mark.integration
+@pytest.mark.api
+def test_post_add_progress_update_count_increments(
+    flask_client, sentinel_academic_year, cleanup_plan_family, cleanup_yse_family
+):
+    """Multiple updates increment update_count and `latest` reflects most recent."""
+    create_campus_plan(CAMPUS_ABBREV, TEST_ACADEMIC_YEAR_NAME)
+    wgp_id, yse_id, si = _prioritize_si_with_yse(TEST_ACADEMIC_YEAR_NAME, CAMPUS_ABBREV, "web")
+
+    for note, traj in [("First note", "stagnant"), ("Second note", "improving")]:
+        flask_client.post(
+            f"{URL_PREFIX}/campus-plans",
+            json={
+                "action": "add_progress_update",
+                "working_group_plan_identifier": wgp_id,
+                "yse_identifier": yse_id,
+                "note": note,
+                "trajectory": traj,
+            },
+        )
+
+    get_resp = flask_client.get(f"{URL_PREFIX}/campus-plans/{CAMPUS_ABBREV}/{TEST_ACADEMIC_YEAR_NAME}")
+    web_wgp_resp = next(
+        w for w in get_resp.get_json()["data"]["working_group_plans"] if w["working_group"] == "Web"
+    )
+    progress = next(
+        s for s in web_wgp_resp["prioritized_success_indicators"] if s["unique_id"] == si.unique_id
+    )["progress"]
+    assert progress["update_count"] == 2
+    assert len(progress["updates"]) == 2
+    # Both updates have the same date (today) so order between them is undefined,
+    # but both notes should be in the list.
+    notes = {u["note"] for u in progress["updates"]}
+    assert notes == {"First note", "Second note"}
+
+
+@pytest.mark.integration
+@pytest.mark.api
+def test_post_add_progress_update_invalid_trajectory_returns_400(
+    flask_client, sentinel_academic_year, cleanup_plan_family, cleanup_yse_family
+):
+    create_campus_plan(CAMPUS_ABBREV, TEST_ACADEMIC_YEAR_NAME)
+    wgp_id, yse_id, _ = _prioritize_si_with_yse(TEST_ACADEMIC_YEAR_NAME, CAMPUS_ABBREV, "web")
+
+    resp = flask_client.post(
+        f"{URL_PREFIX}/campus-plans",
+        json={
+            "action": "add_progress_update",
+            "working_group_plan_identifier": wgp_id,
+            "yse_identifier": yse_id,
+            "note": "Update",
+            "trajectory": "bogus_value",
+        },
+    )
+    assert resp.status_code == 400
+    assert "trajectory" in resp.get_json()["error"].lower()
+
+
+@pytest.mark.integration
+@pytest.mark.api
+def test_post_add_progress_update_unknown_yse_returns_404(
+    flask_client, sentinel_academic_year, cleanup_plan_family
+):
+    create_campus_plan(CAMPUS_ABBREV, TEST_ACADEMIC_YEAR_NAME)
+    wgp_id = make_working_group_plan_identifier(TEST_ACADEMIC_YEAR_NAME, CAMPUS_ABBREV, "web")
+
+    resp = flask_client.post(
+        f"{URL_PREFIX}/campus-plans",
+        json={
+            "action": "add_progress_update",
+            "working_group_plan_identifier": wgp_id,
+            "yse_identifier": "9999-9999-bogus-yse",
+            "note": "Update",
+        },
+    )
+    assert resp.status_code == 404
+
+
+@pytest.mark.integration
+@pytest.mark.api
+def test_get_campus_plan_surfaces_status_level_per_prioritized_indicator(
+    flask_client, sentinel_academic_year, cleanup_plan_family, cleanup_yse_family
+):
+    """A YSE wired to a StatusLevel surfaces that level on the prioritized SI."""
+    create_campus_plan(CAMPUS_ABBREV, TEST_ACADEMIC_YEAR_NAME)
+    wgp_id, yse_id, si = _prioritize_si_with_yse(TEST_ACADEMIC_YEAR_NAME, CAMPUS_ABBREV, "web")
+
+    yse = YearSuccessEvidence.nodes.get(year_identifier=yse_id)
+    defined_status = StatusLevel.nodes.get(status_level="Defined")
+    yse.status_level.connect(defined_status)
+
+    resp = flask_client.get(f"{URL_PREFIX}/campus-plans/{CAMPUS_ABBREV}/{TEST_ACADEMIC_YEAR_NAME}")
+    web_wgp_resp = next(
+        w for w in resp.get_json()["data"]["working_group_plans"] if w["working_group"] == "Web"
+    )
+    surfaced = next(
+        s for s in web_wgp_resp["prioritized_success_indicators"] if s["unique_id"] == si.unique_id
+    )
+    assert surfaced["status_level"] == "Defined"
+
+
+@pytest.mark.integration
+@pytest.mark.api
+def test_get_campus_plan_surfaces_previous_year_status_per_prioritized_indicator(
+    flask_client, sentinel_academic_year, cleanup_plan_family, cleanup_yse_family
+):
+    """A YSE in the previous academic year wired to a StatusLevel surfaces
+    on the prioritized SI as previous_status_level — alongside the current
+    year's status — so the UI can show year-over-year progression."""
+    # Make sure the previous-year AcademicYear node exists. neomodel's
+    # get_or_create uses MERGE with a fresh unique_id, which conflicts with
+    # an already-saved node — same try/get pattern as sentinel_academic_year.
+    try:
+        AcademicYear.nodes.get(name=TEST_PREVIOUS_ACADEMIC_YEAR_NAME)
+    except AcademicYear.DoesNotExist:
+        AcademicYear(name=TEST_PREVIOUS_ACADEMIC_YEAR_NAME).save()
+
+    create_campus_plan(CAMPUS_ABBREV, TEST_ACADEMIC_YEAR_NAME)
+    wgp_id, current_yse_id, si = _prioritize_si_with_yse(
+        TEST_ACADEMIC_YEAR_NAME, CAMPUS_ABBREV, "web"
+    )
+
+    # Wire CURRENT-year YSE to "Defined"
+    current_yse = YearSuccessEvidence.nodes.get(year_identifier=current_yse_id)
+    current_yse.status_level.connect(StatusLevel.nodes.get(status_level="Defined"))
+
+    # Build PREVIOUS-year YSE for the same SI + campus, wire to "Initiated"
+    previous_yse_id = make_yse_identifier(
+        TEST_PREVIOUS_ACADEMIC_YEAR_NAME, si.composite_key, CAMPUS_ABBREV
+    )
+    previous_yse = YearSuccessEvidence(year_identifier=previous_yse_id)
+    previous_yse.save()
+    previous_yse.tracks_success_indicator.connect(si)
+    previous_yse.campus.connect(Campus.nodes.get(abbreviation=CAMPUS_ABBREV))
+    previous_yse.academic_year.connect(
+        AcademicYear.nodes.get(name=TEST_PREVIOUS_ACADEMIC_YEAR_NAME)
+    )
+    previous_yse.status_level.connect(StatusLevel.nodes.get(status_level="Initiated"))
+
+    resp = flask_client.get(f"{URL_PREFIX}/campus-plans/{CAMPUS_ABBREV}/{TEST_ACADEMIC_YEAR_NAME}")
+    web_wgp_resp = next(
+        w for w in resp.get_json()["data"]["working_group_plans"] if w["working_group"] == "Web"
+    )
+    surfaced = next(
+        s for s in web_wgp_resp["prioritized_success_indicators"] if s["unique_id"] == si.unique_id
+    )
+
+    assert surfaced["status_level"] == "Defined"
+    assert surfaced["previous_status_level"] == "Initiated"
+
+
+@pytest.mark.integration
+@pytest.mark.api
+def test_get_campus_plan_previous_status_null_when_no_previous_year_yse(
+    flask_client, sentinel_academic_year, cleanup_plan_family, cleanup_yse_family
+):
+    """No YSE in the previous academic year → previous_status_level is null
+    while current-year status still surfaces normally."""
+    create_campus_plan(CAMPUS_ABBREV, TEST_ACADEMIC_YEAR_NAME)
+    wgp_id, current_yse_id, si = _prioritize_si_with_yse(
+        TEST_ACADEMIC_YEAR_NAME, CAMPUS_ABBREV, "web"
+    )
+
+    current_yse = YearSuccessEvidence.nodes.get(year_identifier=current_yse_id)
+    current_yse.status_level.connect(StatusLevel.nodes.get(status_level="Defined"))
+
+    resp = flask_client.get(f"{URL_PREFIX}/campus-plans/{CAMPUS_ABBREV}/{TEST_ACADEMIC_YEAR_NAME}")
+    web_wgp_resp = next(
+        w for w in resp.get_json()["data"]["working_group_plans"] if w["working_group"] == "Web"
+    )
+    surfaced = next(
+        s for s in web_wgp_resp["prioritized_success_indicators"] if s["unique_id"] == si.unique_id
+    )
+
+    assert surfaced["status_level"] == "Defined"
+    assert surfaced["previous_status_level"] is None
+
+
+@pytest.mark.integration
+@pytest.mark.api
+def test_get_campus_plan_status_level_null_when_yse_has_no_status(
+    flask_client, sentinel_academic_year, cleanup_plan_family, cleanup_yse_family
+):
+    """A prioritized SI whose YSE has no status_is edge returns status_level=None."""
+    create_campus_plan(CAMPUS_ABBREV, TEST_ACADEMIC_YEAR_NAME)
+    _, _, si = _prioritize_si_with_yse(TEST_ACADEMIC_YEAR_NAME, CAMPUS_ABBREV, "web")
+
+    resp = flask_client.get(f"{URL_PREFIX}/campus-plans/{CAMPUS_ABBREV}/{TEST_ACADEMIC_YEAR_NAME}")
+    web_wgp_resp = next(
+        w for w in resp.get_json()["data"]["working_group_plans"] if w["working_group"] == "Web"
+    )
+    surfaced = next(
+        s for s in web_wgp_resp["prioritized_success_indicators"] if s["unique_id"] == si.unique_id
+    )
+    assert surfaced["status_level"] is None
+
+
+@pytest.mark.integration
+@pytest.mark.api
+def test_get_campus_plan_available_indicators_carry_status_level(
+    flask_client, sentinel_academic_year, cleanup_plan_family, cleanup_yse_family
+):
+    """The modal-picker indicator list also surfaces status_level when wired."""
+    create_campus_plan(CAMPUS_ABBREV, TEST_ACADEMIC_YEAR_NAME)
+    _, yse_id, si = _prioritize_si_with_yse(TEST_ACADEMIC_YEAR_NAME, CAMPUS_ABBREV, "web")
+
+    yse = YearSuccessEvidence.nodes.get(year_identifier=yse_id)
+    yse.status_level.connect(StatusLevel.nodes.get(status_level="Initiated"))
+
+    resp = flask_client.get(f"{URL_PREFIX}/campus-plans/{CAMPUS_ABBREV}/{TEST_ACADEMIC_YEAR_NAME}")
+    web_wgp_resp = next(
+        w for w in resp.get_json()["data"]["working_group_plans"] if w["working_group"] == "Web"
+    )
+    matching_available = next(
+        i for i in web_wgp_resp["available_indicators"] if i["unique_id"] == si.unique_id
+    )
+    assert matching_available["status_level"] == "Initiated"
 
 
 @pytest.mark.integration

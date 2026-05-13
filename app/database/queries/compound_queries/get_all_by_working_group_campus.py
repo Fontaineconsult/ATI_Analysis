@@ -5,6 +5,64 @@ from app.endpoints.data_api.errors.custom_exceptions import NotFoundError, CrudE
 set_connection()
 from neomodel import db
 
+
+def _get_campuses_per_plan(plan_unique_ids):
+    """
+    For each Plan unique_id, return the deduped, sorted list of Campus
+    abbreviations reached via:
+        Plan -[:furthers_yse]-> YearSuccessEvidence -[:evidence_at_campus]-> Campus
+
+    Returns a dict {plan_unique_id: [abbrev, ...]}. Plans with no reachable
+    campus are absent.
+    """
+    if not plan_unique_ids:
+        return {}
+    query = """
+    MATCH (p:Plan)-[:furthers_yse]->(:YearSuccessEvidence)-[:evidence_at_campus]->(c:Campus)
+    WHERE p.unique_id IN $plan_ids
+    RETURN p.unique_id AS plan_id, collect(DISTINCT c.abbreviation) AS abbreviations
+    """
+    results, _ = db.cypher_query(query, {'plan_ids': list(plan_unique_ids)})
+    return {row[0]: sorted(row[1]) for row in results}
+
+
+def _walk_plan_nodes(data):
+    """Yield every plan-node dict in the response tree (evidence-level + goal-level)."""
+    for goal in data.get('goals') or []:
+        for plan in goal.get('plans') or []:
+            if plan:
+                yield plan
+        for entry in goal.get('plans_with_progress_notes') or []:
+            plan = (entry or {}).get('plan')
+            if plan:
+                yield plan
+        for indicator in goal.get('indicators') or []:
+            for evidence in indicator.get('evidences') or []:
+                for plan in evidence.get('plans') or []:
+                    if plan:
+                        yield plan
+                for entry in evidence.get('plans_with_notes') or []:
+                    plan = (entry or {}).get('plan')
+                    if plan:
+                        yield plan
+
+
+def _inject_plan_campuses(data):
+    """Mutate each plan node in the response to add `properties.campuses`."""
+    plan_ids = {
+        (plan.get('properties') or {}).get('unique_id')
+        for plan in _walk_plan_nodes(data)
+    }
+    plan_ids.discard(None)
+    campuses_by_plan = _get_campuses_per_plan(plan_ids)
+    for plan in _walk_plan_nodes(data):
+        props = plan.get('properties')
+        if props is None:
+            continue
+        uid = props.get('unique_id')
+        props['campuses'] = campuses_by_plan.get(uid, [])
+
+
 def fetch_evidence_for_working_group(working_group, academic_year, campus_abbreviation=None):
     # Validate working group
 
@@ -334,7 +392,9 @@ def fetch_evidence_for_working_group(working_group, academic_year, campus_abbrev
         })
         if not results:
             raise NotFoundError(f"No data found for the working group '{working_group}' and academic year '{academic_year}'.")
-        return json.loads(results[0][0])
+        data = json.loads(results[0][0])
+        _inject_plan_campuses(data)
+        return data
     except Exception as e:
         raise CrudError(f"Failed to fetch evidence: {str(e)}")
 

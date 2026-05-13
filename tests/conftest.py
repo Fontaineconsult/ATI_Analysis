@@ -48,6 +48,10 @@ from neomodel import config, db
 
 
 TEST_ACADEMIC_YEAR_NAME = "9999-9999"  # Sentinel — never used by production data
+# Previous-year sentinel for status-progression tests (tests create YSEs here
+# to assert the "previous → current" status display). Same untouchable-prefix
+# convention so production data is never matched.
+TEST_PREVIOUS_ACADEMIC_YEAR_NAME = "9998-9998"
 
 
 # --- One-time data_api warm-up ------------------------------------------------
@@ -173,16 +177,21 @@ def cleanup_plan_family(neo4j_connection):
 def cleanup_yse_family(neo4j_connection):
     """
     After-test cleanup for YearSuccessEvidence whose year_identifier starts
-    with the sentinel year. Mirrors `cleanup_plan_family` for YSE-creating tests.
+    with either sentinel year (current or the previous-year sentinel used by
+    status-progression tests). Mirrors `cleanup_plan_family` for YSE-creating tests.
     """
     yield
     db.cypher_query(
         """
         MATCH (yse:YearSuccessEvidence)
-        WHERE yse.year_identifier STARTS WITH $year
+        WHERE yse.year_identifier STARTS WITH $current_year
+           OR yse.year_identifier STARTS WITH $previous_year
         DETACH DELETE yse
         """,
-        {"year": TEST_ACADEMIC_YEAR_NAME},
+        {
+            "current_year": TEST_ACADEMIC_YEAR_NAME,
+            "previous_year": TEST_PREVIOUS_ACADEMIC_YEAR_NAME,
+        },
     )
 
 

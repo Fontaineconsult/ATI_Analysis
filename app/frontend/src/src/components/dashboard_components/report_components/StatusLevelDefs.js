@@ -16,48 +16,7 @@ import {
     Heading
 } from '@chakra-ui/react';
 import { StatusLevelContext } from '../../../context/StatusLevelContext';
-
-// Helper function to get status color
-const getStatusColor = (statusLevel) => {
-    const level = statusLevel?.toLowerCase();
-    switch(level) {
-        case 'not started':
-            return '#E53E3E'; // red.500
-        case 'initiated':
-            return '#ED8936'; // orange.500
-        case 'defined':
-            return '#ECC94B'; // yellow.500
-        case 'established':
-            return '#41b441'; // green.400
-        case 'managed':
-            return '#246f24'; // green.600
-        case 'optimizing':
-            return '#157744'; // green.700
-        default:
-            return '#718096'; // gray.500
-    }
-};
-
-// Helper function to get subtle background color
-const getStatusBackgroundColor = (statusLevel) => {
-    const level = statusLevel?.toLowerCase();
-    switch(level) {
-        case 'not started':
-            return 'red.50';
-        case 'initiated':
-            return 'orange.50';
-        case 'defined':
-            return 'yellow.50';
-        case 'established':
-            return 'green.50';
-        case 'managed':
-            return 'green.100';
-        case 'optimizing':
-            return 'teal.50';
-        default:
-            return 'gray.50';
-    }
-};
+import { getStatusColor, getStatusBackgroundColor } from '../../../services/utils/statusColors';
 
 const StatusLevels = () => {
     const { statusLevels, loading: statusLevelsLoading, error: statusLevelsError } = useContext(StatusLevelContext);
@@ -80,7 +39,7 @@ const StatusLevels = () => {
 
     return (
         <Box mt={6}>
-            <Heading size="md" color="teal.700" mb={4}>
+            <Heading as="h3" size="md" color="teal.700" mb={4}>
                 Status Level Definitions
             </Heading>
             <Accordion allowMultiple>
@@ -123,7 +82,7 @@ const StatusLevels = () => {
                                 mb={2}
                                 overflow="hidden"
                             >
-                                <h2>
+                                <h4>
                                     <AccordionButton
                                         bg="white"
                                         _hover={{ bg: statusBgColor }}
@@ -156,7 +115,7 @@ const StatusLevels = () => {
                                         </Box>
                                         <AccordionIcon color="gray.600" />
                                     </AccordionButton>
-                                </h2>
+                                </h4>
                                 <AccordionPanel pb={4} bg="white" px={4}>
                                     <VStack align="stretch" spacing={3} pt={2}>
                                         {/* Categories Display */}

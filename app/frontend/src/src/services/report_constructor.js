@@ -1,6 +1,7 @@
 import React from 'react';
 import {
     Box,
+    Flex,
     Text,
     Heading,
     Badge,
@@ -420,7 +421,7 @@ function generateReport(evidenceItem) {
 }
 
 function GenerateReportComponent({ evidenceItem }) {
-    console.log("ZINNGG", evidenceItem)
+
 
     const navigate = useNavigate();
     const { campus } = useParams();
@@ -528,7 +529,13 @@ function GenerateReportComponent({ evidenceItem }) {
 
     return (
         <Box p={6} bg="gray.50" fontSize="sm" textAlign="left">
-            <VStack align="stretch" spacing={6}>
+            <Flex
+                direction={{ base: 'column', lg: 'row' }}
+                gap={6}
+                align="flex-start"
+            >
+                <Box flex={{ base: 'none', lg: 3 }} w="100%" minW="0">
+                    <VStack align="stretch" spacing={6}>
 
                 {/* Indicator Information - Header Section */}
                 {evidenceItem.indicator?.properties && (
@@ -730,13 +737,6 @@ function GenerateReportComponent({ evidenceItem }) {
                             </HStack>
                         </VStack>
                     </Box>
-                )}
-
-                {/* Evidence Quality Criteria (driven by StatusLevel sub-nodes) */}
-                {evidenceItem.statusLevel?.properties?.status_level && (
-                    <EvidenceQualityPanel
-                        currentStatusLevelName={evidenceItem.statusLevel.properties.status_level}
-                    />
                 )}
 
                 {/* Plans and Accomplishments Section */}
@@ -1160,7 +1160,25 @@ function GenerateReportComponent({ evidenceItem }) {
                         </Stack>
                     </Box>
                 )}
-            </VStack>
+                    </VStack>
+                </Box>
+
+                {/* Right column: Evidence Quality Criteria (sticky on lg+) */}
+                <Box
+                    flex={{ base: 'none', lg: 1 }}
+                    w={{ base: '100%', lg: 'auto' }}
+                    minW={{ lg: '280px' }}
+                    position={{ lg: 'sticky' }}
+                    top={{ lg: 6 }}
+                    alignSelf={{ lg: 'flex-start' }}
+                >
+                    {evidenceItem.statusLevel?.properties?.status_level && (
+                        <EvidenceQualityPanel
+                            currentStatusLevelName={evidenceItem.statusLevel.properties.status_level}
+                        />
+                    )}
+                </Box>
+            </Flex>
         </Box>
     );
 

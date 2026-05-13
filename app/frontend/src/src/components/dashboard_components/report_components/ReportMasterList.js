@@ -339,7 +339,7 @@ const ReportMasterList = () => {
                 <VStack align="stretch" spacing={3}>
                     <HStack justify="space-between" align="start">
                         <Box flex="1">
-                            <Heading size="sm" color="gray.700" mb={2}>
+                            <Heading as="h4" size="sm" color="gray.700" mb={2}>
                                 Goal {goal.goal?.properties?.goal_number}: {goal.goal?.properties?.name}
                             </Heading>
                             <Text fontSize="xs" color="gray.600">
@@ -516,7 +516,7 @@ const ReportMasterList = () => {
         if (!workingGroupData?.goals || workingGroupData.goals.length === 0) {
             return (
                 <Box key={workingGroupName} mb={8} id={getAnchorId(workingGroupName)}>
-                    <Heading size="md" color="teal.700" mb={4}>
+                    <Heading as="h3" size="md" color="teal.700" mb={4}>
                         {workingGroupData?.workingGroup || workingGroupName}
                     </Heading>
                     <Text color="gray.500" fontSize="sm">No goals available for this working group.</Text>
@@ -526,7 +526,7 @@ const ReportMasterList = () => {
 
         return (
             <Box key={workingGroupName} mb={8} id={getAnchorId(workingGroupName)}>
-                <Heading size="md" color="teal.700" mb={4}>
+                <Heading as="h3" size="md" color="teal.700" mb={4}>
                     {workingGroupData.workingGroup}
                 </Heading>
                 <VStack align="stretch" spacing={4}>
@@ -597,11 +597,12 @@ const ReportMasterList = () => {
                     p={6}
                     boxShadow="sm"
                 >
-                    <Heading size="lg" color="gray.800" mb={6}>
+                    <Heading as="h2" size="lg" color="gray.800" mb={6}>
                         ATI Success Indicators Report
                     </Heading>
 
                     {/* Web Working Group */}
+
                     {data.web && renderWorkingGroup(data.web, 'Web')}
                     {data.web && data.procurement && <Divider my={6} borderColor="gray.200" />}
 
@@ -627,7 +628,7 @@ const ReportMasterList = () => {
                             boxShadow="sm"
                             w="100%"
                         >
-                            <Heading size="md" color="gray.800" mb={4}>
+                            <Heading as="h2" size="md" color="gray.800" mb={4}>
                                 Supporting Information
                             </Heading>
                             <VStack spacing={4} align="stretch">

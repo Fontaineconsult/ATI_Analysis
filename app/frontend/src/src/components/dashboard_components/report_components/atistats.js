@@ -145,7 +145,7 @@ const AtiStats = () => {
                 _hover={{ boxShadow: "md" }}
                 transition="box-shadow 0.2s"
             >
-                <Heading size="md" color="teal.700" mb={4}>
+            <Heading as="h3" size="md" color="teal.700" mb={4}>
                     Working Group Metrics
                 </Heading>
                 <TableContainer>
@@ -201,7 +201,7 @@ const AtiStats = () => {
                 _hover={{ boxShadow: "md" }}
                 transition="box-shadow 0.2s"
             >
-                <Heading size="md" color="teal.700" mb={4}>
+                <Heading as="h3" size="md" color="teal.700" mb={4}>
                     Status Assignments
                 </Heading>
                 <TableContainer>
@@ -242,7 +242,7 @@ const AtiStats = () => {
                 _hover={{ boxShadow: "md" }}
                 transition="box-shadow 0.2s"
             >
-                <Heading size="md" color="teal.700" mb={3}>
+                <Heading as="h3" size="md" color="teal.700" mb={3}>
                     Implementation Assignment
                 </Heading>
                 <Text color="gray.700" fontSize="sm" mb={2}>

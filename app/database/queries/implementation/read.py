@@ -348,7 +348,8 @@ def get_all_implementations() -> dict:
                         'unique_id': yse.unique_id,
                         'success_indicator': None,
                         'indicator_number': None,
-                        'indicator_composite_key': None
+                        'indicator_composite_key': None,
+                        'campus': None,
                     }
 
                     success_indicators = yse.tracks_success_indicator.all()
@@ -358,7 +359,22 @@ def get_all_implementations() -> dict:
                         yse_data['indicator_number'] = indicator.number
                         yse_data['indicator_composite_key'] = indicator.composite_key
 
+                    yse_campus = yse.campus.single()
+                    if yse_campus:
+                        yse_data['campus'] = {
+                            'unique_id': yse_campus.unique_id,
+                            'name': yse_campus.name,
+                            'abbreviation': yse_campus.abbreviation,
+                        }
+
                     impl_data['is_evidence_for'].append(yse_data)
+
+                # Deduped, sorted list of campus abbreviations across this impl's YSEs
+                impl_data['campuses'] = sorted({
+                    yse['campus']['abbreviation']
+                    for yse in impl_data['is_evidence_for']
+                    if yse.get('campus') and yse['campus'].get('abbreviation')
+                })
 
                 all_implementations[implementation_type].append(impl_data)
 

@@ -19,12 +19,12 @@ import {
     Tr,
     Th,
     Td,
-    Select,
     HStack,
     Badge
 } from '@chakra-ui/react';
 import { FaUser } from 'react-icons/fa';
 import DropdownSelect from '../../functional_components/DropdownSelect';
+import PersonAssignmentSelector from '../../functional_components/PersonAssignmentSelector';
 import { useStatusLevels } from '../../../hooks/useStatusLevels';
 import { UserContext } from '../../../context/UserContext';
 import { SettingsContext, useSettings } from '../../../context/SettingsContext';
@@ -450,14 +450,6 @@ const ImplementingPersonsManager = React.memo(({ yearIdentifier }) => {
     const { loadSingleWorkingGroupData } = useContext(DataContext);
     const { refreshAllIndividuals, individuals } = useContext(UserContext);
     const { currentWorkingGroup } = useSettings();
-    const [selectedPerson, setSelectedPerson] = useState('');
-    const [isAssigning, setIsAssigning] = useState(false);
-    const [removingPersonId, setRemovingPersonId] = useState(null);
-    const toast = useToast();
-
-    const assignedPersons = individuals?.filter(
-        person => person.yearSuccessEvidences.some(yse => yse.year_identifier === yearIdentifier)
-    ) || [];
 
     useEffect(() => {
         if (!individuals) {
@@ -465,139 +457,30 @@ const ImplementingPersonsManager = React.memo(({ yearIdentifier }) => {
         }
     }, [individuals, refreshAllIndividuals]);
 
-    const handleAssignPerson = async () => {
-        if (!selectedPerson) return;
-        setIsAssigning(true);
-        try {
-            await assignPersonAsImplementor(selectedPerson, yearIdentifier);
-            toast({
-                title: "Person assigned successfully",
-                status: "success",
-                duration: 2000,
-                isClosable: true,
-                position: "top-right"
-            });
+    const assignedPersons = individuals?.filter(
+        person => person.yearSuccessEvidences?.some(yse => yse.year_identifier === yearIdentifier)
+    ) || [];
 
-            // Refresh both data sources
-            await Promise.all([
-                loadSingleWorkingGroupData(currentWorkingGroup),
-                refreshAllIndividuals()
-            ]);
-
-            setSelectedPerson('');
-        } catch (error) {
-            toast({
-                title: "Error assigning person",
-                description: error.message,
-                status: "error",
-                duration: 3000,
-                isClosable: true,
-                position: "top-right"
-            });
-        } finally {
-            setIsAssigning(false);
-        }
-    };
-
-    const handleRemovePerson = async (personId) => {
-        setRemovingPersonId(personId);
-        try {
-            await unassignPersonAsImplementor(personId, yearIdentifier);
-            toast({
-                title: "Person unassigned successfully",
-                status: "success",
-                duration: 2000,
-                isClosable: true,
-                position: "top-right"
-            });
-
-            // Refresh both data sources
-            await Promise.all([
-                loadSingleWorkingGroupData(currentWorkingGroup),
-                refreshAllIndividuals()
-            ]);
-
-        } catch (error) {
-            toast({
-                title: "Error removing person",
-                description: error.message,
-                status: "error",
-                duration: 3000,
-                isClosable: true,
-                position: "top-right"
-            });
-        } finally {
-            setRemovingPersonId(null);
-        }
-    };
-
-    // Filter out individuals with the 'active' flag set to false
-    const availableIndividuals = individuals?.filter(individual => individual.active || individual.non_committee_member_active) || [];
+    // Preserves the prior YSE-implementor candidate pool: active members and
+    // active non-committee members. Different from the campus-plan callers
+    // which filter to active only.
+    const candidatePersons = individuals?.filter(
+        individual => individual.active || individual.non_committee_member_active
+    ) || [];
 
     return (
-        <Box>
-            <Flex gap={2} mb={4}>
-                <Select
-                    size="sm"
-                    placeholder="Select person to assign"
-                    value={selectedPerson}
-                    onChange={(e) => setSelectedPerson(e.target.value)}
-                    fontSize="sm"
-                    borderColor="teal.300"
-                    isDisabled={isAssigning}
-                    _hover={{ borderColor: "teal.400" }}
-                    _focus={{ borderColor: "teal.500", boxShadow: "0 0 0 1px teal.500" }}
-                >
-                    {availableIndividuals.map((individual) => (
-                        <option key={individual.unique_id} value={individual.unique_id}>
-                            {individual.name} - {individual.title}
-                        </option>
-                    ))}
-                </Select>
-                <Button
-                    size="sm"
-                    colorScheme="teal"
-                    onClick={handleAssignPerson}
-                    isLoading={isAssigning}
-                    loadingText="Assigning..."
-                    isDisabled={!selectedPerson || isAssigning}
-                >
-                    Assign
-                </Button>
-            </Flex>
-
-            <Table variant="simple" size="sm">
-                <Thead>
-                    <Tr bg="teal.50">
-                        <Th color="teal.700" fontWeight="semibold" fontSize="xs">Name</Th>
-                        <Th color="teal.700" fontWeight="semibold" fontSize="xs">Title</Th>
-                        <Th color="teal.700" fontWeight="semibold" fontSize="xs">Actions</Th>
-                    </Tr>
-                </Thead>
-                <Tbody>
-                    {assignedPersons.map((person) => (
-                        <Tr key={person.unique_id} _hover={{ bg: "gray.50" }}>
-                            <Td color="gray.700" fontSize="xs">{person.name}</Td>
-                            <Td color="gray.600" fontSize="xs">{person.title}</Td>
-                            <Td>
-                                <Button
-                                    size="xs"
-                                    colorScheme="red"
-                                    variant="solid"
-                                    onClick={() => handleRemovePerson(person.unique_id)}
-                                    isLoading={removingPersonId === person.unique_id}
-                                    loadingText="Removing..."
-                                    isDisabled={removingPersonId !== null}
-                                    _hover={{ bg: "red.600" }}
-                                >
-                                    Remove
-                                </Button>
-                            </Td>
-                        </Tr>
-                    ))}
-                </Tbody>
-            </Table>
-        </Box>
+        <PersonAssignmentSelector
+            assignedPersons={assignedPersons}
+            candidatePersons={candidatePersons}
+            onAssign={(personUniqueId) => assignPersonAsImplementor(personUniqueId, yearIdentifier)}
+            onUnassign={(personUniqueId) => unassignPersonAsImplementor(personUniqueId, yearIdentifier)}
+            afterChange={async () => {
+                await Promise.all([
+                    loadSingleWorkingGroupData(currentWorkingGroup),
+                    refreshAllIndividuals(),
+                ]);
+            }}
+        />
     );
 });
 

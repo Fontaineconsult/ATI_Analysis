@@ -37,7 +37,9 @@ python -m app.database.tools.create_new_ay_campus
 2. `duplicate_year_success_evidence(old_year, new_year)` — for every YSE in the old year: creates a new node with `year_identifier = <NEW_YEAR> + substring(old_identifier, 9)`, copies all non-`evidence_in_year` relationships (both directions) via APOC, connects the new node to the new `AcademicYear`.
 3. `create_stub_yse_for_missing_campuses(new_year)` — for each campus in `ALL_CAMPUSES` that has fewer YSEs than the active `SuccessIndicator` count, creates `Not Started` stubs.
 4. `reset_admin_review_for_year(new_year)` — sets `administrative_review_complete = false`, removes `administrative_review_completed_date`, and deletes all `admin_review_completed_by` edges for the new year's YSEs.
-5. `verify(new_year)` — prints YSE counts per campus.
+5. `propagate_documentation_years_for(new_year)` — for every implementation that has YSE evidence in `new_year`, finds its `is_documented_by` rels whose `included_in_years` is a non-empty whitelist missing `new_year`, and appends `new_year`. Empty `included_in_years` lists (the default — "applies to all years") are left alone. Without this step, documentation tagged for the old year silently disappears from the master query for the new year. Idempotent.
+6. `create_campus_plans_for_year(new_year)` — creates the `CampusPlan` + three `WorkingGroupPlan` nodes per campus for the new year. Idempotent.
+7. `verify(new_year)` — prints YSE counts per campus.
 
 Capture the full stdout. Surface the verification table to the user verbatim.
 

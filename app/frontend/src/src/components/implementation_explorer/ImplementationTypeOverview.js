@@ -15,6 +15,7 @@ import {
     Badge,
     Divider,
     useToast,
+    useDisclosure,
     Tabs,
     TabList,
     TabPanels,
@@ -23,11 +24,19 @@ import {
     Link,
     Alert,
     AlertIcon,
+    Modal,
+    ModalOverlay,
+    ModalContent,
+    ModalHeader,
+    ModalCloseButton,
+    ModalBody,
+    ModalFooter,
 } from '@chakra-ui/react';
 import { EditIcon, CheckIcon, CloseIcon, LinkIcon } from '@chakra-ui/icons';
 import { useNavigate, useParams } from 'react-router-dom';
 import { updateImplementation } from '../../services/api/put';
 import { DataContext } from '../../context/DataContext';
+import { SettingsContext } from '../../context/SettingsContext';
 
 // New sub-viewers (same folder as this file)
 import DocumentsViewer from './doc_components/DocumentsViewer';
@@ -35,16 +44,23 @@ import WebpagesViewer from './doc_components/WebpagesViewer';
 import NotesViewer from './doc_components/NotesViewer';
 import MessagesViewer from './doc_components/MessagesViewer';
 import MetricsViewer from './doc_components/MetricsSection';
+import YseAssignmentSelector from '../functional_components/YseAssignmentSelector';
 import {getEditUrlFromCompositeKey} from "../../services/utils/tools";
 
 function ImplementationTypeOverview({ implementationType, initialImplementationId }) {
     const { data, refreshImplementations } = useContext(DataContext);
+    const { currentAcademicYear } = useContext(SettingsContext);
     const [selectedImplId, setSelectedImplId] = useState(null);
     const [isEditing, setIsEditing] = useState(false);
     const [editForm, setEditForm] = useState({ title: '', description: '' });
     const toast = useToast();
     const navigate = useNavigate();
     const { campus } = useParams();
+    const {
+        isOpen: isManageYsesOpen,
+        onOpen: onManageYsesOpen,
+        onClose: onManageYsesClose,
+    } = useDisclosure();
 
     const implementations = data.implementations?.[implementationType] || [];
 
@@ -152,6 +168,12 @@ function ImplementationTypeOverview({ implementationType, initialImplementationI
         return new Date(dateString).toLocaleDateString();
     };
 
+    // Cards on the Evidence For tab show only YSEs at the currently-viewed campus.
+    // Cross-campus visibility lives in the Manage Linked YSEs modal.
+    const ysesAtCurrentCampus = (selectedImpl?.is_evidence_for || []).filter(
+        (yse) => yse.campus?.abbreviation === campus
+    );
+
     const totalSupporting =
         (selectedImpl?.supporting_documents?.length || 0) +
         (selectedImpl?.supporting_webpages?.length || 0) +
@@ -207,9 +229,24 @@ function ImplementationTypeOverview({ implementationType, initialImplementationI
                                         >
                                             {impl.title}
                                         </Text>
-                                        <Badge colorScheme="teal" fontSize="xs" px={2} py={1} borderRadius="md">
-                                            {impl.is_evidence_for?.length || 0} YSE
-                                        </Badge>
+                                        <HStack spacing={1} flexWrap="wrap">
+                                            <Badge colorScheme="teal" fontSize="xs" px={2} py={1} borderRadius="md">
+                                                {impl.is_evidence_for?.length || 0} YSE
+                                            </Badge>
+                                            {Array.isArray(impl.campuses) && impl.campuses.map((abbrev) => (
+                                                <Badge
+                                                    key={abbrev}
+                                                    colorScheme={isSelected ? 'whiteAlpha' : 'gray'}
+                                                    fontSize="xs"
+                                                    px={2}
+                                                    py={1}
+                                                    borderRadius="md"
+                                                    textTransform="uppercase"
+                                                >
+                                                    {abbrev}
+                                                </Badge>
+                                            ))}
+                                        </HStack>
                                     </VStack>
                                 </Button>
                             );
@@ -251,7 +288,7 @@ function ImplementationTypeOverview({ implementationType, initialImplementationI
                                 color="gray.600"
                                 _selected={{ color: 'teal.600', borderColor: 'teal.500' }}
                             >
-                                Evidence For ({selectedImpl.is_evidence_for?.length || 0})
+                                Evidence For ({ysesAtCurrentCampus.length})
                             </Tab>
                             <Tab
                                 fontSize="sm"
@@ -353,17 +390,54 @@ function ImplementationTypeOverview({ implementationType, initialImplementationI
                                             </Text>
                                         )}
                                     </FormControl>
+
+                                    <FormControl>
+                                        <FormLabel fontSize="xs" color="gray.600" fontWeight="semibold">
+                                            Campuses
+                                        </FormLabel>
+                                        {Array.isArray(selectedImpl.campuses) && selectedImpl.campuses.length > 0 ? (
+                                            <HStack spacing={1} flexWrap="wrap">
+                                                {selectedImpl.campuses.map((abbrev) => (
+                                                    <Badge
+                                                        key={abbrev}
+                                                        colorScheme="teal"
+                                                        fontSize="xs"
+                                                        px={2}
+                                                        py={1}
+                                                        borderRadius="md"
+                                                        textTransform="uppercase"
+                                                    >
+                                                        {abbrev}
+                                                    </Badge>
+                                                ))}
+                                            </HStack>
+                                        ) : (
+                                            <Text fontSize="xs" color="gray.500" fontStyle="italic">
+                                                Not yet wired to any campus's evidence.
+                                            </Text>
+                                        )}
+                                    </FormControl>
                                 </VStack>
                             </TabPanel>
 
                             {/* Evidence For Tab */}
                             <TabPanel px={0} py={4}>
                                 <VStack align="stretch" spacing={4}>
-                                    <Heading size="sm" color="gray.700" fontWeight="bold">
-                                        Success Indicators This Evidences
-                                    </Heading>
-                                    {selectedImpl.is_evidence_for?.length > 0 ? (
-                                        selectedImpl.is_evidence_for.map((yse) => (
+                                    <Flex justify="space-between" align="center">
+                                        <Heading size="sm" color="gray.700" fontWeight="bold">
+                                            Success Indicators This Evidences
+                                        </Heading>
+                                        <Button
+                                            size="xs"
+                                            colorScheme="teal"
+                                            variant="outline"
+                                            onClick={onManageYsesOpen}
+                                        >
+                                            Manage Linked YSEs
+                                        </Button>
+                                    </Flex>
+                                    {ysesAtCurrentCampus.length > 0 ? (
+                                        ysesAtCurrentCampus.map((yse) => (
                                             <Box
                                                 key={yse.unique_id}
                                                 p={4}
@@ -376,37 +450,51 @@ function ImplementationTypeOverview({ implementationType, initialImplementationI
                                                 transition="box-shadow 0.2s"
                                             >
                                                 <VStack align="stretch" spacing={3}>
-                                                    <Text
-                                                        fontWeight="bold"
-                                                        fontSize="sm"
-                                                        color="teal.700"
-                                                        cursor="pointer"
-                                                        _hover={{ color: 'teal.600', textDecoration: 'underline' }}
-                                                        onClick={() => {
-                                                            const editUrl = getEditUrlFromCompositeKey(yse.indicator_composite_key, campus);
-                                                            const [pathname, hash] = editUrl.split('#');
+                                                    <HStack spacing={2} align="baseline" flexWrap="wrap">
+                                                        <Text
+                                                            fontWeight="bold"
+                                                            fontSize="sm"
+                                                            color="teal.700"
+                                                            cursor="pointer"
+                                                            _hover={{ color: 'teal.600', textDecoration: 'underline' }}
+                                                            onClick={() => {
+                                                                const editUrl = getEditUrlFromCompositeKey(yse.indicator_composite_key, campus);
+                                                                const [pathname, hash] = editUrl.split('#');
 
-                                                            navigate(pathname + '#' + hash);
+                                                                navigate(pathname + '#' + hash);
 
-                                                            setTimeout(() => {
-                                                                if (hash) {
-                                                                    const element = document.getElementById(hash);
-                                                                    if (element) {
-                                                                        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                                                                    } else {
-                                                                        setTimeout(() => {
-                                                                            const retryElement = document.getElementById(hash);
-                                                                            if (retryElement) {
-                                                                                retryElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                                                                            }
-                                                                        }, 300);
+                                                                setTimeout(() => {
+                                                                    if (hash) {
+                                                                        const element = document.getElementById(hash);
+                                                                        if (element) {
+                                                                            element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                                                        } else {
+                                                                            setTimeout(() => {
+                                                                                const retryElement = document.getElementById(hash);
+                                                                                if (retryElement) {
+                                                                                    retryElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                                                                }
+                                                                            }, 300);
+                                                                        }
                                                                     }
-                                                                }
-                                                            }, 100);
-                                                        }}
-                                                    >
-                                                        {yse.year_identifier}
-                                                    </Text>
+                                                                }, 100);
+                                                            }}
+                                                        >
+                                                            {yse.year_identifier}
+                                                        </Text>
+                                                        {yse.campus?.abbreviation && (
+                                                            <Badge
+                                                                colorScheme="teal"
+                                                                fontSize="xs"
+                                                                px={2}
+                                                                py={0.5}
+                                                                borderRadius="md"
+                                                                textTransform="uppercase"
+                                                            >
+                                                                {yse.campus.abbreviation}
+                                                            </Badge>
+                                                        )}
+                                                    </HStack>
 
                                                     {yse.success_indicator && (
                                                         <Box>
@@ -430,7 +518,10 @@ function ImplementationTypeOverview({ implementationType, initialImplementationI
                                         ))
                                     ) : (
                                         <Text fontSize="xs" color="gray.500" fontStyle="italic">
-                                            No success indicators linked to this {implementationType}
+                                            No success indicators linked to this {implementationType} at {(campus || '').toUpperCase()}.
+                                            {(selectedImpl.is_evidence_for?.length || 0) > 0 && (
+                                                <> It is linked at other campuses — open “Manage Linked YSEs” to see and add.</>
+                                            )}
                                         </Text>
                                     )}
                                 </VStack>
@@ -491,6 +582,40 @@ function ImplementationTypeOverview({ implementationType, initialImplementationI
                     </Alert>
                 )}
             </Box>
+
+            {/* Manage Linked YSEs modal — inverse-mount of the YSE-side attach flow */}
+            <Modal isOpen={isManageYsesOpen} onClose={onManageYsesClose} size="3xl" scrollBehavior="inside">
+                <ModalOverlay />
+                <ModalContent>
+                    <ModalHeader fontSize="md" color="teal.700">
+                        Manage Linked YSEs
+                        {selectedImpl?.title && (
+                            <Text as="span" fontSize="sm" color="gray.500" fontWeight="normal" ml={2}>
+                                — {selectedImpl.title}
+                            </Text>
+                        )}
+                    </ModalHeader>
+                    <ModalCloseButton />
+                    <ModalBody pb={6}>
+                        {selectedImpl && (
+                            <YseAssignmentSelector
+                                entityType="Implementation"
+                                entityTitle={selectedImpl.title}
+                                implementationType={implementationType}
+                                academicYear={currentAcademicYear}
+                                currentLinks={selectedImpl.is_evidence_for || []}
+                                scopeCampus={campus}
+                                onChange={refreshImplementations}
+                            />
+                        )}
+                    </ModalBody>
+                    <ModalFooter>
+                        <Button size="sm" colorScheme="teal" onClick={onManageYsesClose}>
+                            Done
+                        </Button>
+                    </ModalFooter>
+                </ModalContent>
+            </Modal>
         </Flex>
     );
 }

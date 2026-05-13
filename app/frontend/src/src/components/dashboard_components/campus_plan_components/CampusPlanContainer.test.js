@@ -9,6 +9,7 @@ import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { ChakraProvider } from '@chakra-ui/react';
+import { MemoryRouter } from 'react-router-dom';
 
 jest.mock('../../../services/api/get', () => ({
     fetchCampusPlan: jest.fn(),
@@ -42,6 +43,7 @@ const PLAN_FIXTURE = {
             plan_identifier: '2025-2026-sfsu-web',
             working_group: 'Web',
             prioritized_success_indicators: [],
+            available_indicators: [],
             group_leads: [],
             plans: [],
         },
@@ -49,9 +51,10 @@ const PLAN_FIXTURE = {
             plan_identifier: '2025-2026-sfsu-pro',
             working_group: 'Procurement',
             prioritized_success_indicators: [
-                { unique_id: 'si1', composite_key: '5.2-pro', success_indicator: 'ICT procurement processes' },
-                { unique_id: 'si2', composite_key: '8.1-pro', success_indicator: 'EEAAP coverage' },
+                { unique_id: 'si1', composite_key: '5.2-pro', success_indicator: 'ICT procurement processes', companion_plans: [], progress: { yse_identifier: null, update_count: 0, latest: null } },
+                { unique_id: 'si2', composite_key: '8.1-pro', success_indicator: 'EEAAP coverage', companion_plans: [], progress: { yse_identifier: null, update_count: 0, latest: null } },
             ],
+            available_indicators: [],
             group_leads: [{ unique_id: 'p1', name: 'Lee Lead', title: 'Buyer' }],
             plans: [],
         },
@@ -59,13 +62,20 @@ const PLAN_FIXTURE = {
             plan_identifier: '2025-2026-sfsu-ins',
             working_group: 'Instructional Materials',
             prioritized_success_indicators: [],
+            available_indicators: [],
             group_leads: [],
             plans: [],
         },
     ],
 };
 
-const renderWithChakra = (ui) => render(<ChakraProvider>{ui}</ChakraProvider>);
+// MemoryRouter is needed because the rendered WorkingGroupPlan children wrap
+// plan cards in react-router Links, which require a router context.
+const renderWithChakra = (ui) => render(
+    <ChakraProvider>
+        <MemoryRouter>{ui}</MemoryRouter>
+    </ChakraProvider>
+);
 
 beforeEach(() => {
     fetchCampusPlan.mockReset();

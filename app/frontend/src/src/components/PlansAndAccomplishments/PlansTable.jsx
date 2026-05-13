@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
     Table,
     Thead,
@@ -18,8 +18,26 @@ import { FaEdit } from 'react-icons/fa';
 import PlanEditForm from './PlanEditForm';
 import PlanProgressNotes from './PlanProgressNotes';
 
-function PlansTable({ plans, onUpdate }) {
-    const [editingRows, setEditingRows] = useState(new Set());
+function PlansTable({ plans, onUpdate, initialPlanId }) {
+    const [editingRows, setEditingRows] = useState(
+        () => (initialPlanId ? new Set([initialPlanId]) : new Set())
+    );
+
+    // Re-honor initialPlanId if it changes after mount (e.g., user clicks
+    // an in-app link to a different /plans/<id> while already on this page).
+    useEffect(() => {
+        if (initialPlanId) {
+            setEditingRows((prev) => new Set([...prev, initialPlanId]));
+        }
+    }, [initialPlanId]);
+
+    // Scroll the deep-linked row into view once the plan rows have rendered.
+    const deepLinkRowRef = useRef(null);
+    useEffect(() => {
+        if (initialPlanId && deepLinkRowRef.current) {
+            deepLinkRowRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    }, [initialPlanId, plans]);
 
     const toggleEdit = (id) => {
         const newEditing = new Set(editingRows);
@@ -42,6 +60,9 @@ function PlansTable({ plans, onUpdate }) {
                         Working Group
                     </Th>
                     <Th color="gray.700" fontWeight="semibold" fontSize="xs" textTransform="uppercase">
+                        Campus
+                    </Th>
+                    <Th color="gray.700" fontWeight="semibold" fontSize="xs" textTransform="uppercase">
                         Goal
                     </Th>
                     <Th color="gray.700" fontWeight="semibold" fontSize="xs" textTransform="uppercase">
@@ -59,6 +80,7 @@ function PlansTable({ plans, onUpdate }) {
                 {plans.map((plan, index) => (
                     <React.Fragment key={plan.unique_id || index}>
                         <Tr
+                            ref={plan.unique_id === initialPlanId ? deepLinkRowRef : null}
                             _hover={{ bg: "gray.50" }}
                             transition="background-color 0.2s"
                         >
@@ -71,6 +93,27 @@ function PlansTable({ plans, onUpdate }) {
                             </Td>
                             <Td color="gray.700" fontSize="xs">
                                 {plan.workingGroup}
+                            </Td>
+                            <Td>
+                                {Array.isArray(plan.campuses) && plan.campuses.length > 0 ? (
+                                    <HStack spacing={1}>
+                                        {plan.campuses.map((abbrev) => (
+                                            <Badge
+                                                key={abbrev}
+                                                colorScheme="teal"
+                                                fontSize="xs"
+                                                px={2}
+                                                py={1}
+                                                borderRadius="md"
+                                                textTransform="uppercase"
+                                            >
+                                                {abbrev}
+                                            </Badge>
+                                        ))}
+                                    </HStack>
+                                ) : (
+                                    <Box as="span" color="gray.400" fontSize="xs">—</Box>
+                                )}
                             </Td>
                             <Td color="gray.700" fontSize="xs">
                                 {plan.goalNumber}
@@ -133,7 +176,7 @@ function PlansTable({ plans, onUpdate }) {
                         </Tr>
                         <Tr>
                             <Td
-                                colSpan={6}
+                                colSpan={7}
                                 p={0}
                                 borderWidth={0}
                                 bg={editingRows.has(plan.unique_id) ? "gray.50" : "transparent"}

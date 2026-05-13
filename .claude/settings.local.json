@@ -9,7 +9,9 @@
       "Bash(python -c:*)",
       "Bash(python:*)",
       "Bash(wc:*)",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "Bash(pytest tests/test_campus_plans_api.py -v)",
+      "Bash(npm test *)"
     ]
   }
 }

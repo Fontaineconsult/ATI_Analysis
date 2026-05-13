@@ -1,18 +1,32 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useContext, useEffect, useState } from 'react';
 import {
     Box,
     Button,
     Heading,
     HStack,
     Link,
+    Modal,
+    ModalBody,
+    ModalCloseButton,
+    ModalContent,
+    ModalFooter,
+    ModalHeader,
+    ModalOverlay,
     Spinner,
     Text,
+    useDisclosure,
     VStack,
 } from '@chakra-ui/react';
 
 import { useSettings } from '../../../context/SettingsContext';
+import { UserContext } from '../../../context/UserContext';
 import { fetchCampusPlan } from '../../../services/api/get';
-import { createCampusPlan } from '../../../services/api/post';
+import {
+    assignExecutiveSponsor,
+    createCampusPlan,
+    unassignExecutiveSponsor,
+} from '../../../services/api/post';
+import PersonAssignmentSelector from '../../functional_components/PersonAssignmentSelector';
 import WorkingGroupPlan from './WorkingGroupPlan';
 
 function isNotFoundError(error) {
@@ -22,12 +36,17 @@ function isNotFoundError(error) {
 
 function CampusPlanContainer() {
     const { currentCampus, currentAcademicYear } = useSettings();
+    // UserContext is optional in tests — guard against missing provider.
+    const userCtx = useContext(UserContext);
+    const currentUserUniqueId = userCtx && userCtx.currentUser ? userCtx.currentUser.unique_id : null;
+    const individuals = userCtx?.individuals || [];
 
     const [plan, setPlan] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [notFound, setNotFound] = useState(false);
     const [creating, setCreating] = useState(false);
+    const sponsorsModal = useDisclosure();
 
     const loadPlan = useCallback(async () => {
         if (!currentCampus || !currentAcademicYear) return;
@@ -124,9 +143,19 @@ function CampusPlanContainer() {
                     )}
 
                     <Box mt={4}>
-                        <Heading as="h3" size="xs" color="gray.700" mb={2} textTransform="uppercase" letterSpacing="wide">
-                            Executive Sponsors
-                        </Heading>
+                        <HStack justify="space-between" align="center" mb={2}>
+                            <Heading as="h3" size="xs" color="gray.700" textTransform="uppercase" letterSpacing="wide">
+                                Executive Sponsors
+                            </Heading>
+                            <Button
+                                size="xs"
+                                variant="outline"
+                                colorScheme="teal"
+                                onClick={sponsorsModal.onOpen}
+                            >
+                                Manage
+                            </Button>
+                        </HStack>
                         {plan.executive_sponsors.length === 0 ? (
                             <Text fontSize="sm" color="gray.500" fontStyle="italic">None assigned.</Text>
                         ) : (
@@ -170,11 +199,41 @@ function CampusPlanContainer() {
                     </Heading>
                     <VStack align="stretch" spacing={3}>
                         {plan.working_group_plans.map((wgp) => (
-                            <WorkingGroupPlan key={wgp.plan_identifier} wgp={wgp} />
+                            <WorkingGroupPlan
+                                key={wgp.plan_identifier}
+                                wgp={wgp}
+                                campusAbbrev={currentCampus}
+                                onIndicatorAdded={loadPlan}
+                                onProgressAdded={loadPlan}
+                                onLeadsChanged={loadPlan}
+                                currentUserUniqueId={currentUserUniqueId}
+                            />
                         ))}
                     </VStack>
                 </Box>
             </VStack>
+
+            <Modal isOpen={sponsorsModal.isOpen} onClose={sponsorsModal.onClose} size="2xl" scrollBehavior="inside">
+                <ModalOverlay />
+                <ModalContent>
+                    <ModalHeader fontSize="md" color="teal.700">
+                        Manage Executive Sponsors
+                    </ModalHeader>
+                    <ModalCloseButton />
+                    <ModalBody pb={4}>
+                        <PersonAssignmentSelector
+                            assignedPersons={plan.executive_sponsors || []}
+                            candidatePersons={individuals.filter((i) => i.active)}
+                            onAssign={(personUniqueId) => assignExecutiveSponsor(plan.plan_identifier, personUniqueId)}
+                            onUnassign={(personUniqueId) => unassignExecutiveSponsor(plan.plan_identifier, personUniqueId)}
+                            afterChange={loadPlan}
+                        />
+                    </ModalBody>
+                    <ModalFooter>
+                        <Button size="sm" colorScheme="teal" onClick={sponsorsModal.onClose}>Done</Button>
+                    </ModalFooter>
+                </ModalContent>
+            </Modal>
         </Box>
     );
 }

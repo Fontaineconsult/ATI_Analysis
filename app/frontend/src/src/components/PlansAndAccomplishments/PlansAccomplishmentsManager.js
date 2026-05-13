@@ -1,4 +1,5 @@
 import React, { useContext, useState } from 'react';
+import { useParams } from 'react-router-dom';
 import {
     Box,
     Heading,
@@ -41,6 +42,16 @@ import { workingGroupWebSafe } from "../../services/utils/tools";
 function PlansAccomplishmentsManager() {
     const { data, loading, loadSingleWorkingGroupData } = useContext(DataContext);
     const { currentAcademicYear } = useContext(SettingsContext);
+
+    // /plans/:planId deep-link support. The route pattern mirrors implementations'
+    // /implementations/:type/:id — same component handles list and deep-link,
+    // we just pre-expand the matching row.
+    //
+    // FUTURE: when a dedicated single-plan detail view is built, this route
+    // will instead mount that view (PlanDetailView or similar). The URL
+    // shape stays the same; only the rendering swaps.
+    const { planId: initialPlanId } = useParams();
+
     const [activeTab, setActiveTab] = useState(0);
     const [showAbandoned, setShowAbandoned] = useState(false);
     const { isOpen, onOpen, onClose } = useDisclosure();
@@ -400,6 +411,7 @@ function PlansAccomplishmentsManager() {
                                 <PlansTable
                                     plans={plans}
                                     onUpdate={loadSingleWorkingGroupData}
+                                    initialPlanId={initialPlanId}
                                 />
                             </TabPanel>
                             <TabPanel p={0}>

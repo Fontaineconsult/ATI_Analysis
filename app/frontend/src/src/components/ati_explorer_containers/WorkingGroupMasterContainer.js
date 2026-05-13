@@ -35,6 +35,7 @@ function WorkingGroupMasterContainer() {
                 />
 
                 <Route path="plans" element={<PlansAccomplishmentsManager />} />
+                <Route path="plans/:planId" element={<PlansAccomplishmentsManager />} />
 
                 <Route path="governance" element={<Text>This area will display the governance category</Text>} />
                 <Route path="*" element={<Text>Please select a working group.</Text>} />

@@ -15,6 +15,38 @@ from app.data_config import trajectory_choices
 dotenv_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'app', '.env.development')
 load_dotenv(dotenv_path)
 
+
+
+
+
+
+
+
+
+"""
+Ontology
+
+Nodes to describe the nodes for use in ontology management and front end display. 
+
+
+"""
+
+
+class UniversalDescriptor(StructuredNode):
+
+    """
+        a general, repeatable property, feature, or relation shared by multiple particular entities used to describe nodes within this schema.
+
+    """
+    unique_id = UniqueIdProperty()
+    description = StringProperty()
+
+
+
+
+
+
+
 """
 Governance
 

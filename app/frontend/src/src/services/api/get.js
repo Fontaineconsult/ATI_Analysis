@@ -19,6 +19,22 @@ export const fetchPrimaryData = async (wg, ay, campus) => {
 };
 
 
+export const fetchYsesByCampusForYear = async (academicYear) => {
+    try {
+        const response = await axios.get(
+            `${process.env.REACT_APP_API_URL}/evidence/yses-by-campus/${academicYear}`
+        );
+        if (response.status === 200) {
+            return response.data;
+        }
+        throw new Error(`Failed to fetch YSEs by campus: ${response.data?.error}`);
+    } catch (error) {
+        console.error('Error fetching YSEs by campus:', error.message);
+        throw error;
+    }
+};
+
+
 export const fetchStatusLevels = async () => {
     try {
         const response = await axios.get(`${process.env.REACT_APP_API_URL}/evidence/status-levels`);
