@@ -6,7 +6,11 @@ from flask import request
 from flask.views import MethodView
 
 from . import data_api_endpoints
-from app.database.queries.individuals.read import get_all_persons, get_person_by_employee_id
+from app.database.queries.individuals.read import (
+    get_all_persons,
+    get_person_by_employee_id,
+    get_person_implementation_details,
+)
 from app.database.queries.individuals.update import update_person_by_employee_id  # Import the update function
 from app.endpoints.data_api.util.response import make_response
 from app.endpoints.data_api.errors.custom_exceptions import NotFoundError, ValidationError, CrudError
@@ -21,12 +25,18 @@ class IndividualsAPI(MethodView):
         try:
             # Retrieve the 'employee_id' from the query string
             employee_id = request.args.get('employee_id')
+            details = request.args.get('details') in ('1', 'true', 'True')
 
             # If no employee_id is provided, fetch all persons
             if not employee_id:
                 all_persons = get_all_persons()
 
                 return make_response(status='success', data={'persons': json.loads(all_persons[0][0])}), 200
+
+            # Rich detail view (people explorer right panel)
+            if details:
+                person_details = get_person_implementation_details(employee_id)
+                return make_response(status='success', data={'person': person_details}), 200
 
             # Fetch person by employee_id
             person = get_person_by_employee_id(employee_id)

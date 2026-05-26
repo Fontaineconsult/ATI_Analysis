@@ -98,6 +98,21 @@ export const fetchAllIndividuals = async () => {
     }
 }
 
+export const fetchPersonImplementationDetails = async (employeeId) => {
+    try {
+        const response = await axios.get(`${process.env.REACT_APP_API_URL}/individuals`, {
+            params: { employee_id: employeeId, details: 'true' },
+        });
+        if (response.status === 200) {
+            return response.data;
+        }
+        throw new Error(`Failed to fetch person details: ${response.data?.error}`);
+    } catch (error) {
+        console.error('Error fetching person details:', error.message);
+        throw error;
+    }
+};
+
 export const fetchTrends = async (previous_year, current_year, campus) => {
     try {
         let url = `${process.env.REACT_APP_API_URL}/evidence/trends?previous_year=${previous_year}&current_year=${current_year}`;
