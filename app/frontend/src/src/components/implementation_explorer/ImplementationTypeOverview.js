@@ -34,9 +34,15 @@ import {
 } from '@chakra-ui/react';
 import { EditIcon, CheckIcon, CloseIcon, LinkIcon } from '@chakra-ui/icons';
 import { useNavigate, useParams } from 'react-router-dom';
-import { updateImplementation } from '../../services/api/put';
+import {
+    updateImplementation,
+    assignPersonAsOwner,
+    unassignPersonAsOwner,
+} from '../../services/api/put';
 import { DataContext } from '../../context/DataContext';
 import { SettingsContext } from '../../context/SettingsContext';
+import { UserContext } from '../../context/UserContext';
+import PersonAssignmentSelector from '../functional_components/PersonAssignmentSelector';
 
 // New sub-viewers (same folder as this file)
 import DocumentsViewer from './doc_components/DocumentsViewer';
@@ -50,6 +56,14 @@ import {getEditUrlFromCompositeKey} from "../../services/utils/tools";
 function ImplementationTypeOverview({ implementationType, initialImplementationId }) {
     const { data, refreshImplementations } = useContext(DataContext);
     const { currentAcademicYear } = useContext(SettingsContext);
+    const { individuals, loadAllIndividuals } = useContext(UserContext);
+
+    // Make sure the individuals list is loaded for the Owners tab dropdown.
+    useEffect(() => {
+        if (!individuals && loadAllIndividuals) {
+            loadAllIndividuals();
+        }
+    }, [individuals, loadAllIndividuals]);
     const [selectedImplId, setSelectedImplId] = useState(null);
     const [isEditing, setIsEditing] = useState(false);
     const [editForm, setEditForm] = useState({ title: '', description: '' });
@@ -297,6 +311,14 @@ function ImplementationTypeOverview({ implementationType, initialImplementationI
                                 _selected={{ color: 'teal.600', borderColor: 'teal.500' }}
                             >
                                 {`Supporting Docs (${totalSupporting})`}
+                            </Tab>
+                            <Tab
+                                fontSize="sm"
+                                fontWeight="semibold"
+                                color="gray.600"
+                                _selected={{ color: 'teal.600', borderColor: 'teal.500' }}
+                            >
+                                {`Owners (${selectedImpl.owned_by?.length || 0})`}
                             </Tab>
                         </TabList>
 
@@ -570,6 +592,41 @@ function ImplementationTypeOverview({ implementationType, initialImplementationI
                                         metrics={selectedImpl.supporting_metrics || []}
                                         implementation_id={selectedImpl.unique_id}
                                         implementation_type={implementationType}
+                                    />
+                                </VStack>
+                            </TabPanel>
+
+                            {/* Owners Tab — manage who owns this implementation */}
+                            <TabPanel px={0} py={4}>
+                                <VStack align="stretch" spacing={4}>
+                                    <Heading size="md" color="teal.700" fontWeight="bold">
+                                        Owners
+                                    </Heading>
+                                    <Text fontSize="sm" color="gray.600">
+                                        People who own this {implementationType}. Owners are accountable
+                                        for the work but may delegate execution.
+                                    </Text>
+                                    <Divider borderColor="gray.200" />
+                                    <PersonAssignmentSelector
+                                        assignedPersons={selectedImpl.owned_by || []}
+                                        candidatePersons={(individuals || []).filter((i) => i.active)}
+                                        onAssign={(personUniqueId) =>
+                                            assignPersonAsOwner(
+                                                implementationType,
+                                                selectedImpl.unique_id,
+                                                personUniqueId,
+                                            )
+                                        }
+                                        onUnassign={(personUniqueId) =>
+                                            unassignPersonAsOwner(
+                                                implementationType,
+                                                selectedImpl.unique_id,
+                                                personUniqueId,
+                                            )
+                                        }
+                                        afterChange={refreshImplementations}
+                                        placeholder="Select person to assign as owner"
+                                        assignLabel="Assign as Owner"
                                     />
                                 </VStack>
                             </TabPanel>

@@ -5,7 +5,8 @@ from app.database.queries.implementation.create import add_plan
 from . import data_api_endpoints
 from ...database.queries.implementation.delete import unassign_person_as_implementor
 from ...database.queries.implementation.update import update_plan, assign_person_as_implementor, \
-    assign_documentation_to_implementation, add_progress_note_to_plan
+    assign_documentation_to_implementation, add_progress_note_to_plan, \
+    assign_person_as_owner, unassign_person_as_owner
 from app.endpoints.data_api.util.response import make_response
 from app.endpoints.data_api.errors.custom_exceptions import ApiError, ValidationError, CrudError, NotFoundError
 
@@ -344,6 +345,10 @@ class ImplementationAPI(MethodView):
                 return self.handle_assign_person_as_implementor(data)
             elif action == "unassign_person_as_implementor":
                 return self.handle_unassign_person_as_implementor(data)
+            elif action == "assign_person_as_owner":
+                return self.handle_assign_person_as_owner(data)
+            elif action == "unassign_person_as_owner":
+                return self.handle_unassign_person_as_owner(data)
             elif action == "assign_documentation_to_implementation":
                 return self.handle_assign_documentation_to_implementation(data)
             elif action == "update_implementation":
@@ -519,6 +524,35 @@ class ImplementationAPI(MethodView):
 
         unassign_person_as_implementor(data['unique_id'], data['year_success_evidence'])
         return make_response({"status": "success", "message": "Person unassigned as implementor successfully"}), 200
+
+    def handle_assign_person_as_owner(self, data):
+        """
+        Connect a Person to an implementation node via the owned_by edge.
+
+        Body: { action: "assign_person_as_owner",
+                implementation_type, implementation_unique_id, person_unique_id }
+        """
+        required = ['implementation_type', 'implementation_unique_id', 'person_unique_id']
+        if not all(field in data for field in required):
+            raise ValidationError(f"Missing required fields: {required}")
+        assign_person_as_owner(
+            implementation_unique_id=data['implementation_unique_id'],
+            implementation_type=data['implementation_type'],
+            person_unique_id=data['person_unique_id'],
+        )
+        return make_response({"status": "success", "message": "Person assigned as owner successfully"}), 200
+
+    def handle_unassign_person_as_owner(self, data):
+        """Inverse of handle_assign_person_as_owner."""
+        required = ['implementation_type', 'implementation_unique_id', 'person_unique_id']
+        if not all(field in data for field in required):
+            raise ValidationError(f"Missing required fields: {required}")
+        unassign_person_as_owner(
+            implementation_unique_id=data['implementation_unique_id'],
+            implementation_type=data['implementation_type'],
+            person_unique_id=data['person_unique_id'],
+        )
+        return make_response({"status": "success", "message": "Person unassigned as owner successfully"}), 200
 
     def handle_assign_documentation_to_implementation(self, data):
         """

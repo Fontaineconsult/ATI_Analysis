@@ -191,8 +191,19 @@ def get_all_implementations() -> dict:
                     'supporting_notes': [],
                     'supporting_messages': [],
                     'supporting_metrics': [],
-                    'is_evidence_for': []
+                    'is_evidence_for': [],
+                    'owned_by': [],
                 }
+
+                # People who own this implementation (owned_by edge)
+                for person in impl.owned_by.all():
+                    impl_data['owned_by'].append({
+                        'unique_id': person.unique_id,
+                        'name': person.name,
+                        'title': person.title,
+                        'email': person.email,
+                        'employee_id': person.employee_id,
+                    })
 
                 # Process supporting documents with relationship data
                 for doc in impl.supporting_documents.all():

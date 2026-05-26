@@ -274,6 +274,37 @@ export const assignPersonAsImplementor = async (employeeId, year_success_indicat
     }
 }
 
+// Owners of an Implementation (Process/Project/Procedure/Service/Guidance/Tracking/InternalPolicy)
+export const assignPersonAsOwner = async (implementationType, implementationUniqueId, personUniqueId) => {
+    try {
+        const response = await axios.put(`${process.env.REACT_APP_API_URL}/implementations`, {
+            action: 'assign_person_as_owner',
+            implementation_type: implementationType,
+            implementation_unique_id: implementationUniqueId,
+            person_unique_id: personUniqueId,
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error assigning person as owner:', error);
+        throw error;
+    }
+};
+
+export const unassignPersonAsOwner = async (implementationType, implementationUniqueId, personUniqueId) => {
+    try {
+        const response = await axios.put(`${process.env.REACT_APP_API_URL}/implementations`, {
+            action: 'unassign_person_as_owner',
+            implementation_type: implementationType,
+            implementation_unique_id: implementationUniqueId,
+            person_unique_id: personUniqueId,
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error unassigning person as owner:', error);
+        throw error;
+    }
+};
+
 export const unassignPersonAsImplementor = async (employeeId, year_success_indicator) => {
     try {
         await axios.put(`${process.env.REACT_APP_API_URL}/implementations`, unassignResponsiblePersonPayload(employeeId, year_success_indicator));

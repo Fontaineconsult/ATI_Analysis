@@ -233,6 +233,40 @@ def assign_person_as_implementor(unique_id, year_identifier):
     return True
 
 
+def _resolve_implementation(implementation_unique_id, implementation_type):
+    """Resolve (type, unique_id) -> implementation node. Raises ValidationError /
+    NotFoundError consistent with the rest of the module."""
+    if implementation_type not in implementation_classes:
+        raise ValidationError(f"Invalid implementation_type: {implementation_type}")
+    implementation_class = implementation_classes[implementation_type]
+    try:
+        return implementation_class.nodes.get(unique_id=implementation_unique_id)
+    except implementation_class.DoesNotExist:
+        raise NotFoundError(f"No {implementation_type} found with unique_id: {implementation_unique_id}")
+
+
+def assign_person_as_owner(implementation_unique_id, implementation_type, person_unique_id):
+    """Connect a Person to an implementation via the owned_by edge."""
+    impl_node = _resolve_implementation(implementation_unique_id, implementation_type)
+    try:
+        person_node = Person.nodes.get(unique_id=person_unique_id)
+    except Person.DoesNotExist:
+        raise NotFoundError(f"No Person node found with unique_id: {person_unique_id}")
+    impl_node.owned_by.connect(person_node)
+    return True
+
+
+def unassign_person_as_owner(implementation_unique_id, implementation_type, person_unique_id):
+    """Disconnect a Person from an implementation's owned_by edge."""
+    impl_node = _resolve_implementation(implementation_unique_id, implementation_type)
+    try:
+        person_node = Person.nodes.get(unique_id=person_unique_id)
+    except Person.DoesNotExist:
+        raise NotFoundError(f"No Person node found with unique_id: {person_unique_id}")
+    impl_node.owned_by.disconnect(person_node)
+    return True
+
+
 def assign_note_to_implementation(implementation_title, implementation_type, note_title):
     if implementation_type not in implementation_classes:
         raise ValidationError(f"Invalid implementation_type: {implementation_type}")

@@ -551,6 +551,7 @@ class InternalPolicy(StructuredNode):
     supporting_messages = RelationshipTo("Message", "is_documented_by", model=DocumentedByRel)
     supporting_metrics = RelationshipTo("Metric", "has_metric")
     is_evidence_for = RelationshipTo("YearSuccessEvidence", "is_evidence_for")
+    owned_by = RelationshipTo("Person", "owned_by")
 
     #serialize
     def serialize(self):
@@ -585,6 +586,7 @@ class Process(StructuredNode):
     supporting_messages = RelationshipTo("Message", "is_documented_by", model=DocumentedByRel)
     supporting_metrics = RelationshipTo("Metric", "has_metric")
     is_evidence_for = RelationshipTo("YearSuccessEvidence", "is_evidence_for")
+    owned_by = RelationshipTo("Person", "owned_by")
     includes_procedures = RelationshipTo("Procedure", "includes_procedure")
 
     #serialize
@@ -620,6 +622,7 @@ class Project(StructuredNode):
     supporting_messages = RelationshipTo("Message", "is_documented_by", model=DocumentedByRel)
     supporting_metrics = RelationshipTo("Metric", "has_metric")
     is_evidence_for = RelationshipTo("YearSuccessEvidence", "is_evidence_for")
+    owned_by = RelationshipTo("Person", "owned_by")
     includes_procedures = RelationshipTo("Procedure", "includes_procedure")
 
     #serialize
@@ -652,6 +655,7 @@ class Procedure(StructuredNode):
     supporting_messages = RelationshipTo("Message", "is_documented_by", model=DocumentedByRel)
     supporting_metrics = RelationshipTo("Metric", "has_metric")
     is_evidence_for = RelationshipTo("YearSuccessEvidence", "is_evidence_for")
+    owned_by = RelationshipTo("Person", "owned_by")
 
 
     #serialize
@@ -684,6 +688,7 @@ class Service(StructuredNode):
     supporting_messages = RelationshipTo("Message", "is_documented_by", model=DocumentedByRel)
     supporting_metrics = RelationshipTo("Metric", "has_metric")
     is_evidence_for = RelationshipTo("YearSuccessEvidence", "is_evidence_for")
+    owned_by = RelationshipTo("Person", "owned_by")
     includes_procedures = RelationshipTo("Procedure", "includes_procedure")
 
     #serialize
@@ -718,6 +723,7 @@ class Guidance(StructuredNode):
     supporting_messages = RelationshipTo("Message", "is_documented_by", model=DocumentedByRel)
     supporting_metrics = RelationshipTo("Metric", "has_metric")
     is_evidence_for = RelationshipTo("YearSuccessEvidence", "is_evidence_for")
+    owned_by = RelationshipTo("Person", "owned_by")
     references_procedure = RelationshipTo("Procedure", "references_procedure")
     references_process = RelationshipTo("Process", "references_process")
     references_service = RelationshipTo("Service", "references_service")
@@ -752,6 +758,7 @@ class Tracking(StructuredNode):
     supporting_messages = RelationshipTo("Message", "is_documented_by", model=DocumentedByRel)
     supporting_metrics = RelationshipTo("Metric", "has_metric")
     is_evidence_for = RelationshipTo("YearSuccessEvidence", "is_evidence_for")
+    owned_by = RelationshipTo("Person", "owned_by")
 
     #serialize
     def serialize(self):
