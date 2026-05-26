@@ -11,11 +11,16 @@ def get_all_persons() -> list:
         MATCH (p:Person)
         OPTIONAL MATCH (p)-[:participates_in]->(wg:ATIWorkingGroup)
         OPTIONAL MATCH (p)-[:implements]->(yse:YearSuccessEvidence)
-        WITH p, collect(DISTINCT wg) AS workingGroups, collect(DISTINCT yse) AS yearSuccessEvidences
+        OPTIONAL MATCH (p)-[:works_at_campus]->(camp:Campus)
+        WITH p,
+             collect(DISTINCT wg) AS workingGroups,
+             collect(DISTINCT yse) AS yearSuccessEvidences,
+             head(collect(DISTINCT camp.abbreviation)) AS host_campus
         WITH p {
-          .*, 
+          .*,
           workingGroups: [wg IN workingGroups | wg { .* }],
-          yearSuccessEvidences: [yse IN yearSuccessEvidences | yse { .* }]
+          yearSuccessEvidences: [yse IN yearSuccessEvidences | yse { .* }],
+          host_campus: host_campus
         } AS personData
         RETURN apoc.convert.toJson(collect(personData)) AS jsonResult
             """

@@ -11,7 +11,9 @@
       "Bash(wc:*)",
       "Bash(ls:*)",
       "Bash(pytest tests/test_campus_plans_api.py -v)",
-      "Bash(npm test *)"
+      "Bash(npm test *)",
+      "PowerShell(& \"$PWD\\\\.claude\\\\skills\\\\start-dev\\\\start-dev.ps1\")",
+      "WebSearch"
     ]
   }
 }

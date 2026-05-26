@@ -4,7 +4,7 @@
 from app.database.graph_schema import *
 from app.endpoints.data_api.errors.custom_exceptions import CrudError, ValidationError
 
-from app.database.graph_schema import Person, ATIWorkingGroup
+from app.database.graph_schema import Person, ATIWorkingGroup, Campus
 from app.endpoints.data_api.errors.custom_exceptions import CrudError, ValidationError, NotFoundError
 from neomodel import db, DoesNotExist
 
@@ -67,6 +67,15 @@ def add_person(data: dict) -> Person:
 
             # Save the new person node
             person.save()
+
+            # Connect host_campus if provided
+            host_campus_abbrev = data.get('host_campus')
+            if host_campus_abbrev:
+                try:
+                    campus = Campus.nodes.get(abbreviation=host_campus_abbrev)
+                except DoesNotExist:
+                    raise NotFoundError(f"Campus with abbreviation '{host_campus_abbrev}' not found.")
+                person.host_campus.connect(campus)
 
             # Establish relationships if 'workingGroups' is provided in data
             if 'workingGroups' in data:

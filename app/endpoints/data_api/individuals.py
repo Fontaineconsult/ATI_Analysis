@@ -1,4 +1,5 @@
 import json
+import traceback
 from tarfile import data_filter
 
 from flask import request
@@ -34,6 +35,7 @@ class IndividualsAPI(MethodView):
         except NotFoundError as e:
             return make_response(status='error', error=str(e)), 404
         except Exception as e:
+            traceback.print_exc()
             return make_response(status='error', error=str(e)), 500
 
     def post(self):
@@ -58,6 +60,7 @@ class IndividualsAPI(MethodView):
         except CrudError as e:
             return make_response(status='error', error=str(e)), 500
         except Exception as e:
+            traceback.print_exc()
             return make_response(status='error', error=f"An unexpected error occurred: {str(e)}"), 500
 
 
@@ -87,6 +90,7 @@ class IndividualsAPI(MethodView):
         except CrudError as e:
             return make_response(status='error', error=str(e)), 500
         except Exception as e:
+            traceback.print_exc()
             return make_response(status='error', error=f"An unexpected error occurred: {str(e)}"), 500
 
     def delete(self):

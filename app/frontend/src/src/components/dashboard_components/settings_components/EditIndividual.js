@@ -11,6 +11,7 @@ import {
     FormControl,
     FormLabel,
     Input,
+    Select,
     Checkbox,
     VStack,
     useToast,
@@ -20,6 +21,7 @@ import {
 } from '@chakra-ui/react';
 import { updateIndividual } from '../../../services/api/put';
 import { createIndividual } from '../../../services/api/post';
+import { useSettings } from '../../../context/SettingsContext';
 
 const EditIndividual = ({ isOpen, onClose, individualData, onSave }) => {
     const [formData, setFormData] = useState({
@@ -28,6 +30,7 @@ const EditIndividual = ({ isOpen, onClose, individualData, onSave }) => {
         email: '',
         title: '',
         ati_role: '',
+        host_campus: '',
         active: true,
         non_committee_member_active: false,
         can_approve_yse: false,
@@ -35,12 +38,13 @@ const EditIndividual = ({ isOpen, onClose, individualData, onSave }) => {
     });
     const [isSubmitting, setIsSubmitting] = useState(false);
     const toast = useToast();
+    const { campuses, campusesLoading } = useSettings();
 
     const isEditMode = Boolean(individualData);
 
     useEffect(() => {
         if (isEditMode) {
-            setFormData({ ...individualData });
+            setFormData({ host_campus: '', ...individualData });
         } else {
             // Clear form data for create mode
             setFormData({
@@ -49,6 +53,7 @@ const EditIndividual = ({ isOpen, onClose, individualData, onSave }) => {
                 email: '',
                 title: '',
                 ati_role: '',
+                host_campus: '',
                 active: true,
                 non_committee_member_active: false,
                 can_approve_yse: false,
@@ -219,6 +224,29 @@ const EditIndividual = ({ isOpen, onClose, individualData, onSave }) => {
                                 _hover={{ borderColor: "gray.400" }}
                                 _focus={{ borderColor: "teal.500", boxShadow: "0 0 0 1px teal.500" }}
                             />
+                        </FormControl>
+
+                        <FormControl>
+                            <FormLabel fontSize="sm" color="gray.800" fontWeight="bold">
+                                Host Campus
+                            </FormLabel>
+                            <Select
+                                size="sm"
+                                name="host_campus"
+                                value={formData.host_campus || ''}
+                                onChange={handleInputChange}
+                                placeholder={campusesLoading ? 'Loading campuses…' : 'Select a campus'}
+                                isDisabled={campusesLoading}
+                                borderColor="gray.300"
+                                _hover={{ borderColor: "gray.400" }}
+                                _focus={{ borderColor: "teal.500", boxShadow: "0 0 0 1px teal.500" }}
+                            >
+                                {campuses.map((c) => (
+                                    <option key={c.abbreviation} value={c.abbreviation}>
+                                        {c.name}
+                                    </option>
+                                ))}
+                            </Select>
                         </FormControl>
 
                         <Divider />

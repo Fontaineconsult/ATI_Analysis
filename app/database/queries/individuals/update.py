@@ -3,7 +3,7 @@ from app.endpoints.data_api.errors.custom_exceptions import CrudError, NotFoundE
 
 from neomodel import db
 
-from app.database.graph_schema import Person, ATIWorkingGroup
+from app.database.graph_schema import Person, ATIWorkingGroup, Campus
 from app.endpoints.data_api.errors.custom_exceptions import CrudError, NotFoundError
 from neomodel import db, DoesNotExist
 
@@ -44,6 +44,17 @@ def update_person_by_employee_id(data: dict) -> Person:
             # Save updated person node
             person.save()
 
+            # Update host_campus relationship if provided
+            if 'host_campus' in data:
+                person.host_campus.disconnect_all()
+                abbrev = data.get('host_campus')
+                if abbrev:
+                    try:
+                        campus = Campus.nodes.get(abbreviation=abbrev)
+                    except DoesNotExist:
+                        raise NotFoundError(f"Campus with abbreviation '{abbrev}' not found.")
+                    person.host_campus.connect(campus)
+
             # Update relationships if 'workingGroups' is provided in data
             if 'workingGroups' in data:
                 working_groups = data.get('workingGroups') or []
@@ -70,6 +81,8 @@ def update_person_by_employee_id(data: dict) -> Person:
 
     except DoesNotExist:
         raise NotFoundError(f"Person with employee_id '{employee_id}' not found.")
+    except (NotFoundError, ValueError):
+        raise
     except Exception as e:
         raise CrudError(f"Error updating person with employee_id '{employee_id}': {e}")
 

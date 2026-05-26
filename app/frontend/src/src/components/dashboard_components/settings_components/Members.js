@@ -225,6 +225,15 @@ function Members() {
                 ),
             },
             {
+                Header: 'Campus',
+                accessor: 'host_campus',
+                Cell: ({ value }) => (
+                    <Text as="span" isTruncated maxWidth="80px" title={value} textTransform="uppercase">
+                        {value || '-'}
+                    </Text>
+                ),
+            },
+            {
                 Header: 'Active',
                 accessor: 'active',
                 Cell: ({ row: { original } }) => (

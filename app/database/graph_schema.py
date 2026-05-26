@@ -1053,9 +1053,11 @@ class Person(StructuredNode):
     non_committee_member_active = BooleanProperty(default=False) # For people who are not in a committee but are active in the ATI in various capacities
     in_ati_working_group = RelationshipTo('ATIWorkingGroup', 'participates_in')
     implements_yse = RelationshipTo("YearSuccessEvidence", "implements")
+    host_campus = RelationshipTo("Campus", "works_at_campus", cardinality=ZeroOrOne)
 
     #serialize
     def serialize(self):
+        host_campus_node = self.host_campus.single()
         return {
             'name': self.name,
             'email': self.email,
@@ -1065,7 +1067,8 @@ class Person(StructuredNode):
             "active": self.active,
             "ati_role": self.ati_role,
             "unique_id": self.unique_id,
-            "non_committee_member_active": self.non_committee_member_active
+            "non_committee_member_active": self.non_committee_member_active,
+            "host_campus": host_campus_node.abbreviation if host_campus_node else None,
         }
 
 
