@@ -276,6 +276,59 @@ export const createAccomplishment = async (formData) => {
     }
 }
 
+// DOCUMENT / WEBPAGE — standalone create (no implementation link). Backend
+// add_document / add_webpage already accept null implementation_id +
+// implementation_type and skip the link step.
+export const createStandaloneDocument = async (documentData, createdBy) => {
+    try {
+        const response = await axios.post(`${process.env.REACT_APP_API_URL}/documents`, {
+            action: 'add_document',
+            document_dict: documentData,
+            created_by: createdBy || null,
+            implementation_id: null,
+            implementation_type: null,
+            academic_year: null,
+            include_in_year: true,
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error creating document:', error);
+        throw error;
+    }
+};
+
+export const createStandaloneWebpage = async (webpageData, createdBy) => {
+    try {
+        const response = await axios.post(`${process.env.REACT_APP_API_URL}/documents`, {
+            action: 'add_webpage',
+            webpage_dict: webpageData,
+            created_by: createdBy || null,
+            implementation_id: null,
+            implementation_type: null,
+            academic_year: null,
+            include_in_year: true,
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error creating webpage:', error);
+        throw error;
+    }
+};
+
+// GOVERNANCE CREATE
+export const createGovernance = async (governanceType, fields) => {
+    try {
+        const response = await axios.post(
+            `${process.env.REACT_APP_API_URL}/governance`,
+            { type: governanceType, ...fields },
+        );
+        return response.data;
+    } catch (error) {
+        console.error('Error creating governance item:', error);
+        throw error;
+    }
+}
+
 // CAMPUS PLAN CREATE FUNCTIONS
 export const createCampusPlan = async (campusAbbrev, yearName) => {
     try {

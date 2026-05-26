@@ -61,6 +61,51 @@ export const updateStatusLevelNode = async (formData) => {
 };
 
 
+// GOVERNANCE UPDATE
+export const updateGovernance = async (governanceType, uniqueId, fields) => {
+    try {
+        const response = await axios.put(
+            `${process.env.REACT_APP_API_URL}/governance`,
+            { type: governanceType, unique_id: uniqueId, ...fields },
+        );
+        return response.data;
+    } catch (error) {
+        console.error('Error updating governance item:', error);
+        throw error;
+    }
+};
+
+// GOVERNANCE — attach / detach Document and Webpage via supporting_documents / supporting_websites
+const _governanceAttachDetach = async (action, governanceType, governanceUniqueId, targetKey, targetUniqueId) => {
+    try {
+        const response = await axios.put(
+            `${process.env.REACT_APP_API_URL}/governance`,
+            {
+                action,
+                type: governanceType,
+                governance_unique_id: governanceUniqueId,
+                [targetKey]: targetUniqueId,
+            },
+        );
+        return response.data;
+    } catch (error) {
+        console.error(`Error on ${action}:`, error);
+        throw error;
+    }
+};
+
+export const attachDocumentToGovernance = (governanceType, governanceUniqueId, documentUniqueId) =>
+    _governanceAttachDetach('attach_document', governanceType, governanceUniqueId, 'document_unique_id', documentUniqueId);
+
+export const detachDocumentFromGovernance = (governanceType, governanceUniqueId, documentUniqueId) =>
+    _governanceAttachDetach('detach_document', governanceType, governanceUniqueId, 'document_unique_id', documentUniqueId);
+
+export const attachWebpageToGovernance = (governanceType, governanceUniqueId, webpageUniqueId) =>
+    _governanceAttachDetach('attach_webpage', governanceType, governanceUniqueId, 'webpage_unique_id', webpageUniqueId);
+
+export const detachWebpageFromGovernance = (governanceType, governanceUniqueId, webpageUniqueId) =>
+    _governanceAttachDetach('detach_webpage', governanceType, governanceUniqueId, 'webpage_unique_id', webpageUniqueId);
+
 export const assignApprover = async (employeeId, yearSuccessEvidence) => {
     try {
         const response = await axios.put(`${process.env.REACT_APP_API_URL}/evidence`,

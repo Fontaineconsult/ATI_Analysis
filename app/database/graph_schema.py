@@ -1217,7 +1217,7 @@ class Document(StructuredNode):
             "include_in_report": self.include_in_report,
             "is_administrative_review_documentation": self.is_administrative_review_documentation,
             "is_milestone_and_measures_documentation": self.is_milestone_and_measures_documentation,
-            "maintained_by": self.maintained_by,
+            "maintained_by": [{"unique_id": p.unique_id, "name": p.name} for p in self.maintained_by.all()],
             "unique_id": self.unique_id
 
         }
@@ -1258,7 +1258,7 @@ class Webpage(StructuredNode):
             "depreciated": self.depreciated,
             "depreciated_date": self.depreciated_date,
             "unique_id": self.unique_id,
-            "maintained_by": self.maintained_by,
+            "maintained_by": [{"unique_id": p.unique_id, "name": p.name} for p in self.maintained_by.all()],
             "include_in_report": self.include_in_report
 
         }
@@ -1411,7 +1411,7 @@ class Metric(StructuredNode):
             "data": self.get_data() if self.value_dict else None,
             "include_in_report": self.include_in_report,
             "unique_id": self.unique_id,
-            "academic_year": self.academic_year
+            "academic_year": [{"unique_id": ay.unique_id, "name": ay.name} for ay in self.academic_year.all()]
 
         }
 

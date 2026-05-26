@@ -8,6 +8,7 @@ import ImplementationMasterContainer from "../implementation_explorer/Implementa
 import ImplementationTypeOverviewWrapper from "../implementation_explorer/ImplementationTypeOverviewWrapper";
 import PlansAccomplishmentsManager from "../PlansAndAccomplishments/PlansAccomplishmentsManager";
 import PeopleMasterContainer from "./PeopleMasterContainer";
+import GovernanceMasterContainer from "./GovernanceMasterContainer";
 
 function WorkingGroupMasterContainer() {
     const { data, loading, error } = useContext(DataContext);
@@ -40,7 +41,7 @@ function WorkingGroupMasterContainer() {
 
                 <Route path="people" element={<PeopleMasterContainer />} />
 
-                <Route path="governance" element={<Text>This area will display the governance category</Text>} />
+                <Route path="governance" element={<GovernanceMasterContainer />} />
                 <Route path="*" element={<Text>Please select a working group.</Text>} />
             </Routes>
         </Box>

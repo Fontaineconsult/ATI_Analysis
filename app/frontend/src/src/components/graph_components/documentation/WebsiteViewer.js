@@ -2,11 +2,6 @@ import React, { useState, useContext, useEffect } from 'react';
 import {
     Box,
     Button,
-    Input,
-    Textarea,
-    Switch,
-    FormControl,
-    FormLabel,
     Text,
     Flex,
     Collapse,
@@ -15,8 +10,6 @@ import {
     VStack,
     Badge,
     IconButton,
-    Grid,
-    GridItem
 } from '@chakra-ui/react';
 import { EditIcon, ExternalLinkIcon } from '@chakra-ui/icons';
 import { updateWebpage } from '../../../services/api/put';
@@ -25,6 +18,7 @@ import { useToast } from '@chakra-ui/react';
 import { DataContext } from '../../../context/DataContext';
 import { useSettings } from '../../../context/SettingsContext';
 import { UserContext } from '../../../context/UserContext';
+import WebsiteForm from './WebsiteForm';
 
 function WebsiteViewer({ websites, implementation_id, implementation_type }) {
     const [expandedIndex, setExpandedIndex] = useState(null);
@@ -201,151 +195,6 @@ function WebsiteViewer({ websites, implementation_id, implementation_type }) {
             ) : (
                 <Text color="gray.500" fontSize="sm">No websites available.</Text>
             )}
-        </Box>
-    );
-}
-
-function WebsiteForm({ website, onSubmit, createdBy, isNewWebsite, onCancel }) {
-    const [websiteData, setWebsiteData] = useState({
-        unique_id: website?.properties?.unique_id || '',
-        url: website?.properties?.url || '',
-        name: website?.properties?.name || '',
-        description: website?.properties?.description || '',
-        no_longer_exists: website?.properties?.no_longer_exists || false,
-        depreciated: website?.properties?.depreciated || false,
-        depreciated_date: website?.properties?.depreciated_date || '',
-        include_in_report: website?.properties?.include_in_report ?? true,
-        date_created: website?.properties?.date_created || new Date().toISOString().split('T')[0],
-        created_by: createdBy || {},
-    });
-
-    const [isSubmitting, setIsSubmitting] = useState(false);
-
-    const handleChange = (e) => {
-        const { name, value, type, checked } = e.target;
-        setWebsiteData({
-            ...websiteData,
-            [name]: type === 'checkbox' ? checked : value,
-        });
-    };
-
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setIsSubmitting(true);
-        try {
-            await onSubmit(websiteData);
-        } catch (error) {
-            console.error('Error submitting website:', error);
-        } finally {
-            setIsSubmitting(false);
-        }
-    };
-
-    return (
-        <Box as="form" onSubmit={handleSubmit}>
-            <VStack spacing={3}>
-                <FormControl>
-                    <FormLabel fontSize="xs">Website URL</FormLabel>
-                    <Input
-                        size="sm"
-                        name="url"
-                        value={websiteData.url}
-                        onChange={handleChange}
-                        required
-                    />
-                </FormControl>
-
-                <Grid templateColumns="repeat(2, 1fr)" gap={3} width="full">
-                    <FormControl>
-                        <FormLabel fontSize="xs">Website Name</FormLabel>
-                        <Input
-                            size="sm"
-                            name="name"
-                            value={websiteData.name}
-                            onChange={handleChange}
-                            required
-                        />
-                    </FormControl>
-
-                    <FormControl>
-                        <FormLabel fontSize="xs">Depreciation Date</FormLabel>
-                        <Input
-                            size="sm"
-                            type="date"
-                            name="depreciated_date"
-                            value={websiteData.depreciated_date}
-                            onChange={handleChange}
-                        />
-                    </FormControl>
-                </Grid>
-
-                <FormControl>
-                    <FormLabel fontSize="xs">Description</FormLabel>
-                    <Textarea
-                        size="sm"
-                        name="description"
-                        value={websiteData.description}
-                        onChange={handleChange}
-                        rows={2}
-                    />
-                </FormControl>
-
-                {/* Toggle switches in compact grid */}
-                <Grid templateColumns="repeat(2, 1fr)" gap={3} width="full">
-                    <FormControl display="flex" alignItems="center">
-                        <FormLabel fontSize="xs" mb="0" flex="1">404/Dead Link</FormLabel>
-                        <Switch
-                            size="sm"
-                            name="no_longer_exists"
-                            isChecked={websiteData.no_longer_exists}
-                            onChange={handleChange}
-                        />
-                    </FormControl>
-
-                    <FormControl display="flex" alignItems="center">
-                        <FormLabel fontSize="xs" mb="0" flex="1">Include in Report</FormLabel>
-                        <Switch
-                            size="sm"
-                            name="include_in_report"
-                            isChecked={websiteData.include_in_report}
-                            onChange={handleChange}
-                        />
-                    </FormControl>
-
-                    <FormControl display="flex" alignItems="center">
-                        <FormLabel fontSize="xs" mb="0" flex="1">Deprecated</FormLabel>
-                        <Switch
-                            size="sm"
-                            name="depreciated"
-                            isChecked={websiteData.depreciated}
-                            onChange={handleChange}
-                        />
-                    </FormControl>
-                </Grid>
-            </VStack>
-
-            {/* Action buttons */}
-            <HStack mt={4} spacing={2}>
-                <Button
-                    type="submit"
-                    size="xs"
-                    colorScheme="teal"
-                    isLoading={isSubmitting}
-                    loadingText={isNewWebsite ? 'Submitting...' : 'Updating...'}
-                >
-                    {isNewWebsite ? 'Submit' : 'Update'}
-                </Button>
-                {onCancel && (
-                    <Button
-                        size="xs"
-                        variant="outline"
-                        onClick={onCancel}
-                        isDisabled={isSubmitting}
-                    >
-                        Cancel
-                    </Button>
-                )}
-            </HStack>
         </Box>
     );
 }

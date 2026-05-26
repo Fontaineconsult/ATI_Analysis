@@ -201,6 +201,41 @@ export const fetchCampuses = async () => {
     }
 }
 
+export const fetchAllDocuments = async () => {
+    try {
+        const response = await axios.get(`${process.env.REACT_APP_API_URL}/documents/documents`);
+        if (response.status === 200) return response.data;
+        throw new Error(`Failed to fetch documents: ${response.data?.error}`);
+    } catch (error) {
+        console.error('Error fetching documents:', error.message);
+        throw error;
+    }
+};
+
+export const fetchAllWebpages = async () => {
+    try {
+        const response = await axios.get(`${process.env.REACT_APP_API_URL}/documents/webpages`);
+        if (response.status === 200) return response.data;
+        throw new Error(`Failed to fetch webpages: ${response.data?.error}`);
+    } catch (error) {
+        console.error('Error fetching webpages:', error.message);
+        throw error;
+    }
+};
+
+export const fetchAllGovernance = async () => {
+    try {
+        const response = await axios.get(`${process.env.REACT_APP_API_URL}/governance`);
+        if (response.status === 200) {
+            return response.data;
+        }
+        throw new Error(`Failed to fetch governance: ${response.data?.error}`);
+    } catch (error) {
+        console.error('Error fetching governance:', error.message);
+        throw error;
+    }
+};
+
 export const fetchCampusPlan = async (campusAbbrev, academicYear) => {
     try {
         const response = await axios.get(

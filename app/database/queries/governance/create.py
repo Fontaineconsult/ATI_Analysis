@@ -1,171 +1,83 @@
 #
 # GOVERNANCE CREATE QUERIES
 #
-from app.database.graph_schema import *
 from datetime import date, datetime
 
-from app.endpoints.data_api.errors.custom_exceptions import CrudError
+from app.database.graph_schema import Law, Case, Directive, ExternalPolicy, Memo, Guideline
 
-def add_law(title: str,
-            description: str,
-            effective_date: date,
-            last_updated: date,
-            relevant_sections: str,
-            legislative_authority: str) -> bool:
+from app.endpoints.data_api.errors.custom_exceptions import CrudError, ValidationError
+
+# DateProperty fields across all governance types. ISO-date strings from the
+# frontend's <input type="date"> need conversion before neomodel will accept
+# them.
+_DATE_FIELDS = {"effective_date", "last_updated", "authored_date"}
+
+
+def _coerce_date(value):
+    """Accept date, datetime, or ISO-date string; return a date."""
+    if isinstance(value, date) and not isinstance(value, datetime):
+        return value
+    if isinstance(value, datetime):
+        return value.date()
+    if isinstance(value, str):
+        return date.fromisoformat(value)
+    raise ValidationError(f"Expected ISO date string, got {type(value).__name__}.")
+
+# Fields each governance type accepts beyond title/description. Any extra keys
+# on the payload are silently dropped so the API stays forgiving when the
+# frontend sends a superset (the form is type-aware).
+_GOVERNANCE_FIELD_WHITELIST = {
+    "law": {"effective_date", "last_updated", "relevant_sections", "legislative_authority"},
+    "case": {"effective_date", "ruling", "legislative_authority"},
+    "directive": {"effective_date", "last_updated", "source_institution"},
+    "external_policy": {"effective_date", "last_updated"},
+    "memo": {"authored_date"},
+    "guideline": {"effective_date", "last_updated"},
+}
+
+_GOVERNANCE_TYPE_TO_CLASS = {
+    "law": Law,
+    "case": Case,
+    "directive": Directive,
+    "external_policy": ExternalPolicy,
+    "memo": Memo,
+    "guideline": Guideline,
+}
+
+
+def create_governance_item(governance_type: str, data: dict):
     """
-    Adds a law node to the graph
-    :param title: Title of the law
-    :param description: Description of the law
-    :param effective_date: Effective date of the law
-    :param last_updated: Last updated date of the law
-    :param relevant_sections: Relevant sections of the law
-    :param legislative_authority: Legislative authority of the law
-    :return: True if the law node is added successfully, False otherwise
+    Single create dispatcher used by the /governance endpoint. The endpoint
+    receives one POST shape regardless of type; this function builds the
+    right node class with only that type's whitelisted fields.
+
+    All governance types share title (required, unique-indexed) and
+    description; remaining fields are type-specific (see whitelist above).
+
+    Returns the saved neomodel instance.
     """
+    cls = _GOVERNANCE_TYPE_TO_CLASS.get(governance_type)
+    if cls is None:
+        raise ValidationError(f"Unknown governance type '{governance_type}'.")
+
+    title = (data or {}).get("title")
+    if not title or not str(title).strip():
+        raise ValidationError("Title is required.")
+
+    props = {"title": title.strip()}
+    if data.get("description"):
+        props["description"] = data["description"]
+
+    for field in _GOVERNANCE_FIELD_WHITELIST[governance_type]:
+        if field in data and data[field] not in (None, ""):
+            value = data[field]
+            if field in _DATE_FIELDS:
+                value = _coerce_date(value)
+            props[field] = value
+
     try:
-        new_law = Law(
-            title=title,
-            description=description,
-            effective_date=effective_date,
-            last_updated=last_updated,
-            relevant_sections=relevant_sections,
-            legislative_authority=legislative_authority
-        )
-        new_law.save()
-        print("Added law")
-        return True
+        node = cls(**props)
+        node.save()
+        return node
     except Exception as e:
-        raise CrudError(f"Failed to add law: {e}")
-
-
-def add_policy(title: str,
-               description: str,
-               effective_date: str,
-               last_updated: str) -> bool:
-    """
-    Adds a policy node to the graph
-    :param title: Title of the policy
-    :param description: Description of the policy
-    :param effective_date: Effective date of the policy
-    :param last_updated: Last updated date of the policy
-    :return: True if the policy node is added successfully, False otherwise
-    """
-    try:
-        new_policy = Policy(
-            title=title,
-            description=description,
-            effective_date=effective_date,
-            last_updated=last_updated
-        )
-        new_policy.save()
-        print("Added policy")
-        return True
-    except Exception as e:
-        raise CrudError(f"Failed to add policy: {e}")
-
-
-def add_directive(title: str,
-                  description: str,
-                  effective_date: str,
-                  last_updated: str,
-                  source_institution: str) -> bool:
-    """
-    Adds a directive node to the graph
-    :param title: Title of the directive
-    :param description: Description of the directive
-    :param effective_date: Effective date of the directive
-    :param last_updated: Last updated date of the directive
-    :param source_institution: Source institution of the directive
-    :return: True if the directive node is added successfully, False otherwise
-    """
-    try:
-        new_directive = Directive(
-            title=title,
-            description=description,
-            effective_date=effective_date,
-            last_updated=last_updated,
-            source_institution=source_institution
-        )
-        new_directive.save()
-        print("Added directive")
-        return True
-    except Exception as e:
-        raise CrudError(f"Failed to add directive: {e}")
-
-
-def add_case(title: str,
-             description: str,
-             effective_date: str,
-             ruling: str,
-             legislative_authority: str) -> bool:
-    """
-    Adds a case node to the graph
-    :param title: Title of the case
-    :param description: Description of the case
-    :param effective_date: Effective date of the case
-    :param ruling: Ruling of the case
-    :param legislative_authority: Legislative authority of the case
-    :return: True if the case node is added successfully, False otherwise
-    """
-    try:
-        new_case = Case(
-            title=title,
-            description=description,
-            effective_date=effective_date,
-            ruling=ruling,
-            legislative_authority=legislative_authority
-        )
-        new_case.save()
-        print("Added case")
-        return True
-    except Exception as e:
-        raise CrudError(f"Failed to add case: {e}")
-
-
-def add_memo(title: str,
-             description: str,
-             authored_date: str) -> bool:
-    """
-    Adds a memo node to the graph
-    :param title: Title of the memo
-    :param description: Description of the memo
-    :param authored_date: Authored date of the memo
-    :return: True if the memo node is added successfully, False otherwise
-    """
-    try:
-        new_memo = Memo(
-            title=title,
-            description=description,
-            authored_date=authored_date
-        )
-        new_memo.save()
-        print("Added memo")
-        return True
-    except Exception as e:
-        raise CrudError(f"Failed to add memo: {e}")
-
-
-def add_guideline(title: str,
-                  description: str,
-                  effective_date: str,
-                  last_updated: str) -> bool:
-    """
-    Adds a guideline node to the graph
-    :param title: Title of the guideline
-    :param description: Description of the guideline
-    :param effective_date: Effective date of the guideline
-    :param last_updated: Last updated date of the guideline
-    :return: True if the guideline node is added successfully, False otherwise
-    """
-    try:
-        new_guideline = Guideline(
-            title=title,
-            description=description,
-            effective_date=effective_date,
-            last_updated=last_updated
-        )
-        new_guideline.save()
-        print("Added guideline")
-        return True
-    except Exception as e:
-        raise CrudError(f"Failed to add guideline: {e}")
+        raise CrudError(f"Failed to create {cls.__name__}: {e}")

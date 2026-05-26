@@ -101,6 +101,27 @@ export const deleteAccomplishment = async (uniqueId) => {
 };
 
 /**
+ * Delete a governance node (Law / Case / Directive / ExternalPolicy / Memo / Guideline).
+ * @param {string} governanceType - one of "law" | "case" | "directive" | "external_policy" | "memo" | "guideline"
+ * @param {string} uniqueId       - unique_id of the governance node
+ */
+export const deleteGovernance = async (governanceType, uniqueId) => {
+    try {
+        const response = await fetch(`${API_URL}/governance`, {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ type: governanceType, unique_id: uniqueId }),
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Failed to delete governance item');
+        return data;
+    } catch (error) {
+        console.error('Error deleting governance item:', error);
+        throw error;
+    }
+};
+
+/**
  * Unassign a person as implementor from a Year Success Evidence
  * @param {string} personUniqueId - The unique ID of the person
  * @param {string} yearSuccessEvidence - The YSE identifier

@@ -1,3 +1,5 @@
+import traceback
+
 from flask import jsonify, request
 from flask.views import MethodView
 
@@ -41,8 +43,10 @@ class DocumentsAPI(MethodView):
         except NotFoundError as e:
             return make_response(status='error', error=str(e)), 404
         except CrudError as e:
+            traceback.print_exc()
             return make_response(status='error', error=str(e)), 500
         except Exception as e:
+            traceback.print_exc()
             return make_response(status='error', error=f"An unexpected error occurred: {str(e)}"), 500
 
     def post(self):
