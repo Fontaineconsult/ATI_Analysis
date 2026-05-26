@@ -415,7 +415,7 @@ class Plan(StructuredNode):
     completion_notes = StringProperty()
     plan_status = StringProperty()
     progress_updates = RelationshipTo("Note", "progress_documented_by")
-
+    abandoned_year = RelationshipTo("AcademicYear", "abandoned_in_year")
     completed_year = RelationshipTo("AcademicYear", "completed_in_year")
     supporting_documents = RelationshipTo("Document", "is_documented_by")
     supporting_webpages = RelationshipTo("Webpage", "is_documented_by")

@@ -114,7 +114,20 @@ _PLANS_FOR_WGP_QUERY = """
                   <-[:responsible_for]-(:ATIWorkingGroup {name: $wg_name})
     OPTIONAL MATCH (p)-[:in_academic_year]->(planYear:AcademicYear)
     OPTIONAL MATCH (p)-[:completed_in_year]->(completedYear:AcademicYear)
-    RETURN DISTINCT p, planYear.name AS plan_year, completedYear.name AS completed_year
+    OPTIONAL MATCH (p)-[:abandoned_in_year]->(abandonedYear:AcademicYear)
+    // Hide plans completed in another year, and plans abandoned in another year.
+    // A plan completed/abandoned in the *current* selected year remains visible;
+    // active plans (no completed/abandoned year set) also remain visible.
+    // Note: `p.abandoned = true` without an :abandoned_in_year edge has no
+    // year info — we treat that as "not current year" and hide it.
+    WITH p, planYear, completedYear, abandonedYear
+    WHERE (completedYear IS NULL OR completedYear.name = $year_name)
+      AND (NOT coalesce(p.abandoned, false)
+           OR (abandonedYear IS NOT NULL AND abandonedYear.name = $year_name))
+    RETURN DISTINCT p,
+                    planYear.name      AS plan_year,
+                    completedYear.name AS completed_year,
+                    abandonedYear.name AS abandoned_year
 """
 
 
@@ -126,11 +139,12 @@ def _fetch_plans_for_working_group(wg_name: str, campus_abbrev: str, year_name: 
         {"wg_name": wg_name, "campus_abbrev": campus_abbrev, "year_name": year_name},
     )
     plans = []
-    for plan_node, plan_year, completed_year in results:
+    for plan_node, plan_year, completed_year, abandoned_year in results:
         data = Plan.inflate(plan_node).serialize()
         # Created/target year (per the policy, also the intended completion year).
         data["academic_year"] = plan_year
         data["completed_year"] = completed_year
+        data["abandoned_year"] = abandoned_year
         plans.append(data)
     return plans
 
