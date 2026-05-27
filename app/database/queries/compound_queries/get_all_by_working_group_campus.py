@@ -365,9 +365,25 @@ def fetch_evidence_for_working_group(working_group, academic_year, campus_abbrev
            progress_notes: [pn IN goalPlanProgressNotes WHERE pn.note IS NOT NULL]
          } AS planWithNotes
 
-    // Collect accomplishments and plans per goal
+    // Collect accomplishments and plans per goal.
+    // Accomplishments reach a goal via two paths in this graph:
+    //   1. Direct  — (goal)<-[:advances_goal]-(accomplishment)
+    //   2. Indirect — (goal)-[:supported_by]->SI<-[:tracks]-YSE<-[:furthers_yse]-Plan<-[:achieved_through]-(accomplishment)
+    // Existing data overwhelmingly uses path 2 (accomplishments from
+    // completed plans). The upstream OPTIONAL MATCH supplies path-1 hits
+    // as the `accomplishment` variable; the pattern comprehension below
+    // gathers path-2 hits. apoc.coll.toSet dedupes when both paths reach
+    // the same accomplishment.
     WITH wg.name AS workingGroupName, goal, indicators,
-         collect(DISTINCT accomplishment) AS accomplishments,
+         apoc.coll.toSet(
+           [a IN collect(DISTINCT accomplishment) WHERE a IS NOT NULL] +
+           [(goal)-[:supported_by]->(:SuccessIndicator)
+                  <-[:tracks]-(:YearSuccessEvidence)
+                  <-[:furthers_yse]-(:Plan)
+                  <-[:achieved_through]-(acc:Accomplishment)
+                  -[:in_academic_year]->(:AcademicYear {name: $academic_year})
+              | acc]
+         ) AS accomplishments,
          collect(DISTINCT planWithNotes.plan) AS plans,
          collect(DISTINCT CASE WHEN planWithNotes.plan IS NOT NULL THEN planWithNotes ELSE NULL END) AS plansWithProgressNotes
 

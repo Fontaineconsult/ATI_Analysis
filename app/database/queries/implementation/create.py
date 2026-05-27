@@ -344,6 +344,23 @@ def add_plan(plan_data: dict) -> bool:
             abandoned_year = AcademicYear.nodes.get(name=abandoned_year_name)
             plan.abandoned_year.connect(abandoned_year)
 
+        # If this plan was created already-Completed, mirror it into an
+        # Accomplishment immediately so the Accomplishments tab shows it
+        # without needing a follow-up edit. Mirrors the update_plan flow.
+        if plan_status == "Completed":
+            try:
+                from app.database.queries.implementation.create_accomplishments_from_plans import (
+                    create_single_accomplishment_from_plan,
+                )
+                result = create_single_accomplishment_from_plan(
+                    plan_id=plan.unique_id,
+                    accomplishment_name=None,
+                    accomplishment_description=completion_notes,
+                )
+                print(f"Accomplishment '{result['accomplishment_name']}' auto-created from new completed plan '{name}'")
+            except Exception as e:
+                print(f"Warning: Failed to create accomplishment automatically: {e}")
+
         print(f"Plan '{name}' added successfully")
         return True
 

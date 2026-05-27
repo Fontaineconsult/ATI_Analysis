@@ -9,6 +9,7 @@ from app.database.graph_schema import *
 from app.database.class_factory import implementation_classes, documentation_classes, documentation_relationships
 from app.database.queries.implementation.read import get_goal_node
 from app.endpoints.data_api.errors.custom_exceptions import NotFoundError, ValidationError, CrudError
+from neomodel import db
 
 
 def assign_documentation_to_implementation(
@@ -368,6 +369,11 @@ def update_plan(data: dict) -> bool:
 
         plan = Plan.nodes.get(unique_id=unique_id)
 
+        # Capture pre-mutation status so we can detect Completed transitions
+        # AFTER the assignments below — needed for the accomplishment
+        # auto-create / auto-delete branch later in this function.
+        previous_status = plan.plan_status
+
         # Update plan properties
         plan.description = data.get('description', plan.description)
         plan.is_key_plan = data.get('is_key_plan', plan.is_key_plan)
@@ -407,6 +413,48 @@ def update_plan(data: dict) -> bool:
             if abandoned_year:
                 plan.abandoned_year.disconnect_all()
                 plan.abandoned_year.connect(abandoned_year)
+
+        # Accomplishment auto-create / auto-delete based on Completed transitions.
+        # When the plan newly becomes Completed, mirror it into an
+        # Accomplishment via :achieved_through (idempotent — skip if one
+        # already exists). When it leaves Completed, drop the linked
+        # accomplishment so the records stay in sync.
+        new_plan_status = data.get('plan_status')
+        if new_plan_status == "Completed" and previous_status != "Completed":
+            existing_acc, _ = db.cypher_query(
+                """
+                MATCH (p:Plan {unique_id: $plan_id})<-[:achieved_through]-(a:Accomplishment)
+                RETURN a.unique_id
+                """,
+                {"plan_id": plan.unique_id},
+            )
+            if not existing_acc:
+                try:
+                    from app.database.queries.implementation.create_accomplishments_from_plans import (
+                        create_single_accomplishment_from_plan,
+                    )
+                    completion_notes = data.get('completion_notes') or plan.completion_notes
+                    result = create_single_accomplishment_from_plan(
+                        plan_id=plan.unique_id,
+                        accomplishment_name=None,
+                        accomplishment_description=completion_notes,
+                    )
+                    print(f"Accomplishment '{result['accomplishment_name']}' auto-created from completed plan '{plan.name}'")
+                except Exception as e:
+                    # Don't fail the plan update if the accomplishment side errors.
+                    print(f"Warning: Failed to create accomplishment automatically: {e}")
+        elif new_plan_status is not None and new_plan_status != "Completed" and previous_status == "Completed":
+            try:
+                db.cypher_query(
+                    """
+                    MATCH (p:Plan {unique_id: $plan_id})<-[:achieved_through]-(a:Accomplishment)
+                    DETACH DELETE a
+                    """,
+                    {"plan_id": plan.unique_id},
+                )
+                print(f"Deleted accomplishment linked to plan '{plan.name}' (status changed away from Completed)")
+            except Exception as e:
+                print(f"Warning: Failed to delete linked accomplishment: {e}")
 
         # Update furthered goal relationship
         furthered_goal_number = data.get('furthered_goal_number')
