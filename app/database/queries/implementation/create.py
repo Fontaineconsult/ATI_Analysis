@@ -281,7 +281,9 @@ def add_plan(plan_data: dict) -> bool:
         plan_status = plan_data.get('plan_status', None)
         abandoned = plan_data.get('abandoned', False)
         abandoned_notes = plan_data.get('abandoned_notes', None)
+        completion_notes = plan_data.get('completion_notes', None)
         completed_year_name = plan_data.get('completed_year_name', None)
+        abandoned_year_name = plan_data.get('abandoned_year_name', None)
         furthered_goal_number = plan_data.get('furthered_goal_number', None)
         furthered_working_group = plan_data.get('furthered_working_group', None)
         furthered_yse_identifier = plan_data.get('furthered_yse_identifier', None)
@@ -315,7 +317,8 @@ def add_plan(plan_data: dict) -> bool:
             is_campus_plan=is_campus_plan,
             plan_status=plan_status,              # Optional plan status
             abandoned=abandoned,                 # Optional abandoned status
-            abandoned_notes=abandoned_notes       # Optional abandoned notes
+            abandoned_notes=abandoned_notes,      # Optional abandoned notes
+            completion_notes=completion_notes,    # Optional completion notes
         ).save()
 
         # Connect the plan to the academic year
@@ -333,6 +336,13 @@ def add_plan(plan_data: dict) -> bool:
         if completed_year_name:
             completed_year = AcademicYear.nodes.get(name=completed_year_name)
             plan.completed_year.connect(completed_year)
+
+        # If an abandoned year is specified, connect it. Mirrors the
+        # completed_year handling: caller decides when to attach (typically the
+        # current academic year when abandoned flips to true).
+        if abandoned_year_name:
+            abandoned_year = AcademicYear.nodes.get(name=abandoned_year_name)
+            plan.abandoned_year.connect(abandoned_year)
 
         print(f"Plan '{name}' added successfully")
         return True

@@ -35,6 +35,7 @@ import { FaPlus } from 'react-icons/fa';
 import { DataContext } from '../../context/DataContext';
 import { SettingsContext } from '../../context/SettingsContext';
 import PlansTable from './PlansTable';
+import PlansSplitView from './PlansSplitView';
 import AccomplishmentsTable from './AccomplishmentsTable';
 import { createPlan } from '../../services/api/post';
 import { workingGroupWebSafe } from "../../services/utils/tools";
@@ -132,7 +133,18 @@ function PlansAccomplishmentsManager() {
 
         setIsSubmitting(true);
         try {
-            await createPlan(newPlanData);
+            // If a plan is created already-abandoned or already-completed, stamp
+            // the current academic year so it shows up under the right year's
+            // bucket. The backend connects abandoned_year / completed_year
+            // edges when these *_year_name fields are present.
+            const createPayload = { ...newPlanData };
+            if (newPlanData.abandoned === true && currentAcademicYear) {
+                createPayload.abandoned_year_name = currentAcademicYear;
+            }
+            if (newPlanData.plan_status === 'Completed' && currentAcademicYear) {
+                createPayload.completed_year_name = currentAcademicYear;
+            }
+            await createPlan(createPayload);
             toast({
                 title: "Plan created successfully",
                 status: "success",
@@ -186,6 +198,8 @@ function PlansAccomplishmentsManager() {
                             if (planData.plan) {
                                 plans.push({
                                     ...planData.plan.properties,
+                                    completed_year: planData.completed_year || null,
+                                    abandoned_year: planData.abandoned_year || null,
                                     progress_notes: planData.progress_notes || [],
                                     workingGroup: workingGroupWebSafe(wg),
                                     goalNumber: goal.goal?.properties?.goal_number,
@@ -221,6 +235,8 @@ function PlansAccomplishmentsManager() {
                                             if (planData.plan) {
                                                 plans.push({
                                                     ...planData.plan.properties,
+                                                    completed_year: planData.completed_year || null,
+                                                    abandoned_year: planData.abandoned_year || null,
                                                     progress_notes: planData.progress_notes || [],
                                                     workingGroup: workingGroupWebSafe(wg),
                                                     goalNumber: goal.goal?.properties?.goal_number,
@@ -260,8 +276,21 @@ function PlansAccomplishmentsManager() {
             index === self.findIndex((p) => p.unique_id === plan.unique_id)
         );
 
-        // Filter out abandoned plans unless showAbandoned is true
-        return uniquePlans.filter(plan => showAbandoned || !plan.abandoned);
+        // Year-scoped visibility. Hide plans that are completed or abandoned
+        // in a year other than the current selected year — they belong to
+        // some other year's books. Active plans (no completed/abandoned
+        // state) always pass through. The `showAbandoned` toggle is now an
+        // override that disables this hiding (legacy behavior preserved).
+        if (showAbandoned) return uniquePlans;
+        return uniquePlans.filter((plan) => {
+            // Completed in another year → hide
+            if (plan.completed_year && plan.completed_year !== currentAcademicYear) return false;
+            // Abandoned (with year) in another year → hide
+            if (plan.abandoned_year && plan.abandoned_year !== currentAcademicYear) return false;
+            // Legacy: abandoned=true with no abandoned_year edge → no year info, hide
+            if (plan.abandoned && !plan.abandoned_year) return false;
+            return true;
+        });
     };
 
     // Extract all accomplishments from data
@@ -408,7 +437,7 @@ function PlansAccomplishmentsManager() {
 
                         <TabPanels>
                             <TabPanel p={0}>
-                                <PlansTable
+                                <PlansSplitView
                                     plans={plans}
                                     onUpdate={loadSingleWorkingGroupData}
                                     initialPlanId={initialPlanId}

@@ -12,16 +12,12 @@ import {
     useToast,
     Text,
     Box,
-    Grid,
-    GridItem,
-    Heading,
-    Badge
 } from '@chakra-ui/react';
 import { updatePlan } from '../../services/api/put';
-import { DataContext } from '../../context/DataContext';
+import { SettingsContext } from '../../context/SettingsContext';
 
 function PlanEditForm({ plan, onClose, onSuccess }) {
-    const { data } = useContext(DataContext);
+    const { currentAcademicYear } = useContext(SettingsContext);
     const [formData, setFormData] = useState({
         unique_id: plan.unique_id,
         name: plan.name,
@@ -30,66 +26,39 @@ function PlanEditForm({ plan, onClose, onSuccess }) {
         is_key_plan: plan.is_key_plan || false,
         is_campus_plan: plan.is_campus_plan || false,
         abandoned: plan.abandoned || false,
-        abandoned_notes: plan.abandoned_notes || ''
+        abandoned_notes: plan.abandoned_notes || '',
+        completion_notes: plan.completion_notes || '',
     });
     const [isSubmitting, setIsSubmitting] = useState(false);
     const toast = useToast();
 
-    // Handle status change - automatically update abandoned field
+    // Handle status change - automatically update abandoned field and clear
+    // any stale notes when the related state goes away.
     const handleStatusChange = (newStatus) => {
         if (newStatus === 'Abandoned') {
             setFormData({
                 ...formData,
                 plan_status: newStatus,
-                abandoned: true
+                abandoned: true,
+                completion_notes: '' // Clear stale completion notes when abandoning
+            });
+        } else if (newStatus === 'Completed') {
+            setFormData({
+                ...formData,
+                plan_status: newStatus,
+                abandoned: false,
+                abandoned_notes: '' // Clear stale abandonment notes when completing
             });
         } else {
             setFormData({
                 ...formData,
                 plan_status: newStatus,
                 abandoned: false,
-                abandoned_notes: '' // Clear notes when not abandoned
+                abandoned_notes: '',
+                completion_notes: ''
             });
         }
     };
-
-    // Extract ONLY year success evidences that contain THIS plan
-    const getRelatedYearSuccessEvidences = () => {
-        const evidences = [];
-        const wg = plan.workingGroup;
-
-        if (data[wg]?.goals) {
-            data[wg].goals.forEach(goal => {
-                if (goal.indicators) {
-                    goal.indicators.forEach(indicatorObj => {
-                        if (indicatorObj.evidences) {
-                            indicatorObj.evidences.forEach(evidence => {
-                                const planExists = evidence.plans?.some(p =>
-                                    p.properties?.unique_id === plan.unique_id
-                                );
-
-                                if (planExists && evidence.evidence?.properties) {
-                                    evidences.push({
-                                        yearIdentifier: evidence.evidence.properties.year_identifier,
-                                        uniqueId: evidence.evidence.properties.unique_id,
-                                        indicatorKey: indicatorObj.indicator?.properties?.composite_key,
-                                        indicatorDescription: indicatorObj.indicator?.properties?.success_indicator,
-                                        goalNumber: goal.goal?.properties?.goal_number,
-                                        statusLevel: evidence.statusLevel?.properties?.status_level,
-                                        planCount: evidence.plans?.length || 0
-                                    });
-                                }
-                            });
-                        }
-                    });
-                }
-            });
-        }
-
-        return evidences.sort((a, b) => b.yearIdentifier.localeCompare(a.yearIdentifier));
-    };
-
-    const relatedEvidences = getRelatedYearSuccessEvidences();
 
     const handleSubmit = async () => {
         // Validate abandonment notes if status is abandoned
@@ -105,9 +74,35 @@ function PlanEditForm({ plan, onClose, onSuccess }) {
             return;
         }
 
+        // Validate completion notes when status is Completed
+        if (formData.plan_status === 'Completed' && !formData.completion_notes?.trim()) {
+            toast({
+                title: "Completion notes required",
+                description: "Please describe what was completed and any outcomes",
+                status: "warning",
+                duration: 3000,
+                isClosable: true,
+                position: "top-right"
+            });
+            return;
+        }
+
         setIsSubmitting(true);
         try {
-            await updatePlan(formData);
+            // Stamp the current academic year whenever the desired state is
+            // active (abandoned / completed) AND no year edge exists on the
+            // persisted plan. Covers both the flip-on transition and the
+            // backfill case for already-completed/abandoned plans created
+            // before year tracking existed. If a year edge already exists,
+            // we leave it alone — re-saves can't rewrite history.
+            const updatePayload = { ...formData };
+            if (formData.abandoned === true && !plan.abandoned_year && currentAcademicYear) {
+                updatePayload.abandoned_year_name = currentAcademicYear;
+            }
+            if (formData.plan_status === 'Completed' && !plan.completed_year && currentAcademicYear) {
+                updatePayload.completed_year_name = currentAcademicYear;
+            }
+            await updatePlan(updatePayload);
             toast({
                 title: "Plan updated successfully",
                 status: "success",
@@ -130,23 +125,9 @@ function PlanEditForm({ plan, onClose, onSuccess }) {
         }
     };
 
-    const getStatusColor = (status) => {
-        switch(status) {
-            case 'Optimized': return 'green';
-            case 'Managed': return 'blue';
-            case 'Established': return 'cyan';
-            case 'Defined': return 'yellow';
-            case 'Initiated': return 'orange';
-            case 'Not Started': return 'red';
-            default: return 'gray';
-        }
-    };
-
     return (
-        <Grid templateColumns="2fr 1fr" gap={3}>
-            {/* Left Column - Form */}
-            <GridItem>
-                <VStack spacing={2} align="stretch">
+        <Box>
+            <VStack spacing={2} align="stretch">
                     <FormControl>
                         <FormLabel fontSize="sm" color="gray.800" fontWeight="bold" mb={1}>
                             Name
@@ -244,6 +225,34 @@ function PlanEditForm({ plan, onClose, onSuccess }) {
                         </FormControl>
                     )}
 
+                    {formData.plan_status === 'Completed' && (
+                        <FormControl isRequired>
+                            <FormLabel fontSize="sm" color="green.700" fontWeight="bold" mb={1}>
+                                Completion Notes <Text as="span" color="green.500">*</Text>
+                            </FormLabel>
+                            <Textarea
+                                size="sm"
+                                borderColor="green.300"
+                                bg="green.50"
+                                color="gray.800"
+                                _placeholder={{ color: "green.400" }}
+                                _hover={{ borderColor: "green.400", bg: "green.100" }}
+                                _focus={{
+                                    borderColor: "green.500",
+                                    boxShadow: "0 0 0 1px green.500",
+                                    bg: "green.50"
+                                }}
+                                value={formData.completion_notes}
+                                onChange={(e) => setFormData({...formData, completion_notes: e.target.value})}
+                                rows={2}
+                                placeholder="What was completed? Any outcomes or follow-ups?"
+                            />
+                            <Text fontSize="xs" color="green.600" mt={1}>
+                                Required when marking a plan as completed
+                            </Text>
+                        </FormControl>
+                    )}
+
                     <HStack spacing={3}>
                         <FormControl display="flex" alignItems="center">
                             <FormLabel fontSize="sm" color="gray.800" fontWeight="bold" mb="0" mr={2}>
@@ -293,94 +302,8 @@ function PlanEditForm({ plan, onClose, onSuccess }) {
                             Save Changes
                         </Button>
                     </HStack>
-                </VStack>
-            </GridItem>
-
-            {/* Right Column - Related Year Success Evidences */}
-            <GridItem>
-                <Box
-                    borderWidth="1px"
-                    borderColor="gray.300"
-                    borderRadius="lg"
-                    p={3}
-                    bg="white"
-                    maxHeight="50vh"
-                    overflowY="auto"
-                    boxShadow="sm"
-                >
-                    <Heading
-                        size="sm"
-                        mb={2}
-                        color="gray.800"
-                        fontWeight="bold"
-                        position="sticky"
-                        top={-3}
-                        bg="white"
-                        pb={1}
-                        borderBottomWidth="1px"
-                        borderBottomColor="gray.200"
-                    >
-                        Associated Year Success Evidence
-                    </Heading>
-
-                    {relatedEvidences.length > 0 ? (
-                        <VStack spacing={2} align="stretch">
-                            {relatedEvidences.map((evidence, index) => (
-                                <Box
-                                    key={evidence.uniqueId}
-                                    p={2}
-                                    borderRadius="lg"
-                                    borderWidth="1px"
-                                    borderColor={index === 0 ? "teal.400" : "gray.300"}
-                                    bg={index === 0 ? "teal.50" : "white"}
-                                    boxShadow={index === 0 ? "sm" : "none"}
-                                    transition="all 0.2s"
-                                    _hover={{ boxShadow: "sm", borderColor: index === 0 ? "teal.500" : "gray.400" }}
-                                >
-                                    <HStack justify="space-between" mb={1}>
-                                        <Text fontWeight="bold" color={index === 0 ? "teal.800" : "gray.800"} fontSize="sm">
-                                            {evidence.yearIdentifier}
-                                        </Text>
-                                        <HStack spacing={1}>
-                                            {index === 0 && (
-                                                <Badge colorScheme="teal" fontSize="xs">
-                                                    PRIMARY
-                                                </Badge>
-                                            )}
-                                            {evidence.statusLevel && (
-                                                <Badge colorScheme={getStatusColor(evidence.statusLevel)} fontSize="xs">
-                                                    {evidence.statusLevel}
-                                                </Badge>
-                                            )}
-                                        </HStack>
-                                    </HStack>
-                                    <Text fontWeight="semibold" color="gray.700" fontSize="sm">
-                                        {evidence.indicatorKey}
-                                    </Text>
-                                    <Text color="gray.600" fontSize="xs" mt={1}>
-                                        {evidence.indicatorDescription}
-                                    </Text>
-                                    <HStack mt={2} justify="space-between">
-                                        <Text color="gray.500" fontSize="xs">
-                                            Goal {evidence.goalNumber}
-                                        </Text>
-                                        {evidence.planCount > 1 && (
-                                            <Text color="purple.600" fontSize="xs" fontWeight="semibold">
-                                                {evidence.planCount} plans total
-                                            </Text>
-                                        )}
-                                    </HStack>
-                                </Box>
-                            ))}
-                        </VStack>
-                    ) : (
-                        <Text fontSize="sm" color="gray.700" textAlign="center" mt={4}>
-                            This plan is not associated with any Year Success Evidence
-                        </Text>
-                    )}
-                </Box>
-            </GridItem>
-        </Grid>
+            </VStack>
+        </Box>
     );
 }
 

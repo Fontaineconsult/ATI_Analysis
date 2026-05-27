@@ -177,10 +177,14 @@ def fetch_evidence_for_working_group(working_group, academic_year, campus_abbrev
            created_by: planNoteCreator
          }) AS progressNotes
 
-    // Filter out null progress notes and aggregate plans
+    // Filter out null progress notes and aggregate plans.
+    // Project completed_in_year / abandoned_in_year alongside each plan so the
+    // FE can year-scope visibility without a second round-trip.
     WITH wg, goal, indicator, evidence, evidenceCampus, evidenceNotes, evidenceMessages, evidenceMetrics, statusLevel, adminReviewers, adminReviewNotes, persons,
          collect(DISTINCT {
            plan: evidencePlan,
+           completed_year: head([(evidencePlan)-[:completed_in_year]->(cy:AcademicYear) | cy.name]),
+           abandoned_year: head([(evidencePlan)-[:abandoned_in_year]->(ay:AcademicYear) | ay.name]),
            progress_notes: [pn IN progressNotes WHERE pn.note IS NOT NULL]
          }) AS plansWithNotes
 
@@ -351,10 +355,13 @@ def fetch_evidence_for_working_group(working_group, academic_year, campus_abbrev
            created_by: goalPlanNoteCreator
          }) AS goalPlanProgressNotes
 
-    // Create plan objects with progress notes
+    // Create plan objects with progress notes. Surface completed/abandoned
+    // year alongside so the FE can filter without an extra fetch.
     With wg, goal, indicators, accomplishment,
          {
            plan: plan,
+           completed_year: head([(plan)-[:completed_in_year]->(cy:AcademicYear) | cy.name]),
+           abandoned_year: head([(plan)-[:abandoned_in_year]->(ay:AcademicYear) | ay.name]),
            progress_notes: [pn IN goalPlanProgressNotes WHERE pn.note IS NOT NULL]
          } AS planWithNotes
 

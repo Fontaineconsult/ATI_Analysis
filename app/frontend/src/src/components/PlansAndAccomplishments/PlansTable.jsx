@@ -188,6 +188,34 @@ function PlansTable({ plans, onUpdate, initialPlanId }) {
                                         borderBottomWidth="2px"
                                         borderBottomColor="gray.200"
                                     >
+                                        {(plan.completed_year || plan.abandoned_year) && (
+                                            <HStack spacing={2} mb={3}>
+                                                {plan.completed_year && (
+                                                    <Badge
+                                                        colorScheme="green"
+                                                        variant="outline"
+                                                        fontSize="xs"
+                                                        px={2}
+                                                        py={1}
+                                                        borderRadius="md"
+                                                    >
+                                                        Completed {plan.completed_year}
+                                                    </Badge>
+                                                )}
+                                                {plan.abandoned_year && (
+                                                    <Badge
+                                                        colorScheme="red"
+                                                        variant="outline"
+                                                        fontSize="xs"
+                                                        px={2}
+                                                        py={1}
+                                                        borderRadius="md"
+                                                    >
+                                                        Abandoned {plan.abandoned_year}
+                                                    </Badge>
+                                                )}
+                                            </HStack>
+                                        )}
                                         <Grid templateColumns="2fr 1fr" gap={3}>
                                             <GridItem>
                                                 <PlanEditForm

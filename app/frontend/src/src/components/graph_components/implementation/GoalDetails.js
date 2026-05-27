@@ -17,11 +17,30 @@ import Accomplishment from './Accomplishment';
 import { DataContext } from '../../../context/DataContext';
 import { SettingsContext } from '../../../context/SettingsContext';
 
-function GoalDetails({ plans, accomplishments, indicators, goalNumber }) {
+function GoalDetails({ plans, plansWithProgressNotes, accomplishments, indicators, goalNumber }) {
     const { loadSingleWorkingGroupData } = useContext(DataContext);
     const { currentAcademicYear, currentWorkingGroup } = useContext(SettingsContext);
     const [showNewPlan, setShowNewPlan] = useState(false);
     const [showNewAccomplishment, setShowNewAccomplishment] = useState(false);
+
+    // Look up completed_year / abandoned_year for a plain plan node by
+    // unique_id. The years live on the wrapper objects (plans_with_progress_notes
+    // / evidence.plans_with_notes) that the compound query projects alongside
+    // the bare plan node, so we hand them through to <Plan>.
+    const goalLevelYearsById = React.useMemo(() => {
+        const m = new Map();
+        (plansWithProgressNotes || []).forEach((w) => {
+            const id = w?.plan?.properties?.unique_id;
+            if (id) m.set(id, { completed_year: w.completed_year || null, abandoned_year: w.abandoned_year || null });
+        });
+        return m;
+    }, [plansWithProgressNotes]);
+
+    const yearsFromEvidence = (evidence, planUniqueId) => {
+        const w = (evidence?.plans_with_notes || []).find((wn) => wn?.plan?.properties?.unique_id === planUniqueId);
+        if (!w) return { completed_year: null, abandoned_year: null };
+        return { completed_year: w.completed_year || null, abandoned_year: w.abandoned_year || null };
+    };
 
     // Calculate the total count of plans
     const goalPlansCount = plans ? plans.length : 0;
@@ -90,27 +109,37 @@ function GoalDetails({ plans, accomplishments, indicators, goalNumber }) {
                         {/* Existing Plans */}
                         {totalPlansCount > 0 ? (
                             <>
-                                {plans?.map((goalPlan, index) => (
-                                    <Plan
-                                        key={`goal-plan-${index}`}
-                                        planData={goalPlan}
-                                        goalNumber={goalNumber}
-                                        workingGroup={currentWorkingGroup}
-                                        academicYear={currentAcademicYear}
-                                        onUpdate={handleRefresh}
-                                    />
-                                ))}
-                                {indicators.map((item, index) => (
-                                    item.evidences[0]?.plans?.map((indicatorPlan, indIndex) => (
+                                {plans?.map((goalPlan, index) => {
+                                    const years = goalLevelYearsById.get(goalPlan?.properties?.unique_id) || {};
+                                    return (
                                         <Plan
-                                            key={`indicator-plan-${index}-${indIndex}`}
-                                            planData={indicatorPlan}
+                                            key={`goal-plan-${index}`}
+                                            planData={goalPlan}
                                             goalNumber={goalNumber}
                                             workingGroup={currentWorkingGroup}
                                             academicYear={currentAcademicYear}
+                                            completedYear={years.completed_year || null}
+                                            abandonedYear={years.abandoned_year || null}
                                             onUpdate={handleRefresh}
                                         />
-                                    ))
+                                    );
+                                })}
+                                {indicators.map((item, index) => (
+                                    item.evidences[0]?.plans?.map((indicatorPlan, indIndex) => {
+                                        const years = yearsFromEvidence(item.evidences[0], indicatorPlan?.properties?.unique_id);
+                                        return (
+                                            <Plan
+                                                key={`indicator-plan-${index}-${indIndex}`}
+                                                planData={indicatorPlan}
+                                                goalNumber={goalNumber}
+                                                workingGroup={currentWorkingGroup}
+                                                academicYear={currentAcademicYear}
+                                                completedYear={years.completed_year || null}
+                                                abandonedYear={years.abandoned_year || null}
+                                                onUpdate={handleRefresh}
+                                            />
+                                        );
+                                    })
                                 ))}
                             </>
                         ) : (

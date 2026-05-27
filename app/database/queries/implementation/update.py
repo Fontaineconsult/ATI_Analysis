@@ -375,6 +375,7 @@ def update_plan(data: dict) -> bool:
         plan.plan_status = data.get('plan_status', plan.plan_status)
         plan.abandoned = data.get('abandoned', plan.abandoned)
         plan.abandoned_notes = data.get('abandoned_notes', plan.abandoned_notes)
+        plan.completion_notes = data.get('completion_notes', plan.completion_notes)
         plan.name = data.get('name', plan.name)
 
         plan.save()
@@ -394,6 +395,18 @@ def update_plan(data: dict) -> bool:
             if completed_year:
                 plan.completed_year.disconnect_all()
                 plan.completed_year.connect(completed_year)
+
+        # Update abandoned year relationship.
+        # If `abandoned` was explicitly toggled to False, also drop any existing
+        # abandoned_in_year edge so the plan goes back to "active everywhere".
+        if 'abandoned' in data and data['abandoned'] is False:
+            plan.abandoned_year.disconnect_all()
+        abandoned_year_name = data.get('abandoned_year_name')
+        if abandoned_year_name:
+            abandoned_year = AcademicYear.nodes.get_or_none(name=abandoned_year_name)
+            if abandoned_year:
+                plan.abandoned_year.disconnect_all()
+                plan.abandoned_year.connect(abandoned_year)
 
         # Update furthered goal relationship
         furthered_goal_number = data.get('furthered_goal_number')

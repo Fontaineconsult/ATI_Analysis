@@ -15,6 +15,7 @@ function ProcurementData({ procurementData }) {
                     key={index}
                     goalData={goalWrapper.goal}
                     plans={goalWrapper.plans}
+                    plansWithProgressNotes={goalWrapper.plans_with_progress_notes}
                     accomplishments={goalWrapper.accomplishments}
                     indicators={goalWrapper.indicators}
                 />

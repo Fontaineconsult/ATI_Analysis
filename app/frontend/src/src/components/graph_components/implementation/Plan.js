@@ -30,6 +30,8 @@ function Plan({
                   goalNumber,
                   workingGroup,
                   academicYear,
+                  completedYear = null,
+                  abandonedYear = null,
                   onSuccess,
                   onCancel,
                   onUpdate
@@ -264,6 +266,16 @@ function Plan({
                     >
                         {plan_status}
                     </Badge>
+                    {completedYear && (
+                        <Badge colorScheme="green" variant="outline" fontSize="xs" title="Year completed">
+                            Completed {completedYear}
+                        </Badge>
+                    )}
+                    {abandonedYear && (
+                        <Badge colorScheme="red" variant="outline" fontSize="xs" title="Year abandoned">
+                            Abandoned {abandonedYear}
+                        </Badge>
+                    )}
                     <Button
                         size="xs"
                         variant="ghost"
