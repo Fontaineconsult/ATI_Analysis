@@ -24,6 +24,7 @@ import { Link as RouterLink } from 'react-router-dom';
 import { UserContext } from '../../../context/UserContext';
 import { getUrlFromCompositeKey } from '../../../services/utils/tools';
 import {
+    addPrioritizedIndicator,
     assignGroupLead,
     unassignGroupLead,
 } from '../../../services/api/post';
@@ -84,17 +85,97 @@ function EmptyText({ children }) {
     );
 }
 
-function WorkingGroupPlan({ wgp, campusAbbrev, onIndicatorAdded, onProgressAdded, onLeadsChanged, currentUserUniqueId }) {
+function WorkingGroupPlan({
+    wgp,
+    campusAbbrev,
+    campusName,
+    onIndicatorAdded,
+    onProgressAdded,
+    onLeadsChanged,
+    currentUserUniqueId,
+    peerWorkingGroupPlans = [],
+    onPeerIndicatorChanged,
+}) {
     const { isOpen, onOpen, onClose } = useDisclosure();
     const leadsModal = useDisclosure();
     const plansSection = useDisclosure({ defaultIsOpen: false });
     const [activeProgressSi, setActiveProgressSi] = useState(null);
+    const [togglingKey, setTogglingKey] = useState(null); // `${campusAbbrev}|${compositeKey}` while adding
     const userCtx = useContext(UserContext);
     const individuals = userCtx?.individuals || [];
 
     if (!wgp) return null;
 
     const prioritizedIds = wgp.prioritized_success_indicators.map((si) => si.unique_id);
+
+    // Union of prioritized indicators across the primary + every loaded peer
+    // campus, deduped by composite_key. Each entry carries:
+    //   - primarySi: the primary campus's SI object (with status, trajectory,
+    //     progress, plans) if the primary has prioritized it, else null.
+    //   - prioritizedByAbbrevs: Set of campus abbrevs (primary + peers) that
+    //     have prioritized this indicator. Drives per-campus badges.
+    // Rows where primarySi is null are "peer-only" — primary hasn't picked
+    // this one yet; clicking the primary badge adds it.
+    const allCampusEntries = [
+        { campusAbbrev, campusName: campusName || campusAbbrev, wgp, isPrimary: true },
+        ...peerWorkingGroupPlans.map(({ campusAbbrev: a, campusName: n, wgp: w }) => ({
+            campusAbbrev: a, campusName: n || a, wgp: w, isPrimary: false,
+        })),
+    ];
+
+    const unionIndicators = (() => {
+        const byKey = new Map();
+        // Primary first so the primarySi is populated from this campus when present.
+        for (const { wgp: w, campusAbbrev: a } of allCampusEntries) {
+            if (!w || !Array.isArray(w.prioritized_success_indicators)) continue;
+            for (const si of w.prioritized_success_indicators) {
+                const key = si.composite_key;
+                if (!key) continue;
+                let entry = byKey.get(key);
+                if (!entry) {
+                    entry = {
+                        composite_key: key,
+                        success_indicator: si.success_indicator,
+                        primarySi: null,
+                        prioritizedByAbbrevs: new Set(),
+                    };
+                    byKey.set(key, entry);
+                }
+                entry.prioritizedByAbbrevs.add(a);
+                // Carry the primary's full SI when the primary has prioritized it.
+                if (a === campusAbbrev) entry.primarySi = si;
+                // Fill in description from any campus if we don't have one yet.
+                if (!entry.success_indicator) entry.success_indicator = si.success_indicator;
+            }
+        }
+        return Array.from(byKey.values()).sort((a, b) => a.composite_key.localeCompare(b.composite_key));
+    })();
+
+    const handleToggleCampusPriority = async (entry, campusEntry) => {
+        const { campusAbbrev: targetAbbrev, wgp: targetWgp, isPrimary } = campusEntry;
+        const alreadyPrioritized = entry.prioritizedByAbbrevs.has(targetAbbrev);
+        if (alreadyPrioritized) {
+            // Remove isn't wired yet — no removePrioritizedIndicator API.
+            // No-op for now; the visual state communicates "already on".
+            return;
+        }
+        if (!targetWgp?.plan_identifier) return;
+        const tkey = `${targetAbbrev}|${entry.composite_key}`;
+        setTogglingKey(tkey);
+        try {
+            await addPrioritizedIndicator(targetWgp.plan_identifier, entry.composite_key);
+            if (isPrimary) {
+                if (onIndicatorAdded) onIndicatorAdded();
+            } else {
+                if (onPeerIndicatorChanged) onPeerIndicatorChanged(targetAbbrev);
+            }
+        } catch (err) {
+            // Surface to console; toast handling can be wired by caller if desired.
+            console.error('Failed to add prioritized indicator', err);
+        } finally {
+            setTogglingKey(null);
+        }
+    };
 
     return (
         <Box p={4} borderWidth="1px" borderColor="gray.200" borderRadius="md">
@@ -148,26 +229,61 @@ function WorkingGroupPlan({ wgp, campusAbbrev, onIndicatorAdded, onProgressAdded
                             + Add Indicator
                         </Button>
                     </HStack>
-                    {wgp.prioritized_success_indicators.length === 0 ? (
+                    {unionIndicators.length === 0 ? (
                         <EmptyText>None selected.</EmptyText>
                     ) : (
                         <VStack align="stretch" spacing={3}>
-                            {wgp.prioritized_success_indicators.map((si) => {
-                                const companionCount = si.companion_plans ? si.companion_plans.length : 0;
-                                const progress = si.progress || { yse_identifier: null, update_count: 0, updates: [] };
+                            {unionIndicators.map((entry) => {
+                                const si = entry.primarySi;
+                                const isPrimaryPrioritized = entry.prioritizedByAbbrevs.has(campusAbbrev);
+                                const companionCount = si?.companion_plans ? si.companion_plans.length : 0;
+                                const progress = si?.progress || { yse_identifier: null, update_count: 0, updates: [] };
                                 const updates = progress.updates || [];
                                 const trajectory = updates.length > 0 ? updates[0].trajectory : null;
                                 const canLogProgress = !!progress.yse_identifier;
 
+                                const campusBadgesRow = (
+                                    <HStack spacing={1} flexWrap="wrap">
+                                        {allCampusEntries.map((c) => {
+                                            const has = entry.prioritizedByAbbrevs.has(c.campusAbbrev);
+                                            const tkey = `${c.campusAbbrev}|${entry.composite_key}`;
+                                            const isBusy = togglingKey === tkey;
+                                            return (
+                                                <Button
+                                                    key={c.campusAbbrev}
+                                                    size="xs"
+                                                    variant={has ? 'solid' : 'outline'}
+                                                    colorScheme={has ? 'teal' : 'gray'}
+                                                    onClick={() => handleToggleCampusPriority(entry, c)}
+                                                    isLoading={isBusy}
+                                                    isDisabled={has /* remove not yet wired */}
+                                                    title={
+                                                        has
+                                                            ? `Prioritized by ${c.campusName}`
+                                                            : `Click to prioritize for ${c.campusName}`
+                                                    }
+                                                    px={2}
+                                                    minW="unset"
+                                                    fontSize="2xs"
+                                                    textTransform="uppercase"
+                                                >
+                                                    {c.campusAbbrev}
+                                                </Button>
+                                            );
+                                        })}
+                                    </HStack>
+                                );
+
                                 return (
                                     <Box
-                                        key={si.unique_id}
+                                        key={entry.composite_key}
                                         p={3}
                                         borderWidth="1px"
-                                        borderColor="gray.300"
+                                        borderColor={isPrimaryPrioritized ? 'gray.300' : 'gray.200'}
                                         borderRadius="md"
-                                        bg="gray.50"
+                                        bg={isPrimaryPrioritized ? 'gray.50' : 'white'}
                                         boxShadow="sm"
+                                        opacity={isPrimaryPrioritized ? 1 : 0.95}
                                     >
                                         <HStack align="center" spacing={2}>
                                             <Heading
@@ -178,48 +294,59 @@ function WorkingGroupPlan({ wgp, campusAbbrev, onIndicatorAdded, onProgressAdded
                                                 minW="60px"
                                                 fontWeight="semibold"
                                             >
-                                                {si.composite_key}
+                                                {entry.composite_key}
                                             </Heading>
                                             <Text fontSize="sm" color="gray.900" flex={1} textAlign="left">
-                                                {si.success_indicator}
+                                                {entry.success_indicator}
                                             </Text>
-                                            <StatusProgression
-                                                previousStatusLevel={si.previous_status_level}
-                                                currentStatusLevel={si.status_level}
-                                            />
-                                            <TrajectoryBadge trajectory={trajectory} />
-                                            {companionCount > 0 ? (
-                                                <Text fontSize="xs" color="teal.600" fontWeight="medium" whiteSpace="nowrap">
-                                                    {companionCount} plan{companionCount === 1 ? '' : 's'}
-                                                </Text>
+                                            {isPrimaryPrioritized ? (
+                                                <>
+                                                    <StatusProgression
+                                                        previousStatusLevel={si.previous_status_level}
+                                                        currentStatusLevel={si.status_level}
+                                                    />
+                                                    <TrajectoryBadge trajectory={trajectory} />
+                                                    {companionCount > 0 ? (
+                                                        <Text fontSize="xs" color="teal.600" fontWeight="medium" whiteSpace="nowrap">
+                                                            {companionCount} plan{companionCount === 1 ? '' : 's'}
+                                                        </Text>
+                                                    ) : (
+                                                        <Text fontSize="xs" color="gray.400" fontStyle="italic" whiteSpace="nowrap">
+                                                            no plan yet
+                                                        </Text>
+                                                    )}
+                                                    {campusAbbrev && (
+                                                        <Button
+                                                            as={RouterLink}
+                                                            to={`/${campusAbbrev}/dashboard/reports/${getUrlFromCompositeKey(entry.composite_key)}`}
+                                                            size="xs"
+                                                            variant="ghost"
+                                                            colorScheme="teal"
+                                                        >
+                                                            View
+                                                        </Button>
+                                                    )}
+                                                    {canLogProgress && (
+                                                        <Button
+                                                            size="xs"
+                                                            variant="ghost"
+                                                            colorScheme="teal"
+                                                            onClick={() => setActiveProgressSi(si)}
+                                                        >
+                                                            Log
+                                                        </Button>
+                                                    )}
+                                                </>
                                             ) : (
                                                 <Text fontSize="xs" color="gray.400" fontStyle="italic" whiteSpace="nowrap">
-                                                    no plan yet
+                                                    Not prioritized here
                                                 </Text>
                                             )}
-                                            {campusAbbrev && (
-                                                <Button
-                                                    as={RouterLink}
-                                                    to={`/${campusAbbrev}/dashboard/reports/${getUrlFromCompositeKey(si.composite_key)}`}
-                                                    size="xs"
-                                                    variant="ghost"
-                                                    colorScheme="teal"
-                                                >
-                                                    View
-                                                </Button>
-                                            )}
-                                            {canLogProgress && (
-                                                <Button
-                                                    size="xs"
-                                                    variant="ghost"
-                                                    colorScheme="teal"
-                                                    onClick={() => setActiveProgressSi(si)}
-                                                >
-                                                    Log
-                                                </Button>
-                                            )}
                                         </HStack>
-                                        {updates.length > 0 && (
+                                        <Box mt={2} pl="68px">
+                                            {campusBadgesRow}
+                                        </Box>
+                                        {isPrimaryPrioritized && updates.length > 0 && (
                                             <Box
                                                 mt={3}
                                                 pt={3}

@@ -1,10 +1,15 @@
-import React, { useCallback, useContext, useEffect, useState } from 'react';
+import React, { useContext, useMemo, useState } from 'react';
 import {
     Box,
     Button,
     Heading,
     HStack,
     Link,
+    Menu,
+    MenuButton,
+    MenuItemOption,
+    MenuList,
+    MenuOptionGroup,
     Modal,
     ModalBody,
     ModalCloseButton,
@@ -13,77 +18,98 @@ import {
     ModalHeader,
     ModalOverlay,
     Spinner,
+    Tag,
+    TagCloseButton,
+    TagLabel,
     Text,
     useDisclosure,
     VStack,
+    Wrap,
+    WrapItem,
 } from '@chakra-ui/react';
+import { ChevronDownIcon } from '@chakra-ui/icons';
 
 import { useSettings } from '../../../context/SettingsContext';
 import { UserContext } from '../../../context/UserContext';
-import { fetchCampusPlan } from '../../../services/api/get';
+import { useCampusPlans } from '../../../hooks/useCampusPlans';
 import {
     assignExecutiveSponsor,
-    createCampusPlan,
     unassignExecutiveSponsor,
 } from '../../../services/api/post';
 import PersonAssignmentSelector from '../../functional_components/PersonAssignmentSelector';
 import WorkingGroupPlan from './WorkingGroupPlan';
 
-function isNotFoundError(error) {
-    // axios throws on 4xx/5xx — check the underlying response status when present.
-    return error?.response?.status === 404;
+/**
+ * Pick the WGP that matches `wgName` out of a campus plan's
+ * `working_group_plans` array. Used to thread the same working group
+ * across peer campuses for the cross-campus prioritized-indicator badges.
+ */
+function findWgpForGroup(plan, wgName) {
+    if (!plan || !Array.isArray(plan.working_group_plans)) return null;
+    return plan.working_group_plans.find((wgp) => wgp.working_group === wgName) || null;
 }
 
 function CampusPlanContainer() {
-    const { currentCampus, currentAcademicYear } = useSettings();
+    const { currentCampus, currentAcademicYear, campuses } = useSettings();
     // UserContext is optional in tests — guard against missing provider.
     const userCtx = useContext(UserContext);
     const currentUserUniqueId = userCtx && userCtx.currentUser ? userCtx.currentUser.unique_id : null;
     const individuals = userCtx?.individuals || [];
 
-    const [plan, setPlan] = useState(null);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
-    const [notFound, setNotFound] = useState(false);
-    const [creating, setCreating] = useState(false);
+    // Peers explicitly loaded by the user via the comparison selector. The
+    // primary campus from SettingsContext is always loaded; peers are
+    // opt-in additions for cross-campus indicator comparison.
+    const [peerCampusAbbrevs, setPeerCampusAbbrevs] = useState([]);
+
+    // All campuses we want plan data for. Order is stable: primary first.
+    const allCampusAbbrevs = useMemo(() => {
+        if (!currentCampus) return [];
+        const peers = peerCampusAbbrevs.filter((a) => a && a !== currentCampus);
+        return [currentCampus, ...peers];
+    }, [currentCampus, peerCampusAbbrevs]);
+
+    const { byAbbrev, refreshOne, createPlanFor } = useCampusPlans(allCampusAbbrevs, currentAcademicYear);
+
+    const primaryState = byAbbrev[currentCampus] || { plan: null, loading: true, error: null, notFound: false, creating: false };
+    const { plan, loading, error, notFound, creating } = primaryState;
+
     const sponsorsModal = useDisclosure();
 
-    const loadPlan = useCallback(async () => {
-        if (!currentCampus || !currentAcademicYear) return;
+    const handleReloadPrimary = () => refreshOne(currentCampus);
+    const handleCreatePrimary = () => createPlanFor(currentCampus);
 
-        setLoading(true);
-        setError(null);
-        setNotFound(false);
-        try {
-            const response = await fetchCampusPlan(currentCampus, currentAcademicYear);
-            setPlan(response.data);
-        } catch (err) {
-            if (isNotFoundError(err)) {
-                setNotFound(true);
-                setPlan(null);
-            } else {
-                setError(err.message || 'Failed to load campus plan.');
-            }
-        } finally {
-            setLoading(false);
-        }
-    }, [currentCampus, currentAcademicYear]);
+    // Map of campus abbreviation → display name, from SettingsContext.
+    const campusNameByAbbrev = useMemo(() => {
+        const map = {};
+        (campuses || []).forEach((c) => { if (c.abbreviation) map[c.abbreviation] = c.name; });
+        return map;
+    }, [campuses]);
 
-    useEffect(() => {
-        loadPlan();
-    }, [loadPlan]);
+    // Build the list of peer campus plans paired with their abbreviation
+    // and human name, ready for downstream consumption.
+    const peerCampusPlans = useMemo(() => {
+        return peerCampusAbbrevs
+            .filter((a) => a && a !== currentCampus)
+            .map((abbrev) => ({
+                campusAbbrev: abbrev,
+                campusName: campusNameByAbbrev[abbrev] || abbrev,
+                state: byAbbrev[abbrev] || { plan: null, loading: true, error: null },
+            }));
+    }, [peerCampusAbbrevs, currentCampus, byAbbrev, campusNameByAbbrev]);
 
-    const handleCreate = async () => {
-        setCreating(true);
-        setError(null);
-        try {
-            await createCampusPlan(currentCampus, currentAcademicYear);
-            await loadPlan();
-        } catch (err) {
-            setError(err.message || 'Failed to create campus plan.');
-        } finally {
-            setCreating(false);
-        }
+    // Available campuses for the picker — every campus except the primary.
+    const availablePeerOptions = useMemo(() => {
+        return (campuses || []).filter((c) => c.abbreviation && c.abbreviation !== currentCampus);
+    }, [campuses, currentCampus]);
+
+    const handlePeerSelectionChange = (selected) => {
+        // Chakra MenuOptionGroup passes the array of currently-checked values.
+        const arr = Array.isArray(selected) ? selected : (selected ? [selected] : []);
+        setPeerCampusAbbrevs(arr.filter((a) => a !== currentCampus));
+    };
+
+    const handleRemovePeer = (abbrev) => {
+        setPeerCampusAbbrevs((prev) => prev.filter((a) => a !== abbrev));
     };
 
     if (loading) {
@@ -115,7 +141,7 @@ function CampusPlanContainer() {
                     </Text>
                     <Button
                         colorScheme="teal"
-                        onClick={handleCreate}
+                        onClick={handleCreatePrimary}
                         isLoading={creating}
                         loadingText="Creating…"
                     >
@@ -193,22 +219,101 @@ function CampusPlanContainer() {
                     </Box>
                 </Box>
 
+                {/* Cross-campus comparison selector. Loads peer campus plans
+                    into the same view so each WG's Prioritized Indicators
+                    block can show per-campus badges. */}
+                <Box bg="white" borderRadius="lg" p={4} boxShadow="sm">
+                    <HStack justify="space-between" align="start" mb={peerCampusPlans.length > 0 ? 3 : 0} flexWrap="wrap" gap={2}>
+                        <Box>
+                            <Heading as="h3" size="xs" color="gray.700" textTransform="uppercase" letterSpacing="wide">
+                                Cross-campus comparison
+                            </Heading>
+                            <Text fontSize="xs" color="gray.500" mt={1}>
+                                Add peer campuses to compare prioritized indicators in each working group below.
+                            </Text>
+                        </Box>
+                        <Menu closeOnSelect={false}>
+                            <MenuButton
+                                as={Button}
+                                size="sm"
+                                variant="outline"
+                                colorScheme="teal"
+                                rightIcon={<ChevronDownIcon />}
+                            >
+                                Compare with…
+                            </MenuButton>
+                            <MenuList maxH="320px" overflowY="auto">
+                                <MenuOptionGroup
+                                    type="checkbox"
+                                    value={peerCampusAbbrevs}
+                                    onChange={handlePeerSelectionChange}
+                                >
+                                    {availablePeerOptions.map((c) => (
+                                        <MenuItemOption key={c.abbreviation} value={c.abbreviation}>
+                                            {c.name}
+                                        </MenuItemOption>
+                                    ))}
+                                </MenuOptionGroup>
+                            </MenuList>
+                        </Menu>
+                    </HStack>
+                    {peerCampusPlans.length > 0 && (
+                        <Wrap spacing={2}>
+                            {peerCampusPlans.map(({ campusAbbrev, campusName, state }) => {
+                                const tagColor =
+                                    state.loading ? 'gray' :
+                                        state.error ? 'red' :
+                                            state.notFound ? 'orange' : 'teal';
+                                const tagText =
+                                    state.loading ? `${campusName} — loading…` :
+                                        state.error ? `${campusName} — error` :
+                                            state.notFound ? `${campusName} — no plan yet` :
+                                                campusName;
+                                return (
+                                    <WrapItem key={campusAbbrev}>
+                                        <Tag colorScheme={tagColor} variant="subtle">
+                                            <TagLabel>{tagText}</TagLabel>
+                                            <TagCloseButton onClick={() => handleRemovePeer(campusAbbrev)} />
+                                        </Tag>
+                                    </WrapItem>
+                                );
+                            })}
+                        </Wrap>
+                    )}
+                </Box>
+
                 <Box bg="white" borderRadius="lg" p={6} boxShadow="sm">
                     <Heading as="h2" size="md" color="gray.800" mb={4}>
                         Working Group Plans
                     </Heading>
                     <VStack align="stretch" spacing={3}>
-                        {plan.working_group_plans.map((wgp) => (
-                            <WorkingGroupPlan
-                                key={wgp.plan_identifier}
-                                wgp={wgp}
-                                campusAbbrev={currentCampus}
-                                onIndicatorAdded={loadPlan}
-                                onProgressAdded={loadPlan}
-                                onLeadsChanged={loadPlan}
-                                currentUserUniqueId={currentUserUniqueId}
-                            />
-                        ))}
+                        {plan.working_group_plans.map((wgp) => {
+                            // For each peer campus, find the matching WGP for THIS working group
+                            // (matched by working_group name, since composite identifiers differ
+                            // across campuses). Pass only successfully-loaded peers; loading/error
+                            // peers are surfaced in the comparison strip above.
+                            const peerWorkingGroupPlans = peerCampusPlans
+                                .map(({ campusAbbrev, campusName, state }) => {
+                                    const peerWgp = findWgpForGroup(state.plan, wgp.working_group);
+                                    return peerWgp ? { campusAbbrev, campusName, wgp: peerWgp, state } : null;
+                                })
+                                .filter(Boolean);
+
+                            return (
+                                <WorkingGroupPlan
+                                    key={wgp.plan_identifier}
+                                    wgp={wgp}
+                                    campusAbbrev={currentCampus}
+                                    campusName={plan.campus?.name || currentCampus}
+                                    onIndicatorAdded={handleReloadPrimary}
+                                    onProgressAdded={handleReloadPrimary}
+                                    onLeadsChanged={handleReloadPrimary}
+                                    currentUserUniqueId={currentUserUniqueId}
+                                    peerWorkingGroupPlans={peerWorkingGroupPlans}
+                                    onPeerIndicatorChanged={refreshOne}
+                                />
+                            );
+                        })}
                     </VStack>
                 </Box>
             </VStack>
@@ -226,7 +331,7 @@ function CampusPlanContainer() {
                             candidatePersons={individuals.filter((i) => i.active)}
                             onAssign={(personUniqueId) => assignExecutiveSponsor(plan.plan_identifier, personUniqueId)}
                             onUnassign={(personUniqueId) => unassignExecutiveSponsor(plan.plan_identifier, personUniqueId)}
-                            afterChange={loadPlan}
+                            afterChange={handleReloadPrimary}
                         />
                     </ModalBody>
                     <ModalFooter>
