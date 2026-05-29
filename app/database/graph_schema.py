@@ -10,7 +10,7 @@ from neomodel import (StructuredNode, StringProperty,
 from dotenv import load_dotenv
 import os
 
-from app.data_config import trajectory_choices
+from app.data_config import trajectory_choices, asset_classes, asset_scopes, taap_outcomes
 
 dotenv_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'app', '.env.development')
 load_dotenv(dotenv_path)
@@ -588,6 +588,8 @@ class Process(StructuredNode):
     is_evidence_for = RelationshipTo("YearSuccessEvidence", "is_evidence_for")
     owned_by = RelationshipTo("Person", "owned_by")
     includes_procedures = RelationshipTo("Procedure", "includes_procedure")
+    remediates = RelationshipTo("Asset", "remediates")   # this work keeps that asset accessible
+    uses_tool = RelationshipTo("Asset", "uses_tool")     # this work uses that asset/product as a tool
 
     #serialize
     def serialize(self):
@@ -624,6 +626,8 @@ class Project(StructuredNode):
     is_evidence_for = RelationshipTo("YearSuccessEvidence", "is_evidence_for")
     owned_by = RelationshipTo("Person", "owned_by")
     includes_procedures = RelationshipTo("Procedure", "includes_procedure")
+    remediates = RelationshipTo("Asset", "remediates")   # this work keeps that asset accessible
+    uses_tool = RelationshipTo("Asset", "uses_tool")     # this work uses that asset/product as a tool
 
     #serialize
     def serialize(self):
@@ -656,6 +660,8 @@ class Procedure(StructuredNode):
     supporting_metrics = RelationshipTo("Metric", "has_metric")
     is_evidence_for = RelationshipTo("YearSuccessEvidence", "is_evidence_for")
     owned_by = RelationshipTo("Person", "owned_by")
+    remediates = RelationshipTo("Asset", "remediates")   # this work keeps that asset accessible
+    uses_tool = RelationshipTo("Asset", "uses_tool")     # this work uses that asset/product as a tool
 
 
     #serialize
@@ -690,6 +696,8 @@ class Service(StructuredNode):
     is_evidence_for = RelationshipTo("YearSuccessEvidence", "is_evidence_for")
     owned_by = RelationshipTo("Person", "owned_by")
     includes_procedures = RelationshipTo("Procedure", "includes_procedure")
+    remediates = RelationshipTo("Asset", "remediates")   # this work keeps that asset accessible
+    uses_tool = RelationshipTo("Asset", "uses_tool")     # this work uses that asset/product as a tool
 
     #serialize
     def serialize(self):
@@ -965,6 +973,11 @@ class YearSuccessEvidence(StructuredNode):
     guidance_that_evidence = RelationshipFrom("Guidance", "is_evidence_for")
     trackings_that_evidence = RelationshipFrom("Tracking", "is_evidence_for")
     internal_policies_that_evidence = RelationshipFrom("InternalPolicy", "is_evidence_for")
+    taaps_that_evidence = RelationshipFrom("TAAP", "is_evidence_for")
+
+    # Assets are NOT evidence: an asset's accessibility status reaches YSE through the
+    # implementation that remediates it (Process/Project/Procedure/Service.is_evidence_for)
+    # and through any covering TAAP — there is no direct Asset -> YSE edge.
 
     # Relationships from person nodes
     persons_that_implement = RelationshipFrom("Person", "implements")
@@ -1096,7 +1109,34 @@ Relationships
 """
 
 
-class Department(StructuredNode):
+class OrgUnit(StructuredNode):
+
+    """    Shared supertype for internal organizational units (Department, College).
+
+    An OrgUnit is an internal division of the institution that can employ people and
+    steward ICT assets. It exists so that an Asset's §508 stewardship edges
+    (procure / develop / maintain / use) can target a *unit* — not only a Person —
+    for cases where capacity sits at the org level and no individual is named
+    (e.g. "ITS maintains this", "the Library procures this").
+
+    Vendor is deliberately NOT an OrgUnit: a vendor is external and relates to an
+    Asset through `supplied_by`, not through institutional stewardship.
+
+    Non-destructive note: Department and College now inherit from OrgUnit. Existing
+    :Department / :College nodes keep working via their own labels; a back-label
+    migration (adding :OrgUnit to those existing nodes) is what lets OrgUnit-label
+    traversal find them, and is deferred.
+    """
+    unique_id = UniqueIdProperty()
+
+    name = StringProperty(unique_index=True)
+    location = StringProperty()
+    employs = RelationshipTo("Person", "employs")
+    implements_yse = RelationshipTo("YearSuccessEvidence", "implements")
+    operates_under_campus = RelationshipTo("Campus", "operates_under_campus")
+
+
+class Department(OrgUnit):
 
     """    Class representing a Department.
 
@@ -1110,22 +1150,12 @@ class Department(StructuredNode):
     to organize and coordinate the efforts of different parts of the institution, ensuring a comprehensive and
     unified approach to accessibility.
 
-
+    Inherits name / location / employs / implements_yse / operates_under_campus from OrgUnit.
     """
-    unique_id = UniqueIdProperty()
+    pass
 
 
-
-    name = StringProperty(unique_index=True)
-    location = StringProperty()
-    employs = RelationshipTo("Person", "employs")
-    implements_yse = RelationshipTo("YearSuccessEvidence", "implements")
-    operates_under_campus = RelationshipTo("Campus", "operates_under_campus")
-
-
-
-
-class College(StructuredNode):
+class College(OrgUnit):
 
 
     """    Class representing a College.
@@ -1134,15 +1164,9 @@ class College(StructuredNode):
     within the institution, typically encompassing multiple departments and programs. Each college is responsible
     for integrating accessibility into its curricula, research, and administrative practices.
 
+    Inherits name / location / employs / implements_yse / operates_under_campus from OrgUnit.
     """
-    unique_id = UniqueIdProperty()
-
-
-    name = StringProperty(unique_index=True)
-    location = StringProperty()
-    employs = RelationshipTo("Person", "employs")
-    implements_yse = RelationshipTo("YearSuccessEvidence", "implements")
-    operates_under_campus = RelationshipTo("Campus", "operates_under_campus")
+    pass
 
 
 class Campus(StructuredNode):
@@ -1421,6 +1445,142 @@ class Metric(StructuredNode):
             "academic_year": [{"unique_id": ay.unique_id, "name": ay.name} for ay in self.academic_year.all()]
 
         }
+
+
+
+
+class Asset(StructuredNode):
+
+    """    Class representing an ICT Asset node.
+
+    An Asset is a logged unit of information-and-communications technology — the thing
+    whose accessibility must be maintained. It is the unit at which remediation authority
+    is coherent; where authority splits, the asset splits. Defined from the remediation
+    side (who can fix it), not the statutory side.
+
+    The Asset records WHAT the thing is (identity, class, scope, vendor/product) and WHO
+    stewards it under §508 — the parties that procure / develop / maintain / use it, each
+    a Person OR an OrgUnit. It does NOT carry remediation accountability: HOW accessibility
+    is maintained, and who is accountable, lives on the Implementation nodes that
+    *remediate* the asset (those carry owned_by). Stewardship and remediation strongly
+    overlap but are distinct. An asset that is stewarded yet has no remediating
+    implementation is the modeled signal that responsibility has elevated to the
+    institution (Title II §35.205 / the responsibility heuristic).
+
+    asset_class: institutional_system | employee_content | third_party_service | infrastructure
+    scope:       systemwide | regional | campus | vendor
+
+    Identity is composite: scope is part of identity, so the same nominal system
+    (CSU-wide Canvas) resolves into distinct assets where remediation authority sits at
+    different scopes. The unique index is on `asset_identifier` (built by
+    identifiers.make_asset_identifier()); `title` is descriptive and indexed but NOT
+    unique. This mirrors CampusPlan.plan_identifier / YearSuccessEvidence.year_identifier.
+    """
+    unique_id = UniqueIdProperty()
+
+    asset_identifier = StringProperty(unique_index=True)  # e.g. "canvas-sfsu", "canvas-systemwide"
+    title = StringProperty(index=True, required=True)
+    version = StringProperty()
+    description = StringProperty()
+    asset_class = StringProperty(choices=asset_classes)
+    scope = StringProperty(choices=asset_scopes)
+
+    # §508 stewardship — who procures / develops / maintains / uses the asset.
+    # Each capacity can be held by a Person OR an OrgUnit; the two variants share a
+    # rel-type so ad-hoc Cypher (e.g. (:Asset)-[:maintained_by]->(holder)) catches both.
+    procured_by        = RelationshipTo("Person",  "procured_by")
+    procured_by_unit   = RelationshipTo("OrgUnit", "procured_by")
+    developed_by       = RelationshipTo("Person",  "developed_by")
+    developed_by_unit  = RelationshipTo("OrgUnit", "developed_by")
+    maintained_by      = RelationshipTo("Person",  "maintained_by")
+    maintained_by_unit = RelationshipTo("OrgUnit", "maintained_by")
+    used_by            = RelationshipTo("Person",  "used_by")
+    used_by_unit       = RelationshipTo("OrgUnit", "used_by")
+
+    # Vendor / product provenance (external; not stewardship)
+    supplied_by = RelationshipTo("Vendor", "supplied_by")
+
+    # Scope anchor (campus / regional; empty for systemwide — scope property carries it)
+    at_campus = RelationshipTo("Campus", "asset_at_campus")
+
+    # Remediation accountability flows through implementations (reverse of
+    # Implementation.remediates / .uses_tool). An asset is remediated by the work that
+    # keeps it accessible; that work may also use another asset as a tool (PopeTech).
+    remediated_by_processes    = RelationshipFrom("Process",   "remediates")
+    remediated_by_projects     = RelationshipFrom("Project",   "remediates")
+    remediated_by_procedures   = RelationshipFrom("Procedure", "remediates")
+    remediated_by_services     = RelationshipFrom("Service",   "remediates")
+    used_as_tool_by_processes  = RelationshipFrom("Process",   "uses_tool")
+    used_as_tool_by_projects   = RelationshipFrom("Project",   "uses_tool")
+    used_as_tool_by_procedures = RelationshipFrom("Procedure", "uses_tool")
+    used_as_tool_by_services   = RelationshipFrom("Service",   "uses_tool")
+
+    # Interim non-conformance coverage (a TAAP is itself evidence; the asset is not)
+    covered_by_taap = RelationshipFrom("TAAP", "covers_asset")
+
+    # Documentation ABOUT the asset (VPAT / ACR / spec / product page) — descriptive,
+    # NOT year-scoped evidence, so plain edges (no DocumentedByRel) under a distinct
+    # rel-type that won't be swept up by is_documented_by evidence queries.
+    described_by = RelationshipTo("Document", "describes_asset")
+    described_on = RelationshipTo("Webpage", "describes_asset")
+    notes = RelationshipTo("Note", "has_note")
+
+    #serialize
+    def serialize(self):
+        return {
+            'asset_identifier': self.asset_identifier,
+            'title': self.title,
+            'version': self.version,
+            'description': self.description,
+            'asset_class': self.asset_class,
+            'scope': self.scope,
+            "unique_id": self.unique_id
+        }
+
+
+class TAAP(StructuredNode):
+
+    """    Class representing a Temporary Alternate Access Plan node.
+
+    A TAAP is the institution's required response when full conformance is not achievable at procurement or
+    operation. It is asset-scoped, time-bound, reviewed annually, and is itself evidence — so it both covers an
+    Asset and feeds YearSuccessEvidence the same way other implementation nodes do. Anchored in Title II 35.205.
+    Replaces the older EEAAP.
+
+    outcome: equally_effective | non_equal_alternative | referral
+    """
+    unique_id = UniqueIdProperty()
+
+    title = StringProperty(unique_index=True, required=True)
+    description = StringProperty()
+    outcome = StringProperty(choices=taap_outcomes)
+    effective_date = DateProperty()
+    review_due = DateProperty()
+    active = BooleanProperty(default=True)
+
+    covers_asset = RelationshipTo("Asset", "covers_asset")
+    owned_by = RelationshipTo("Person", "owned_by")
+    signed_by = RelationshipTo("Person", "signed_by")
+
+    # Evidence + documentation (standard pattern)
+    is_evidence_for = RelationshipTo("YearSuccessEvidence", "is_evidence_for")
+    supporting_documents = RelationshipTo("Document", "is_documented_by", model=DocumentedByRel)
+    supporting_webpages = RelationshipTo("Webpage", "is_documented_by", model=DocumentedByRel)
+    supporting_notes = RelationshipTo("Note", "is_documented_by", model=DocumentedByRel)
+    supporting_messages = RelationshipTo("Message", "is_documented_by", model=DocumentedByRel)
+
+    #serialize
+    def serialize(self):
+        return {
+            'title': self.title,
+            'description': self.description,
+            'outcome': self.outcome,
+            'effective_date': self.effective_date,
+            'review_due': self.review_due,
+            'active': self.active,
+            "unique_id": self.unique_id
+        }
+
 
 
 def update_remote():

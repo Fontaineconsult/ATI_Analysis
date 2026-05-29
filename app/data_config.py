@@ -129,3 +129,29 @@ trajectory_choices = {
     "at_risk":   "At Risk",
     "failing":   "Failing",
 }
+
+# Asset class: what kind of ICT the asset is — shorthand for which §508 stewardship
+# capacities typically attach and to whom. Stored values are dict keys.
+asset_classes = {
+    "institutional_system": "Institutional System",
+    "employee_content":     "Employee-Authored Content",
+    "third_party_service":  "Third-Party Service",
+    "infrastructure":       "Infrastructure",
+}
+
+# Asset scope: the level at which the asset is deployed/owned. Scope is part of asset
+# identity (the same nominal system can resolve into assets at different scopes).
+asset_scopes = {
+    "systemwide": "Systemwide",
+    "regional":   "Regional",
+    "campus":     "Campus",
+    "vendor":     "Vendor-Controlled",
+}
+
+# TAAP outcome: the equivalent-facilitation result when full conformance isn't achievable
+# (Title II §35.205). Stored values are dict keys.
+taap_outcomes = {
+    "equally_effective":     "Equally Effective",
+    "non_equal_alternative": "Non-Equal Alternative",
+    "referral":              "Referral",
+}

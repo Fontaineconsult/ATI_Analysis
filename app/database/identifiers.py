@@ -50,3 +50,21 @@ def make_working_group_plan_identifier(academic_year: str, campus_abbrev: str, w
     (web / pro / ins), matching the SuccessIndicator composite_key suffix.
     """
     return IDENTIFIER_SEPARATOR.join([academic_year, campus_abbrev, working_group_abbrev])
+
+
+def make_asset_identifier(title_slug: str, locus: str) -> str:
+    """
+    Build an Asset.asset_identifier.
+
+    Scope is part of asset identity, so the locus (where remediation authority sits)
+    disambiguates the same nominal system across scopes: the CSU-wide Canvas resolves
+    into 'canvas-systemwide' vs the campus-scoped 'canvas-sfsu'. `title` alone cannot
+    carry this, which is why the unique index lives on the composite identifier instead.
+
+    `locus` is a campus abbreviation (campus scope), a vendor slug (vendor scope),
+    or the literal 'systemwide' / 'regional'.
+
+    Format:  '<title_slug>-<locus>'
+    Example: 'canvas-sfsu', 'canvas-systemwide', 'popetech-instructure'
+    """
+    return IDENTIFIER_SEPARATOR.join([title_slug, locus])
