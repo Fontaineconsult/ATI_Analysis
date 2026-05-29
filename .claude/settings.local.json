@@ -17,7 +17,8 @@
       "Bash(cd /d \"C:\\\\Users\\\\913678186\\\\IdeaProjects\\\\ATI_Analysis\")",
       "Bash(powershell -Command \"Get-ChildItem -Path 'app\\\\frontend\\\\src\\\\src\\\\services\\\\api' -File\")",
       "Bash(./windowsvenvpy12/Scripts/python.exe -c \"import neomodel; print\\('neomodel', neomodel.__version__\\)\")",
-      "Bash(PYTHONPATH=. ./windowsvenvpy12/Scripts/python.exe *)"
+      "Bash(PYTHONPATH=. ./windowsvenvpy12/Scripts/python.exe *)",
+      "Bash(PYTHONPATH=. python -c ' *)"
     ]
   }
 }
