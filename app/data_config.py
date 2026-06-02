@@ -178,6 +178,11 @@ coverage_domains = {
     "publisher-content":            "Publisher Content",
     "course-content":               "Course Content",
     "emerging-instructional-tech":  "Emerging Instructional Tech",
+    "administrative-systems":        "Administrative Systems",
+    "academic-services":              "Academic Services",
+    'human-resource-services':        "Human Resource Services",
+    'campus-map':                    "Campus Map",
+
 }
 
 # Audience: who encounters the interface. The label carries the governing legal basis,
@@ -197,4 +202,40 @@ interface_provenances = {
     "declared": "Declared",
     "enacted":  "Enacted",
     "both":     "Both",
+}
+
+
+# ---------------------------------------------------------------------------
+# Public vocabularies surfaced to the frontend (read-only).
+#
+# This is the single source of truth: the frontend fetches these over
+# GET /ati/data-api/v1/settings (see endpoints/data_api/settings.py) instead of
+# hardcoding its own copies. To expose a NEW vocabulary, define it above and add
+# one line here — that is the only file to edit.
+#
+# Only display vocabularies belong here. The structural maps that drive dispatch
+# logic (implementor_classes, documentation_relationships, working_group_names,
+# implementation_types, documentation_types, compsite_key_wg_names,
+# working_group_names_web_query, evidence_descriptions) are deliberately NOT
+# exposed — they are code, not settings.
+# ---------------------------------------------------------------------------
+PUBLIC_VOCABULARIES = {
+    # interfaces
+    "interface_kinds":       interface_kinds,
+    "coverage_domains":      coverage_domains,
+    "audiences":             audiences,
+    "interface_provenances": interface_provenances,
+    # assets / TAAPs
+    "asset_classes":         asset_classes,
+    "asset_scopes":          asset_scopes,
+    "taap_outcomes":         taap_outcomes,
+    # plans / progress
+    "trajectory_choices":    trajectory_choices,
+    "plan_statuses":         plan_statuses,
+    # evidence / indicators / reference
+    "status_levels":         status_levels,
+    "working_groups":        working_groups,
+    "message_types":         message_types,
+    "metric_types":          metric_types,
+    "academic_years":        academic_years,
 }

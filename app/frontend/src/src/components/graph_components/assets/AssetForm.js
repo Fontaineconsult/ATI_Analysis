@@ -18,7 +18,7 @@ import {
     VStack,
 } from '@chakra-ui/react';
 import { useSettings } from '../../../context/SettingsContext';
-import { ASSET_SCOPES, ASSET_SCOPE_ORDER, ASSET_CLASSES, ASSET_CLASS_ORDER } from './assetConfig';
+import { getScopeOptions, getClassOptions } from './assetConfig';
 import { fetchVendors } from '../../../services/api/get';
 import { createAsset } from '../../../services/api/post';
 import { updateAsset } from '../../../services/api/put';
@@ -36,7 +36,7 @@ import { updateAsset } from '../../../services/api/put';
  */
 function AssetForm({ isOpen, onClose, existingAsset, onSaved }) {
     const isEdit = Boolean(existingAsset);
-    const { campuses } = useSettings();
+    const { campuses, vocab } = useSettings();
     const toast = useToast();
     const [form, setForm] = useState({ title: '', scope: '', asset_class: '', version: '', description: '', locus: '' });
     const [submitting, setSubmitting] = useState(false);
@@ -159,7 +159,7 @@ function AssetForm({ isOpen, onClose, existingAsset, onSaved }) {
                         <FormControl isRequired>
                             <FormLabel fontSize="sm" color="gray.700" fontWeight="semibold">Scope</FormLabel>
                             <Select size="sm" placeholder="Select scope…" value={form.scope} onChange={set('scope')}>
-                                {ASSET_SCOPE_ORDER.map((k) => <option key={k} value={k}>{ASSET_SCOPES[k].label}</option>)}
+                                {getScopeOptions(vocab).map((o) => <option key={o.key} value={o.key}>{o.label}</option>)}
                             </Select>
                         </FormControl>
 
@@ -180,7 +180,7 @@ function AssetForm({ isOpen, onClose, existingAsset, onSaved }) {
                         <FormControl>
                             <FormLabel fontSize="sm" color="gray.700" fontWeight="semibold">Asset Class</FormLabel>
                             <Select size="sm" placeholder="Select class…" value={form.asset_class} onChange={set('asset_class')}>
-                                {ASSET_CLASS_ORDER.map((k) => <option key={k} value={k}>{ASSET_CLASSES[k].label}</option>)}
+                                {getClassOptions(vocab).map((o) => <option key={o.key} value={o.key}>{o.label}</option>)}
                             </Select>
                         </FormControl>
 

@@ -17,7 +17,8 @@ import {
     useToast,
     VStack,
 } from '@chakra-ui/react';
-import { TAAP_OUTCOME_ORDER, TAAP_OUTCOMES, toISODate } from './assetConfig';
+import { getOutcomeOptions, toISODate } from './assetConfig';
+import { useSettings } from '../../../context/SettingsContext';
 import { createTaap } from '../../../services/api/post';
 import { updateTaap } from '../../../services/api/put';
 
@@ -33,6 +34,7 @@ import { updateTaap } from '../../../services/api/put';
 function TaapForm({ isOpen, onClose, existingTaap, assets = [], presetAssetIdentifier, onSaved }) {
     const isEdit = Boolean(existingTaap);
     const toast = useToast();
+    const { vocab } = useSettings();
     const [form, setForm] = useState({
         title: '',
         asset_identifier: '',
@@ -150,7 +152,7 @@ function TaapForm({ isOpen, onClose, existingTaap, assets = [], presetAssetIdent
                         <FormControl>
                             <FormLabel fontSize="sm" fontWeight="semibold" color="gray.700">Outcome</FormLabel>
                             <Select size="sm" placeholder="Select outcome…" value={form.outcome} onChange={set('outcome')}>
-                                {TAAP_OUTCOME_ORDER.map((k) => <option key={k} value={k}>{TAAP_OUTCOMES[k].label}</option>)}
+                                {getOutcomeOptions(vocab).map((o) => <option key={o.key} value={o.key}>{o.label}</option>)}
                             </Select>
                         </FormControl>
 

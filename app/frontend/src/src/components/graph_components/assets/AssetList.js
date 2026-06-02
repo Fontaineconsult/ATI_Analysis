@@ -16,7 +16,8 @@ import {
     VStack,
 } from '@chakra-ui/react';
 import { AddIcon, SearchIcon } from '@chakra-ui/icons';
-import { ASSET_SCOPE_ORDER, getScopeConfig } from './assetConfig';
+import { getScopeOptions, getScopeConfig } from './assetConfig';
+import { useSettings } from '../../../context/SettingsContext';
 import { ClassBadge } from './AssetBadges';
 
 /**
@@ -37,10 +38,13 @@ function AssetList({ items = [], selectedId, onSelect, onAdd, elevationSet, empt
     const [query, setQuery] = useState('');
     const q = query.trim().toLowerCase();
     const elevation = elevationSet || new Set();
+    const { vocab } = useSettings();
+    // Scope group order comes from data_config (via /settings); empty until loaded.
+    const scopeOrder = useMemo(() => getScopeOptions(vocab).map((o) => o.key), [vocab]);
 
     const grouped = useMemo(() => {
         const byScope = new Map();
-        for (const sk of ASSET_SCOPE_ORDER) byScope.set(sk, []);
+        for (const sk of scopeOrder) byScope.set(sk, []);
         for (const it of items) {
             if (q) {
                 const hay = `${it.title || ''} ${it.description || ''} ${it.asset_class || ''} ${it.asset_identifier || ''}`.toLowerCase();
@@ -54,13 +58,13 @@ function AssetList({ items = [], selectedId, onSelect, onAdd, elevationSet, empt
             }
         }
         return byScope;
-    }, [items, q]);
+    }, [items, q, scopeOrder]);
 
     const scopeKeys = useMemo(() => {
-        const keys = [...ASSET_SCOPE_ORDER];
+        const keys = [...scopeOrder];
         if (grouped.has('_other') && grouped.get('_other').length) keys.push('_other');
         return keys;
-    }, [grouped]);
+    }, [grouped, scopeOrder]);
 
     const defaultIndex = useMemo(() => {
         const indices = [];
@@ -105,7 +109,7 @@ function AssetList({ items = [], selectedId, onSelect, onAdd, elevationSet, empt
                 ) : (
                     <Accordion key={defaultIndex.join(',')} defaultIndex={defaultIndex} allowMultiple>
                         {scopeKeys.map((scopeKey) => {
-                            const config = getScopeConfig(scopeKey);
+                            const config = getScopeConfig(scopeKey, vocab);
                             const list = grouped.get(scopeKey) || [];
                             const label = config?.label || (scopeKey === '_other' ? 'Other' : scopeKey);
                             return (

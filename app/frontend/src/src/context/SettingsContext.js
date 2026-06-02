@@ -1,5 +1,6 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
-import { fetchCampuses } from '../services/api/get';
+import { fetchCampuses, fetchSettings } from '../services/api/get';
+import { setVocab } from '../components/graph_components/assets/vocabRegistry';
 
 // Create the SettingsContext
 export const SettingsContext = createContext();
@@ -22,6 +23,13 @@ export const SettingsProvider = ({ children }) => {
     const [campuses, setCampuses] = useState([]);  // List of {name, abbreviation}
     const [campusesLoading, setCampusesLoading] = useState(true);
 
+    // Display vocabularies pulled from data_config.py via GET /settings (single
+    // source of truth). Mirrored into the module-level registry so the pure
+    // label/colour helpers resolve without context; also kept in state so hook
+    // consumers (forms, lists) re-render once it arrives.
+    const [vocab, setVocabState] = useState({});
+    const [vocabLoading, setVocabLoading] = useState(true);
+
     // Load campuses on mount
     useEffect(() => {
         const loadCampuses = async () => {
@@ -36,6 +44,23 @@ export const SettingsProvider = ({ children }) => {
             }
         };
         loadCampuses();
+    }, []);
+
+    // Load vocabularies on mount
+    useEffect(() => {
+        const loadVocab = async () => {
+            try {
+                const response = await fetchSettings();
+                const data = response.data || {};
+                setVocab(data);          // module registry (for pure helpers/badges)
+                setVocabState(data);     // React state (for hook consumers)
+            } catch (error) {
+                console.error('Error loading settings vocabularies:', error);
+            } finally {
+                setVocabLoading(false);
+            }
+        };
+        loadVocab();
     }, []);
 
     // Function to update the current academic year
@@ -69,7 +94,9 @@ export const SettingsProvider = ({ children }) => {
             campuses,
             campusesLoading,
             updateCurrentCampus,
-            getCampusName
+            getCampusName,
+            vocab,
+            vocabLoading
         }}>
             {children}
         </SettingsContext.Provider>

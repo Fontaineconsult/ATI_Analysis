@@ -544,3 +544,19 @@ export const fetchInterfacesForAsset = async (assetIdentifier) => {
         throw error;
     }
 };
+
+//
+// SETTINGS — read-only vocabularies from data_config.py (single source of truth).
+// The frontend fetches these instead of hardcoding label/key copies.
+//
+
+export const fetchSettings = async () => {
+    try {
+        const response = await axios.get(`${process.env.REACT_APP_API_URL}/settings`);
+        if (response.status === 200) return response.data;
+        throw new Error(`Failed to fetch settings: ${response.data?.error}`);
+    } catch (error) {
+        console.error('Error fetching settings:', error.message);
+        throw error;
+    }
+};
