@@ -3,7 +3,7 @@
 #
 from app.database.graph_schema import *
 from app.database.graph_schema import Department, Person
-from app.endpoints.data_api.errors.custom_exceptions import CrudError
+from app.endpoints.data_api.errors.custom_exceptions import CrudError, NotFoundError, ValidationError
 
 def assign_employee_to_department(department_name, employee_id):
     try:
@@ -54,6 +54,76 @@ def assign_employee_to_vendor(vendor_name, employee_id):
             print(f"Employee {employee_id} is already assigned to the vendor {vendor_name}.")
     except Exception as e:
         raise CrudError(f"Error assigning employee {employee_id} to vendor {vendor_name}: {e}")
+
+
+def update_vendor(name: str, location=None, new_name: str = None) -> Vendor:
+    """
+    Patch a vendor's editable fields. `location` is set when provided; `new_name`
+    renames the vendor (its unique business key). Existing Asset.supplied_by /
+    employs edges point at the node and survive a rename. Returns the node.
+
+    Raises NotFoundError if missing, ValidationError on a duplicate new_name,
+    CrudError on save failure.
+    """
+    try:
+        vendor = Vendor.nodes.get(name=name)
+    except Vendor.DoesNotExist:
+        raise NotFoundError(f"Vendor {name!r} not found")
+
+    try:
+        if new_name is not None and new_name.strip() and new_name.strip() != name:
+            candidate = new_name.strip()
+            if Vendor.nodes.filter(name=candidate):
+                raise ValidationError(f"Vendor with name {candidate!r} already exists")
+            vendor.name = candidate
+        if location is not None:
+            vendor.location = location
+        vendor.save()
+        return vendor
+    except ValidationError:
+        raise
+    except Exception as e:
+        raise CrudError(f"Failed to update Vendor {name!r}: {e}")
+
+
+def assign_person_to_vendor(vendor_name: str, person_unique_id: str) -> bool:
+    """
+    Connect a Person (by unique_id) to a Vendor's `employs` edge. Idempotent.
+    Uses unique_id to match the rest of the asset/TAAP person-assignment UI
+    (the older assign_employee_to_vendor keys on employee_id).
+    """
+    try:
+        vendor = Vendor.nodes.get(name=vendor_name)
+    except Vendor.DoesNotExist:
+        raise NotFoundError(f"Vendor {vendor_name!r} not found")
+    try:
+        person = Person.nodes.get(unique_id=person_unique_id)
+    except Person.DoesNotExist:
+        raise NotFoundError(f"Person {person_unique_id!r} not found")
+    try:
+        if not vendor.employs.is_connected(person):
+            vendor.employs.connect(person)
+        return True
+    except Exception as e:
+        raise CrudError(f"Failed to assign person to vendor {vendor_name!r}: {e}")
+
+
+def unassign_person_from_vendor(vendor_name: str, person_unique_id: str) -> bool:
+    """Disconnect a Person (by unique_id) from a Vendor's `employs`. Idempotent."""
+    try:
+        vendor = Vendor.nodes.get(name=vendor_name)
+    except Vendor.DoesNotExist:
+        raise NotFoundError(f"Vendor {vendor_name!r} not found")
+    try:
+        person = Person.nodes.get(unique_id=person_unique_id)
+    except Person.DoesNotExist:
+        raise NotFoundError(f"Person {person_unique_id!r} not found")
+    try:
+        if vendor.employs.is_connected(person):
+            vendor.employs.disconnect(person)
+        return True
+    except Exception as e:
+        raise CrudError(f"Failed to unassign person from vendor {vendor_name!r}: {e}")
 
 
 def assign_department_to_campus(department_name, campus_name):

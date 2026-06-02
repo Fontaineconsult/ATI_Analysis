@@ -451,3 +451,40 @@ export const addProgressUpdate = async (workingGroupPlanIdentifier, yseIdentifie
         throw error;
     }
 }
+
+//
+// ASSETS / TAAPs — create (plain POST, no `action` field)
+//
+
+export const createAsset = async (payload) => {
+    // payload: { title, scope, locus, asset_class?, version?, description? }
+    try {
+        const response = await axios.post(`${process.env.REACT_APP_API_URL}/assets`, payload);
+        return response.data;
+    } catch (error) {
+        console.error('Error creating asset:', error);
+        throw error;
+    }
+};
+
+export const createTaap = async (payload) => {
+    // payload: { title, asset_identifier, outcome?, description?, effective_date?, review_due?, active? }
+    try {
+        const response = await axios.post(`${process.env.REACT_APP_API_URL}/taaps`, payload);
+        return response.data;
+    } catch (error) {
+        console.error('Error creating TAAP:', error);
+        throw error;
+    }
+};
+
+export const createVendor = async (payload) => {
+    // payload: { name, location? }
+    try {
+        const response = await axios.post(`${process.env.REACT_APP_API_URL}/vendors`, payload);
+        return response.data;
+    } catch (error) {
+        console.error('Error creating vendor:', error);
+        throw error;
+    }
+};

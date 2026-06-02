@@ -153,3 +153,55 @@ export const unassignPersonAsImplementor = async (personUniqueId, yearSuccessEvi
         throw error;
     }
 };
+
+//
+// ASSETS / TAAPs — node deletes (edge unassigns live on PUT, in put.js)
+//
+
+export const deleteAsset = async (assetIdentifier) => {
+    try {
+        const response = await fetch(`${API_URL}/assets`, {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ asset_identifier: assetIdentifier }),
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Failed to delete asset');
+        return data;
+    } catch (error) {
+        console.error('Error deleting asset:', error);
+        throw error;
+    }
+};
+
+export const deleteTaap = async (title) => {
+    try {
+        const response = await fetch(`${API_URL}/taaps`, {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ title }),
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Failed to delete TAAP');
+        return data;
+    } catch (error) {
+        console.error('Error deleting TAAP:', error);
+        throw error;
+    }
+};
+
+export const deleteVendor = async (name) => {
+    try {
+        const response = await fetch(`${API_URL}/vendors`, {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name }),
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Failed to delete vendor');
+        return data;
+    } catch (error) {
+        console.error('Error deleting vendor:', error);
+        throw error;
+    }
+};

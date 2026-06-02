@@ -1,8 +1,10 @@
 #
 # ORGANIZATIONAL UNITS WRITE QUERIES
 #
+from neomodel import db
+
 from app.database.graph_schema import *
-from app.endpoints.data_api.errors.custom_exceptions import CrudError
+from app.endpoints.data_api.errors.custom_exceptions import CrudError, NotFoundError
 
 def get_all_departments() -> list:
     """
@@ -33,6 +35,33 @@ def get_all_vendors() -> list:
         return Vendor.nodes.all()
     except Exception as e:
         raise CrudError(f"Failed to retrieve vendors: {e}")
+
+def get_vendor(name: str):
+    """
+    Get one vendor node by its unique name. Raises NotFoundError if missing.
+    """
+    try:
+        return Vendor.nodes.get(name=name)
+    except Vendor.DoesNotExist:
+        raise NotFoundError(f"Vendor {name!r} not found")
+    except Exception as e:
+        raise CrudError(f"Failed to retrieve vendor '{name}': {e}")
+
+
+# Assets a vendor supplies (reverse of Asset.supplied_by). Vendor has no reverse
+# accessor for that edge, so query it in the database rather than scanning nodes.
+_VENDOR_ASSETS_QUERY = """
+    MATCH (a:Asset)-[:supplied_by]->(v:Vendor {name: $name})
+    RETURN a.asset_identifier AS asset_identifier, a.title AS title
+    ORDER BY a.title
+"""
+
+
+def get_assets_supplied_by_vendor(name: str) -> list:
+    """All assets whose supplier (supplied_by) is the named vendor."""
+    results, _ = db.cypher_query(_VENDOR_ASSETS_QUERY, {"name": name})
+    return [{"asset_identifier": row[0], "title": row[1]} for row in results]
+
 
 def get_all_campuses() -> list:
     """

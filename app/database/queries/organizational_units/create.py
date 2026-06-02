@@ -2,7 +2,7 @@
 # ORGANIZATIONAL UNITS CREATE QUERIES
 #
 from app.database.graph_schema import *
-from app.endpoints.data_api.errors.custom_exceptions import CrudError
+from app.endpoints.data_api.errors.custom_exceptions import CrudError, ValidationError
 
 def add_department(name: str, location: str) -> bool:
     """
@@ -39,6 +39,29 @@ def add_vendor(name: str, location: str) -> bool:
         return True
     except Exception as e:
         raise CrudError(f"Failed to add vendor: {e}")
+
+def create_vendor(name: str, location: str = None) -> Vendor:
+    """
+    Create a Vendor node and return it. The sanctioned creation path for the
+    /vendors CRUD endpoint: validates a non-blank name, guards the unique-name
+    index with a friendly ValidationError, and returns the node so the caller can
+    serialize it. (add_vendor above is the older bool-returning helper.)
+
+    Raises ValidationError on a blank/duplicate name, CrudError on save failure.
+    """
+    if not name or not name.strip():
+        raise ValidationError("name is required")
+    name = name.strip()
+
+    if Vendor.nodes.filter(name=name):
+        raise ValidationError(f"Vendor with name {name!r} already exists")
+
+    try:
+        vendor = Vendor(name=name, location=location)
+        vendor.save()
+        return vendor
+    except Exception as e:
+        raise CrudError(f"Failed to create Vendor {name!r}: {e}")
 
 def add_college(name: str, location: str) -> bool:
     """

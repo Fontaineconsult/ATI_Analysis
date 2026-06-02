@@ -251,3 +251,203 @@ export const fetchCampusPlan = async (campusAbbrev, academicYear) => {
         throw error;
     }
 }
+
+//
+// ASSETS / TAAPs
+//
+
+// Assets ---------------------------------------------------------------------
+
+export const fetchAllAssets = async () => {
+    try {
+        const response = await axios.get(`${process.env.REACT_APP_API_URL}/assets`);
+        if (response.status === 200) return response.data;
+        throw new Error(`Failed to fetch assets: ${response.data?.error}`);
+    } catch (error) {
+        console.error('Error fetching assets:', error.message);
+        throw error;
+    }
+};
+
+export const fetchAssetDetail = async (assetIdentifier) => {
+    try {
+        const response = await axios.get(
+            `${process.env.REACT_APP_API_URL}/assets/${encodeURIComponent(assetIdentifier)}`
+        );
+        if (response.status === 200) return response.data;
+        throw new Error(`Failed to fetch asset: ${response.data?.error}`);
+    } catch (error) {
+        console.error('Error fetching asset detail:', error.message);
+        throw error;
+    }
+};
+
+export const fetchAssetsByScope = async (scope) => {
+    try {
+        const response = await axios.get(`${process.env.REACT_APP_API_URL}/assets`, {
+            params: { scope },
+        });
+        if (response.status === 200) return response.data;
+        throw new Error(`Failed to fetch assets by scope: ${response.data?.error}`);
+    } catch (error) {
+        console.error('Error fetching assets by scope:', error.message);
+        throw error;
+    }
+};
+
+export const fetchAssetsByCampus = async (campusAbbrev) => {
+    try {
+        const response = await axios.get(`${process.env.REACT_APP_API_URL}/assets`, {
+            params: { campus: campusAbbrev },
+        });
+        if (response.status === 200) return response.data;
+        throw new Error(`Failed to fetch assets by campus: ${response.data?.error}`);
+    } catch (error) {
+        console.error('Error fetching assets by campus:', error.message);
+        throw error;
+    }
+};
+
+export const fetchElevationSignalAssets = async () => {
+    try {
+        const response = await axios.get(`${process.env.REACT_APP_API_URL}/assets`, {
+            params: { elevation_signal: true },
+        });
+        if (response.status === 200) return response.data;
+        throw new Error(`Failed to fetch elevation-signal assets: ${response.data?.error}`);
+    } catch (error) {
+        console.error('Error fetching elevation-signal assets:', error.message);
+        throw error;
+    }
+};
+
+// TAAPs ----------------------------------------------------------------------
+
+export const fetchAllTaaps = async () => {
+    try {
+        const response = await axios.get(`${process.env.REACT_APP_API_URL}/taaps`);
+        if (response.status === 200) return response.data;
+        throw new Error(`Failed to fetch TAAPs: ${response.data?.error}`);
+    } catch (error) {
+        console.error('Error fetching TAAPs:', error.message);
+        throw error;
+    }
+};
+
+export const fetchTaapDetail = async (title) => {
+    try {
+        const response = await axios.get(
+            `${process.env.REACT_APP_API_URL}/taaps/${encodeURIComponent(title)}`
+        );
+        if (response.status === 200) return response.data;
+        throw new Error(`Failed to fetch TAAP: ${response.data?.error}`);
+    } catch (error) {
+        console.error('Error fetching TAAP detail:', error.message);
+        throw error;
+    }
+};
+
+export const fetchTaapsForAsset = async (assetIdentifier) => {
+    try {
+        const response = await axios.get(`${process.env.REACT_APP_API_URL}/taaps`, {
+            params: { asset_identifier: assetIdentifier },
+        });
+        if (response.status === 200) return response.data;
+        throw new Error(`Failed to fetch TAAPs for asset: ${response.data?.error}`);
+    } catch (error) {
+        console.error('Error fetching TAAPs for asset:', error.message);
+        throw error;
+    }
+};
+
+export const fetchActiveTaaps = async () => {
+    try {
+        const response = await axios.get(`${process.env.REACT_APP_API_URL}/taaps`, {
+            params: { active: true },
+        });
+        if (response.status === 200) return response.data;
+        throw new Error(`Failed to fetch active TAAPs: ${response.data?.error}`);
+    } catch (error) {
+        console.error('Error fetching active TAAPs:', error.message);
+        throw error;
+    }
+};
+
+export const fetchTaapsDueForReview = async (dueBefore) => {
+    try {
+        const response = await axios.get(`${process.env.REACT_APP_API_URL}/taaps`, {
+            params: { due_before: dueBefore },
+        });
+        if (response.status === 200) return response.data;
+        throw new Error(`Failed to fetch TAAPs due for review: ${response.data?.error}`);
+    } catch (error) {
+        console.error('Error fetching TAAPs due for review:', error.message);
+        throw error;
+    }
+};
+
+// Organizational units used as asset stewards / suppliers --------------------
+
+export const fetchVendors = async () => {
+    try {
+        const response = await axios.get(`${process.env.REACT_APP_API_URL}/organizational-units`, {
+            params: { type: 'vendors' },
+        });
+        if (response.status === 200) return response.data;
+        throw new Error(`Failed to fetch vendors: ${response.data?.error}`);
+    } catch (error) {
+        console.error('Error fetching vendors:', error.message);
+        throw error;
+    }
+};
+
+export const fetchDepartments = async (campus) => {
+    try {
+        const response = await axios.get(`${process.env.REACT_APP_API_URL}/organizational-units`, {
+            params: campus ? { type: 'departments', campus } : { type: 'departments' },
+        });
+        if (response.status === 200) return response.data;
+        throw new Error(`Failed to fetch departments: ${response.data?.error}`);
+    } catch (error) {
+        console.error('Error fetching departments:', error.message);
+        throw error;
+    }
+};
+
+export const fetchColleges = async (campus) => {
+    try {
+        const response = await axios.get(`${process.env.REACT_APP_API_URL}/organizational-units`, {
+            params: campus ? { type: 'colleges', campus } : { type: 'colleges' },
+        });
+        if (response.status === 200) return response.data;
+        throw new Error(`Failed to fetch colleges: ${response.data?.error}`);
+    } catch (error) {
+        console.error('Error fetching colleges:', error.message);
+        throw error;
+    }
+};
+
+// Vendor CRUD resource (/vendors) — richer than the org-units ?type=vendors
+// reference list (this one carries location + detail). fetchVendors above stays
+// for the asset supplier dropdowns.
+export const fetchVendorsList = async () => {
+    try {
+        const response = await axios.get(`${process.env.REACT_APP_API_URL}/vendors`);
+        if (response.status === 200) return response.data;
+        throw new Error(`Failed to fetch vendors: ${response.data?.error}`);
+    } catch (error) {
+        console.error('Error fetching vendors list:', error.message);
+        throw error;
+    }
+};
+
+export const fetchVendorDetail = async (name) => {
+    try {
+        const response = await axios.get(`${process.env.REACT_APP_API_URL}/vendors/${encodeURIComponent(name)}`);
+        if (response.status === 200) return response.data;
+        throw new Error(`Failed to fetch vendor: ${response.data?.error}`);
+    } catch (error) {
+        console.error('Error fetching vendor detail:', error.message);
+        throw error;
+    }
+};

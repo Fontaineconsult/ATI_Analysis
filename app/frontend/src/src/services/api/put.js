@@ -358,3 +358,255 @@ export const addProgressNoteToPlan = async (planId, noteName, noteContent, creat
         throw error;
     }
 }
+
+//
+// ASSETS / TAAPs — update + edge assign/unassign (action-dispatch PUT).
+// Both assign and unassign live on PUT; DELETE is reserved for node removal.
+//
+
+export const updateAsset = async (assetIdentifier, fields) => {
+    try {
+        const response = await axios.put(`${process.env.REACT_APP_API_URL}/assets`, {
+            action: 'update',
+            asset_identifier: assetIdentifier,
+            ...fields,
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error updating asset:', error);
+        throw error;
+    }
+};
+
+export const assignStewardToAsset = async (assetIdentifier, capacity, holderType, holderUniqueId) => {
+    try {
+        const response = await axios.put(`${process.env.REACT_APP_API_URL}/assets`, {
+            action: 'assign_steward',
+            asset_identifier: assetIdentifier,
+            capacity,
+            holder_type: holderType,
+            holder_unique_id: holderUniqueId,
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error assigning steward to asset:', error);
+        throw error;
+    }
+};
+
+export const unassignStewardFromAsset = async (assetIdentifier, capacity, holderType, holderUniqueId) => {
+    try {
+        const response = await axios.put(`${process.env.REACT_APP_API_URL}/assets`, {
+            action: 'unassign_steward',
+            asset_identifier: assetIdentifier,
+            capacity,
+            holder_type: holderType,
+            holder_unique_id: holderUniqueId,
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error unassigning steward from asset:', error);
+        throw error;
+    }
+};
+
+export const assignVendorToAsset = async (assetIdentifier, vendorName) => {
+    try {
+        const response = await axios.put(`${process.env.REACT_APP_API_URL}/assets`, {
+            action: 'assign_vendor',
+            asset_identifier: assetIdentifier,
+            vendor_name: vendorName,
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error assigning vendor to asset:', error);
+        throw error;
+    }
+};
+
+export const unassignVendorFromAsset = async (assetIdentifier, vendorName) => {
+    try {
+        const response = await axios.put(`${process.env.REACT_APP_API_URL}/assets`, {
+            action: 'unassign_vendor',
+            asset_identifier: assetIdentifier,
+            vendor_name: vendorName,
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error unassigning vendor from asset:', error);
+        throw error;
+    }
+};
+
+export const assignCampusToAsset = async (assetIdentifier, campusAbbrev) => {
+    try {
+        const response = await axios.put(`${process.env.REACT_APP_API_URL}/assets`, {
+            action: 'assign_campus',
+            asset_identifier: assetIdentifier,
+            campus_abbrev: campusAbbrev,
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error assigning campus to asset:', error);
+        throw error;
+    }
+};
+
+export const unassignCampusFromAsset = async (assetIdentifier, campusAbbrev) => {
+    try {
+        const response = await axios.put(`${process.env.REACT_APP_API_URL}/assets`, {
+            action: 'unassign_campus',
+            asset_identifier: assetIdentifier,
+            campus_abbrev: campusAbbrev,
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error unassigning campus from asset:', error);
+        throw error;
+    }
+};
+
+export const updateTaap = async (title, fields) => {
+    try {
+        const response = await axios.put(`${process.env.REACT_APP_API_URL}/taaps`, {
+            action: 'update',
+            title,
+            ...fields,
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error updating TAAP:', error);
+        throw error;
+    }
+};
+
+export const assignOwnerToTaap = async (title, personUniqueId) => {
+    try {
+        const response = await axios.put(`${process.env.REACT_APP_API_URL}/taaps`, {
+            action: 'assign_owner',
+            title,
+            person_unique_id: personUniqueId,
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error assigning owner to TAAP:', error);
+        throw error;
+    }
+};
+
+export const unassignOwnerFromTaap = async (title, personUniqueId) => {
+    try {
+        const response = await axios.put(`${process.env.REACT_APP_API_URL}/taaps`, {
+            action: 'unassign_owner',
+            title,
+            person_unique_id: personUniqueId,
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error unassigning owner from TAAP:', error);
+        throw error;
+    }
+};
+
+export const assignSignerToTaap = async (title, personUniqueId) => {
+    try {
+        const response = await axios.put(`${process.env.REACT_APP_API_URL}/taaps`, {
+            action: 'assign_signer',
+            title,
+            person_unique_id: personUniqueId,
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error assigning signer to TAAP:', error);
+        throw error;
+    }
+};
+
+export const unassignSignerFromTaap = async (title, personUniqueId) => {
+    try {
+        const response = await axios.put(`${process.env.REACT_APP_API_URL}/taaps`, {
+            action: 'unassign_signer',
+            title,
+            person_unique_id: personUniqueId,
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error unassigning signer from TAAP:', error);
+        throw error;
+    }
+};
+
+export const connectTaapToYse = async (title, yseIdentifier) => {
+    try {
+        const response = await axios.put(`${process.env.REACT_APP_API_URL}/taaps`, {
+            action: 'connect_yse',
+            title,
+            yse_identifier: yseIdentifier,
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error connecting TAAP to YSE:', error);
+        throw error;
+    }
+};
+
+export const disconnectTaapFromYse = async (title, yseIdentifier) => {
+    try {
+        const response = await axios.put(`${process.env.REACT_APP_API_URL}/taaps`, {
+            action: 'disconnect_yse',
+            title,
+            yse_identifier: yseIdentifier,
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error disconnecting TAAP from YSE:', error);
+        throw error;
+    }
+};
+
+//
+// VENDORS — update + employee assign/unassign (action-dispatch PUT)
+//
+
+export const updateVendor = async (name, fields) => {
+    // fields: { location?, new_name? }
+    try {
+        const response = await axios.put(`${process.env.REACT_APP_API_URL}/vendors`, {
+            action: 'update',
+            name,
+            ...fields,
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error updating vendor:', error);
+        throw error;
+    }
+};
+
+export const assignEmployeeToVendor = async (name, personUniqueId) => {
+    try {
+        const response = await axios.put(`${process.env.REACT_APP_API_URL}/vendors`, {
+            action: 'assign_employee',
+            name,
+            person_unique_id: personUniqueId,
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error assigning employee to vendor:', error);
+        throw error;
+    }
+};
+
+export const unassignEmployeeFromVendor = async (name, personUniqueId) => {
+    try {
+        const response = await axios.put(`${process.env.REACT_APP_API_URL}/vendors`, {
+            action: 'unassign_employee',
+            name,
+            person_unique_id: personUniqueId,
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error unassigning employee from vendor:', error);
+        throw error;
+    }
+};

@@ -12,4 +12,5 @@ from . import (assets,
                implementation,
                indicators,
                individuals,
-               organizational_units)
+               organizational_units,
+               vendors)
