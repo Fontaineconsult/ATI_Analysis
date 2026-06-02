@@ -1,0 +1,349 @@
+# ===========================================================================
+# ATI Cypher Query Registry
+# ---------------------------------------------------------------------------
+# A curated catalog of reusable Cypher queries for the ATI knowledge graph.
+# Modeled on app/database/graph_schema.py (neomodel). Relationship directions
+# below mirror that schema exactly.
+#
+# Each entry:
+#   name:        unique key (used with: python run_query.py --query <name>)
+#   category:    ontology grouping
+#   description: what it answers
+#   mode:        read | write   (write queries require --allow-write)
+#   params:      list of $param names the query expects (or [])
+#   cypher:      the query text
+#
+# To add a query: copy an entry, give it a unique name, set mode honestly.
+# Keep writes rare and parameterized. Never interpolate values into the
+# cypher string — always pass them as params.
+# ===========================================================================
+
+# ---------------------------------------------------------------------------
+# SCHEMA / INTROSPECTION
+# ---------------------------------------------------------------------------
+- name: list_labels
+  category: schema
+  description: All node labels present in the database.
+  mode: read
+  params: []
+  cypher: |
+    CALL db.labels() YIELD label
+    RETURN label ORDER BY label
+
+- name: list_relationship_types
+  category: schema
+  description: All relationship types present in the database.
+  mode: read
+  params: []
+  cypher: |
+    CALL db.relationshipTypes() YIELD relationshipType
+    RETURN relationshipType ORDER BY relationshipType
+
+- name: node_counts_by_label
+  category: schema
+  description: Count of nodes grouped by their primary label.
+  mode: read
+  params: []
+  cypher: |
+    MATCH (n)
+    RETURN labels(n)[0] AS label, count(*) AS count
+    ORDER BY count DESC
+
+- name: schema_visualization
+  category: schema
+  description: Schema graph (labels and how they connect).
+  mode: read
+  params: []
+  cypher: |
+    CALL db.schema.visualization()
+
+# ---------------------------------------------------------------------------
+# INDICATORS  (Goal -[:supported_by]-> SuccessIndicator; WG -[:responsible_for]-> Goal)
+# ---------------------------------------------------------------------------
+- name: list_goals
+  category: indicators
+  description: All active goals, ordered by goal number.
+  mode: read
+  params: []
+  cypher: |
+    MATCH (g:Goal)
+    WHERE coalesce(g.removed, false) = false
+    RETURN g.goal_number AS number, g.name AS name, g.description AS description
+    ORDER BY number
+
+- name: list_success_indicators
+  category: indicators
+  description: All active success indicators with their composite keys.
+  mode: read
+  params: []
+  cypher: |
+    MATCH (si:SuccessIndicator)
+    WHERE coalesce(si.removed, false) = false
+    RETURN si.number AS number,
+           si.composite_key AS composite_key,
+           si.success_indicator AS text
+    ORDER BY si.composite_key
+
+- name: indicators_for_working_group
+  category: indicators
+  description: Success indicators a working group is responsible for (via its goals).
+  mode: read
+  params: [working_group]   # e.g. "Web", "Procurement", "Instructional Materials"
+  cypher: |
+    MATCH (wg:ATIWorkingGroup {name: $working_group})-[:responsible_for]->(g:Goal)-[:supported_by]->(si:SuccessIndicator)
+    WHERE coalesce(si.removed, false) = false
+    RETURN g.goal_number AS goal,
+           si.composite_key AS indicator,
+           si.success_indicator AS text
+    ORDER BY indicator
+
+# ---------------------------------------------------------------------------
+# EVIDENCE  (YSE -[:evidence_in_year]-> AcademicYear; -[:evidence_at_campus]-> Campus;
+#            -[:status_is]-> StatusLevel; -[:tracks]-> SuccessIndicator)
+# ---------------------------------------------------------------------------
+- name: yse_status_breakdown_for_year
+  category: evidence
+  description: Count of YearSuccessEvidence by status level for a given academic year.
+  mode: read
+  params: [academic_year]   # e.g. "2025-2026"
+  cypher: |
+    MATCH (yse:YearSuccessEvidence)-[:evidence_in_year]->(:AcademicYear {name: $academic_year})
+    OPTIONAL MATCH (yse)-[:status_is]->(sl:StatusLevel)
+    RETURN coalesce(sl.status_level, 'Unset') AS status, count(yse) AS count
+    ORDER BY count DESC
+
+- name: yses_by_campus_for_year
+  category: evidence
+  description: How many YSEs each campus has for a year (sanity check for migrations).
+  mode: read
+  params: [academic_year]
+  cypher: |
+    MATCH (yse:YearSuccessEvidence)-[:evidence_in_year]->(:AcademicYear {name: $academic_year})
+    OPTIONAL MATCH (yse)-[:evidence_at_campus]->(c:Campus)
+    RETURN coalesce(c.abbreviation, 'NO CAMPUS') AS campus, count(yse) AS yse_count
+    ORDER BY campus
+
+- name: not_started_yses_for_year
+  category: evidence
+  description: YSEs still at 'Not Started' for a year, with campus and indicator.
+  mode: read
+  params: [academic_year]
+  cypher: |
+    MATCH (yse:YearSuccessEvidence)-[:evidence_in_year]->(:AcademicYear {name: $academic_year})
+    MATCH (yse)-[:status_is]->(:StatusLevel {status_level: 'Not Started'})
+    MATCH (yse)-[:tracks]->(si:SuccessIndicator)
+    OPTIONAL MATCH (yse)-[:evidence_at_campus]->(c:Campus)
+    RETURN coalesce(c.abbreviation, 'NO CAMPUS') AS campus,
+           si.composite_key AS indicator,
+           yse.year_identifier AS yse
+    ORDER BY campus, indicator
+
+# ---------------------------------------------------------------------------
+# IMPLEMENTATION  (Process/Project/Procedure/Service/Guidance/Tracking/InternalPolicy
+#                  -[:is_evidence_for]-> YSE)
+# ---------------------------------------------------------------------------
+- name: count_implementations_by_type
+  category: implementation
+  description: Count of each implementation node type.
+  mode: read
+  params: []
+  cypher: |
+    MATCH (n)
+    WITH n, [l IN labels(n) WHERE l IN
+      ['Process','Project','Procedure','Service','Guidance','Tracking','InternalPolicy']] AS impl
+    WHERE size(impl) > 0
+    RETURN impl[0] AS type, count(n) AS count
+    ORDER BY count DESC
+
+- name: implementations_for_yse
+  category: implementation
+  description: All implementation nodes that serve as evidence for a specific YSE.
+  mode: read
+  params: [year_identifier]
+  cypher: |
+    MATCH (n)-[:is_evidence_for]->(:YearSuccessEvidence {year_identifier: $year_identifier})
+    RETURN labels(n)[0] AS type,
+           coalesce(n.title, n.name) AS title,
+           n.unique_id AS id
+    ORDER BY type, title
+
+- name: implementations_without_evidence
+  category: implementation
+  description: Implementation nodes not linked to any YSE (candidates for cleanup or linking).
+  mode: read
+  params: []
+  cypher: |
+    MATCH (n)
+    WHERE any(l IN labels(n) WHERE l IN
+      ['Process','Project','Procedure','Service','Guidance','Tracking','InternalPolicy'])
+      AND NOT (n)-[:is_evidence_for]->(:YearSuccessEvidence)
+    RETURN labels(n)[0] AS type, coalesce(n.title, n.name) AS title
+    ORDER BY type, title
+
+# ---------------------------------------------------------------------------
+# INDIVIDUALS  (Person -[:participates_in]-> ATIWorkingGroup; -[:works_at_campus]-> Campus;
+#               -[:implements]-> YSE)
+# ---------------------------------------------------------------------------
+- name: people_by_campus
+  category: individuals
+  description: Everyone with their host campus, role, and active flag.
+  mode: read
+  params: []
+  cypher: |
+    MATCH (p:Person)
+    OPTIONAL MATCH (p)-[:works_at_campus]->(c:Campus)
+    RETURN coalesce(c.abbreviation, 'none') AS campus,
+           p.name AS name, p.ati_role AS role, p.active AS active
+    ORDER BY campus, name
+
+- name: people_in_working_group
+  category: individuals
+  description: Members of a given ATI working group.
+  mode: read
+  params: [working_group]
+  cypher: |
+    MATCH (p:Person)-[:participates_in]->(:ATIWorkingGroup {name: $working_group})
+    RETURN p.name AS name, p.email AS email, p.ati_role AS role
+    ORDER BY name
+
+- name: find_person
+  category: individuals
+  description: Case-insensitive person lookup by partial name.
+  mode: read
+  params: [name]
+  cypher: |
+    MATCH (p:Person)
+    WHERE toLower(p.name) CONTAINS toLower($name)
+    RETURN p.name AS name, p.email AS email, p.title AS title, p.ati_role AS role
+    ORDER BY name
+
+- name: people_assigned_to_yse_for_year
+  category: individuals
+  description: Workload view — how many YSEs each person implements in a year.
+  mode: read
+  params: [academic_year]
+  cypher: |
+    MATCH (p:Person)-[:implements]->(yse:YearSuccessEvidence)-[:evidence_in_year]->(:AcademicYear {name: $academic_year})
+    RETURN p.name AS person, count(yse) AS yse_count
+    ORDER BY yse_count DESC, person
+
+# ---------------------------------------------------------------------------
+# ORGANIZATIONAL UNITS  (Department/College -[:operates_under_campus]-> Campus)
+# ---------------------------------------------------------------------------
+- name: list_campuses
+  category: organizational_units
+  description: All campuses with abbreviations.
+  mode: read
+  params: []
+  cypher: |
+    MATCH (c:Campus)
+    RETURN c.abbreviation AS abbreviation, c.name AS name
+    ORDER BY abbreviation
+
+- name: departments_by_campus
+  category: organizational_units
+  description: Departments operating under a campus.
+  mode: read
+  params: [campus_abbreviation]   # e.g. "sfsu"
+  cypher: |
+    MATCH (d:Department)-[:operates_under_campus]->(:Campus {abbreviation: $campus_abbreviation})
+    RETURN d.name AS department
+    ORDER BY department
+
+- name: list_vendors
+  category: organizational_units
+  description: All vendors.
+  mode: read
+  params: []
+  cypher: |
+    MATCH (v:Vendor)
+    RETURN v.name AS name, v.location AS location
+    ORDER BY name
+
+# ---------------------------------------------------------------------------
+# GOVERNANCE  (Law/Case/Directive/ExternalPolicy/Memo/Guideline -[:informs]-> Goal)
+# ---------------------------------------------------------------------------
+- name: list_laws
+  category: governance
+  description: All law nodes with legislative authority.
+  mode: read
+  params: []
+  cypher: |
+    MATCH (l:Law)
+    RETURN l.title AS title, l.legislative_authority AS authority, l.effective_date AS effective_date
+    ORDER BY title
+
+- name: governance_informing_goals
+  category: governance
+  description: Which governance documents inform which goals.
+  mode: read
+  params: []
+  cypher: |
+    MATCH (n)-[:informs]->(g:Goal)
+    WHERE any(lbl IN labels(n) WHERE lbl IN
+      ['Law','Case','Directive','ExternalPolicy','Memo','Guideline'])
+    RETURN labels(n)[0] AS governance_type,
+           coalesce(n.title, n.name) AS title,
+           g.goal_number AS goal
+    ORDER BY governance_type, goal
+
+# ---------------------------------------------------------------------------
+# DOCUMENTATION  (X -[:is_documented_by]-> Document/Webpage/Note/Message)
+# ---------------------------------------------------------------------------
+- name: documents_for_indicator_in_year
+  category: documentation
+  description: Evidence documents reachable from a success indicator, via its YSE and implementations, for a year.
+  mode: read
+  params: [composite_key, academic_year]   # composite_key e.g. "1.1-web"
+  cypher: |
+    MATCH (si:SuccessIndicator {composite_key: $composite_key})<-[:tracks]-(yse:YearSuccessEvidence)
+          -[:evidence_in_year]->(:AcademicYear {name: $academic_year})
+    MATCH (impl)-[:is_evidence_for]->(yse)
+    MATCH (impl)-[:is_documented_by]->(doc:Document)
+    WHERE coalesce(doc.depreciated, false) = false
+    RETURN DISTINCT doc.name AS document, doc.uri_path AS uri
+    ORDER BY document
+
+- name: orphan_documents
+  category: documentation
+  description: Document nodes nothing points to via is_documented_by.
+  mode: read
+  params: []
+  cypher: |
+    MATCH (d:Document)
+    WHERE NOT ()-[:is_documented_by]->(d)
+    RETURN d.name AS name, d.file_path AS path
+    ORDER BY name
+
+# ---------------------------------------------------------------------------
+# COMPOUND / REPORTING
+# ---------------------------------------------------------------------------
+- name: campus_plan_overview_for_year
+  category: compound
+  description: Campus plans for a year with their working-group plans.
+  mode: read
+  params: [academic_year]
+  cypher: |
+    MATCH (cp:CampusPlan)-[:in_academic_year]->(:AcademicYear {name: $academic_year})
+    MATCH (cp)-[:is_campus_plan_for]->(c:Campus)
+    OPTIONAL MATCH (cp)-[:has_working_group_plan]->(:WorkingGroupPlan)-[:for_working_group]->(wg:ATIWorkingGroup)
+    RETURN c.abbreviation AS campus,
+           cp.plan_identifier AS plan,
+           collect(DISTINCT wg.name) AS working_groups
+    ORDER BY campus
+
+# ---------------------------------------------------------------------------
+# WRITE EXAMPLES  (require --allow-write; included as templates, use with care)
+# ---------------------------------------------------------------------------
+- name: set_yse_status
+  category: write_examples
+  description: Set a YSE's status level, replacing any existing status_is edge.
+  mode: write
+  params: [year_identifier, status_level]   # status_level e.g. "Initiated"
+  cypher: |
+    MATCH (yse:YearSuccessEvidence {year_identifier: $year_identifier})
+    MATCH (sl:StatusLevel {status_level: $status_level})
+    OPTIONAL MATCH (yse)-[r:status_is]->()
+    DELETE r
+    MERGE (yse)-[:status_is]->(sl)
+    RETURN yse.year_identifier AS yse, sl.status_level AS status
