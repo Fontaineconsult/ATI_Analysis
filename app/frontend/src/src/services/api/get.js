@@ -560,3 +560,44 @@ export const fetchSettings = async () => {
         throw error;
     }
 };
+
+//
+// TOOLS — instruments an Implementation uses to remediate Interfaces.
+//
+
+export const fetchAllTools = async () => {
+    try {
+        const response = await axios.get(`${process.env.REACT_APP_API_URL}/tools`);
+        if (response.status === 200) return response.data;
+        throw new Error(`Failed to fetch tools: ${response.data?.error}`);
+    } catch (error) {
+        console.error('Error fetching tools:', error.message);
+        throw error;
+    }
+};
+
+export const fetchToolDetail = async (toolIdentifier) => {
+    try {
+        const response = await axios.get(
+            `${process.env.REACT_APP_API_URL}/tools/${encodeURIComponent(toolIdentifier)}`
+        );
+        if (response.status === 200) return response.data;
+        throw new Error(`Failed to fetch tool: ${response.data?.error}`);
+    } catch (error) {
+        console.error('Error fetching tool detail:', error.message);
+        throw error;
+    }
+};
+
+export const fetchToolsForAsset = async (assetIdentifier) => {
+    try {
+        const response = await axios.get(`${process.env.REACT_APP_API_URL}/tools`, {
+            params: { asset: assetIdentifier },
+        });
+        if (response.status === 200) return response.data;
+        throw new Error(`Failed to fetch tools for asset: ${response.data?.error}`);
+    } catch (error) {
+        console.error('Error fetching tools for asset:', error.message);
+        throw error;
+    }
+};

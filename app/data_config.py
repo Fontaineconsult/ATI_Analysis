@@ -239,3 +239,11 @@ PUBLIC_VOCABULARIES = {
     "metric_types":          metric_types,
     "academic_years":        academic_years,
 }
+
+yse_priority_level = {
+    "top": "Top",
+    "high": "High",
+    "neutral": "Neutral",
+    "low": "Low",
+
+}

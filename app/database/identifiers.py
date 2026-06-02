@@ -85,3 +85,18 @@ def make_interface_identifier(locus: str, view_slug: str) -> str:
     Example: 'canvas-sfsu-course-view'
     """
     return IDENTIFIER_SEPARATOR.join([locus, view_slug])
+
+
+def make_tool_identifier(title_slug: str) -> str:
+    """
+    Build a Tool.tool_identifier.
+
+    A Tool is an instrument of remediation work (Pope Tech, Equidox, an OCR engine).
+    Unlike Asset/Interface it has no scope/locus dimension, so its identity is just the
+    slug of its product name. Kept as a helper for consistency with the other composite
+    identifiers — every code path that builds one should go through identifiers.py.
+
+    Format:  '<title_slug>'
+    Example: 'pope-tech', 'equidox'
+    """
+    return title_slug

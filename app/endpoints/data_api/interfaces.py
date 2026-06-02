@@ -12,12 +12,16 @@ URL surface (mounted at /ati/data-api/v1):
            ?asset=<asset_identifier>             interfaces presented by an asset
     GET    /interfaces/<interface_identifier>  one interface (full detail + coverage flags)
     POST   /interfaces                         create_interface (optionally wires presented_by)
-    PUT    /interfaces                         action-dispatch: update / assign|unassign asset
+    PUT    /interfaces                         action-dispatch: update / assign|unassign asset /
+                                               assign|unassign remediation (Implementation that remediates it)
     DELETE /interfaces                         delete_interface (interface_identifier in body)
 
-Edge modifications (assign and unassign the backing asset) live on PUT; DELETE is
-reserved for removing the node itself — matching the assets.py / governance.py convention.
+Edge modifications (assign and unassign the backing asset / remediating implementation)
+live on PUT; DELETE is reserved for removing the node itself — matching the assets.py /
+governance.py convention.
 """
+import traceback
+
 from flask import request
 from flask.views import MethodView
 
@@ -34,10 +38,12 @@ from app.database.queries.interfaces.read import (
 from app.database.queries.interfaces.update import (
     update_interface,
     assign_asset_to_interface,
+    assign_remediation_to_interface,
 )
 from app.database.queries.interfaces.delete import (
     delete_interface,
     unassign_asset_from_interface,
+    unassign_remediation_from_interface,
 )
 from app.endpoints.data_api.errors.custom_exceptions import (
     CrudError,
@@ -84,6 +90,7 @@ class InterfacesAPI(MethodView):
         except NotFoundError as e:
             return make_response(status="error", error=str(e)), 404
         except Exception as e:
+            traceback.print_exc()  # surface the full stack to the server console (do not suppress 500s)
             return make_response(status="error", error=str(e)), 500
 
     def post(self):
@@ -112,6 +119,7 @@ class InterfacesAPI(MethodView):
         except CrudError as e:
             return make_response(status="error", error=str(e)), 500
         except Exception as e:
+            traceback.print_exc()  # surface the full stack to the server console (do not suppress 500s)
             return make_response(status="error", error=f"An unexpected error occurred: {e}"), 500
 
     def put(self):
@@ -131,6 +139,13 @@ class InterfacesAPI(MethodView):
                 verb = "assigned" if action == "assign_asset" else "unassigned"
                 return make_response(status="success", message=f"Backing asset {verb}."), 200
 
+            if action in ("assign_remediation", "unassign_remediation"):
+                _require(data, "interface_identifier", "implementation_type", "implementation_unique_id")
+                fn = assign_remediation_to_interface if action == "assign_remediation" else unassign_remediation_from_interface
+                fn(data["interface_identifier"], data["implementation_type"], data["implementation_unique_id"])
+                verb = "assigned" if action == "assign_remediation" else "unassigned"
+                return make_response(status="success", message=f"Remediation {verb}."), 200
+
             return make_response(status="error", error=f"Unknown action: {action}"), 400
         except ValidationError as e:
             return make_response(status="error", error=str(e)), 400
@@ -139,6 +154,7 @@ class InterfacesAPI(MethodView):
         except CrudError as e:
             return make_response(status="error", error=str(e)), 500
         except Exception as e:
+            traceback.print_exc()  # surface the full stack to the server console (do not suppress 500s)
             return make_response(status="error", error=f"An unexpected error occurred: {e}"), 500
 
     def delete(self):
@@ -154,6 +170,7 @@ class InterfacesAPI(MethodView):
         except CrudError as e:
             return make_response(status="error", error=str(e)), 500
         except Exception as e:
+            traceback.print_exc()  # surface the full stack to the server console (do not suppress 500s)
             return make_response(status="error", error=f"An unexpected error occurred: {e}"), 500
 
 

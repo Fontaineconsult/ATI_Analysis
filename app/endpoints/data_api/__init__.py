@@ -15,4 +15,5 @@ from . import (assets,
                interfaces,
                organizational_units,
                settings,
+               tools,
                vendors)

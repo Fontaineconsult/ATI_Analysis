@@ -225,3 +225,23 @@ export const deleteInterface = async (interfaceIdentifier) => {
         throw error;
     }
 };
+
+//
+// TOOLS — node delete (edge unassigns live on PUT, in put.js)
+//
+
+export const deleteTool = async (toolIdentifier) => {
+    try {
+        const response = await fetch(`${API_URL}/tools`, {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ tool_identifier: toolIdentifier }),
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Failed to delete tool');
+        return data;
+    } catch (error) {
+        console.error('Error deleting tool:', error);
+        throw error;
+    }
+};

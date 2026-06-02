@@ -581,6 +581,7 @@ class Process(StructuredNode):
 
     title = StringProperty(unique_index=True, required=True)
     description = StringProperty()
+    process_markdown = StringProperty()
     supporting_documents = RelationshipTo("Document", "is_documented_by", model=DocumentedByRel)
     supporting_webpages = RelationshipTo("Webpage", "is_documented_by", model=DocumentedByRel)
     supporting_notes = RelationshipTo("Note", "is_documented_by", model=DocumentedByRel)
@@ -590,7 +591,7 @@ class Process(StructuredNode):
     owned_by = RelationshipTo("Person", "owned_by")
     includes_procedures = RelationshipTo("Procedure", "includes_procedure")
     remediates_interface = RelationshipTo("Interface", "remediates_interface")
-  # this work uses that asset/product as a tool
+
 
     #serialize
     def serialize(self):
@@ -628,7 +629,9 @@ class Project(StructuredNode):
     owned_by = RelationshipTo("Person", "owned_by")
     includes_procedures = RelationshipTo("Procedure", "includes_procedure")
     remediates_interface = RelationshipTo("Interface", "remediates_interface")
-  # this work uses that asset/product as a tool
+    start_date = DateProperty()
+    end_date = DateProperty()
+
 
     #serialize
     def serialize(self):
@@ -654,6 +657,7 @@ class Procedure(StructuredNode):
 
     title = StringProperty(unique_index=True, required=True)
     description = StringProperty()
+    procedure_markdown = StringProperty()
     supporting_documents = RelationshipTo("Document", "is_documented_by", model=DocumentedByRel)
     supporting_webpages = RelationshipTo("Webpage", "is_documented_by", model=DocumentedByRel)
     supporting_notes = RelationshipTo("Note", "is_documented_by", model=DocumentedByRel)
@@ -662,7 +666,6 @@ class Procedure(StructuredNode):
     is_evidence_for = RelationshipTo("YearSuccessEvidence", "is_evidence_for")
     owned_by = RelationshipTo("Person", "owned_by")
     remediates_interface = RelationshipTo("Interface", "remediates_interface")
-  # this work uses that asset/product as a tool
 
 
     #serialize
@@ -698,7 +701,7 @@ class Service(StructuredNode):
     owned_by = RelationshipTo("Person", "owned_by")
     includes_procedures = RelationshipTo("Procedure", "includes_procedure")
     remediates_interface = RelationshipTo("Interface", "remediates_interface")
- # this work uses that asset/product as a tool
+
 
     #serialize
     def serialize(self):
@@ -943,6 +946,7 @@ class YearSuccessEvidence(StructuredNode):
     academic_year = RelationshipTo("AcademicYear", "evidence_in_year")
     status_level = RelationshipTo("StatusLevel", "status_is")
     tracks_success_indicator = RelationshipTo("SuccessIndicator", "tracks")
+    priority_level = StringProperty() # connect this to data_config
 
     # New properties for tracking status level details
     documentation_status = StringProperty()
@@ -1583,7 +1587,7 @@ class Interface(StructuredNode):
     title = StringProperty(index=True, required=True)
     description = StringProperty()
 
-    interface_kind = StringProperty(choices=interface_kinds)
+    interface_kind = ArrayProperty(StringProperty(choices=interface_kinds), default=list)  # multi-valued: an interface can play several roles at once
     coverage_domains = StringProperty(choices=coverage_domains)
     audience = ArrayProperty(StringProperty(choices=audiences), default=list)  # multi-valued: any of students | employees | applicants-for-employment | prospective-students | general-public
     provenance = StringProperty(choices=interface_provenances)  # how it entered the graph: declared (ATI named it) | enacted (emerged from remediation work) | both
@@ -1592,11 +1596,11 @@ class Interface(StructuredNode):
     # crossing several systems). Steward of an asset-backed interface is derived upward.
     presented_by = RelationshipTo("Asset", "presented_by")
 
-    # Remediation flows through implementations (reverse of Implementation.remediates).
-    remediated_by_processes  = RelationshipFrom("Process",   "remediates")
-    remediated_by_projects   = RelationshipFrom("Project",   "remediates")
-    remediated_by_procedures = RelationshipFrom("Procedure", "remediates")
-    remediated_by_services   = RelationshipFrom("Service",   "remediates")
+    # Remediation flows through implementations (reverse of Implementation.remediates_interface).
+    remediated_by_processes  = RelationshipFrom("Process",   "remediates_interface")
+    remediated_by_projects   = RelationshipFrom("Project",   "remediates_interface")
+    remediated_by_procedures = RelationshipFrom("Procedure", "remediates_interface")
+    remediated_by_services   = RelationshipFrom("Service",   "remediates_interface")
 
     # WCAG-grain elements this interface is made of.
     has_components = RelationshipTo("Component", "has_component")
@@ -1658,6 +1662,54 @@ class Component(StructuredNode):
     def serialize(self):
         return {
             'component_identifier': self.component_identifier,
+            'title': self.title,
+            'description': self.description,
+            "unique_id": self.unique_id
+        }
+
+
+class Tool(StructuredNode):
+
+    """    Class representing a Tool node.
+
+    A Tool is something an Implementation USES to remediate Interfaces — the instruments
+    of remediation work (e.g. Pope Tech, Equidox, a captioning service, an OCR engine).
+    Distinct from an Asset, which is a thing the institution must keep accessible: a Tool
+    is a thing the institution uses to DO the keeping. The same product can be both (a
+    tool the campus operates may also be an asset it stewards), which is why a Tool may
+    have a parent Asset — but it is not required, since many tools are used without being
+    tracked as institutional assets in their own right.
+
+    A Tool may have a Vendor (its supplier) and may have a parent Asset (when the tool is
+    also a stewarded institutional system), neither required. It is reached from the work
+    side via Implementation.uses_tool.
+    """
+    unique_id = UniqueIdProperty()
+
+    tool_identifier = StringProperty(unique_index=True)  # e.g. "pope-tech", "equidox"
+    title = StringProperty(index=True, required=True)
+    description = StringProperty()
+
+    # Supplier of the tool (optional).
+    supplied_by = RelationshipTo("Vendor", "supplied_by")
+
+    # Optional parent Asset — present when the tool is also a stewarded institutional system.
+    parent_asset = RelationshipTo("Asset", "tool_of_asset", cardinality=ZeroOrOne)
+
+    # Used by the work that remediates interfaces (reverse of Implementation.uses_tool).
+    used_by_processes  = RelationshipFrom("Process",   "uses_tool")
+    used_by_projects   = RelationshipFrom("Project",   "uses_tool")
+    used_by_procedures = RelationshipFrom("Procedure", "uses_tool")
+    used_by_services   = RelationshipFrom("Service",   "uses_tool")
+
+    # Documentation about the tool — off the evidence backbone.
+    described_by = RelationshipTo("Document", "describes_tool")
+    notes = RelationshipTo("Note", "has_note")
+
+    #serialize
+    def serialize(self):
+        return {
+            'tool_identifier': self.tool_identifier,
             'title': self.title,
             'description': self.description,
             "unique_id": self.unique_id

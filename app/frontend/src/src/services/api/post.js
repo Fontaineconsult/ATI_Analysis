@@ -499,3 +499,14 @@ export const createInterface = async (payload) => {
         throw error;
     }
 };
+
+export const createTool = async (payload) => {
+    // payload: { title, description?, supplied_by? (vendor name), parent_asset? (asset_identifier) }
+    try {
+        const response = await axios.post(`${process.env.REACT_APP_API_URL}/tools`, payload);
+        return response.data;
+    } catch (error) {
+        console.error('Error creating tool:', error);
+        throw error;
+    }
+};

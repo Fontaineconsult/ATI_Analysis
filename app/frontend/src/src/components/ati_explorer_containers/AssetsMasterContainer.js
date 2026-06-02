@@ -22,6 +22,8 @@ import {
     fetchVendorsList,
     fetchAllInterfaces,
     fetchUncoveredInterfaces,
+    fetchAllImplementations,
+    fetchAllTools,
 } from '../../services/api/get';
 import AssetStatStrip from '../graph_components/assets/AssetStatStrip';
 import AssetList from '../graph_components/assets/AssetList';
@@ -36,6 +38,9 @@ import VendorDetailPanel from '../graph_components/assets/VendorDetailPanel';
 import InterfaceList from '../graph_components/assets/InterfaceList';
 import InterfaceForm from '../graph_components/assets/InterfaceForm';
 import InterfaceDetailPanel from '../graph_components/assets/InterfaceDetailPanel';
+import ToolList from '../graph_components/assets/ToolList';
+import ToolForm from '../graph_components/assets/ToolForm';
+import ToolDetailPanel from '../graph_components/assets/ToolDetailPanel';
 import { toISODate } from '../graph_components/assets/assetConfig';
 
 /**
@@ -83,6 +88,17 @@ function AssetsMasterContainer() {
     const [interfacesError, setInterfacesError] = useState(null);
     const [selectedInterfaceId, setSelectedInterfaceId] = useState(null);
     const [interfaceFormOpen, setInterfaceFormOpen] = useState(false);
+
+    // Remediating implementations (Process/Project/Procedure/Service), flattened for
+    // the Interface "Remediated by" and Tool "Used by" pickers.
+    const [implementations, setImplementations] = useState([]);
+
+    // Tools
+    const [tools, setTools] = useState([]);
+    const [toolsLoading, setToolsLoading] = useState(true);
+    const [toolsError, setToolsError] = useState(null);
+    const [selectedToolId, setSelectedToolId] = useState(null);
+    const [toolFormOpen, setToolFormOpen] = useState(false);
 
     // Stat
     const [taapsDueCount, setTaapsDueCount] = useState(0);
@@ -165,13 +181,51 @@ function AssetsMasterContainer() {
         }
     }, []);
 
+    // Remediating implementation types only (these carry remediates_interface).
+    const REMEDIATING_TYPES = ['Process', 'Project', 'Procedure', 'Service'];
+    const loadImplementations = useCallback(async () => {
+        try {
+            const resp = await fetchAllImplementations();
+            const grouped = resp?.status?.data || resp?.data || {};
+            const flat = REMEDIATING_TYPES.flatMap((t) =>
+                (grouped[t] || []).map((impl) => ({
+                    unique_id: impl.unique_id,
+                    title: impl.title,
+                    type: impl.type || t,
+                })),
+            );
+            setImplementations(flat);
+        } catch (_) {
+            setImplementations([]);
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
+    const loadTools = useCallback(async () => {
+        setToolsLoading(true);
+        setToolsError(null);
+        try {
+            const resp = await fetchAllTools();
+            const list = resp?.data?.items || [];
+            setTools(list);
+            return list;
+        } catch (e) {
+            setToolsError(e?.message || 'Failed to load tools.');
+            return [];
+        } finally {
+            setToolsLoading(false);
+        }
+    }, []);
+
     useEffect(() => {
         loadAssets();
         loadTaaps();
         loadTaapsDue();
         loadVendors();
         loadInterfaces();
-    }, [loadAssets, loadTaaps, loadTaapsDue, loadVendors, loadInterfaces]);
+        loadImplementations();
+        loadTools();
+    }, [loadAssets, loadTaaps, loadTaapsDue, loadVendors, loadInterfaces, loadImplementations, loadTools]);
 
     // ---- Asset handlers ----
     const handleAssetCreated = async (created) => {
@@ -236,6 +290,21 @@ function AssetsMasterContainer() {
         return list;
     };
 
+    // ---- Tool handlers ----
+    const handleToolCreated = async (created) => {
+        const list = await loadTools();
+        if (created?.tool_identifier) setSelectedToolId(created.tool_identifier);
+        else if (list.length) setSelectedToolId(list[0].tool_identifier);
+    };
+
+    const handleToolMutate = async (deletedId) => {
+        const list = await loadTools();
+        if (deletedId && deletedId === selectedToolId) {
+            setSelectedToolId(null);
+        }
+        return list;
+    };
+
     // ---- Cross-tab navigation ----
     const goToTaaps = (title) => {
         setTabIndex(1);
@@ -268,6 +337,7 @@ function AssetsMasterContainer() {
                     <Tab fontSize="sm">TAAPs</Tab>
                     <Tab fontSize="sm">Vendors</Tab>
                     <Tab fontSize="sm">Interfaces</Tab>
+                    <Tab fontSize="sm">Tools</Tab>
                 </TabList>
 
                 <TabPanels>
@@ -401,7 +471,44 @@ function AssetsMasterContainer() {
                                 <InterfaceDetailPanel
                                     interfaceIdentifier={selectedInterfaceId}
                                     assets={assets}
+                                    implementations={implementations}
                                     onAfterMutate={handleInterfaceMutate}
+                                    onGoToAsset={goToAsset}
+                                />
+                            </Box>
+                        </Flex>
+                    </TabPanel>
+
+                    {/* Tools */}
+                    <TabPanel px={0}>
+                        {toolsError && (
+                            <Alert status="error" borderRadius="md" fontSize="sm" mb={3}>
+                                <AlertIcon />{toolsError}
+                            </Alert>
+                        )}
+                        <Flex gap={6} align="flex-start">
+                            <Box flex="1" minW="0">
+                                {toolsLoading ? (
+                                    <HStack p={4} color="gray.600" fontSize="sm">
+                                        <Spinner size="sm" color="teal.500" /><Text>Loading tools…</Text>
+                                    </HStack>
+                                ) : (
+                                    <ToolList
+                                        items={tools}
+                                        selectedId={selectedToolId}
+                                        onSelect={(item) => setSelectedToolId(item.tool_identifier)}
+                                        onAdd={() => setToolFormOpen(true)}
+                                        emptyMessage="No tools yet. Click Add Tool to begin tracking."
+                                    />
+                                )}
+                            </Box>
+                            <Box flex="2" minW="0">
+                                <ToolDetailPanel
+                                    toolIdentifier={selectedToolId}
+                                    assets={assets}
+                                    vendors={vendors}
+                                    implementations={implementations}
+                                    onAfterMutate={handleToolMutate}
                                     onGoToAsset={goToAsset}
                                 />
                             </Box>
@@ -435,6 +542,13 @@ function AssetsMasterContainer() {
                 onClose={() => setInterfaceFormOpen(false)}
                 assets={assets}
                 onSaved={handleInterfaceCreated}
+            />
+
+            <ToolForm
+                isOpen={toolFormOpen}
+                onClose={() => setToolFormOpen(false)}
+                assets={assets}
+                onSaved={handleToolCreated}
             />
         </Box>
     );

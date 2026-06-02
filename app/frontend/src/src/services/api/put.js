@@ -658,3 +658,141 @@ export const unassignAssetFromInterface = async (interfaceIdentifier, assetIdent
         throw error;
     }
 };
+
+// Remediation: connect/disconnect an Implementation (Process/Project/Procedure/Service)
+// that remediates the interface, via the remediates_interface edge.
+export const assignRemediationToInterface = async (interfaceIdentifier, implementationType, implementationUniqueId) => {
+    try {
+        const response = await axios.put(`${process.env.REACT_APP_API_URL}/interfaces`, {
+            action: 'assign_remediation',
+            interface_identifier: interfaceIdentifier,
+            implementation_type: implementationType,
+            implementation_unique_id: implementationUniqueId,
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error assigning remediation to interface:', error);
+        throw error;
+    }
+};
+
+export const unassignRemediationFromInterface = async (interfaceIdentifier, implementationType, implementationUniqueId) => {
+    try {
+        const response = await axios.put(`${process.env.REACT_APP_API_URL}/interfaces`, {
+            action: 'unassign_remediation',
+            interface_identifier: interfaceIdentifier,
+            implementation_type: implementationType,
+            implementation_unique_id: implementationUniqueId,
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error unassigning remediation from interface:', error);
+        throw error;
+    }
+};
+
+//
+// TOOLS — update + supplier / parent-asset / usage (Implementation that uses it) edges
+// (action-dispatch PUT). Both assign and unassign live on PUT.
+//
+
+export const updateTool = async (toolIdentifier, fields) => {
+    // fields: { title?, description? }
+    try {
+        const response = await axios.put(`${process.env.REACT_APP_API_URL}/tools`, {
+            action: 'update',
+            tool_identifier: toolIdentifier,
+            ...fields,
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error updating tool:', error);
+        throw error;
+    }
+};
+
+export const assignVendorToTool = async (toolIdentifier, vendorName) => {
+    try {
+        const response = await axios.put(`${process.env.REACT_APP_API_URL}/tools`, {
+            action: 'assign_vendor',
+            tool_identifier: toolIdentifier,
+            vendor_name: vendorName,
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error assigning vendor to tool:', error);
+        throw error;
+    }
+};
+
+export const unassignVendorFromTool = async (toolIdentifier, vendorName) => {
+    try {
+        const response = await axios.put(`${process.env.REACT_APP_API_URL}/tools`, {
+            action: 'unassign_vendor',
+            tool_identifier: toolIdentifier,
+            vendor_name: vendorName,
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error unassigning vendor from tool:', error);
+        throw error;
+    }
+};
+
+export const assignAssetToTool = async (toolIdentifier, assetIdentifier) => {
+    try {
+        const response = await axios.put(`${process.env.REACT_APP_API_URL}/tools`, {
+            action: 'assign_asset',
+            tool_identifier: toolIdentifier,
+            asset_identifier: assetIdentifier,
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error assigning asset to tool:', error);
+        throw error;
+    }
+};
+
+export const unassignAssetFromTool = async (toolIdentifier, assetIdentifier) => {
+    try {
+        const response = await axios.put(`${process.env.REACT_APP_API_URL}/tools`, {
+            action: 'unassign_asset',
+            tool_identifier: toolIdentifier,
+            asset_identifier: assetIdentifier,
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error unassigning asset from tool:', error);
+        throw error;
+    }
+};
+
+export const assignUsageToTool = async (toolIdentifier, implementationType, implementationUniqueId) => {
+    try {
+        const response = await axios.put(`${process.env.REACT_APP_API_URL}/tools`, {
+            action: 'assign_usage',
+            tool_identifier: toolIdentifier,
+            implementation_type: implementationType,
+            implementation_unique_id: implementationUniqueId,
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error assigning usage to tool:', error);
+        throw error;
+    }
+};
+
+export const unassignUsageFromTool = async (toolIdentifier, implementationType, implementationUniqueId) => {
+    try {
+        const response = await axios.put(`${process.env.REACT_APP_API_URL}/tools`, {
+            action: 'unassign_usage',
+            tool_identifier: toolIdentifier,
+            implementation_type: implementationType,
+            implementation_unique_id: implementationUniqueId,
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error unassigning usage from tool:', error);
+        throw error;
+    }
+};
