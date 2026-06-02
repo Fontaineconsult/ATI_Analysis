@@ -68,3 +68,20 @@ def make_asset_identifier(title_slug: str, locus: str) -> str:
     Example: 'canvas-sfsu', 'canvas-systemwide', 'popetech-instructure'
     """
     return IDENTIFIER_SEPARATOR.join([title_slug, locus])
+
+
+def make_interface_identifier(locus: str, view_slug: str) -> str:
+    """
+    Build an Interface.interface_identifier.
+
+    An Interface is a salient point of interaction; its identity is the locus it
+    lives on plus the slug of the view/surface. For an asset-backed interface the
+    locus is the backing Asset.asset_identifier ('canvas-sfsu'); for a standalone
+    interface the locus is a campus abbreviation or the literal 'standalone'. This
+    mirrors how scope is part of Asset identity — the same view on the same product
+    resolves into distinct interfaces where it is presented at different loci.
+
+    Format:  '<locus>-<view_slug>'
+    Example: 'canvas-sfsu-course-view'
+    """
+    return IDENTIFIER_SEPARATOR.join([locus, view_slug])

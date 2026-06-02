@@ -12,5 +12,6 @@ from . import (assets,
                implementation,
                indicators,
                individuals,
+               interfaces,
                organizational_units,
                vendors)

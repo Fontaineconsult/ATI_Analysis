@@ -18,7 +18,11 @@
       "Bash(powershell -Command \"Get-ChildItem -Path 'app\\\\frontend\\\\src\\\\src\\\\services\\\\api' -File\")",
       "Bash(./windowsvenvpy12/Scripts/python.exe -c \"import neomodel; print\\('neomodel', neomodel.__version__\\)\")",
       "Bash(PYTHONPATH=. ./windowsvenvpy12/Scripts/python.exe *)",
-      "Bash(PYTHONPATH=. python -c ' *)"
+      "Bash(PYTHONPATH=. python -c ' *)",
+      "Bash(git --no-pager diff HEAD -- app/database/graph_schema.py)",
+      "PowerShell($p = \\(Get-Command python, python3, py -ErrorAction SilentlyContinue | Select-Object -First 1\\).Source; Write-Output \"PYTHON: $p\"; if \\($p\\) { & $p -c \"import neomodel, os; print\\(neomodel.__version__\\); print\\(os.path.dirname\\(neomodel.__file__\\)\\)\" })",
+      "Bash(find app/frontend -maxdepth 3 -name package.json -not -path \"*/node_modules/*\")",
+      "Bash(ls -d app/frontend/src/node_modules)"
     ]
   }
 }

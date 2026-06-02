@@ -488,3 +488,14 @@ export const createVendor = async (payload) => {
         throw error;
     }
 };
+
+export const createInterface = async (payload) => {
+    // payload: { title, locus, interface_kind?, coverage_domains?, audience?[], provenance?, description?, presented_by? }
+    try {
+        const response = await axios.post(`${process.env.REACT_APP_API_URL}/interfaces`, payload);
+        return response.data;
+    } catch (error) {
+        console.error('Error creating interface:', error);
+        throw error;
+    }
+};

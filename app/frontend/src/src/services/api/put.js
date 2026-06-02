@@ -610,3 +610,51 @@ export const unassignEmployeeFromVendor = async (name, personUniqueId) => {
         throw error;
     }
 };
+
+//
+// INTERFACES — update + backing-asset assign/unassign (action-dispatch PUT).
+// Both assign and unassign live on PUT; DELETE is reserved for node removal.
+//
+
+export const updateInterface = async (interfaceIdentifier, fields) => {
+    // fields: { title?, description?, interface_kind?, coverage_domains?, audience?[], provenance? }
+    try {
+        const response = await axios.put(`${process.env.REACT_APP_API_URL}/interfaces`, {
+            action: 'update',
+            interface_identifier: interfaceIdentifier,
+            ...fields,
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error updating interface:', error);
+        throw error;
+    }
+};
+
+export const assignAssetToInterface = async (interfaceIdentifier, assetIdentifier) => {
+    try {
+        const response = await axios.put(`${process.env.REACT_APP_API_URL}/interfaces`, {
+            action: 'assign_asset',
+            interface_identifier: interfaceIdentifier,
+            asset_identifier: assetIdentifier,
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error assigning asset to interface:', error);
+        throw error;
+    }
+};
+
+export const unassignAssetFromInterface = async (interfaceIdentifier, assetIdentifier) => {
+    try {
+        const response = await axios.put(`${process.env.REACT_APP_API_URL}/interfaces`, {
+            action: 'unassign_asset',
+            interface_identifier: interfaceIdentifier,
+            asset_identifier: assetIdentifier,
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error unassigning asset from interface:', error);
+        throw error;
+    }
+};

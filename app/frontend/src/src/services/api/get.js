@@ -451,3 +451,96 @@ export const fetchVendorDetail = async (name) => {
         throw error;
     }
 };
+
+//
+// INTERFACES — the salient interaction points where the accessibility duty lands.
+//
+
+export const fetchAllInterfaces = async () => {
+    try {
+        const response = await axios.get(`${process.env.REACT_APP_API_URL}/interfaces`);
+        if (response.status === 200) return response.data;
+        throw new Error(`Failed to fetch interfaces: ${response.data?.error}`);
+    } catch (error) {
+        console.error('Error fetching interfaces:', error.message);
+        throw error;
+    }
+};
+
+export const fetchInterfaceDetail = async (interfaceIdentifier) => {
+    try {
+        const response = await axios.get(
+            `${process.env.REACT_APP_API_URL}/interfaces/${encodeURIComponent(interfaceIdentifier)}`
+        );
+        if (response.status === 200) return response.data;
+        throw new Error(`Failed to fetch interface: ${response.data?.error}`);
+    } catch (error) {
+        console.error('Error fetching interface detail:', error.message);
+        throw error;
+    }
+};
+
+export const fetchUncoveredInterfaces = async () => {
+    try {
+        const response = await axios.get(`${process.env.REACT_APP_API_URL}/interfaces`, {
+            params: { uncovered: true },
+        });
+        if (response.status === 200) return response.data;
+        throw new Error(`Failed to fetch uncovered interfaces: ${response.data?.error}`);
+    } catch (error) {
+        console.error('Error fetching uncovered interfaces:', error.message);
+        throw error;
+    }
+};
+
+export const fetchInterfacesByKind = async (kind) => {
+    try {
+        const response = await axios.get(`${process.env.REACT_APP_API_URL}/interfaces`, {
+            params: { kind },
+        });
+        if (response.status === 200) return response.data;
+        throw new Error(`Failed to fetch interfaces by kind: ${response.data?.error}`);
+    } catch (error) {
+        console.error('Error fetching interfaces by kind:', error.message);
+        throw error;
+    }
+};
+
+export const fetchInterfacesByAudience = async (audience) => {
+    try {
+        const response = await axios.get(`${process.env.REACT_APP_API_URL}/interfaces`, {
+            params: { audience },
+        });
+        if (response.status === 200) return response.data;
+        throw new Error(`Failed to fetch interfaces by audience: ${response.data?.error}`);
+    } catch (error) {
+        console.error('Error fetching interfaces by audience:', error.message);
+        throw error;
+    }
+};
+
+export const fetchInterfacesByCoverageDomain = async (coverageDomain) => {
+    try {
+        const response = await axios.get(`${process.env.REACT_APP_API_URL}/interfaces`, {
+            params: { coverage_domain: coverageDomain },
+        });
+        if (response.status === 200) return response.data;
+        throw new Error(`Failed to fetch interfaces by coverage domain: ${response.data?.error}`);
+    } catch (error) {
+        console.error('Error fetching interfaces by coverage domain:', error.message);
+        throw error;
+    }
+};
+
+export const fetchInterfacesForAsset = async (assetIdentifier) => {
+    try {
+        const response = await axios.get(`${process.env.REACT_APP_API_URL}/interfaces`, {
+            params: { asset: assetIdentifier },
+        });
+        if (response.status === 200) return response.data;
+        throw new Error(`Failed to fetch interfaces for asset: ${response.data?.error}`);
+    } catch (error) {
+        console.error('Error fetching interfaces for asset:', error.message);
+        throw error;
+    }
+};

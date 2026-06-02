@@ -155,3 +155,46 @@ taap_outcomes = {
     "non_equal_alternative": "Non-Equal Alternative",
     "referral":              "Referral",
 }
+
+# Interface kind: the functional role of a salient interaction point, defined by what
+# kind of thing it is to interact with — NOT by the substrate behind it. A standalone
+# PDF and a Canvas course view can be the same kind because they play the same role.
+# Stored values are dict keys (neomodel `choices=` requires a dict; the labels are
+# what an app surfaces).
+interface_kinds = {
+    "web-surface":           "Web Surface",            # page or web/mobile application rendered in a browser/web runtime
+    "structured-document":   "Structured Document",    # PDF, word-processor, presentation, spreadsheet — read/rendered docs
+    "time-based-media":      "Time-Based Media",       # video, audio
+    "interactive-component": "Interactive Component",   # forms, widgets, embedded tools (LTIs)
+    "static-non-text":       "Static Non-Text",        # standalone image or graphic
+}
+
+# Coverage domain: the declared "what we track" — institution-chosen domains of ATI
+# attention. Orthogonal to interface_kind (role) and provenance (how it became known).
+coverage_domains = {
+    "library-assets":               "Library Assets",
+    "social-media":                 "Social Media",
+    "marketing-communications":     "Marketing & Communications",
+    "publisher-content":            "Publisher Content",
+    "course-content":               "Course Content",
+    "emerging-instructional-tech":  "Emerging Instructional Tech",
+}
+
+# Audience: who encounters the interface. The label carries the governing legal basis,
+# because the duty and its accommodation population differ by audience.
+audiences = {
+    "students":                  "Students",                   # enrolled students — §504 + Title II (DPRC accommodation population)
+    "employees":                 "Employees",                  # faculty & staff — Title I + §504 (HR accommodation population; FEHA in CA)
+    "applicants-for-employment": "Applicants for Employment",  # job applicants — Title I reaches hiring
+    "prospective-students":      "Prospective Students",       # recruitment/admissions audience — Title II + §504
+    "general-public":            "General Public",             # community, visitors, non-affiliated users — Title II + §504
+}
+
+# Provenance: how an interface became known to the ATI. The declared-vs-enacted gap is
+# diagnostic (it is NOT meant to be eliminated): declared = the ATI named it up front;
+# enacted = it emerged from where remediation actually clustered; both = surfaced both ways.
+interface_provenances = {
+    "declared": "Declared",
+    "enacted":  "Enacted",
+    "both":     "Both",
+}

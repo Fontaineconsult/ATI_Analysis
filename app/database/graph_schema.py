@@ -10,7 +10,8 @@ from neomodel import (StructuredNode, StringProperty,
 from dotenv import load_dotenv
 import os
 
-from app.data_config import trajectory_choices, asset_classes, asset_scopes, taap_outcomes
+from app.data_config import (trajectory_choices, asset_classes, asset_scopes, taap_outcomes,
+                             interface_kinds, coverage_domains, audiences, interface_provenances)
 
 dotenv_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'app', '.env.development')
 load_dotenv(dotenv_path)
@@ -588,8 +589,8 @@ class Process(StructuredNode):
     is_evidence_for = RelationshipTo("YearSuccessEvidence", "is_evidence_for")
     owned_by = RelationshipTo("Person", "owned_by")
     includes_procedures = RelationshipTo("Procedure", "includes_procedure")
-    remediates = RelationshipTo("Asset", "remediates")   # this work keeps that asset accessible
-    uses_tool = RelationshipTo("Asset", "uses_tool")     # this work uses that asset/product as a tool
+    remediates_interface = RelationshipTo("Interface", "remediates_interface")
+  # this work uses that asset/product as a tool
 
     #serialize
     def serialize(self):
@@ -626,8 +627,8 @@ class Project(StructuredNode):
     is_evidence_for = RelationshipTo("YearSuccessEvidence", "is_evidence_for")
     owned_by = RelationshipTo("Person", "owned_by")
     includes_procedures = RelationshipTo("Procedure", "includes_procedure")
-    remediates = RelationshipTo("Asset", "remediates")   # this work keeps that asset accessible
-    uses_tool = RelationshipTo("Asset", "uses_tool")     # this work uses that asset/product as a tool
+    remediates_interface = RelationshipTo("Interface", "remediates_interface")
+  # this work uses that asset/product as a tool
 
     #serialize
     def serialize(self):
@@ -660,8 +661,8 @@ class Procedure(StructuredNode):
     supporting_metrics = RelationshipTo("Metric", "has_metric")
     is_evidence_for = RelationshipTo("YearSuccessEvidence", "is_evidence_for")
     owned_by = RelationshipTo("Person", "owned_by")
-    remediates = RelationshipTo("Asset", "remediates")   # this work keeps that asset accessible
-    uses_tool = RelationshipTo("Asset", "uses_tool")     # this work uses that asset/product as a tool
+    remediates_interface = RelationshipTo("Interface", "remediates_interface")
+  # this work uses that asset/product as a tool
 
 
     #serialize
@@ -696,8 +697,8 @@ class Service(StructuredNode):
     is_evidence_for = RelationshipTo("YearSuccessEvidence", "is_evidence_for")
     owned_by = RelationshipTo("Person", "owned_by")
     includes_procedures = RelationshipTo("Procedure", "includes_procedure")
-    remediates = RelationshipTo("Asset", "remediates")   # this work keeps that asset accessible
-    uses_tool = RelationshipTo("Asset", "uses_tool")     # this work uses that asset/product as a tool
+    remediates_interface = RelationshipTo("Interface", "remediates_interface")
+ # this work uses that asset/product as a tool
 
     #serialize
     def serialize(self):
@@ -1196,6 +1197,10 @@ class Vendor(StructuredNode):
     name = StringProperty(unique_index=True)
     location = StringProperty()
     employs = RelationshipTo("Person", "employs")
+    sales_contact_name = StringProperty()
+    technical_contact_name = StringProperty()
+    sales_contact_email = StringProperty()
+    technical_contact_email = StringProperty()
     implements_yse = RelationshipTo("YearSuccessEvidence", "implements")
 
 
@@ -1536,6 +1541,128 @@ class Asset(StructuredNode):
             'scope': self.scope,
             "unique_id": self.unique_id
         }
+
+
+
+class Interface(StructuredNode):
+
+    """    Class representing an Interface node.
+
+    An Interface is a salient point of interaction with ICT, identified by the
+    accessibility function because it can present an access barrier. It is where the
+    accessibility duty lands and what remediation targets, and it exists whether or not
+    it sits on top of an owned Asset.
+
+    Defined by functional role, not substrate: a standalone PDF and a Canvas course view
+    are the same kind of thing because they play the same role. Defined by the ATI's
+    judgment of salience, not by enumerating an asset's surfaces. This is WCAG's actual
+    unit of conformance (the perceivable page/document/view a claim is scoped to), and
+    POUR are predicates of an interaction, not properties of an artifact. It is also the
+    point where ICT is either ready-to-hand or breaks down into a barrier for a
+    particular body; the duty attaches to the encounter, not the Asset behind it.
+
+    Duty and remediation live here; ownership lives on the Asset. §508 stewardship is NOT
+    duplicated: for an asset-backed interface, derive the steward via `presented_by`; a
+    standalone interface may have no steward, which is correct, not a gap. Conformance is
+    NOT stored — both senses of "accessible" (conformant, usable) are derived via Metric.
+
+    Coverage is layered and many-to-many: specific (an implementation targeting this
+    instance; Rule 1) and general (an institution-level implementation sweeping this
+    interface's kind; Rule 2). An interface is UNCOVERED — the Title II §35.205 elevation
+    signal — only when neither reaches it. `provenance` records how it became known:
+    declared (ATI named it), enacted (it emerged from where remediation clustered), or
+    both. The declared-vs-enacted gap is diagnostic and not meant to be eliminated.
+
+    Identity is composite on `interface_identifier`; `title` is descriptive, indexed but
+    NOT unique. Mirrors Asset.asset_identifier / YearSuccessEvidence.year_identifier.
+    """
+
+    unique_id = UniqueIdProperty()
+
+    interface_identifier = StringProperty(unique_index=True)  # e.g. "canvas-sfsu-course-view"
+    title = StringProperty(index=True, required=True)
+    description = StringProperty()
+
+    interface_kind = StringProperty(choices=interface_kinds)
+    coverage_domains = StringProperty(choices=coverage_domains)
+    audience = ArrayProperty(StringProperty(choices=audiences), default=list)  # multi-valued: any of students | employees | applicants-for-employment | prospective-students | general-public
+    provenance = StringProperty(choices=interface_provenances)  # how it entered the graph: declared (ATI named it) | enacted (emerged from remediation work) | both
+
+    # Optional backing asset (absent for a standalone interface; 0..many for a surface
+    # crossing several systems). Steward of an asset-backed interface is derived upward.
+    presented_by = RelationshipTo("Asset", "presented_by")
+
+    # Remediation flows through implementations (reverse of Implementation.remediates).
+    remediated_by_processes  = RelationshipFrom("Process",   "remediates")
+    remediated_by_projects   = RelationshipFrom("Project",   "remediates")
+    remediated_by_procedures = RelationshipFrom("Procedure", "remediates")
+    remediated_by_services   = RelationshipFrom("Service",   "remediates")
+
+    # WCAG-grain elements this interface is made of.
+    has_components = RelationshipTo("Component", "has_component")
+
+
+    # Documentation ABOUT the interface — distinct rel-type, off the evidence backbone.
+    described_by = RelationshipTo("Document", "describes_interface")
+    described_on = RelationshipTo("Webpage", "describes_interface")
+    notes = RelationshipTo("Note", "has_note")
+
+    #serialize
+    def serialize(self):
+        return {
+            'interface_identifier': self.interface_identifier,
+            'title': self.title,
+            'description': self.description,
+            'interface_kind': self.interface_kind,
+            'coverage_domains': self.coverage_domains,
+            'audience': self.audience,
+            'provenance': self.provenance,
+            "unique_id": self.unique_id
+        }
+
+
+class Component(StructuredNode):
+
+    """    Class representing a Component node.
+
+    A Component is a piece of an Interface at the grain where a WCAG success criterion or
+    a VPAT line item attaches — the element specifically called out when conformance is
+    evaluated (e.g. a video player, a data table, a form field, a navigation menu). It is
+    the WCAG attachment point: where the standard's criteria are actually satisfied or
+    failed, one tier below the Interface that contains it.
+
+    Defined by the standard, not by the institution or the ATI: components are individuated
+    the way WCAG / a VPAT individuates them. Conformance is NOT stored here — whether a
+    component meets its criteria is derived via the Metric layer, like everything else.
+
+    Stub: carries identity, its parent Interface, and the WCAG criteria it must satisfy
+    (via the existing Guideline node). Remediation targeting and richer structure deferred.
+    """
+    unique_id = UniqueIdProperty()
+
+    component_identifier = StringProperty(unique_index=True)  # e.g. "canvas-shell-video-player"
+    title = StringProperty(index=True, required=True)
+    description = StringProperty()
+
+    # The Interface this component is part of.
+    part_of = RelationshipTo("Interface", "part_of", cardinality=ZeroOrOne)
+
+    # The WCAG criteria this component must satisfy (Guideline holds WCAG).
+    must_satisfy = RelationshipTo("Guideline", "must_satisfy")
+
+    # Documentation about the component (VPAT line items, etc.) — off the evidence backbone.
+    described_by = RelationshipTo("Document", "describes_component")
+    notes = RelationshipTo("Note", "has_note")
+
+    #serialize
+    def serialize(self):
+        return {
+            'component_identifier': self.component_identifier,
+            'title': self.title,
+            'description': self.description,
+            "unique_id": self.unique_id
+        }
+
 
 
 class TAAP(StructuredNode):

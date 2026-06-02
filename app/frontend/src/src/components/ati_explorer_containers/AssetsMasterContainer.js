@@ -20,6 +20,8 @@ import {
     fetchAllTaaps,
     fetchTaapsDueForReview,
     fetchVendorsList,
+    fetchAllInterfaces,
+    fetchUncoveredInterfaces,
 } from '../../services/api/get';
 import AssetStatStrip from '../graph_components/assets/AssetStatStrip';
 import AssetList from '../graph_components/assets/AssetList';
@@ -31,6 +33,9 @@ import TaapDetailPanel from '../graph_components/assets/TaapDetailPanel';
 import VendorList from '../graph_components/assets/VendorList';
 import VendorForm from '../graph_components/assets/VendorForm';
 import VendorDetailPanel from '../graph_components/assets/VendorDetailPanel';
+import InterfaceList from '../graph_components/assets/InterfaceList';
+import InterfaceForm from '../graph_components/assets/InterfaceForm';
+import InterfaceDetailPanel from '../graph_components/assets/InterfaceDetailPanel';
 import { toISODate } from '../graph_components/assets/assetConfig';
 
 /**
@@ -70,6 +75,14 @@ function AssetsMasterContainer() {
     const [vendorsError, setVendorsError] = useState(null);
     const [selectedVendorName, setSelectedVendorName] = useState(null);
     const [vendorFormOpen, setVendorFormOpen] = useState(false);
+
+    // Interfaces
+    const [interfaces, setInterfaces] = useState([]);
+    const [uncoveredSet, setUncoveredSet] = useState(new Set());
+    const [interfacesLoading, setInterfacesLoading] = useState(true);
+    const [interfacesError, setInterfacesError] = useState(null);
+    const [selectedInterfaceId, setSelectedInterfaceId] = useState(null);
+    const [interfaceFormOpen, setInterfaceFormOpen] = useState(false);
 
     // Stat
     const [taapsDueCount, setTaapsDueCount] = useState(0);
@@ -134,12 +147,31 @@ function AssetsMasterContainer() {
         }
     }, []);
 
+    const loadInterfaces = useCallback(async () => {
+        setInterfacesLoading(true);
+        setInterfacesError(null);
+        try {
+            const [allResp, uncovResp] = await Promise.all([fetchAllInterfaces(), fetchUncoveredInterfaces()]);
+            const list = allResp?.data?.items || [];
+            const uncovered = (uncovResp?.data?.items || []).map((i) => i.interface_identifier);
+            setInterfaces(list);
+            setUncoveredSet(new Set(uncovered));
+            return list;
+        } catch (e) {
+            setInterfacesError(e?.message || 'Failed to load interfaces.');
+            return [];
+        } finally {
+            setInterfacesLoading(false);
+        }
+    }, []);
+
     useEffect(() => {
         loadAssets();
         loadTaaps();
         loadTaapsDue();
         loadVendors();
-    }, [loadAssets, loadTaaps, loadTaapsDue, loadVendors]);
+        loadInterfaces();
+    }, [loadAssets, loadTaaps, loadTaapsDue, loadVendors, loadInterfaces]);
 
     // ---- Asset handlers ----
     const handleAssetCreated = async (created) => {
@@ -189,6 +221,21 @@ function AssetsMasterContainer() {
         return list;
     };
 
+    // ---- Interface handlers ----
+    const handleInterfaceCreated = async (created) => {
+        const list = await loadInterfaces();
+        if (created?.interface_identifier) setSelectedInterfaceId(created.interface_identifier);
+        else if (list.length) setSelectedInterfaceId(list[0].interface_identifier);
+    };
+
+    const handleInterfaceMutate = async (deletedId) => {
+        const list = await loadInterfaces();
+        if (deletedId && deletedId === selectedInterfaceId) {
+            setSelectedInterfaceId(null);
+        }
+        return list;
+    };
+
     // ---- Cross-tab navigation ----
     const goToTaaps = (title) => {
         setTabIndex(1);
@@ -220,6 +267,7 @@ function AssetsMasterContainer() {
                     <Tab fontSize="sm">Assets</Tab>
                     <Tab fontSize="sm">TAAPs</Tab>
                     <Tab fontSize="sm">Vendors</Tab>
+                    <Tab fontSize="sm">Interfaces</Tab>
                 </TabList>
 
                 <TabPanels>
@@ -324,6 +372,41 @@ function AssetsMasterContainer() {
                             </Box>
                         </Flex>
                     </TabPanel>
+
+                    {/* Interfaces */}
+                    <TabPanel px={0}>
+                        {interfacesError && (
+                            <Alert status="error" borderRadius="md" fontSize="sm" mb={3}>
+                                <AlertIcon />{interfacesError}
+                            </Alert>
+                        )}
+                        <Flex gap={6} align="flex-start">
+                            <Box flex="1" minW="0">
+                                {interfacesLoading ? (
+                                    <HStack p={4} color="gray.600" fontSize="sm">
+                                        <Spinner size="sm" color="teal.500" /><Text>Loading interfaces…</Text>
+                                    </HStack>
+                                ) : (
+                                    <InterfaceList
+                                        items={interfaces}
+                                        selectedId={selectedInterfaceId}
+                                        uncoveredSet={uncoveredSet}
+                                        onSelect={(item) => setSelectedInterfaceId(item.interface_identifier)}
+                                        onAdd={() => setInterfaceFormOpen(true)}
+                                        emptyMessage="No interfaces yet. Click Add Interface to begin tracking."
+                                    />
+                                )}
+                            </Box>
+                            <Box flex="2" minW="0">
+                                <InterfaceDetailPanel
+                                    interfaceIdentifier={selectedInterfaceId}
+                                    assets={assets}
+                                    onAfterMutate={handleInterfaceMutate}
+                                    onGoToAsset={goToAsset}
+                                />
+                            </Box>
+                        </Flex>
+                    </TabPanel>
                 </TabPanels>
             </Tabs>
 
@@ -345,6 +428,13 @@ function AssetsMasterContainer() {
                 isOpen={vendorFormOpen}
                 onClose={() => setVendorFormOpen(false)}
                 onSaved={handleVendorCreated}
+            />
+
+            <InterfaceForm
+                isOpen={interfaceFormOpen}
+                onClose={() => setInterfaceFormOpen(false)}
+                assets={assets}
+                onSaved={handleInterfaceCreated}
             />
         </Box>
     );

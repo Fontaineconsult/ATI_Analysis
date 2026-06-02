@@ -205,3 +205,23 @@ export const deleteVendor = async (name) => {
         throw error;
     }
 };
+
+//
+// INTERFACES — node delete (edge unassigns live on PUT, in put.js)
+//
+
+export const deleteInterface = async (interfaceIdentifier) => {
+    try {
+        const response = await fetch(`${API_URL}/interfaces`, {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ interface_identifier: interfaceIdentifier }),
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Failed to delete interface');
+        return data;
+    } catch (error) {
+        console.error('Error deleting interface:', error);
+        throw error;
+    }
+};
