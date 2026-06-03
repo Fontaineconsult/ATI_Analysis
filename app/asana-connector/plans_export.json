@@ -1,0 +1,1236 @@
+[
+  {
+    "uid": "66d063c4-46c7-4fa8-aadd-7b39fceca799",
+    "name": "1 Review Web V1 Process Document with ATI Steering",
+    "description": "Review Web V1 Process Document with ATI Steering",
+    "plan_status": "Not Started",
+    "is_key_plan": false,
+    "is_campus_plan": false,
+    "abandoned": false,
+    "plan_years": [
+      "2023-2024"
+    ],
+    "working_groups": [
+      "Web"
+    ],
+    "campuses": [
+      "sfsu"
+    ],
+    "goal_numbers": [],
+    "indicators": [
+      "1.1-web"
+    ]
+  },
+  {
+    "uid": "847dd5a36f0d49399a95627a5ce8ccdb",
+    "name": "Add ATI Accessibility Process to internal IT documentation ",
+    "description": "This is part of the web ati process review.\n\nWe need to review how Ed gets requiests for accessibility reviews.\n\nCurrently by email.\nHow is this email generated?",
+    "plan_status": "Abandoned",
+    "is_key_plan": false,
+    "is_campus_plan": false,
+    "abandoned": true,
+    "plan_years": [
+      "2023-2024"
+    ],
+    "working_groups": [
+      "Web"
+    ],
+    "campuses": [
+      "sfsu"
+    ],
+    "goal_numbers": [],
+    "indicators": [
+      "1.6-web"
+    ]
+  },
+  {
+    "uid": "5105c878cb714d45b637d3ac4d76d97c",
+    "name": "Add PDF remediation Service in ServiceNow",
+    "description": "Explore a Snow workflow for PDF accessibility. Create webform for submission.\n\nhttps://sfsu.service-now.com/sp?id=sc_cat_item_guide&table=sc_cat_item&sys_id=08309247dbe1105081fd16994b96199c\n\nWe need conversion resources first. ",
+    "plan_status": "On Hold",
+    "is_key_plan": false,
+    "is_campus_plan": false,
+    "abandoned": false,
+    "plan_years": [
+      "2023-2024"
+    ],
+    "working_groups": [
+      "Web"
+    ],
+    "campuses": [
+      "sfsu"
+    ],
+    "goal_numbers": [],
+    "indicators": [
+      "1.11-web"
+    ]
+  },
+  {
+    "uid": "7a5f9a97509c4bc38beb9098a5a4b882",
+    "name": "Closer plan between DPRC/AT is needed",
+    "description": "Bring in AT and DPRC to improve BuyIT to directly handle pusblisher tools. ",
+    "plan_status": "Abandoned",
+    "is_key_plan": false,
+    "is_campus_plan": false,
+    "abandoned": true,
+    "plan_years": [
+      "2023-2024"
+    ],
+    "working_groups": [
+      "Instructional Materials"
+    ],
+    "campuses": [
+      "sfsu"
+    ],
+    "goal_numbers": [],
+    "indicators": [
+      "5.15-ins"
+    ]
+  },
+  {
+    "uid": "ea0adfc4f79f4a82b125497f3a56becb",
+    "name": "Codify manual ACR review process for products without VPAT.",
+    "description": "The ACR review process for products without VPAT needs to be better Instrumentalized. New Qualtrics form contains detailed instructions to TAAP creation.",
+    "plan_status": "In Progress",
+    "is_key_plan": false,
+    "is_campus_plan": true,
+    "abandoned": false,
+    "plan_years": [
+      "2023-2024"
+    ],
+    "working_groups": [
+      "Procurement"
+    ],
+    "campuses": [
+      "sfsu"
+    ],
+    "goal_numbers": [],
+    "indicators": [
+      "5.9-pro"
+    ]
+  },
+  {
+    "uid": "2628f12522aa41d798c84410e1e83a60",
+    "name": "Contact Jesus Garcia",
+    "description": "About formal policy. DPRC will reach out to discuss establishing a new senate policy rooted in the Title II update. ",
+    "plan_status": "On Hold",
+    "is_key_plan": false,
+    "is_campus_plan": false,
+    "abandoned": false,
+    "plan_years": [
+      "2023-2024"
+    ],
+    "working_groups": [
+      "Instructional Materials"
+    ],
+    "campuses": [
+      "sfsu"
+    ],
+    "goal_numbers": [],
+    "indicators": [
+      "7.1-ins"
+    ]
+  },
+  {
+    "uid": "491cde822b0e4c93a0202ff7f6fe0969",
+    "name": "Courses listed for CEETL/AT need review ",
+    "description": "Do they contain updated accessibility guidance?",
+    "plan_status": "Abandoned",
+    "is_key_plan": false,
+    "is_campus_plan": false,
+    "abandoned": true,
+    "plan_years": [
+      "2023-2024"
+    ],
+    "working_groups": [
+      "Instructional Materials"
+    ],
+    "campuses": [
+      "sfsu"
+    ],
+    "goal_numbers": [],
+    "indicators": [
+      "4.5-ins"
+    ]
+  },
+  {
+    "uid": "c436cf001f264ad5a15b3ae901615eea",
+    "name": "Deliver Level Access Web Conformance Reports ",
+    "description": "Develop a process to deliver quarterly conformance reports to appropriate stakeholders. ",
+    "plan_status": "Abandoned",
+    "is_key_plan": true,
+    "is_campus_plan": true,
+    "abandoned": true,
+    "plan_years": [
+      "2023-2024"
+    ],
+    "working_groups": [
+      "Web"
+    ],
+    "campuses": [
+      "sfsu"
+    ],
+    "goal_numbers": [],
+    "indicators": [
+      "1.14-web"
+    ]
+  },
+  {
+    "uid": "8db5867d52b04dadac18bb5e14afffc2",
+    "name": "Deploy Verbit Unlimited Integration with Canvas Studio",
+    "description": "Deploy Verbit Unlimited Integration with Canvas Studio",
+    "plan_status": "Completed",
+    "is_key_plan": false,
+    "is_campus_plan": true,
+    "abandoned": false,
+    "plan_years": [
+      "2024-2025"
+    ],
+    "working_groups": [
+      "Instructional Materials"
+    ],
+    "campuses": [
+      "sfsu"
+    ],
+    "goal_numbers": [],
+    "indicators": [
+      "5.11-ins"
+    ]
+  },
+  {
+    "uid": "2d9e5264b48a4aa08dbe05ac37a9faf4",
+    "name": "Develop training materials for new website redesign.",
+    "description": "DPRC needs to establish a training routine with new materials with the help of SMC",
+    "plan_status": "Abandoned",
+    "is_key_plan": false,
+    "is_campus_plan": false,
+    "abandoned": true,
+    "plan_years": [
+      "2023-2024"
+    ],
+    "working_groups": [
+      "Web"
+    ],
+    "campuses": [
+      "sfsu"
+    ],
+    "goal_numbers": [],
+    "indicators": [
+      "5.4-web"
+    ]
+  },
+  {
+    "uid": "00ab2f0a00ef4d59a9d95f825347429d",
+    "name": "Document AT/CEETL Proceedures for Course Accessibility. ",
+    "description": "To rasie to established, we need prove with documentation.",
+    "plan_status": "On Hold",
+    "is_key_plan": false,
+    "is_campus_plan": false,
+    "abandoned": false,
+    "plan_years": [
+      "2023-2024"
+    ],
+    "working_groups": [
+      "Instructional Materials"
+    ],
+    "campuses": [
+      "sfsu"
+    ],
+    "goal_numbers": [],
+    "indicators": [
+      "8.12-ins"
+    ]
+  },
+  {
+    "uid": "912f6236bca04f80ac3a35da98e6f276",
+    "name": "Finalize the updated TAAP authoring workflow. ",
+    "description": "We made solid progress in 2025 updating the EEAAP process to the TAAP. A top priority for 2026 will be to codify this process in the updated V2 procurement process documentation, and run multiple tests. ",
+    "plan_status": "In Progress",
+    "is_key_plan": false,
+    "is_campus_plan": true,
+    "abandoned": false,
+    "plan_years": [
+      "2024-2025"
+    ],
+    "working_groups": [
+      "Procurement"
+    ],
+    "campuses": [
+      "sfsu"
+    ],
+    "goal_numbers": [
+      4
+    ],
+    "indicators": [
+      "4.6-pro"
+    ]
+  },
+  {
+    "uid": "f3ecf15984044bab95845ed5627943cb",
+    "name": "Find appropriate contact to make sure information is in onboarding",
+    "description": "Who is the correct contact for this?",
+    "plan_status": "Completed",
+    "is_key_plan": false,
+    "is_campus_plan": false,
+    "abandoned": false,
+    "plan_years": [
+      "2023-2024"
+    ],
+    "working_groups": [
+      "Web"
+    ],
+    "campuses": [
+      "sfsu"
+    ],
+    "goal_numbers": [],
+    "indicators": [
+      "6.4-web"
+    ]
+  },
+  {
+    "uid": "4da914b0fafc4d8398895875a030ef49",
+    "name": "Find existing Web Accessibility Training",
+    "description": "Find Free training to link to.",
+    "plan_status": "In Progress",
+    "is_key_plan": false,
+    "is_campus_plan": false,
+    "abandoned": false,
+    "plan_years": [
+      "2023-2024"
+    ],
+    "working_groups": [
+      "Web"
+    ],
+    "campuses": [
+      "sfsu"
+    ],
+    "goal_numbers": [],
+    "indicators": [
+      "5.1-web"
+    ]
+  },
+  {
+    "uid": "17c63634a8154c9b8714460a58f045c1",
+    "name": "Find someone to oversee timely textbook adoption process. ",
+    "description": "Who can take responsibility for the timely textbook adoption process?",
+    "plan_status": "Abandoned",
+    "is_key_plan": true,
+    "is_campus_plan": false,
+    "abandoned": true,
+    "plan_years": [
+      "2023-2024"
+    ],
+    "working_groups": [
+      "Instructional Materials"
+    ],
+    "campuses": [
+      "sfsu"
+    ],
+    "goal_numbers": [],
+    "indicators": [
+      "1.6-ins"
+    ]
+  },
+  {
+    "uid": "27b3cd85b930465b93ce0697e0e85865",
+    "name": "Formal review of 6.7-web",
+    "description": "Review all documentation for clarity ",
+    "plan_status": "Abandoned",
+    "is_key_plan": false,
+    "is_campus_plan": false,
+    "abandoned": true,
+    "plan_years": [
+      "2023-2024"
+    ],
+    "working_groups": [
+      "Web"
+    ],
+    "campuses": [
+      "sfsu"
+    ],
+    "goal_numbers": [],
+    "indicators": [
+      "6.7-web"
+    ]
+  },
+  {
+    "uid": "1c6ebdcff90749d88880b2a24d66afce",
+    "name": "Formalize Procurement Plan Approval Process",
+    "description": "Develop a clear system to present updated process documents and plans to the ATI committee for approval inside the ATIKG",
+    "plan_status": "Completed",
+    "is_key_plan": true,
+    "is_campus_plan": false,
+    "abandoned": false,
+    "plan_years": [
+      "2023-2024"
+    ],
+    "working_groups": [
+      "Procurement"
+    ],
+    "campuses": [
+      "sfsu"
+    ],
+    "goal_numbers": [],
+    "indicators": [
+      "9.1-pro"
+    ]
+  },
+  {
+    "uid": "6aaeb734a7664187810715eedcda7f17",
+    "name": "Fully implement campus-wide TAAP process to include all required stakeholders \u2013 ITS, DPRC, HR and Colleges.  ",
+    "description": "Fully implement campus-wide TAAP process to include all required stakeholders \u2013 ITS, DPRC, HR and Colleges.  \n\nMove to 2025-2026",
+    "plan_status": "Not Started",
+    "is_key_plan": false,
+    "is_campus_plan": true,
+    "abandoned": false,
+    "plan_years": [
+      "2024-2025"
+    ],
+    "working_groups": [
+      "Instructional Materials"
+    ],
+    "campuses": [
+      "sfsu"
+    ],
+    "goal_numbers": [],
+    "indicators": [
+      "6.9-ins"
+    ]
+  },
+  {
+    "uid": "d8f908c5e57e4067af98220275e669a9",
+    "name": "Gather and improve documentation for 3.2-web",
+    "description": "This will need to be included in the new OHO drupal web process. Likely using web scanning tool.",
+    "plan_status": "Abandoned",
+    "is_key_plan": false,
+    "is_campus_plan": false,
+    "abandoned": true,
+    "plan_years": [
+      "2023-2024"
+    ],
+    "working_groups": [
+      "Web"
+    ],
+    "campuses": [
+      "sfsu"
+    ],
+    "goal_numbers": [],
+    "indicators": [
+      "3.2-web"
+    ]
+  },
+  {
+    "uid": "29ce7e7103214437acc34a548c73acd2",
+    "name": "Identify responsible personnel to re-implement a timely textbook adoption policy.",
+    "description": "New bookstore committee will be started in November 2025. ",
+    "plan_status": "Completed",
+    "is_key_plan": true,
+    "is_campus_plan": true,
+    "abandoned": false,
+    "plan_years": [
+      "2023-2024"
+    ],
+    "working_groups": [
+      "Instructional Materials"
+    ],
+    "campuses": [
+      "sfsu"
+    ],
+    "goal_numbers": [],
+    "indicators": [
+      "1.1-ins"
+    ]
+  },
+  {
+    "uid": "357020276c154cd0a735cac0f0a3706a",
+    "name": "Include ATI-related training in onboarding for instructional designers with ATI responsibilities",
+    "description": "Only those with ATI responsibilities.",
+    "plan_status": "On Hold",
+    "is_key_plan": false,
+    "is_campus_plan": true,
+    "abandoned": false,
+    "plan_years": [
+      "2023-2024"
+    ],
+    "working_groups": [
+      "Instructional Materials"
+    ],
+    "campuses": [
+      "sfsu"
+    ],
+    "goal_numbers": [],
+    "indicators": [
+      "8.14-ins"
+    ]
+  },
+  {
+    "uid": "74c1cf7296574510baaa7b3d1617c95a",
+    "name": "Integrate LTI acquisition into the TAR Process.",
+    "description": "The EEAAP process needs clearer instructions for LTI. We are now tracking if a purchase can affect student materials.",
+    "plan_status": "In Progress",
+    "is_key_plan": false,
+    "is_campus_plan": true,
+    "abandoned": false,
+    "plan_years": [
+      "2023-2024"
+    ],
+    "working_groups": [
+      "Instructional Materials"
+    ],
+    "campuses": [
+      "sfsu"
+    ],
+    "goal_numbers": [],
+    "indicators": [
+      "6.9-ins"
+    ]
+  },
+  {
+    "uid": "5c4e088c8d15412387583983b6071f24",
+    "name": "Interview CPAGE about their own accessibility process",
+    "description": "They may have their own process in place. Reached out to Angie.",
+    "plan_status": "Completed",
+    "is_key_plan": false,
+    "is_campus_plan": true,
+    "abandoned": false,
+    "plan_years": [
+      "2023-2024"
+    ],
+    "working_groups": [
+      "Instructional Materials"
+    ],
+    "campuses": [
+      "sfsu"
+    ],
+    "goal_numbers": [],
+    "indicators": [
+      "6.4-ins"
+    ]
+  },
+  {
+    "uid": "1ba24d07cf3749b4adcd962cdbb5832f",
+    "name": "Launch the Drupal PDF Accessibility Project",
+    "description": "Drupal PDF Accessibility Review (DPAR)",
+    "plan_status": "Completed",
+    "is_key_plan": false,
+    "is_campus_plan": true,
+    "abandoned": false,
+    "plan_years": [
+      "2024-2025"
+    ],
+    "working_groups": [
+      "Web"
+    ],
+    "campuses": [
+      "sfsu"
+    ],
+    "goal_numbers": [],
+    "indicators": [
+      "1.11-web",
+      "5.6-web"
+    ]
+  },
+  {
+    "uid": "693f6befce6c41a0b7b823c375af3688",
+    "name": "Locate coordinator for New Student Orientation",
+    "description": "Orientation should contain a mention about web/document accessibility. ",
+    "plan_status": "Completed",
+    "is_key_plan": false,
+    "is_campus_plan": false,
+    "abandoned": false,
+    "plan_years": [
+      "2023-2024"
+    ],
+    "working_groups": [
+      "Web"
+    ],
+    "campuses": [
+      "sfsu"
+    ],
+    "goal_numbers": [],
+    "indicators": [
+      "6.5-web"
+    ]
+  },
+  {
+    "uid": "af375d6e85454c02976fadf3b4096c06",
+    "name": "Make official the responsibility for web monitoring",
+    "description": "Establish ATI as the locus of monitoring, not ITS for PopeTech Monitoring. ",
+    "plan_status": "Not Started",
+    "is_key_plan": false,
+    "is_campus_plan": false,
+    "abandoned": false,
+    "plan_years": [
+      "2024-2025"
+    ],
+    "working_groups": [
+      "Web"
+    ],
+    "campuses": [
+      "sfsu"
+    ],
+    "goal_numbers": [],
+    "indicators": [
+      "3.1-web",
+      "1.6-web",
+      "1.7-web",
+      "5.4-web",
+      "1.14-web",
+      "1.4-web",
+      "1.9-web",
+      "1.15-web",
+      "3.5-web"
+    ]
+  },
+  {
+    "uid": "5a609570f7fd469abc80d54cc1ec0d03",
+    "name": "Make sure ATI related materials are posted",
+    "description": "SMC/AT/CEETL/DPRC should maintain a repo for this info for the relevant people. ",
+    "plan_status": "On Hold",
+    "is_key_plan": false,
+    "is_campus_plan": false,
+    "abandoned": false,
+    "plan_years": [
+      "2023-2024"
+    ],
+    "working_groups": [
+      "Instructional Materials"
+    ],
+    "campuses": [
+      "sfsu"
+    ],
+    "goal_numbers": [],
+    "indicators": [
+      "6.8-ins"
+    ]
+  },
+  {
+    "uid": "fca4342acf0940c891ac87a21b02d96b",
+    "name": "Make sure accessibility information is included in all course approval processes",
+    "description": "Make sure accessibility information is included in all course approval processes",
+    "plan_status": "On Hold",
+    "is_key_plan": false,
+    "is_campus_plan": false,
+    "abandoned": false,
+    "plan_years": [
+      "2023-2024"
+    ],
+    "working_groups": [
+      "Instructional Materials"
+    ],
+    "campuses": [
+      "sfsu"
+    ],
+    "goal_numbers": [],
+    "indicators": [
+      "6.2-ins"
+    ]
+  },
+  {
+    "uid": "2a3c2142538449b8a1beba70c63c9b25",
+    "name": "New Website Redesign Responsibilities",
+    "description": "Figure out how who is responsible for updating content accessibility for a given site. \n\nThis may be in a subdirectory.",
+    "plan_status": "Abandoned",
+    "is_key_plan": false,
+    "is_campus_plan": false,
+    "abandoned": true,
+    "plan_years": [
+      "2023-2024"
+    ],
+    "working_groups": [
+      "Web"
+    ],
+    "campuses": [
+      "sfsu"
+    ],
+    "goal_numbers": [],
+    "indicators": [
+      "1.4-web"
+    ]
+  },
+  {
+    "uid": "3310796a-77da-4ece-8202-cb8d7a139bbb",
+    "name": "Plan 1",
+    "description": "Send quarterly level access reports to all drupal content managers.",
+    "plan_status": null,
+    "is_key_plan": true,
+    "is_campus_plan": false,
+    "abandoned": null,
+    "plan_years": [
+      "2022-2023"
+    ],
+    "working_groups": [
+      "Web"
+    ],
+    "campuses": [],
+    "goal_numbers": [
+      1
+    ],
+    "indicators": []
+  },
+  {
+    "uid": "3045c106-9a3e-4f06-97c1-39be4bece33f",
+    "name": "Plan 1",
+    "description": "DPRC will develop a process to identify and review PDFs for accessibility on high-profile Drupal sites",
+    "plan_status": null,
+    "is_key_plan": true,
+    "is_campus_plan": false,
+    "abandoned": null,
+    "plan_years": [
+      "2022-2023"
+    ],
+    "working_groups": [
+      "Web"
+    ],
+    "campuses": [],
+    "goal_numbers": [
+      2
+    ],
+    "indicators": []
+  },
+  {
+    "uid": "6b95fe7d-ba1e-4351-a8c9-d7017df429b3",
+    "name": "Plan 1",
+    "description": "DPRC will re-establish relationships with ITS and SM&C to continue providing web accessibility training.",
+    "plan_status": null,
+    "is_key_plan": true,
+    "is_campus_plan": false,
+    "abandoned": false,
+    "plan_years": [
+      "2022-2023"
+    ],
+    "working_groups": [
+      "Web"
+    ],
+    "campuses": [],
+    "goal_numbers": [
+      5
+    ],
+    "indicators": []
+  },
+  {
+    "uid": "6487d8bf-41e4-477c-bdd7-e83689f22d4c",
+    "name": "Plan 1",
+    "description": "Will use level access to develop an updated workflow for existing web accessibility reviews",
+    "plan_status": null,
+    "is_key_plan": true,
+    "is_campus_plan": false,
+    "abandoned": false,
+    "plan_years": [
+      "2022-2023"
+    ],
+    "working_groups": [
+      "Web"
+    ],
+    "campuses": [],
+    "goal_numbers": [
+      6
+    ],
+    "indicators": []
+  },
+  {
+    "uid": "37e13c24-d1a6-4f23-ab83-f037fa21e3be",
+    "name": "Plan 1",
+    "description": "We will continue to work to re-establish regular web subcommittee meetings.",
+    "plan_status": null,
+    "is_key_plan": true,
+    "is_campus_plan": false,
+    "abandoned": false,
+    "plan_years": [
+      "2022-2023"
+    ],
+    "working_groups": [
+      "Web"
+    ],
+    "campuses": [],
+    "goal_numbers": [
+      7
+    ],
+    "indicators": []
+  },
+  {
+    "uid": "2633dde9-7395-4830-9d18-617d103b5ae6",
+    "name": "Plan 2",
+    "description": "DPRC, ITS and SM&C will collaborate on ATI goals relevant to the OHO Drupal site redesign",
+    "plan_status": null,
+    "is_key_plan": true,
+    "is_campus_plan": false,
+    "abandoned": null,
+    "plan_years": [
+      "2022-2023"
+    ],
+    "working_groups": [
+      "Web"
+    ],
+    "campuses": [],
+    "goal_numbers": [
+      2
+    ],
+    "indicators": []
+  },
+  {
+    "uid": "dc2761de-7eb5-4da4-9287-3d5b3c08d9de",
+    "name": "Plan 2",
+    "description": "Will find an HR contact for ATI related goals.",
+    "plan_status": null,
+    "is_key_plan": true,
+    "is_campus_plan": false,
+    "abandoned": false,
+    "plan_years": [
+      "2022-2023"
+    ],
+    "working_groups": [
+      "Web"
+    ],
+    "campuses": [],
+    "goal_numbers": [
+      6
+    ],
+    "indicators": []
+  },
+  {
+    "uid": "100526ee-6080-4cb1-bc2d-adb8d288b64b",
+    "name": "Plan 3",
+    "description": "DPRC and ITS will revisit ATI goals related to the faculty site migration and standardization within Pantheon.",
+    "plan_status": null,
+    "is_key_plan": true,
+    "is_campus_plan": false,
+    "abandoned": null,
+    "plan_years": [
+      "2022-2023"
+    ],
+    "working_groups": [
+      "Web"
+    ],
+    "campuses": [],
+    "goal_numbers": [
+      2
+    ],
+    "indicators": []
+  },
+  {
+    "uid": "0b81b20f-5240-4517-984c-671e1eb2e6d6",
+    "name": "Plan 3",
+    "description": "Will find contact in new student programs related to ATI Goals.",
+    "plan_status": null,
+    "is_key_plan": true,
+    "is_campus_plan": false,
+    "abandoned": false,
+    "plan_years": [
+      "2022-2023"
+    ],
+    "working_groups": [
+      "Web"
+    ],
+    "campuses": [],
+    "goal_numbers": [
+      6
+    ],
+    "indicators": []
+  },
+  {
+    "uid": "3a4474c677f94b4183339d3a2aa6cf4b",
+    "name": "Re-establish outreach and training guidelines for campus members",
+    "description": "Indicator 1.15 requires the ATI oversee training and outreach related to web accessibility. The Process document should be updated to reflect new work in this area. ",
+    "plan_status": "Abandoned",
+    "is_key_plan": true,
+    "is_campus_plan": false,
+    "abandoned": true,
+    "plan_years": [
+      "2023-2024"
+    ],
+    "working_groups": [
+      "Web"
+    ],
+    "campuses": [
+      "sfsu"
+    ],
+    "goal_numbers": [],
+    "indicators": [
+      "1.15-web"
+    ]
+  },
+  {
+    "uid": "23b8ceec0030417a8e0a3146d5854355",
+    "name": "Remove DPRC reference to course review",
+    "description": "bvb",
+    "plan_status": "Abandoned",
+    "is_key_plan": false,
+    "is_campus_plan": false,
+    "abandoned": true,
+    "plan_years": [
+      "2023-2024"
+    ],
+    "working_groups": [
+      "Instructional Materials"
+    ],
+    "campuses": [
+      "sfsu"
+    ],
+    "goal_numbers": [],
+    "indicators": [
+      "6.4-ins"
+    ]
+  },
+  {
+    "uid": "2303da05-7647-4069-ae3f-5ef16ac90a58",
+    "name": "Review Web V1 Process Document with ATI Steering",
+    "description": "We will review the Web Accessibility V1 Document to update and verify for version 2",
+    "plan_status": "Not Started",
+    "is_key_plan": false,
+    "is_campus_plan": false,
+    "abandoned": false,
+    "plan_years": [
+      "2023-2024"
+    ],
+    "working_groups": [],
+    "campuses": [],
+    "goal_numbers": [],
+    "indicators": []
+  },
+  {
+    "uid": "f45b7cd650b34ec0b249c95d504cac3c",
+    "name": "Review and update documentation related to creation and adoption of accessible instructional materials with stakeholders like CPage/AT/CEETL",
+    "description": "Verify accessibility information in AT/CEETL courses",
+    "plan_status": "On Hold",
+    "is_key_plan": false,
+    "is_campus_plan": true,
+    "abandoned": false,
+    "plan_years": [
+      "2023-2024"
+    ],
+    "working_groups": [
+      "Instructional Materials"
+    ],
+    "campuses": [
+      "sfsu"
+    ],
+    "goal_numbers": [],
+    "indicators": [
+      "6.4-ins"
+    ]
+  },
+  {
+    "uid": "1a480470cd17458c8d80d32a53017508",
+    "name": "Review and update the existing Accessible Procurement Process Document (V1) to align with the new BuyIT system.",
+    "description": "The new procruement process includes the updated TAAP system and BuyIT. \n",
+    "plan_status": "Abandoned",
+    "is_key_plan": true,
+    "is_campus_plan": true,
+    "abandoned": true,
+    "plan_years": [
+      "2023-2024"
+    ],
+    "working_groups": [
+      "Procurement"
+    ],
+    "campuses": [
+      "sfsu"
+    ],
+    "goal_numbers": [],
+    "indicators": [
+      "1.3-pro"
+    ]
+  },
+  {
+    "uid": "f97133cf01e34f9799bf3f932c8bf656",
+    "name": "Review group memebers",
+    "description": "Make sure all campus areas are represented",
+    "plan_status": "Not Started",
+    "is_key_plan": false,
+    "is_campus_plan": false,
+    "abandoned": false,
+    "plan_years": [
+      "2023-2024"
+    ],
+    "working_groups": [
+      "Instructional Materials"
+    ],
+    "campuses": [
+      "sfsu"
+    ],
+    "goal_numbers": [],
+    "indicators": [
+      "9.1-ins"
+    ]
+  },
+  {
+    "uid": "32ddce8d13f24cb2a1a9b917fc3549ca",
+    "name": "Review the existing Web Accessibility Process (v1) documentation to ensure status indicators are properly implemented and to clarify shifting roles and responsibilities shared by DPRC, ITS, and SM&C.",
+    "description": "Exising web process is out of date. This will need to be revisited with OHO and SFBRN. ",
+    "plan_status": "Abandoned",
+    "is_key_plan": false,
+    "is_campus_plan": true,
+    "abandoned": true,
+    "plan_years": [
+      "2024-2025"
+    ],
+    "working_groups": [
+      "Web"
+    ],
+    "campuses": [
+      "sfsu"
+    ],
+    "goal_numbers": [],
+    "indicators": [
+      "1.4-web"
+    ]
+  },
+  {
+    "uid": "5763424635904ca3b6a88bfd9c767446",
+    "name": "Review this indicator for 25",
+    "description": "7.3",
+    "plan_status": "On Hold",
+    "is_key_plan": false,
+    "is_campus_plan": false,
+    "abandoned": false,
+    "plan_years": [
+      "2023-2024"
+    ],
+    "working_groups": [
+      "Instructional Materials"
+    ],
+    "campuses": [
+      "sfsu"
+    ],
+    "goal_numbers": [],
+    "indicators": [
+      "7.3-ins"
+    ]
+  },
+  {
+    "uid": "982ce83016c9491ca7482bac063b2b50",
+    "name": "Review with Alexis who has permissions to submit/publish",
+    "description": "SMC will control who can publish content. DPRC should be involved in checking content before published.\n\n",
+    "plan_status": "Abandoned",
+    "is_key_plan": false,
+    "is_campus_plan": false,
+    "abandoned": true,
+    "plan_years": [
+      "2023-2024"
+    ],
+    "working_groups": [
+      "Web"
+    ],
+    "campuses": [
+      "sfsu"
+    ],
+    "goal_numbers": [],
+    "indicators": [
+      "2.5-web"
+    ]
+  },
+  {
+    "uid": "62a1a7ad347d4f79a8dcee26915e9df1",
+    "name": "Update ATI Website under ITS with updated information.",
+    "description": "The new ATI Website should contain all updates about how to make content accessible at SF State. ",
+    "plan_status": "Abandoned",
+    "is_key_plan": false,
+    "is_campus_plan": true,
+    "abandoned": true,
+    "plan_years": [
+      "2023-2024"
+    ],
+    "working_groups": [
+      "Web"
+    ],
+    "campuses": [
+      "sfsu"
+    ],
+    "goal_numbers": [],
+    "indicators": [
+      "6.8-web"
+    ]
+  },
+  {
+    "uid": "caac5afd11364ae3a2ff990b7ac4f1ac",
+    "name": "Verify Audio and Video remediation is included in LMS Remediation Framework. ",
+    "description": "Verify Audio and Video remediation is included in LMS Remediation Framework. ",
+    "plan_status": "On Hold",
+    "is_key_plan": false,
+    "is_campus_plan": false,
+    "abandoned": false,
+    "plan_years": [
+      "2023-2024"
+    ],
+    "working_groups": [
+      "Instructional Materials"
+    ],
+    "campuses": [
+      "sfsu"
+    ],
+    "goal_numbers": [],
+    "indicators": [
+      "5.11-ins"
+    ]
+  },
+  {
+    "uid": "318359b559534b43806c7ef9b90366aa",
+    "name": "Verify Campus Accessibility Statement is Updated",
+    "description": "The SF State accessibility statement is updated. ",
+    "plan_status": "Completed",
+    "is_key_plan": false,
+    "is_campus_plan": false,
+    "abandoned": false,
+    "plan_years": [
+      "2023-2024"
+    ],
+    "working_groups": [
+      "Web"
+    ],
+    "campuses": [
+      "sfsu"
+    ],
+    "goal_numbers": [],
+    "indicators": [
+      "1.19-web"
+    ]
+  },
+  {
+    "uid": "d9190edd12eb49eabc8f628602890fcb",
+    "name": "Verify P-card trainings contain TAR process and accessibility information.",
+    "description": "Verify P-card trainings contain TAR process and accessibility information.",
+    "plan_status": "Abandoned",
+    "is_key_plan": false,
+    "is_campus_plan": false,
+    "abandoned": true,
+    "plan_years": [
+      "2023-2024"
+    ],
+    "working_groups": [
+      "Procurement"
+    ],
+    "campuses": [
+      "sfsu"
+    ],
+    "goal_numbers": [],
+    "indicators": [
+      "5.5-pro"
+    ]
+  },
+  {
+    "uid": "40f7a687f54a4209964c95f0789b4c0c",
+    "name": "Verify P-card trainings include TAR process and accessibility information.",
+    "description": "BuyIT is directly referenced in P-CARD training materials. ",
+    "plan_status": "Completed",
+    "is_key_plan": false,
+    "is_campus_plan": true,
+    "abandoned": false,
+    "plan_years": [
+      "2023-2024"
+    ],
+    "working_groups": [
+      "Procurement"
+    ],
+    "campuses": [
+      "sfsu"
+    ],
+    "goal_numbers": [],
+    "indicators": [
+      "5.2-pro",
+      "5.5-pro"
+    ]
+  },
+  {
+    "uid": "fe09ee09c0564a99bf4088697b94df77",
+    "name": "Verify current CEETL/AT presentations include web accessibility information.",
+    "description": "We need to locate new faculty orientation materials.",
+    "plan_status": "Completed",
+    "is_key_plan": false,
+    "is_campus_plan": true,
+    "abandoned": false,
+    "plan_years": [
+      "2023-2024"
+    ],
+    "working_groups": [
+      "Web"
+    ],
+    "campuses": [
+      "sfsu"
+    ],
+    "goal_numbers": [],
+    "indicators": [
+      "6.3-web"
+    ]
+  },
+  {
+    "uid": "f7ace1330c7345c980750451f60cf3c3",
+    "name": "Verify if New Employee Orientation Contains reference to TAR accessibility process",
+    "description": "We need to determine who has this information. ",
+    "plan_status": "Completed",
+    "is_key_plan": false,
+    "is_campus_plan": false,
+    "abandoned": false,
+    "plan_years": [
+      "2023-2024"
+    ],
+    "working_groups": [
+      "Procurement"
+    ],
+    "campuses": [
+      "sfsu"
+    ],
+    "goal_numbers": [],
+    "indicators": [
+      "5.1-pro"
+    ]
+  },
+  {
+    "uid": "4c7fe1bd560641f59d148494abb754ed",
+    "name": "Who is formally tasked with communicating updates about web accessibility?",
+    "description": "This belongs to the whole ATI committee but we need a formal process to review. ",
+    "plan_status": "On Hold",
+    "is_key_plan": false,
+    "is_campus_plan": false,
+    "abandoned": false,
+    "plan_years": [
+      "2023-2024"
+    ],
+    "working_groups": [
+      "Web"
+    ],
+    "campuses": [
+      "sfsu"
+    ],
+    "goal_numbers": [],
+    "indicators": [
+      "6.1-web"
+    ]
+  },
+  {
+    "uid": "350ea2d06d3f4bae9529c30da0ce8592",
+    "name": "Who is responsible for training digital content editors about accessibility?",
+    "description": "Who is responsible for training digital content editors about accessibility?",
+    "plan_status": "Abandoned",
+    "is_key_plan": false,
+    "is_campus_plan": false,
+    "abandoned": true,
+    "plan_years": [
+      "2023-2024"
+    ],
+    "working_groups": [
+      "Web"
+    ],
+    "campuses": [
+      "sfsu"
+    ],
+    "goal_numbers": [],
+    "indicators": [
+      "5.2-web"
+    ]
+  },
+  {
+    "uid": "1d7f166d-d413-4c97-b217-28ba6912ce30",
+    "name": null,
+    "description": "",
+    "plan_status": null,
+    "is_key_plan": null,
+    "is_campus_plan": true,
+    "abandoned": null,
+    "plan_years": [],
+    "working_groups": [],
+    "campuses": [],
+    "goal_numbers": [],
+    "indicators": []
+  }
+]

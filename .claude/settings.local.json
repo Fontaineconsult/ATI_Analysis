@@ -22,7 +22,13 @@
       "Bash(git --no-pager diff HEAD -- app/database/graph_schema.py)",
       "PowerShell($p = \\(Get-Command python, python3, py -ErrorAction SilentlyContinue | Select-Object -First 1\\).Source; Write-Output \"PYTHON: $p\"; if \\($p\\) { & $p -c \"import neomodel, os; print\\(neomodel.__version__\\); print\\(os.path.dirname\\(neomodel.__file__\\)\\)\" })",
       "Bash(find app/frontend -maxdepth 3 -name package.json -not -path \"*/node_modules/*\")",
-      "Bash(ls -d app/frontend/src/node_modules)"
+      "Bash(ls -d app/frontend/src/node_modules)",
+      "mcp__mcp-registry__list_connectors",
+      "mcp__mcp-registry__search_mcp_registry",
+      "PowerShell(& \"C:\\\\Users\\\\913678186\\\\IdeaProjects\\\\ATI_Analysis\\\\windowsvenvpy12\\\\Scripts\\\\python.exe\" -c \"import json; d=json.load\\(open\\(r'C:\\\\Users\\\\913678186\\\\IdeaProjects\\\\ATI_Analysis\\\\app\\\\asana-connector\\\\plans_export.json', encoding='utf-8'\\)\\); print\\('with goals:',sum\\(1 for p in d if p['goal_numbers']\\)\\); print\\('with indicators:',sum\\(1 for p in d if p['indicators']\\)\\); print\\('with campus:',sum\\(1 for p in d if p['campuses']\\)\\); print\\('statuses:', sorted\\(set\\(str\\(p['plan_status']\\) for p in d\\)\\)\\)\")",
+      "PowerShell($env:PYTHONPATH = \".\"; & \"C:\\\\Users\\\\913678186\\\\IdeaProjects\\\\ATI_Analysis\\\\windowsvenvpy12\\\\Scripts\\\\python.exe\" \"C:\\\\Users\\\\913678186\\\\IdeaProjects\\\\ATI_Analysis\\\\app\\\\asana-connector\\\\export_plans.py\")",
+      "PowerShell($root = \"C:\\\\Users\\\\913678186\\\\IdeaProjects\\\\ATI_Analysis\"; $env:PYTHONPATH = $root; & \"$root\\\\windowsvenvpy12\\\\Scripts\\\\python.exe\" \"$root\\\\app\\\\asana-connector\\\\export_plans.py\")",
+      "mcp__7fb79afa-be6e-4d9f-ba06-9483020d2c3e__create_project"
     ]
   }
 }

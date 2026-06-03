@@ -1,0 +1,131 @@
+ATI COMMITTEE ROSTER — assignments for 9998-9998
+41 contributor(s)
+
+== csueb (3) ==
+  • Gene Lim — Deputy Network Chief Information Officer <gene.lim@csueastbay.edu>
+      working group(s): Web, Instructional Materials, Procurement
+      indicators:       —
+  • Jonathan Hale — Business Operations Specialist <jonathan.hale@csueastbay.edu>
+      working group(s): Procurement
+      indicators:       —
+  • Zach Oshri — ATI Coordinator <zach.oshri@csueastbay.edu>
+      working group(s): Web, Instructional Materials, Procurement
+      indicators:       —
+
+== sfsu (27) ==
+  • Alex Cherian — Library Services Specialist <acherian@sfsu.edu>
+      working group(s): Instructional Materials
+      indicators:       —
+  • Alexis Cabrerra — Public Affairs/Communication Specialist <cabrera@sfsu.edu>
+      working group(s): Web
+      indicators:       —
+  • Andrew Roderick — AVP Academic Technology <roderick@sfsu.edu>
+      working group(s): Web, Instructional Materials, Procurement
+      indicators:       —
+  • Anoshua Chaudhuri — Senior Director CEETL <anoshua@sfsu.edu>
+      working group(s): Instructional Materials
+      indicators:       —
+  • Ash Klein — Info Tech Consultant <atklein@sfsu.edu>
+      working group(s): Web, Instructional Materials
+      indicators:       —
+  • Avi Advani — ATI Program Manager <avi@sfsu.edu>
+      working group(s): —
+      indicators:       —
+  • Barbara M Stein — Director Marketing and Brand Strategy <bmstein@sfsu.edu>
+      working group(s): Web
+      indicators:       —
+  • Chris Farmer — Director of Operations - Ucorp <cfarmer@sfsu.edu>
+      working group(s): Instructional Materials
+      indicators:       —
+  • Christy Stevens — Interim University Librarian <crstevens@sfsu.edu>
+      working group(s): Instructional Materials
+      indicators:       —
+  • Cristian Alvarado — LMS Administrator <calv@sfsu.edu>
+      working group(s): Instructional Materials
+      indicators:       —
+  • Daniel Fontaine — Senior Accessible Technology Services Coordinator <fontaine@sfsu.edu>
+      working group(s): Web, Instructional Materials, Procurement
+      indicators:       —
+  • David Chellia  — Accounts Payable & Fiscal Services Manager <chelliah@sfsu.edu>
+      working group(s): Procurement
+      indicators:       —
+  • Eugene Chelberg — Associate Vice President for Student Affairs <chelberg@sfsu.edu>
+      working group(s): —
+      indicators:       —
+  • Genievive Del Mundo Mendieta — Administrative Analyst/Specialist <gen@sfsu.edu>
+      working group(s): Instructional Materials
+      indicators:       —
+  • Ingrid Williams — AVP Human Resources <icwilliams@sfsu.edu>
+      working group(s): —
+      indicators:       —
+  • Jason Huynh — Lead P-Card Coordinator <jhuynh@sfsu.edu>
+      working group(s): Procurement
+      indicators:       —
+  • John Gates — Executive Director Financial Services <jmgates@sfsu.edu>
+      working group(s): Procurement
+      indicators:       —
+  • Jonathan Foerster — Desktop Support / Technical Services <foerster@sfsu.edu>
+      working group(s): Procurement
+      indicators:       —
+  • Larry Major Lee — Buyer III <larrylee@sfsu.edu>
+      working group(s): Procurement
+      indicators:       —
+  • Maggie Beers — Associate Vice President for Teaching and Learning <mbeers@sfsu.edu>
+      working group(s): —
+      indicators:       —
+  • Mantasha Lakdawala — Accessible Procurement Analyst <mlakdawa@sfsu.edu>
+      working group(s): Procurement
+      indicators:       —
+  • Michelle Rito Anolin — Director, Accessible Technology Initiative and Project Management Office <mich@sfsu.edu>
+      working group(s): Web, Instructional Materials, Procurement
+      indicators:       —
+  • Nancy Rovegno-Ganner — Asst. Director of Operations • H/R - Human Resources <ganner@sfsu.edu>
+      working group(s): Web
+      indicators:       —
+  • Nancy Trinh — Buyer 3 <nancy625@sfsu.edu>
+      working group(s): Procurement
+      indicators:       —
+  • Nish Malik — Head of Information Technology <nish@sfsu.edu>
+      working group(s): Web, Instructional Materials, Procurement
+      indicators:       —
+  • Shawn Hicks — Director of Web and Mobile Applications <shawnhicks@sfsu.edu>
+      working group(s): Web
+      indicators:       —
+  • Steven Chang — Interim Director of Procurement & Support Services <stevenchang@sfsu.edu>
+      working group(s): Procurement
+      indicators:       —
+
+== ssu (11) ==
+  • Amanda McGowan — Deputy CIO | Project Management Office, Business Operations, and Accessible Technology  <amanda.mcgowan@sonoma.edu>
+      working group(s): Web, Instructional Materials, Procurement
+      indicators:       —
+  • Brent Boyer — Director of Disability Services for Students and Testing Services <boyer@sonoma.edu>
+      working group(s): —
+      indicators:       —
+  • Christine Hayes — Web Developer <christine.hayes@sonoma.edu>
+      working group(s): —
+      indicators:       —
+  • Ian Carlson — carlsoni@sonoma.edu <Lead Web & Mobile Developer>
+      working group(s): Web
+      indicators:       —
+  • Jaime Russell — Senior Director of ERP Applications and Business Intelligence <jaime.russell@sonoma.edu>
+      working group(s): —
+      indicators:       —
+  • Jenifer Barnett — Senior Director Procurement and Accounts Payable <jenifer.barnett@sonoma.edu>
+      working group(s): —
+      indicators:       —
+  • John Lynch — Director of the Center for Teaching and Educational Technology <lynchjo@sonoma.edu>
+      working group(s): Instructional Materials
+      indicators:       —
+  • Noelia Franzen — Senior Accessibility Coordinator <franzen@sonoma.edu>
+      working group(s): Instructional Materials
+      indicators:       —
+  • Sadie Pettit — Change Management, Communications, & Process Improvement Manager <sadie.pettit@sonoma.edu>
+      working group(s): —
+      indicators:       —
+  • Sara Marquez — Accessibility Student Assistant <marquezsa@sonoma.edu>
+      working group(s): Web, Procurement
+      indicators:       —
+  • Steve Higginbotham — Barnes & Noble Bookstore Manager <bkstrmgr@sonoma.edu>
+      working group(s): —
+      indicators:       —

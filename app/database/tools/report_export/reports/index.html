@@ -3,77 +3,100 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Instructional Materials - Report Index</title>
+    <title>ATI Reports Index - 2024-2025</title>
     <style>
         body {
             font-family: -apple-system, 'Segoe UI', Arial, sans-serif;
-            max-width: 800px;
+            max-width: 1200px;
             margin: 0 auto;
-            padding: 20px;
+            padding: 40px 20px;
             background: #f5f5f5;
+        }
+        .header {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
         h1 {
             color: #2c5282;
+            margin: 0 0 10px 0;
         }
-        .report-list {
+        .reports-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .report-card {
             background: white;
             padding: 20px;
             border-radius: 8px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: transform 0.3s;
         }
-        .report-item {
-            padding: 10px;
-            margin: 5px 0;
-            border-left: 3px solid #3182ce;
-            background: #f7fafc;
+        .report-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
         }
-        a {
-            color: #3182ce;
+        .report-card h3 {
+            color: #2c5282;
+            margin-bottom: 15px;
+        }
+        .report-link {
+            display: inline-block;
+            padding: 10px 20px;
+            background: #3182ce;
+            color: white;
             text-decoration: none;
+            border-radius: 4px;
+            margin-top: 10px;
         }
-        a:hover {
-            text-decoration: underline;
+        .report-link:hover {
+            background: #2c5282;
+        }
+        .meta {
+            color: #666;
+            font-size: 14px;
+            margin-top: 10px;
         }
     </style>
 </head>
 <body>
-    <h1>Instructional Materials - Evidence Reports</h1>
-    <div class="report-list">
-        <h2>Available Reports (31)</h2>
-        <div class="report-item"><a href="2024-2025-1.1-ins.html">2024-2025-1.1-ins.html</a></div>
-        <div class="report-item"><a href="2024-2025-1.2-ins.html">2024-2025-1.2-ins.html</a></div>
-        <div class="report-item"><a href="2024-2025-1.6-ins.html">2024-2025-1.6-ins.html</a></div>
-        <div class="report-item"><a href="2024-2025-4.1-ins.html">2024-2025-4.1-ins.html</a></div>
-        <div class="report-item"><a href="2024-2025-4.11-ins.html">2024-2025-4.11-ins.html</a></div>
-        <div class="report-item"><a href="2024-2025-4.3-ins.html">2024-2025-4.3-ins.html</a></div>
-        <div class="report-item"><a href="2024-2025-4.5-ins.html">2024-2025-4.5-ins.html</a></div>
-        <div class="report-item"><a href="2024-2025-5.11-ins.html">2024-2025-5.11-ins.html</a></div>
-        <div class="report-item"><a href="2024-2025-5.12-ins.html">2024-2025-5.12-ins.html</a></div>
-        <div class="report-item"><a href="2024-2025-5.13-ins.html">2024-2025-5.13-ins.html</a></div>
-        <div class="report-item"><a href="2024-2025-5.14-ins.html">2024-2025-5.14-ins.html</a></div>
-        <div class="report-item"><a href="2024-2025-5.15-ins.html">2024-2025-5.15-ins.html</a></div>
-        <div class="report-item"><a href="2024-2025-5.16-ins.html">2024-2025-5.16-ins.html</a></div>
-        <div class="report-item"><a href="2024-2025-6.2-ins.html">2024-2025-6.2-ins.html</a></div>
-        <div class="report-item"><a href="2024-2025-6.4-ins.html">2024-2025-6.4-ins.html</a></div>
-        <div class="report-item"><a href="2024-2025-6.5-ins.html">2024-2025-6.5-ins.html</a></div>
-        <div class="report-item"><a href="2024-2025-6.7-ins.html">2024-2025-6.7-ins.html</a></div>
-        <div class="report-item"><a href="2024-2025-6.8-ins.html">2024-2025-6.8-ins.html</a></div>
-        <div class="report-item"><a href="2024-2025-6.9-ins.html">2024-2025-6.9-ins.html</a></div>
-        <div class="report-item"><a href="2024-2025-7.1-ins.html">2024-2025-7.1-ins.html</a></div>
-        <div class="report-item"><a href="2024-2025-7.11-ins.html">2024-2025-7.11-ins.html</a></div>
-        <div class="report-item"><a href="2024-2025-7.3-ins.html">2024-2025-7.3-ins.html</a></div>
-        <div class="report-item"><a href="2024-2025-7.5-ins.html">2024-2025-7.5-ins.html</a></div>
-        <div class="report-item"><a href="2024-2025-8.1-ins.html">2024-2025-8.1-ins.html</a></div>
-        <div class="report-item"><a href="2024-2025-8.11-ins.html">2024-2025-8.11-ins.html</a></div>
-        <div class="report-item"><a href="2024-2025-8.12-ins.html">2024-2025-8.12-ins.html</a></div>
-        <div class="report-item"><a href="2024-2025-8.13-ins.html">2024-2025-8.13-ins.html</a></div>
-        <div class="report-item"><a href="2024-2025-8.14-ins.html">2024-2025-8.14-ins.html</a></div>
-        <div class="report-item"><a href="2024-2025-8.3-ins.html">2024-2025-8.3-ins.html</a></div>
-        <div class="report-item"><a href="2024-2025-9.2-ins.html">2024-2025-9.2-ins.html</a></div>
-        <div class="report-item"><a href="2024-2025-9.3-ins.html">2024-2025-9.3-ins.html</a></div>
+    <div class="header">
+        <h1>ATI Reports Index</h1>
+        <p class="meta">Academic Year: 2024-2025 | Generated: 2026-06-02 17:04</p>
     </div>
-    <p style="text-align: center; color: #666; margin-top: 20px;">
-        Generated: 2025-11-19 15:07
-    </p>
+
+    <div class="reports-grid">
+        <div class="report-card">
+            <h3>📊 Comprehensive Report</h3>
+            <p>Complete report containing all working groups with statistics and executive summary.</p>
+            <a href="comprehensive_report_2024-2025.html" class="report-link">View Comprehensive Report</a>
+        </div>
+
+        <div class="report-card">
+            <h3>🌐 Web Working Group</h3>
+            <p>Detailed report for the Web accessibility working group.</p>
+            <a href="web_report_2024-2025.html" class="report-link">View Web Report</a>
+        </div>
+
+        <div class="report-card">
+            <h3>📋 Procurement Working Group</h3>
+            <p>Detailed report for the Procurement working group.</p>
+            <a href="procurement_report_2024-2025.html" class="report-link">View Procurement Report</a>
+        </div>
+
+        <div class="report-card">
+            <h3>📚 Instructional Materials Working Group</h3>
+            <p>Detailed report for the Instructional Materials working group.</p>
+            <a href="instructional_materials_report_2024-2025.html" class="report-link">View Instructional Materials Report</a>
+        </div>
+    </div>
+
+    <div style="text-align: center; color: #666; margin-top: 40px;">
+        <p>ATI Evidence Tracking System - 2024-2025</p>
+    </div>
 </body>
 </html>

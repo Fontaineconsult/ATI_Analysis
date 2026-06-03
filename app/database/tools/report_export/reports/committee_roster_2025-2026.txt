@@ -1,0 +1,62 @@
+ATI COMMITTEE ROSTER — assignments for 2025-2026
+18 contributor(s)
+
+== csueb (2) ==
+  • Gene Lim — Deputy Network Chief Information Officer <gene.lim@csueastbay.edu>
+      working group(s): Web, Instructional Materials, Procurement
+      indicators:       —
+  • Zach Oshri — ATI Coordinator <zach.oshri@csueastbay.edu>
+      working group(s): Web, Instructional Materials, Procurement
+      indicators:       4.1-ins, 4.11-ins, 4.3-ins, 4.5-ins, 5.11-ins, 5.12-ins, 5.13-ins, 5.14-ins, 5.15-ins, 5.16-ins, 6.2-ins, 6.4-ins, 6.5-ins, 6.7-ins, 6.8-ins, 6.9-ins, 7.11-ins, 7.3-ins, 7.5-ins, 8.11-ins, 8.12-ins, 8.13-ins, 8.14-ins, 8.3-ins
+
+== sfsu (13) ==
+  • Alexis Cabrerra — Public Affairs/Communication Specialist <cabrera@sfsu.edu>
+      working group(s): Web
+      indicators:       1.15-web, 1.19-web, 1.9-web, 2.6-web, 5.12-web, 5.13-web, 5.2-web, 5.5-web, 5.7-web, 6.1-web, 6.2-web, 6.3-web, 6.4-web, 6.5-web, 6.7-web, 6.8-web
+  • Andrew Roderick — AVP Academic Technology <roderick@sfsu.edu>
+      working group(s): Web, Instructional Materials, Procurement
+      indicators:       2.2-web, 4.11-ins, 5.1-web, 6.2-ins, 6.2-web, 7.1-ins, 7.5-ins, 8.1-ins, 8.13-ins, 9.2-ins
+  • Anoshua Chaudhuri — Senior Director CEETL <anoshua@sfsu.edu>
+      working group(s): Instructional Materials
+      indicators:       4.1-ins, 6.3-web, 6.5-ins, 7.5-ins, 8.1-ins, 8.12-ins
+  • Chris Farmer — Director of Operations - Ucorp <cfarmer@sfsu.edu>
+      working group(s): Instructional Materials
+      indicators:       1.1-ins, 1.2-ins, 1.6-ins
+  • Cristian Alvarado — LMS Administrator <calv@sfsu.edu>
+      working group(s): Instructional Materials
+      indicators:       5.11-ins, 5.16-ins, 6.9-ins, 7.5-ins, 8.13-ins
+  • Daniel Fontaine — Senior Accessible Technology Services Coordinator <fontaine@sfsu.edu>
+      working group(s): Web, Instructional Materials, Procurement
+      indicators:       1.1-web, 1.10-pro, 1.11-pro, 1.11-web, 1.12-web, 1.15-web, 1.19-web, 1.3-pro, 1.4-pro, 1.4-web, 1.5-pro, 1.7-pro, 1.7-web, 1.8-pro, 1.9-pro, 1.9-web, 2.5-web, 2.6-web, 3.2-web, 3.5-web, 3.6-web, 4.1-ins, 4.3-ins, 4.5-ins, 4.6-pro, 5.10-pro, 5.11-ins, 5.12-ins, 5.12-web, 5.13-ins, 5.13-web, 5.15-ins, 5.16-ins, 5.2-web, 5.3-pro, 5.4-web, 5.5-web, 5.6-web, 5.7-web, 5.9-pro, 6.1-web, 6.2-ins, 6.2-web, 6.3-web, 6.4-ins, 6.7-ins, 6.7-web, 6.8-ins, 6.8-web, 6.9-ins, 7.3-ins, 7.5-ins, 7.5-web, 7.6-web, 8.1-ins, 8.10-pro, 8.11-ins, 8.14-ins, 8.3-ins, 8.8-pro, 8.9-pro, 9.1-pro, 9.2-ins, 9.2-pro, 9.3-ins
+  • David Chellia  — Accounts Payable & Fiscal Services Manager <chelliah@sfsu.edu>
+      working group(s): Procurement
+      indicators:       5.4-pro, 8.8-pro
+  • Ingrid Williams — AVP Human Resources <icwilliams@sfsu.edu>
+      working group(s): —
+      indicators:       1.1-pro, 5.1-pro, 6.4-web
+  • Mantasha Lakdawala — Accessible Procurement Analyst <mlakdawa@sfsu.edu>
+      working group(s): Procurement
+      indicators:       1.10-pro, 1.11-pro, 1.3-pro, 1.4-pro, 1.5-pro, 1.8-pro, 4.6-pro, 5.16-ins, 5.3-pro, 5.9-pro, 8.10-pro
+  • Michelle Rito Anolin — Director, Accessible Technology Initiative and Project Management Office <mich@sfsu.edu>
+      working group(s): Web, Instructional Materials, Procurement
+      indicators:       5.14-web, 5.2-web, 9.1-pro, 9.2-pro
+  • Nish Malik — Head of Information Technology <nish@sfsu.edu>
+      working group(s): Web, Instructional Materials, Procurement
+      indicators:       5.10-pro, 6.2-web, 9.1-ins, 9.1-pro, 9.2-pro
+  • Shawn Hicks — Director of Web and Mobile Applications <shawnhicks@sfsu.edu>
+      working group(s): Web
+      indicators:       1.1-web, 1.19-web, 1.2-web, 1.4-web, 2.1-web, 2.2-web, 2.5-web, 2.9-web, 3.1-web, 3.2-web, 4.11-ins, 5.1-web, 5.4-web, 5.5-web, 6.2-web, 7.5-web, 7.6-web
+  • Steven Chang — Interim Director of Procurement & Support Services <stevenchang@sfsu.edu>
+      working group(s): Procurement
+      indicators:       5.10-pro, 5.5-pro
+
+== ssu (3) ==
+  • Amanda McGowan — Deputy CIO | Project Management Office, Business Operations, and Accessible Technology  <amanda.mcgowan@sonoma.edu>
+      working group(s): Web, Instructional Materials, Procurement
+      indicators:       1.11-pro, 7.5-web, 9.1-pro, 9.2-pro
+  • Jaime Russell — Senior Director of ERP Applications and Business Intelligence <jaime.russell@sonoma.edu>
+      working group(s): —
+      indicators:       1.1-web, 1.14-web, 1.15-web, 1.19-web, 1.4-web, 1.6-web, 1.7-web, 1.9-pro, 2.1-web, 2.2-web, 2.5-web, 2.6-web, 2.9-web, 3.1-web, 3.2-web, 3.5-web, 3.6-web, 5.1-web, 5.13-web, 5.14-web, 5.4-web, 5.5-web, 5.6-web, 5.7-web, 6.1-web, 6.2-web, 6.5-web, 6.7-web, 7.5-web, 7.6-web
+  • John Lynch — Director of the Center for Teaching and Educational Technology <lynchjo@sonoma.edu>
+      working group(s): Instructional Materials
+      indicators:       4.1-ins, 4.11-ins, 4.3-ins, 4.5-ins, 5.11-ins, 5.12-ins, 5.13-ins, 5.14-ins, 5.15-ins, 5.16-ins, 6.4-ins, 6.5-ins, 6.8-ins, 6.9-ins, 7.1-ins, 7.11-ins, 7.3-ins, 7.5-ins, 8.1-ins, 8.11-ins, 8.13-ins, 8.14-ins, 8.3-ins, 9.2-ins, 9.3-ins
