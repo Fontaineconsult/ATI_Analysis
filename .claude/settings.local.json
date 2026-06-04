@@ -28,7 +28,9 @@
       "PowerShell(& \"C:\\\\Users\\\\913678186\\\\IdeaProjects\\\\ATI_Analysis\\\\windowsvenvpy12\\\\Scripts\\\\python.exe\" -c \"import json; d=json.load\\(open\\(r'C:\\\\Users\\\\913678186\\\\IdeaProjects\\\\ATI_Analysis\\\\app\\\\asana-connector\\\\plans_export.json', encoding='utf-8'\\)\\); print\\('with goals:',sum\\(1 for p in d if p['goal_numbers']\\)\\); print\\('with indicators:',sum\\(1 for p in d if p['indicators']\\)\\); print\\('with campus:',sum\\(1 for p in d if p['campuses']\\)\\); print\\('statuses:', sorted\\(set\\(str\\(p['plan_status']\\) for p in d\\)\\)\\)\")",
       "PowerShell($env:PYTHONPATH = \".\"; & \"C:\\\\Users\\\\913678186\\\\IdeaProjects\\\\ATI_Analysis\\\\windowsvenvpy12\\\\Scripts\\\\python.exe\" \"C:\\\\Users\\\\913678186\\\\IdeaProjects\\\\ATI_Analysis\\\\app\\\\asana-connector\\\\export_plans.py\")",
       "PowerShell($root = \"C:\\\\Users\\\\913678186\\\\IdeaProjects\\\\ATI_Analysis\"; $env:PYTHONPATH = $root; & \"$root\\\\windowsvenvpy12\\\\Scripts\\\\python.exe\" \"$root\\\\app\\\\asana-connector\\\\export_plans.py\")",
-      "mcp__7fb79afa-be6e-4d9f-ba06-9483020d2c3e__create_project"
+      "mcp__7fb79afa-be6e-4d9f-ba06-9483020d2c3e__create_project",
+      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\Fonta\\\\PycharmProjects\\\\ATI_Analysis\\\\app\\\\frontend\\\\src\\\\src\\\\components\" -Directory)",
+      "Bash(Select-Object -ExpandProperty Name)"
     ]
   }
 }
