@@ -1,0 +1,261 @@
+[
+  {
+    "sectionName": "Web",
+    "tasks": [
+      {
+        "name": "1 Review Web V1 Process Document with ATI Steering",
+        "notes": "Review Web V1 Process Document with ATI Steering\n\nStatus: Not Started\nYear: 2023-2024   Campus: sfsu\nFlags: \u2014\nIndicators: 1.1-web\n\n[graph Plan.unique_id: 66d063c4-46c7-4fa8-aadd-7b39fceca799]"
+      },
+      {
+        "name": "Add ATI Accessibility Process to internal IT documentation",
+        "notes": "This is part of the web ati process review.\n\nWe need to review how Ed gets requiests for accessibility reviews.\n\nCurrently by email.\nHow is this email generated?\n\nStatus: Abandoned\nYear: 2023-2024   Campus: sfsu\nFlags: abandoned\nIndicators: 1.6-web\n\n[graph Plan.unique_id: 847dd5a36f0d49399a95627a5ce8ccdb]"
+      },
+      {
+        "name": "Add PDF remediation Service in ServiceNow",
+        "notes": "Explore a Snow workflow for PDF accessibility. Create webform for submission.\n\nhttps://sfsu.service-now.com/sp?id=sc_cat_item_guide&table=sc_cat_item&sys_id=08309247dbe1105081fd16994b96199c\n\nWe need conversion resources first.\n\nStatus: On Hold\nYear: 2023-2024   Campus: sfsu\nFlags: \u2014\nIndicators: 1.11-web\n\n[graph Plan.unique_id: 5105c878cb714d45b637d3ac4d76d97c]"
+      },
+      {
+        "name": "Deliver Level Access Web Conformance Reports",
+        "notes": "Develop a process to deliver quarterly conformance reports to appropriate stakeholders.\n\nStatus: Abandoned\nYear: 2023-2024   Campus: sfsu\nFlags: KEY, campus-plan, abandoned\nIndicators: 1.14-web\n\n[graph Plan.unique_id: c436cf001f264ad5a15b3ae901615eea]"
+      },
+      {
+        "name": "Develop training materials for new website redesign.",
+        "notes": "DPRC needs to establish a training routine with new materials with the help of SMC\n\nStatus: Abandoned\nYear: 2023-2024   Campus: sfsu\nFlags: abandoned\nIndicators: 5.4-web\n\n[graph Plan.unique_id: 2d9e5264b48a4aa08dbe05ac37a9faf4]"
+      },
+      {
+        "name": "Find appropriate contact to make sure information is in onboarding",
+        "notes": "Who is the correct contact for this?\n\nStatus: Completed\nYear: 2023-2024   Campus: sfsu\nFlags: \u2014\nIndicators: 6.4-web\n\n[graph Plan.unique_id: f3ecf15984044bab95845ed5627943cb]",
+        "completed": true
+      },
+      {
+        "name": "Find existing Web Accessibility Training",
+        "notes": "Find Free training to link to.\n\nStatus: In Progress\nYear: 2023-2024   Campus: sfsu\nFlags: \u2014\nIndicators: 5.1-web\n\n[graph Plan.unique_id: 4da914b0fafc4d8398895875a030ef49]"
+      },
+      {
+        "name": "Formal review of 6.7-web",
+        "notes": "Review all documentation for clarity\n\nStatus: Abandoned\nYear: 2023-2024   Campus: sfsu\nFlags: abandoned\nIndicators: 6.7-web\n\n[graph Plan.unique_id: 27b3cd85b930465b93ce0697e0e85865]"
+      },
+      {
+        "name": "Gather and improve documentation for 3.2-web",
+        "notes": "This will need to be included in the new OHO drupal web process. Likely using web scanning tool.\n\nStatus: Abandoned\nYear: 2023-2024   Campus: sfsu\nFlags: abandoned\nIndicators: 3.2-web\n\n[graph Plan.unique_id: d8f908c5e57e4067af98220275e669a9]"
+      },
+      {
+        "name": "Launch the Drupal PDF Accessibility Project",
+        "notes": "Drupal PDF Accessibility Review (DPAR)\n\nStatus: Completed\nYear: 2024-2025   Campus: sfsu\nFlags: campus-plan\nIndicators: 1.11-web, 5.6-web\n\n[graph Plan.unique_id: 1ba24d07cf3749b4adcd962cdbb5832f]",
+        "completed": true
+      },
+      {
+        "name": "Locate coordinator for New Student Orientation",
+        "notes": "Orientation should contain a mention about web/document accessibility.\n\nStatus: Completed\nYear: 2023-2024   Campus: sfsu\nFlags: \u2014\nIndicators: 6.5-web\n\n[graph Plan.unique_id: 693f6befce6c41a0b7b823c375af3688]",
+        "completed": true
+      },
+      {
+        "name": "Make official the responsibility for web monitoring",
+        "notes": "Establish ATI as the locus of monitoring, not ITS for PopeTech Monitoring.\n\nStatus: Not Started\nYear: 2024-2025   Campus: sfsu\nFlags: \u2014\nIndicators: 3.1-web, 1.6-web, 1.7-web, 5.4-web, 1.14-web, 1.4-web, 1.9-web, 1.15-web, 3.5-web\n\n[graph Plan.unique_id: af375d6e85454c02976fadf3b4096c06]"
+      },
+      {
+        "name": "New Website Redesign Responsibilities",
+        "notes": "Figure out how who is responsible for updating content accessibility for a given site. \n\nThis may be in a subdirectory.\n\nStatus: Abandoned\nYear: 2023-2024   Campus: sfsu\nFlags: abandoned\nIndicators: 1.4-web\n\n[graph Plan.unique_id: 2a3c2142538449b8a1beba70c63c9b25]"
+      },
+      {
+        "name": "Plan 1",
+        "notes": "Send quarterly level access reports to all drupal content managers.\n\nStatus: None\nYear: 2022-2023   Campus: \u2014\nFlags: KEY\nIndicators: \u2014\n\n[graph Plan.unique_id: 3310796a-77da-4ece-8202-cb8d7a139bbb]"
+      },
+      {
+        "name": "Plan 1",
+        "notes": "DPRC will develop a process to identify and review PDFs for accessibility on high-profile Drupal sites\n\nStatus: None\nYear: 2022-2023   Campus: \u2014\nFlags: KEY\nIndicators: \u2014\n\n[graph Plan.unique_id: 3045c106-9a3e-4f06-97c1-39be4bece33f]"
+      },
+      {
+        "name": "Plan 1",
+        "notes": "DPRC will re-establish relationships with ITS and SM&C to continue providing web accessibility training.\n\nStatus: None\nYear: 2022-2023   Campus: \u2014\nFlags: KEY\nIndicators: \u2014\n\n[graph Plan.unique_id: 6b95fe7d-ba1e-4351-a8c9-d7017df429b3]"
+      },
+      {
+        "name": "Plan 1",
+        "notes": "Will use level access to develop an updated workflow for existing web accessibility reviews\n\nStatus: None\nYear: 2022-2023   Campus: \u2014\nFlags: KEY\nIndicators: \u2014\n\n[graph Plan.unique_id: 6487d8bf-41e4-477c-bdd7-e83689f22d4c]"
+      },
+      {
+        "name": "Plan 1",
+        "notes": "We will continue to work to re-establish regular web subcommittee meetings.\n\nStatus: None\nYear: 2022-2023   Campus: \u2014\nFlags: KEY\nIndicators: \u2014\n\n[graph Plan.unique_id: 37e13c24-d1a6-4f23-ab83-f037fa21e3be]"
+      },
+      {
+        "name": "Plan 2",
+        "notes": "DPRC, ITS and SM&C will collaborate on ATI goals relevant to the OHO Drupal site redesign\n\nStatus: None\nYear: 2022-2023   Campus: \u2014\nFlags: KEY\nIndicators: \u2014\n\n[graph Plan.unique_id: 2633dde9-7395-4830-9d18-617d103b5ae6]"
+      },
+      {
+        "name": "Plan 2",
+        "notes": "Will find an HR contact for ATI related goals.\n\nStatus: None\nYear: 2022-2023   Campus: \u2014\nFlags: KEY\nIndicators: \u2014\n\n[graph Plan.unique_id: dc2761de-7eb5-4da4-9287-3d5b3c08d9de]"
+      },
+      {
+        "name": "Plan 3",
+        "notes": "DPRC and ITS will revisit ATI goals related to the faculty site migration and standardization within Pantheon.\n\nStatus: None\nYear: 2022-2023   Campus: \u2014\nFlags: KEY\nIndicators: \u2014\n\n[graph Plan.unique_id: 100526ee-6080-4cb1-bc2d-adb8d288b64b]"
+      },
+      {
+        "name": "Plan 3",
+        "notes": "Will find contact in new student programs related to ATI Goals.\n\nStatus: None\nYear: 2022-2023   Campus: \u2014\nFlags: KEY\nIndicators: \u2014\n\n[graph Plan.unique_id: 0b81b20f-5240-4517-984c-671e1eb2e6d6]"
+      },
+      {
+        "name": "Re-establish outreach and training guidelines for campus members",
+        "notes": "Indicator 1.15 requires the ATI oversee training and outreach related to web accessibility. The Process document should be updated to reflect new work in this area.\n\nStatus: Abandoned\nYear: 2023-2024   Campus: sfsu\nFlags: KEY, abandoned\nIndicators: 1.15-web\n\n[graph Plan.unique_id: 3a4474c677f94b4183339d3a2aa6cf4b]"
+      },
+      {
+        "name": "Review the existing Web Accessibility Process (v1) documentation to ensure status indicators are properly implemented and to clarify shifting roles and responsibilities shared by DPRC, ITS, and SM&C.",
+        "notes": "Exising web process is out of date. This will need to be revisited with OHO and SFBRN.\n\nStatus: Abandoned\nYear: 2024-2025   Campus: sfsu\nFlags: campus-plan, abandoned\nIndicators: 1.4-web\n\n[graph Plan.unique_id: 32ddce8d13f24cb2a1a9b917fc3549ca]"
+      },
+      {
+        "name": "Review with Alexis who has permissions to submit/publish",
+        "notes": "SMC will control who can publish content. DPRC should be involved in checking content before published.\n\nStatus: Abandoned\nYear: 2023-2024   Campus: sfsu\nFlags: abandoned\nIndicators: 2.5-web\n\n[graph Plan.unique_id: 982ce83016c9491ca7482bac063b2b50]"
+      },
+      {
+        "name": "Update ATI Website under ITS with updated information.",
+        "notes": "The new ATI Website should contain all updates about how to make content accessible at SF State.\n\nStatus: Abandoned\nYear: 2023-2024   Campus: sfsu\nFlags: campus-plan, abandoned\nIndicators: 6.8-web\n\n[graph Plan.unique_id: 62a1a7ad347d4f79a8dcee26915e9df1]"
+      },
+      {
+        "name": "Verify Campus Accessibility Statement is Updated",
+        "notes": "The SF State accessibility statement is updated.\n\nStatus: Completed\nYear: 2023-2024   Campus: sfsu\nFlags: \u2014\nIndicators: 1.19-web\n\n[graph Plan.unique_id: 318359b559534b43806c7ef9b90366aa]",
+        "completed": true
+      },
+      {
+        "name": "Verify current CEETL/AT presentations include web accessibility information.",
+        "notes": "We need to locate new faculty orientation materials.\n\nStatus: Completed\nYear: 2023-2024   Campus: sfsu\nFlags: campus-plan\nIndicators: 6.3-web\n\n[graph Plan.unique_id: fe09ee09c0564a99bf4088697b94df77]",
+        "completed": true
+      },
+      {
+        "name": "Who is formally tasked with communicating updates about web accessibility?",
+        "notes": "This belongs to the whole ATI committee but we need a formal process to review.\n\nStatus: On Hold\nYear: 2023-2024   Campus: sfsu\nFlags: \u2014\nIndicators: 6.1-web\n\n[graph Plan.unique_id: 4c7fe1bd560641f59d148494abb754ed]"
+      },
+      {
+        "name": "Who is responsible for training digital content editors about accessibility?",
+        "notes": "Status: Abandoned\nYear: 2023-2024   Campus: sfsu\nFlags: abandoned\nIndicators: 5.2-web\n\n[graph Plan.unique_id: 350ea2d06d3f4bae9529c30da0ce8592]"
+      }
+    ]
+  },
+  {
+    "sectionName": "Instructional Materials",
+    "tasks": [
+      {
+        "name": "Closer plan between DPRC/AT is needed",
+        "notes": "Bring in AT and DPRC to improve BuyIT to directly handle pusblisher tools.\n\nStatus: Abandoned\nYear: 2023-2024   Campus: sfsu\nFlags: abandoned\nIndicators: 5.15-ins\n\n[graph Plan.unique_id: 7a5f9a97509c4bc38beb9098a5a4b882]"
+      },
+      {
+        "name": "Contact Jesus Garcia",
+        "notes": "About formal policy. DPRC will reach out to discuss establishing a new senate policy rooted in the Title II update.\n\nStatus: On Hold\nYear: 2023-2024   Campus: sfsu\nFlags: \u2014\nIndicators: 7.1-ins\n\n[graph Plan.unique_id: 2628f12522aa41d798c84410e1e83a60]"
+      },
+      {
+        "name": "Courses listed for CEETL/AT need review",
+        "notes": "Do they contain updated accessibility guidance?\n\nStatus: Abandoned\nYear: 2023-2024   Campus: sfsu\nFlags: abandoned\nIndicators: 4.5-ins\n\n[graph Plan.unique_id: 491cde822b0e4c93a0202ff7f6fe0969]"
+      },
+      {
+        "name": "Deploy Verbit Unlimited Integration with Canvas Studio",
+        "notes": "Status: Completed\nYear: 2024-2025   Campus: sfsu\nFlags: campus-plan\nIndicators: 5.11-ins\n\n[graph Plan.unique_id: 8db5867d52b04dadac18bb5e14afffc2]",
+        "completed": true
+      },
+      {
+        "name": "Document AT/CEETL Proceedures for Course Accessibility.",
+        "notes": "To rasie to established, we need prove with documentation.\n\nStatus: On Hold\nYear: 2023-2024   Campus: sfsu\nFlags: \u2014\nIndicators: 8.12-ins\n\n[graph Plan.unique_id: 00ab2f0a00ef4d59a9d95f825347429d]"
+      },
+      {
+        "name": "Find someone to oversee timely textbook adoption process.",
+        "notes": "Who can take responsibility for the timely textbook adoption process?\n\nStatus: Abandoned\nYear: 2023-2024   Campus: sfsu\nFlags: KEY, abandoned\nIndicators: 1.6-ins\n\n[graph Plan.unique_id: 17c63634a8154c9b8714460a58f045c1]"
+      },
+      {
+        "name": "Fully implement campus-wide TAAP process to include all required stakeholders \u2013 ITS, DPRC, HR and Colleges.",
+        "notes": "Fully implement campus-wide TAAP process to include all required stakeholders \u2013 ITS, DPRC, HR and Colleges.  \n\nMove to 2025-2026\n\nStatus: Not Started\nYear: 2024-2025   Campus: sfsu\nFlags: campus-plan\nIndicators: 6.9-ins\n\n[graph Plan.unique_id: 6aaeb734a7664187810715eedcda7f17]"
+      },
+      {
+        "name": "Identify responsible personnel to re-implement a timely textbook adoption policy.",
+        "notes": "New bookstore committee will be started in November 2025.\n\nStatus: Completed\nYear: 2023-2024   Campus: sfsu\nFlags: KEY, campus-plan\nIndicators: 1.1-ins\n\n[graph Plan.unique_id: 29ce7e7103214437acc34a548c73acd2]",
+        "completed": true
+      },
+      {
+        "name": "Include ATI-related training in onboarding for instructional designers with ATI responsibilities",
+        "notes": "Only those with ATI responsibilities.\n\nStatus: On Hold\nYear: 2023-2024   Campus: sfsu\nFlags: campus-plan\nIndicators: 8.14-ins\n\n[graph Plan.unique_id: 357020276c154cd0a735cac0f0a3706a]"
+      },
+      {
+        "name": "Integrate LTI acquisition into the TAR Process.",
+        "notes": "The EEAAP process needs clearer instructions for LTI. We are now tracking if a purchase can affect student materials.\n\nStatus: In Progress\nYear: 2023-2024   Campus: sfsu\nFlags: campus-plan\nIndicators: 6.9-ins\n\n[graph Plan.unique_id: 74c1cf7296574510baaa7b3d1617c95a]"
+      },
+      {
+        "name": "Interview CPAGE about their own accessibility process",
+        "notes": "They may have their own process in place. Reached out to Angie.\n\nStatus: Completed\nYear: 2023-2024   Campus: sfsu\nFlags: campus-plan\nIndicators: 6.4-ins\n\n[graph Plan.unique_id: 5c4e088c8d15412387583983b6071f24]",
+        "completed": true
+      },
+      {
+        "name": "Make sure ATI related materials are posted",
+        "notes": "SMC/AT/CEETL/DPRC should maintain a repo for this info for the relevant people.\n\nStatus: On Hold\nYear: 2023-2024   Campus: sfsu\nFlags: \u2014\nIndicators: 6.8-ins\n\n[graph Plan.unique_id: 5a609570f7fd469abc80d54cc1ec0d03]"
+      },
+      {
+        "name": "Make sure accessibility information is included in all course approval processes",
+        "notes": "Status: On Hold\nYear: 2023-2024   Campus: sfsu\nFlags: \u2014\nIndicators: 6.2-ins\n\n[graph Plan.unique_id: fca4342acf0940c891ac87a21b02d96b]"
+      },
+      {
+        "name": "Remove DPRC reference to course review",
+        "notes": "bvb\n\nStatus: Abandoned\nYear: 2023-2024   Campus: sfsu\nFlags: abandoned\nIndicators: 6.4-ins\n\n[graph Plan.unique_id: 23b8ceec0030417a8e0a3146d5854355]"
+      },
+      {
+        "name": "Review and update documentation related to creation and adoption of accessible instructional materials with stakeholders like CPage/AT/CEETL",
+        "notes": "Verify accessibility information in AT/CEETL courses\n\nStatus: On Hold\nYear: 2023-2024   Campus: sfsu\nFlags: campus-plan\nIndicators: 6.4-ins\n\n[graph Plan.unique_id: f45b7cd650b34ec0b249c95d504cac3c]"
+      },
+      {
+        "name": "Review group memebers",
+        "notes": "Make sure all campus areas are represented\n\nStatus: Not Started\nYear: 2023-2024   Campus: sfsu\nFlags: \u2014\nIndicators: 9.1-ins\n\n[graph Plan.unique_id: f97133cf01e34f9799bf3f932c8bf656]"
+      },
+      {
+        "name": "Review this indicator for 25",
+        "notes": "7.3\n\nStatus: On Hold\nYear: 2023-2024   Campus: sfsu\nFlags: \u2014\nIndicators: 7.3-ins\n\n[graph Plan.unique_id: 5763424635904ca3b6a88bfd9c767446]"
+      },
+      {
+        "name": "Verify Audio and Video remediation is included in LMS Remediation Framework.",
+        "notes": "Status: On Hold\nYear: 2023-2024   Campus: sfsu\nFlags: \u2014\nIndicators: 5.11-ins\n\n[graph Plan.unique_id: caac5afd11364ae3a2ff990b7ac4f1ac]"
+      }
+    ]
+  },
+  {
+    "sectionName": "Procurement",
+    "tasks": [
+      {
+        "name": "Codify manual ACR review process for products without VPAT.",
+        "notes": "The ACR review process for products without VPAT needs to be better Instrumentalized. New Qualtrics form contains detailed instructions to TAAP creation.\n\nStatus: In Progress\nYear: 2023-2024   Campus: sfsu\nFlags: campus-plan\nIndicators: 5.9-pro\n\n[graph Plan.unique_id: ea0adfc4f79f4a82b125497f3a56becb]"
+      },
+      {
+        "name": "Finalize the updated TAAP authoring workflow.",
+        "notes": "We made solid progress in 2025 updating the EEAAP process to the TAAP. A top priority for 2026 will be to codify this process in the updated V2 procurement process documentation, and run multiple tests.\n\nStatus: In Progress\nYear: 2024-2025   Campus: sfsu\nFlags: campus-plan\nIndicators: 4.6-pro\n\n[graph Plan.unique_id: 912f6236bca04f80ac3a35da98e6f276]"
+      },
+      {
+        "name": "Formalize Procurement Plan Approval Process",
+        "notes": "Develop a clear system to present updated process documents and plans to the ATI committee for approval inside the ATIKG\n\nStatus: Completed\nYear: 2023-2024   Campus: sfsu\nFlags: KEY\nIndicators: 9.1-pro\n\n[graph Plan.unique_id: 1c6ebdcff90749d88880b2a24d66afce]",
+        "completed": true
+      },
+      {
+        "name": "Review and update the existing Accessible Procurement Process Document (V1) to align with the new BuyIT system.",
+        "notes": "The new procruement process includes the updated TAAP system and BuyIT.\n\nStatus: Abandoned\nYear: 2023-2024   Campus: sfsu\nFlags: KEY, campus-plan, abandoned\nIndicators: 1.3-pro\n\n[graph Plan.unique_id: 1a480470cd17458c8d80d32a53017508]"
+      },
+      {
+        "name": "Verify P-card trainings contain TAR process and accessibility information.",
+        "notes": "Status: Abandoned\nYear: 2023-2024   Campus: sfsu\nFlags: abandoned\nIndicators: 5.5-pro\n\n[graph Plan.unique_id: d9190edd12eb49eabc8f628602890fcb]"
+      },
+      {
+        "name": "Verify P-card trainings include TAR process and accessibility information.",
+        "notes": "BuyIT is directly referenced in P-CARD training materials.\n\nStatus: Completed\nYear: 2023-2024   Campus: sfsu\nFlags: campus-plan\nIndicators: 5.2-pro, 5.5-pro\n\n[graph Plan.unique_id: 40f7a687f54a4209964c95f0789b4c0c]",
+        "completed": true
+      },
+      {
+        "name": "Verify if New Employee Orientation Contains reference to TAR accessibility process",
+        "notes": "We need to determine who has this information.\n\nStatus: Completed\nYear: 2023-2024   Campus: sfsu\nFlags: \u2014\nIndicators: 5.1-pro\n\n[graph Plan.unique_id: f7ace1330c7345c980750451f60cf3c3]",
+        "completed": true
+      }
+    ]
+  },
+  {
+    "sectionName": "Unassigned",
+    "tasks": [
+      {
+        "name": "Review Web V1 Process Document with ATI Steering",
+        "notes": "We will review the Web Accessibility V1 Document to update and verify for version 2\n\nStatus: Not Started\nYear: 2023-2024   Campus: \u2014\nFlags: \u2014\nIndicators: \u2014\n\n[graph Plan.unique_id: 2303da05-7647-4069-ae3f-5ef16ac90a58]"
+      },
+      {
+        "name": "(untitled plan)",
+        "notes": "Status: None\nYear: \u2014   Campus: \u2014\nFlags: campus-plan\nIndicators: \u2014\n\n[graph Plan.unique_id: 1d7f166d-d413-4c97-b217-28ba6912ce30]"
+      }
+    ]
+  }
+]

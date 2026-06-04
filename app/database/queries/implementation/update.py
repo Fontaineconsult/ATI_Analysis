@@ -8,8 +8,14 @@ from pycparser.c_ast import Return
 from app.database.graph_schema import *
 from app.database.class_factory import implementation_classes, documentation_classes, documentation_relationships
 from app.database.queries.implementation.read import get_goal_node
+from app.data_config import working_group_names
 from app.endpoints.data_api.errors.custom_exceptions import NotFoundError, ValidationError, CrudError
 from neomodel import db
+
+
+# Only the four "doing" implementations carry accountable_working_group (the committee
+# accountable for the remediation work, distinct from owned_by Person).
+_WORKING_GROUP_ACCOUNTABLE_TYPES = ("Process", "Project", "Procedure", "Service")
 
 
 def assign_documentation_to_implementation(
@@ -265,6 +271,45 @@ def unassign_person_as_owner(implementation_unique_id, implementation_type, pers
     except Person.DoesNotExist:
         raise NotFoundError(f"No Person node found with unique_id: {person_unique_id}")
     impl_node.owned_by.disconnect(person_node)
+    return True
+
+
+def _resolve_accountable_implementation(implementation_unique_id, implementation_type):
+    """Resolve an implementation that can carry accountable_working_group (the four doing
+    types). Raises ValidationError on a non-accountable type."""
+    if implementation_type not in _WORKING_GROUP_ACCOUNTABLE_TYPES:
+        raise ValidationError(
+            f"implementation_type must be one of {list(_WORKING_GROUP_ACCOUNTABLE_TYPES)} to carry "
+            f"working-group accountability; got {implementation_type!r}"
+        )
+    return _resolve_implementation(implementation_unique_id, implementation_type)
+
+
+def _resolve_working_group(name_or_abbrev):
+    """Resolve an ATIWorkingGroup by full name ('Web') or abbreviation ('web'/'pro'/'ins')."""
+    name = working_group_names.get(name_or_abbrev, name_or_abbrev)
+    try:
+        return ATIWorkingGroup.nodes.get(name=name)
+    except ATIWorkingGroup.DoesNotExist:
+        raise NotFoundError(f"ATIWorkingGroup {name!r} not found")
+
+
+def assign_accountable_working_group(implementation_unique_id, implementation_type, working_group):
+    """Connect an accountable ATIWorkingGroup to an implementation (accountable_working_group).
+    The committee accountable for this remediation work — distinct from owned_by (the Person)."""
+    impl_node = _resolve_accountable_implementation(implementation_unique_id, implementation_type)
+    wg = _resolve_working_group(working_group)
+    if not impl_node.accountable_working_group.is_connected(wg):
+        impl_node.accountable_working_group.connect(wg)
+    return True
+
+
+def unassign_accountable_working_group(implementation_unique_id, implementation_type, working_group):
+    """Disconnect an accountable ATIWorkingGroup from an implementation. Inverse of the assign."""
+    impl_node = _resolve_accountable_implementation(implementation_unique_id, implementation_type)
+    wg = _resolve_working_group(working_group)
+    if impl_node.accountable_working_group.is_connected(wg):
+        impl_node.accountable_working_group.disconnect(wg)
     return True
 
 

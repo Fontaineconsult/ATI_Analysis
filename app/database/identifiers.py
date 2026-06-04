@@ -18,6 +18,13 @@ YEAR_PREFIX_LENGTH = 9
 
 IDENTIFIER_SEPARATOR = "-"
 
+# Separator BETWEEN identity coordinates in composite identifiers whose coordinates can
+# themselves contain IDENTIFIER_SEPARATOR (e.g. an Interface's backing is an
+# Asset.asset_identifier like 'canvas-sfsu'). A double hyphen keeps the coordinates
+# parseable: split on SEGMENT_SEPARATOR to recover them, while within-segment slugs keep
+# using IDENTIFIER_SEPARATOR.
+SEGMENT_SEPARATOR = "--"
+
 
 def make_yse_identifier(academic_year: str, indicator_composite_key: str, campus_abbrev: str) -> str:
     """
@@ -70,21 +77,43 @@ def make_asset_identifier(title_slug: str, locus: str) -> str:
     return IDENTIFIER_SEPARATOR.join([title_slug, locus])
 
 
-def make_interface_identifier(locus: str, view_slug: str) -> str:
+def make_interface_identifier(backing: str, locus_slug: str, function: str, title_slug: str) -> str:
     """
-    Build an Interface.interface_identifier.
+    Build an Interface.interface_identifier from its four identity coordinates.
 
-    An Interface is a salient point of interaction; its identity is the locus it
-    lives on plus the slug of the view/surface. For an asset-backed interface the
-    locus is the backing Asset.asset_identifier ('canvas-sfsu'); for a standalone
-    interface the locus is a campus abbreviation or the literal 'standalone'. This
-    mirrors how scope is part of Asset identity — the same view on the same product
-    resolves into distinct interfaces where it is presented at different loci.
+    An Interface's identity is a signature of where work converges:
+      - backing    : the backing Asset.asset_identifier ('canvas-sfsu'), or the literal
+                     'standalone' when no owned asset sits behind it.
+      - locus_slug : the named structural zone within the backing ('course-shells'),
+                     governed free text, slugified.
+      - function   : the institutional purpose the interface serves
+                     ('teaching-and-learning'); an identity-bearing controlled-vocab key.
+      - title_slug : slug of the human title; title is part of identity.
 
-    Format:  '<locus>-<view_slug>'
-    Example: 'canvas-sfsu-course-view'
+    Coordinates are joined with SEGMENT_SEPARATOR (not IDENTIFIER_SEPARATOR), because
+    `backing` already contains IDENTIFIER_SEPARATOR hyphens — the double-hyphen keeps the
+    four coordinates parseable.
+
+    Format:  '<backing>--<locus_slug>--<function>--<title_slug>'
+    Example: 'canvas-sfsu--course-shells--teaching-and-learning--canvas-course-shells'
     """
-    return IDENTIFIER_SEPARATOR.join([locus, view_slug])
+    return SEGMENT_SEPARATOR.join([backing, locus_slug, function, title_slug])
+
+
+def make_component_identifier(parent: str, title_slug: str) -> str:
+    """
+    Build a Component.component_identifier.
+
+    A Component is a WCAG-grain element that is part_of an Interface. Its identity is the
+    parent Interface's identifier (or the literal 'standalone' when not yet attached) plus
+    the slug of its title. The parent prefix guarantees global uniqueness; the composite is
+    reached via the part_of edge rather than parsed, so a SEGMENT_SEPARATOR collision with
+    the parent's own separators is harmless.
+
+    Format:  '<parent>--<title_slug>'
+    Example: 'canvas-sfsu--course-shells--teaching-and-learning--canvas-course-shells--video-player'
+    """
+    return SEGMENT_SEPARATOR.join([parent, title_slug])
 
 
 def make_tool_identifier(title_slug: str) -> str:

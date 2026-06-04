@@ -11,7 +11,7 @@ from dotenv import load_dotenv
 import os
 
 from app.data_config import (trajectory_choices, asset_classes, asset_scopes, taap_outcomes,
-                             interface_kinds, coverage_domains, audiences, interface_provenances)
+                             functions, component_kinds, coverage_domains, audiences, interface_provenances)
 
 dotenv_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'app', '.env.development')
 load_dotenv(dotenv_path)
@@ -591,6 +591,7 @@ class Process(StructuredNode):
     owned_by = RelationshipTo("Person", "owned_by")
     includes_procedures = RelationshipTo("Procedure", "includes_procedure")
     remediates_interface = RelationshipTo("Interface", "remediates_interface")
+    accountable_working_group = RelationshipTo("ATIWorkingGroup", "accountable_working_group")  # committee accountable for this work (distinct from owned_by Person)
 
 
     #serialize
@@ -629,6 +630,7 @@ class Project(StructuredNode):
     owned_by = RelationshipTo("Person", "owned_by")
     includes_procedures = RelationshipTo("Procedure", "includes_procedure")
     remediates_interface = RelationshipTo("Interface", "remediates_interface")
+    accountable_working_group = RelationshipTo("ATIWorkingGroup", "accountable_working_group")  # committee accountable for this work (distinct from owned_by Person)
     start_date = DateProperty()
     end_date = DateProperty()
 
@@ -666,6 +668,7 @@ class Procedure(StructuredNode):
     is_evidence_for = RelationshipTo("YearSuccessEvidence", "is_evidence_for")
     owned_by = RelationshipTo("Person", "owned_by")
     remediates_interface = RelationshipTo("Interface", "remediates_interface")
+    accountable_working_group = RelationshipTo("ATIWorkingGroup", "accountable_working_group")  # committee accountable for this work (distinct from owned_by Person)
 
 
     #serialize
@@ -701,6 +704,7 @@ class Service(StructuredNode):
     owned_by = RelationshipTo("Person", "owned_by")
     includes_procedures = RelationshipTo("Procedure", "includes_procedure")
     remediates_interface = RelationshipTo("Interface", "remediates_interface")
+    accountable_working_group = RelationshipTo("ATIWorkingGroup", "accountable_working_group")  # committee accountable for this work (distinct from owned_by Person)
 
 
     #serialize
@@ -1577,25 +1581,63 @@ class Interface(StructuredNode):
     declared (ATI named it), enacted (it emerged from where remediation clustered), or
     both. The declared-vs-enacted gap is diagnostic and not meant to be eliminated.
 
-    Identity is composite on `interface_identifier`; `title` is descriptive, indexed but
-    NOT unique. Mirrors Asset.asset_identifier / YearSuccessEvidence.year_identifier.
+    Identity is a four-coordinate SIGNATURE, built into `interface_identifier`
+    (unique_index) by identifiers.make_interface_identifier():
+
+        backing -- locus -- function -- title-slug
+
+      - backing  : the backing Asset.asset_identifier (via `presented_by`), or the
+                   literal 'standalone' when no owned asset sits behind it.
+      - locus    : the named structural zone within the backing ('course-shells');
+                   governed free text.
+      - function : the institutional purpose the interface serves
+                   ('teaching-and-learning'); an identity-bearing controlled-vocab key.
+      - title    : the human title is part of identity (it is in the key).
+
+    All four are identity, hence IMMUTABLE: changing one is a different interface
+    (delete + re-create), exactly as Asset.asset_identifier is immutable.
+
+    What is deliberately NOT identity:
+      - `kind` is gone from Interface entirely — it lives on Component, where it is
+        homogeneous and where WCAG attaches (a single interface is kind-heterogeneous).
+      - the component set is composition, not identity (Ship of Theseus): folding it
+        into the key would re-identify the interface every time a component is
+        added/removed and break year-over-year tracking.
+      - working-group accountability is an EDGE (`accountable_working_groups` here,
+        `accountable_working_group` on the remediating implementations), never identity.
+        Keeping function in the key but accountability as an edge is what makes the
+        diagnostic queryable: interfaces whose `function` is 'teaching-and-learning' but
+        whose remediating work is accountable to the Web group — i.e. surfaces where
+        purpose and accountability diverge. Mirrors the stewardship-vs-remediation split.
+      - `audience`, `coverage_domains`, `provenance` are descriptive only.
     """
 
     unique_id = UniqueIdProperty()
 
-    interface_identifier = StringProperty(unique_index=True)  # e.g. "canvas-sfsu-course-view"
-    title = StringProperty(index=True, required=True)
+    interface_identifier = StringProperty(unique_index=True)  # e.g. "canvas-sfsu--course-shells--teaching-and-learning--canvas-course-shells"
+    title = StringProperty(index=True, required=True)         # identity coordinate (in the key)
     description = StringProperty()
 
-    interface_kind = ArrayProperty(StringProperty(choices=interface_kinds), default=list)  # multi-valued: an interface can play several roles at once
-    coverage_domains = StringProperty(choices=coverage_domains)
+    # Identity coordinates (besides backing, which is the presented_by asset).
+    locus = StringProperty(required=True)                     # structural zone within the backing; governed free text
+    function = StringProperty(choices=functions, required=True)  # institutional purpose; single-valued, identity-bearing
 
+    # Descriptive only (NOT in the identity signature).
+    coverage_domains = ArrayProperty(StringProperty(choices=coverage_domains), default=list)  # multi-valued: institution-chosen domains of attention
     audience = ArrayProperty(StringProperty(choices=audiences), default=list)  # multi-valued: any of students | employees | applicants-for-employment | prospective-students | general-public
     provenance = StringProperty(choices=interface_provenances)  # how it entered the graph: declared (ATI named it) | enacted (emerged from remediation work) | both
 
     # Optional backing asset (absent for a standalone interface; 0..many for a surface
     # crossing several systems). Steward of an asset-backed interface is derived upward.
+    # This is also the `backing` coordinate of the identity signature.
     presented_by = RelationshipTo("Asset", "presented_by")
+
+    # Working-group accountability (committee responsible), optional and multi-valued — a
+    # single interface (e.g. a library database surface) can have several groups touching
+    # it across its life. NOT identity. Distinct from the remediating implementations'
+    # own `accountable_working_group`; this lets an interface carry accountability directly
+    # before it is decomposed into implementations.
+    accountable_working_groups = RelationshipTo("ATIWorkingGroup", "accountable_working_group")
 
     # Remediation flows through implementations (reverse of Implementation.remediates_interface).
     remediated_by_processes  = RelationshipFrom("Process",   "remediates_interface")
@@ -1618,7 +1660,8 @@ class Interface(StructuredNode):
             'interface_identifier': self.interface_identifier,
             'title': self.title,
             'description': self.description,
-            'interface_kind': self.interface_kind,
+            'locus': self.locus,
+            'function': self.function,
             'coverage_domains': self.coverage_domains,
             'audience': self.audience,
             'provenance': self.provenance,
@@ -1640,14 +1683,21 @@ class Component(StructuredNode):
     the way WCAG / a VPAT individuates them. Conformance is NOT stored here — whether a
     component meets its criteria is derived via the Metric layer, like everything else.
 
-    Stub: carries identity, its parent Interface, and the WCAG criteria it must satisfy
-    (via the existing Guideline node). Remediation targeting and richer structure deferred.
+    `kind` lives HERE (not on the Interface): a component is kind-homogeneous, and kind
+    is exactly the grain at which WCAG / a VPAT individuates. Components are composition,
+    NOT identity — the interface's component set evolves, so it must never be folded into
+    the interface's identity key (Ship of Theseus). A Component is NOT a remediation target
+    in this iteration; remediation stays at the Interface grain.
+
+    Identity is composite on `component_identifier` (built by
+    identifiers.make_component_identifier from the parent interface + a title slug).
     """
     unique_id = UniqueIdProperty()
 
-    component_identifier = StringProperty(unique_index=True)  # e.g. "canvas-shell-video-player"
+    component_identifier = StringProperty(unique_index=True)  # e.g. "<interface_identifier>--video-player"
     title = StringProperty(index=True, required=True)
     description = StringProperty()
+    component_kind = StringProperty(choices=component_kinds)  # functional role at WCAG grain (web-surface, time-based-media, …)
 
     # The Interface this component is part of.
     part_of = RelationshipTo("Interface", "part_of", cardinality=ZeroOrOne)
@@ -1665,6 +1715,7 @@ class Component(StructuredNode):
             'component_identifier': self.component_identifier,
             'title': self.title,
             'description': self.description,
+            'component_kind': self.component_kind,
             "unique_id": self.unique_id
         }
 
@@ -1694,8 +1745,10 @@ class Tool(StructuredNode):
     # Supplier of the tool (optional).
     supplied_by = RelationshipTo("Vendor", "supplied_by")
 
-    # Optional parent Asset — present when the tool is also a stewarded institutional system.
-    parent_asset = RelationshipTo("Asset", "tool_of_asset", cardinality=ZeroOrOne)
+    # Optional parent Asset(s) — present when the tool is also a stewarded institutional
+    # system. Multi-valued: the same product can map to several stewarded assets (e.g. the
+    # same tool tracked at different scopes/campuses).
+    parent_asset = RelationshipTo("Asset", "tool_of_asset")
 
     # Used by the work that remediates interfaces (reverse of Implementation.uses_tool).
     used_by_processes  = RelationshipFrom("Process",   "uses_tool")

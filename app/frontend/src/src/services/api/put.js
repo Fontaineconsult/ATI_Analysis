@@ -305,6 +305,38 @@ export const unassignPersonAsOwner = async (implementationType, implementationUn
     }
 };
 
+// Accountable working group (committee) on a doing-implementation — distinct from owned_by
+// (the Person). workingGroup is a full name ('Web') or abbrev ('web'/'pro'/'ins').
+export const assignAccountableWorkingGroup = async (implementationType, implementationUniqueId, workingGroup) => {
+    try {
+        const response = await axios.put(`${process.env.REACT_APP_API_URL}/implementations`, {
+            action: 'assign_accountable_working_group',
+            implementation_type: implementationType,
+            implementation_unique_id: implementationUniqueId,
+            working_group: workingGroup,
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error assigning accountable working group:', error);
+        throw error;
+    }
+};
+
+export const unassignAccountableWorkingGroup = async (implementationType, implementationUniqueId, workingGroup) => {
+    try {
+        const response = await axios.put(`${process.env.REACT_APP_API_URL}/implementations`, {
+            action: 'unassign_accountable_working_group',
+            implementation_type: implementationType,
+            implementation_unique_id: implementationUniqueId,
+            working_group: workingGroup,
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error unassigning accountable working group:', error);
+        throw error;
+    }
+};
+
 export const unassignPersonAsImplementor = async (employeeId, year_success_indicator) => {
     try {
         await axios.put(`${process.env.REACT_APP_API_URL}/implementations`, unassignResponsiblePersonPayload(employeeId, year_success_indicator));
@@ -617,7 +649,9 @@ export const unassignEmployeeFromVendor = async (name, personUniqueId) => {
 //
 
 export const updateInterface = async (interfaceIdentifier, fields) => {
-    // fields: { title?, description?, interface_kind?, coverage_domains?, audience?[], provenance? }
+    // fields: { description?, coverage_domains?[], audience?[], provenance? }
+    // The identity coordinates (title, locus, function, backing/presented_by) are immutable —
+    // the backend rejects them here; change identity by delete + re-create.
     try {
         const response = await axios.put(`${process.env.REACT_APP_API_URL}/interfaces`, {
             action: 'update',
@@ -627,6 +661,35 @@ export const updateInterface = async (interfaceIdentifier, fields) => {
         return response.data;
     } catch (error) {
         console.error('Error updating interface:', error);
+        throw error;
+    }
+};
+
+// Accountable working group (committee) on an interface — multi-valued, NOT identity.
+export const assignWorkingGroupToInterface = async (interfaceIdentifier, workingGroup) => {
+    try {
+        const response = await axios.put(`${process.env.REACT_APP_API_URL}/interfaces`, {
+            action: 'assign_working_group',
+            interface_identifier: interfaceIdentifier,
+            working_group: workingGroup,
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error assigning working group to interface:', error);
+        throw error;
+    }
+};
+
+export const unassignWorkingGroupFromInterface = async (interfaceIdentifier, workingGroup) => {
+    try {
+        const response = await axios.put(`${process.env.REACT_APP_API_URL}/interfaces`, {
+            action: 'unassign_working_group',
+            interface_identifier: interfaceIdentifier,
+            working_group: workingGroup,
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error unassigning working group from interface:', error);
         throw error;
     }
 };
@@ -793,6 +856,81 @@ export const unassignUsageFromTool = async (toolIdentifier, implementationType, 
         return response.data;
     } catch (error) {
         console.error('Error unassigning usage from tool:', error);
+        throw error;
+    }
+};
+
+//
+// COMPONENTS — update + WCAG-guideline / parent-interface edges (action-dispatch PUT).
+//
+
+export const updateComponent = async (componentIdentifier, fields) => {
+    // fields: { description?, component_kind? }  (title + parent are immutable identity)
+    try {
+        const response = await axios.put(`${process.env.REACT_APP_API_URL}/components`, {
+            action: 'update',
+            component_identifier: componentIdentifier,
+            ...fields,
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error updating component:', error);
+        throw error;
+    }
+};
+
+export const assignGuidelineToComponent = async (componentIdentifier, guidelineUniqueId) => {
+    try {
+        const response = await axios.put(`${process.env.REACT_APP_API_URL}/components`, {
+            action: 'assign_guideline',
+            component_identifier: componentIdentifier,
+            guideline_unique_id: guidelineUniqueId,
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error assigning guideline to component:', error);
+        throw error;
+    }
+};
+
+export const unassignGuidelineFromComponent = async (componentIdentifier, guidelineUniqueId) => {
+    try {
+        const response = await axios.put(`${process.env.REACT_APP_API_URL}/components`, {
+            action: 'unassign_guideline',
+            component_identifier: componentIdentifier,
+            guideline_unique_id: guidelineUniqueId,
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error unassigning guideline from component:', error);
+        throw error;
+    }
+};
+
+export const assignParentInterfaceToComponent = async (componentIdentifier, interfaceIdentifier) => {
+    try {
+        const response = await axios.put(`${process.env.REACT_APP_API_URL}/components`, {
+            action: 'assign_parent',
+            component_identifier: componentIdentifier,
+            interface_identifier: interfaceIdentifier,
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error assigning parent interface to component:', error);
+        throw error;
+    }
+};
+
+export const unassignParentInterfaceFromComponent = async (componentIdentifier, interfaceIdentifier) => {
+    try {
+        const response = await axios.put(`${process.env.REACT_APP_API_URL}/components`, {
+            action: 'unassign_parent',
+            component_identifier: componentIdentifier,
+            interface_identifier: interfaceIdentifier,
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error unassigning parent interface from component:', error);
         throw error;
     }
 };

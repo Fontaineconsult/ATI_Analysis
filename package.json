@@ -1,0 +1,5 @@
+{
+  "dependencies": {
+    "rdf-reasoner-konclude": "^0.2.1"
+  }
+}
