@@ -9,3 +9,15 @@
 __pycache__/
 *.py[cod]
 *$py.class
+
+# Neo4j database dumps (real institutional data / PII — never publish)
+*.dump
+
+# Local secrets & machine-specific config
+app/frontend/src/src/context/admins.json
+.claude/settings.local.json
+**/.claude/settings.local.json
+
+# Jupyter scratch notebooks (contain connection strings and query output data)
+app/database/jupyter/
+.ipynb_checkpoints/

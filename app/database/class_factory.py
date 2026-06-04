@@ -5,11 +5,6 @@ Pure string vocabularies (status_levels, working_groups, plan_statuses, etc.)
 live in app/data_config.py and are re-exported below for backward compatibility
 with existing `from app.database.class_factory import <vocab>` callers.
 """
-import sys
-
-sys.path.append(r"C:\Users\Fonta\IdeaProjects\ATI_Analysis")
-sys.path.append(r"C:\Users\913678186\IdeaProjects\ATI_Analysis")
-
 from app.database.graph_schema import (
     Process,
     Project,

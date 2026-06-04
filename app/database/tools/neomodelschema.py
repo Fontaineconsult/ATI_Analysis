@@ -512,11 +512,12 @@ class Vendor(StructuredNode):
 
 def set_connection():
 
+    import os
     from neomodel import config
 
-    config.DATABASE_URL = 'bolt://neo4j:testtest@localhost:7687'
-    config.DATABASE_USERNAME = 'neo4j'
-    config.DATABASE_PASSWORD = 'testtest'
+    # Credentials come from the DATABASE_URL env var
+    # (e.g. bolt://user:pass@host:7687) — never hardcode them.
+    config.DATABASE_URL = os.environ.get('DATABASE_URL', 'bolt://localhost:7687')
 
 
 if __name__=="__main__":

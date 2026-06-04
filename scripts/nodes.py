@@ -1,8 +1,11 @@
+import os
+
 from neomodel import db
 from app.database.tools.neomodelschema import YearSuccessEvidence, AcademicYear
 
-# Set up your database connection
-db.set_connection('bolt://neo4j:testtest@localhost:7687')
+# Set up your database connection from the DATABASE_URL env var
+# (e.g. bolt://user:pass@host:7687) — never hardcode credentials.
+db.set_connection(os.environ["DATABASE_URL"])
 
 # Query all YearSuccessEvidence nodes
 

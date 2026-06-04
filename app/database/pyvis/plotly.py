@@ -1,16 +1,24 @@
+import os
+from urllib.parse import urlparse
+
 import networkx as nx
 import plotly.graph_objects as go
 from neo4j import GraphDatabase
 
-# Path to the .cypher file
-cypher_file = r"C:\Users\913678186\IdeaProjects\ATI_Analysis\app\database\batch\master_wg.cypher"
+# Path to the .cypher file (resolved relative to this file)
+cypher_file = os.path.join(os.path.dirname(__file__), "..", "batch", "master_wg.cypher")
 
 # Read the Cypher query from the file
 with open(cypher_file, "r") as file:
     query = file.read()
 
-# Connect to Neo4j
-driver = GraphDatabase.driver("bolt://130.212.104.18:7687", auth=("neo4j", "accessibility"))
+# Connect to Neo4j. Credentials come from the DATABASE_URL env var
+# (e.g. bolt://user:pass@host:7687) — never hardcode them.
+_parsed = urlparse(os.environ.get("DATABASE_URL", "bolt://localhost:7687"))
+driver = GraphDatabase.driver(
+    f"{_parsed.scheme}://{_parsed.hostname}:{_parsed.port or 7687}",
+    auth=(_parsed.username or "neo4j", _parsed.password or ""),
+)
 
 # We'll build a NetworkX graph first
 G = nx.DiGraph()

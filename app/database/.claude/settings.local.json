@@ -1,9 +1,0 @@
-{
-  "permissions": {
-    "allow": [
-      "Read(//c/Users/913678186/IdeaProjects/ATI_Analysis/**)"
-    ],
-    "deny": [],
-    "ask": []
-  }
-}

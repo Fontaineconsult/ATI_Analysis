@@ -37,6 +37,7 @@ Nodes to describe the nodes for use in ontology management and front end display
 class UniversalDescriptor(StructuredNode):
 
     """
+
     A standalone descriptor for an ontology element — a node type, a field, or a specific
     field/vocabulary value. Surfaced by the web app for help text, tooltips, and an
     ontology browser, and authored/edited from the Settings area.

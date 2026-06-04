@@ -13,6 +13,7 @@ def create_app():
     # would in turn import graph_schema via the Flask blueprints — and
     # if graph_schema is being run as __main__ at the same time, neomodel
     # raises NodeClassAlreadyDefined.
+    import os
     from flask import Flask
     from flask_cors import CORS
     from neomodel import config, db
@@ -33,7 +34,9 @@ def create_app():
 
     # Set up database connection
     config.DATABASE_URL = app.config['DATABASE_URL']
-    app.config['SECRET_KEY'] = 'accessibility'
+    # Read the Flask secret from the environment; fall back to a random
+    # per-process key so a real secret is never hardcoded in source.
+    app.config['SECRET_KEY'] = os.environ.get('FLASK_SECRET_KEY', os.urandom(32).hex())
     app.config['DEBUG_TB_INTERCEPT_REDIRECTS'] = False
     app.config['DEBUG_TB_PROFILER_ENABLED'] = True
     app.config["DEBUG"] = True
