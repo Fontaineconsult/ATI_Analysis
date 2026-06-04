@@ -3,3 +3,9 @@
 /.idea/
 /app/.env.production
 /app/.env.remote
+
+
+# Python bytecode
+__pycache__/
+*.py[cod]
+*$py.class
