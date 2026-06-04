@@ -1589,6 +1589,7 @@ class Interface(StructuredNode):
 
     interface_kind = ArrayProperty(StringProperty(choices=interface_kinds), default=list)  # multi-valued: an interface can play several roles at once
     coverage_domains = StringProperty(choices=coverage_domains)
+
     audience = ArrayProperty(StringProperty(choices=audiences), default=list)  # multi-valued: any of students | employees | applicants-for-employment | prospective-students | general-public
     provenance = StringProperty(choices=interface_provenances)  # how it entered the graph: declared (ATI named it) | enacted (emerged from remediation work) | both
 
