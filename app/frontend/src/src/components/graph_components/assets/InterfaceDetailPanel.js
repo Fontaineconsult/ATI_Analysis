@@ -14,16 +14,20 @@ import {
     useToast,
     VStack,
 } from '@chakra-ui/react';
+import { useSettings } from '../../../context/SettingsContext';
 import { fetchInterfaceDetail } from '../../../services/api/get';
 import {
     assignAssetToInterface,
     unassignAssetFromInterface,
     assignRemediationToInterface,
     unassignRemediationFromInterface,
+    assignWorkingGroupToInterface,
+    unassignWorkingGroupFromInterface,
 } from '../../../services/api/put';
 import { deleteInterface } from '../../../services/api/delete';
 import EntityAttachmentSelector from '../../functional_components/EntityAttachmentSelector';
-import { KindBadges, CoverageDomainBadge, ProvenanceBadge, AudienceBadges, UncoveredBadge } from './InterfaceBadges';
+import { FunctionBadge, CoverageDomainBadges, ProvenanceBadge, AudienceBadges, UncoveredBadge } from './InterfaceBadges';
+import { getFunctionLabel } from './interfaceConfig';
 import InterfaceForm from './InterfaceForm';
 
 const Card = ({ title, children, ...rest }) => (
@@ -63,6 +67,7 @@ function Field({ label, value }) {
  *   onGoToAsset(assetId)       Optional: jump to the Assets tab and select an asset.
  */
 function InterfaceDetailPanel({ interfaceIdentifier, assets = [], implementations = [], onAfterMutate, onGoToAsset }) {
+    const { vocab } = useSettings();
     const toast = useToast();
     const editDisclosure = useDisclosure();
     const [iface, setIface] = useState(null);
@@ -150,6 +155,11 @@ function InterfaceDetailPanel({ interfaceIdentifier, assets = [], implementation
     const remediationAttached = (iface.remediated_by || []).map((r) => ({ unique_id: r.unique_id, label: `${r.title} (${r.type})` }));
     const remediationCandidates = implementations.map((i) => ({ unique_id: i.unique_id, label: `${i.title} (${i.type})` }));
 
+    // Accountable working groups — backend resolves by name, so use the name as the key.
+    const wgAttached = (iface.accountable_working_groups || []).map((w) => ({ unique_id: w.name, label: w.name }));
+    const wgList = Array.isArray(vocab?.working_groups) ? vocab.working_groups : [];
+    const wgCandidates = wgList.map((name) => ({ unique_id: name, label: name }));
+
     return (
         <VStack align="stretch" spacing={4}>
             {/* Identity */}
@@ -157,8 +167,8 @@ function InterfaceDetailPanel({ interfaceIdentifier, assets = [], implementation
                 <HStack align="start" mb={3}>
                     <VStack align="stretch" spacing={2} flex="1" minW="0">
                         <HStack spacing={2} flexWrap="wrap">
-                            <KindBadges kinds={iface.interface_kind} />
-                            {iface.coverage_domains && <CoverageDomainBadge domain={iface.coverage_domains} />}
+                            {iface.function && <FunctionBadge fn={iface.function} />}
+                            <CoverageDomainBadges domains={iface.coverage_domains} />
                             {iface.provenance && <ProvenanceBadge provenance={iface.provenance} />}
                             {iface.uncovered && <UncoveredBadge />}
                         </HStack>
@@ -181,6 +191,8 @@ function InterfaceDetailPanel({ interfaceIdentifier, assets = [], implementation
                             No implementation remediates this interface. The duty for this interaction point is unmet (Title II §35.205).
                         </Alert>
                     )}
+                    <Field label="Function" value={iface.function ? getFunctionLabel(iface.function) : null} />
+                    <Field label="Locus" value={iface.locus} />
                     <Box>
                         <Text fontSize="xs" color="gray.500" textTransform="uppercase" fontWeight="bold" mb={1}>Audience</Text>
                         {(iface.audience || []).length
@@ -222,6 +234,26 @@ function InterfaceDetailPanel({ interfaceIdentifier, assets = [], implementation
                         ))}
                     </HStack>
                 )}
+            </Card>
+
+            {/* Accountable working groups — committee accountability (editable). NOT identity.
+                Keeping function in the key but accountability here is what makes the
+                function-vs-accountability divergence queryable. */}
+            <Card title="Accountable working groups">
+                <Text fontSize="xs" color="gray.500" mb={2}>
+                    The committee(s) accountable for this interface's accessibility — distinct from its
+                    <strong> function</strong> (what it is for). Divergence between the two is diagnostic.
+                </Text>
+                <EntityAttachmentSelector
+                    entityLabel="Working group"
+                    placeholder="Select a working group…"
+                    attached={wgAttached}
+                    candidates={wgCandidates}
+                    onAttach={(name) => assignWorkingGroupToInterface(iface.interface_identifier, name)}
+                    onDetach={(name) => unassignWorkingGroupFromInterface(iface.interface_identifier, name)}
+                    afterChange={refreshAll}
+                    emptyLabel="No accountable working group set."
+                />
             </Card>
 
             {/* Remediation — the Implementations that remediate this interface (editable).

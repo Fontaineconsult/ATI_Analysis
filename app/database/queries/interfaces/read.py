@@ -4,7 +4,7 @@
 from neomodel import db
 
 from app.database.graph_schema import *
-from app.data_config import interface_kinds, audiences
+from app.data_config import functions, audiences
 from app.data_config import coverage_domains as COVERAGE_DOMAINS
 from app.endpoints.data_api.errors.custom_exceptions import NotFoundError, ValidationError
 
@@ -50,6 +50,10 @@ def _serialize_interface_detail(interface) -> dict:
     data = interface.serialize()
     data.update({
         "presented_by": [a.serialize() for a in presented_assets],
+        "accountable_working_groups": [
+            {"unique_id": wg.unique_id, "name": wg.name}
+            for wg in interface.accountable_working_groups.all()
+        ],
         "remediated_by": remediations,
         "described_by": [d.serialize() for d in interface.described_by.all()],
         "described_on": [w.serialize() for w in interface.described_on.all()],
@@ -76,21 +80,25 @@ def get_interface(interface_identifier: str) -> dict:
     return _serialize_interface_detail(interface)
 
 
-def get_interfaces_by_kind(interface_kind: str) -> list:
-    """All interfaces carrying a given kind (summaries). Raises ValidationError on a bad kind."""
-    if interface_kind not in interface_kinds:
+def get_interfaces_by_function(function: str) -> list:
+    """All interfaces serving a given function (summaries). Raises ValidationError on a bad function.
+
+    `function` is single-valued and identity-bearing, so this is a plain property filter."""
+    if function not in functions:
         raise ValidationError(
-            f"interface_kind must be one of {list(interface_kinds.keys())}; got {interface_kind!r}"
+            f"function must be one of {list(functions.keys())}; got {function!r}"
         )
-    results, _ = db.cypher_query(_INTERFACES_BY_KIND_QUERY, {"kind": interface_kind})
-    return [Interface.inflate(row[0]).serialize() for row in results]
+    return [
+        i.serialize()
+        for i in Interface.nodes.filter(function=function).order_by("interface_identifier")
+    ]
 
 
-# interface_kind is multi-valued (an ArrayProperty), so membership is tested with `IN`
+# coverage_domains is multi-valued (an ArrayProperty), so membership is tested with `IN`
 # against the list rather than equality. Done in Cypher so the match happens in-DB.
-_INTERFACES_BY_KIND_QUERY = """
+_INTERFACES_BY_COVERAGE_DOMAIN_QUERY = """
     MATCH (i:Interface)
-    WHERE $kind IN i.interface_kind
+    WHERE $domain IN i.coverage_domains
     RETURN i
     ORDER BY i.interface_identifier
 """
@@ -102,10 +110,8 @@ def get_interfaces_by_coverage_domain(coverage_domain: str) -> list:
         raise ValidationError(
             f"coverage_domain must be one of {list(COVERAGE_DOMAINS.keys())}; got {coverage_domain!r}"
         )
-    return [
-        i.serialize()
-        for i in Interface.nodes.filter(coverage_domains=coverage_domain).order_by("interface_identifier")
-    ]
+    results, _ = db.cypher_query(_INTERFACES_BY_COVERAGE_DOMAIN_QUERY, {"domain": coverage_domain})
+    return [Interface.inflate(row[0]).serialize() for row in results]
 
 
 # audience is multi-valued (an ArrayProperty), so membership is tested with `IN`

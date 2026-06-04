@@ -490,7 +490,8 @@ export const createVendor = async (payload) => {
 };
 
 export const createInterface = async (payload) => {
-    // payload: { title, locus, interface_kind?, coverage_domains?, audience?[], provenance?, description?, presented_by? }
+    // payload: { title, locus, function, presented_by?, coverage_domains?[], audience?[], provenance?, description? }
+    // title/locus/function (+ backing from presented_by) are the identity coordinates.
     try {
         const response = await axios.post(`${process.env.REACT_APP_API_URL}/interfaces`, payload);
         return response.data;
@@ -507,6 +508,17 @@ export const createTool = async (payload) => {
         return response.data;
     } catch (error) {
         console.error('Error creating tool:', error);
+        throw error;
+    }
+};
+
+export const createComponent = async (payload) => {
+    // payload: { title, interface_identifier? (parent), component_kind?, description? }
+    try {
+        const response = await axios.post(`${process.env.REACT_APP_API_URL}/components`, payload);
+        return response.data;
+    } catch (error) {
+        console.error('Error creating component:', error);
         throw error;
     }
 };

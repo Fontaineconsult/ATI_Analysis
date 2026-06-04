@@ -6,7 +6,8 @@ from . import data_api_endpoints
 from ...database.queries.implementation.delete import unassign_person_as_implementor
 from ...database.queries.implementation.update import update_plan, assign_person_as_implementor, \
     assign_documentation_to_implementation, add_progress_note_to_plan, \
-    assign_person_as_owner, unassign_person_as_owner
+    assign_person_as_owner, unassign_person_as_owner, \
+    assign_accountable_working_group, unassign_accountable_working_group
 from app.endpoints.data_api.util.response import make_response
 from app.endpoints.data_api.errors.custom_exceptions import ApiError, ValidationError, CrudError, NotFoundError
 
@@ -349,6 +350,10 @@ class ImplementationAPI(MethodView):
                 return self.handle_assign_person_as_owner(data)
             elif action == "unassign_person_as_owner":
                 return self.handle_unassign_person_as_owner(data)
+            elif action == "assign_accountable_working_group":
+                return self.handle_assign_accountable_working_group(data)
+            elif action == "unassign_accountable_working_group":
+                return self.handle_unassign_accountable_working_group(data)
             elif action == "assign_documentation_to_implementation":
                 return self.handle_assign_documentation_to_implementation(data)
             elif action == "update_implementation":
@@ -553,6 +558,37 @@ class ImplementationAPI(MethodView):
             person_unique_id=data['person_unique_id'],
         )
         return make_response({"status": "success", "message": "Person unassigned as owner successfully"}), 200
+
+    def handle_assign_accountable_working_group(self, data):
+        """
+        Connect an accountable ATIWorkingGroup to a doing-implementation
+        (Process/Project/Procedure/Service) via accountable_working_group.
+
+        Body: { action: "assign_accountable_working_group",
+                implementation_type, implementation_unique_id, working_group }
+        where working_group is a full name ('Web') or abbreviation ('web'/'pro'/'ins').
+        """
+        required = ['implementation_type', 'implementation_unique_id', 'working_group']
+        if not all(field in data for field in required):
+            raise ValidationError(f"Missing required fields: {required}")
+        assign_accountable_working_group(
+            implementation_unique_id=data['implementation_unique_id'],
+            implementation_type=data['implementation_type'],
+            working_group=data['working_group'],
+        )
+        return make_response({"status": "success", "message": "Accountable working group assigned successfully"}), 200
+
+    def handle_unassign_accountable_working_group(self, data):
+        """Inverse of handle_assign_accountable_working_group."""
+        required = ['implementation_type', 'implementation_unique_id', 'working_group']
+        if not all(field in data for field in required):
+            raise ValidationError(f"Missing required fields: {required}")
+        unassign_accountable_working_group(
+            implementation_unique_id=data['implementation_unique_id'],
+            implementation_type=data['implementation_type'],
+            working_group=data['working_group'],
+        )
+        return make_response({"status": "success", "message": "Accountable working group unassigned successfully"}), 200
 
     def handle_assign_documentation_to_implementation(self, data):
         """

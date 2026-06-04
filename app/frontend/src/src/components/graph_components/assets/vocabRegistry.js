@@ -10,7 +10,7 @@
  * to the *Options() helpers; the registry is the default fallback for everything else.
  *
  * Shape: { <category>: { <key>: <label> } | [<value>, ...] }, e.g.
- *   { interface_kinds: { 'web-surface': 'Web Surface', ... }, working_groups: [...] }
+ *   { component_kinds: { 'web-surface': 'Web Surface', ... }, functions: {...}, working_groups: [...] }
  */
 export const vocab = {};
 

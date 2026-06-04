@@ -156,12 +156,26 @@ taap_outcomes = {
     "referral":              "Referral",
 }
 
-# Interface kind: the functional role of a salient interaction point, defined by what
-# kind of thing it is to interact with — NOT by the substrate behind it. A standalone
-# PDF and a Canvas course view can be the same kind because they play the same role.
-# Stored values are dict keys (neomodel `choices=` requires a dict; the labels are
-# what an app surfaces).
-interface_kinds = {
+# Interface function: the institutional purpose a surface serves — what it is FOR.
+# Identity-bearing (one of the four coordinates of the interface signature) and
+# single-valued per interface. Program-shaped: aligns with how §504/Title II frame the
+# institution's programs/activities. Kept small and uncontestable to minimize false
+# splits. Stored values are dict keys; changing a key re-identifies interfaces, so the
+# keys are stable.
+functions = {
+    "teaching-and-learning":            "Teaching & Learning",
+    "information-and-communication":    "Information & Communication",
+    "service-and-self-administration":  "Service & Self-Administration",
+    "internal-operations":              "Internal Operations",
+}
+
+# Component kind: the functional role of a WCAG-grain element, defined by what kind of
+# thing it is to interact with — NOT by the substrate behind it. A standalone PDF and a
+# Canvas course file can be the same kind because they play the same role. Kind lives on
+# the Component (where it is homogeneous and where WCAG attaches), NOT on the Interface
+# (a single interface is kind-heterogeneous). Stored values are dict keys (neomodel
+# `choices=` requires a dict; the labels are what an app surfaces).
+component_kinds = {
     "web-surface":           "Web Surface",            # page or web/mobile application rendered in a browser/web runtime
     "structured-document":   "Structured Document",    # PDF, word-processor, presentation, spreadsheet — read/rendered docs
     "time-based-media":      "Time-Based Media",       # video, audio
@@ -170,7 +184,7 @@ interface_kinds = {
 }
 
 # Coverage domain: the declared "what we track" — institution-chosen domains of ATI
-# attention. Orthogonal to interface_kind (role) and provenance (how it became known).
+# attention. Orthogonal to function (purpose) and provenance (how it became known).
 coverage_domains = {
     "library-assets":               "Library Assets",
     "social-media":                 "Social Media",
@@ -221,10 +235,12 @@ interface_provenances = {
 # ---------------------------------------------------------------------------
 PUBLIC_VOCABULARIES = {
     # interfaces
-    "interface_kinds":       interface_kinds,
+    "functions":             functions,
     "coverage_domains":      coverage_domains,
     "audiences":             audiences,
     "interface_provenances": interface_provenances,
+    # components
+    "component_kinds":       component_kinds,
     # assets / TAAPs
     "asset_classes":         asset_classes,
     "asset_scopes":          asset_scopes,

@@ -16,18 +16,19 @@ import {
     VStack,
 } from '@chakra-ui/react';
 import { AddIcon, SearchIcon } from '@chakra-ui/icons';
-import { getKindOptions, getKindConfig } from './interfaceConfig';
+import { getFunctionOptions, getFunctionConfig } from './interfaceConfig';
 import { useSettings } from '../../../context/SettingsContext';
-import { CoverageDomainBadge } from './InterfaceBadges';
+import { CoverageDomainBadges } from './InterfaceBadges';
 
 /**
- * Interface list grouped by kind via Chakra Accordion (mirrors AssetList).
- * Search filters across all sections and auto-expands matching ones. Rows are
- * keyed/selected by `interface_identifier` (the business key used by detail/CRUD).
+ * Interface list grouped by function via Chakra Accordion (mirrors AssetList).
+ * function is single-valued and identity-bearing, so each interface sits in exactly
+ * one group. Search filters across all sections and auto-expands matching ones. Rows
+ * are keyed/selected by `interface_identifier` (the business key used by detail/CRUD).
  * A ⚠ badge marks rows in `uncoveredSet` (no remediation reaches them).
  *
  * Props:
- *   items          Array of interface summaries {interface_identifier, title, interface_kind, coverage_domains, ...}.
+ *   items          Array of interface summaries {interface_identifier, title, function, locus, coverage_domains, ...}.
  *   selectedId     interface_identifier of the selected row, or null.
  *   onSelect(item) Called with the full summary when a row is clicked.
  *   onAdd()        Called when "Add Interface" is pressed.
@@ -39,49 +40,45 @@ function InterfaceList({ items = [], selectedId, onSelect, onAdd, uncoveredSet, 
     const q = query.trim().toLowerCase();
     const uncovered = uncoveredSet || new Set();
     const { vocab } = useSettings();
-    // Kind group order comes from data_config (via /settings); empty until loaded.
-    const kindOrder = useMemo(() => getKindOptions(vocab).map((o) => o.key), [vocab]);
+    // Function group order comes from data_config (via /settings); empty until loaded.
+    const functionOrder = useMemo(() => getFunctionOptions(vocab).map((o) => o.key), [vocab]);
 
     const grouped = useMemo(() => {
-        const byKind = new Map();
-        for (const kk of kindOrder) byKind.set(kk, []);
+        const byFunction = new Map();
+        for (const fk of functionOrder) byFunction.set(fk, []);
         for (const it of items) {
-            // interface_kind is multi-valued; an interface appears under each of its kinds.
-            const kinds = Array.isArray(it.interface_kind)
-                ? it.interface_kind
-                : (it.interface_kind ? [it.interface_kind] : []);
+            const domains = Array.isArray(it.coverage_domains) ? it.coverage_domains : (it.coverage_domains ? [it.coverage_domains] : []);
             if (q) {
-                const hay = `${it.title || ''} ${it.description || ''} ${it.coverage_domains || ''} ${kinds.join(' ')} ${it.interface_identifier || ''}`.toLowerCase();
+                const hay = `${it.title || ''} ${it.description || ''} ${it.locus || ''} ${domains.join(' ')} ${it.function || ''} ${it.interface_identifier || ''}`.toLowerCase();
                 if (!hay.includes(q)) continue;
             }
-            let placed = false;
-            for (const k of kinds) {
-                if (byKind.has(k)) { byKind.get(k).push(it); placed = true; }
-            }
-            if (!placed) {
-                if (!byKind.has('_other')) byKind.set('_other', []);
-                byKind.get('_other').push(it);
+            const fk = it.function;
+            if (fk && byFunction.has(fk)) {
+                byFunction.get(fk).push(it);
+            } else {
+                if (!byFunction.has('_other')) byFunction.set('_other', []);
+                byFunction.get('_other').push(it);
             }
         }
-        return byKind;
-    }, [items, q, kindOrder]);
+        return byFunction;
+    }, [items, q, functionOrder]);
 
-    const kindKeys = useMemo(() => {
-        const keys = [...kindOrder];
+    const functionKeys = useMemo(() => {
+        const keys = [...functionOrder];
         if (grouped.has('_other') && grouped.get('_other').length) keys.push('_other');
         return keys;
-    }, [grouped, kindOrder]);
+    }, [grouped, functionOrder]);
 
     const defaultIndex = useMemo(() => {
         const indices = [];
-        kindKeys.forEach((kk, idx) => {
-            const list = grouped.get(kk) || [];
+        functionKeys.forEach((fk, idx) => {
+            const list = grouped.get(fk) || [];
             const containsSelected = selectedId && list.some((it) => it.interface_identifier === selectedId);
             const hasSearchMatches = q && list.length > 0;
             if (containsSelected || hasSearchMatches) indices.push(idx);
         });
         return indices;
-    }, [grouped, kindKeys, selectedId, q]);
+    }, [grouped, functionKeys, selectedId, q]);
 
     const totalMatches = useMemo(
         () => Array.from(grouped.values()).reduce((acc, list) => acc + list.length, 0),
@@ -114,12 +111,12 @@ function InterfaceList({ items = [], selectedId, onSelect, onAdd, uncoveredSet, 
                     <Box p={4} color="gray.500" fontSize="sm" fontStyle="italic">No interfaces match “{query}”.</Box>
                 ) : (
                     <Accordion key={defaultIndex.join(',')} defaultIndex={defaultIndex} allowMultiple>
-                        {kindKeys.map((kindKey) => {
-                            const config = getKindConfig(kindKey, vocab);
-                            const list = grouped.get(kindKey) || [];
-                            const label = config?.label || (kindKey === '_other' ? 'Other' : kindKey);
+                        {functionKeys.map((functionKey) => {
+                            const config = getFunctionConfig(functionKey, vocab);
+                            const list = grouped.get(functionKey) || [];
+                            const label = config?.label || (functionKey === '_other' ? 'Other' : functionKey);
                             return (
-                                <AccordionItem key={kindKey} borderColor="gray.100">
+                                <AccordionItem key={functionKey} borderColor="gray.100">
                                     <AccordionButton px={3} py={2} _hover={{ bg: 'gray.50' }}>
                                         <HStack flex="1" justify="space-between" align="center">
                                             <Text fontSize="sm" fontWeight="semibold" color="gray.700">{label}</Text>
@@ -159,8 +156,8 @@ function InterfaceList({ items = [], selectedId, onSelect, onAdd, uncoveredSet, 
                                                             )}
                                                         </HStack>
                                                         <HStack mt={1} spacing={1}>
-                                                            {item.coverage_domains && <CoverageDomainBadge domain={item.coverage_domains} size="sm" />}
-                                                            <Text fontSize="2xs" color="gray.400" noOfLines={1}>{item.interface_identifier}</Text>
+                                                            <CoverageDomainBadges domains={item.coverage_domains} size="sm" />
+                                                            <Text fontSize="2xs" color="gray.400" noOfLines={1}>{item.locus}</Text>
                                                         </HStack>
                                                     </Box>
                                                 );

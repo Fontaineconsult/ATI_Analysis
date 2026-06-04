@@ -24,6 +24,8 @@ import {
     fetchUncoveredInterfaces,
     fetchAllImplementations,
     fetchAllTools,
+    fetchAllComponents,
+    fetchAllGovernance,
 } from '../../services/api/get';
 import AssetStatStrip from '../graph_components/assets/AssetStatStrip';
 import AssetList from '../graph_components/assets/AssetList';
@@ -41,6 +43,9 @@ import InterfaceDetailPanel from '../graph_components/assets/InterfaceDetailPane
 import ToolList from '../graph_components/assets/ToolList';
 import ToolForm from '../graph_components/assets/ToolForm';
 import ToolDetailPanel from '../graph_components/assets/ToolDetailPanel';
+import ComponentList from '../graph_components/assets/ComponentList';
+import ComponentForm from '../graph_components/assets/ComponentForm';
+import ComponentDetailPanel from '../graph_components/assets/ComponentDetailPanel';
 import { toISODate } from '../graph_components/assets/assetConfig';
 
 /**
@@ -99,6 +104,16 @@ function AssetsMasterContainer() {
     const [toolsError, setToolsError] = useState(null);
     const [selectedToolId, setSelectedToolId] = useState(null);
     const [toolFormOpen, setToolFormOpen] = useState(false);
+
+    // Components
+    const [components, setComponents] = useState([]);
+    const [componentsLoading, setComponentsLoading] = useState(true);
+    const [componentsError, setComponentsError] = useState(null);
+    const [selectedComponentId, setSelectedComponentId] = useState(null);
+    const [componentFormOpen, setComponentFormOpen] = useState(false);
+
+    // WCAG guidelines (governance items of type 'guideline'), for the component must_satisfy picker.
+    const [guidelines, setGuidelines] = useState([]);
 
     // Stat
     const [taapsDueCount, setTaapsDueCount] = useState(0);
@@ -217,6 +232,37 @@ function AssetsMasterContainer() {
         }
     }, []);
 
+    const loadComponents = useCallback(async () => {
+        setComponentsLoading(true);
+        setComponentsError(null);
+        try {
+            const resp = await fetchAllComponents();
+            const list = resp?.data?.items || [];
+            setComponents(list);
+            return list;
+        } catch (e) {
+            setComponentsError(e?.message || 'Failed to load components.');
+            return [];
+        } finally {
+            setComponentsLoading(false);
+        }
+    }, []);
+
+    // Guidelines come from the governance store (type === 'guideline'); used as the
+    // candidate list for a component's must_satisfy picker.
+    const loadGuidelines = useCallback(async () => {
+        try {
+            const resp = await fetchAllGovernance();
+            const raw = resp?.data;
+            const list = Array.isArray(raw) ? raw : (Array.isArray(raw?.items) ? raw.items : []);
+            setGuidelines(
+                list.filter((g) => g.type === 'guideline').map((g) => ({ unique_id: g.unique_id, title: g.title })),
+            );
+        } catch (_) {
+            setGuidelines([]);
+        }
+    }, []);
+
     useEffect(() => {
         loadAssets();
         loadTaaps();
@@ -225,7 +271,9 @@ function AssetsMasterContainer() {
         loadInterfaces();
         loadImplementations();
         loadTools();
-    }, [loadAssets, loadTaaps, loadTaapsDue, loadVendors, loadInterfaces, loadImplementations, loadTools]);
+        loadComponents();
+        loadGuidelines();
+    }, [loadAssets, loadTaaps, loadTaapsDue, loadVendors, loadInterfaces, loadImplementations, loadTools, loadComponents, loadGuidelines]);
 
     // ---- Asset handlers ----
     const handleAssetCreated = async (created) => {
@@ -305,6 +353,21 @@ function AssetsMasterContainer() {
         return list;
     };
 
+    // ---- Component handlers ----
+    const handleComponentCreated = async (created) => {
+        const list = await loadComponents();
+        if (created?.component_identifier) setSelectedComponentId(created.component_identifier);
+        else if (list.length) setSelectedComponentId(list[0].component_identifier);
+    };
+
+    const handleComponentMutate = async (deletedId) => {
+        const list = await loadComponents();
+        if (deletedId && deletedId === selectedComponentId) {
+            setSelectedComponentId(null);
+        }
+        return list;
+    };
+
     // ---- Cross-tab navigation ----
     const goToTaaps = (title) => {
         setTabIndex(1);
@@ -313,6 +376,10 @@ function AssetsMasterContainer() {
     const goToAsset = (assetIdentifier) => {
         setTabIndex(0);
         if (assetIdentifier) setSelectedAssetId(assetIdentifier);
+    };
+    const goToInterface = (interfaceIdentifier) => {
+        setTabIndex(3);
+        if (interfaceIdentifier) setSelectedInterfaceId(interfaceIdentifier);
     };
     const addTaapForAsset = (assetIdentifier) => {
         setTaapPresetAsset(assetIdentifier);
@@ -338,6 +405,7 @@ function AssetsMasterContainer() {
                     <Tab fontSize="sm">Vendors</Tab>
                     <Tab fontSize="sm">Interfaces</Tab>
                     <Tab fontSize="sm">Tools</Tab>
+                    <Tab fontSize="sm">Components</Tab>
                 </TabList>
 
                 <TabPanels>
@@ -514,6 +582,41 @@ function AssetsMasterContainer() {
                             </Box>
                         </Flex>
                     </TabPanel>
+
+                    {/* Components */}
+                    <TabPanel px={0}>
+                        {componentsError && (
+                            <Alert status="error" borderRadius="md" fontSize="sm" mb={3}>
+                                <AlertIcon />{componentsError}
+                            </Alert>
+                        )}
+                        <Flex gap={6} align="flex-start">
+                            <Box flex="1" minW="0">
+                                {componentsLoading ? (
+                                    <HStack p={4} color="gray.600" fontSize="sm">
+                                        <Spinner size="sm" color="teal.500" /><Text>Loading components…</Text>
+                                    </HStack>
+                                ) : (
+                                    <ComponentList
+                                        items={components}
+                                        selectedId={selectedComponentId}
+                                        onSelect={(item) => setSelectedComponentId(item.component_identifier)}
+                                        onAdd={() => setComponentFormOpen(true)}
+                                        emptyMessage="No components yet. Click Add Component to begin tracking."
+                                    />
+                                )}
+                            </Box>
+                            <Box flex="2" minW="0">
+                                <ComponentDetailPanel
+                                    componentIdentifier={selectedComponentId}
+                                    interfaces={interfaces}
+                                    guidelines={guidelines}
+                                    onAfterMutate={handleComponentMutate}
+                                    onGoToInterface={goToInterface}
+                                />
+                            </Box>
+                        </Flex>
+                    </TabPanel>
                 </TabPanels>
             </Tabs>
 
@@ -549,6 +652,13 @@ function AssetsMasterContainer() {
                 onClose={() => setToolFormOpen(false)}
                 assets={assets}
                 onSaved={handleToolCreated}
+            />
+
+            <ComponentForm
+                isOpen={componentFormOpen}
+                onClose={() => setComponentFormOpen(false)}
+                interfaces={interfaces}
+                onSaved={handleComponentCreated}
             />
         </Box>
     );

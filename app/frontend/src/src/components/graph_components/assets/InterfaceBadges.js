@@ -1,7 +1,7 @@
 import React from 'react';
 import { Badge, HStack } from '@chakra-ui/react';
 import {
-    getKindColor, getKindLabel,
+    getFunctionColor, getFunctionLabel,
     getCoverageDomainColor, getCoverageDomainLabel,
     getAudienceColor, getAudienceLabel,
     getProvenanceColor, getProvenanceLabel,
@@ -9,33 +9,24 @@ import {
 
 /**
  * Colored pills for Interface metadata. Single source of color truth so the list,
- * detail, and forms render the same chip for a given kind / coverage domain /
+ * detail, and forms render the same chip for a given function / coverage domain /
  * audience / provenance, plus the uncovered (elevation) flag. Mirrors AssetBadges.
+ * (Kind moved to Component — see ComponentBadges.)
  */
-export function KindBadge({ kind, size = 'md' }) {
-    if (!kind) return null;
+export function FunctionBadge({ fn, size = 'md' }) {
+    if (!fn) return null;
     return (
         <Badge
-            colorScheme={getKindColor(kind)}
+            colorScheme={getFunctionColor(fn)}
             fontSize={size === 'sm' ? '2xs' : 'xs'}
             textTransform="uppercase"
             px={2}
             py={size === 'sm' ? 0 : 0.5}
             borderRadius="md"
+            title="Institutional purpose this interface serves (identity coordinate)"
         >
-            {getKindLabel(kind)}
+            {getFunctionLabel(fn)}
         </Badge>
-    );
-}
-
-// interface_kind is multi-valued — render one KindBadge per kind.
-export function KindBadges({ kinds = [], size = 'md' }) {
-    const list = Array.isArray(kinds) ? kinds : (kinds ? [kinds] : []);
-    if (!list.length) return null;
-    return (
-        <HStack spacing={1} flexWrap="wrap">
-            {list.map((k) => <KindBadge key={k} kind={k} size={size} />)}
-        </HStack>
     );
 }
 
@@ -52,6 +43,17 @@ export function CoverageDomainBadge({ domain, size = 'md' }) {
         >
             {getCoverageDomainLabel(domain)}
         </Badge>
+    );
+}
+
+// coverage_domains is multi-valued — render one subtle pill per value.
+export function CoverageDomainBadges({ domains = [], size = 'md' }) {
+    const list = Array.isArray(domains) ? domains : (domains ? [domains] : []);
+    if (!list.length) return null;
+    return (
+        <HStack spacing={1} flexWrap="wrap">
+            {list.map((d) => <CoverageDomainBadge key={d} domain={d} size={size} />)}
+        </HStack>
     );
 }
 

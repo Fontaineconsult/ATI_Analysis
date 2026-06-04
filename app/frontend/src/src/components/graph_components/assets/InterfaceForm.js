@@ -23,7 +23,7 @@ import {
 } from '@chakra-ui/react';
 import { useSettings } from '../../../context/SettingsContext';
 import {
-    getKindOptions,
+    getFunctionOptions,
     getCoverageDomainOptions,
     getAudienceOptions,
     getProvenanceOptions,
@@ -32,16 +32,16 @@ import { createInterface } from '../../../services/api/post';
 import { updateInterface } from '../../../services/api/put';
 
 /**
- * Interface create/edit modal. Create is a plain POST (title + locus + opts);
- * edit is the `update` PUT action (interface_identifier immutable, no locus).
+ * Interface create/edit modal.
  *
- * The identifier is built from locus + a slug of the title, so locus is create-only:
- *   Backing asset chosen → locus = the asset_identifier, and presented_by is wired
- *                          on create (asset-backed; stewardship derives upward).
- *   No backing asset      → standalone: locus is the literal 'standalone' or a
- *                          campus abbreviation. presented_by stays empty (a valid state).
+ * Identity is the four-coordinate signature backing--locus--function--title-slug, built
+ * server-side. So on CREATE the user supplies title + locus (the structural zone, free
+ * text) + function (institutional purpose), and optionally a backing asset (presented_by,
+ * which supplies `backing`; absent => 'standalone').
  *
- * `audience` is multi-valued (rendered as a checkbox group).
+ * On EDIT those four coordinates are immutable (the backend rejects them) — only the
+ * descriptive fields (description, coverage_domains, audience, provenance) are editable;
+ * the identity coordinates render read-only. coverage_domains and audience are multi-valued.
  *
  * Props: isOpen, onClose, assets (summaries for the backing-asset picker),
  *        presetAssetIdentifier (optional create prefill), existingInterface
@@ -49,33 +49,35 @@ import { updateInterface } from '../../../services/api/put';
  */
 function InterfaceForm({ isOpen, onClose, assets = [], presetAssetIdentifier, existingInterface, onSaved }) {
     const isEdit = Boolean(existingInterface);
-    const { campuses, vocab } = useSettings();
+    const { vocab } = useSettings();
     const toast = useToast();
     const [form, setForm] = useState({
         title: '',
-        interface_kind: [],
-        coverage_domains: '',
+        function: '',
+        locus: '',
+        backingAsset: '',
+        coverage_domains: [],
         audience: [],
         provenance: '',
         description: '',
-        backingAsset: '',
-        locus: 'standalone',
     });
     const [submitting, setSubmitting] = useState(false);
 
     useEffect(() => {
         if (!isOpen) return;
+        // In edit mode existingInterface is the detail projection (presented_by is an array).
+        const backingFromDetail = Array.isArray(existingInterface?.presented_by) && existingInterface.presented_by.length
+            ? existingInterface.presented_by[0].asset_identifier
+            : '';
         setForm({
             title: existingInterface?.title || '',
-            interface_kind: Array.isArray(existingInterface?.interface_kind)
-                ? existingInterface.interface_kind
-                : (existingInterface?.interface_kind ? [existingInterface.interface_kind] : []),
-            coverage_domains: existingInterface?.coverage_domains || '',
+            function: existingInterface?.function || '',
+            locus: existingInterface?.locus || '',
+            backingAsset: backingFromDetail || presetAssetIdentifier || '',
+            coverage_domains: Array.isArray(existingInterface?.coverage_domains) ? existingInterface.coverage_domains : [],
             audience: Array.isArray(existingInterface?.audience) ? existingInterface.audience : [],
             provenance: existingInterface?.provenance || '',
             description: existingInterface?.description || '',
-            backingAsset: presetAssetIdentifier || '',
-            locus: 'standalone',
         });
     }, [isOpen, existingInterface, presetAssetIdentifier]);
 
@@ -89,10 +91,9 @@ function InterfaceForm({ isOpen, onClose, assets = [], presetAssetIdentifier, ex
         try {
             let saved;
             if (isEdit) {
+                // Identity coordinates are immutable — only descriptive fields go up.
                 const fields = {
-                    title,
-                    interface_kind: form.interface_kind,
-                    coverage_domains: form.coverage_domains || null,
+                    coverage_domains: form.coverage_domains,
                     audience: form.audience,
                     provenance: form.provenance || null,
                     description: form.description.trim() || null,
@@ -100,18 +101,20 @@ function InterfaceForm({ isOpen, onClose, assets = [], presetAssetIdentifier, ex
                 const resp = await updateInterface(existingInterface.interface_identifier, fields);
                 saved = resp?.data?.interface || null;
             } else {
-                // Asset-backed → locus is the asset_identifier and we wire presented_by.
-                // Standalone → locus is 'standalone' or a campus abbreviation.
-                const locus = form.backingAsset || form.locus;
+                const locus = form.locus.trim();
                 if (!locus) {
-                    toast({ title: 'A locus is required (pick a backing asset, a campus, or standalone).', status: 'error', duration: 2800, isClosable: true });
+                    toast({ title: 'A locus is required (the structural zone, e.g. "course-shells").', status: 'error', duration: 2800, isClosable: true });
                     setSubmitting(false);
                     return;
                 }
-                const payload = { title, locus };
+                if (!form.function) {
+                    toast({ title: 'A function is required.', status: 'error', duration: 2800, isClosable: true });
+                    setSubmitting(false);
+                    return;
+                }
+                const payload = { title, locus, function: form.function };
                 if (form.backingAsset) payload.presented_by = form.backingAsset;
-                if (form.interface_kind.length) payload.interface_kind = form.interface_kind;
-                if (form.coverage_domains) payload.coverage_domains = form.coverage_domains;
+                if (form.coverage_domains.length) payload.coverage_domains = form.coverage_domains;
                 if (form.audience.length) payload.audience = form.audience;
                 if (form.provenance) payload.provenance = form.provenance;
                 if (form.description.trim()) payload.description = form.description.trim();
@@ -142,44 +145,73 @@ function InterfaceForm({ isOpen, onClose, assets = [], presetAssetIdentifier, ex
                 <ModalCloseButton />
                 <ModalBody>
                     <VStack align="stretch" spacing={3}>
-                        <FormControl isRequired>
+                        {/* Identity coordinates — editable only on create */}
+                        <FormControl isRequired={!isEdit}>
                             <FormLabel fontSize="sm" color="gray.700" fontWeight="semibold">Title</FormLabel>
-                            <Input size="sm" value={form.title} onChange={set('title')} placeholder="e.g. Course View" />
+                            <Input
+                                size="sm"
+                                value={form.title}
+                                onChange={set('title')}
+                                placeholder="e.g. Canvas Course Shells"
+                                isReadOnly={isEdit}
+                                bg={isEdit ? 'gray.50' : undefined}
+                                color={isEdit ? 'gray.500' : undefined}
+                            />
                         </FormControl>
 
-                        {!isEdit && (
-                            <>
-                                <FormControl>
-                                    <FormLabel fontSize="sm" color="gray.700" fontWeight="semibold">Backing Asset</FormLabel>
-                                    <Select size="sm" placeholder="None (standalone)" value={form.backingAsset} onChange={set('backingAsset')}>
-                                        {assets.map((a) => (
-                                            <option key={a.asset_identifier} value={a.asset_identifier}>
-                                                {a.title} ({a.asset_identifier})
-                                            </option>
-                                        ))}
-                                    </Select>
-                                    <Text fontSize="2xs" color="gray.400" mt={1}>
-                                        Asset-backed interfaces derive their §508 steward upward from the asset.
-                                    </Text>
-                                </FormControl>
+                        <FormControl isRequired={!isEdit}>
+                            <FormLabel fontSize="sm" color="gray.700" fontWeight="semibold">Function</FormLabel>
+                            {isEdit ? (
+                                <Input size="sm" value={form.function} isReadOnly bg="gray.50" color="gray.500" />
+                            ) : (
+                                <Select size="sm" placeholder="Select function…" value={form.function} onChange={set('function')}>
+                                    {getFunctionOptions(vocab).map((o) => <option key={o.key} value={o.key}>{o.label}</option>)}
+                                </Select>
+                            )}
+                            <Text fontSize="2xs" color="gray.400" mt={1}>
+                                The institutional purpose this interface serves — an identity coordinate.
+                            </Text>
+                        </FormControl>
 
-                                <FormControl isRequired={!form.backingAsset}>
-                                    <FormLabel fontSize="sm" color="gray.700" fontWeight="semibold">Locus</FormLabel>
-                                    {form.backingAsset ? (
-                                        <Text fontSize="sm" color="gray.500" fontStyle="italic">
-                                            Locus is set to “{form.backingAsset}” automatically (asset-backed).
-                                        </Text>
-                                    ) : (
-                                        <Select size="sm" value={form.locus} onChange={set('locus')}>
-                                            <option value="standalone">Standalone</option>
-                                            {(campuses || []).map((c) => (
-                                                <option key={c.abbreviation} value={c.abbreviation}>{c.name} ({c.abbreviation})</option>
-                                            ))}
-                                        </Select>
-                                    )}
-                                </FormControl>
-                            </>
-                        )}
+                        <FormControl>
+                            <FormLabel fontSize="sm" color="gray.700" fontWeight="semibold">Backing Asset</FormLabel>
+                            {isEdit ? (
+                                <Input
+                                    size="sm"
+                                    value={form.backingAsset || 'standalone'}
+                                    isReadOnly
+                                    bg="gray.50"
+                                    color="gray.500"
+                                />
+                            ) : (
+                                <Select size="sm" placeholder="None (standalone)" value={form.backingAsset} onChange={set('backingAsset')}>
+                                    {assets.map((a) => (
+                                        <option key={a.asset_identifier} value={a.asset_identifier}>
+                                            {a.title} ({a.asset_identifier})
+                                        </option>
+                                    ))}
+                                </Select>
+                            )}
+                            <Text fontSize="2xs" color="gray.400" mt={1}>
+                                Asset-backed interfaces derive their §508 steward upward from the asset. Standalone is a valid state.
+                            </Text>
+                        </FormControl>
+
+                        <FormControl isRequired={!isEdit}>
+                            <FormLabel fontSize="sm" color="gray.700" fontWeight="semibold">Locus</FormLabel>
+                            <Input
+                                size="sm"
+                                value={form.locus}
+                                onChange={set('locus')}
+                                placeholder="e.g. course-shells"
+                                isReadOnly={isEdit}
+                                bg={isEdit ? 'gray.50' : undefined}
+                                color={isEdit ? 'gray.500' : undefined}
+                            />
+                            <Text fontSize="2xs" color="gray.400" mt={1}>
+                                The structural zone within the backing (free text). An identity coordinate.
+                            </Text>
+                        </FormControl>
 
                         {isEdit && (
                             <FormControl>
@@ -188,27 +220,21 @@ function InterfaceForm({ isOpen, onClose, assets = [], presetAssetIdentifier, ex
                             </FormControl>
                         )}
 
+                        {/* Descriptive fields — editable in both modes */}
                         <FormControl>
-                            <FormLabel fontSize="sm" color="gray.700" fontWeight="semibold">Kind</FormLabel>
+                            <FormLabel fontSize="sm" color="gray.700" fontWeight="semibold">Coverage Domains</FormLabel>
                             <CheckboxGroup
-                                value={form.interface_kind}
-                                onChange={(vals) => setForm((p) => ({ ...p, interface_kind: vals }))}
+                                value={form.coverage_domains}
+                                onChange={(vals) => setForm((p) => ({ ...p, coverage_domains: vals }))}
                             >
                                 <Wrap spacing={3}>
-                                    {getKindOptions(vocab).map((o) => (
+                                    {getCoverageDomainOptions(vocab).map((o) => (
                                         <WrapItem key={o.key}>
                                             <Checkbox size="sm" value={o.key}>{o.label}</Checkbox>
                                         </WrapItem>
                                     ))}
                                 </Wrap>
                             </CheckboxGroup>
-                        </FormControl>
-
-                        <FormControl>
-                            <FormLabel fontSize="sm" color="gray.700" fontWeight="semibold">Coverage Domain</FormLabel>
-                            <Select size="sm" placeholder="Select domain…" value={form.coverage_domains} onChange={set('coverage_domains')}>
-                                {getCoverageDomainOptions(vocab).map((o) => <option key={o.key} value={o.key}>{o.label}</option>)}
-                            </Select>
                         </FormControl>
 
                         <FormControl>

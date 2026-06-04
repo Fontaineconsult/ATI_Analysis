@@ -493,15 +493,15 @@ export const fetchUncoveredInterfaces = async () => {
     }
 };
 
-export const fetchInterfacesByKind = async (kind) => {
+export const fetchInterfacesByFunction = async (fn) => {
     try {
         const response = await axios.get(`${process.env.REACT_APP_API_URL}/interfaces`, {
-            params: { kind },
+            params: { function: fn },
         });
         if (response.status === 200) return response.data;
-        throw new Error(`Failed to fetch interfaces by kind: ${response.data?.error}`);
+        throw new Error(`Failed to fetch interfaces by function: ${response.data?.error}`);
     } catch (error) {
-        console.error('Error fetching interfaces by kind:', error.message);
+        console.error('Error fetching interfaces by function:', error.message);
         throw error;
     }
 };
@@ -598,6 +598,47 @@ export const fetchToolsForAsset = async (assetIdentifier) => {
         throw new Error(`Failed to fetch tools for asset: ${response.data?.error}`);
     } catch (error) {
         console.error('Error fetching tools for asset:', error.message);
+        throw error;
+    }
+};
+
+//
+// COMPONENTS — the WCAG-grain elements of an Interface (kind lives here).
+//
+
+export const fetchAllComponents = async () => {
+    try {
+        const response = await axios.get(`${process.env.REACT_APP_API_URL}/components`);
+        if (response.status === 200) return response.data;
+        throw new Error(`Failed to fetch components: ${response.data?.error}`);
+    } catch (error) {
+        console.error('Error fetching components:', error.message);
+        throw error;
+    }
+};
+
+export const fetchComponentDetail = async (componentIdentifier) => {
+    try {
+        const response = await axios.get(
+            `${process.env.REACT_APP_API_URL}/components/${encodeURIComponent(componentIdentifier)}`
+        );
+        if (response.status === 200) return response.data;
+        throw new Error(`Failed to fetch component: ${response.data?.error}`);
+    } catch (error) {
+        console.error('Error fetching component detail:', error.message);
+        throw error;
+    }
+};
+
+export const fetchComponentsForInterface = async (interfaceIdentifier) => {
+    try {
+        const response = await axios.get(`${process.env.REACT_APP_API_URL}/components`, {
+            params: { interface: interfaceIdentifier },
+        });
+        if (response.status === 200) return response.data;
+        throw new Error(`Failed to fetch components for interface: ${response.data?.error}`);
+    } catch (error) {
+        console.error('Error fetching components for interface:', error.message);
         throw error;
     }
 };

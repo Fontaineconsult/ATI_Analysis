@@ -5,7 +5,7 @@ import re
 
 from app.database.graph_schema import *
 from app.database.identifiers import make_interface_identifier
-from app.data_config import interface_kinds, audiences, interface_provenances
+from app.data_config import functions, audiences, interface_provenances
 # Aliased so the vocabulary doesn't collide with the `coverage_domains` field/param name.
 from app.data_config import coverage_domains as COVERAGE_DOMAINS
 from app.endpoints.data_api.errors.custom_exceptions import (
@@ -31,7 +31,7 @@ def _normalize_choice_list(value, allowed, field_name):
     Coerce a multi-valued choice input into a clean, validated list of keys. Accepts
     None, a single string, or a list/tuple; raises ValidationError on any value outside
     `allowed` (a {key: label} vocabulary). Shared by the Interface ArrayProperty fields
-    (interface_kind, audience): an interface can carry several of each at once.
+    (coverage_domains, audience): an interface can carry several of each at once.
     """
     if value is None:
         return []
@@ -52,54 +52,65 @@ def normalize_audience(audience):
     return _normalize_choice_list(audience, audiences, "audience")
 
 
-def normalize_interface_kind(interface_kind):
-    """Validated list of interface-kind keys — Interface.interface_kind is multi-valued."""
-    return _normalize_choice_list(interface_kind, interface_kinds, "interface_kind")
+def normalize_coverage_domains(coverage_domains):
+    """Validated list of coverage-domain keys — Interface.coverage_domains is multi-valued."""
+    return _normalize_choice_list(coverage_domains, COVERAGE_DOMAINS, "coverage_domains")
+
+
+# The literal `backing` coordinate for an interface that has no owned asset behind it.
+STANDALONE_BACKING = "standalone"
 
 
 def create_interface(
     title: str,
     locus: str,
-    interface_kind: str = None,
-    coverage_domains: str = None,
+    function: str,
+    presented_by: str = None,
+    coverage_domains=None,
     audience=None,
     provenance: str = None,
     description: str = None,
-    presented_by: str = None,
 ) -> Interface:
     """
     Create an Interface (a salient point of interaction with ICT — where the
     accessibility duty lands and what remediation targets).
 
-    Identity is composite: the unique `interface_identifier` is built from `locus`
-    plus a slug of `title` via `make_interface_identifier`. The locus is the
-    backing Asset.asset_identifier for an asset-backed interface ('canvas-sfsu'),
-    or a campus abbreviation / the literal 'standalone' for one that has no owned
-    asset behind it. The same view at different loci therefore resolves into
-    distinct interfaces.
+    Identity is a four-coordinate signature, built into the unique
+    `interface_identifier` by `make_interface_identifier`:
 
-    This is the only sanctioned creation path for Interface: it builds the
-    identifier in canonical format, validates the kind / coverage_domain /
-    audience / provenance vocabularies, and guards the unique index with a
-    friendly error.
+        backing -- locus -- function -- title-slug
 
-    `presented_by` is OPTIONAL — a standalone interface has no backing asset, which
-    is a correct, meaningful state (not a gap). When given, the named Asset must
-    exist; it is connected after save. Remediation, components, and documentation
-    edges are deferred to the assign_* functions in queries/interfaces/update.py.
+    where `backing` is the backing Asset.asset_identifier (from `presented_by`) or
+    the literal 'standalone'. The same view at a different backing / locus / function
+    therefore resolves into a distinct interface. All four coordinates are identity,
+    so they are immutable after creation (see queries/interfaces/update.py).
+
+    This is the only sanctioned creation path for Interface: it resolves the backing,
+    builds the identifier in canonical format, validates the function / coverage_domain
+    / audience / provenance vocabularies, and guards the unique index with a friendly
+    error.
+
+    `presented_by` is OPTIONAL — a standalone interface has no backing asset, which is
+    a correct, meaningful state (not a gap). When given, the named Asset must exist; it
+    is connected after save and supplies the `backing` coordinate. Working-group
+    accountability, remediation, components, and documentation edges are deferred to the
+    assign_* functions in queries/interfaces/update.py (they are NOT identity).
 
     Parameters
     ----------
     title : str (required)
-        The view/surface name, e.g. 'Course View'. Indexed but NOT unique on its own.
+        The view/surface name, e.g. 'Course View'. Identity coordinate (in the key).
     locus : str (required)
-        Identity anchor — backing asset_identifier, campus abbrev, or 'standalone'.
-    interface_kind : str | list[str], optional — one or more of `interface_kinds` (multi-valued).
-    coverage_domains : str, optional — one of `coverage_domains` (declared domain of attention).
-    audience : str | list[str], optional — one or more of `audiences` (multi-valued).
-    provenance : str, optional       — one of `interface_provenances`.
+        The structural zone within the backing ('course-shells'); governed free text,
+        slugified into the identifier. Identity coordinate.
+    function : str (required)
+        One of `functions` (institutional purpose). Identity coordinate.
+    presented_by : str, optional
+        asset_identifier of the backing Asset; absent => backing is 'standalone'.
+    coverage_domains : str | list[str], optional — one or more of `coverage_domains` (multi-valued, descriptive).
+    audience : str | list[str], optional — one or more of `audiences` (multi-valued, descriptive).
+    provenance : str, optional       — one of `interface_provenances` (descriptive).
     description : str, optional.
-    presented_by : str, optional     — asset_identifier of the backing Asset to connect.
 
     Raises
     ------
@@ -110,15 +121,15 @@ def create_interface(
     if not title or not title.strip():
         raise ValidationError("title is required")
 
-    if coverage_domains is not None and coverage_domains not in COVERAGE_DOMAINS:
+    if function not in functions:
         raise ValidationError(
-            f"coverage_domains must be one of {list(COVERAGE_DOMAINS.keys())}; got {coverage_domains!r}"
+            f"function must be one of {list(functions.keys())}; got {function!r}"
         )
     if provenance is not None and provenance not in interface_provenances:
         raise ValidationError(
             f"provenance must be one of {list(interface_provenances.keys())}; got {provenance!r}"
         )
-    interface_kind = normalize_interface_kind(interface_kind)
+    coverage_domains = normalize_coverage_domains(coverage_domains)
     audience = normalize_audience(audience)
 
     title_slug = _slugify(title)
@@ -126,30 +137,33 @@ def create_interface(
     if not title_slug:
         raise ValidationError(f"title {title!r} does not yield a usable slug")
     if not locus_slug:
-        raise ValidationError("locus is required (backing asset_identifier, campus abbrev, or 'standalone')")
+        raise ValidationError("locus is required (the structural zone within the backing, e.g. 'course-shells')")
 
-    interface_identifier = make_interface_identifier(locus_slug, title_slug)
+    # Resolve the optional backing asset up front so a bad reference is a 404 before we
+    # create a dangling node, and so `backing` feeds the identifier.
+    asset = None
+    backing = STANDALONE_BACKING
+    if presented_by:
+        try:
+            asset = Asset.nodes.get(asset_identifier=presented_by)
+        except Asset.DoesNotExist:
+            raise NotFoundError(f"Asset {presented_by!r} not found")
+        backing = asset.asset_identifier
+
+    interface_identifier = make_interface_identifier(backing, locus_slug, function, title_slug)
 
     if Interface.nodes.filter(interface_identifier=interface_identifier):
         raise ValidationError(
             f"Interface with interface_identifier {interface_identifier!r} already exists"
         )
 
-    # Resolve the optional backing asset up front so a bad reference is a 404 before
-    # we create a dangling node.
-    asset = None
-    if presented_by:
-        try:
-            asset = Asset.nodes.get(asset_identifier=presented_by)
-        except Asset.DoesNotExist:
-            raise NotFoundError(f"Asset {presented_by!r} not found")
-
     try:
         interface = Interface(
             interface_identifier=interface_identifier,
             title=title,
             description=description,
-            interface_kind=interface_kind,
+            locus=locus,
+            function=function,
             coverage_domains=coverage_domains,
             audience=audience,
             provenance=provenance,

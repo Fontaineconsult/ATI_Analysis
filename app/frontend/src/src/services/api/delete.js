@@ -245,3 +245,23 @@ export const deleteTool = async (toolIdentifier) => {
         throw error;
     }
 };
+
+//
+// COMPONENTS — node delete (edge unassigns live on PUT, in put.js)
+//
+
+export const deleteComponent = async (componentIdentifier) => {
+    try {
+        const response = await fetch(`${API_URL}/components`, {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ component_identifier: componentIdentifier }),
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Failed to delete component');
+        return data;
+    } catch (error) {
+        console.error('Error deleting component:', error);
+        throw error;
+    }
+};

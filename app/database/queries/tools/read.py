@@ -29,14 +29,14 @@ def _used_by_list(tool) -> list:
 
 def _serialize_tool_detail(tool) -> dict:
     """
-    Full tool projection: identity + supplier + optional parent asset + the
-    implementations that use it + documentation.
+    Full tool projection: identity + supplier + optional parent asset(s) + the
+    implementations that use it + documentation. `parent_assets` is a list — a tool may
+    map to several stewarded assets.
     """
-    parent = tool.parent_asset.single()
     data = tool.serialize()
     data.update({
         "supplied_by": [{"unique_id": v.unique_id, "name": v.name} for v in tool.supplied_by.all()],
-        "parent_asset": (parent.serialize() if parent else None),
+        "parent_assets": [a.serialize() for a in tool.parent_asset.all()],
         "used_by": _used_by_list(tool),
         "described_by": [d.serialize() for d in tool.described_by.all()],
         "notes": [n.serialize() for n in tool.notes.all()],

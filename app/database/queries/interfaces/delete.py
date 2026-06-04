@@ -9,6 +9,7 @@ from app.endpoints.data_api.errors.custom_exceptions import CrudError, NotFoundE
 from app.database.queries.interfaces.update import (
     _resolve_interface,
     _resolve_implementation,
+    _resolve_working_group,
     _REMEDIATION_ACCESSOR_BY_TYPE,
 )
 
@@ -61,3 +62,11 @@ def unassign_remediation_from_interface(interface_identifier: str, implementatio
     impl = _resolve_implementation(implementation_type, implementation_unique_id)
     accessor = getattr(interface, _REMEDIATION_ACCESSOR_BY_TYPE[implementation_type])
     return _disconnect_rel(accessor, impl, what_for=f"{implementation_type} remediation")
+
+
+def unassign_working_group_from_interface(interface_identifier: str, working_group: str) -> bool:
+    """Disconnect an accountable ATIWorkingGroup from an Interface (accountable_working_group).
+    Idempotent. Inverse of assign_working_group_to_interface."""
+    interface = _resolve_interface(interface_identifier)
+    wg = _resolve_working_group(working_group)
+    return _disconnect_rel(interface.accountable_working_groups, wg, what_for="accountable working group")

@@ -2,15 +2,20 @@
 # INTERFACE UPDATE QUERIES
 #
 from app.database.graph_schema import *
-from app.data_config import interface_provenances
-from app.data_config import coverage_domains as COVERAGE_DOMAINS
+from app.data_config import interface_provenances, working_group_names
 from app.database.class_factory import implementation_classes
-from app.database.queries.interfaces.create import normalize_audience, normalize_interface_kind
+from app.database.queries.interfaces.create import normalize_audience, normalize_coverage_domains
 from app.endpoints.data_api.errors.custom_exceptions import (
     CrudError,
     NotFoundError,
     ValidationError,
 )
+
+
+# The four identity coordinates of an interface (backing is `presented_by`). All are
+# baked into interface_identifier, so they are immutable — changing one is a different
+# interface (delete + re-create), mirroring Asset.asset_identifier.
+_INTERFACE_IDENTITY_FIELDS = ("title", "locus", "function", "presented_by")
 
 
 # Implementation type -> the Interface reverse-accessor that writes a
@@ -64,40 +69,68 @@ def update_interface(interface_identifier: str, data: dict) -> dict:
     """
     Patch an Interface's descriptive fields. Only keys present in `data` are touched.
 
-    Mutable: title, description, interface_kind, coverage_domains, audience, provenance.
-    Immutable: interface_identifier — the stable composite business key (mirrors
-    Asset.asset_identifier / YearSuccessEvidence.year_identifier). A new identity means
-    delete + re-create; this method never rebuilds the identifier.
+    Mutable: description, coverage_domains, audience, provenance.
+    Immutable: the four identity coordinates (title, locus, function, backing/presented_by)
+    and interface_identifier itself — all baked into the composite business key. Changing
+    identity means delete + re-create; passing an identity field here is a ValidationError.
 
-    `audience` is multi-valued; whatever list is supplied replaces the existing one
-    (set semantics, not append). Raises NotFoundError if the interface is missing,
-    ValidationError on a bad vocabulary value, CrudError on save failure.
+    `coverage_domains` and `audience` are multi-valued; whatever list is supplied replaces
+    the existing one (set semantics, not append). Raises NotFoundError if the interface is
+    missing, ValidationError on an identity-field change or a bad vocabulary value, CrudError
+    on save failure.
     """
     interface = _resolve_interface(interface_identifier)
 
-    if "coverage_domains" in data and data["coverage_domains"] is not None and data["coverage_domains"] not in COVERAGE_DOMAINS:
+    attempted_identity = [f for f in _INTERFACE_IDENTITY_FIELDS if f in data]
+    if attempted_identity:
         raise ValidationError(
-            f"coverage_domains must be one of {list(COVERAGE_DOMAINS.keys())}; got {data['coverage_domains']!r}"
+            f"Identity fields {attempted_identity} are immutable; delete + re-create to change them"
         )
+
     if "provenance" in data and data["provenance"] is not None and data["provenance"] not in interface_provenances:
         raise ValidationError(
             f"provenance must be one of {list(interface_provenances.keys())}; got {data['provenance']!r}"
         )
 
     updates = dict(data)
-    if "interface_kind" in updates:
-        updates["interface_kind"] = normalize_interface_kind(updates["interface_kind"])
+    if "coverage_domains" in updates:
+        updates["coverage_domains"] = normalize_coverage_domains(updates["coverage_domains"])
     if "audience" in updates:
         updates["audience"] = normalize_audience(updates["audience"])
 
     try:
-        for field in ("title", "description", "interface_kind", "coverage_domains", "audience", "provenance"):
+        for field in ("description", "coverage_domains", "audience", "provenance"):
             if field in updates:
                 setattr(interface, field, updates[field])
         interface.save()
         return interface.serialize()
     except Exception as e:
         raise CrudError(f"Failed to update Interface {interface_identifier!r}: {e}")
+
+
+def _resolve_working_group(name_or_abbrev: str):
+    """
+    Resolve an ATIWorkingGroup by full name ('Web') or abbreviation ('web'/'pro'/'ins').
+    Mirrors the lookup in queries/committees/create.py. Raises ValidationError on an
+    unknown key, NotFoundError if the node is missing.
+    """
+    name = working_group_names.get(name_or_abbrev, name_or_abbrev)
+    try:
+        return ATIWorkingGroup.nodes.get(name=name)
+    except ATIWorkingGroup.DoesNotExist:
+        raise NotFoundError(f"ATIWorkingGroup {name!r} not found")
+
+
+def assign_working_group_to_interface(interface_identifier: str, working_group: str) -> bool:
+    """
+    Connect an accountable ATIWorkingGroup to an Interface (accountable_working_group).
+    Idempotent. Multi-valued: an interface can have several accountable groups. This is
+    accountability, NOT identity. Raises NotFoundError if the interface or group is
+    missing, ValidationError on an unknown group key, CrudError on failure.
+    """
+    interface = _resolve_interface(interface_identifier)
+    wg = _resolve_working_group(working_group)
+    return _connect_rel(interface.accountable_working_groups, wg, what_for="accountable working group")
 
 
 def assign_asset_to_interface(interface_identifier: str, asset_identifier: str) -> bool:

@@ -83,9 +83,9 @@ def assign_vendor_to_tool(tool_identifier: str, vendor_name: str) -> bool:
 
 def assign_asset_to_tool(tool_identifier: str, asset_identifier: str) -> bool:
     """
-    Set the tool's parent Asset (tool_of_asset). parent_asset is ZeroOrOne, so this
-    REPLACES any existing parent (disconnect-then-connect) rather than erroring.
-    Idempotent when the same asset is already set.
+    Connect a parent Asset to the tool (tool_of_asset). Multi-valued, so this ADDS the
+    asset alongside any existing parents (idempotent — connecting the same asset twice is
+    a no-op). Use unassign_asset_from_tool to remove one.
 
     Raises NotFoundError if the tool or asset is missing, CrudError on failure.
     """
@@ -94,15 +94,7 @@ def assign_asset_to_tool(tool_identifier: str, asset_identifier: str) -> bool:
         asset = Asset.nodes.get(asset_identifier=asset_identifier)
     except Asset.DoesNotExist:
         raise NotFoundError(f"Asset {asset_identifier!r} not found")
-    try:
-        existing = tool.parent_asset.single()
-        if existing and existing.asset_identifier != asset_identifier:
-            tool.parent_asset.disconnect(existing)
-        if not tool.parent_asset.is_connected(asset):
-            tool.parent_asset.connect(asset)
-        return True
-    except Exception as e:
-        raise CrudError(f"Failed to assign parent asset: {e}")
+    return _connect_rel(tool.parent_asset, asset, what_for="parent asset")
 
 
 def assign_usage_to_tool(tool_identifier: str, implementation_type: str, implementation_unique_id: str) -> bool:

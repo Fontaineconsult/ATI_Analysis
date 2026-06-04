@@ -40,7 +40,8 @@ def create_tool(
     reference is a 404 before we create a dangling node):
       supplied_by  — Vendor name (the tool's supplier).
       parent_asset — Asset.asset_identifier, present when the tool is also a stewarded
-                     institutional system. Cardinality ZeroOrOne.
+                     institutional system. Multi-valued — this create path sets one;
+                     add more via assign_asset_to_tool.
 
     Raises ValidationError on bad/missing input or a duplicate tool_identifier,
     NotFoundError if `supplied_by` / `parent_asset` name a node that doesn't exist,

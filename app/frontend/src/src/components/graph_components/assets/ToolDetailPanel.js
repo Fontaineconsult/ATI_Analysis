@@ -100,7 +100,7 @@ function ToolDetailPanel({ toolIdentifier, assets = [], vendors = [], implementa
     const assetIdByUid = useMemo(() => {
         const m = new Map();
         assets.forEach((a) => m.set(a.unique_id, a.asset_identifier));
-        if (tool?.parent_asset) m.set(tool.parent_asset.unique_id, tool.parent_asset.asset_identifier);
+        (tool?.parent_assets || []).forEach((a) => m.set(a.unique_id, a.asset_identifier));
         return m;
     }, [assets, tool]);
 
@@ -149,9 +149,7 @@ function ToolDetailPanel({ toolIdentifier, assets = [], vendors = [], implementa
     const vendorAttached = (tool.supplied_by || []).map((v) => ({ unique_id: v.unique_id, label: v.name }));
     const vendorCandidates = vendors.map((v) => ({ unique_id: v.unique_id, label: v.name }));
 
-    const assetAttached = tool.parent_asset
-        ? [{ unique_id: tool.parent_asset.unique_id, label: `${tool.parent_asset.title} (${tool.parent_asset.asset_identifier})` }]
-        : [];
+    const assetAttached = (tool.parent_assets || []).map((a) => ({ unique_id: a.unique_id, label: `${a.title} (${a.asset_identifier})` }));
     const assetCandidates = assets.map((a) => ({ unique_id: a.unique_id, label: `${a.title} (${a.asset_identifier})` }));
 
     const usageAttached = (tool.used_by || []).map((r) => ({ unique_id: r.unique_id, label: `${r.title} (${r.type})` }));
@@ -192,10 +190,11 @@ function ToolDetailPanel({ toolIdentifier, assets = [], vendors = [], implementa
                 />
             </Card>
 
-            {/* Parent asset (ZeroOrOne; attaching replaces) */}
-            <Card title="Parent asset">
+            {/* Parent assets (multi-valued) — set when this tool is also a stewarded asset */}
+            <Card title="Parent assets">
                 <Text fontSize="xs" color="gray.500" mb={2}>
-                    Set only when this tool is also a stewarded institutional asset. Attaching one replaces any existing.
+                    Set when this tool is also a stewarded institutional asset. A tool can map to
+                    several assets (e.g. the same product tracked at different scopes).
                 </Text>
                 <EntityAttachmentSelector
                     entityLabel="Asset"
@@ -207,11 +206,19 @@ function ToolDetailPanel({ toolIdentifier, assets = [], vendors = [], implementa
                     afterChange={refreshAll}
                     emptyLabel="No parent asset (used without being a stewarded asset)."
                 />
-                {onGoToAsset && tool.parent_asset && (
-                    <HStack mt={2}>
-                        <Button size="xs" variant="link" colorScheme="teal" onClick={() => onGoToAsset(tool.parent_asset.asset_identifier)}>
-                            Open {tool.parent_asset.title} →
-                        </Button>
+                {onGoToAsset && (tool.parent_assets || []).length > 0 && (
+                    <HStack mt={2} spacing={2} flexWrap="wrap">
+                        {tool.parent_assets.map((a) => (
+                            <Button
+                                key={a.asset_identifier}
+                                size="xs"
+                                variant="link"
+                                colorScheme="teal"
+                                onClick={() => onGoToAsset(a.asset_identifier)}
+                            >
+                                Open {a.title} →
+                            </Button>
+                        ))}
                     </HStack>
                 )}
             </Card>

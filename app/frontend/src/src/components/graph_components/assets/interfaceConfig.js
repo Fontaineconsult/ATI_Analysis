@@ -14,12 +14,12 @@
 import { vocab as registry } from './vocabRegistry';
 
 // Presentation only — colour per vocab key. Labels/keys/order are data_config's job.
-const KIND_COLORS = {
-    'web-surface': 'blue',
-    'structured-document': 'purple',
-    'time-based-media': 'pink',
-    'interactive-component': 'teal',
-    'static-non-text': 'gray',
+// function is the identity-bearing institutional-purpose coordinate (kind moved to Component).
+const FUNCTION_COLORS = {
+    'teaching-and-learning': 'blue',
+    'information-and-communication': 'cyan',
+    'service-and-self-administration': 'teal',
+    'internal-operations': 'gray',
 };
 const COVERAGE_DOMAIN_COLORS = {
     'library-assets': 'cyan',
@@ -53,11 +53,11 @@ const optionsFor = (category, colors, v) =>
         colorScheme: colors[key] || 'gray',
     }));
 
-// kind
-export const getKindLabel = (k, v) => labelFor('interface_kinds', k, v);
-export const getKindColor = (k) => KIND_COLORS[k] || 'gray';
-export const getKindConfig = (k, v) => ({ key: k, label: getKindLabel(k, v), colorScheme: getKindColor(k) });
-export const getKindOptions = (v) => optionsFor('interface_kinds', KIND_COLORS, v);
+// function (identity-bearing institutional purpose)
+export const getFunctionLabel = (k, v) => labelFor('functions', k, v);
+export const getFunctionColor = (k) => FUNCTION_COLORS[k] || 'gray';
+export const getFunctionConfig = (k, v) => ({ key: k, label: getFunctionLabel(k, v), colorScheme: getFunctionColor(k) });
+export const getFunctionOptions = (v) => optionsFor('functions', FUNCTION_COLORS, v);
 
 // coverage domain
 export const getCoverageDomainLabel = (k, v) => labelFor('coverage_domains', k, v);
