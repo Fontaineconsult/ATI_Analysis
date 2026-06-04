@@ -42,6 +42,8 @@ function SubNavbar() {
             { label: 'People', path: `${campusPrefix}/ati-explorer/people` },
             { label: 'Governance', path: `${campusPrefix}/ati-explorer/governance` },
             { label: 'Assets', path: `${campusPrefix}/ati-explorer/assets` },
+            { label: 'Schema Elements', path: `${campusPrefix}/ati-explorer/schema-elements` },
+            { label: 'Principles', path: `${campusPrefix}/ati-explorer/principles` },
         ];
     } else if (location.pathname.includes('/dashboard')) {
         subNavItems = [

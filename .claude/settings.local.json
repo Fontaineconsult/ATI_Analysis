@@ -30,7 +30,8 @@
       "PowerShell($root = \"C:\\\\Users\\\\913678186\\\\IdeaProjects\\\\ATI_Analysis\"; $env:PYTHONPATH = $root; & \"$root\\\\windowsvenvpy12\\\\Scripts\\\\python.exe\" \"$root\\\\app\\\\asana-connector\\\\export_plans.py\")",
       "mcp__7fb79afa-be6e-4d9f-ba06-9483020d2c3e__create_project",
       "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\Fonta\\\\PycharmProjects\\\\ATI_Analysis\\\\app\\\\frontend\\\\src\\\\src\\\\components\" -Directory)",
-      "Bash(Select-Object -ExpandProperty Name)"
+      "Bash(Select-Object -ExpandProperty Name)",
+      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\Fonta\\\\PycharmProjects\\\\ATI_Analysis\\\\app\\\\frontend\\\\src\\\\src\\\\services\" -Directory)"
     ]
   }
 }

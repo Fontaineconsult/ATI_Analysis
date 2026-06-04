@@ -167,3 +167,33 @@ def make_field_value_handle(field: str, value: str) -> str:
     Example: 'field_value:function.teaching-and-learning'
     """
     return f"field_value{DESCRIPTOR_HANDLE_SEPARATOR}{field}.{value}"
+
+
+# --- Meta-scaffold handles -----------------------------------------------------------------
+# SchemaElement.handle and Principle.handle use the same kind-prefix discipline as the
+# descriptor handles above, but their own namespaces. These are the canonical builders used
+# by the seed and as suggestions in the UI; SchemaElement/Principle handles are also accepted
+# as user-entered values, validated for uniqueness by the create queries.
+
+def make_node_label_handle(label: str) -> str:
+    """SchemaElement handle for a node label. Format: 'label:<Label>' (e.g. 'label:Tool')."""
+    return f"label{DESCRIPTOR_HANDLE_SEPARATOR}{label}"
+
+
+def make_rel_type_handle(rel_type: str) -> str:
+    """SchemaElement handle for a relationship type. Format: 'rel:<rel>' (e.g. 'rel:develops')."""
+    return f"rel{DESCRIPTOR_HANDLE_SEPARATOR}{rel_type}"
+
+
+def make_schema_field_handle(label: str, field: str) -> str:
+    """
+    SchemaElement handle for a field. Format: 'field:<Label>.<field>' (e.g. 'field:Asset.scope').
+    Note: identical format to a `field` descriptor handle (make_field_handle) — intentional, so
+    a field SchemaElement and its descriptor share the same coordinate string.
+    """
+    return f"field{DESCRIPTOR_HANDLE_SEPARATOR}{label}.{field}"
+
+
+def make_principle_handle(slug: str) -> str:
+    """Principle handle. Format: 'principle:<slug>' (e.g. 'principle:closest-to-capacity')."""
+    return f"principle{DESCRIPTOR_HANDLE_SEPARATOR}{slug}"

@@ -230,6 +230,16 @@ descriptor_kinds = {
 }
 
 
+# Schema-element kind: which type-level element of our own schema a SchemaElement handle
+# anchors — a node label, a relationship type, or a field. Drives the meta-scaffold list
+# grouping, the add picker, and which identifiers.py helper builds the handle. Stored as keys.
+schema_element_kinds = {
+    "node_label": "Node Label",
+    "rel_type":   "Relationship Type",
+    "field":      "Field",
+}
+
+
 # ---------------------------------------------------------------------------
 # Public vocabularies surfaced to the frontend (read-only).
 #
@@ -267,6 +277,8 @@ PUBLIC_VOCABULARIES = {
     "academic_years":        academic_years,
     # ontology descriptions
     "descriptor_kinds":      descriptor_kinds,
+    # meta-scaffold
+    "schema_element_kinds":  schema_element_kinds,
 }
 
 yse_priority_level = {

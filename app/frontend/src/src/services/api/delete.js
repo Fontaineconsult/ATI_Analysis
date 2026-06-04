@@ -285,3 +285,39 @@ export const deleteDescriptor = async (descriptorHandle) => {
         throw error;
     }
 };
+
+//
+// META-SCAFFOLD — node deletes (edge attach/detach live on PUT, in put.js)
+//
+
+export const deleteSchemaElement = async (handle) => {
+    try {
+        const response = await fetch(`${API_URL}/schema-elements`, {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ handle }),
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Failed to delete schema element');
+        return data;
+    } catch (error) {
+        console.error('Error deleting schema element:', error);
+        throw error;
+    }
+};
+
+export const deletePrinciple = async (handle) => {
+    try {
+        const response = await fetch(`${API_URL}/principles`, {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ handle }),
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Failed to delete principle');
+        return data;
+    } catch (error) {
+        console.error('Error deleting principle:', error);
+        throw error;
+    }
+};

@@ -954,3 +954,79 @@ export const updateDescriptor = async (descriptorHandle, fields) => {
         throw error;
     }
 };
+
+//
+// META-SCAFFOLD — field updates + edge (grounding/shapes) attach/detach (action-dispatch PUT).
+// handle / element_kind are immutable identity; only descriptive fields update.
+//
+
+export const updateSchemaElement = async (handle, fields) => {
+    // fields: { name? }
+    try {
+        const response = await axios.put(`${process.env.REACT_APP_API_URL}/schema-elements`, {
+            action: 'update',
+            handle,
+            ...fields,
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error updating schema element:', error);
+        throw error;
+    }
+};
+
+export const updatePrinciple = async (handle, fields) => {
+    // fields: { name?, description_short?, description_full? }
+    try {
+        const response = await axios.put(`${process.env.REACT_APP_API_URL}/principles`, {
+            action: 'update',
+            handle,
+            ...fields,
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error updating principle:', error);
+        throw error;
+    }
+};
+
+// Shared helper for the principle edge mutations (mirrors _governanceAttachDetach).
+const _principleAttachDetach = async (action, principleHandle, extra) => {
+    try {
+        const response = await axios.put(`${process.env.REACT_APP_API_URL}/principles`, {
+            action,
+            principle_handle: principleHandle,
+            ...extra,
+        });
+        return response.data;
+    } catch (error) {
+        console.error(`Error on principle ${action}:`, error);
+        throw error;
+    }
+};
+
+// Grounding (derives_from) — Governance target.
+export const attachGovernanceToPrinciple = (principleHandle, governanceType, governanceUniqueId) =>
+    _principleAttachDetach('attach_grounding', principleHandle, {
+        source_kind: 'governance', governance_type: governanceType, governance_unique_id: governanceUniqueId,
+    });
+export const detachGovernanceFromPrinciple = (principleHandle, governanceType, governanceUniqueId) =>
+    _principleAttachDetach('detach_grounding', principleHandle, {
+        source_kind: 'governance', governance_type: governanceType, governance_unique_id: governanceUniqueId,
+    });
+
+// Grounding (derives_from) — IntellectualSource target.
+export const attachSourceToPrinciple = (principleHandle, sourceUniqueId) =>
+    _principleAttachDetach('attach_grounding', principleHandle, {
+        source_kind: 'intellectual_source', source_unique_id: sourceUniqueId,
+    });
+export const detachSourceFromPrinciple = (principleHandle, sourceUniqueId) =>
+    _principleAttachDetach('detach_grounding', principleHandle, {
+        source_kind: 'intellectual_source', source_unique_id: sourceUniqueId,
+    });
+
+// Shapes (across-link) — SchemaElement target.
+export const attachShapeToPrinciple = (principleHandle, schemaElementHandle) =>
+    _principleAttachDetach('attach_shape', principleHandle, { schema_element_handle: schemaElementHandle });
+export const detachShapeFromPrinciple = (principleHandle, schemaElementHandle) =>
+    _principleAttachDetach('detach_shape', principleHandle, { schema_element_handle: schemaElementHandle });

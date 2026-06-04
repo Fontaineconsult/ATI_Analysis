@@ -11,6 +11,7 @@ import {SettingsProvider} from "./context/SettingsContext";
 import {DataProvider} from "./context/DataContext";
 import {StatusLevelProvider} from "./context/StatusLevelContext"; // Import UserProvider
 import {DescriptorProvider} from "./context/DescriptorContext";
+import {MetaScaffoldProvider} from "./context/MetaScaffoldContext";
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
@@ -20,15 +21,17 @@ root.render(
                     <DataProvider>
                         <StatusLevelProvider>
                             <DescriptorProvider>
-                                <UserProvider>  {/* Wrap the app with UserProvider */}
+                                <MetaScaffoldProvider>
+                                    <UserProvider>  {/* Wrap the app with UserProvider */}
 
-                                    <DevSupport ComponentPreviews={ComponentPreviews}
-                                                useInitialHook={useInitial}
-                                    >
-                                        <App/>
-                                    </DevSupport>
+                                        <DevSupport ComponentPreviews={ComponentPreviews}
+                                                    useInitialHook={useInitial}
+                                        >
+                                            <App/>
+                                        </DevSupport>
 
-                                </UserProvider>
+                                    </UserProvider>
+                                </MetaScaffoldProvider>
                             </DescriptorProvider>
                         </StatusLevelProvider>
                     </DataProvider>
