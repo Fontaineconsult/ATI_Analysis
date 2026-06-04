@@ -1,5 +1,4 @@
-import React from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import React, { useState } from 'react';
 import {
     Alert,
     AlertIcon,
@@ -17,33 +16,27 @@ import PrincipleDetailPanel from '../graph_components/principles/PrincipleDetail
 import PrincipleForm from '../graph_components/principles/PrincipleForm';
 
 /**
- * Principle slice of the ATI Explorer. URL-driven selection + MetaScaffoldContext data (same
- * pattern as SchemaElementMasterContainer). Single node type, so Add opens the form directly.
- * Deep-links: /{campus}/ati-explorer/principles/principle:closest-to-capacity.
+ * Principles master-detail, rendered inside the Governance area's "Principles" tab. Selection
+ * is IN-MEMORY (the tab has no route of its own); data + reload come from MetaScaffoldContext.
  */
 function PrincipleMasterContainer() {
-    const { campus, handle } = useParams();
-    const navigate = useNavigate();
     const { principles, loading, error, reload } = useMetaScaffold();
+    const [selectedHandle, setSelectedHandle] = useState(null);
     const createForm = useDisclosure();
 
-    const basePath = `/${campus}/ati-explorer/principles`;
-    const selectedHandle = handle ? decodeURIComponent(handle) : null;
     const selectedItem = principles.find((p) => p.handle === selectedHandle) || null;
-
-    const goTo = (h) => navigate(h ? `${basePath}/${encodeURIComponent(h)}` : basePath);
 
     const handleCreated = async (created) => {
         await reload();
-        if (created?.handle) goTo(created.handle);
+        if (created?.handle) setSelectedHandle(created.handle);
     };
     const handleEdited = async (updated) => {
         await reload();
-        if (updated?.handle) goTo(updated.handle);
+        if (updated?.handle) setSelectedHandle(updated.handle);
     };
     const handleDeleted = async () => {
         await reload();
-        goTo(null);
+        setSelectedHandle(null);
     };
 
     return (
@@ -71,7 +64,7 @@ function PrincipleMasterContainer() {
                         <PrincipleList
                             items={principles}
                             selectedHandle={selectedHandle}
-                            onSelect={(item) => goTo(item.handle)}
+                            onSelect={(item) => setSelectedHandle(item.handle)}
                             onAdd={createForm.onOpen}
                             emptyMessage="No principles yet. Click Add Principle to begin."
                         />

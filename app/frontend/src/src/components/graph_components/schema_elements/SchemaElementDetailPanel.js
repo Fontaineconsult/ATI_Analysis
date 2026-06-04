@@ -1,12 +1,10 @@
 import React, { useState } from 'react';
-import { useParams, Link as RouterLink } from 'react-router-dom';
 import {
     Box,
     Button,
     Divider,
     Heading,
     HStack,
-    Link,
     Spacer,
     Text,
     useDisclosure,
@@ -42,7 +40,6 @@ function SchemaElementDetailPanel({ item, onAfterEdit, onAfterDelete, placeholde
     const editDisclosure = useDisclosure();
     const [deleting, setDeleting] = useState(false);
     const toast = useToast();
-    const { campus } = useParams();
     const { describeNodeType, describeField } = useDescriptors();
 
     if (!item) {
@@ -123,19 +120,15 @@ function SchemaElementDetailPanel({ item, onAfterEdit, onAfterDelete, placeholde
                 ) : (
                     <VStack align="stretch" spacing={1}>
                         {shapedBy.map((p) => (
-                            <Link
-                                key={p.handle}
-                                as={RouterLink}
-                                to={`/${campus}/ati-explorer/principles/${encodeURIComponent(p.handle)}`}
-                                fontSize="sm"
-                                color="teal.600"
-                            >
-                                {p.name || p.handle}
-                            </Link>
+                            <HStack key={p.handle} spacing={2} align="center">
+                                <Box w="6px" h="6px" borderRadius="full" bg="teal.400" flexShrink={0} />
+                                <Text fontSize="sm" color="gray.700">{p.name || p.handle}</Text>
+                            </HStack>
                         ))}
                     </VStack>
                 )}
-                {/* Phase 2: a "Concerned by" section listing Determinations will go here. */}
+                {/* Principles live under Governance → Principles. Phase 2: a "Concerned by" section
+                    listing Determinations will go here. */}
             </Box>
 
             <SchemaElementForm

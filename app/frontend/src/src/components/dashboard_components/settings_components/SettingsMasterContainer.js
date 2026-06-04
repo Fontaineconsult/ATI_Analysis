@@ -12,6 +12,7 @@ import Members from "./Members";
 import SuccessIndicators from "./SuccessIndicators";
 import StatusLevels from "./StatusLevelsControls";
 import OntologyDescriptions from "./OntologyDescriptions";
+import SchemaElements from "./SchemaElements";
 
 function SettingsMasterContainer() {
     const [activeSetting, setActiveSetting] = useState('members');
@@ -27,6 +28,8 @@ function SettingsMasterContainer() {
                 return <Members />;
             case 'ontology-descriptions':
                 return <OntologyDescriptions />;
+            case 'schema-elements':
+                return <SchemaElements />;
             default:
                 return (
                     <Box p={6}>
@@ -41,11 +44,22 @@ function SettingsMasterContainer() {
         }
     };
 
-    const menuItems = [
-        { id: 'members', label: 'Members' },
-        { id: 'status-levels', label: 'Status Levels' },
-        { id: 'success-indicators', label: 'Success Indicators' },
-        { id: 'ontology-descriptions', label: 'Ontology Descriptions' },
+    const menuSections = [
+        {
+            heading: null,
+            items: [
+                { id: 'members', label: 'Members' },
+                { id: 'status-levels', label: 'Status Levels' },
+                { id: 'success-indicators', label: 'Success Indicators' },
+            ],
+        },
+        {
+            heading: 'Ontology',
+            items: [
+                { id: 'ontology-descriptions', label: 'Ontology Descriptions' },
+                { id: 'schema-elements', label: 'Schema Elements' },
+            ],
+        },
     ];
 
     return (
@@ -75,30 +89,49 @@ function SettingsMasterContainer() {
                     >
                         Settings
                     </Heading>
-                    <VStack spacing={1} align="stretch">
-                        {menuItems.map((item) => (
-                            <Button
-                                key={item.id}
-                                onClick={() => setActiveSetting(item.id)}
-                                variant="ghost"
-                                justifyContent="flex-start"
-                                size="sm"
-                                fontWeight={activeSetting === item.id ? "semibold" : "normal"}
-                                bg={activeSetting === item.id ? "teal.50" : "transparent"}
-                                color={activeSetting === item.id ? "teal.700" : "gray.600"}
-                                borderLeftWidth="3px"
-                                borderLeftColor={activeSetting === item.id ? "teal.500" : "transparent"}
-                                borderRadius="0"
-                                _hover={{
-                                    bg: activeSetting === item.id ? "teal.50" : "gray.50",
-                                    color: activeSetting === item.id ? "teal.700" : "gray.700"
-                                }}
-                                px={3}
-                                py={2}
-                                transition="all 0.2s"
-                            >
-                                {item.label}
-                            </Button>
+                    <VStack spacing={4} align="stretch">
+                        {menuSections.map((section, idx) => (
+                            <Box key={section.heading || `section-${idx}`}>
+                                {section.heading && (
+                                    <Heading
+                                        size="xs"
+                                        mb={2}
+                                        color="gray.500"
+                                        textTransform="uppercase"
+                                        fontSize="2xs"
+                                        fontWeight="bold"
+                                        letterSpacing="wider"
+                                    >
+                                        {section.heading}
+                                    </Heading>
+                                )}
+                                <VStack spacing={1} align="stretch">
+                                    {section.items.map((item) => (
+                                        <Button
+                                            key={item.id}
+                                            onClick={() => setActiveSetting(item.id)}
+                                            variant="ghost"
+                                            justifyContent="flex-start"
+                                            size="sm"
+                                            fontWeight={activeSetting === item.id ? "semibold" : "normal"}
+                                            bg={activeSetting === item.id ? "teal.50" : "transparent"}
+                                            color={activeSetting === item.id ? "teal.700" : "gray.600"}
+                                            borderLeftWidth="3px"
+                                            borderLeftColor={activeSetting === item.id ? "teal.500" : "transparent"}
+                                            borderRadius="0"
+                                            _hover={{
+                                                bg: activeSetting === item.id ? "teal.50" : "gray.50",
+                                                color: activeSetting === item.id ? "teal.700" : "gray.700"
+                                            }}
+                                            px={3}
+                                            py={2}
+                                            transition="all 0.2s"
+                                        >
+                                            {item.label}
+                                        </Button>
+                                    ))}
+                                </VStack>
+                            </Box>
                         ))}
                     </VStack>
                 </Box>

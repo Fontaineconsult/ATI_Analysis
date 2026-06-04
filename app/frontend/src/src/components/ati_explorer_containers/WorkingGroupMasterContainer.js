@@ -8,10 +8,8 @@ import ImplementationMasterContainer from "../implementation_explorer/Implementa
 import ImplementationTypeOverviewWrapper from "../implementation_explorer/ImplementationTypeOverviewWrapper";
 import PlansAccomplishmentsManager from "../PlansAndAccomplishments/PlansAccomplishmentsManager";
 import PeopleMasterContainer from "./PeopleMasterContainer";
-import GovernanceMasterContainer from "./GovernanceMasterContainer";
+import GovernanceArea from "./GovernanceArea";
 import AssetsMasterContainer from "./AssetsMasterContainer";
-import SchemaElementMasterContainer from "./SchemaElementMasterContainer";
-import PrincipleMasterContainer from "./PrincipleMasterContainer";
 
 function WorkingGroupMasterContainer() {
     const { data, loading, error } = useContext(DataContext);
@@ -44,16 +42,8 @@ function WorkingGroupMasterContainer() {
 
                 <Route path="people" element={<PeopleMasterContainer />} />
 
-                <Route path="governance" element={<GovernanceMasterContainer />} />
-
-                {/* Meta-scaffold — URL-driven selection (optional :handle param). A handle is one
-                    path segment containing ':' / '.' (e.g. 'label:Tool', 'field:Asset.scope',
-                    'principle:closest-to-capacity'); navigate() encodeURIComponent-encodes it and
-                    useParams() decodes it back, so a plain `:handle` param is correct. */}
-                <Route path="schema-elements" element={<SchemaElementMasterContainer />} />
-                <Route path="schema-elements/:handle" element={<SchemaElementMasterContainer />} />
-                <Route path="principles" element={<PrincipleMasterContainer />} />
-                <Route path="principles/:handle" element={<PrincipleMasterContainer />} />
+                {/* Governance area = Governance items + Principles (tabbed). */}
+                <Route path="governance" element={<GovernanceArea />} />
 
                 <Route path="assets" element={<AssetsMasterContainer />} />
                 <Route path="*" element={<Text>Please select a working group.</Text>} />
