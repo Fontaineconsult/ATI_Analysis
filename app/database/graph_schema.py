@@ -11,7 +11,8 @@ from dotenv import load_dotenv
 import os
 
 from app.data_config import (trajectory_choices, asset_classes, asset_scopes, taap_outcomes,
-                             functions, component_kinds, coverage_domains, audiences, interface_provenances)
+                             functions, component_kinds, coverage_domains, audiences, interface_provenances,
+                             descriptor_kinds)
 
 dotenv_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'app', '.env.development')
 load_dotenv(dotenv_path)
@@ -36,11 +37,70 @@ Nodes to describe the nodes for use in ontology management and front end display
 class UniversalDescriptor(StructuredNode):
 
     """
-        a general, repeatable property, feature, or relation shared by multiple particular entities used to describe nodes within this schema.
+    A standalone descriptor for an ontology element — a node type, a field, or a specific
+    field/vocabulary value. Surfaced by the web app for help text, tooltips, and an
+    ontology browser, and authored/edited from the Settings area.
 
+    DESCRIPTORS ARE NOT EDGE-CONNECTED TO INSTANCE DATA. They are retrieved by matching
+    `descriptor_handle` (exact) or by keyword-searching `search_text`, and merged onto
+    query results in the application layer — fetched once per handle, never once per
+    instance. Connecting them by edges would multiply repeated description text across
+    result sets.
+
+    Two descriptions per element:
+      - description_full  : long-form. The complete reasoning, design rationale, and
+                            thinking behind the element. Shown on demand; the institutional
+                            memory of WHY the element is shaped the way it is.
+      - description_short : concise. The text the application renders by default in
+                            tooltips, help panels, and the ontology browser.
+
+    descriptor_kind: node_type | field | field_value
     """
     unique_id = UniqueIdProperty()
-    description = StringProperty()
+
+    # The stable retrieval handle, built by a factory (identifiers.py) so two authors
+    # describing the same element produce the same handle. Examples:
+    #   node_type:   "node_type:Interface"
+    #   field:       "field:Interface.function"
+    #   field_value: "field_value:function.teaching-and-learning"
+    descriptor_handle = StringProperty(unique_index=True, required=True)
+
+    descriptor_kind = StringProperty(choices=descriptor_kinds)  # node_type | field | field_value
+
+    # The label/field/value parts of the target, so the app can filter (e.g. "all field
+    # descriptors for Interface") without parsing the handle.
+    target_label = StringProperty(index=True)   # e.g. "Interface" (null for pure vocab values not tied to a label)
+    target_field = StringProperty(index=True)   # e.g. "function"  (null for node_type descriptors)
+    target_value = StringProperty(index=True)   # e.g. "teaching-and-learning" (only for field_value)
+
+    title = StringProperty()                    # short human label, e.g. "Function"
+
+    description_short = StringProperty()        # concise; rendered in the app by default
+    description_full = StringProperty()         # long-form; the whole idea / rationale
+    description = StringProperty()              # legacy single field, retained for back-compat
+
+    # Lowercase concatenation of title + both descriptions + handle parts, for keyword
+    # search (CONTAINS / full-text). Populated by the create/update query functions.
+    search_text = StringProperty(index=True)
+
+    include_in_report = BooleanProperty(default=False)
+    last_updated = DateProperty()
+
+    def serialize(self):
+        return {
+            "unique_id": self.unique_id,
+            "descriptor_handle": self.descriptor_handle,
+            "descriptor_kind": self.descriptor_kind,
+            "target_label": self.target_label,
+            "target_field": self.target_field,
+            "target_value": self.target_value,
+            "title": self.title,
+            "description_short": self.description_short,
+            "description_full": self.description_full,
+            "description": self.description,
+            "include_in_report": self.include_in_report,
+            "last_updated": str(self.last_updated) if self.last_updated else None,
+        }
 
 
 

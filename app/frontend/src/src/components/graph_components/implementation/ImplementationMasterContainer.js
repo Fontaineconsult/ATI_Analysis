@@ -29,7 +29,7 @@ import CreateImplementationModal from './CreateImplementation';
 import LinkImplementationModal from './LinkImplementation';
 import { DataContext } from '../../../context/DataContext';
 import { useSettings } from '../../../context/SettingsContext';
-import { getDefinition } from '../../../context/definitions';
+import { useDescriptors } from '../../../hooks/useDescriptors';
 
 function ImplementationMasterContainer({ evidenceData = {}, compositeKey, yearIdentifier }) {
     const { evidenceTypes = [] } = evidenceData;
@@ -40,6 +40,7 @@ function ImplementationMasterContainer({ evidenceData = {}, compositeKey, yearId
     const { isOpen, onOpen, onClose } = useDisclosure();
     const { loadSingleWorkingGroupData, refreshImplementations } = useContext(DataContext);
     const { currentWorkingGroup } = useSettings();
+    const { getNodeTypeDefinition } = useDescriptors();
 
     const implementationTypes = [
         'Tracking',
@@ -98,7 +99,7 @@ function ImplementationMasterContainer({ evidenceData = {}, compositeKey, yearId
         }
     };
 
-    const selectedTypeDefinition = selectedImplementationType ? getDefinition(selectedImplementationType) : null;
+    const selectedTypeDefinition = selectedImplementationType ? getNodeTypeDefinition(selectedImplementationType) : null;
 
     // Count implementations by type
     const getTypeCount = (type) => {

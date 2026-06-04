@@ -10,6 +10,7 @@ import {ComponentPreviews, useInitial} from "./dev";
 import {SettingsProvider} from "./context/SettingsContext";
 import {DataProvider} from "./context/DataContext";
 import {StatusLevelProvider} from "./context/StatusLevelContext"; // Import UserProvider
+import {DescriptorProvider} from "./context/DescriptorContext";
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
@@ -18,15 +19,17 @@ root.render(
             <SettingsProvider>
                     <DataProvider>
                         <StatusLevelProvider>
-                            <UserProvider>  {/* Wrap the app with UserProvider */}
+                            <DescriptorProvider>
+                                <UserProvider>  {/* Wrap the app with UserProvider */}
 
-                                <DevSupport ComponentPreviews={ComponentPreviews}
-                                            useInitialHook={useInitial}
-                                >
-                                    <App/>
-                                </DevSupport>
+                                    <DevSupport ComponentPreviews={ComponentPreviews}
+                                                useInitialHook={useInitial}
+                                    >
+                                        <App/>
+                                    </DevSupport>
 
-                            </UserProvider>
+                                </UserProvider>
+                            </DescriptorProvider>
                         </StatusLevelProvider>
                     </DataProvider>
             </SettingsProvider>

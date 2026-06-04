@@ -642,3 +642,32 @@ export const fetchComponentsForInterface = async (interfaceIdentifier) => {
         throw error;
     }
 };
+
+//
+// ONTOLOGY DESCRIPTIONS — human-readable descriptions of the schema (UniversalDescriptor),
+// authored from Settings. Keyed by descriptor_handle; not edge-connected to instance data.
+//
+
+export const fetchAllDescriptors = async () => {
+    try {
+        const response = await axios.get(`${process.env.REACT_APP_API_URL}/descriptions`);
+        if (response.status === 200) return response.data;
+        throw new Error(`Failed to fetch descriptors: ${response.data?.error}`);
+    } catch (error) {
+        console.error('Error fetching descriptors:', error.message);
+        throw error;
+    }
+};
+
+export const fetchDescriptor = async (descriptorHandle) => {
+    try {
+        const response = await axios.get(
+            `${process.env.REACT_APP_API_URL}/descriptions/${encodeURIComponent(descriptorHandle)}`
+        );
+        if (response.status === 200) return response.data;
+        throw new Error(`Failed to fetch descriptor: ${response.data?.error}`);
+    } catch (error) {
+        console.error('Error fetching descriptor:', error.message);
+        throw error;
+    }
+};

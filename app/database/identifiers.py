@@ -129,3 +129,41 @@ def make_tool_identifier(title_slug: str) -> str:
     Example: 'pope-tech', 'equidox'
     """
     return title_slug
+
+
+# Separator between a descriptor handle's kind prefix and its target coordinates. The
+# kind prefix (`node_type:` / `field:` / `field_value:`) namespaces handles so they don't
+# collide and so the app can tell a handle's kind from its prefix.
+DESCRIPTOR_HANDLE_SEPARATOR = ":"
+
+
+def make_node_type_handle(label: str) -> str:
+    """
+    Build a UniversalDescriptor.descriptor_handle for a node-type descriptor.
+
+    Format:  'node_type:<Label>'
+    Example: 'node_type:Interface'
+    """
+    return f"node_type{DESCRIPTOR_HANDLE_SEPARATOR}{label}"
+
+
+def make_field_handle(label: str, field: str) -> str:
+    """
+    Build a UniversalDescriptor.descriptor_handle for a field descriptor (a field on a
+    specific node type).
+
+    Format:  'field:<Label>.<field>'
+    Example: 'field:Interface.function'
+    """
+    return f"field{DESCRIPTOR_HANDLE_SEPARATOR}{label}.{field}"
+
+
+def make_field_value_handle(field: str, value: str) -> str:
+    """
+    Build a UniversalDescriptor.descriptor_handle for a field-value descriptor (a single
+    controlled-vocabulary value of a field, so each choice can be described on its own).
+
+    Format:  'field_value:<field>.<value>'
+    Example: 'field_value:function.teaching-and-learning'
+    """
+    return f"field_value{DESCRIPTOR_HANDLE_SEPARATOR}{field}.{value}"

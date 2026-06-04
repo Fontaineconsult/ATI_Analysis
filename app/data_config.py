@@ -219,6 +219,17 @@ interface_provenances = {
 }
 
 
+# Descriptor kind: what flavor of ontology element a UniversalDescriptor describes. Drives
+# which factory helper builds its handle (make_node_type_handle / make_field_handle /
+# make_field_value_handle in identifiers.py) and which target_* coordinates are required.
+# Stored values are dict keys.
+descriptor_kinds = {
+    "node_type":   "Node Type",
+    "field":       "Field",
+    "field_value": "Field Value",
+}
+
+
 # ---------------------------------------------------------------------------
 # Public vocabularies surfaced to the frontend (read-only).
 #
@@ -254,6 +265,8 @@ PUBLIC_VOCABULARIES = {
     "message_types":         message_types,
     "metric_types":          metric_types,
     "academic_years":        academic_years,
+    # ontology descriptions
+    "descriptor_kinds":      descriptor_kinds,
 }
 
 yse_priority_level = {

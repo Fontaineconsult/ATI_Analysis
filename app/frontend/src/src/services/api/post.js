@@ -522,3 +522,17 @@ export const createComponent = async (payload) => {
         throw error;
     }
 };
+
+// ONTOLOGY DESCRIPTIONS — create a UniversalDescriptor. The handle is auto-built by the
+// backend from descriptor_kind + the target_* coordinates.
+export const createDescriptor = async (payload) => {
+    // payload: { descriptor_kind, target_label?, target_field?, target_value?,
+    //            title?, description_short?, description_full?, include_in_report? }
+    try {
+        const response = await axios.post(`${process.env.REACT_APP_API_URL}/descriptions`, payload);
+        return response.data;
+    } catch (error) {
+        console.error('Error creating descriptor:', error);
+        throw error;
+    }
+};

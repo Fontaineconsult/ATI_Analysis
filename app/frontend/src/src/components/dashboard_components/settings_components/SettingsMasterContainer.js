@@ -11,6 +11,7 @@ import {
 import Members from "./Members";
 import SuccessIndicators from "./SuccessIndicators";
 import StatusLevels from "./StatusLevelsControls";
+import OntologyDescriptions from "./OntologyDescriptions";
 
 function SettingsMasterContainer() {
     const [activeSetting, setActiveSetting] = useState('members');
@@ -24,6 +25,8 @@ function SettingsMasterContainer() {
                 return <SuccessIndicators />;
             case 'members':
                 return <Members />;
+            case 'ontology-descriptions':
+                return <OntologyDescriptions />;
             default:
                 return (
                     <Box p={6}>
@@ -42,6 +45,7 @@ function SettingsMasterContainer() {
         { id: 'members', label: 'Members' },
         { id: 'status-levels', label: 'Status Levels' },
         { id: 'success-indicators', label: 'Success Indicators' },
+        { id: 'ontology-descriptions', label: 'Ontology Descriptions' },
     ];
 
     return (

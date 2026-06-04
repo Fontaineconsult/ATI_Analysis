@@ -265,3 +265,23 @@ export const deleteComponent = async (componentIdentifier) => {
         throw error;
     }
 };
+
+//
+// ONTOLOGY DESCRIPTIONS — node delete (keyed by descriptor_handle)
+//
+
+export const deleteDescriptor = async (descriptorHandle) => {
+    try {
+        const response = await fetch(`${API_URL}/descriptions`, {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ descriptor_handle: descriptorHandle }),
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Failed to delete descriptor');
+        return data;
+    } catch (error) {
+        console.error('Error deleting descriptor:', error);
+        throw error;
+    }
+};

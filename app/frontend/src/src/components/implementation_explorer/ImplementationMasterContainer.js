@@ -21,7 +21,7 @@ import { AddIcon } from '@chakra-ui/icons';
 import ImplementationTypeOverview from './ImplementationTypeOverview';
 import CreateImplementationModal from '../graph_components/implementation/CreateImplementation';
 import { DataContext } from '../../context/DataContext';
-import {getDefinition} from "../../context/definitions";
+import { useDescriptors } from '../../hooks/useDescriptors';
 
 function ImplementationExplorer() {
     const implementationTypes = [
@@ -39,6 +39,7 @@ function ImplementationExplorer() {
     const [selectedType, setSelectedType] = useState(implementationType || implementationTypes[0]);
     const { isOpen, onOpen, onClose } = useDisclosure();
     const { refreshImplementations } = useContext(DataContext);
+    const { getNodeTypeDefinition } = useDescriptors();
 
     // Update selected type when URL changes
     useEffect(() => {
@@ -67,8 +68,8 @@ function ImplementationExplorer() {
         }
     };
 
-    // Get the definition for the selected type
-    const selectedDefinition = getDefinition(selectedType);
+    // Get the definition for the selected type (from the ontology descriptions store)
+    const selectedDefinition = getNodeTypeDefinition(selectedType);
 
     return (
         <Box maxW="1400px" mx="auto" p={4}>

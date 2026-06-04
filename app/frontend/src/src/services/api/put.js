@@ -934,3 +934,23 @@ export const unassignParentInterfaceFromComponent = async (componentIdentifier, 
         throw error;
     }
 };
+
+//
+// ONTOLOGY DESCRIPTIONS — update a descriptor's text (action-dispatch PUT). The handle,
+// kind, and target_* coordinates are immutable identity; only the descriptions + flag change.
+//
+
+export const updateDescriptor = async (descriptorHandle, fields) => {
+    // fields: { title?, description_short?, description_full?, include_in_report? }
+    try {
+        const response = await axios.put(`${process.env.REACT_APP_API_URL}/descriptions`, {
+            action: 'update',
+            descriptor_handle: descriptorHandle,
+            ...fields,
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error updating descriptor:', error);
+        throw error;
+    }
+};
