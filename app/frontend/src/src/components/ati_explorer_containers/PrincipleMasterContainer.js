@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import {
     Alert,
     AlertIcon,
@@ -20,23 +21,40 @@ import PrincipleForm from '../graph_components/principles/PrincipleForm';
  * is IN-MEMORY (the tab has no route of its own); data + reload come from MetaScaffoldContext.
  */
 function PrincipleMasterContainer() {
+    const { campus, principleSlug } = useParams();
+    const navigate = useNavigate();
     const { principles, loading, error, reload } = useMetaScaffold();
-    const [selectedHandle, setSelectedHandle] = useState(null);
     const createForm = useDisclosure();
 
-    const selectedItem = principles.find((p) => p.handle === selectedHandle) || null;
+    const basePath = `/${campus}/ati-explorer/principles`;
+
+    // URLs drop the redundant 'principle:' prefix for readability (the route is already
+    // /principles/…) — e.g. /principles/capability-maturity-over-binary-compliance, not the
+    // %3A-escaped full handle. Match the slug against handles flexibly so legacy
+    // 'principle:'-encoded links still resolve.
+    const param = principleSlug ? decodeURIComponent(principleSlug) : null;
+    const selectedItem = param
+        ? principles.find((p) =>
+            p.handle === param ||
+            p.handle === `principle:${param}` ||
+            p.handle.replace(/^principle:/, '') === param) || null
+        : null;
+    const selectedHandle = selectedItem?.handle || null;
+
+    const goTo = (handle) =>
+        navigate(handle ? `${basePath}/${encodeURIComponent(handle.replace(/^principle:/, ''))}` : basePath);
 
     const handleCreated = async (created) => {
         await reload();
-        if (created?.handle) setSelectedHandle(created.handle);
+        if (created?.handle) goTo(created.handle);
     };
     const handleEdited = async (updated) => {
         await reload();
-        if (updated?.handle) setSelectedHandle(updated.handle);
+        if (updated?.handle) goTo(updated.handle);
     };
     const handleDeleted = async () => {
         await reload();
-        setSelectedHandle(null);
+        goTo(null);
     };
 
     return (
@@ -64,7 +82,7 @@ function PrincipleMasterContainer() {
                         <PrincipleList
                             items={principles}
                             selectedHandle={selectedHandle}
-                            onSelect={(item) => setSelectedHandle(item.handle)}
+                            onSelect={(item) => goTo(item.handle)}
                             onAdd={createForm.onOpen}
                             emptyMessage="No principles yet. Click Add Principle to begin."
                         />

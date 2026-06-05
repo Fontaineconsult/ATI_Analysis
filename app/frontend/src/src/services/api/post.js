@@ -538,23 +538,9 @@ export const createDescriptor = async (payload) => {
 };
 
 //
-// META-SCAFFOLD — create SchemaElements / Principles. Relationship edges (grounding, shapes)
-// are attached afterward from the detail panel, not in the create payload.
+// META-SCAFFOLD — create Principles / IntellectualSources. Relationship edges (grounding,
+// shapes) are attached afterward from the detail panel, not in the create payload.
 //
-
-export const createSchemaElement = async (elementKind, fields) => {
-    // fields: { handle (required), name? }
-    try {
-        const response = await axios.post(`${process.env.REACT_APP_API_URL}/schema-elements`, {
-            element_kind: elementKind,
-            ...fields,
-        });
-        return response.data;
-    } catch (error) {
-        console.error('Error creating schema element:', error);
-        throw error;
-    }
-};
 
 export const createPrinciple = async (fields) => {
     // fields: { handle (required), name (required), description_short?, description_full? }

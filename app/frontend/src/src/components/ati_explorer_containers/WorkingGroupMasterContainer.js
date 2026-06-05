@@ -42,8 +42,14 @@ function WorkingGroupMasterContainer() {
 
                 <Route path="people" element={<PeopleMasterContainer />} />
 
-                {/* Governance area = Governance items + Principles (tabbed). */}
-                <Route path="governance" element={<GovernanceArea />} />
+                {/* Governance area = Governance items + Principles (tabbed). URL-driven: the
+                    route picks the active tab, and the optional selection param deep-links an
+                    item (governance unique_id / principle handle). Same useParams+navigate
+                    pattern as the implementations routes above. */}
+                <Route path="governance" element={<GovernanceArea activeTab="governance" />} />
+                <Route path="governance/:governanceId" element={<GovernanceArea activeTab="governance" />} />
+                <Route path="principles" element={<GovernanceArea activeTab="principles" />} />
+                <Route path="principles/:principleSlug" element={<GovernanceArea activeTab="principles" />} />
 
                 <Route path="assets" element={<AssetsMasterContainer />} />
                 <Route path="*" element={<Text>Please select a working group.</Text>} />

@@ -12,7 +12,7 @@ import os
 
 from app.data_config import (trajectory_choices, asset_classes, asset_scopes, taap_outcomes,
                              functions, component_kinds, coverage_domains, audiences, interface_provenances,
-                             descriptor_kinds, schema_element_kinds)
+                             descriptor_kinds)
 
 dotenv_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'app', '.env.development')
 load_dotenv(dotenv_path)
@@ -87,6 +87,11 @@ class UniversalDescriptor(StructuredNode):
     include_in_report = BooleanProperty(default=False)
     last_updated = DateProperty()
 
+    # The meta-graph anchors on descriptors: Principles that shape this ontology element
+    # (backref of Principle.shapes). Type-level only; serialized `shaped_by` is assembled in the
+    # read layer via Cypher. (Phase 2: Determinations' `concerned_by` will join here too.)
+    shaped_by = RelationshipFrom("Principle", "shapes")
+
     def serialize(self):
         return {
             "unique_id": self.unique_id,
@@ -109,17 +114,22 @@ class UniversalDescriptor(StructuredNode):
 """
 Meta-Scaffold (Phase 1)
 
-The self-describing layer beside the ontology descriptions. SchemaElement gives type-level
-elements of our OWN schema (a node label, a relationship type, a field) a stable handle to
-point AT. Principle captures the framework's conceptual commitments; it is grounded DOWN in
-Governance / IntellectualSource via `derives_from`, and shapes ACROSS to SchemaElements via
-`shapes`. IntellectualSource is a non-legal grounding (a theory / body of scholarship).
+The self-describing layer. Principle captures the framework's conceptual commitments; it is
+grounded DOWN in Governance / IntellectualSource via `derives_from`, and shapes ACROSS to the
+ontology elements it justifies via `shapes`. IntellectualSource is a non-legal grounding (a
+theory / body of scholarship).
+
+There is NO separate SchemaElement node: the ontology-element registry IS the descriptions
+layer (UniversalDescriptor). A descriptor already names every type-level element (a node type,
+a field, a field value, a relationship type) and holds its prose; the meta-graph points at the
+SAME descriptors. These are TYPE-level edges (a few principles -> a few descriptors), so they
+do NOT multiply across instance data — the descriptor's "no instance edges" invariant is intact.
 
 Relationships:
 - (Principle)-[:derives_from]->(Law|Case|Directive|ExternalPolicy|Memo|Guideline|IntellectualSource)
   HETEROGENEOUS targets, so these edges are managed in queries/principles via Cypher rather
   than a typed neomodel RelationshipTo.
-- (Principle)-[:shapes]->(SchemaElement)   # typed below (single-class, clean as neomodel rel)
+- (Principle)-[:shapes]->(UniversalDescriptor)   # typed below; the descriptor is the anchor
 """
 
 
@@ -144,42 +154,14 @@ class IntellectualSource(StructuredNode):
         }
 
 
-class SchemaElement(StructuredNode):
-    """
-    A thin, stable handle for a type-level element of our OWN schema — a node label, a
-    relationship type, or a field. It is the anchor the meta-layer points AT: a Principle
-    `shapes` SchemaElements (and, in Phase 2, a Determination will concern them). It carries
-    no prose itself; its human meaning comes from the ontology descriptions layer
-    (UniversalDescriptor), resolved by the element's handle.
-
-    element_kind ∈ node_label | rel_type | field
-    handle examples: 'label:Tool', 'rel:develops', 'field:Asset.scope'
-    """
-    unique_id = UniqueIdProperty()
-    handle = StringProperty(unique_index=True, required=True)
-    name = StringProperty()
-    element_kind = StringProperty(choices=schema_element_kinds)
-
-    # Principles that shape this element (backref of Principle.shapes). The serialized
-    # `shaped_by` (and Phase 2's `concerned_by`) are assembled in the read layer via Cypher.
-    shaped_by = RelationshipFrom("Principle", "shapes")
-
-    def serialize(self):
-        return {
-            "element_kind": self.element_kind,
-            "handle": self.handle,
-            "name": self.name,
-        }
-
-
 class Principle(StructuredNode):
     """
     A conceptual commitment of the framework (e.g. parallel duties, closest-to-capacity,
     line-vs-functional authority, second-line function, Ostrom's boundaries). Grounded DOWN
     in Governance and/or IntellectualSource via `derives_from`, and shaping ACROSS to the
-    schema via `shapes` -> SchemaElement. An ungrounded principle (no `derives_from`) or an
-    inert one (shapes nothing) is intentionally findable later — integrity is queryable, not
-    enforced at save time.
+    ontology elements it justifies via `shapes` -> UniversalDescriptor. An ungrounded principle
+    (no `derives_from`) or an inert one (shapes nothing) is intentionally findable later —
+    integrity is queryable, not enforced at save time.
     """
     unique_id = UniqueIdProperty()
     handle = StringProperty(unique_index=True, required=True)
@@ -187,8 +169,9 @@ class Principle(StructuredNode):
     description_short = StringProperty()   # concise statement (UI default)
     description_full = StringProperty()    # full rationale (the whole idea)
 
-    # ACROSS link to the schema — single target class, so a typed neomodel relationship is clean.
-    shapes = RelationshipTo("SchemaElement", "shapes")
+    # ACROSS link to the ontology — the descriptor IS the element anchor. Single target class,
+    # so a typed neomodel relationship is clean. Type-level edge (does not touch instance data).
+    shapes = RelationshipTo("UniversalDescriptor", "shapes")
 
     # DOWN link (`derives_from`) targets Governance OR IntellectualSource — heterogeneous
     # labels, so those edges live in queries/principles (Cypher), not a typed rel here.

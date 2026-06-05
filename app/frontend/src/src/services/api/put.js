@@ -960,21 +960,6 @@ export const updateDescriptor = async (descriptorHandle, fields) => {
 // handle / element_kind are immutable identity; only descriptive fields update.
 //
 
-export const updateSchemaElement = async (handle, fields) => {
-    // fields: { name? }
-    try {
-        const response = await axios.put(`${process.env.REACT_APP_API_URL}/schema-elements`, {
-            action: 'update',
-            handle,
-            ...fields,
-        });
-        return response.data;
-    } catch (error) {
-        console.error('Error updating schema element:', error);
-        throw error;
-    }
-};
-
 export const updatePrinciple = async (handle, fields) => {
     // fields: { name?, description_short?, description_full? }
     try {
@@ -1025,8 +1010,8 @@ export const detachSourceFromPrinciple = (principleHandle, sourceUniqueId) =>
         source_kind: 'intellectual_source', source_unique_id: sourceUniqueId,
     });
 
-// Shapes (across-link) — SchemaElement target.
-export const attachShapeToPrinciple = (principleHandle, schemaElementHandle) =>
-    _principleAttachDetach('attach_shape', principleHandle, { schema_element_handle: schemaElementHandle });
-export const detachShapeFromPrinciple = (principleHandle, schemaElementHandle) =>
-    _principleAttachDetach('detach_shape', principleHandle, { schema_element_handle: schemaElementHandle });
+// Shapes (across-link) — UniversalDescriptor target (the descriptor IS the ontology-element anchor).
+export const attachShapeToPrinciple = (principleHandle, descriptorHandle) =>
+    _principleAttachDetach('attach_shape', principleHandle, { descriptor_handle: descriptorHandle });
+export const detachShapeFromPrinciple = (principleHandle, descriptorHandle) =>
+    _principleAttachDetach('detach_shape', principleHandle, { descriptor_handle: descriptorHandle });

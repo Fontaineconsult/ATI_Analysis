@@ -13,8 +13,11 @@ import {
     VStack,
 } from '@chakra-ui/react';
 import PrincipleSourceBadge from './PrincipleSourceBadge';
+import PrincipleGroundingTags from './PrincipleGroundingTags';
 import PrincipleForm from './PrincipleForm';
 import EntityAttachmentSelector from '../../functional_components/EntityAttachmentSelector';
+import GovernanceTypeBadge from '../governance/GovernanceTypeBadge';
+import { getGovernanceTypeLabel } from '../governance/governanceTypes';
 import { deletePrinciple } from '../../../services/api/delete';
 import { fetchAllGovernance } from '../../../services/api/get';
 import {
@@ -26,6 +29,7 @@ import {
     detachShapeFromPrinciple,
 } from '../../../services/api/put';
 import { useMetaScaffold } from '../../../hooks/useMetaScaffold';
+import { useDescriptors } from '../../../hooks/useDescriptors';
 
 /**
  * Right-column detail for a Principle. Shows the stored statement (short + expandable full),
@@ -43,7 +47,8 @@ function PrincipleDetailPanel({ item, onAfterEdit, onAfterDelete, placeholder })
     const fullDisclosure = useDisclosure();
     const [deleting, setDeleting] = useState(false);
     const toast = useToast();
-    const { schemaElements, intellectualSources } = useMetaScaffold();
+    const { intellectualSources } = useMetaScaffold();
+    const { descriptors } = useDescriptors();
 
     // Governance candidates aren't in the meta-scaffold context; fetch once and cache.
     const [governanceItems, setGovernanceItems] = useState([]);
@@ -101,7 +106,10 @@ function PrincipleDetailPanel({ item, onAfterEdit, onAfterDelete, placeholder })
             <Box bg="white" borderWidth="1px" borderColor="gray.200" borderRadius="lg" boxShadow="sm" p={5}>
                 <HStack align="start" mb={3}>
                     <VStack align="stretch" spacing={2} flex="1" minW="0">
-                        <PrincipleSourceBadge principle={item} />
+                        <HStack spacing={1} flexWrap="wrap">
+                            <PrincipleSourceBadge principle={item} />
+                            <PrincipleGroundingTags principle={item} />
+                        </HStack>
                         <Heading as="h2" size="md" color="gray.800">{item.name || item.handle}</Heading>
                         <Text fontSize="xs" color="gray.400" fontFamily="mono">{item.handle}</Text>
                     </VStack>
@@ -138,8 +146,16 @@ function PrincipleDetailPanel({ item, onAfterEdit, onAfterDelete, placeholder })
                 <EntityAttachmentSelector
                     entityLabel="Governance"
                     placeholder="Select a law / policy / directive…"
-                    attached={(grounded.governance || []).map((g) => ({ unique_id: g.unique_id, label: g.title || '(untitled)' }))}
-                    candidates={governanceItems.map((g) => ({ unique_id: g.unique_id, label: g.title || '(untitled)' }))}
+                    attached={(grounded.governance || []).map((g) => ({
+                        unique_id: g.unique_id,
+                        label: g.title || '(untitled)',
+                        badge: <GovernanceTypeBadge type={g.type} size="sm" />,
+                    }))}
+                    candidates={governanceItems.map((g) => ({
+                        unique_id: g.unique_id,
+                        // dropdown <option> can't hold a badge, so name it "<Type> — <Title>"
+                        label: `${getGovernanceTypeLabel(g.type)} — ${g.title || '(untitled)'}`,
+                    }))}
                     onAttach={(uid) => attachGovernanceToPrinciple(item.handle, govTypeByUid[uid], uid)}
                     onDetach={(uid) => detachGovernanceFromPrinciple(item.handle, govTypeByUid[uid], uid)}
                     afterChange={refresh}
@@ -162,18 +178,20 @@ function PrincipleDetailPanel({ item, onAfterEdit, onAfterDelete, placeholder })
                 />
             </Box>
 
-            {/* ACROSS — shapes schema elements */}
+            {/* ACROSS — shapes ontology elements (descriptors). The descriptor IS the anchor:
+                the same UniversalDescriptor that holds an element's prose is what a principle
+                points at. Candidates are the full descriptor catalog. */}
             <Box bg="white" borderWidth="1px" borderColor="gray.200" borderRadius="lg" boxShadow="sm" p={5}>
-                <Heading as="h3" size="sm" color="teal.700" mb={3}>Shapes — Schema Elements</Heading>
+                <Heading as="h3" size="sm" color="teal.700" mb={3}>Shapes — Ontology Elements</Heading>
                 <EntityAttachmentSelector
-                    entityLabel="Schema element"
-                    placeholder="Select a schema element…"
-                    attached={(item.shapes || []).map((e) => ({ unique_id: e.handle, label: e.name || e.handle }))}
-                    candidates={schemaElements.map((e) => ({ unique_id: e.handle, label: e.name || e.handle }))}
+                    entityLabel="Ontology element"
+                    placeholder="Select an ontology element (descriptor)…"
+                    attached={(item.shapes || []).map((d) => ({ unique_id: d.descriptor_handle, label: d.title || d.descriptor_handle }))}
+                    candidates={descriptors.map((d) => ({ unique_id: d.descriptor_handle, label: d.title || d.descriptor_handle }))}
                     onAttach={(handle) => attachShapeToPrinciple(item.handle, handle)}
                     onDetach={(handle) => detachShapeFromPrinciple(item.handle, handle)}
                     afterChange={refresh}
-                    emptyLabel="Shapes no schema elements yet."
+                    emptyLabel="Shapes no ontology elements yet."
                 />
             </Box>
 

@@ -673,21 +673,10 @@ export const fetchDescriptor = async (descriptorHandle) => {
 };
 
 //
-// META-SCAFFOLD — SchemaElements (handles for our own schema), Principles (conceptual
-// commitments grounded in governance/theory and shaping the schema), and IntellectualSources
-// (non-legal grounding). Read across views via MetaScaffoldContext.
+// META-SCAFFOLD — Principles (conceptual commitments grounded in governance/theory, shaping
+// the ontology) and IntellectualSources (non-legal grounding). Read via MetaScaffoldContext.
+// Principles shape UniversalDescriptors directly, so there is no separate schema-element fetch.
 //
-
-export const fetchAllSchemaElements = async () => {
-    try {
-        const response = await axios.get(`${process.env.REACT_APP_API_URL}/schema-elements`);
-        if (response.status === 200) return response.data;
-        throw new Error(`Failed to fetch schema elements: ${response.data?.error}`);
-    } catch (error) {
-        console.error('Error fetching schema elements:', error.message);
-        throw error;
-    }
-};
 
 export const fetchAllPrinciples = async () => {
     try {

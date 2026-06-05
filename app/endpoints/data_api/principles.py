@@ -1,6 +1,7 @@
 """
 HTTP endpoints for Principle — the framework's conceptual commitments, grounded DOWN in
-Governance / IntellectualSource (`derives_from`) and shaping ACROSS to SchemaElements (`shapes`).
+Governance / IntellectualSource (`derives_from`) and shaping ACROSS to ontology elements —
+UniversalDescriptors — via `shapes`.
 
 URL surface (mounted at /ati/data-api/v1):
 
@@ -12,7 +13,7 @@ URL surface (mounted at /ati/data-api/v1):
                                          attach_grounding/detach_grounding:
                                            source_kind='governance'         (governance_type + governance_unique_id)
                                            source_kind='intellectual_source'(source_unique_id)
-                                         attach_shape/detach_shape       (schema_element_handle)
+                                         attach_shape/detach_shape       (descriptor_handle)
     DELETE /principles                 delete (handle in body)
 """
 import traceback
@@ -110,9 +111,9 @@ class PrinciplesAPI(MethodView):
                 return make_response(status="success", data={"item": item}, message=f"Grounding {verb}."), 200
 
             if action in ("attach_shape", "detach_shape"):
-                _require(data, "principle_handle", "schema_element_handle")
+                _require(data, "principle_handle", "descriptor_handle")
                 fn = attach_shape if action == "attach_shape" else detach_shape
-                item = fn(data["principle_handle"], data["schema_element_handle"])
+                item = fn(data["principle_handle"], data["descriptor_handle"])
                 verb = "attached" if action == "attach_shape" else "detached"
                 return make_response(status="success", data={"item": item}, message=f"Shape {verb}."), 200
 

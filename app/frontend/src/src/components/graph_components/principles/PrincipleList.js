@@ -11,6 +11,7 @@ import {
 } from '@chakra-ui/react';
 import { AddIcon, SearchIcon } from '@chakra-ui/icons';
 import PrincipleSourceBadge from './PrincipleSourceBadge';
+import PrincipleGroundingTags from './PrincipleGroundingTags';
 
 /**
  * Flat, searchable list of Principles (single node type → no accordion). Each row shows the
@@ -76,8 +77,11 @@ function PrincipleList({ items = [], selectedHandle, onSelect, onAdd, emptyMessa
                                     <PrincipleSourceBadge principle={item} size="sm" />
                                 </HStack>
                                 <Text fontSize="2xs" color="gray.400" fontFamily="mono" noOfLines={1}>{item.handle}</Text>
+                                <Box mt={1}>
+                                    <PrincipleGroundingTags principle={item} size="sm" />
+                                </Box>
                                 {item.description_short && (
-                                    <Text fontSize="xs" color="gray.600" noOfLines={2}>{item.description_short}</Text>
+                                    <Text fontSize="xs" color="gray.600" noOfLines={2} mt={1}>{item.description_short}</Text>
                                 )}
                             </Box>
                         );

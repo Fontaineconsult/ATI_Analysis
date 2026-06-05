@@ -12,7 +12,6 @@ import Members from "./Members";
 import SuccessIndicators from "./SuccessIndicators";
 import StatusLevels from "./StatusLevelsControls";
 import OntologyDescriptions from "./OntologyDescriptions";
-import SchemaElements from "./SchemaElements";
 
 function SettingsMasterContainer() {
     const [activeSetting, setActiveSetting] = useState('members');
@@ -28,8 +27,6 @@ function SettingsMasterContainer() {
                 return <Members />;
             case 'ontology-descriptions':
                 return <OntologyDescriptions />;
-            case 'schema-elements':
-                return <SchemaElements />;
             default:
                 return (
                     <Box p={6}>
@@ -57,7 +54,6 @@ function SettingsMasterContainer() {
             heading: 'Ontology',
             items: [
                 { id: 'ontology-descriptions', label: 'Ontology Descriptions' },
-                { id: 'schema-elements', label: 'Schema Elements' },
             ],
         },
     ];

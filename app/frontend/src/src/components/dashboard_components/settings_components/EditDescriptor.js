@@ -45,11 +45,12 @@ const TARGETS_BY_KIND = {
     node_type: ['target_label'],
     field: ['target_label', 'target_field'],
     field_value: ['target_field', 'target_value'],
+    rel_type: ['target_field'],  // the relationship name (handle: rel_type:<name>)
 };
 
 const TARGET_META = {
     target_label: { label: 'Target Label', placeholder: 'e.g. Interface', help: 'The node-type label.' },
-    target_field: { label: 'Target Field', placeholder: 'e.g. function', help: 'The field name.' },
+    target_field: { label: 'Target Field / Name', placeholder: 'e.g. function / develops', help: 'The field name, or (for a relationship type) the relationship name.' },
     target_value: { label: 'Target Value', placeholder: 'e.g. teaching-and-learning', help: 'The vocabulary value key.' },
 };
 

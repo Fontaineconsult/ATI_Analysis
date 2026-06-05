@@ -3,8 +3,8 @@
 #
 # `derives_from` targets are heterogeneous (six Governance labels OR IntellectualSource), so
 # grounding is read with Cypher pattern comprehensions and assembled in Python — there is no
-# single typed neomodel relationship that could inflate them. `shapes` -> SchemaElement is
-# read the same way for uniformity.
+# single typed neomodel relationship that could inflate them. `shapes` -> UniversalDescriptor
+# is read the same way for uniformity.
 #
 from neomodel import db
 
@@ -28,7 +28,8 @@ _PROJECTION = """
     [(p)-[:derives_from]->(g) WHERE any(l IN labels(g) WHERE l IN $gov_labels)
         | {labels: labels(g), unique_id: g.unique_id, title: g.title}] AS governance,
     [(p)-[:derives_from]->(s:IntellectualSource) | {unique_id: s.unique_id, name: s.name}] AS sources,
-    [(p)-[:shapes]->(e:SchemaElement) | {handle: e.handle, name: e.name, element_kind: e.element_kind}] AS shapes
+    [(p)-[:shapes]->(d:UniversalDescriptor)
+        | {descriptor_handle: d.descriptor_handle, title: d.title, descriptor_kind: d.descriptor_kind}] AS shapes
 """
 
 
@@ -47,8 +48,12 @@ def _row_to_principle(r) -> dict:
         governance.append({"type": gov_type, "unique_id": g.get("unique_id"), "title": g.get("title")})
     sources = [{"unique_id": s.get("unique_id"), "name": s.get("name")} for s in (r[5] or [])]
     shapes = [
-        {"handle": e.get("handle"), "name": e.get("name"), "element_kind": e.get("element_kind")}
-        for e in (r[6] or [])
+        {
+            "descriptor_handle": d.get("descriptor_handle"),
+            "title": d.get("title"),
+            "descriptor_kind": d.get("descriptor_kind"),
+        }
+        for d in (r[6] or [])
     ]
     return {
         "handle": r[0],

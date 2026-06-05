@@ -3,7 +3,7 @@
 #
 from neomodel import db
 
-from app.database.graph_schema import SchemaElement, IntellectualSource
+from app.database.graph_schema import UniversalDescriptor, IntellectualSource
 from app.database.queries.governance.read import GOVERNANCE_TYPE_TO_CLASS
 from app.database.queries.principles.read import _resolve, get_principle
 from app.endpoints.data_api.errors.custom_exceptions import (
@@ -107,32 +107,33 @@ def detach_source_grounding(principle_handle, source_unique_id) -> dict:
     return get_principle(principle_handle)
 
 
-# --- shapes (Principle -> SchemaElement): single-class, neomodel relationship --------------
+# --- shapes (Principle -> UniversalDescriptor): the descriptor IS the ontology-element anchor.
+# Single target class, so a typed neomodel relationship is clean. Type-level edge only.
 
-def _resolve_schema_element(handle):
-    node = SchemaElement.nodes.get_or_none(handle=handle)
+def _resolve_descriptor(descriptor_handle):
+    node = UniversalDescriptor.nodes.get_or_none(descriptor_handle=descriptor_handle)
     if node is None:
-        raise NotFoundError(f"SchemaElement {handle!r} not found")
+        raise NotFoundError(f"UniversalDescriptor {descriptor_handle!r} not found")
     return node
 
 
-def attach_shape(principle_handle, schema_element_handle) -> dict:
+def attach_shape(principle_handle, descriptor_handle) -> dict:
     p = _resolve(principle_handle)
-    e = _resolve_schema_element(schema_element_handle)
+    d = _resolve_descriptor(descriptor_handle)
     try:
-        if not p.shapes.is_connected(e):
-            p.shapes.connect(e)
+        if not p.shapes.is_connected(d):
+            p.shapes.connect(d)
     except Exception as ex:
         raise CrudError(f"Failed to attach shape: {ex}")
     return get_principle(principle_handle)
 
 
-def detach_shape(principle_handle, schema_element_handle) -> dict:
+def detach_shape(principle_handle, descriptor_handle) -> dict:
     p = _resolve(principle_handle)
-    e = _resolve_schema_element(schema_element_handle)
+    d = _resolve_descriptor(descriptor_handle)
     try:
-        if p.shapes.is_connected(e):
-            p.shapes.disconnect(e)
+        if p.shapes.is_connected(d):
+            p.shapes.disconnect(d)
     except Exception as ex:
         raise CrudError(f"Failed to detach shape: {ex}")
     return get_principle(principle_handle)

@@ -170,28 +170,19 @@ def make_field_value_handle(field: str, value: str) -> str:
 
 
 # --- Meta-scaffold handles -----------------------------------------------------------------
-# SchemaElement.handle and Principle.handle use the same kind-prefix discipline as the
-# descriptor handles above, but their own namespaces. These are the canonical builders used
-# by the seed and as suggestions in the UI; SchemaElement/Principle handles are also accepted
-# as user-entered values, validated for uniqueness by the create queries.
-
-def make_node_label_handle(label: str) -> str:
-    """SchemaElement handle for a node label. Format: 'label:<Label>' (e.g. 'label:Tool')."""
-    return f"label{DESCRIPTOR_HANDLE_SEPARATOR}{label}"
-
+# Principle.handle uses the same kind-prefix discipline as the descriptor handles above. The
+# meta-graph anchors on UniversalDescriptor, so there is no separate SchemaElement handle —
+# a relationship-type descriptor gets a `rel_type:` handle here (alongside node_type/field/
+# field_value built above).
 
 def make_rel_type_handle(rel_type: str) -> str:
-    """SchemaElement handle for a relationship type. Format: 'rel:<rel>' (e.g. 'rel:develops')."""
-    return f"rel{DESCRIPTOR_HANDLE_SEPARATOR}{rel_type}"
-
-
-def make_schema_field_handle(label: str, field: str) -> str:
     """
-    SchemaElement handle for a field. Format: 'field:<Label>.<field>' (e.g. 'field:Asset.scope').
-    Note: identical format to a `field` descriptor handle (make_field_handle) — intentional, so
-    a field SchemaElement and its descriptor share the same coordinate string.
+    UniversalDescriptor.descriptor_handle for a relationship-type descriptor.
+
+    Format:  'rel_type:<rel>'
+    Example: 'rel_type:develops'
     """
-    return f"field{DESCRIPTOR_HANDLE_SEPARATOR}{label}.{field}"
+    return f"rel_type{DESCRIPTOR_HANDLE_SEPARATOR}{rel_type}"
 
 
 def make_principle_handle(slug: str) -> str:

@@ -18,7 +18,6 @@ from . import (assets,
                interfaces,
                organizational_units,
                principles,
-               schema_elements,
                settings,
                tools,
                vendors)

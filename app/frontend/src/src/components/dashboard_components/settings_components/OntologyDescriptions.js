@@ -24,8 +24,9 @@ const KIND_META = {
     node_type: { label: 'Node Type', color: 'purple' },
     field: { label: 'Field', color: 'blue' },
     field_value: { label: 'Field Value', color: 'teal' },
+    rel_type: { label: 'Relationship Type', color: 'orange' },
 };
-const KIND_ORDER = ['node_type', 'field', 'field_value'];
+const KIND_ORDER = ['node_type', 'field', 'field_value', 'rel_type'];
 
 function OntologyDescriptions() {
     const [descriptors, setDescriptors] = useState([]);

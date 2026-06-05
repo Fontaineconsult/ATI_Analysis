@@ -1,23 +1,27 @@
 import React from 'react';
 import { Badge } from '@chakra-ui/react';
-import { deriveGroundingKind, GROUNDING_KIND_META } from './principleTypes';
 
 /**
- * Pill showing a principle's DERIVED grounding kind (law-grounded / theory-grounded / mixed /
- * ungrounded) — computed from `grounded_in`, never stored. Single source of color truth.
+ * Grounding-status badge: "Grounded" if the principle derives from ANY governance or
+ * intellectual source, else "Ungrounded". The specific grounding TYPES (Law, Directive,
+ * Theory, …) are shown separately by PrincipleGroundingTags.
  */
 function PrincipleSourceBadge({ principle, size = 'md' }) {
-    const meta = GROUNDING_KIND_META[deriveGroundingKind(principle)] || GROUNDING_KIND_META.ungrounded;
+    const groundedCount =
+        (principle?.grounded_in?.governance?.length || 0) +
+        (principle?.grounded_in?.intellectual_sources?.length || 0);
+    const grounded = groundedCount > 0;
+
     return (
         <Badge
-            colorScheme={meta.color}
+            colorScheme={grounded ? 'green' : 'gray'}
             fontSize={size === 'sm' ? '2xs' : 'xs'}
             textTransform="uppercase"
             px={2}
             py={size === 'sm' ? 0 : 0.5}
             borderRadius="md"
         >
-            {meta.label}
+            {grounded ? 'Grounded' : 'Ungrounded'}
         </Badge>
     );
 }

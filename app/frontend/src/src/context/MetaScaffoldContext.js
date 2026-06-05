@@ -1,23 +1,21 @@
 import React, { createContext, useState, useEffect, useCallback, useMemo } from 'react';
-import {
-    fetchAllSchemaElements,
-    fetchAllPrinciples,
-    fetchAllIntellectualSources,
-} from '../services/api/get';
+import { fetchAllPrinciples, fetchAllIntellectualSources } from '../services/api/get';
 
 /**
- * Shared store for the meta-scaffold (Phase 1): SchemaElements, Principles, and the
- * IntellectualSources that ground principles. Fetched ONCE here and exposed app-wide so the
- * two slice containers (and Phase 2's trace-up) read from one place rather than self-fetching.
- * Mirrors DescriptorContext. Consume via the useMetaScaffold() hook.
+ * Shared store for the meta-scaffold (Phase 1): Principles and the IntellectualSources that
+ * ground them. Fetched ONCE here and exposed app-wide so the Governance → Principles tab reads
+ * from one place. Mirrors DescriptorContext. Consume via the useMetaScaffold() hook.
  *
- * Mutations in the slices call `reload()` to refresh the whole store (so e.g. a SchemaElement's
- * `shaped_by` backref updates when a Principle attaches it).
+ * NOTE: there is no separate "schema elements" list — a Principle `shapes` UniversalDescriptors
+ * (the descriptor IS the ontology-element anchor), so shape candidates come from the descriptor
+ * store (useDescriptors), not from here. Governance candidates are fetched on demand in the
+ * principle detail panel.
+ *
+ * Mutations call `reload()` to refresh the store.
  */
 export const MetaScaffoldContext = createContext();
 
 export const MetaScaffoldProvider = ({ children }) => {
-    const [schemaElements, setSchemaElements] = useState([]);
     const [principles, setPrinciples] = useState([]);
     const [intellectualSources, setIntellectualSources] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -27,12 +25,10 @@ export const MetaScaffoldProvider = ({ children }) => {
         setLoading(true);
         setError(null);
         try {
-            const [se, pr, is] = await Promise.all([
-                fetchAllSchemaElements(),
+            const [pr, is] = await Promise.all([
                 fetchAllPrinciples(),
                 fetchAllIntellectualSources(),
             ]);
-            setSchemaElements(se?.data?.items || []);
             setPrinciples(pr?.data?.items || []);
             setIntellectualSources(is?.data?.items || []);
         } catch (e) {
@@ -46,14 +42,6 @@ export const MetaScaffoldProvider = ({ children }) => {
         reload();
     }, [reload]);
 
-    // handle/id -> item maps, rebuilt only when their list changes. The handle is the stable,
-    // URL-meaningful key (SchemaElement/Principle); IntellectualSource keys on unique_id.
-    const schemaElementsByHandle = useMemo(() => {
-        const m = {};
-        for (const e of schemaElements) if (e?.handle) m[e.handle] = e;
-        return m;
-    }, [schemaElements]);
-
     const principlesByHandle = useMemo(() => {
         const m = {};
         for (const p of principles) if (p?.handle) m[p.handle] = p;
@@ -66,27 +54,22 @@ export const MetaScaffoldProvider = ({ children }) => {
         return m;
     }, [intellectualSources]);
 
-    const getSchemaElement = useCallback((handle) => schemaElementsByHandle[handle] || null, [schemaElementsByHandle]);
     const getPrinciple = useCallback((handle) => principlesByHandle[handle] || null, [principlesByHandle]);
     const getIntellectualSource = useCallback((uid) => intellectualSourcesById[uid] || null, [intellectualSourcesById]);
 
     const value = useMemo(() => ({
-        schemaElements,
         principles,
         intellectualSources,
-        schemaElementsByHandle,
         principlesByHandle,
         intellectualSourcesById,
         loading,
         error,
         reload,
-        getSchemaElement,
         getPrinciple,
         getIntellectualSource,
     }), [
-        schemaElements, principles, intellectualSources,
-        schemaElementsByHandle, principlesByHandle, intellectualSourcesById,
-        loading, error, reload, getSchemaElement, getPrinciple, getIntellectualSource,
+        principles, intellectualSources, principlesByHandle, intellectualSourcesById,
+        loading, error, reload, getPrinciple, getIntellectualSource,
     ]);
 
     return (

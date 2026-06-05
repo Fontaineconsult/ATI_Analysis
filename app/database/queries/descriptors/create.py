@@ -16,6 +16,7 @@ from app.database.identifiers import (
     make_node_type_handle,
     make_field_handle,
     make_field_value_handle,
+    make_rel_type_handle,
 )
 from app.endpoints.data_api.errors.custom_exceptions import (
     CrudError,
@@ -39,9 +40,10 @@ def build_descriptor_handle(descriptor_kind, target_label=None, target_field=Non
     Build the deterministic descriptor_handle for a (kind, target) tuple, validating that
     the target coordinates required by that kind are present.
 
-        node_type   -> needs target_label              -> 'node_type:<Label>'
+        node_type   -> needs target_label                -> 'node_type:<Label>'
         field       -> needs target_label + target_field -> 'field:<Label>.<field>'
         field_value -> needs target_field + target_value -> 'field_value:<field>.<value>'
+        rel_type    -> needs target_field (the rel name) -> 'rel_type:<rel>'
 
     Raises ValidationError on an unknown kind or a missing required coordinate.
     """
@@ -57,6 +59,10 @@ def build_descriptor_handle(descriptor_kind, target_label=None, target_field=Non
         if not (target_field and target_value):
             raise ValidationError("field_value descriptors require target_field and target_value")
         return make_field_value_handle(target_field, target_value)
+    if descriptor_kind == "rel_type":
+        if not target_field:
+            raise ValidationError("rel_type descriptors require target_field (the relationship name)")
+        return make_rel_type_handle(target_field)
     raise ValidationError(
         f"descriptor_kind must be one of {list(descriptor_kinds.keys())}; got {descriptor_kind!r}"
     )

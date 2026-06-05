@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import {
     Alert,
     AlertIcon,
@@ -30,14 +31,19 @@ import GovernanceForm from '../graph_components/governance/GovernanceForm';
  *   - Edit/delete callbacks → refresh + reconcile selection.
  */
 function GovernanceMasterContainer() {
+    const { campus, governanceId } = useParams();
+    const navigate = useNavigate();
     const [items, setItems] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [selectedId, setSelectedId] = useState(null);
 
     const typePicker = useDisclosure();
     const [pendingType, setPendingType] = useState(null);
     const createForm = useDisclosure();
+
+    const basePath = `/${campus}/ati-explorer/governance`;
+    // Governance items are keyed (and deep-linked) by unique_id.
+    const goTo = (id) => navigate(id ? `${basePath}/${encodeURIComponent(id)}` : basePath);
 
     const loadAll = useCallback(async () => {
         setLoading(true);
@@ -59,7 +65,7 @@ function GovernanceMasterContainer() {
         loadAll();
     }, [loadAll]);
 
-    const selectedItem = items.find((it) => it.unique_id === selectedId) || null;
+    const selectedItem = items.find((it) => it.unique_id === governanceId) || null;
 
     const handleAddClick = () => {
         setPendingType(null);
@@ -74,23 +80,19 @@ function GovernanceMasterContainer() {
 
     const handleCreated = async (created) => {
         const list = await loadAll();
-        if (created?.unique_id) {
-            setSelectedId(created.unique_id);
-        } else if (list.length > 0) {
-            // fall back to first item if API didn't return the created node
-            setSelectedId(list[0].unique_id);
-        }
+        // navigate to the created node (or the first item if the API didn't echo it back)
+        goTo(created?.unique_id || list[0]?.unique_id || null);
     };
 
     const handleEdited = async (updated) => {
         await loadAll();
-        if (updated?.unique_id) setSelectedId(updated.unique_id);
+        if (updated?.unique_id) goTo(updated.unique_id);
     };
 
     const handleDeleted = async (deletedItem) => {
         const list = await loadAll();
-        if (selectedId === deletedItem.unique_id) {
-            setSelectedId(list[0]?.unique_id || null);
+        if (governanceId === deletedItem.unique_id) {
+            goTo(list[0]?.unique_id || null);
         }
     };
 
@@ -122,8 +124,8 @@ function GovernanceMasterContainer() {
                     ) : (
                         <GovernanceList
                             items={items}
-                            selectedId={selectedId}
-                            onSelect={(item) => setSelectedId(item.unique_id)}
+                            selectedId={governanceId}
+                            onSelect={(item) => goTo(item.unique_id)}
                             onAdd={handleAddClick}
                             emptyMessage="No governance items yet. Click Add Governance to begin tracking."
                         />

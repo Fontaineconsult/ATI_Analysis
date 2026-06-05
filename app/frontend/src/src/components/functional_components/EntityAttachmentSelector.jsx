@@ -3,6 +3,7 @@ import {
     Box,
     Button,
     Flex,
+    HStack,
     Link,
     Select,
     Table,
@@ -43,7 +44,8 @@ function normalizeHref(href) {
  *
  * Caller owns data + I/O:
  *   attached            — array of currently-attached entities (objects with at
- *                         least unique_id and label).
+ *                         least unique_id and label; optional `badge` ReactNode is
+ *                         rendered before the label, and optional `href` makes it a link).
  *   candidates          — array of all attachable entities (full objects); the
  *                         component filters out anything already in `attached`.
  *   onAttach(uniqueId)   — async; do the link.
@@ -190,20 +192,23 @@ function EntityAttachmentSelector({
                         {attached.map((a) => (
                             <Tr key={a.unique_id} _hover={{ bg: 'gray.50' }}>
                                 <Td color="gray.700" fontSize="xs">
-                                    {normalizeHref(a.href) ? (
-                                        <Link
-                                            href={normalizeHref(a.href)}
-                                            isExternal
-                                            color="teal.600"
-                                            display="inline-flex"
-                                            alignItems="center"
-                                        >
-                                            {a.label}
-                                            <ExternalLinkIcon ml={1} boxSize={3} />
-                                        </Link>
-                                    ) : (
-                                        a.label
-                                    )}
+                                    <HStack spacing={2} align="center">
+                                        {a.badge}
+                                        {normalizeHref(a.href) ? (
+                                            <Link
+                                                href={normalizeHref(a.href)}
+                                                isExternal
+                                                color="teal.600"
+                                                display="inline-flex"
+                                                alignItems="center"
+                                            >
+                                                {a.label}
+                                                <ExternalLinkIcon ml={1} boxSize={3} />
+                                            </Link>
+                                        ) : (
+                                            <span>{a.label}</span>
+                                        )}
+                                    </HStack>
                                 </Td>
                                 <Td>
                                     <Button

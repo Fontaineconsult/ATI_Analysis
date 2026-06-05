@@ -34,7 +34,7 @@ import app.endpoints.data_api  # noqa: E402,F401
 
 from app.data_config import (  # noqa: E402
     functions, coverage_domains, audiences, interface_provenances, component_kinds,
-    asset_classes, asset_scopes, taap_outcomes, schema_element_kinds,
+    asset_classes, asset_scopes, taap_outcomes,
 )
 from app.database.queries.descriptors.create import create_descriptor, build_descriptor_handle  # noqa: E402
 from app.database.queries.descriptors.read import get_descriptor  # noqa: E402
@@ -59,7 +59,7 @@ NODE_TYPE_LABELS = [
     # documentation
     "Document", "Webpage", "Note", "Message", "Metric",
     # meta + meta-scaffold
-    "UniversalDescriptor", "SchemaElement", "Principle", "IntellectualSource",
+    "UniversalDescriptor", "Principle", "IntellectualSource",
 ]
 
 # --- salient fields to describe: (label, field, short, full) -------------------------------
@@ -116,15 +116,10 @@ FIELD_DESCRIPTORS = [
      "Heterogeneous edge — points at law/policy (mandate) and/or theory (scholarship). An "
      "ungrounded principle is intentionally findable, not blocked at save time."),
     ("Principle", "shapes",
-     "The SchemaElements this principle shapes ACROSS the schema.",
-     "The across-link from a conceptual commitment to the type-level elements it governs. A "
-     "principle that shapes nothing is inert and findable later."),
-    ("SchemaElement", "handle",
-     "The stable handle anchoring a type-level element of our own schema.",
-     "Namespaced by kind: 'label:<Label>', 'rel:<rel>', 'field:<Label>.<field>'. Identity — immutable."),
-    ("SchemaElement", "element_kind",
-     "Whether the element is a node label, a relationship type, or a field.",
-     "One of the `schema_element_kinds` vocabulary; fixed at creation (drives the handle namespace)."),
+     "The ontology elements (descriptors) this principle shapes ACROSS the schema.",
+     "The across-link from a conceptual commitment to the type-level elements it justifies — it "
+     "points at the SAME UniversalDescriptor that holds each element's prose. A principle that "
+     "shapes nothing is inert and findable later."),
 ]
 
 # --- field-value vocabularies: (field_name, vocabulary dict) -------------------------------
@@ -137,7 +132,6 @@ FIELD_VALUE_VOCABS = [
     ("asset_class", asset_classes),
     ("scope", asset_scopes),
     ("outcome", taap_outcomes),
-    ("element_kind", schema_element_kinds),
 ]
 
 
