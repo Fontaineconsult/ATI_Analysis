@@ -67,7 +67,7 @@ function ImplementationMasterContainer({ evidenceData = {}, yearIdentifier }) {
     return (
         <Box bg="white" borderWidth="1px" borderColor="gray.200" borderRadius="lg" boxShadow="sm" p={4}>
             <Flex justify="space-between" align="center" mb={3}>
-                <Heading size="xs" color="teal.700" textTransform="uppercase" letterSpacing="wide">
+                <Heading as="h6" size="xs" color="teal.700" textTransform="uppercase" letterSpacing="wide">
                     Implementations ({totalCount})
                 </Heading>
                 <Button size="xs" colorScheme="teal" leftIcon={<AddIcon />} onClick={handleOpenModal}>

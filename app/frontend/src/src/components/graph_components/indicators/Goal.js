@@ -11,7 +11,7 @@ function Goal({ goalData, plans, plansWithProgressNotes, accomplishments, indica
     return (
         <Box>
             <Box as="section" className="goal-section" aria-label={`Goal ${goal_number}: ${name}`}>
-                <Heading tabIndex={0} as="h2" className="goal-heading">
+                <Heading tabIndex={0} as="h3" className="goal-heading">
                     Goal {goal_number}: {name}
                 </Heading>
                 <Text tabIndex={0} className="goal-text">

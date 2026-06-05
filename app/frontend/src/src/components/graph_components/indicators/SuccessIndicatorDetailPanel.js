@@ -33,7 +33,7 @@ import IndicatorAssetsPanel from './IndicatorAssetsPanel';
 // stacked sections — no modals (except the review process, which is action-gated).
 const Section = ({ title, children }) => (
     <Box bg="white" borderWidth="1px" borderColor="gray.200" borderRadius="lg" boxShadow="sm" p={3}>
-        <Heading size="xs" color="teal.700" textTransform="uppercase" letterSpacing="wide" mb={2}>
+        <Heading as="h6" size="xs" color="teal.700" textTransform="uppercase" letterSpacing="wide" mb={2}>
             {title}
         </Heading>
         {children}
@@ -87,7 +87,7 @@ function SuccessIndicatorDetailPanel({ wrapper }) {
     if (!ev?.evidence || !yearIdentifier) {
         return (
             <Box bg="white" borderWidth="1px" borderColor="gray.200" borderRadius="lg" boxShadow="sm" p={5}>
-                <Text fontSize="md" fontWeight="semibold" color="gray.800" mb={1}>{s.description || '(no description)'}</Text>
+                <Heading as="h5" fontSize="md" fontWeight="semibold" color="gray.800" mb={1}>{s.description || '(no description)'}</Heading>
                 <Text fontSize="xs" color="gray.400" fontFamily="mono" mb={3}>Indicator {s.compositeKey}</Text>
                 <Box p={3} bg="red.50" borderWidth="1px" borderColor="red.200" borderRadius="md">
                     <Text color="red.700" fontSize="sm" fontWeight="semibold">
@@ -107,12 +107,12 @@ function SuccessIndicatorDetailPanel({ wrapper }) {
     const candidatePersons = individuals?.filter((i) => i.active || i.non_committee_member_active) || [];
 
     return (
-        <VStack align="stretch" spacing={3}>
+        <VStack as="section" aria-label={`Success indicator ${s.compositeKey}`} align="stretch" spacing={3}>
             {/* Header card — SI description is the headline; controls + badges below it */}
             <Box bg="white" borderWidth="1px" borderColor="gray.200" borderRadius="lg" boxShadow="sm" p={4}>
-                <Text fontSize="lg" fontWeight="semibold" color="gray.800" lineHeight="short" mb={3}>
+                <Heading as="h5" fontSize="lg" fontWeight="semibold" color="gray.800" lineHeight="short" mb={3}>
                     {s.description || '(no description)'}
-                </Text>
+                </Heading>
 
                 <HStack justify="space-between" align="center" flexWrap="wrap" gap={3}>
                     <HStack spacing={2} flexWrap="wrap">

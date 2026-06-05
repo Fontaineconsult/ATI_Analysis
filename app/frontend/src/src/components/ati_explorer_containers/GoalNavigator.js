@@ -41,10 +41,10 @@ function GoalNavigator({ data }) {
     }
 
     return (
-        <Box>
+        <Box as="section" aria-labelledby="wg-area-heading">
             {/* Header */}
             <Box mb={2} textAlign="center">
-                <Heading size="md" color="teal.700" mb={2}>
+                <Heading id="wg-area-heading" as="h2" size="md" color="teal.700" mb={2}>
                     {config.name} Working Group
                     {goalId && ` - Goal ${goalId}`}
                 </Heading>

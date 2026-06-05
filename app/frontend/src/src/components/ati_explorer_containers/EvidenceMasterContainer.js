@@ -82,10 +82,10 @@ function EvidenceMasterContainer({ indicators, initialIndicatorNumber }) {
     if (!indicators || indicators.length === 0) return null;
 
     return (
-        <Box mt={3} aria-label={`(${sorted.length}) Success Indicators`}>
+        <Box as="section" mt={3} aria-label="Success indicators">
             {/* Summary bar */}
             <Flex justify="space-between" align="center" mb={2} flexWrap="wrap" gap={2}>
-                <Heading as="h5" size="sm" color="teal.700">
+                <Heading as="h4" size="sm" color="teal.700">
                     Success Indicators ({sorted.length})
                 </Heading>
                 <Wrap spacing={2}>

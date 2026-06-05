@@ -57,6 +57,7 @@ function SubNavbar() {
     return (
         <Box
             as="nav"
+            aria-label="Section navigation"
             bg="white"
             borderBottomWidth="1px"
             borderColor="gray.200"
