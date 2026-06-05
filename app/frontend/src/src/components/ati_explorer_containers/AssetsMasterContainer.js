@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
+import { useParams } from 'react-router-dom';
 import {
     Alert,
     AlertIcon,
@@ -61,6 +62,10 @@ import { toISODate } from '../graph_components/assets/assetConfig';
  * by title.
  */
 function AssetsMasterContainer() {
+    // Deep-link: /{campus}/ati-explorer/assets/:assetTab/:itemId arrives with a tab
+    // and item to open (e.g. from a success indicator's Assets/Interfaces/Tools panel).
+    const { assetTab, itemId } = useParams();
+
     const [tabIndex, setTabIndex] = useState(0);
 
     // Assets
@@ -274,6 +279,24 @@ function AssetsMasterContainer() {
         loadComponents();
         loadGuidelines();
     }, [loadAssets, loadTaaps, loadTaapsDue, loadVendors, loadInterfaces, loadImplementations, loadTools, loadComponents, loadGuidelines]);
+
+    // Apply the deep-link tab + selection when the URL params are present. Detail
+    // panels fetch their own detail by identifier, so this works even before the
+    // matching list finishes loading. Manual tab/selection changes don't touch the
+    // URL, so this only fires on arrival.
+    useEffect(() => {
+        if (!assetTab) return;
+        const id = itemId ? decodeURIComponent(itemId) : null;
+        switch (assetTab) {
+            case 'assets': setTabIndex(0); if (id) setSelectedAssetId(id); break;
+            case 'taaps': setTabIndex(1); if (id) setSelectedTaapTitle(id); break;
+            case 'vendors': setTabIndex(2); if (id) setSelectedVendorName(id); break;
+            case 'interfaces': setTabIndex(3); if (id) setSelectedInterfaceId(id); break;
+            case 'tools': setTabIndex(4); if (id) setSelectedToolId(id); break;
+            case 'components': setTabIndex(5); if (id) setSelectedComponentId(id); break;
+            default: break;
+        }
+    }, [assetTab, itemId]);
 
     // ---- Asset handlers ----
     const handleAssetCreated = async (created) => {

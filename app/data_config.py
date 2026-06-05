@@ -196,6 +196,7 @@ coverage_domains = {
     "academic-services":              "Academic Services",
     'human-resource-services':        "Human Resource Services",
     'campus-map':                    "Campus Map",
+    'public-webpages':                "Public Webpages",
 
 }
 

@@ -324,11 +324,52 @@ def fetch_evidence_for_working_group(working_group, academic_year, campus_abbrev
     // Collect all evidences under each indicator
     WITH wg, goal, indicator, collect(evidenceData) AS evidences
 
-    // Create a map for each indicator with its evidences
+    // Assets / Interfaces / Tools that touch this indicator — found by working
+    // backward through the implementations that evidence it in the selected year
+    // (and at the selected campus, when one is given). The remediates /
+    // remediates_interface / uses_tool rel-types only originate on
+    // Process/Project/Procedure/Service, so the impl node needs no label filter.
+    // Assets are surfaced through three connections: directly remediated, plus the
+    // backing asset of a touched interface (Interface-presented_by->Asset) and the
+    // parent asset of a touched tool (Tool-tool_of_asset->Asset).
     WITH wg, goal, indicator, evidences,
+         apoc.coll.toSet(
+           [ (indicator)<-[:tracks]-(yse:YearSuccessEvidence)<-[:is_evidence_for]-(impl)-[:remediates]->(asset:Asset)
+               WHERE (yse)-[:evidence_in_year]->(:AcademicYear {name: $academic_year})
+                 AND ($campus_abbreviation IS NULL OR (yse)-[:evidence_at_campus]->(:Campus {abbreviation: $campus_abbreviation}))
+               | asset { .asset_identifier, .title, .unique_id, .scope, .asset_class } ]
+           +
+           [ (indicator)<-[:tracks]-(yse:YearSuccessEvidence)<-[:is_evidence_for]-(impl)-[:remediates_interface]->(:Interface)-[:presented_by]->(asset:Asset)
+               WHERE (yse)-[:evidence_in_year]->(:AcademicYear {name: $academic_year})
+                 AND ($campus_abbreviation IS NULL OR (yse)-[:evidence_at_campus]->(:Campus {abbreviation: $campus_abbreviation}))
+               | asset { .asset_identifier, .title, .unique_id, .scope, .asset_class } ]
+           +
+           [ (indicator)<-[:tracks]-(yse:YearSuccessEvidence)<-[:is_evidence_for]-(impl)-[:uses_tool]->(:Tool)-[:tool_of_asset]->(asset:Asset)
+               WHERE (yse)-[:evidence_in_year]->(:AcademicYear {name: $academic_year})
+                 AND ($campus_abbreviation IS NULL OR (yse)-[:evidence_at_campus]->(:Campus {abbreviation: $campus_abbreviation}))
+               | asset { .asset_identifier, .title, .unique_id, .scope, .asset_class } ]
+         ) AS touchedAssets,
+         apoc.coll.toSet([
+           (indicator)<-[:tracks]-(yse:YearSuccessEvidence)<-[:is_evidence_for]-(impl)-[:remediates_interface]->(iface:Interface)
+             WHERE (yse)-[:evidence_in_year]->(:AcademicYear {name: $academic_year})
+               AND ($campus_abbreviation IS NULL OR (yse)-[:evidence_at_campus]->(:Campus {abbreviation: $campus_abbreviation}))
+             | iface { .interface_identifier, .title, .unique_id, .function, .provenance }
+         ]) AS touchedInterfaces,
+         apoc.coll.toSet([
+           (indicator)<-[:tracks]-(yse:YearSuccessEvidence)<-[:is_evidence_for]-(impl)-[:uses_tool]->(tool:Tool)
+             WHERE (yse)-[:evidence_in_year]->(:AcademicYear {name: $academic_year})
+               AND ($campus_abbreviation IS NULL OR (yse)-[:evidence_at_campus]->(:Campus {abbreviation: $campus_abbreviation}))
+             | tool { .tool_identifier, .title, .unique_id }
+         ]) AS touchedTools
+
+    // Create a map for each indicator with its evidences
+    WITH wg, goal, indicator, evidences, touchedAssets, touchedInterfaces, touchedTools,
          {
            indicator: indicator,
-           evidences: evidences
+           evidences: evidences,
+           assets: touchedAssets,
+           interfaces: touchedInterfaces,
+           tools: touchedTools
          } AS indicatorData
 
     // Collect all indicators under each goal

@@ -27,6 +27,7 @@ import { useSettings } from '../../../context/SettingsContext';
 import { DataContext } from '../../../context/DataContext';
 import { updateStatusLevel, assignPersonAsImplementor, unassignPersonAsImplementor } from '../../../services/api/put';
 import { getIndicatorSummary, getStatusColor, PRIORITY_COLORS } from './indicatorHelpers';
+import IndicatorAssetsPanel from './IndicatorAssetsPanel';
 
 // A flat, titled section card. Everything for the selected indicator is rendered inline as
 // stacked sections — no modals (except the review process, which is action-gated).
@@ -173,6 +174,14 @@ function SuccessIndicatorDetailPanel({ wrapper }) {
                 evidenceData={ev}
                 compositeKey={s.compositeKey}
                 yearIdentifier={yearIdentifier}
+            />
+
+            {/* Assets / Interfaces / Tools this indicator touches, reached through its
+                implementations. Each row deep-links into the Assets explorer. */}
+            <IndicatorAssetsPanel
+                assets={wrapper.assets}
+                interfaces={wrapper.interfaces}
+                tools={wrapper.tools}
             />
 
             <Section title="Annotations">

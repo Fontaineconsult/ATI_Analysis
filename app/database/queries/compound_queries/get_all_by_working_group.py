@@ -258,11 +258,50 @@ def fetch_evidence_for_working_group(working_group, academic_year):
     // Collect all evidences under each indicator
     WITH wg, goal, indicator, collect(evidenceData) AS evidences
     
-    // Create a map for each indicator with its evidences
+    // Assets / Interfaces / Tools that touch this indicator — found by working
+    // backward through the implementations that evidence it in the selected year:
+    //   (indicator)<-tracks-(YSE)<-is_evidence_for-(impl)-remediates->Asset
+    //                                              -remediates_interface->Interface
+    //                                              -uses_tool->Tool
+    // Assets are surfaced through THREE connections: directly remediated, plus the
+    // backing asset of a touched interface (Interface-presented_by->Asset) and the
+    // parent asset of a touched tool (Tool-tool_of_asset->Asset). The three rel-types
+    // only originate on Process/Project/Procedure/Service, so impl needs no label
+    // filter (TAAP, which only covers_asset, is excluded by design). apoc.coll.toSet
+    // dedupes items reached via more than one path/implementation.
     WITH wg, goal, indicator, evidences,
+         apoc.coll.toSet(
+           [ (indicator)<-[:tracks]-(yse:YearSuccessEvidence)<-[:is_evidence_for]-(impl)-[:remediates]->(asset:Asset)
+               WHERE (yse)-[:evidence_in_year]->(:AcademicYear {name: $academic_year})
+               | asset { .asset_identifier, .title, .unique_id, .scope, .asset_class } ]
+           +
+           [ (indicator)<-[:tracks]-(yse:YearSuccessEvidence)<-[:is_evidence_for]-(impl)-[:remediates_interface]->(:Interface)-[:presented_by]->(asset:Asset)
+               WHERE (yse)-[:evidence_in_year]->(:AcademicYear {name: $academic_year})
+               | asset { .asset_identifier, .title, .unique_id, .scope, .asset_class } ]
+           +
+           [ (indicator)<-[:tracks]-(yse:YearSuccessEvidence)<-[:is_evidence_for]-(impl)-[:uses_tool]->(:Tool)-[:tool_of_asset]->(asset:Asset)
+               WHERE (yse)-[:evidence_in_year]->(:AcademicYear {name: $academic_year})
+               | asset { .asset_identifier, .title, .unique_id, .scope, .asset_class } ]
+         ) AS touchedAssets,
+         apoc.coll.toSet([
+           (indicator)<-[:tracks]-(yse:YearSuccessEvidence)<-[:is_evidence_for]-(impl)-[:remediates_interface]->(iface:Interface)
+             WHERE (yse)-[:evidence_in_year]->(:AcademicYear {name: $academic_year})
+             | iface { .interface_identifier, .title, .unique_id, .function, .provenance }
+         ]) AS touchedInterfaces,
+         apoc.coll.toSet([
+           (indicator)<-[:tracks]-(yse:YearSuccessEvidence)<-[:is_evidence_for]-(impl)-[:uses_tool]->(tool:Tool)
+             WHERE (yse)-[:evidence_in_year]->(:AcademicYear {name: $academic_year})
+             | tool { .tool_identifier, .title, .unique_id }
+         ]) AS touchedTools
+
+    // Create a map for each indicator with its evidences
+    WITH wg, goal, indicator, evidences, touchedAssets, touchedInterfaces, touchedTools,
          {
            indicator: indicator,
-           evidences: evidences
+           evidences: evidences,
+           assets: touchedAssets,
+           interfaces: touchedInterfaces,
+           tools: touchedTools
          } AS indicatorData
     
     // Collect all indicators under each goal

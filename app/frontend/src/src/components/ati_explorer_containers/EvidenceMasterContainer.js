@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import { Box, Flex, Heading, Wrap, WrapItem, Badge } from '@chakra-ui/react';
 import SuccessIndicatorList from '../graph_components/indicators/SuccessIndicatorList';
 import SuccessIndicatorDetailPanel from '../graph_components/indicators/SuccessIndicatorDetailPanel';
@@ -17,6 +18,8 @@ function EvidenceMasterContainer({ indicators, initialIndicatorNumber }) {
     );
 
     const [selectedKey, setSelectedKey] = useState(null);
+    const navigate = useNavigate();
+    const { campus, workingGroup, goalId } = useParams();
 
     // Deep-link support: the Reports "Edit" button targets a specific success
     // indicator (its number is the last URL segment, threaded down here as
@@ -41,6 +44,20 @@ function EvidenceMasterContainer({ indicators, initialIndicatorNumber }) {
         if (sorted.length === 0) return null;
         return sorted.find((w) => w.indicator?.properties?.composite_key === selectedKey) || sorted[0];
     }, [sorted, selectedKey]);
+
+    // Selecting an indicator updates the URL so the in-context SI is shareable
+    // (/{campus}/dashboard/{wg}/goal/{goalId}/{indicatorNumber}). The deep-link
+    // pre-select effect above reads that same param back, so arrival and manual
+    // selection stay in sync; replace:true keeps history clean while browsing.
+    const handleSelect = (compositeKey) => {
+        setSelectedKey(compositeKey);
+        if (campus && workingGroup && goalId) {
+            const num = String(compositeKey).split('-')[0].split('.')[1];
+            if (num) {
+                navigate(`/${campus}/dashboard/${workingGroup}/goal/${goalId}/${num}`, { replace: true });
+            }
+        }
+    };
 
     // Goal status distribution (count per status level) + approved / no-evidence tallies.
     const summary = useMemo(() => {
@@ -98,7 +115,7 @@ function EvidenceMasterContainer({ indicators, initialIndicatorNumber }) {
                     <SuccessIndicatorList
                         indicators={sorted}
                         selectedKey={selectedWrapper?.indicator?.properties?.composite_key || null}
-                        onSelect={setSelectedKey}
+                        onSelect={handleSelect}
                     />
                 </Box>
                 <Box flex="2" minW="0">

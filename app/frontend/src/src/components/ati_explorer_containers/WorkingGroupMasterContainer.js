@@ -48,6 +48,8 @@ function WorkingGroupMasterContainer() {
                 <Route path="principles/:principleSlug" element={<GovernanceArea activeTab="principles" />} />
 
                 <Route path="assets" element={<AssetsMasterContainer />} />
+                <Route path="assets/:assetTab" element={<AssetsMasterContainer />} />
+                <Route path="assets/:assetTab/:itemId" element={<AssetsMasterContainer />} />
                 <Route path="*" element={<Text>Please select a section.</Text>} />
             </Routes>
         </Box>
