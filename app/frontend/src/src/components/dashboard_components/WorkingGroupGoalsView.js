@@ -1,26 +1,18 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { Box, Spinner } from '@chakra-ui/react';
-import { useLocation, useNavigate, useParams } from 'react-router-dom';
-import WorkingGroupMasterContainer from './ati_explorer_containers/WorkingGroupMasterContainer';
-import { useData } from '../hooks/useData';
-import '../styles/App.css';
+import { useData } from '../../hooks/useData';
+import GoalNavigator from '../ati_explorer_containers/GoalNavigator';
+import '../../styles/App.css';
 
-function AtiExplorer() {
-    const location = useLocation();
-    const navigate = useNavigate();
-    const { campus } = useParams();
+/**
+ * Dashboard view for a working group's goals (Web / Instructional Materials / Procurement).
+ * The working-group selectors moved here from the ATI Explorer; the data is already loaded
+ * app-wide by DataProvider, so this just gates on loading/empty and hands `data` to the shared
+ * GoalNavigator (which reads :workingGroup / :goalId from the route).
+ */
+function WorkingGroupGoalsView() {
     const { data, loading, updating, error, selectedYear } = useData();
 
-    // Redirect from /campus/ati-explorer to its first section. (The working-group goal views
-    // moved to the Dashboard; the explorer now opens on Implementations.)
-    useEffect(() => {
-        const atiExplorerBase = `/${campus}/ati-explorer`;
-        if (location.pathname === atiExplorerBase || location.pathname === `${atiExplorerBase}/`) {
-            navigate(`${atiExplorerBase}/implementations`, { replace: true });
-        }
-    }, [location.pathname, navigate, campus]);
-
-    // Check if all data fields are null, indicating an empty state
     const isDataEmpty = !data.web && !data.instructionalMaterials && !data.procurement;
 
     if (loading) {
@@ -49,7 +41,7 @@ function AtiExplorer() {
 
     return (
         <Box maxW="1400px" mx="auto" p={4}>
-            <WorkingGroupMasterContainer />
+            <GoalNavigator data={data} />
 
             {updating && (
                 <Box className="update-spinner">
@@ -61,4 +53,4 @@ function AtiExplorer() {
     );
 }
 
-export default AtiExplorer;
+export default WorkingGroupGoalsView;

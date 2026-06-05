@@ -194,7 +194,7 @@ const ReportMasterList = () => {
         };
 
         const workingGroupSegment = workingGroupMap[suffix] || suffix;
-        return `/ati-explorer/${workingGroupSegment}/goal/${goalNumber}#${compositeKey}`;
+        return `/dashboard/${workingGroupSegment}/goal/${goalNumber}#${compositeKey}`;
     };
 
     // Function to generate HTML for copying goal group to clipboard

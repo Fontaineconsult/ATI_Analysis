@@ -9,6 +9,7 @@ import ReportMasterList from "./dashboard_components/report_components/ReportMas
 import ImplementationTypeOverviewWrapper from './implementation_explorer/ImplementationTypeOverviewWrapper';
 import PlansAccomplishmentsManager from "./PlansAndAccomplishments/PlansAccomplishmentsManager";
 import CampusPlanContainer from "./dashboard_components/campus_plan_components/CampusPlanContainer";
+import WorkingGroupGoalsView from "./dashboard_components/WorkingGroupGoalsView";
 
 // Main Dashboard component containing route-based subcomponents
 function Dashboard() {
@@ -27,6 +28,10 @@ function Dashboard() {
     return (
         <Box className="dashboard-container" ml={0} mx="auto" p={4} textAlign="center">
             <Routes>
+                {/* Working-group goal views (moved here from the ATI Explorer). The literal
+                    `goal` segment keeps this from clashing with implementations/:type/:id. */}
+                <Route path=":workingGroup/goal/:goalId" element={<WorkingGroupGoalsView />} />
+
                 <Route path="report-overview" element={<ReportOverviewMasterContainer />} />
                 <Route
                     path="reports/:workingGroup/:goalNumber/:indicatorNumber"

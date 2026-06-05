@@ -9,22 +9,18 @@ import {UserContext} from "../context/UserContext";
 function SubNavbar() {
     const location = useLocation();
     const { campus } = useParams();
-    const { updateCurrentWorkingGroup, currentWorkingGroup } = useSettings();
+    const { updateCurrentWorkingGroup } = useSettings();
     const { isUserAdmin } = useContext(UserContext);
 
     useEffect(() => {
-        if (location.pathname.includes('/ati-explorer')) {
+        // The working-group views now live under /dashboard/<wg>/goal/<n>. Detect the segment
+        // right after 'dashboard' and sync the current working group when it's one of the three.
+        if (location.pathname.includes('/dashboard')) {
             const pathSegments = location.pathname.split('/');
-            // Get the segment after 'ati-explorer'
-            const atiExplorerIndex = pathSegments.indexOf('ati-explorer');
-            if (atiExplorerIndex !== -1 && pathSegments[atiExplorerIndex + 1]) {
-                const workingGroup = pathSegments[atiExplorerIndex + 1];
-
-                if (['web', 'instructional-materials', 'procurement'].includes(workingGroup)) {
-                    console.log("UPDATING", workingGroup);
-                    console.log("Current working group before update:", currentWorkingGroup);
-                    updateCurrentWorkingGroup(workingGroup);
-                }
+            const dashIndex = pathSegments.indexOf('dashboard');
+            const segment = dashIndex !== -1 ? pathSegments[dashIndex + 1] : null;
+            if (['web', 'instructional-materials', 'procurement'].includes(segment)) {
+                updateCurrentWorkingGroup(segment);
             }
         }
     }, [location.pathname, updateCurrentWorkingGroup]);
@@ -34,9 +30,6 @@ function SubNavbar() {
     let subNavItems;
     if (location.pathname.includes('/ati-explorer')) {
         subNavItems = [
-            { label: 'Web', path: `${campusPrefix}/ati-explorer/web/goal/1` },
-            { label: 'Instructional Materials', path: `${campusPrefix}/ati-explorer/instructional-materials/goal/1` },
-            { label: 'Procurement', path: `${campusPrefix}/ati-explorer/procurement/goal/1` },
             { label: 'Implementations', path: `${campusPrefix}/ati-explorer/implementations` },
             { label: 'Plans', path: `${campusPrefix}/ati-explorer/plans` },
             { label: 'People', path: `${campusPrefix}/ati-explorer/people` },
@@ -45,6 +38,9 @@ function SubNavbar() {
         ];
     } else if (location.pathname.includes('/dashboard')) {
         subNavItems = [
+            { label: 'Web', path: `${campusPrefix}/dashboard/web/goal/1` },
+            { label: 'Instructional Materials', path: `${campusPrefix}/dashboard/instructional-materials/goal/1` },
+            { label: 'Procurement', path: `${campusPrefix}/dashboard/procurement/goal/1` },
             { label: 'View Reports', path: `${campusPrefix}/dashboard/reports` },
             { label: 'Copy Report', path: `${campusPrefix}/dashboard/report-overview` },
             { label: 'Campus Plan', path: `${campusPrefix}/dashboard/campus-plan` },

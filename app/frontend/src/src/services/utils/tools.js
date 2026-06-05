@@ -98,7 +98,7 @@ const getEditUrlFromCompositeKey = (compositeKey, campus) => {
 
     const workingGroupSegment = workingGroupMap[suffix] || suffix;
     const campusPrefix = campus ? `/${campus}` : '';
-    return `${campusPrefix}/ati-explorer/${workingGroupSegment}/goal/${goalNumber}#${compositeKey}`;
+    return `${campusPrefix}/dashboard/${workingGroupSegment}/goal/${goalNumber}#${compositeKey}`;
 };
 
 

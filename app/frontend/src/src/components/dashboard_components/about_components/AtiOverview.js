@@ -167,9 +167,9 @@ function ATIOverview() {
                             </Text>
                             <List spacing={2} pl={4} styleType="decimal" textAlign="left">
                                 <ListItem color="gray.700">Scroll down to 'Committee Members' and find your name. Based on the working groups assigned, please review the corresponding working group overview. These assignments are not final and if you feel your work intersects with success indicators in other working groups please let me know and feel free to engage with them.</ListItem>
-                                <ListItem color="gray.700"> Select a working group (<Link as={RouterLink} colorPalette="teal" variant="underline" to={`/${campus}/ati-explorer/web`}>Web</Link>,{' '}
-                                    <Link as={RouterLink}  colorPalette="teal" variant="underline" to={`/${campus}/ati-explorer/instructional-materials`}>Instructional Materials</Link>, or{' '}
-                                    <Link as={RouterLink}  colorPalette="teal" variant="underline" to={`/${campus}/ati-explorer/procurement`}>Procurement</Link>)
+                                <ListItem color="gray.700"> Select a working group (<Link as={RouterLink} colorPalette="teal" variant="underline" to={`/${campus}/dashboard/web/goal/1`}>Web</Link>,{' '}
+                                    <Link as={RouterLink}  colorPalette="teal" variant="underline" to={`/${campus}/dashboard/instructional-materials/goal/1`}>Instructional Materials</Link>, or{' '}
+                                    <Link as={RouterLink}  colorPalette="teal" variant="underline" to={`/${campus}/dashboard/procurement/goal/1`}>Procurement</Link>)
 
                                 </ListItem>
                                 <ListItem color="gray.700">Scroll through the list of success indicators and familiarize yourself with our responsibilities.</ListItem>

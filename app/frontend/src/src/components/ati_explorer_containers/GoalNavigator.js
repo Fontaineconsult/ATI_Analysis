@@ -1,93 +1,51 @@
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Box, Heading, Divider, Button, HStack } from '@chakra-ui/react';
-import WebData from '../ati_explorer_containers/WebData';
-import InstructionalMaterialsData from '../ati_explorer_containers/InstructionalMaterialsData';
-import ProcurementData from '../ati_explorer_containers/ProcurementData';
+import Goal from '../graph_components/indicators/Goal';
+
+// URL slug -> display name + the key of `data` that holds this group's goals. The three
+// working groups render the SAME goal display, so one config replaces the old per-group
+// WebData / InstructionalMaterialsData / ProcurementData wrappers and the switch statements.
+const WORKING_GROUPS = {
+    'web': { name: 'Web', dataKey: 'web' },
+    'instructional-materials': { name: 'Instructional Materials', dataKey: 'instructionalMaterials' },
+    'procurement': { name: 'Procurement', dataKey: 'procurement' },
+};
 
 function GoalNavigator({ data }) {
     const { workingGroup, goalId, campus } = useParams();
     const navigate = useNavigate();
 
-    // Helper function to get the working group display name
-    const getWorkingGroupName = () => {
-        switch(workingGroup) {
-            case 'web':
-                return 'Web';
-            case 'instructional-materials':
-                return 'Instructional Materials';
-            case 'procurement':
-                return 'Procurement';
-            default:
-                return '';
-        }
-    };
+    const config = WORKING_GROUPS[workingGroup];
+    const allGoals = (config && data?.[config.dataKey]?.goals) || [];
 
-    // Get the appropriate data based on working group
-    const getWorkingGroupData = () => {
-        switch(workingGroup) {
-            case 'web':
-                return data.web;
-            case 'instructional-materials':
-                return data.instructionalMaterials;
-            case 'procurement':
-                return data.procurement;
-            default:
-                return null;
-        }
-    };
+    // If a goalId is in the URL, show only that goal; otherwise show all.
+    const goalsToDisplay = goalId
+        ? allGoals.filter((g) => g.goal?.properties?.goal_number === parseInt(goalId, 10))
+        : allGoals;
 
-    const workingGroupData = getWorkingGroupData();
+    const allGoalNumbers = allGoals
+        .map((g) => g.goal?.properties?.goal_number)
+        .filter(Boolean)
+        .sort((a, b) => a - b);
 
-    // If we have goalId in the URL, filter to show only that goal
-    let goalsToDisplay = workingGroupData?.goals || [];
-
-    if (goalId) {
-        // Find the specific goal by goal_number
-        const specificGoal = goalsToDisplay.find(g =>
-            g.goal?.properties?.goal_number === parseInt(goalId)
-        );
-        goalsToDisplay = specificGoal ? [specificGoal] : [];
-    }
-
-    // Get all goal numbers for navigation
-    const allGoalNumbers = workingGroupData?.goals?.map(g =>
-        g.goal?.properties?.goal_number
-    ).filter(Boolean).sort((a, b) => a - b) || [];
-
-    const currentGoalNumber = goalId ? parseInt(goalId) : null;
+    const currentGoalNumber = goalId ? parseInt(goalId, 10) : null;
     const currentIndex = allGoalNumbers.indexOf(currentGoalNumber);
 
     const handleGoalNavigation = (goalNumber) => {
-        navigate(`/${campus}/ati-explorer/${workingGroup}/goal/${goalNumber}`);
+        navigate(`/${campus}/dashboard/${workingGroup}/goal/${goalNumber}`);
     };
 
-    // Function to render the appropriate working group component
-    const renderWorkingGroupContent = () => {
-        // Pass the filtered goals data
-        const filteredData = {
-            ...workingGroupData,
-            goals: goalsToDisplay
-        };
-
-        switch(workingGroup) {
-            case 'web':
-                return <WebData webData={filteredData} />;
-            case 'instructional-materials':
-                return <InstructionalMaterialsData instructionalMaterialsData={filteredData} />;
-            case 'procurement':
-                return <ProcurementData procurementData={filteredData} />;
-            default:
-                return <Box color="gray.600" fontSize="sm">Please select a valid working group</Box>;
-        }
-    };
+    if (!config) {
+        return <Box color="gray.600" fontSize="sm">Please select a valid working group</Box>;
+    }
 
     return (
         <Box>
             {/* Header */}
-            <Box mb={6} textAlign="center">
-                <Heading size="lg" color="teal.700" mb={3}>
-                    {getWorkingGroupName()} Working Group
+            <Box mb={4} textAlign="center">
+                <Heading size="md" color="teal.700" mb={2}>
+                    {config.name} Working Group
                     {goalId && ` - Goal ${goalId}`}
                 </Heading>
                 <Divider borderColor="gray.200" />
@@ -96,8 +54,8 @@ function GoalNavigator({ data }) {
             {/* Goal Navigation Controls - only show if we're viewing a specific goal */}
             {goalId && allGoalNumbers.length > 1 && (
                 <Box
-                    mb={6}
-                    p={4}
+                    mb={4}
+                    p={3}
                     bg="white"
                     borderRadius="lg"
                     borderWidth="1px"
@@ -145,9 +103,18 @@ function GoalNavigator({ data }) {
                 </Box>
             )}
 
-            {/* Main content area */}
-            <Box>
-                {renderWorkingGroupContent()}
+            {/* Goals — same display for every working group */}
+            <Box mb={4}>
+                {goalsToDisplay.slice().reverse().map((goalWrapper, index) => (
+                    <Goal
+                        key={goalWrapper.goal?.properties?.unique_id || index}
+                        goalData={goalWrapper.goal}
+                        plans={goalWrapper.plans}
+                        plansWithProgressNotes={goalWrapper.plans_with_progress_notes}
+                        accomplishments={goalWrapper.accomplishments}
+                        indicators={goalWrapper.indicators}
+                    />
+                ))}
             </Box>
         </Box>
     );
