@@ -40,7 +40,7 @@ function WorkingGroupGoalsView() {
     }
 
     return (
-        <Box maxW="1400px" mx="auto" p={4}>
+        <Box className="wg-page" maxW="1400px" mx="auto" p={2}>
             <GoalNavigator data={data} />
 
             {updating && (

@@ -13,7 +13,7 @@ const WORKING_GROUPS = {
 };
 
 function GoalNavigator({ data }) {
-    const { workingGroup, goalId, campus } = useParams();
+    const { workingGroup, goalId, indicatorNumber, campus } = useParams();
     const navigate = useNavigate();
 
     const config = WORKING_GROUPS[workingGroup];
@@ -43,7 +43,7 @@ function GoalNavigator({ data }) {
     return (
         <Box>
             {/* Header */}
-            <Box mb={4} textAlign="center">
+            <Box mb={2} textAlign="center">
                 <Heading size="md" color="teal.700" mb={2}>
                     {config.name} Working Group
                     {goalId && ` - Goal ${goalId}`}
@@ -54,8 +54,8 @@ function GoalNavigator({ data }) {
             {/* Goal Navigation Controls - only show if we're viewing a specific goal */}
             {goalId && allGoalNumbers.length > 1 && (
                 <Box
-                    mb={4}
-                    p={3}
+                    mb={3}
+                    p={2}
                     bg="white"
                     borderRadius="lg"
                     borderWidth="1px"
@@ -104,7 +104,7 @@ function GoalNavigator({ data }) {
             )}
 
             {/* Goals — same display for every working group */}
-            <Box mb={4}>
+            <Box mb={2}>
                 {goalsToDisplay.slice().reverse().map((goalWrapper, index) => (
                     <Goal
                         key={goalWrapper.goal?.properties?.unique_id || index}
@@ -113,6 +113,7 @@ function GoalNavigator({ data }) {
                         plansWithProgressNotes={goalWrapper.plans_with_progress_notes}
                         accomplishments={goalWrapper.accomplishments}
                         indicators={goalWrapper.indicators}
+                        initialIndicatorNumber={indicatorNumber}
                     />
                 ))}
             </Box>

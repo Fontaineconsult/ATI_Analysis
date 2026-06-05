@@ -182,7 +182,10 @@ const ReportMasterList = () => {
         return `${workingGroupSegment}/${goalNumber}/${indicatorNumber}`;
     };
 
-    // Helper function to get Edit URL for ATI Explorer
+    // Helper to build the goal-view edit path segment for a composite key.
+    // Mirrors getUrlFromCompositeKey but targets the editable goal view and
+    // deep-links the specific success indicator (its number is the last segment,
+    // which EvidenceMasterContainer reads to pre-select on arrival).
     const getEditUrlFromCompositeKey = (compositeKey) => {
         const [numbers, suffix] = compositeKey.split('-');
         const [goalNumber, indicatorNumber] = numbers.split('.');
@@ -194,7 +197,7 @@ const ReportMasterList = () => {
         };
 
         const workingGroupSegment = workingGroupMap[suffix] || suffix;
-        return `/dashboard/${workingGroupSegment}/goal/${goalNumber}#${compositeKey}`;
+        return `${workingGroupSegment}/goal/${goalNumber}/${indicatorNumber}`;
     };
 
     // Function to generate HTML for copying goal group to clipboard
@@ -438,26 +441,7 @@ const ReportMasterList = () => {
                                                         colorScheme="gray"
                                                         variant="outline"
                                                         onClick={() => {
-                                                            const editUrl = getEditUrlFromCompositeKey(compositeKey, campus);
-                                                            const [pathname, hash] = editUrl.split('#');
-
-                                                            navigate(pathname + '#' + hash);
-
-                                                            setTimeout(() => {
-                                                                if (hash) {
-                                                                    const element = document.getElementById(hash);
-                                                                    if (element) {
-                                                                        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                                                                    } else {
-                                                                        setTimeout(() => {
-                                                                            const retryElement = document.getElementById(hash);
-                                                                            if (retryElement) {
-                                                                                retryElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                                                                            }
-                                                                        }, 500);
-                                                                    }
-                                                                }
-                                                            }, 100);
+                                                            navigate(`/${campus}/dashboard/${getEditUrlFromCompositeKey(compositeKey)}`);
                                                         }}
                                                         _hover={{ bg: "gray.50" }}
                                                     >

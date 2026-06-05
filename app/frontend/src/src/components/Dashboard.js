@@ -31,6 +31,7 @@ function Dashboard() {
                 {/* Working-group goal views (moved here from the ATI Explorer). The literal
                     `goal` segment keeps this from clashing with implementations/:type/:id. */}
                 <Route path=":workingGroup/goal/:goalId" element={<WorkingGroupGoalsView />} />
+                <Route path=":workingGroup/goal/:goalId/:indicatorNumber" element={<WorkingGroupGoalsView />} />
 
                 <Route path="report-overview" element={<ReportOverviewMasterContainer />} />
                 <Route

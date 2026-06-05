@@ -31,8 +31,8 @@ import { getIndicatorSummary, getStatusColor, PRIORITY_COLORS } from './indicato
 // A flat, titled section card. Everything for the selected indicator is rendered inline as
 // stacked sections — no modals (except the review process, which is action-gated).
 const Section = ({ title, children }) => (
-    <Box bg="white" borderWidth="1px" borderColor="gray.200" borderRadius="lg" boxShadow="sm" p={4}>
-        <Heading size="xs" color="teal.700" textTransform="uppercase" letterSpacing="wide" mb={3}>
+    <Box bg="white" borderWidth="1px" borderColor="gray.200" borderRadius="lg" boxShadow="sm" p={3}>
+        <Heading size="xs" color="teal.700" textTransform="uppercase" letterSpacing="wide" mb={2}>
             {title}
         </Heading>
         {children}
@@ -106,9 +106,9 @@ function SuccessIndicatorDetailPanel({ wrapper }) {
     const candidatePersons = individuals?.filter((i) => i.active || i.non_committee_member_active) || [];
 
     return (
-        <VStack align="stretch" spacing={4}>
+        <VStack align="stretch" spacing={3}>
             {/* Header card — SI description is the headline; controls + badges below it */}
-            <Box bg="white" borderWidth="1px" borderColor="gray.200" borderRadius="lg" boxShadow="sm" p={5}>
+            <Box bg="white" borderWidth="1px" borderColor="gray.200" borderRadius="lg" boxShadow="sm" p={4}>
                 <Text fontSize="lg" fontWeight="semibold" color="gray.800" lineHeight="short" mb={3}>
                     {s.description || '(no description)'}
                 </Text>

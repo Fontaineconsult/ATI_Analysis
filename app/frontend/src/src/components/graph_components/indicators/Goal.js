@@ -3,7 +3,7 @@ import { Box, Heading, Text } from '@chakra-ui/react';
 import GoalDetails from "../implementation/GoalDetails";
 import EvidenceMasterContainer from "../../ati_explorer_containers/EvidenceMasterContainer";
 
-function Goal({ goalData, plans, plansWithProgressNotes, accomplishments, indicators, workingGroup }) {
+function Goal({ goalData, plans, plansWithProgressNotes, accomplishments, indicators, workingGroup, initialIndicatorNumber }) {
     if (!goalData) return null;
 
     const { goal_number, name, goal, date_added } = goalData.properties;
@@ -29,7 +29,7 @@ function Goal({ goalData, plans, plansWithProgressNotes, accomplishments, indica
             </Box>
 
             <Box>
-                <EvidenceMasterContainer indicators={indicators} />
+                <EvidenceMasterContainer indicators={indicators} initialIndicatorNumber={initialIndicatorNumber} />
             </Box>
         </Box>
     );

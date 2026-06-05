@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link as RouterLink, useParams } from 'react-router-dom';
 import {
     Box,
     Button,
@@ -9,6 +10,7 @@ import {
     Th,
     Td,
     Text,
+    Link,
     Modal,
     ModalOverlay,
     ModalContent,
@@ -44,6 +46,7 @@ function EvidenceTypeMasterList({ evidence, yearIdentifier, onRefresh }) {
     const { isOpen: isDeleteOpen, onOpen: onDeleteOpen, onClose: onDeleteClose } = useDisclosure();  // Alert dialog control
     const cancelRef = React.useRef();
     const toast = useToast();
+    const { campus } = useParams();
 
     // Helper function to get documentation counts
     const getDocumentationCounts = (evidenceItem) => {
@@ -231,6 +234,13 @@ function EvidenceTypeMasterList({ evidence, yearIdentifier, onRefresh }) {
                         {evidence.map((evidenceItem, index) => {
                             const evidenceType = evidenceItem.type || 'Unknown Type';
                             const evidenceTitle = evidenceItem.evidenceType?.properties?.title || 'Untitled Evidence';
+                            // Deep-link the title to the implementation page, pre-selected by
+                            // unique_id — the same select-and-deep-link infra ImplementationTypeOverview
+                            // uses. Falls back to plain text if we can't build a target.
+                            const implUniqueId = evidenceItem.evidenceType?.properties?.unique_id;
+                            const implementationLink = campus && implUniqueId
+                                ? `/${campus}/ati-explorer/implementations/${evidenceType}/${implUniqueId}`
+                                : null;
 
                             return (
                                 <Tr
@@ -242,7 +252,21 @@ function EvidenceTypeMasterList({ evidence, yearIdentifier, onRefresh }) {
                                         <Text fontSize="sm">{evidenceType}</Text>
                                     </Td>
                                     <Td>
-                                        <Text fontSize="sm">{evidenceTitle}</Text>
+                                        {implementationLink ? (
+                                            <Link
+                                                as={RouterLink}
+                                                to={implementationLink}
+                                                fontSize="sm"
+                                                color="teal.700"
+                                                fontWeight="medium"
+                                                _hover={{ color: 'teal.600', textDecoration: 'underline' }}
+                                                title="Open this implementation"
+                                            >
+                                                {evidenceTitle}
+                                            </Link>
+                                        ) : (
+                                            <Text fontSize="sm">{evidenceTitle}</Text>
+                                        )}
                                     </Td>
                                     <Td>
                                         {renderDocumentationCounts(evidenceItem)}

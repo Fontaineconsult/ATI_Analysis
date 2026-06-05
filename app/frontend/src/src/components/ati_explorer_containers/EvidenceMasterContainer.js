@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Box, Flex, Heading, Wrap, WrapItem, Badge } from '@chakra-ui/react';
 import SuccessIndicatorList from '../graph_components/indicators/SuccessIndicatorList';
 import SuccessIndicatorDetailPanel from '../graph_components/indicators/SuccessIndicatorDetailPanel';
@@ -10,13 +10,31 @@ import { sortCompositeKeys } from '../../services/utils/sorters';
  * goal's indicators on the left (with overview badges), the selected indicator flattened for
  * read/edit on the right. A summary bar shows the goal's status distribution at a glance.
  */
-function EvidenceMasterContainer({ indicators }) {
+function EvidenceMasterContainer({ indicators, initialIndicatorNumber }) {
     const sorted = useMemo(
         () => (indicators || []).filter((w) => w?.indicator).slice().sort(sortCompositeKeys),
         [indicators],
     );
 
     const [selectedKey, setSelectedKey] = useState(null);
+
+    // Deep-link support: the Reports "Edit" button targets a specific success
+    // indicator (its number is the last URL segment, threaded down here as
+    // initialIndicatorNumber). Pre-select it on arrival. A ref guards against a
+    // later data refresh yanking the selection back from a manual pick.
+    const appliedInitial = useRef(null);
+    useEffect(() => {
+        if (!initialIndicatorNumber || sorted.length === 0) return;
+        if (appliedInitial.current === String(initialIndicatorNumber)) return;
+        const match = sorted.find((w) => {
+            const ck = w.indicator?.properties?.composite_key || '';
+            return ck.split('-')[0].split('.')[1] === String(initialIndicatorNumber);
+        });
+        if (match) {
+            setSelectedKey(match.indicator.properties.composite_key);
+            appliedInitial.current = String(initialIndicatorNumber);
+        }
+    }, [initialIndicatorNumber, sorted]);
 
     // Resolve the selected wrapper, defaulting to the first indicator.
     const selectedWrapper = useMemo(() => {
@@ -47,9 +65,9 @@ function EvidenceMasterContainer({ indicators }) {
     if (!indicators || indicators.length === 0) return null;
 
     return (
-        <Box mt={4} aria-label={`(${sorted.length}) Success Indicators`}>
+        <Box mt={3} aria-label={`(${sorted.length}) Success Indicators`}>
             {/* Summary bar */}
-            <Flex justify="space-between" align="center" mb={3} flexWrap="wrap" gap={2}>
+            <Flex justify="space-between" align="center" mb={2} flexWrap="wrap" gap={2}>
                 <Heading as="h5" size="sm" color="teal.700">
                     Success Indicators ({sorted.length})
                 </Heading>
@@ -75,7 +93,7 @@ function EvidenceMasterContainer({ indicators }) {
             </Flex>
 
             {/* Master–detail */}
-            <Flex gap={4} align="flex-start">
+            <Flex gap={3} align="flex-start">
                 <Box flex="1" minW="0" maxW="400px">
                     <SuccessIndicatorList
                         indicators={sorted}

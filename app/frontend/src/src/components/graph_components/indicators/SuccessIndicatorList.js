@@ -4,9 +4,9 @@ import { FaUser, FaListUl, FaRegComment, FaCheckCircle } from 'react-icons/fa';
 import { getIndicatorSummary, getStatusColor } from './indicatorHelpers';
 
 // Compact count chip (icon + number) used in each row.
-const CountChip = ({ icon, count, label }) => (
+const CountChip = ({ icon, count, label, zeroColor = 'gray.300' }) => (
     <Tooltip label={`${count} ${label}`} openDelay={400}>
-        <HStack spacing={1} color={count > 0 ? 'gray.600' : 'gray.300'}>
+        <HStack spacing={1} color={count > 0 ? 'gray.600' : zeroColor}>
             <Icon as={icon} boxSize={2.5} />
             <Text fontSize="2xs" fontWeight="medium">{count}</Text>
         </HStack>
@@ -29,7 +29,7 @@ function SuccessIndicatorList({ indicators = [], selectedKey, onSelect }) {
     }
 
     return (
-        <VStack align="stretch" spacing={2}>
+        <VStack align="stretch" spacing={1.5}>
             {indicators.map((wrapper) => {
                 const s = getIndicatorSummary(wrapper);
                 const isSelected = s.compositeKey === selectedKey;
@@ -46,7 +46,7 @@ function SuccessIndicatorList({ indicators = [], selectedKey, onSelect }) {
                         borderRadius="md"
                         boxShadow="sm"
                         px={3}
-                        py={2}
+                        py={1.5}
                         _hover={{ borderColor: isSelected ? 'teal.400' : 'gray.300', boxShadow: 'md' }}
                         transition="all 0.15s"
                     >
@@ -78,7 +78,7 @@ function SuccessIndicatorList({ indicators = [], selectedKey, onSelect }) {
 
                         <HStack justify="space-between" align="center">
                             <HStack spacing={3}>
-                                <CountChip icon={FaUser} count={s.personCount} label="responsible persons" />
+                                <CountChip icon={FaUser} count={s.personCount} label="responsible persons" zeroColor="red.500" />
                                 <CountChip icon={FaListUl} count={s.implCount} label="implementations" />
                                 <CountChip icon={FaRegComment} count={s.annotationCount} label="annotations" />
                             </HStack>
