@@ -671,6 +671,8 @@ class ProgressUpdate(StructuredNode):
 
 
 
+
+
 class InternalPolicy(StructuredNode):
 
     """    Class representing an internal policy node.
@@ -695,6 +697,8 @@ class InternalPolicy(StructuredNode):
     supporting_metrics = RelationshipTo("Metric", "has_metric")
     is_evidence_for = RelationshipTo("YearSuccessEvidence", "is_evidence_for")
     owned_by = RelationshipTo("Person", "owned_by")
+    classified_under = RelationshipTo("Dimension", "classified_under")  # cross-cutting AMM dimension(s) of the work
+
 
     #serialize
     def serialize(self):
@@ -703,7 +707,8 @@ class InternalPolicy(StructuredNode):
             'description': self.description,
             'effective_date': self.effective_date,
             'last_updated': self.last_updated,
-            "unique_id": self.unique_id
+            "unique_id": self.unique_id,
+            "dimensions": [{"handle": d.handle, "name": d.name} for d in self.classified_under.all()],
         }
 
 
@@ -734,6 +739,7 @@ class Process(StructuredNode):
     includes_procedures = RelationshipTo("Procedure", "includes_procedure")
     remediates_interface = RelationshipTo("Interface", "remediates_interface")
     accountable_working_group = RelationshipTo("ATIWorkingGroup", "accountable_working_group")  # committee accountable for this work (distinct from owned_by Person)
+    classified_under = RelationshipTo("Dimension", "classified_under")  # cross-cutting AMM dimension(s) of the work
 
 
     #serialize
@@ -741,7 +747,8 @@ class Process(StructuredNode):
         return {
             'title': self.title,
             'description': self.description,
-            "unique_id": self.unique_id
+            "unique_id": self.unique_id,
+            "dimensions": [{"handle": d.handle, "name": d.name} for d in self.classified_under.all()],
         }
 
 
@@ -773,6 +780,7 @@ class Project(StructuredNode):
     includes_procedures = RelationshipTo("Procedure", "includes_procedure")
     remediates_interface = RelationshipTo("Interface", "remediates_interface")
     accountable_working_group = RelationshipTo("ATIWorkingGroup", "accountable_working_group")  # committee accountable for this work (distinct from owned_by Person)
+    classified_under = RelationshipTo("Dimension", "classified_under")  # cross-cutting AMM dimension(s) of the work
     start_date = DateProperty()
     end_date = DateProperty()
 
@@ -782,7 +790,8 @@ class Project(StructuredNode):
         return {
             'title': self.title,
             'description': self.description,
-            "unique_id": self.unique_id
+            "unique_id": self.unique_id,
+            "dimensions": [{"handle": d.handle, "name": d.name} for d in self.classified_under.all()],
         }
 
 
@@ -811,6 +820,7 @@ class Procedure(StructuredNode):
     owned_by = RelationshipTo("Person", "owned_by")
     remediates_interface = RelationshipTo("Interface", "remediates_interface")
     accountable_working_group = RelationshipTo("ATIWorkingGroup", "accountable_working_group")  # committee accountable for this work (distinct from owned_by Person)
+    classified_under = RelationshipTo("Dimension", "classified_under")  # cross-cutting AMM dimension(s) of the work
 
 
     #serialize
@@ -818,7 +828,8 @@ class Procedure(StructuredNode):
         return {
             'title': self.title,
             'description': self.description,
-            "unique_id": self.unique_id
+            "unique_id": self.unique_id,
+            "dimensions": [{"handle": d.handle, "name": d.name} for d in self.classified_under.all()],
         }
 
 
@@ -847,6 +858,7 @@ class Service(StructuredNode):
     includes_procedures = RelationshipTo("Procedure", "includes_procedure")
     remediates_interface = RelationshipTo("Interface", "remediates_interface")
     accountable_working_group = RelationshipTo("ATIWorkingGroup", "accountable_working_group")  # committee accountable for this work (distinct from owned_by Person)
+    classified_under = RelationshipTo("Dimension", "classified_under")  # cross-cutting AMM dimension(s) of the work
 
 
     #serialize
@@ -854,7 +866,8 @@ class Service(StructuredNode):
         return {
             'title': self.title,
             'description': self.description,
-            "unique_id": self.unique_id
+            "unique_id": self.unique_id,
+            "dimensions": [{"handle": d.handle, "name": d.name} for d in self.classified_under.all()],
         }
 
 
@@ -886,6 +899,7 @@ class Guidance(StructuredNode):
     references_process = RelationshipTo("Process", "references_process")
     references_service = RelationshipTo("Service", "references_service")
     references_project = RelationshipTo("Project", "references_project")
+    classified_under = RelationshipTo("Dimension", "classified_under")  # cross-cutting AMM dimension(s) of the work
 
 
 
@@ -895,7 +909,8 @@ class Guidance(StructuredNode):
         return {
             'title': self.title,
             'description': self.description,
-            "unique_id": self.unique_id
+            "unique_id": self.unique_id,
+            "dimensions": [{"handle": d.handle, "name": d.name} for d in self.classified_under.all()],
         }
 
 
@@ -1184,6 +1199,51 @@ class ATIWorkingGroup(StructuredNode):
     # implements_project = RelationshipTo("Project", "implements")
     # implements_procedure = RelationshipTo("Procedure", "implements")
     # implements_service = RelationshipTo("Service", "implements")
+
+
+class Dimension(StructuredNode):
+    """
+    A W3C Accessibility Maturity Model (AMM) dimension — one of the seven areas of
+    organizational accessibility practice (Communications, Governance & Oversight,
+    ICT Development Lifecycle, Knowledge & Skills, Personnel, Procurement, Support).
+
+    A cross-cutting classification of the WORK: implementation nodes
+    (Process/Project/Procedure/Service/InternalPolicy/Guidance) are classified_under
+    one or more Dimensions.
+    Orthogonal to the Interface signature and to ATIWorkingGroup — Dimension answers
+    "what kind of accessibility activity is this," where working group answers "who is
+    accountable." Sits in the same structural position as ATIWorkingGroup: a shared
+    node the work points at.
+
+    Fixed controlled set of seven (the AMM's); not a user-grown list. Carries the AMM
+    definition so the node is self-describing. Classification anchor only — no
+    first-order operational data lives here.
+
+    Grounded in the W3C Accessibility Maturity Model (https://w3c.github.io/maturity-model/).
+    """
+    unique_id = UniqueIdProperty()
+
+    handle = StringProperty(unique_index=True, required=True)  # e.g. "dimension:communications"
+    name = StringProperty(unique_index=True, required=True)    # e.g. "Communications"
+    description = StringProperty()                              # the AMM definition (seeded)
+
+    # Reverse side of Implementation.classified_under; the four variants share one
+    # rel-type so (:Process|Project|Procedure|Service)-[:classified_under]->(:Dimension)
+    # traverses uniformly.
+    classifies_processes         = RelationshipFrom("Process",        "classified_under")
+    classifies_projects          = RelationshipFrom("Project",        "classified_under")
+    classifies_procedures        = RelationshipFrom("Procedure",      "classified_under")
+    classifies_services          = RelationshipFrom("Service",        "classified_under")
+    classifies_internal_policies = RelationshipFrom("InternalPolicy", "classified_under")
+    classifies_guidances         = RelationshipFrom("Guidance",       "classified_under")
+
+    def serialize(self):
+        return {
+            "unique_id": self.unique_id,
+            "handle": self.handle,
+            "name": self.name,
+            "description": self.description,
+        }
 
 
 """

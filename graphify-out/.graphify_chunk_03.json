@@ -1,0 +1,1467 @@
+{
+  "nodes": [
+    {
+      "id": "claude_files_ontology_descriptor_layer",
+      "label": "Ontology Descriptions Layer",
+      "file_type": "rationale",
+      "source_file": "claude_files/ontology.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": "Daniel Fontaine",
+      "contributor": null
+    },
+    {
+      "id": "claude_files_ontology_universaldescriptor",
+      "label": "UniversalDescriptor Node",
+      "file_type": "concept",
+      "source_file": "claude_files/ontology.md",
+      "source_location": "graph_schema.py UniversalDescriptor",
+      "source_url": null,
+      "captured_at": null,
+      "author": "Daniel Fontaine",
+      "contributor": null
+    },
+    {
+      "id": "claude_files_ontology_descriptor_handle",
+      "label": "Descriptor Handle Convention",
+      "file_type": "concept",
+      "source_file": "claude_files/ontology.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": "Daniel Fontaine",
+      "contributor": null
+    },
+    {
+      "id": "claude_files_ontology_handle_match_retrieval",
+      "label": "Handle-Match In-App Merge Retrieval",
+      "file_type": "rationale",
+      "source_file": "claude_files/ontology.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": "Daniel Fontaine",
+      "contributor": null
+    },
+    {
+      "id": "claude_files_ontology_descriptor_kinds",
+      "label": "descriptor_kinds Vocabulary",
+      "file_type": "concept",
+      "source_file": "claude_files/ontology.md",
+      "source_location": "data_config.py",
+      "source_url": null,
+      "captured_at": null,
+      "author": "Daniel Fontaine",
+      "contributor": null
+    },
+    {
+      "id": "claude_files_ontology_seed_descriptors",
+      "label": "seed_descriptors Script",
+      "file_type": "concept",
+      "source_file": "claude_files/ontology.md",
+      "source_location": "app/database/tools/seed_descriptors.py",
+      "source_url": null,
+      "captured_at": null,
+      "author": "Daniel Fontaine",
+      "contributor": null
+    },
+    {
+      "id": "claude_files_ontology2_meta_scaffold",
+      "label": "Meta-Scaffold (Phase 1)",
+      "file_type": "rationale",
+      "source_file": "claude_files/ontology2.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "claude_files_ontology2_schemaelement",
+      "label": "SchemaElement",
+      "file_type": "concept",
+      "source_file": "claude_files/ontology2.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "claude_files_ontology2_principle",
+      "label": "Principle",
+      "file_type": "concept",
+      "source_file": "claude_files/ontology2.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "claude_files_ontology2_intellectualsource",
+      "label": "IntellectualSource",
+      "file_type": "concept",
+      "source_file": "claude_files/ontology2.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "claude_files_ontology2_determination",
+      "label": "Determination (Phase 2)",
+      "file_type": "concept",
+      "source_file": "claude_files/ontology2.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "claude_files_ontology2_metascaffoldcontext",
+      "label": "MetaScaffoldContext",
+      "file_type": "concept",
+      "source_file": "claude_files/ontology2.md",
+      "source_location": "context/MetaScaffoldContext.js",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "claude_files_ontology2_descriptorcontext",
+      "label": "DescriptorContext / useDescriptors",
+      "file_type": "concept",
+      "source_file": "claude_files/ontology2.md",
+      "source_location": "context/DescriptorContext.js",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "claude_files_ontology2_url_driven_selection",
+      "label": "URL-Driven Selection",
+      "file_type": "rationale",
+      "source_file": "claude_files/ontology2.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "claude_files_ontology2_shapes_edge",
+      "label": "shapes Edge (Principle to SchemaElement)",
+      "file_type": "concept",
+      "source_file": "claude_files/ontology2.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "claude_files_ontology2_derives_from_edge",
+      "label": "derives_from Edge (Principle Grounding)",
+      "file_type": "concept",
+      "source_file": "claude_files/ontology2.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "claude_files_ontology2_entityattachmentselector",
+      "label": "EntityAttachmentSelector",
+      "file_type": "concept",
+      "source_file": "claude_files/ontology2.md",
+      "source_location": "components/functional_components/EntityAttachmentSelector.js",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "claude_files_principles_institution_wide_responsibility",
+      "label": "Principle: Institution-Wide Responsibility",
+      "file_type": "concept",
+      "source_file": "claude_files/principles.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "claude_files_principles_equally_effective_access",
+      "label": "Principle: Equally Effective Access",
+      "file_type": "concept",
+      "source_file": "claude_files/principles.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "claude_files_principles_universal_design_over_accommodation",
+      "label": "Principle: Universal Design Reduces Accommodation",
+      "file_type": "concept",
+      "source_file": "claude_files/principles.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "claude_files_principles_coded_memo",
+      "label": "CSU Coded Memo (Governance Source)",
+      "file_type": "concept",
+      "source_file": "claude_files/principles.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "claude_files_principles_section_504_title_ii",
+      "label": "Section 504 / Title II",
+      "file_type": "concept",
+      "source_file": "claude_files/principles.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "claude_files_principles_taap_outcomes",
+      "label": "TAAP/EEAAP Outcome Vocabulary",
+      "file_type": "concept",
+      "source_file": "claude_files/principles.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "claude_files_principles_parallel_duties",
+      "label": "Parallel Duties Distinction",
+      "file_type": "rationale",
+      "source_file": "claude_files/principles.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "claude_files_governance_governance_layer",
+      "label": "Governance Layer (Six Rule Types)",
+      "file_type": "concept",
+      "source_file": "claude_files/governance-frontend.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "claude_files_governance_governancetypes_registry",
+      "label": "governanceTypes.js Registry",
+      "file_type": "concept",
+      "source_file": "claude_files/governance-frontend.md",
+      "source_location": "graph_components/governance/governanceTypes.js",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "claude_files_governance_master_detail_pattern",
+      "label": "Master-Detail Container/Presentational Pattern",
+      "file_type": "rationale",
+      "source_file": "claude_files/governance-frontend.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "claude_files_governance_governancemastercontainer",
+      "label": "GovernanceMasterContainer",
+      "file_type": "concept",
+      "source_file": "claude_files/governance-frontend.md",
+      "source_location": "components/ati_explorer_containers/GovernanceMasterContainer.js",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "claude_files_governance_descriptor_context_rule",
+      "label": "Descriptor Context Over Hardcoded Prose Rule",
+      "file_type": "rationale",
+      "source_file": "claude_files/governance-frontend.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "claude_files_governance_service_layer_split",
+      "label": "axios/fetch Service Layer Split",
+      "file_type": "concept",
+      "source_file": "claude_files/governance-frontend.md",
+      "source_location": "services/api/",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "claude_files_governance_action_dispatch_put",
+      "label": "Action-Dispatch PUT Pattern",
+      "file_type": "concept",
+      "source_file": "claude_files/governance-frontend.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "claude_files_clipboard_fix_clipboard_fallback",
+      "label": "Three-Tier Clipboard Fallback",
+      "file_type": "rationale",
+      "source_file": "claude_files/CLIPBOARD_FIX_EXPLANATION.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "claude_files_clipboard_fix_clipboarditem_api",
+      "label": "ClipboardItem API",
+      "file_type": "concept",
+      "source_file": "claude_files/CLIPBOARD_FIX_EXPLANATION.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "claude_files_compact_version_compact_report",
+      "label": "Compact Report Component",
+      "file_type": "document",
+      "source_file": "claude_files/COMPACT_VERSION_SUMMARY.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "claude_files_compact_version_generatereportcomponent",
+      "label": "GenerateReportComponent",
+      "file_type": "concept",
+      "source_file": "claude_files/COMPACT_VERSION_SUMMARY.md",
+      "source_location": "app/frontend/src/src/services/report_constructor.js",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "claude_files_readme_claude_working_files",
+      "label": "Claude Working Files Index",
+      "file_type": "document",
+      "source_file": "claude_files/README.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "claude_files_readme_reportmasterlist",
+      "label": "ReportMasterList Component",
+      "file_type": "concept",
+      "source_file": "claude_files/README.md",
+      "source_location": "app/frontend/src/src/components/dashboard_components/report_components/ReportMasterList.js",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "claude_files_reportmasterlist_copy_button",
+      "label": "ReportMasterList Copy-to-Clipboard Button",
+      "file_type": "document",
+      "source_file": "claude_files/ReportMasterList_COPY_BUTTON.txt",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "claude_files_claude_codebase_guide",
+      "label": "ATI Analysis Codebase Guide (CLAUDE.md)",
+      "file_type": "document",
+      "source_file": "claude_files/CLAUDE.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "claude_files_claude_yearsuccessevidence",
+      "label": "YearSuccessEvidence (YSE)",
+      "file_type": "concept",
+      "source_file": "claude_files/CLAUDE.md",
+      "source_location": "app/database/graph_schema.py",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "claude_files_claude_successindicator",
+      "label": "SuccessIndicator",
+      "file_type": "concept",
+      "source_file": "claude_files/CLAUDE.md",
+      "source_location": "app/database/graph_schema.py",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "claude_files_claude_statuslevel",
+      "label": "StatusLevel",
+      "file_type": "concept",
+      "source_file": "claude_files/CLAUDE.md",
+      "source_location": "app/database/graph_schema.py",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "claude_files_claude_atiworkinggroup",
+      "label": "ATIWorkingGroup",
+      "file_type": "concept",
+      "source_file": "claude_files/CLAUDE.md",
+      "source_location": "app/database/graph_schema.py",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "claude_files_claude_goal",
+      "label": "Goal",
+      "file_type": "concept",
+      "source_file": "claude_files/CLAUDE.md",
+      "source_location": "app/database/graph_schema.py",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "claude_files_claude_academicyear",
+      "label": "AcademicYear",
+      "file_type": "concept",
+      "source_file": "claude_files/CLAUDE.md",
+      "source_location": "app/database/graph_schema.py",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "claude_files_claude_person",
+      "label": "Person",
+      "file_type": "concept",
+      "source_file": "claude_files/CLAUDE.md",
+      "source_location": "app/database/graph_schema.py",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "templates_success_indicators_report",
+      "label": "Success Indicators Report Template",
+      "file_type": "code",
+      "source_file": "app/templates/success_indicators.html",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "templates_success_indicator_detail",
+      "label": "Success Indicator Detail Template",
+      "file_type": "code",
+      "source_file": "app/templates/success_indicator.html",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "templates_success_indicator_table",
+      "label": "Success Indicator Table Partial",
+      "file_type": "code",
+      "source_file": "app/templates/success_indicator_table.html",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "templates_policies_table",
+      "label": "Policies Table Partial",
+      "file_type": "code",
+      "source_file": "app/templates/policies_table.html",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "templates_projects_table",
+      "label": "Projects Table Partial",
+      "file_type": "code",
+      "source_file": "app/templates/projects_table.html",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "templates_vendors_table",
+      "label": "Vendors Table Partial",
+      "file_type": "code",
+      "source_file": "app/templates/vendors_table.html",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "templates_websites_table",
+      "label": "Websites Table Partial",
+      "file_type": "code",
+      "source_file": "app/templates/websites_table.html",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "templates_year_success_selector",
+      "label": "Year Success Selector Template",
+      "file_type": "code",
+      "source_file": "app/templates/year_success_selector.html",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "templates_submit_document_form",
+      "label": "Submit Document Form Template",
+      "file_type": "code",
+      "source_file": "app/templates/forms/submit_document.html",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "reports_comprehensive_report_2024_2025",
+      "label": "Comprehensive ATI Working Groups Report 2024-2025",
+      "file_type": "document",
+      "source_file": "reports/comprehensive_report_2024-2025_remote.html",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    }
+  ],
+  "edges": [
+    {
+      "source": "claude_files_ontology_descriptor_layer",
+      "target": "claude_files_ontology_universaldescriptor",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "claude_files/ontology.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "claude_files_ontology_universaldescriptor",
+      "target": "claude_files_ontology_descriptor_handle",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "claude_files/ontology.md",
+      "source_location": "section 4",
+      "weight": 1.0
+    },
+    {
+      "source": "claude_files_ontology_universaldescriptor",
+      "target": "claude_files_ontology_handle_match_retrieval",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "claude_files/ontology.md",
+      "source_location": "section 2",
+      "weight": 1.0
+    },
+    {
+      "source": "claude_files_ontology_handle_match_retrieval",
+      "target": "claude_files_ontology_universaldescriptor",
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "claude_files/ontology.md",
+      "source_location": "section 10",
+      "weight": 1.0
+    },
+    {
+      "source": "claude_files_ontology_universaldescriptor",
+      "target": "claude_files_ontology_descriptor_kinds",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "claude_files/ontology.md",
+      "source_location": "section 5",
+      "weight": 1.0
+    },
+    {
+      "source": "claude_files_ontology_seed_descriptors",
+      "target": "claude_files_ontology_universaldescriptor",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "claude_files/ontology.md",
+      "source_location": "section 7",
+      "weight": 1.0
+    },
+    {
+      "source": "claude_files_ontology2_meta_scaffold",
+      "target": "claude_files_ontology2_schemaelement",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "claude_files/ontology2.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "claude_files_ontology2_meta_scaffold",
+      "target": "claude_files_ontology2_principle",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "claude_files/ontology2.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "claude_files_ontology2_principle",
+      "target": "claude_files_ontology2_shapes_edge",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "claude_files/ontology2.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "claude_files_ontology2_shapes_edge",
+      "target": "claude_files_ontology2_schemaelement",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "claude_files/ontology2.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "claude_files_ontology2_principle",
+      "target": "claude_files_ontology2_derives_from_edge",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "claude_files/ontology2.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "claude_files_ontology2_derives_from_edge",
+      "target": "claude_files_ontology2_intellectualsource",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "claude_files/ontology2.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "claude_files_ontology2_derives_from_edge",
+      "target": "claude_files_governance_governance_layer",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "claude_files/ontology2.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "claude_files_ontology2_determination",
+      "target": "claude_files_ontology2_principle",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "claude_files/ontology2.md",
+      "source_location": "Phase 2",
+      "weight": 1.0
+    },
+    {
+      "source": "claude_files_ontology2_determination",
+      "target": "claude_files_ontology2_schemaelement",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "claude_files/ontology2.md",
+      "source_location": "Phase 2",
+      "weight": 1.0
+    },
+    {
+      "source": "claude_files_ontology2_metascaffoldcontext",
+      "target": "claude_files_ontology2_descriptorcontext",
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "claude_files/ontology2.md",
+      "source_location": "mirror DescriptorContext",
+      "weight": 1.0
+    },
+    {
+      "source": "claude_files_ontology2_metascaffoldcontext",
+      "target": "claude_files_ontology2_schemaelement",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "claude_files/ontology2.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "claude_files_ontology2_metascaffoldcontext",
+      "target": "claude_files_ontology2_principle",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "claude_files/ontology2.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "claude_files_ontology2_url_driven_selection",
+      "target": "claude_files_ontology2_meta_scaffold",
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "claude_files/ontology2.md",
+      "source_location": "section 11",
+      "weight": 1.0
+    },
+    {
+      "source": "claude_files_ontology2_principle",
+      "target": "claude_files_ontology2_entityattachmentselector",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "claude_files/ontology2.md",
+      "source_location": "section 5",
+      "weight": 1.0
+    },
+    {
+      "source": "claude_files_ontology2_descriptorcontext",
+      "target": "claude_files_ontology_universaldescriptor",
+      "relation": "references",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "claude_files/ontology2.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "claude_files_ontology2_meta_scaffold",
+      "target": "claude_files_ontology_descriptor_layer",
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "claude_files/ontology.md",
+      "source_location": "section 10 deferred meta-scaffold",
+      "weight": 1.0
+    },
+    {
+      "source": "claude_files_principles_institution_wide_responsibility",
+      "target": "claude_files_ontology2_principle",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "claude_files/principles.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "claude_files_principles_equally_effective_access",
+      "target": "claude_files_ontology2_principle",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "claude_files/principles.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "claude_files_principles_universal_design_over_accommodation",
+      "target": "claude_files_ontology2_principle",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "claude_files/principles.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "claude_files_principles_institution_wide_responsibility",
+      "target": "claude_files_principles_coded_memo",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "claude_files/principles.md",
+      "source_location": "derives_from",
+      "weight": 1.0
+    },
+    {
+      "source": "claude_files_principles_institution_wide_responsibility",
+      "target": "claude_files_principles_section_504_title_ii",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "claude_files/principles.md",
+      "source_location": "derives_from EO 1111",
+      "weight": 1.0
+    },
+    {
+      "source": "claude_files_principles_equally_effective_access",
+      "target": "claude_files_principles_section_504_title_ii",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "claude_files/principles.md",
+      "source_location": "section 504 equal-access standard",
+      "weight": 1.0
+    },
+    {
+      "source": "claude_files_principles_equally_effective_access",
+      "target": "claude_files_principles_taap_outcomes",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "claude_files/principles.md",
+      "source_location": "shapes taap_outcomes",
+      "weight": 1.0
+    },
+    {
+      "source": "claude_files_principles_universal_design_over_accommodation",
+      "target": "claude_files_principles_parallel_duties",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "claude_files/principles.md",
+      "source_location": "shapes parallel-duties split",
+      "weight": 1.0
+    },
+    {
+      "source": "claude_files_principles_coded_memo",
+      "target": "claude_files_principles_section_504_title_ii",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "claude_files/principles.md",
+      "source_location": "memo rests on 504",
+      "weight": 1.0
+    },
+    {
+      "source": "claude_files_principles_coded_memo",
+      "target": "claude_files_governance_governance_layer",
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "claude_files/principles.md",
+      "source_location": "governance node for memo",
+      "weight": 1.0
+    },
+    {
+      "source": "claude_files_governance_governance_layer",
+      "target": "claude_files_governance_governancetypes_registry",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "claude_files/governance-frontend.md",
+      "source_location": "section 4",
+      "weight": 1.0
+    },
+    {
+      "source": "claude_files_governance_governancemastercontainer",
+      "target": "claude_files_governance_governancetypes_registry",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "claude_files/governance-frontend.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "claude_files_governance_governancemastercontainer",
+      "target": "claude_files_governance_master_detail_pattern",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "claude_files/governance-frontend.md",
+      "source_location": "section 3",
+      "weight": 1.0
+    },
+    {
+      "source": "claude_files_governance_governancemastercontainer",
+      "target": "claude_files_governance_service_layer_split",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "claude_files/governance-frontend.md",
+      "source_location": "section 6",
+      "weight": 1.0
+    },
+    {
+      "source": "claude_files_governance_service_layer_split",
+      "target": "claude_files_governance_action_dispatch_put",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "claude_files/governance-frontend.md",
+      "source_location": "section 7",
+      "weight": 1.0
+    },
+    {
+      "source": "claude_files_governance_descriptor_context_rule",
+      "target": "claude_files_governance_governancetypes_registry",
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "claude_files/governance-frontend.md",
+      "source_location": "section 9 and 10",
+      "weight": 1.0
+    },
+    {
+      "source": "claude_files_governance_descriptor_context_rule",
+      "target": "claude_files_ontology_descriptor_layer",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "claude_files/governance-frontend.md",
+      "source_location": "ontology descriptions layer",
+      "weight": 1.0
+    },
+    {
+      "source": "claude_files_ontology2_meta_scaffold",
+      "target": "claude_files_governance_master_detail_pattern",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "claude_files/ontology2.md",
+      "source_location": "Governance as structural reference",
+      "weight": 1.0
+    },
+    {
+      "source": "claude_files_ontology2_principle",
+      "target": "claude_files_governance_descriptor_context_rule",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "claude_files/ontology2.md",
+      "source_location": "section 9 governance doc rule",
+      "weight": 1.0
+    },
+    {
+      "source": "claude_files_clipboard_fix_clipboard_fallback",
+      "target": "claude_files_clipboard_fix_clipboarditem_api",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "claude_files/CLIPBOARD_FIX_EXPLANATION.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "claude_files_clipboard_fix_clipboard_fallback",
+      "target": "claude_files_readme_reportmasterlist",
+      "relation": "references",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "claude_files/CLIPBOARD_FIX_EXPLANATION.md",
+      "source_location": "ReportMasterList_COMPLETE_WITH_COPY",
+      "weight": 1.0
+    },
+    {
+      "source": "claude_files_reportmasterlist_copy_button",
+      "target": "claude_files_readme_reportmasterlist",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "claude_files/ReportMasterList_COPY_BUTTON.txt",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "claude_files_reportmasterlist_copy_button",
+      "target": "claude_files_clipboard_fix_clipboarditem_api",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "claude_files/ReportMasterList_COPY_BUTTON.txt",
+      "source_location": "copyGoalToClipboard",
+      "weight": 1.0
+    },
+    {
+      "source": "claude_files_reportmasterlist_copy_button",
+      "target": "claude_files_clipboard_fix_clipboard_fallback",
+      "relation": "semantically_similar_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "claude_files/ReportMasterList_COPY_BUTTON.txt",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "claude_files_compact_version_compact_report",
+      "target": "claude_files_compact_version_generatereportcomponent",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "claude_files/COMPACT_VERSION_SUMMARY.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "claude_files_readme_claude_working_files",
+      "target": "claude_files_compact_version_compact_report",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "claude_files/README.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "claude_files_readme_claude_working_files",
+      "target": "claude_files_reportmasterlist_copy_button",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "claude_files/README.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "claude_files_readme_claude_working_files",
+      "target": "claude_files_readme_reportmasterlist",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "claude_files/README.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "claude_files_compact_version_generatereportcomponent",
+      "target": "claude_files_readme_reportmasterlist",
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.75,
+      "source_file": "claude_files/COMPACT_VERSION_SUMMARY.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "claude_files_claude_codebase_guide",
+      "target": "claude_files_claude_yearsuccessevidence",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "claude_files/CLAUDE.md",
+      "source_location": "Evidence Layer",
+      "weight": 1.0
+    },
+    {
+      "source": "claude_files_claude_codebase_guide",
+      "target": "claude_files_claude_successindicator",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "claude_files/CLAUDE.md",
+      "source_location": "Indicators Layer",
+      "weight": 1.0
+    },
+    {
+      "source": "claude_files_claude_codebase_guide",
+      "target": "claude_files_claude_atiworkinggroup",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "claude_files/CLAUDE.md",
+      "source_location": "Organizational Layer",
+      "weight": 1.0
+    },
+    {
+      "source": "claude_files_claude_yearsuccessevidence",
+      "target": "claude_files_claude_successindicator",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "claude_files/CLAUDE.md",
+      "source_location": "YSE tracks SuccessIndicator",
+      "weight": 1.0
+    },
+    {
+      "source": "claude_files_claude_yearsuccessevidence",
+      "target": "claude_files_claude_statuslevel",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "claude_files/CLAUDE.md",
+      "source_location": "YSE status_is StatusLevel",
+      "weight": 1.0
+    },
+    {
+      "source": "claude_files_claude_yearsuccessevidence",
+      "target": "claude_files_claude_academicyear",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "claude_files/CLAUDE.md",
+      "source_location": "YSE links by academic year",
+      "weight": 1.0
+    },
+    {
+      "source": "claude_files_claude_person",
+      "target": "claude_files_claude_yearsuccessevidence",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "claude_files/CLAUDE.md",
+      "source_location": "Person implements YSE",
+      "weight": 1.0
+    },
+    {
+      "source": "claude_files_claude_goal",
+      "target": "claude_files_claude_successindicator",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "claude_files/CLAUDE.md",
+      "source_location": "Goals supported by SuccessIndicators",
+      "weight": 1.0
+    },
+    {
+      "source": "claude_files_claude_successindicator",
+      "target": "claude_files_claude_atiworkinggroup",
+      "relation": "references",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "claude_files/CLAUDE.md",
+      "source_location": "composite key includes working group abbreviation",
+      "weight": 1.0
+    },
+    {
+      "source": "templates_success_indicators_report",
+      "target": "claude_files_claude_successindicator",
+      "relation": "references",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "app/templates/success_indicators.html",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "templates_success_indicator_detail",
+      "target": "templates_success_indicator_table",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "app/templates/success_indicator.html",
+      "source_location": "include success_indicator_table.html",
+      "weight": 1.0
+    },
+    {
+      "source": "templates_success_indicator_detail",
+      "target": "templates_submit_document_form",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "app/templates/success_indicator.html",
+      "source_location": "include forms/submit_document.html",
+      "weight": 1.0
+    },
+    {
+      "source": "templates_success_indicator_detail",
+      "target": "templates_websites_table",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "app/templates/success_indicator.html",
+      "source_location": "include websites_table.html",
+      "weight": 1.0
+    },
+    {
+      "source": "templates_success_indicator_detail",
+      "target": "templates_vendors_table",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "app/templates/success_indicator.html",
+      "source_location": "include vendors_table.html",
+      "weight": 1.0
+    },
+    {
+      "source": "templates_success_indicator_detail",
+      "target": "templates_policies_table",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "app/templates/success_indicator.html",
+      "source_location": "include policies_table.html",
+      "weight": 1.0
+    },
+    {
+      "source": "templates_success_indicator_detail",
+      "target": "templates_projects_table",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "app/templates/success_indicator.html",
+      "source_location": "include projects_table.html",
+      "weight": 1.0
+    },
+    {
+      "source": "templates_success_indicator_table",
+      "target": "claude_files_claude_successindicator",
+      "relation": "references",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "app/templates/success_indicator_table.html",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "templates_success_indicator_table",
+      "target": "claude_files_claude_statuslevel",
+      "relation": "references",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "app/templates/success_indicator_table.html",
+      "source_location": "status_level column",
+      "weight": 1.0
+    },
+    {
+      "source": "templates_success_indicator_table",
+      "target": "claude_files_claude_yearsuccessevidence",
+      "relation": "references",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "app/templates/success_indicator_table.html",
+      "source_location": "year_success_evidence column",
+      "weight": 1.0
+    },
+    {
+      "source": "templates_vendors_table",
+      "target": "claude_files_claude_codebase_guide",
+      "relation": "references",
+      "confidence": "INFERRED",
+      "confidence_score": 0.65,
+      "source_file": "app/templates/vendors_table.html",
+      "source_location": "Vendor node",
+      "weight": 1.0
+    },
+    {
+      "source": "templates_year_success_selector",
+      "target": "claude_files_claude_yearsuccessevidence",
+      "relation": "references",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "app/templates/year_success_selector.html",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "templates_year_success_selector",
+      "target": "templates_success_indicator_detail",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "app/templates/year_success_selector.html",
+      "source_location": "hx-get /success-indicator",
+      "weight": 1.0
+    },
+    {
+      "source": "reports_comprehensive_report_2024_2025",
+      "target": "claude_files_claude_atiworkinggroup",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "reports/comprehensive_report_2024-2025_remote.html",
+      "source_location": "Web/Procurement/Instructional Materials sections",
+      "weight": 1.0
+    },
+    {
+      "source": "reports_comprehensive_report_2024_2025",
+      "target": "claude_files_claude_goal",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "reports/comprehensive_report_2024-2025_remote.html",
+      "source_location": "Goal sections",
+      "weight": 1.0
+    },
+    {
+      "source": "reports_comprehensive_report_2024_2025",
+      "target": "claude_files_claude_successindicator",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "reports/comprehensive_report_2024-2025_remote.html",
+      "source_location": "Success Indicators stat",
+      "weight": 1.0
+    },
+    {
+      "source": "reports_comprehensive_report_2024_2025",
+      "target": "claude_files_claude_yearsuccessevidence",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "reports/comprehensive_report_2024-2025_remote.html",
+      "source_location": "Evidence Items / Evidence cards",
+      "weight": 1.0
+    },
+    {
+      "source": "reports_comprehensive_report_2024_2025",
+      "target": "claude_files_claude_academicyear",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "reports/comprehensive_report_2024-2025_remote.html",
+      "source_location": "Academic Year 2024-2025",
+      "weight": 1.0
+    },
+    {
+      "source": "reports_comprehensive_report_2024_2025",
+      "target": "templates_success_indicators_report",
+      "relation": "semantically_similar_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.7,
+      "source_file": "reports/comprehensive_report_2024-2025_remote.html",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "claude_files_compact_version_generatereportcomponent",
+      "target": "reports_comprehensive_report_2024_2025",
+      "relation": "semantically_similar_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.65,
+      "source_file": "claude_files/COMPACT_VERSION_SUMMARY.md",
+      "source_location": null,
+      "weight": 1.0
+    }
+  ],
+  "hyperedges": [
+    {
+      "id": "ati_evidence_tracking_backbone",
+      "label": "ATI Evidence Tracking Backbone",
+      "nodes": [
+        "claude_files_claude_yearsuccessevidence",
+        "claude_files_claude_successindicator",
+        "claude_files_claude_statuslevel",
+        "claude_files_claude_academicyear"
+      ],
+      "relation": "participate_in",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "claude_files/CLAUDE.md"
+    },
+    {
+      "id": "meta_scaffold_principle_grounding",
+      "label": "Principle Grounding and Shaping Flow",
+      "nodes": [
+        "claude_files_ontology2_principle",
+        "claude_files_ontology2_schemaelement",
+        "claude_files_governance_governance_layer",
+        "claude_files_ontology2_intellectualsource"
+      ],
+      "relation": "participate_in",
+      "confidence": "EXTRACTED",
+      "confidence_score": 0.95,
+      "source_file": "claude_files/ontology2.md"
+    },
+    {
+      "id": "descriptor_prose_sourcing_pattern",
+      "label": "Descriptor-Sourced Prose Pattern",
+      "nodes": [
+        "claude_files_ontology_universaldescriptor",
+        "claude_files_ontology2_descriptorcontext",
+        "claude_files_governance_descriptor_context_rule"
+      ],
+      "relation": "form",
+      "confidence": "EXTRACTED",
+      "confidence_score": 0.95,
+      "source_file": "claude_files/governance-frontend.md"
+    }
+  ],
+  "input_tokens": 0,
+  "output_tokens": 0
+}

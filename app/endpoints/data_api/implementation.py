@@ -7,7 +7,8 @@ from ...database.queries.implementation.delete import unassign_person_as_impleme
 from ...database.queries.implementation.update import update_plan, assign_person_as_implementor, \
     assign_documentation_to_implementation, add_progress_note_to_plan, \
     assign_person_as_owner, unassign_person_as_owner, \
-    assign_accountable_working_group, unassign_accountable_working_group
+    assign_accountable_working_group, unassign_accountable_working_group, \
+    set_implementation_dimensions
 from app.endpoints.data_api.util.response import make_response
 from app.endpoints.data_api.errors.custom_exceptions import ApiError, ValidationError, CrudError, NotFoundError
 
@@ -162,7 +163,11 @@ class ImplementationAPI(MethodView):
                     "supporting_webpages": [],
                     "supporting_notes": [],
                     "supporting_messages": [],
-                    "supporting_metrics": []
+                    "supporting_metrics": [],
+                    "dimensions": [
+                        {"handle": d.handle, "name": d.name}
+                        for d in implementation_node.classified_under.all()
+                    ] if hasattr(implementation_node, "classified_under") else [],
                 }
 
                 # Helper function to check if doc should be included for specific year
@@ -354,6 +359,8 @@ class ImplementationAPI(MethodView):
                 return self.handle_assign_accountable_working_group(data)
             elif action == "unassign_accountable_working_group":
                 return self.handle_unassign_accountable_working_group(data)
+            elif action == "set_dimensions":
+                return self.handle_set_dimensions(data)
             elif action == "assign_documentation_to_implementation":
                 return self.handle_assign_documentation_to_implementation(data)
             elif action == "update_implementation":
@@ -589,6 +596,25 @@ class ImplementationAPI(MethodView):
             working_group=data['working_group'],
         )
         return make_response({"status": "success", "message": "Accountable working group unassigned successfully"}), 200
+
+    def handle_set_dimensions(self, data):
+        """
+        Replace a doing-implementation's AMM-dimension classification (classified_under).
+        Replace-semantics: dimension_handles is the full intended set (the multi-select's
+        current selection). Only Process/Project/Procedure/Service can be classified.
+
+        Body: { action: "set_dimensions", implementation_type, implementation_unique_id,
+                dimension_handles: ["dimension:...", ...] }
+        """
+        required = ['implementation_type', 'implementation_unique_id', 'dimension_handles']
+        if not all(field in data for field in required):
+            raise ValidationError(f"Missing required fields: {required}")
+        set_implementation_dimensions(
+            implementation_type=data['implementation_type'],
+            implementation_unique_id=data['implementation_unique_id'],
+            dimension_handles=data['dimension_handles'],
+        )
+        return make_response({"status": "success", "message": "Dimensions updated successfully"}), 200
 
     def handle_assign_documentation_to_implementation(self, data):
         """

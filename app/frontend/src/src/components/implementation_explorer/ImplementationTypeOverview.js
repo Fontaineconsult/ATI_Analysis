@@ -13,6 +13,11 @@ import {
     Textarea,
     IconButton,
     Badge,
+    CheckboxGroup,
+    Checkbox,
+    Wrap,
+    WrapItem,
+    Tooltip,
     Divider,
     useToast,
     useDisclosure,
@@ -38,7 +43,10 @@ import {
     updateImplementation,
     assignPersonAsOwner,
     unassignPersonAsOwner,
+    setImplementationDimensions,
 } from '../../services/api/put';
+import { fetchAllDimensions } from '../../services/api/get';
+import { useDescriptors } from '../../hooks/useDescriptors';
 import { DataContext } from '../../context/DataContext';
 import { SettingsContext } from '../../context/SettingsContext';
 import { UserContext } from '../../context/UserContext';
@@ -53,10 +61,17 @@ import MetricsViewer from './doc_components/MetricsSection';
 import YseAssignmentSelector from '../functional_components/YseAssignmentSelector';
 import {getEditUrlFromCompositeKey} from "../../services/utils/tools";
 
+// Implementation types that carry the classified_under edge to Dimension.
+const DIMENSION_TYPES = ['Process', 'Project', 'Procedure', 'Service', 'InternalPolicy', 'Guidance'];
+
 function ImplementationTypeOverview({ implementationType, initialImplementationId }) {
     const { data, refreshImplementations } = useContext(DataContext);
     const { currentAcademicYear } = useContext(SettingsContext);
     const { individuals, loadAllIndividuals } = useContext(UserContext);
+    const { describeField } = useDescriptors();
+
+    const isDimensioned = DIMENSION_TYPES.includes(implementationType);
+    const [dimensionOptions, setDimensionOptions] = useState([]);
 
     // Make sure the individuals list is loaded for the Owners tab dropdown.
     useEffect(() => {
@@ -64,9 +79,23 @@ function ImplementationTypeOverview({ implementationType, initialImplementationI
             loadAllIndividuals();
         }
     }, [individuals, loadAllIndividuals]);
+
+    // Load the seven AMM dimension options for the Details multi-select (doing-impls only).
+    useEffect(() => {
+        if (!isDimensioned) return;
+        let cancelled = false;
+        (async () => {
+            try {
+                const resp = await fetchAllDimensions();
+                if (!cancelled) setDimensionOptions(resp?.data?.items || []);
+            } catch (_) { /* non-fatal: the control just shows no options */ }
+        })();
+        return () => { cancelled = true; };
+    }, [isDimensioned]);
+
     const [selectedImplId, setSelectedImplId] = useState(null);
     const [isEditing, setIsEditing] = useState(false);
-    const [editForm, setEditForm] = useState({ title: '', description: '' });
+    const [editForm, setEditForm] = useState({ title: '', description: '', dimensions: [] });
     const toast = useToast();
     const navigate = useNavigate();
     const { campus } = useParams();
@@ -137,6 +166,7 @@ function ImplementationTypeOverview({ implementationType, initialImplementationI
         setEditForm({
             title: selectedImpl.title,
             description: selectedImpl.description,
+            dimensions: (selectedImpl.dimensions || []).map((d) => d.handle),
         });
         setIsEditing(true);
     };
@@ -150,6 +180,13 @@ function ImplementationTypeOverview({ implementationType, initialImplementationI
                 editForm.title,
                 editForm.description
             );
+            if (isDimensioned) {
+                await setImplementationDimensions(
+                    implementationType,
+                    selectedImpl.unique_id,
+                    editForm.dimensions || []
+                );
+            }
             toast({
                 title: 'Success',
                 description: 'Implementation updated successfully',
@@ -174,7 +211,7 @@ function ImplementationTypeOverview({ implementationType, initialImplementationI
 
     const handleCancel = () => {
         setIsEditing(false);
-        setEditForm({ title: '', description: '' });
+        setEditForm({ title: '', description: '', dimensions: [] });
     };
 
     const formatDate = (dateString) => {
@@ -412,6 +449,64 @@ function ImplementationTypeOverview({ implementationType, initialImplementationI
                                             </Text>
                                         )}
                                     </FormControl>
+
+                                    {isDimensioned && (
+                                        <FormControl>
+                                            <FormLabel fontSize="xs" color="gray.600" fontWeight="semibold">
+                                                {describeField?.('Implementation', 'dimensions')?.title || 'Dimensions'}
+                                            </FormLabel>
+                                            {isEditing ? (
+                                                <>
+                                                    <CheckboxGroup
+                                                        value={editForm.dimensions}
+                                                        onChange={(vals) =>
+                                                            setEditForm({ ...editForm, dimensions: vals })
+                                                        }
+                                                    >
+                                                        <Wrap spacing={3}>
+                                                            {dimensionOptions.map((d) => (
+                                                                <WrapItem key={d.handle}>
+                                                                    <Tooltip label={d.description} hasArrow openDelay={300}>
+                                                                        <Box>
+                                                                            <Checkbox size="sm" value={d.handle}>
+                                                                                {d.name}
+                                                                            </Checkbox>
+                                                                        </Box>
+                                                                    </Tooltip>
+                                                                </WrapItem>
+                                                            ))}
+                                                        </Wrap>
+                                                    </CheckboxGroup>
+                                                    {describeField?.('Implementation', 'dimensions')?.description_short && (
+                                                        <Text fontSize="2xs" color="gray.400" mt={1}>
+                                                            {describeField('Implementation', 'dimensions').description_short}
+                                                        </Text>
+                                                    )}
+                                                </>
+                                            ) : (
+                                                Array.isArray(selectedImpl.dimensions) && selectedImpl.dimensions.length > 0 ? (
+                                                    <HStack spacing={1} flexWrap="wrap">
+                                                        {selectedImpl.dimensions.map((d) => (
+                                                            <Badge
+                                                                key={d.handle}
+                                                                colorScheme="purple"
+                                                                fontSize="xs"
+                                                                px={2}
+                                                                py={1}
+                                                                borderRadius="md"
+                                                            >
+                                                                {d.name}
+                                                            </Badge>
+                                                        ))}
+                                                    </HStack>
+                                                ) : (
+                                                    <Text fontSize="xs" color="gray.500" fontStyle="italic">
+                                                        No AMM dimensions assigned.
+                                                    </Text>
+                                                )
+                                            )}
+                                        </FormControl>
+                                    )}
 
                                     <FormControl>
                                         <FormLabel fontSize="xs" color="gray.600" fontWeight="semibold">

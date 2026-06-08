@@ -699,3 +699,16 @@ export const fetchAllIntellectualSources = async () => {
         throw error;
     }
 };
+
+// The seven W3C AMM dimensions (read-only) — options for the Implementation Details
+// dimension multi-select. Returns the wrapper; consumers read data.items.
+export const fetchAllDimensions = async () => {
+    try {
+        const response = await axios.get(`${process.env.REACT_APP_API_URL}/dimensions`);
+        if (response.status === 200) return response.data;
+        throw new Error(`Failed to fetch dimensions: ${response.data?.error}`);
+    } catch (error) {
+        console.error('Error fetching dimensions:', error.message);
+        throw error;
+    }
+};

@@ -17,6 +17,12 @@ from neomodel import db
 # accountable for the remediation work, distinct from owned_by Person).
 _WORKING_GROUP_ACCOUNTABLE_TYPES = ("Process", "Project", "Procedure", "Service")
 
+# AMM-dimension classification is broader than working-group accountability: it also
+# covers InternalPolicy and Guidance (but not Tracking / Plan).
+_DIMENSION_CLASSIFIABLE_TYPES = (
+    "Process", "Project", "Procedure", "Service", "InternalPolicy", "Guidance",
+)
+
 
 def assign_documentation_to_implementation(
         implementation_id: str,
@@ -311,6 +317,53 @@ def unassign_accountable_working_group(implementation_unique_id, implementation_
     if impl_node.accountable_working_group.is_connected(wg):
         impl_node.accountable_working_group.disconnect(wg)
     return True
+
+
+def set_implementation_dimensions(implementation_type, implementation_unique_id, dimension_handles):
+    """
+    Replace an implementation's AMM-dimension classification (classified_under) with
+    exactly the dimensions named by `dimension_handles`. Replace-semantics: the passed
+    list is the full intended set, so a multi-select dropdown's current selection wins.
+
+    Classifiable types are Process/Project/Procedure/Service/InternalPolicy/Guidance
+    (the ones that carry the classified_under edge). Raises ValidationError on a
+    non-classifiable type or a bad list, NotFoundError if the implementation or any
+    dimension handle is missing. Returns the resolved implementation node.
+    """
+    if implementation_type not in _DIMENSION_CLASSIFIABLE_TYPES:
+        raise ValidationError(
+            f"implementation_type must be one of {list(_DIMENSION_CLASSIFIABLE_TYPES)} to carry "
+            f"AMM-dimension classification; got {implementation_type!r}"
+        )
+    impl_node = _resolve_implementation(implementation_unique_id, implementation_type)
+
+    if dimension_handles is None:
+        dimension_handles = []
+    if not isinstance(dimension_handles, (list, tuple)):
+        raise ValidationError("dimension_handles must be a list of dimension handles")
+
+    # Resolve all targets first so a bad handle fails before we mutate any edges.
+    targets = []
+    for handle in dimension_handles:
+        try:
+            targets.append(Dimension.nodes.get(handle=handle))
+        except Dimension.DoesNotExist:
+            raise NotFoundError(f"Dimension {handle!r} not found")
+
+    try:
+        for current in impl_node.classified_under.all():
+            impl_node.classified_under.disconnect(current)
+        seen = set()
+        for dim in targets:
+            if dim.handle in seen:
+                continue
+            seen.add(dim.handle)
+            impl_node.classified_under.connect(dim)
+        return impl_node
+    except Exception as e:
+        raise CrudError(
+            f"Failed to set dimensions on {implementation_type} {implementation_unique_id!r}: {e}"
+        )
 
 
 def assign_note_to_implementation(implementation_title, implementation_type, note_title):
