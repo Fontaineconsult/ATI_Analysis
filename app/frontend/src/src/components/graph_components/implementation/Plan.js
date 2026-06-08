@@ -21,6 +21,7 @@ import { FaEdit, FaSave, FaTimes } from 'react-icons/fa';
 import { updatePlan } from '../../../services/api/put';
 import { createPlan } from '../../../services/api/post';
 import {workingGroupCodeFromName} from "../../../services/utils/tools";
+import { getPlanStatusColorScheme } from '../../../styles/planStatusColors';
 
 
 
@@ -257,11 +258,7 @@ function Plan({
                 </Heading>
                 <HStack spacing={2}>
                     <Badge
-                        colorScheme={
-                            plan_status === 'Completed' ? 'green' :
-                                plan_status === 'In Progress' ? 'blue' :
-                                    plan_status === 'Abandoned' ? 'red' : 'gray'
-                        }
+                        colorScheme={getPlanStatusColorScheme(plan_status)}
                         fontSize="xs"
                     >
                         {plan_status}

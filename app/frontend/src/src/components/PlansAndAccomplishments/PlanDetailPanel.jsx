@@ -19,6 +19,7 @@ import { useParams } from 'react-router-dom';
 import PlanEditForm from './PlanEditForm';
 import PlanProgressNotes from './PlanProgressNotes';
 import AssociatedYearSuccessEvidence from './AssociatedYearSuccessEvidence';
+import { getPlanStatusColorScheme } from '../../styles/planStatusColors';
 
 /**
  * Right-column detail/edit view for the plans split layout. Composes the
@@ -71,11 +72,7 @@ function PlanDetailPanel({ plan, onAfterEdit, placeholder }) {
         );
     }
 
-    const statusColor =
-        plan.abandoned ? 'red' :
-            plan.plan_status === 'Completed' ? 'green' :
-                plan.plan_status === 'In Progress' ? 'blue' :
-                    'gray';
+    const statusColor = getPlanStatusColorScheme(plan);
 
     return (
         <VStack align="stretch" spacing={4}>

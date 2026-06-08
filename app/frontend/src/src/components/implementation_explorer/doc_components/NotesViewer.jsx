@@ -246,7 +246,7 @@ const NotesViewer = ({ notes = [], implementation_id, implementation_type, forma
     return (
         <Box>
             <HStack justify="space-between" mb={3}>
-                <Heading size="sm" color="gray.700" fontWeight="bold">
+                <Heading size="sm" color="teal.700" fontWeight="bold">
                     Notes ({notes.length})
                 </Heading>
                 {implementation_id && implementation_type && (
@@ -350,7 +350,7 @@ const NotesViewer = ({ notes = [], implementation_id, implementation_type, forma
                                             <Button
                                                 size="sm"
                                                 variant="outline"
-                                                colorScheme="blue"
+                                                colorScheme="teal"
                                                 onClick={() => {setEditingIndex(index); setIsAddingNew(false);}}
                                             >
                                                 Edit

@@ -282,7 +282,7 @@ export default function WebpagesViewer({ webpages = [], implementation_id, imple
     return (
         <Box>
             <HStack justify="space-between" mb={3}>
-                <Heading size="sm" color="gray.700" fontWeight="bold">
+                <Heading size="sm" color="teal.700" fontWeight="bold">
                     Webpages ({webpages.length || 0})
                 </Heading>
                 {implementation_id && implementation_type && (
@@ -329,7 +329,7 @@ export default function WebpagesViewer({ webpages = [], implementation_id, imple
                                     bg="white"
                                     borderRadius="lg"
                                     borderWidth="1px"
-                                    borderColor="teal.300"
+                                    borderColor="gray.200"
                                     boxShadow="sm"
                                     _hover={{ boxShadow: 'md' }}
                                     transition="box-shadow 0.2s"
@@ -379,7 +379,7 @@ export default function WebpagesViewer({ webpages = [], implementation_id, imple
                                             <Button
                                                 size="sm"
                                                 variant="outline"
-                                                colorScheme="blue"
+                                                colorScheme="teal"
                                                 onClick={() => {setEditingIndex(index); setIsAddingNew(false);}}
                                             >
                                                 Edit

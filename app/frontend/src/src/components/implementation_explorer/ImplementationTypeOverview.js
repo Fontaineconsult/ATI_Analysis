@@ -236,12 +236,13 @@ function ImplementationTypeOverview({ implementationType, initialImplementationI
         <Flex h="80vh" gap={6}>
             {/* Left Panel - Implementation List */}
             <Box
-                w="35%"
+                flex="1"
+                minW="0"
                 borderWidth="1px"
                 borderColor="gray.200"
                 borderRadius="lg"
                 bg="white"
-                p={6}
+                p={4}
                 overflowY="auto"
                 boxShadow="sm"
             >
@@ -249,76 +250,69 @@ function ImplementationTypeOverview({ implementationType, initialImplementationI
                     {implementationType}s ({implementations.length})
                 </Heading>
                 {implementations.length > 0 ? (
-                    <VStack align="stretch" spacing={3}>
+                    <VStack align="stretch" spacing={2} role="listbox" aria-label={`${implementationType} list`}>
                         {implementations.map((impl) => {
                             const isSelected = selectedImpl?.unique_id === impl.unique_id;
                             return (
-                                <Button
+                                <Box
                                     key={impl.unique_id}
-                                    variant={isSelected ? 'solid' : 'outline'}
-                                    colorScheme="teal"
-                                    size="sm"
-                                    justifyContent="space-between"
+                                    role="option"
+                                    aria-selected={isSelected}
                                     onClick={() => handleImplementationSelect(impl)}
-                                    textAlign="left"
-                                    whiteSpace="normal"
-                                    h="auto"
-                                    py={3}
-                                    px={4}
-                                    bg={isSelected ? 'teal.500' : 'white'}
-                                    _hover={{
-                                        bg: isSelected ? 'teal.600' : 'gray.50',
-                                        boxShadow: 'md',
-                                    }}
-                                    transition="all 0.2s"
+                                    cursor="pointer"
+                                    bg={isSelected ? 'teal.50' : 'white'}
+                                    borderWidth="1px"
+                                    borderColor={isSelected ? 'teal.400' : 'gray.200'}
+                                    borderLeftWidth="3px"
+                                    borderLeftColor={isSelected ? 'teal.500' : 'transparent'}
+                                    borderRadius="md"
+                                    boxShadow="sm"
+                                    px={3}
+                                    py={2}
+                                    _hover={{ borderColor: isSelected ? 'teal.400' : 'gray.300', boxShadow: 'md' }}
+                                    transition="all 0.15s"
                                 >
-                                    <VStack align="start" spacing={1} flex="1">
-                                        <Text
-                                            fontSize="sm"
-                                            color={isSelected ? 'white' : 'gray.700'}
-                                            noOfLines={2}
-                                        >
-                                            {impl.title}
-                                        </Text>
-                                        <HStack spacing={1} flexWrap="wrap">
-                                            <Badge colorScheme="teal" fontSize="xs" px={2} py={1} borderRadius="md">
-                                                {impl.is_evidence_for?.length || 0} YSE
+                                    <Text fontSize="sm" fontWeight={isSelected ? 'semibold' : 'medium'} color="gray.800" noOfLines={2}>
+                                        {impl.title}
+                                    </Text>
+                                    <HStack spacing={1} flexWrap="wrap" mt={1}>
+                                        <Badge colorScheme="teal" variant="subtle" fontSize="2xs" px={2} borderRadius="full">
+                                            {impl.is_evidence_for?.length || 0} YSE
+                                        </Badge>
+                                        {Array.isArray(impl.campuses) && impl.campuses.map((abbrev) => (
+                                            <Badge
+                                                key={abbrev}
+                                                colorScheme="gray"
+                                                variant="subtle"
+                                                fontSize="2xs"
+                                                px={2}
+                                                borderRadius="full"
+                                                textTransform="uppercase"
+                                            >
+                                                {abbrev}
                                             </Badge>
-                                            {Array.isArray(impl.campuses) && impl.campuses.map((abbrev) => (
-                                                <Badge
-                                                    key={abbrev}
-                                                    colorScheme={isSelected ? 'whiteAlpha' : 'gray'}
-                                                    fontSize="xs"
-                                                    px={2}
-                                                    py={1}
-                                                    borderRadius="md"
-                                                    textTransform="uppercase"
-                                                >
-                                                    {abbrev}
-                                                </Badge>
-                                            ))}
-                                        </HStack>
-                                    </VStack>
-                                </Button>
+                                        ))}
+                                    </HStack>
+                                </Box>
                             );
                         })}
                     </VStack>
                 ) : (
-                    <Alert status="info" borderRadius="lg" fontSize="sm">
-                        <AlertIcon />
-                        No {implementationType}s found
-                    </Alert>
+                    <Text fontSize="sm" color="gray.500" fontStyle="italic">
+                        No {implementationType}s yet.
+                    </Text>
                 )}
             </Box>
 
             {/* Right Panel - Details and Relationships */}
             <Box
-                flex="1"
+                flex="2"
+                minW="0"
                 borderWidth="1px"
                 borderColor="gray.200"
                 borderRadius="lg"
                 bg="white"
-                p={6}
+                p={5}
                 overflowY="auto"
                 boxShadow="sm"
             >
@@ -541,7 +535,7 @@ function ImplementationTypeOverview({ implementationType, initialImplementationI
                             <TabPanel px={0} py={4}>
                                 <VStack align="stretch" spacing={4}>
                                     <Flex justify="space-between" align="center">
-                                        <Heading size="sm" color="gray.700" fontWeight="bold">
+                                        <Heading size="sm" color="teal.700" fontWeight="bold">
                                             Success Indicators This Evidences
                                         </Heading>
                                         <Button

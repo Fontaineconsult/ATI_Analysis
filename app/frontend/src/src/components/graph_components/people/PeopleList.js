@@ -66,18 +66,20 @@ function PeopleList({ people = [], selectedId, onSelect, emptyMessage = 'No peop
             <Box
                 borderWidth="1px"
                 borderColor="gray.200"
-                borderRadius="md"
+                borderRadius="lg"
                 bg="white"
                 overflowY="auto"
                 flex="1"
                 maxH="70vh"
             >
-                <List spacing={0}>
+                <List spacing={0} role="listbox" aria-label="People">
                     {filtered.map((person) => {
                         const isSelected = person.unique_id === selectedId;
                         return (
                             <ListItem
                                 key={person.unique_id}
+                                role="option"
+                                aria-selected={isSelected}
                                 px={3}
                                 py={2}
                                 cursor="pointer"

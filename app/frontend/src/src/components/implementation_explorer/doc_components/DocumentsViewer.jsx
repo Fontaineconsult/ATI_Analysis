@@ -340,7 +340,7 @@ export default function DocumentsViewer({ documents = [], implementation_id, imp
     return (
         <Box>
             <HStack justify="space-between" mb={3}>
-                <Heading size="sm" color="gray.700" fontWeight="bold">
+                <Heading size="sm" color="teal.700" fontWeight="bold">
                     Documents ({documents.length || 0})
                 </Heading>
                 {implementation_id && implementation_type && (
@@ -384,7 +384,7 @@ export default function DocumentsViewer({ documents = [], implementation_id, imp
                             <Collapse in={editingIndex !== index} animateOpacity>
                                 <Box
                                     p={4}
-                                    bg="teal.50"
+                                    bg="white"
                                     borderRadius="lg"
                                     borderWidth="1px"
                                     borderColor="gray.200"
@@ -447,7 +447,7 @@ export default function DocumentsViewer({ documents = [], implementation_id, imp
                                             <Button
                                                 size="sm"
                                                 variant="outline"
-                                                colorScheme="blue"
+                                                colorScheme="teal"
                                                 onClick={() => {setEditingIndex(index); setIsAddingNew(false);}}
                                             >
                                                 Edit

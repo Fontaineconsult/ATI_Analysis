@@ -17,6 +17,7 @@ import {
 import { FaEdit } from 'react-icons/fa';
 import PlanEditForm from './PlanEditForm';
 import PlanProgressNotes from './PlanProgressNotes';
+import { getPlanStatusColorScheme } from '../../styles/planStatusColors';
 
 function PlansTable({ plans, onUpdate, initialPlanId }) {
     const [editingRows, setEditingRows] = useState(
@@ -120,11 +121,7 @@ function PlansTable({ plans, onUpdate, initialPlanId }) {
                             </Td>
                             <Td>
                                 <Badge
-                                    colorScheme={
-                                        plan.abandoned ? 'red' :
-                                            plan.plan_status === 'Completed' ? 'green' :
-                                                plan.plan_status === 'In Progress' ? 'blue' : 'gray'
-                                    }
+                                    colorScheme={getPlanStatusColorScheme(plan)}
                                     fontSize="xs"
                                     px={2}
                                     py={1}

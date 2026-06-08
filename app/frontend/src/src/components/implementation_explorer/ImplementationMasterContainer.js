@@ -81,7 +81,7 @@ function ImplementationExplorer() {
                 <IconButton
                     aria-label="Create new implementation"
                     icon={<AddIcon />}
-                    colorScheme="green"
+                    colorScheme="teal"
                     size="sm"
                     onClick={onOpen}
                     borderRadius="lg"
@@ -124,7 +124,7 @@ function ImplementationExplorer() {
                     shadow="sm"
                 >
                     <CardBody>
-                        <Heading size="sm" mb={2} color="teal.600">
+                        <Heading size="sm" mb={2} color="teal.700">
                             {selectedDefinition.name}
                         </Heading>
                         <Text

@@ -85,7 +85,7 @@ function PersonYseList({ yses = [], personEmployeeId, onChange }) {
                         <Badge colorScheme="teal" textTransform="uppercase" fontSize="xs" px={2} py={1} borderRadius="md">
                             {campusGroup.campusAbbrev || '—'}
                         </Badge>
-                        <Heading as="h4" size="xs" color="gray.700">
+                        <Heading as="h4" size="xs" color="teal.700" textTransform="uppercase" letterSpacing="wide">
                             {campusGroup.campusName || 'Unknown campus'}
                         </Heading>
                     </HStack>
@@ -93,7 +93,7 @@ function PersonYseList({ yses = [], personEmployeeId, onChange }) {
                     <VStack align="stretch" spacing={3}>
                         {campusGroup.workingGroups.map((wg) => (
                             <Box key={wg.name}>
-                                <Text fontSize="xs" color="teal.600" fontWeight="semibold" textTransform="uppercase" mb={1}>
+                                <Text fontSize="xs" color="teal.700" fontWeight="semibold" textTransform="uppercase" letterSpacing="wide" mb={1}>
                                     {wg.name}
                                 </Text>
                                 <VStack align="stretch" spacing={2} pl={2}>
@@ -101,9 +101,9 @@ function PersonYseList({ yses = [], personEmployeeId, onChange }) {
                                         <Box
                                             key={yse.year_identifier}
                                             borderWidth="1px"
-                                            borderColor="gray.100"
-                                            borderRadius="md"
-                                            p={2}
+                                            borderColor="gray.200"
+                                            borderRadius="lg"
+                                            p={3}
                                             bg="gray.50"
                                         >
                                             <HStack align="start">

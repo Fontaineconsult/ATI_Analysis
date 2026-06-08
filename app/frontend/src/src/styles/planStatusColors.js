@@ -33,3 +33,22 @@ export function getPlanStatusLabel(plan) {
     if (plan?.abandoned === true) return 'Abandoned';
     return plan?.plan_status || 'Not Started';
 }
+
+// The Chakra `colorScheme` name for a plan status — for components that render a
+// plain <Badge colorScheme=...> rather than a token-based pill. Centralized so the
+// mapping is never re-derived inline. (For pills, prefer getPlanStatusColor tokens.)
+const PLAN_STATUS_TO_SCHEME = {
+    'Not Started': 'gray',
+    'In Progress': 'blue',
+    'Completed':   'green',
+    'On Hold':     'orange',
+    'Abandoned':   'red',
+};
+
+export function getPlanStatusColorScheme(planOrStatus) {
+    if (planOrStatus && typeof planOrStatus === 'object') {
+        if (planOrStatus.abandoned === true) return 'red';
+        return PLAN_STATUS_TO_SCHEME[planOrStatus.plan_status] || 'gray';
+    }
+    return PLAN_STATUS_TO_SCHEME[planOrStatus] || 'gray';
+}

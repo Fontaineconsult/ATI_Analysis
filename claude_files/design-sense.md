@@ -63,8 +63,9 @@ These are the load-bearing instincts. Keep them even if specific tokens change.
 **Semantic — meaning only.** Two palettes, both centralized — **do not hardcode hex**:
 
 - **Plan status** → `styles/palette.js` semantic tokens (`{solid, bg, fg}`), via
-  `getPlanStatusColor()` in `styles/planStatusColors.js`:
-  Not Started=gray · In Progress=blue · Completed=green · On Hold=orange · Abandoned=red.
+  `getPlanStatusColor()` in `styles/planStatusColors.js` (or `getPlanStatusColorScheme()`
+  for a plain `<Badge colorScheme>`): Not Started=gray · In Progress=blue · Completed=green ·
+  On Hold=orange · Abandoned=red. Never re-derive this mapping inline.
 - **Maturity status** (the CMM ladder) → `services/utils/statusColors.js`
   `getStatusColor(level)` — a red→green heat ramp across the six `status_levels`:
   Not Started=`#E53E3E` (red) · Initiated=`#ED8936` (orange) · Defined=`#ECC94B` (yellow) ·

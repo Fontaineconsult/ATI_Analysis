@@ -151,7 +151,7 @@ function PlanProgressNotes({ planUniqueId, planName, progressNotesData }) {
         >
             <VStack spacing={3} align="stretch">
                 <HStack justify="space-between" position="sticky" top={0} bg="white" pb={1} zIndex={1}>
-                    <Heading size="sm" color="gray.800" fontWeight="bold">
+                    <Heading size="sm" color="teal.700" fontWeight="bold">
                         Progress Updates
                     </Heading>
                     <Button
