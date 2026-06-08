@@ -8,6 +8,16 @@ A Flask + neomodel + Neo4j knowledge graph for tracking the CSU Accessible Techn
 - **Frontend:** React 18 + Chakra UI + axios + react-router-dom (CRA-based).
 - **Tests:** pytest (backend, project root); Jest + React Testing Library (frontend, via CRA).
 
+## Frontend design
+
+When building or restyling any frontend area, follow the canonical visual + interaction
+language in **`claude_files/design-sense.md`** (the "design sense"). It codifies the newer
+"graph components" language (Assets/Governance/Indicators) as the standard — color/spacing
+tokens, the stat-strip + 1:2 master-detail shell, `Card`/`Section` primitives, config-driven
+badges, state treatments, accessibility conventions, and a "build a new area" recipe — plus
+the legacy patterns to avoid. Read it before adding UI; keep it updated when design decisions
+change.
+
 ## Run quick reference
 
 ```bash
