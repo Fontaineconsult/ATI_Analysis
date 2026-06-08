@@ -6,6 +6,12 @@
  * import a single source of truth.
  */
 
+// The six maturity levels in progression order (matches data_config.status_levels and
+// the color ramp below). Single source for any progression / ladder UI.
+export const STATUS_LEVELS_ORDER = [
+    'Not Started', 'Initiated', 'Defined', 'Established', 'Managed', 'Optimizing',
+];
+
 export function getStatusColor(statusLevel) {
     const level = statusLevel ? statusLevel.toLowerCase() : null;
     switch (level) {

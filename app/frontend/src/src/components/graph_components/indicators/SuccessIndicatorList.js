@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Box, VStack, HStack, Text, Badge, Icon, Tooltip } from '@chakra-ui/react';
 import { FaUser, FaListUl, FaRegComment, FaCheckCircle } from 'react-icons/fa';
 import { getIndicatorSummary, getStatusColor } from './indicatorHelpers';
+import StatusLevelLadder from '../../functional_components/StatusLevelLadder';
 
 // Compact count chip (icon + number) used in each row. aria-hidden because the
 // row's own aria-label carries the screen-reader summary; the chips are a sighted
@@ -122,6 +123,10 @@ function SuccessIndicatorList({ indicators = [], selectedKey, onSelect }) {
                                 </Badge>
                             )}
                         </HStack>
+
+                        <Box mt={1} mb={2}>
+                            <StatusLevelLadder level={s.statusLevel} variant="compact" />
+                        </Box>
 
                         {s.description && (
                             <Text fontSize="xs" color="gray.600" noOfLines={2} mb={2}>{s.description}</Text>

@@ -17,6 +17,7 @@ import {
     useToast,
 } from '@chakra-ui/react';
 import DropdownSelect from '../../functional_components/DropdownSelect';
+import StatusLevelLadder from '../../functional_components/StatusLevelLadder';
 import PersonAssignmentSelector from '../../functional_components/PersonAssignmentSelector';
 import ImplementationMasterContainer from '../implementation/ImplementationMasterContainer';
 import YSEAnnotationMasterContainer from '../documentation/YSEAnnotationMasterContainer';
@@ -152,6 +153,10 @@ function SuccessIndicatorDetailPanel({ wrapper }) {
                         </Button>
                     </HStack>
                 </HStack>
+
+                <Box mt={3} pt={3} borderTopWidth="1px" borderColor="gray.100">
+                    <StatusLevelLadder level={localStatus} variant="full" />
+                </Box>
             </Box>
 
             <Section title="Responsible Persons">
