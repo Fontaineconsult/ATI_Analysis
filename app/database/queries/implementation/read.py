@@ -159,7 +159,10 @@ def get_all_implementations_by_type(implementation_type: str) -> list:
             'unique_id': impl.unique_id,
             'title': impl.title,
             'description': impl.description,
-            'type': implementation_type
+            'type': implementation_type,
+            'dimensions': [
+                {'handle': d.handle, 'name': d.name} for d in impl.classified_under.all()
+            ] if hasattr(impl, 'classified_under') else [],
         } for impl in implementations]
     except Exception as e:
         raise CrudError(f"Error retrieving {implementation_type} implementations: {e}")
@@ -386,6 +389,12 @@ def get_all_implementations() -> dict:
                     for yse in impl_data['is_evidence_for']
                     if yse.get('campus') and yse['campus'].get('abbreviation')
                 })
+
+                # AMM dimensions classify only the four doing-implementations
+                # (Process/Project/Procedure/Service); other types have no such edge.
+                impl_data['dimensions'] = [
+                    {'handle': d.handle, 'name': d.name} for d in impl.classified_under.all()
+                ] if hasattr(impl, 'classified_under') else []
 
                 all_implementations[implementation_type].append(impl_data)
 

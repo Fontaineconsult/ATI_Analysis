@@ -1015,3 +1015,20 @@ export const attachShapeToPrinciple = (principleHandle, descriptorHandle) =>
     _principleAttachDetach('attach_shape', principleHandle, { descriptor_handle: descriptorHandle });
 export const detachShapeFromPrinciple = (principleHandle, descriptorHandle) =>
     _principleAttachDetach('detach_shape', principleHandle, { descriptor_handle: descriptorHandle });
+
+// Replace a doing-implementation's AMM-dimension classification (replace-semantics:
+// dimensionHandles is the full intended set). Only Process/Project/Procedure/Service.
+export const setImplementationDimensions = async (implementationType, implementationUniqueId, dimensionHandles) => {
+    try {
+        const response = await axios.put(`${process.env.REACT_APP_API_URL}/implementations`, {
+            action: 'set_dimensions',
+            implementation_type: implementationType,
+            implementation_unique_id: implementationUniqueId,
+            dimension_handles: dimensionHandles,
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error setting implementation dimensions:', error);
+        throw error;
+    }
+};

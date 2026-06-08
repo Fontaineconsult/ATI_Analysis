@@ -1,0 +1,22 @@
+C:\Users\Fonta\PycharmProjects\ATI_Analysis\CLAUDE.md
+C:\Users\Fonta\PycharmProjects\ATI_Analysis\README.md
+C:\Users\Fonta\PycharmProjects\ATI_Analysis\requirements-dev.txt
+C:\Users\Fonta\PycharmProjects\ATI_Analysis\.claude\skills\semester-migration\SKILL.md
+C:\Users\Fonta\PycharmProjects\ATI_Analysis\app\iis-deploy.md
+C:\Users\Fonta\PycharmProjects\ATI_Analysis\app\requirements.txt
+C:\Users\Fonta\PycharmProjects\ATI_Analysis\app\asana-connector\README.md
+C:\Users\Fonta\PycharmProjects\ATI_Analysis\app\database\cypher_runner\SKILL.md
+C:\Users\Fonta\PycharmProjects\ATI_Analysis\app\database\cypher_runner\query_registry.yaml
+C:\Users\Fonta\PycharmProjects\ATI_Analysis\app\database\ontology\Policy Briefing on the Distribution of Digital Accessibility Responsibility at SF State.pdf
+C:\Users\Fonta\PycharmProjects\ATI_Analysis\app\database\ontology\accessibility-policy (1).pdf
+C:\Users\Fonta\PycharmProjects\ATI_Analysis\app\database\ontology\dev\1.md
+C:\Users\Fonta\PycharmProjects\ATI_Analysis\app\database\pyvis\graph.html
+C:\Users\Fonta\PycharmProjects\ATI_Analysis\app\database\tools\report_export\comprehensive_report_template.html
+C:\Users\Fonta\PycharmProjects\ATI_Analysis\app\database\tools\report_export\test_report.html
+C:\Users\Fonta\PycharmProjects\ATI_Analysis\app\database\tools\report_export\reports\committee_roster_2025-2026.html
+C:\Users\Fonta\PycharmProjects\ATI_Analysis\app\database\tools\report_export\reports\committee_roster_2025-2026.txt
+C:\Users\Fonta\PycharmProjects\ATI_Analysis\app\database\tools\report_export\reports\committee_roster_9998-9998.html
+C:\Users\Fonta\PycharmProjects\ATI_Analysis\app\database\tools\report_export\reports\committee_roster_9998-9998.txt
+C:\Users\Fonta\PycharmProjects\ATI_Analysis\app\database\tools\report_export\reports\committee_roster_9999-9999.html
+C:\Users\Fonta\PycharmProjects\ATI_Analysis\app\database\tools\report_export\reports\committee_roster_9999-9999.txt
+C:\Users\Fonta\PycharmProjects\ATI_Analysis\app\database\tools\report_export\reports\comprehensive_report_2024-2025.html
