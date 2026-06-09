@@ -1,0 +1,17 @@
+# Virtualenvs (site-packages are not part of this project's knowledge graph)
+windowsvenvpy12/
+windowsvenv/
+venv/
+.venv/
+
+# graphify's own output sidecars
+graphify-out/
+
+# Frontend dependencies and build output
+node_modules/
+**/node_modules/
+build/
+dist/
+
+# Excel binary exports (office conversion unavailable; institutional data)
+*.xlsx
