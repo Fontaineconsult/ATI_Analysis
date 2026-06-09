@@ -739,3 +739,171 @@ def update_accomplishment(data: dict) -> bool:
         raise NotFoundError(f"Accomplishment with unique_id '{unique_id}' not found.")
     except Exception as e:
         raise CrudError(f"Failed to update accomplishment: {e}")
+
+# --- Cross-campus plan assignment -------------------------------------------------
+#
+# A plan's campus anchoring runs through its furthers_yse edges: it "is at" a
+# campus when it furthers a YearSuccessEvidence at that campus. Assigning a plan
+# to another campus therefore means connecting it to the SAME-indicator,
+# SAME-year YSEs at the target campus (every campus has a YSE per indicator
+# per year, created by the seeding/rollover tools).
+
+_ASSIGN_PLAN_TO_CAMPUS_QUERY = """
+    MATCH (p:Plan {unique_id: $plan_uid})-[:furthers_yse]->(src:YearSuccessEvidence)
+    MATCH (src)-[:evidence_in_year]->(y:AcademicYear {name: $year_name})
+    MATCH (src)-[:tracks]->(si:SuccessIndicator)
+    MATCH (dst:YearSuccessEvidence)-[:tracks]->(si)
+    WHERE (dst)-[:evidence_in_year]->(y)
+      AND (dst)-[:evidence_at_campus]->(:Campus {abbreviation: $campus_abbrev})
+    MERGE (p)-[:furthers_yse]->(dst)
+    RETURN count(DISTINCT dst) AS linked
+"""
+
+_UNASSIGN_PLAN_FROM_CAMPUS_QUERY = """
+    MATCH (p:Plan {unique_id: $plan_uid})-[r:furthers_yse]->(yse:YearSuccessEvidence)
+    WHERE (yse)-[:evidence_in_year]->(:AcademicYear {name: $year_name})
+      AND (yse)-[:evidence_at_campus]->(:Campus {abbreviation: $campus_abbrev})
+    DELETE r
+    RETURN count(r) AS unlinked
+"""
+
+_PLAN_CAMPUS_COUNT_QUERY = """
+    MATCH (p:Plan {unique_id: $plan_uid})-[:furthers_yse]->(yse:YearSuccessEvidence)
+          -[:evidence_in_year]->(:AcademicYear {name: $year_name})
+    MATCH (yse)-[:evidence_at_campus]->(c:Campus)
+    RETURN count(DISTINCT c) AS campuses
+"""
+
+
+def assign_plan_to_campus(plan_uid: str, campus_abbrev: str, year_name: str) -> int:
+    """Connect a plan to the target campus's YSEs for the same indicators + year.
+
+    Mirrors each (indicator, year) the plan already furthers anywhere onto the
+    target campus. Idempotent (MERGE). Returns the number of target-campus YSEs
+    the plan is now linked to.
+
+    Raises NotFoundError if the plan doesn't exist or no matching YSEs exist at
+    the target campus (e.g. the campus hasn't been seeded for that year).
+    """
+    plan = Plan.nodes.get_or_none(unique_id=plan_uid)
+    if plan is None:
+        raise NotFoundError(f"Plan with unique_id '{plan_uid}' not found.")
+
+    campus = Campus.nodes.get_or_none(abbreviation=campus_abbrev)
+    if campus is None:
+        raise NotFoundError(f"Campus with abbreviation '{campus_abbrev}' not found.")
+
+    try:
+        results, _ = db.cypher_query(
+            _ASSIGN_PLAN_TO_CAMPUS_QUERY,
+            {"plan_uid": plan_uid, "campus_abbrev": campus_abbrev, "year_name": year_name},
+        )
+        linked = results[0][0] if results else 0
+    except Exception as e:
+        raise CrudError(f"Failed to assign plan '{plan_uid}' to campus '{campus_abbrev}': {e}")
+
+    if linked == 0:
+        raise NotFoundError(
+            f"No matching YearSuccessEvidence at campus '{campus_abbrev}' for "
+            f"{year_name} — the plan furthers no {year_name} evidence, or that "
+            f"campus has no YSEs for those indicators (not seeded?)."
+        )
+    return linked
+
+
+def unassign_plan_from_campus(plan_uid: str, campus_abbrev: str, year_name: str) -> int:
+    """Disconnect a plan from all of one campus's YSEs for the given year.
+
+    Refuses (ValidationError) to remove the plan's last remaining campus for
+    the year — a plan with no furthers_yse anchor would vanish from every
+    campus's plans page.
+    """
+    plan = Plan.nodes.get_or_none(unique_id=plan_uid)
+    if plan is None:
+        raise NotFoundError(f"Plan with unique_id '{plan_uid}' not found.")
+
+    results, _ = db.cypher_query(
+        _PLAN_CAMPUS_COUNT_QUERY, {"plan_uid": plan_uid, "year_name": year_name}
+    )
+    campus_count = results[0][0] if results else 0
+    if campus_count <= 1:
+        raise ValidationError(
+            "Cannot remove the plan's last campus for this year. Assign it to "
+            "another campus first, or delete the plan instead."
+        )
+
+    try:
+        results, _ = db.cypher_query(
+            _UNASSIGN_PLAN_FROM_CAMPUS_QUERY,
+            {"plan_uid": plan_uid, "campus_abbrev": campus_abbrev, "year_name": year_name},
+        )
+        return results[0][0] if results else 0
+    except Exception as e:
+        raise CrudError(f"Failed to unassign plan '{plan_uid}' from campus '{campus_abbrev}': {e}")
+
+
+_DETACH_PLAN_FROM_YSE_QUERY = """
+    MATCH (p:Plan {unique_id: $plan_uid})
+          -[r:furthers_yse]->(yse:YearSuccessEvidence {unique_id: $yse_unique_id})
+    DELETE r
+    RETURN count(r) AS removed
+"""
+
+_PLAN_YSE_LINK_COUNT_QUERY = """
+    MATCH (p:Plan {unique_id: $plan_uid})-[:furthers_yse]->(:YearSuccessEvidence)
+    RETURN count(*) AS links
+"""
+
+
+def detach_plan_from_yse(plan_uid: str, yse_unique_id: str) -> int:
+    """Remove ONE furthers_yse link (per-evidence pruning, finer-grained than
+    unassign_plan_from_campus). Refuses (ValidationError) to remove the plan's
+    last evidence link anywhere — an unanchored plan would vanish from every
+    campus's plans page.
+    """
+    plan = Plan.nodes.get_or_none(unique_id=plan_uid)
+    if plan is None:
+        raise NotFoundError(f"Plan with unique_id '{plan_uid}' not found.")
+
+    results, _ = db.cypher_query(_PLAN_YSE_LINK_COUNT_QUERY, {"plan_uid": plan_uid})
+    total_links = results[0][0] if results else 0
+    if total_links <= 1:
+        raise ValidationError(
+            "Cannot remove the plan's last evidence link. Link it to other "
+            "evidence first, or delete the plan instead."
+        )
+
+    try:
+        results, _ = db.cypher_query(
+            _DETACH_PLAN_FROM_YSE_QUERY,
+            {"plan_uid": plan_uid, "yse_unique_id": yse_unique_id},
+        )
+        removed = results[0][0] if results else 0
+    except Exception as e:
+        raise CrudError(f"Failed to detach plan '{plan_uid}' from YSE '{yse_unique_id}': {e}")
+
+    if removed == 0:
+        raise NotFoundError(
+            f"Plan '{plan_uid}' has no link to evidence '{yse_unique_id}'."
+        )
+    return removed
+
+
+def attach_plan_to_yse(plan_uid: str, yse_unique_id: str) -> bool:
+    """Connect a plan to ONE specific YearSuccessEvidence (the inverse of
+    detach_plan_from_yse; finer-grained than assign_plan_to_campus, which
+    mirrors all of a plan's indicators). Idempotent.
+    """
+    plan = Plan.nodes.get_or_none(unique_id=plan_uid)
+    if plan is None:
+        raise NotFoundError(f"Plan with unique_id '{plan_uid}' not found.")
+
+    yse = YearSuccessEvidence.nodes.get_or_none(unique_id=yse_unique_id)
+    if yse is None:
+        raise NotFoundError(f"YearSuccessEvidence with unique_id '{yse_unique_id}' not found.")
+
+    try:
+        plan.furthered_year_success_indicators.connect(yse)
+        return True
+    except Exception as e:
+        raise CrudError(f"Failed to attach plan '{plan_uid}' to YSE '{yse_unique_id}': {e}")

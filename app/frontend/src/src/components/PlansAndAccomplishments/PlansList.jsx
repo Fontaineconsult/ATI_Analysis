@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import {
     Badge,
     Box,
+    Button,
     Heading,
     HStack,
     List,
@@ -49,9 +50,14 @@ const SORT_OPTIONS = [
  */
 function PlansList({ plans = [], selectedId, onSelect, emptyMessage = 'No plans to show.' }) {
     const [sortBy, setSortBy] = useState('name');
+    // Default view: only plans actively being worked. The `abandoned` flag
+    // overrides plan_status (same rule as getPlanStatusLabel).
+    const [inProgressOnly, setInProgressOnly] = useState(true);
 
     const sorted = useMemo(() => {
-        const arr = [...plans];
+        const arr = inProgressOnly
+            ? plans.filter((p) => !p.abandoned && (p.plan_status || 'Not Started') === 'In Progress')
+            : [...plans];
         if (sortBy === 'status') {
             arr.sort((a, b) => {
                 // `abandoned` flag should land in the Abandoned bucket even
@@ -74,7 +80,7 @@ function PlansList({ plans = [], selectedId, onSelect, emptyMessage = 'No plans 
             arr.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
         }
         return arr;
-    }, [plans, sortBy]);
+    }, [plans, sortBy, inProgressOnly]);
 
     // Bucket the sorted plans into the three fixed working-group sections.
     // Anything with an unrecognized workingGroup lands in a trailing "Other"
@@ -119,6 +125,16 @@ function PlansList({ plans = [], selectedId, onSelect, emptyMessage = 'No plans 
                         </option>
                     ))}
                 </Select>
+                <Button
+                    size="sm"
+                    flexShrink={0}
+                    colorScheme="blue"
+                    variant={inProgressOnly ? 'solid' : 'outline'}
+                    onClick={() => setInProgressOnly((v) => !v)}
+                    aria-pressed={inProgressOnly}
+                >
+                    In Progress Only
+                </Button>
             </HStack>
 
             <Box
@@ -126,9 +142,6 @@ function PlansList({ plans = [], selectedId, onSelect, emptyMessage = 'No plans 
                 borderColor="gray.200"
                 borderRadius="md"
                 bg="white"
-                overflowY="auto"
-                flex="1"
-                maxH="75vh"
             >
                 {sorted.length === 0 ? (
                     <Box p={4} color="gray.500" fontSize="sm" fontStyle="italic">

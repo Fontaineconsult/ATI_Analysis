@@ -563,3 +563,23 @@ export const createIntellectualSource = async (fields) => {
         throw error;
     }
 };
+
+//
+// ASANA SYNC — two-way reconciliation for the plans page. Pushes the campus's
+// plans for the year into the year's Asana project (create or update name/notes)
+// and pulls each task's subtasks back into the graph. Slow-ish (one round-trip
+// per plan); callers should show a loading state. Summary at response.data.data.
+//
+
+export const refreshAsanaPlans = async (campusAbbrev, yearName) => {
+    try {
+        const response = await axios.post(`${process.env.REACT_APP_API_URL}/asana/refresh-plans`, {
+            campus_abbrev: campusAbbrev,
+            year_name: yearName,
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error refreshing plans to Asana:', error);
+        throw error;
+    }
+};

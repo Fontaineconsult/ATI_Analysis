@@ -28,21 +28,20 @@ import {
     Select,
     Switch,
     useDisclosure,
-    useToast,
-    Checkbox
+    useToast
 } from '@chakra-ui/react';
-import { FaPlus } from 'react-icons/fa';
+import { FaPlus, FaSyncAlt } from 'react-icons/fa';
 import { DataContext } from '../../context/DataContext';
 import { SettingsContext } from '../../context/SettingsContext';
 import PlansTable from './PlansTable';
 import PlansSplitView from './PlansSplitView';
 import AccomplishmentsTable from './AccomplishmentsTable';
-import { createPlan } from '../../services/api/post';
+import { createPlan, refreshAsanaPlans } from '../../services/api/post';
 import { workingGroupWebSafe } from "../../services/utils/tools";
 
 function PlansAccomplishmentsManager() {
     const { data, loading, loadSingleWorkingGroupData } = useContext(DataContext);
-    const { currentAcademicYear } = useContext(SettingsContext);
+    const { currentAcademicYear, currentCampus } = useContext(SettingsContext);
 
     // /plans/:planId deep-link support. The route pattern mirrors implementations'
     // /implementations/:type/:id — same component handles list and deep-link,
@@ -54,10 +53,43 @@ function PlansAccomplishmentsManager() {
     const { planId: initialPlanId } = useParams();
 
     const [activeTab, setActiveTab] = useState(0);
-    const [showAbandoned, setShowAbandoned] = useState(false);
     const { isOpen, onOpen, onClose } = useDisclosure();
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isAsanaRefreshing, setIsAsanaRefreshing] = useState(false);
     const toast = useToast();
+
+    // Two-way Asana sync for the current campus + year: pushes plans into the
+    // year's Asana project, pulls subtasks back into the graph, then refetches
+    // all three working groups so any new subtask state is visible.
+    const handleAsanaRefresh = async () => {
+        if (!currentCampus || !currentAcademicYear) {
+            toast({
+                title: 'Campus and year required',
+                description: 'Select a campus and academic year before refreshing Asana.',
+                status: 'warning', duration: 4000, isClosable: true,
+            });
+            return;
+        }
+        setIsAsanaRefreshing(true);
+        try {
+            const result = await refreshAsanaPlans(currentCampus, currentAcademicYear);
+            const s = result?.data || {};
+            toast({
+                title: 'Asana refresh complete',
+                description: `${s.tasks_created ?? 0} created, ${s.tasks_updated ?? 0} updated, ` +
+                    `${s.subtasks_synced ?? 0} subtasks mirrored into "${s.project_name}".`,
+                status: 'success', duration: 6000, isClosable: true,
+            });
+        } catch (error) {
+            toast({
+                title: 'Asana refresh failed',
+                description: error.response?.data?.error || error.message,
+                status: 'error', duration: 8000, isClosable: true,
+            });
+        } finally {
+            setIsAsanaRefreshing(false);
+        }
+    };
 
     // Form state for new plan
     const [newPlanData, setNewPlanData] = useState({
@@ -279,9 +311,7 @@ function PlansAccomplishmentsManager() {
         // Year-scoped visibility. Hide plans that are completed or abandoned
         // in a year other than the current selected year — they belong to
         // some other year's books. Active plans (no completed/abandoned
-        // state) always pass through. The `showAbandoned` toggle is now an
-        // override that disables this hiding (legacy behavior preserved).
-        if (showAbandoned) return uniquePlans;
+        // state) always pass through.
         return uniquePlans.filter((plan) => {
             // Completed in another year → hide
             if (plan.completed_year && plan.completed_year !== currentAcademicYear) return false;
@@ -359,16 +389,17 @@ function PlansAccomplishmentsManager() {
                         </Heading>
                         <HStack spacing={3}>
                             {activeTab === 0 && (
-                                <Checkbox
+                                <Button
                                     size="sm"
-                                    isChecked={showAbandoned}
-                                    onChange={(e) => setShowAbandoned(e.target.checked)}
-                                    colorScheme="gray"
+                                    variant="outline"
+                                    colorScheme="purple"
+                                    leftIcon={<FaSyncAlt />}
+                                    onClick={handleAsanaRefresh}
+                                    isLoading={isAsanaRefreshing}
+                                    loadingText="Syncing Asana…"
                                 >
-                                    <Text fontSize="sm" color="gray.600">
-                                        Show abandoned
-                                    </Text>
-                                </Checkbox>
+                                    Asana Refresh
+                                </Button>
                             )}
                             <Button
                                 size="sm"

@@ -18,6 +18,7 @@ import { LinkIcon } from '@chakra-ui/icons';
 import { useParams } from 'react-router-dom';
 import PlanEditForm from './PlanEditForm';
 import PlanProgressNotes from './PlanProgressNotes';
+import PlanAsanaSubtasks from './PlanAsanaSubtasks';
 import AssociatedYearSuccessEvidence from './AssociatedYearSuccessEvidence';
 import { getPlanStatusColorScheme } from '../../styles/planStatusColors';
 
@@ -153,13 +154,26 @@ function PlanDetailPanel({ plan, onAfterEdit, placeholder }) {
                 />
             </Box>
 
-            {/* Associated Year Success Evidence */}
+            {/* Associated Year Success Evidence — campus board with assign/unassign */}
             <Box bg="white" borderWidth="1px" borderColor="gray.200" borderRadius="lg" boxShadow="sm" p={5}>
                 <Heading as="h3" size="sm" color="teal.700" mb={3}>
                     Associated Year Success Evidence
                 </Heading>
                 <Divider mb={4} borderColor="gray.200" />
-                <AssociatedYearSuccessEvidence plan={plan} />
+                <AssociatedYearSuccessEvidence
+                    key={plan.unique_id}
+                    plan={plan}
+                    onChanged={() => { if (onAfterEdit) onAfterEdit(plan); }}
+                />
+            </Box>
+
+            {/* Asana subtasks (read-only mirror; Asana owns these) */}
+            <Box bg="white" borderWidth="1px" borderColor="gray.200" borderRadius="lg" boxShadow="sm" p={5}>
+                <Heading as="h3" size="sm" color="teal.700" mb={3}>
+                    Asana Subtasks
+                </Heading>
+                <Divider mb={4} borderColor="gray.200" />
+                <PlanAsanaSubtasks key={plan.unique_id} planUniqueId={plan.unique_id} />
             </Box>
 
             {/* Progress notes */}

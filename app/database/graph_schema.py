@@ -655,6 +655,11 @@ class Plan(StructuredNode):
     supporting_notes = RelationshipTo("Note", "is_documented_by")
     supporting_messages = RelationshipTo("Message", "is_documented_by")
 
+    # Asana reconciliation: the gid of the Asana task this plan was pushed to
+    # (set by the connector on first push) and the subtasks mirrored back.
+    asana_task_gid = StringProperty(index=True)
+    asana_subtasks = RelationshipTo("AsanaSubtask", "has_asana_subtask")
+
     #serialize
     def serialize(self):
         return {
@@ -666,7 +671,44 @@ class Plan(StructuredNode):
             'abandoned_notes': self.abandoned_notes,
             'completion_notes': self.completion_notes,
             'plan_status': self.plan_status,
+            'asana_task_gid': self.asana_task_gid,
             "unique_id": self.unique_id
+        }
+
+
+class AsanaSubtask(StructuredNode):
+    """
+    A read-only mirror of an Asana subtask living under a Plan's Asana task.
+
+    These nodes are owned by the Asana refresh sync: each refresh replaces a
+    plan's AsanaSubtask set wholesale with what Asana currently reports
+    (see queries/asana/create.replace_plan_subtasks). Do not edit them in-app —
+    Asana is the source of truth and the next refresh overwrites local changes.
+    """
+    unique_id = UniqueIdProperty()
+    asana_gid = StringProperty(unique_index=True, required=True)
+
+    name = StringProperty()
+    completed = BooleanProperty(default=False)
+    completed_at = StringProperty()   # ISO timestamp from Asana, verbatim
+    due_on = StringProperty()         # ISO date from Asana, verbatim
+    assignee_name = StringProperty()
+    permalink_url = StringProperty()
+    last_synced = StringProperty()    # ISO timestamp of the refresh that wrote this
+
+    plan = RelationshipFrom("Plan", "has_asana_subtask")
+
+    def serialize(self):
+        return {
+            "unique_id": self.unique_id,
+            "asana_gid": self.asana_gid,
+            "name": self.name,
+            "completed": self.completed,
+            "completed_at": self.completed_at,
+            "due_on": self.due_on,
+            "assignee_name": self.assignee_name,
+            "permalink_url": self.permalink_url,
+            "last_synced": self.last_synced,
         }
 
 class CampusPlan(StructuredNode):

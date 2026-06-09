@@ -759,3 +759,47 @@ export const fetchAllRoles = async () => {
         throw error;
     }
 };
+
+// A plan's mirrored Asana subtasks (AsanaSubtask nodes written by the Asana
+// Refresh sync). Open subtasks first, then by due date. Returns the list
+// directly (already unwrapped from the response envelope).
+export const fetchPlanAsanaSubtasks = async (planUid) => {
+    try {
+        const response = await axios.get(`${process.env.REACT_APP_API_URL}/asana/subtasks/${planUid}`);
+        if (response.status === 200) return response.data?.data || [];
+        throw new Error(`Failed to fetch Asana subtasks: ${response.data?.error}`);
+    } catch (error) {
+        console.error('Error fetching Asana subtasks:', error.message);
+        throw error;
+    }
+};
+
+// The campuses a plan is assigned to for one academic year (via its
+// furthers_yse anchors). Each entry: {abbreviation, name, yse_count}.
+export const fetchPlanCampuses = async (planUid, yearName) => {
+    try {
+        const response = await axios.get(`${process.env.REACT_APP_API_URL}/implementations/plans`, {
+            params: { campuses_for: planUid, academic_year: yearName },
+        });
+        if (response.status === 200) return response.data?.data || [];
+        throw new Error(`Failed to fetch plan campuses: ${response.data?.error}`);
+    } catch (error) {
+        console.error('Error fetching plan campuses:', error.message);
+        throw error;
+    }
+};
+
+// Every YSE a plan furthers — across ALL campuses and years — with year,
+// campus, status level, indicator, and total plan count per evidence.
+export const fetchPlanYses = async (planUid) => {
+    try {
+        const response = await axios.get(`${process.env.REACT_APP_API_URL}/implementations/plans`, {
+            params: { yses_for: planUid },
+        });
+        if (response.status === 200) return response.data?.data || [];
+        throw new Error(`Failed to fetch plan YSEs: ${response.data?.error}`);
+    } catch (error) {
+        console.error('Error fetching plan YSEs:', error.message);
+        throw error;
+    }
+};

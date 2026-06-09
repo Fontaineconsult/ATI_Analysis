@@ -8,7 +8,10 @@ from ...database.queries.implementation.update import update_plan, assign_person
     assign_documentation_to_implementation, add_progress_note_to_plan, \
     assign_person_as_owner, unassign_person_as_owner, \
     assign_accountable_working_group, unassign_accountable_working_group, \
-    set_implementation_dimensions, set_implementation_participants
+    set_implementation_dimensions, set_implementation_participants, \
+    assign_plan_to_campus, unassign_plan_from_campus, \
+    attach_plan_to_yse, detach_plan_from_yse
+from ...database.queries.implementation.read import get_plan_campuses, get_plan_yses
 from app.endpoints.data_api.util.response import make_response
 from app.endpoints.data_api.errors.custom_exceptions import ApiError, ValidationError, CrudError, NotFoundError
 from app.database.graph_schema import serialize_participants, serialize_applied_assets
@@ -706,6 +709,25 @@ class ImplementationPlanAPI(MethodView):
         try:
             from app.database.graph_schema import Plan, AcademicYear
 
+            # Campuses a plan is assigned to (via its furthers_yse anchors)
+            # for one academic year: ?campuses_for=<uid>&academic_year=<year>
+            # Every YSE a plan furthers, across all campuses/years:
+            # ?yses_for=<uid>
+            yses_for = request.args.get('yses_for')
+            if yses_for:
+                data = get_plan_yses(yses_for)
+                return make_response(status="success", data=data), 200
+
+            campuses_for = request.args.get('campuses_for')
+            if campuses_for:
+                academic_year = request.args.get('academic_year')
+                if not academic_year:
+                    return make_response(
+                        status="error",
+                        error="'academic_year' is required with 'campuses_for'"), 400
+                data = get_plan_campuses(campuses_for, academic_year)
+                return make_response(status="success", data=data), 200
+
             # Check if requesting all plans
             all_param = request.args.get('all')
 
@@ -846,6 +868,29 @@ class ImplementationPlanAPI(MethodView):
                 return self.handle_update_plan(data)
             elif action == "add_progress_note":
                 return self.handle_add_progress_note(data)
+            elif action in ("assign_campus", "unassign_campus"):
+                # Local error envelope: the shared handlers below put the
+                # message in the wrong slot (make_response positional-dict
+                # quirk) and the campus UI surfaces these errors verbatim.
+                try:
+                    return self.handle_campus_assignment(action, data)
+                except ValidationError as e:
+                    return make_response(status="error", error=str(e)), 400
+                except NotFoundError as e:
+                    return make_response(status="error", error=str(e)), 404
+                except CrudError as e:
+                    return make_response(status="error", error=str(e)), 500
+            elif action in ("attach_yse", "detach_yse"):
+                try:
+                    if action == "attach_yse":
+                        return self.handle_attach_yse(data)
+                    return self.handle_detach_yse(data)
+                except ValidationError as e:
+                    return make_response(status="error", error=str(e)), 400
+                except NotFoundError as e:
+                    return make_response(status="error", error=str(e)), 404
+                except CrudError as e:
+                    return make_response(status="error", error=str(e)), 500
             else:
                 return make_response({"status": "error", "error": f"Unknown action '{action}' in request."}), 400
 
@@ -870,6 +915,88 @@ class ImplementationPlanAPI(MethodView):
         update_plan(data)
 
         return make_response({"status": "success", "message": "Plan updated successfully"}), 200
+
+    def handle_campus_assignment(self, action, data):
+        """
+        Assign/unassign a plan to a campus for one academic year. Connects
+        (or disconnects) the plan to that campus's YSEs for the same
+        indicators + year it already furthers elsewhere.
+
+        Expected payload:
+        {
+            "action": "assign_campus" | "unassign_campus",
+            "unique_id": "UUID of the plan",
+            "campus_abbrev": "ssu",
+            "year_name": "2025-2026"
+        }
+        """
+        required_fields = ['unique_id', 'campus_abbrev', 'year_name']
+        for field in required_fields:
+            if not data.get(field):
+                raise ValidationError(f"Missing required field: '{field}'")
+
+        if action == "assign_campus":
+            linked = assign_plan_to_campus(
+                data['unique_id'], data['campus_abbrev'], data['year_name'])
+            return make_response(
+                status="success",
+                message=f"Plan assigned to {data['campus_abbrev']} "
+                        f"({linked} evidence link{'s' if linked != 1 else ''}).",
+                data={"linked": linked},
+            ), 200
+
+        unlinked = unassign_plan_from_campus(
+            data['unique_id'], data['campus_abbrev'], data['year_name'])
+        return make_response(
+            status="success",
+            message=f"Plan unassigned from {data['campus_abbrev']} "
+                    f"({unlinked} evidence link{'s' if unlinked != 1 else ''} removed).",
+            data={"unlinked": unlinked},
+        ), 200
+
+    def handle_attach_yse(self, data):
+        """
+        Connect the plan to ONE specific YearSuccessEvidence (the "add new
+        evidence" path — finer-grained than assign_campus's mirror-all).
+
+        Expected payload:
+        {
+            "action": "attach_yse",
+            "unique_id": "UUID of the plan",
+            "yse_unique_id": "UUID of the YearSuccessEvidence"
+        }
+        """
+        for field in ('unique_id', 'yse_unique_id'):
+            if not data.get(field):
+                raise ValidationError(f"Missing required field: '{field}'")
+
+        attach_plan_to_yse(data['unique_id'], data['yse_unique_id'])
+        return make_response(
+            status="success",
+            message="Evidence link added.",
+        ), 200
+
+    def handle_detach_yse(self, data):
+        """
+        Remove one furthers_yse link (per-evidence pruning; finer-grained than
+        unassign_campus). The query layer refuses to orphan the plan entirely.
+
+        Expected payload:
+        {
+            "action": "detach_yse",
+            "unique_id": "UUID of the plan",
+            "yse_unique_id": "UUID of the YearSuccessEvidence"
+        }
+        """
+        for field in ('unique_id', 'yse_unique_id'):
+            if not data.get(field):
+                raise ValidationError(f"Missing required field: '{field}'")
+
+        detach_plan_from_yse(data['unique_id'], data['yse_unique_id'])
+        return make_response(
+            status="success",
+            message="Evidence link removed.",
+        ), 200
 
     def handle_add_progress_note(self, data):
         """

@@ -15,9 +15,22 @@ from collections import Counter
 # Working group is reached authoritatively via the responsible-for edge:
 #   ATIWorkingGroup -[:responsible_for]-> Goal -[:supported_by]-> SuccessIndicator
 # either from the plan's directly-furthered goal, or via its YSE's indicator.
+#
+# $year_name / $campus_abbrev are optional scoping params (pass null to skip).
+# Scoping mirrors what the plans page shows (PlansAccomplishmentsManager):
+#   - anchor: the plan furthers a YearSuccessEvidence in $year_name at
+#     $campus_abbrev. NOT the plan's own in_academic_year — the year rollover
+#     re-links active plans to each new year's YSEs, so a plan created in
+#     2023-2024 legitimately appears under 2025-2026 evidence.
+#   - visibility (only when $year_name is given): hide plans completed or
+#     abandoned in a DIFFERENT year, and legacy abandoned=true plans with no
+#     abandoned_in_year edge — the same rule as _PLANS_FOR_WGP_QUERY and the
+#     frontend getAllPlans().
 PLANS_QUERY = """
 MATCH (plan:Plan)
 OPTIONAL MATCH (plan)-[:in_academic_year]->(py:AcademicYear)
+OPTIONAL MATCH (plan)-[:completed_in_year]->(completedYear:AcademicYear)
+OPTIONAL MATCH (plan)-[:abandoned_in_year]->(abandonedYear:AcademicYear)
 OPTIONAL MATCH (wgp:WorkingGroupPlan)-[:includes_plan]->(plan)
 OPTIONAL MATCH (wgp)-[:for_working_group]->(wg:ATIWorkingGroup)
 OPTIONAL MATCH (cp:CampusPlan)-[:has_working_group_plan]->(wgp)
@@ -28,7 +41,22 @@ OPTIONAL MATCH (yse)-[:evidence_at_campus]->(yseCampus:Campus)
 OPTIONAL MATCH (yse)-[:tracks]->(si:SuccessIndicator)
 OPTIONAL MATCH (g)<-[:responsible_for]-(wgViaGoal:ATIWorkingGroup)
 OPTIONAL MATCH (si)<-[:supported_by]-(:Goal)<-[:responsible_for]-(wgViaInd:ATIWorkingGroup)
-WITH plan, py, wgp, wg, cpCampus, yseCampus, g, si, wgViaGoal, wgViaInd
+WITH plan, py, completedYear, abandonedYear, wgp, wg, cpCampus, yseCampus, g, si,
+     wgViaGoal, wgViaInd
+WHERE (
+    ($year_name IS NULL AND $campus_abbrev IS NULL)
+    OR size([(plan)-[:furthers_yse]->(e:YearSuccessEvidence)
+             WHERE ($year_name IS NULL
+                    OR (e)-[:evidence_in_year]->(:AcademicYear {name: $year_name}))
+               AND ($campus_abbrev IS NULL
+                    OR (e)-[:evidence_at_campus]->(:Campus {abbreviation: $campus_abbrev}))
+             | 1]) > 0
+  )
+  AND ($year_name IS NULL OR (
+        (completedYear IS NULL OR completedYear.name = $year_name)
+        AND (NOT coalesce(plan.abandoned, false)
+             OR (abandonedYear IS NOT NULL AND abandonedYear.name = $year_name))
+  ))
 RETURN plan.unique_id     AS uid,
        plan.name          AS name,
        plan.description    AS description,
@@ -36,6 +64,7 @@ RETURN plan.unique_id     AS uid,
        plan.is_key_plan    AS is_key_plan,
        plan.is_campus_plan AS is_campus_plan,
        plan.abandoned      AS abandoned,
+       plan.asana_task_gid AS asana_task_gid,
        collect(DISTINCT py.name)                              AS plan_years,
        collect(DISTINCT coalesce(wg.name, wgViaGoal.name,
                                  wgViaInd.name))              AS working_groups,
@@ -49,10 +78,19 @@ ORDER BY name
 LIST_FIELDS = ("plan_years", "working_groups", "campuses", "goal_numbers", "indicators")
 
 
-def fetch_plans():
-    """Return a list of plan dicts (one per :Plan node). Connection must be set."""
+def fetch_plans(year_name=None, campus_abbrev=None):
+    """Return a list of plan dicts (one per :Plan node). Connection must be set.
+
+    Optional scoping mirrors the plans page: ``year_name``/``campus_abbrev``
+    keep only plans furthering a YearSuccessEvidence in that year / at that
+    campus, with the page's visibility rule applied (plans completed or
+    abandoned in a different year are dropped). Both default to None = no
+    filter, preserving the original export-everything behaviour.
+    """
     from neomodel import db
-    rows, cols = db.cypher_query(PLANS_QUERY)
+    rows, cols = db.cypher_query(
+        PLANS_QUERY, {"year_name": year_name, "campus_abbrev": campus_abbrev}
+    )
     plans = []
     for row in rows:
         rec = dict(zip(cols, row))

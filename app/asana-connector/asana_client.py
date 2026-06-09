@@ -111,12 +111,17 @@ class AsanaClient:
             json_body={"data": {"name": name}},
         )
 
-    def create_task(self, name, project_gid, *, notes=None, completed=False):
+    def create_task(self, name, project_gid, *, notes=None, completed=False,
+                    custom_fields=None):
         data = {"name": name, "projects": [project_gid]}
         if notes is not None:
             data["notes"] = notes
         if completed:
             data["completed"] = True
+        if custom_fields:
+            # {field_gid: value} — text string, enum option gid, or list of
+            # option gids for multi_enum.
+            data["custom_fields"] = custom_fields
         return self._data(
             "POST", "/tasks",
             params={"opt_fields": "name,permalink_url,gid,completed"},
@@ -129,6 +134,55 @@ class AsanaClient:
             "POST", f"/sections/{section_gid}/addTask",
             json_body={"data": {"task": task_gid}},
         )
+
+    # ---- reconciliation --------------------------------------------------
+    def get_task(self, task_gid):
+        """GET /tasks/{gid} — raises AsanaError(404) if it no longer exists."""
+        return self._data(
+            "GET", f"/tasks/{task_gid}",
+            params={"opt_fields": "name,permalink_url,gid,completed"},
+        )
+
+    def update_task(self, task_gid, *, name=None, notes=None, custom_fields=None):
+        """PUT /tasks/{gid} — update only the fields given (None = leave alone)."""
+        data = {}
+        if name is not None:
+            data["name"] = name
+        if notes is not None:
+            data["notes"] = notes
+        if custom_fields:
+            data["custom_fields"] = custom_fields
+        if not data:
+            return None
+        return self._data(
+            "PUT", f"/tasks/{task_gid}",
+            params={"opt_fields": "name,permalink_url,gid,completed"},
+            json_body={"data": data},
+        )
+
+    # ---- custom fields ----------------------------------------------------
+    def get_project_custom_field_settings(self, project_gid):
+        """The project's custom fields (Asana list-view columns), with options."""
+        return list(self._paginate(
+            f"/projects/{project_gid}/custom_field_settings",
+            opt_fields="custom_field.name,custom_field.resource_subtype,"
+                       "custom_field.enum_options.name,"
+                       "custom_field.enum_options.enabled",
+        ))
+
+    def create_enum_option(self, custom_field_gid, name):
+        """Add an option to an enum/multi_enum custom field; returns the option."""
+        return self._data(
+            "POST", f"/custom_fields/{custom_field_gid}/enum_options",
+            json_body={"data": {"name": name}},
+        )
+
+    def list_subtasks(self, task_gid):
+        """All subtasks of a task, with the fields the graph mirror stores."""
+        return list(self._paginate(
+            f"/tasks/{task_gid}/subtasks",
+            opt_fields="name,completed,completed_at,due_on,assignee.name,permalink_url",
+        ))
 
     # ---- helpers ---------------------------------------------------------
     def _paginate(self, path, **params):

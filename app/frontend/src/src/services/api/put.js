@@ -1065,3 +1065,47 @@ export const setImplementationParticipants = async (implementationType, implemen
         throw error;
     }
 };
+//
+// CROSS-CAMPUS PLAN ASSIGNMENT — connects/disconnects a plan to another
+// campus's YSEs for the same indicators + year (the plan's campus anchoring
+// runs through its furthers_yse edges). Backend refuses to remove the last
+// remaining campus for the year.
+//
+
+export const assignPlanToCampus = async (planUid, campusAbbrev, yearName) => {
+    const response = await axios.put(`${process.env.REACT_APP_API_URL}/implementations/plans`, {
+        action: 'assign_campus',
+        unique_id: planUid,
+        campus_abbrev: campusAbbrev,
+        year_name: yearName,
+    });
+    return response.data;
+};
+
+export const unassignPlanFromCampus = async (planUid, campusAbbrev, yearName) => {
+    const response = await axios.put(`${process.env.REACT_APP_API_URL}/implementations/plans`, {
+        action: 'unassign_campus',
+        unique_id: planUid,
+        campus_abbrev: campusAbbrev,
+        year_name: yearName,
+    });
+    return response.data;
+};
+
+export const detachPlanFromYse = async (planUid, yseUniqueId) => {
+    const response = await axios.put(`${process.env.REACT_APP_API_URL}/implementations/plans`, {
+        action: 'detach_yse',
+        unique_id: planUid,
+        yse_unique_id: yseUniqueId,
+    });
+    return response.data;
+};
+
+export const attachPlanToYse = async (planUid, yseUniqueId) => {
+    const response = await axios.put(`${process.env.REACT_APP_API_URL}/implementations/plans`, {
+        action: 'attach_yse',
+        unique_id: planUid,
+        yse_unique_id: yseUniqueId,
+    });
+    return response.data;
+};

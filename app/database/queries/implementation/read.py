@@ -400,3 +400,69 @@ def get_documents_for_year(
         raise CrudError(f"Failed to retrieve documents for year: {e}")
 
     return result
+
+_PLAN_CAMPUSES_QUERY = """
+    MATCH (p:Plan {unique_id: $plan_uid})-[:furthers_yse]->(yse:YearSuccessEvidence)
+          -[:evidence_in_year]->(:AcademicYear {name: $year_name})
+    MATCH (yse)-[:evidence_at_campus]->(c:Campus)
+    RETURN c.abbreviation AS abbreviation,
+           c.name         AS name,
+           count(DISTINCT yse) AS yse_count
+    ORDER BY abbreviation
+"""
+
+
+def get_plan_campuses(plan_uid: str, year_name: str) -> list:
+    """The campuses a plan is assigned to for one year, via its furthers_yse
+    anchors. Each entry: {abbreviation, name, yse_count}. Raises NotFoundError
+    for a nonexistent plan; an empty list on a real plan just means no
+    evidence links in that year.
+    """
+    plan = Plan.nodes.get_or_none(unique_id=plan_uid)
+    if plan is None:
+        raise NotFoundError(f"Plan with unique_id '{plan_uid}' not found.")
+
+    results, _ = db.cypher_query(
+        _PLAN_CAMPUSES_QUERY, {"plan_uid": plan_uid, "year_name": year_name}
+    )
+    return [
+        {"abbreviation": row[0], "name": row[1], "yse_count": row[2]}
+        for row in results
+    ]
+
+
+_PLAN_YSES_QUERY = """
+    MATCH (p:Plan {unique_id: $plan_uid})-[:furthers_yse]->(yse:YearSuccessEvidence)
+    OPTIONAL MATCH (yse)-[:evidence_in_year]->(y:AcademicYear)
+    OPTIONAL MATCH (yse)-[:evidence_at_campus]->(c:Campus)
+    OPTIONAL MATCH (yse)-[:status_is]->(sl:StatusLevel)
+    OPTIONAL MATCH (yse)-[:tracks]->(si:SuccessIndicator)
+    OPTIONAL MATCH (si)<-[:supported_by]-(g:Goal)
+    OPTIONAL MATCH (yse)<-[:furthers_yse]-(other:Plan)
+    RETURN yse.year_identifier      AS year_identifier,
+           yse.unique_id            AS unique_id,
+           y.name                   AS year_name,
+           c.abbreviation           AS campus_abbrev,
+           c.name                   AS campus_name,
+           sl.status_level          AS status_level,
+           si.composite_key         AS indicator_key,
+           si.success_indicator     AS indicator_description,
+           g.goal_number            AS goal_number,
+           count(DISTINCT other)    AS plan_count
+    ORDER BY year_name DESC, campus_abbrev, indicator_key
+"""
+
+
+def get_plan_yses(plan_uid: str) -> list:
+    """Every YearSuccessEvidence a plan furthers — across ALL campuses and
+    years — with its year, campus, status level, indicator, and how many
+    plans total further it. Drives the plan detail panel's Associated YSE
+    list (DataContext only holds the current campus, so cross-campus links
+    need this direct read).
+    """
+    plan = Plan.nodes.get_or_none(unique_id=plan_uid)
+    if plan is None:
+        raise NotFoundError(f"Plan with unique_id '{plan_uid}' not found.")
+
+    results, cols = db.cypher_query(_PLAN_YSES_QUERY, {"plan_uid": plan_uid})
+    return [dict(zip(cols, row)) for row in results]
