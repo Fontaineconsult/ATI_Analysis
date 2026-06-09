@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import {
     Badge,
     Box,
+    Heading,
     HStack,
     List,
     ListItem,
@@ -19,6 +20,14 @@ const STATUS_ORDER = {
     'Completed': 3,
     'Abandoned': 4,
 };
+
+// Fixed working-group sections, in display order. Keys match the web-safe
+// values getAllPlans() stamps onto plan.workingGroup (workingGroupWebSafe).
+const WG_SECTIONS = [
+    { key: 'procurement', label: 'Procurement' },
+    { key: 'web', label: 'Web' },
+    { key: 'instructional-materials', label: 'Instructional Materials' },
+];
 
 const SORT_OPTIONS = [
     { value: 'name', label: 'Name (A→Z)' },
@@ -67,6 +76,22 @@ function PlansList({ plans = [], selectedId, onSelect, emptyMessage = 'No plans 
         return arr;
     }, [plans, sortBy]);
 
+    // Bucket the sorted plans into the three fixed working-group sections.
+    // Anything with an unrecognized workingGroup lands in a trailing "Other"
+    // section (only rendered when non-empty) so no plan silently disappears.
+    const sections = useMemo(() => {
+        const known = WG_SECTIONS.map((s) => ({
+            ...s,
+            plans: sorted.filter((p) => p.workingGroup === s.key),
+        }));
+        const knownKeys = new Set(WG_SECTIONS.map((s) => s.key));
+        const leftover = sorted.filter((p) => !knownKeys.has(p.workingGroup));
+        if (leftover.length > 0) {
+            known.push({ key: 'other', label: 'Other', plans: leftover });
+        }
+        return known;
+    }, [sorted]);
+
     if (!plans || plans.length === 0) {
         return (
             <Box p={4} color="gray.500" fontSize="sm" fontStyle="italic">
@@ -110,70 +135,94 @@ function PlansList({ plans = [], selectedId, onSelect, emptyMessage = 'No plans 
                         {emptyMessage}
                     </Box>
                 ) : (
-                    <List spacing={0}>
-                        {sorted.map((plan) => {
-                            const isSelected = plan.unique_id === selectedId;
-                            const statusColor = getPlanStatusColor(plan);
-                            const statusLabel = getPlanStatusLabel(plan);
-                            return (
-                                <ListItem
-                                    key={plan.unique_id}
-                                    p={0}
-                                    cursor="pointer"
-                                    bg={isSelected ? 'teal.50' : 'white'}
-                                    borderLeftWidth="3px"
-                                    borderLeftColor={isSelected ? 'teal.500' : 'transparent'}
-                                    borderBottomWidth="1px"
-                                    borderBottomColor="gray.100"
-                                    _hover={{ bg: isSelected ? 'teal.50' : 'gray.50' }}
-                                    onClick={() => onSelect && onSelect(plan)}
+                    sections.map((section) => (
+                        <Box key={section.key}>
+                            {/* Section header — sticky so the group stays labeled while scrolling */}
+                            <HStack
+                                position="sticky"
+                                top={0}
+                                zIndex={1}
+                                px={3}
+                                py={2}
+                                bg="gray.50"
+                                borderBottomWidth="1px"
+                                borderBottomColor="gray.200"
+                                justify="space-between"
+                                align="center"
+                            >
+                                <Heading
+                                    as="h3"
+                                    size="xs"
+                                    textTransform="uppercase"
+                                    letterSpacing="wide"
+                                    color="teal.700"
                                 >
-                                    {/* Status band — full-width, colored per status */}
-                                    <Box
-                                        px={3}
-                                        py={1}
-                                        bg={statusColor.bg}
-                                        color={statusColor.fg}
-                                        borderLeftWidth="3px"
-                                        borderLeftColor={statusColor.solid}
-                                    >
-                                        <Text fontSize="2xs" fontWeight="bold" textTransform="uppercase" letterSpacing="wide">
-                                            {statusLabel}
-                                        </Text>
-                                    </Box>
+                                    {section.label}
+                                </Heading>
+                                <Text fontSize="2xs" fontWeight="semibold" color="gray.500">
+                                    {section.plans.length}
+                                </Text>
+                            </HStack>
 
-                                    {/* Body */}
-                                    <Box px={3} py={2.5}>
-                                        {/* Title */}
-                                        <Box pb={2} mb={2} borderBottomWidth="1px" borderBottomColor={isSelected ? 'teal.100' : 'gray.100'}>
-                                            <Text fontSize="sm" fontWeight={isSelected ? 'semibold' : 'medium'} color="gray.800" noOfLines={2}>
-                                                {plan.name || '(untitled)'}
-                                            </Text>
-                                        </Box>
+                            {section.plans.length === 0 ? (
+                                <Box px={3} py={2.5} color="gray.400" fontSize="xs" fontStyle="italic">
+                                    No plans
+                                </Box>
+                            ) : (
+                                <List spacing={0} aria-label={`${section.label} plans`}>
+                                    {section.plans.map((plan) => {
+                                        const isSelected = plan.unique_id === selectedId;
+                                        const statusColor = getPlanStatusColor(plan);
+                                        const statusLabel = getPlanStatusLabel(plan);
+                                        return (
+                                            <ListItem
+                                                key={plan.unique_id}
+                                                px={3}
+                                                py={2.5}
+                                                cursor="pointer"
+                                                bg={statusColor.bg}
+                                                borderLeftWidth="6px"
+                                                borderLeftColor={statusColor.solid}
+                                                borderTopWidth="1px"
+                                                borderTopColor="gray.300"
+                                                borderBottomWidth="1px"
+                                                borderBottomColor="gray.300"
+                                                boxShadow={isSelected ? 'inset 0 0 0 1px var(--chakra-colors-teal-500)' : 'none'}
+                                                _hover={{ filter: 'brightness(0.96)' }}
+                                                onClick={() => onSelect && onSelect(plan)}
+                                            >
+                                                {/* Title */}
+                                                <Text fontSize="sm" fontWeight={isSelected ? 'semibold' : 'medium'} color="gray.800" noOfLines={2}>
+                                                    {plan.name || '(untitled)'}
+                                                </Text>
 
-                                        {/* Single line: WG on left, key/campus flags on right */}
-                                        <HStack justify="space-between" align="center">
-                                            {plan.workingGroup ? (
-                                                <Badge colorScheme="teal" variant="subtle" fontSize="2xs" textTransform="uppercase">
-                                                    {plan.workingGroup}
-                                                </Badge>
-                                            ) : (
-                                                <Box />
-                                            )}
-                                            <HStack spacing={1.5}>
-                                                {plan.is_key_plan && (
-                                                    <Badge colorScheme="purple" variant="subtle" fontSize="2xs">Key</Badge>
-                                                )}
-                                                {plan.is_campus_plan && (
-                                                    <Badge colorScheme="green" variant="subtle" fontSize="2xs">Campus</Badge>
-                                                )}
-                                            </HStack>
-                                        </HStack>
-                                    </Box>
-                                </ListItem>
-                            );
-                        })}
-                    </List>
+                                                {/* Meta row: quiet status text + key/campus flags */}
+                                                <HStack justify="space-between" align="center" mt={1.5}>
+                                                    <Text
+                                                        fontSize="2xs"
+                                                        fontWeight="bold"
+                                                        textTransform="uppercase"
+                                                        letterSpacing="wide"
+                                                        color={statusColor.fg}
+                                                    >
+                                                        {statusLabel}
+                                                    </Text>
+                                                    <HStack spacing={1.5}>
+                                                        {plan.is_key_plan && (
+                                                            <Badge colorScheme="purple" variant="subtle" fontSize="2xs">Key</Badge>
+                                                        )}
+                                                        {plan.is_campus_plan && (
+                                                            <Badge colorScheme="green" variant="subtle" fontSize="2xs">Campus</Badge>
+                                                        )}
+                                                    </HStack>
+                                                </HStack>
+                                            </ListItem>
+                                        );
+                                    })}
+                                </List>
+                            )}
+                        </Box>
+                    ))
                 )}
             </Box>
         </VStack>
