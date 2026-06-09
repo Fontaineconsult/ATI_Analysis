@@ -164,245 +164,158 @@ def get_all_implementations_by_type(implementation_type: str) -> list:
                 {'handle': d.handle, 'name': d.name} for d in impl.classified_under.all()
             ] if hasattr(impl, 'classified_under') else [],
             'participants': serialize_participants(impl) if hasattr(impl, 'participants') else [],
+            'assets': serialize_applied_assets(impl) if hasattr(impl, 'remediates_interface') else [],
         } for impl in implementations]
     except Exception as e:
         raise CrudError(f"Error retrieving {implementation_type} implementations: {e}")
+
+
+# One batched projection per implementation type, replacing the per-node N+1. Pattern
+# comprehensions compute each nested collection independently per impl node (no cartesian
+# explosion), and apoc.convert.toJson returns the whole type's payload as a single string —
+# so the entire implementations read is 7 round-trips instead of thousands. The shape mirrors
+# _get_all_implementations_legacy field-for-field; the only Python post-processing is the two
+# derived fields (campuses, deduped assets) the legacy loop also computed.
+#
+# The `is_documented_by` rel-type is shared by documents/webpages/notes/messages, so each is
+# disambiguated by the TARGET label (:Document / :Webpage / :Note / :Message). The doing-only
+# collections (participants / assets / dimensions) naturally yield [] for the reference types
+# that lack those edges — matching the legacy hasattr guards.
+_IMPL_PROJECTION = """
+    MATCH (impl:%(label)s)
+    RETURN apoc.convert.toJson(collect({
+      unique_id: impl.unique_id,
+      title: impl.title,
+      description: impl.description,
+      type: $type_name,
+      owned_by: [ (impl)-[:owned_by]->(p:Person) |
+        { unique_id: p.unique_id, name: p.name, title: p.title, email: p.email, employee_id: p.employee_id } ],
+      supporting_documents: [ (impl)-[r:is_documented_by]->(d:Document) | {
+        unique_id: d.unique_id, name: d.name, hash: d.hash, file_path: d.file_path, uri_path: d.uri_path,
+        description: d.description, depreciated: d.depreciated, depreciated_date: d.depreciated_date,
+        include_in_report: coalesce(d.include_in_report, true),
+        is_administrative_review_documentation: d.is_administrative_review_documentation,
+        is_milestone_and_measures_documentation: d.is_milestone_and_measures_documentation,
+        maintained_by: head([ (d)-[:maintained_by]->(m:Person) |
+          { unique_id: m.unique_id, name: m.name, email: m.email, employee_id: m.employee_id, title: m.title } ]),
+        relationship: {
+          included_in_years: coalesce(r.included_in_years, []),
+          excluded_from_years: coalesce(r.excluded_from_years, []),
+          added_date: r.added_date, modified_date: r.modified_date, added_by: r.added_by
+        }
+      } ],
+      supporting_webpages: [ (impl)-[r:is_documented_by]->(w:Webpage) | {
+        unique_id: w.unique_id, url: w.url, name: w.name, description: w.description,
+        no_longer_exists: w.no_longer_exists, depreciated: w.depreciated, depreciated_date: w.depreciated_date,
+        include_in_report: coalesce(w.include_in_report, true),
+        maintained_by: head([ (w)-[:maintained_by]->(m:Person) |
+          { unique_id: m.unique_id, name: m.name, email: m.email, employee_id: m.employee_id, title: m.title } ]),
+        relationship: {
+          included_in_years: coalesce(r.included_in_years, []),
+          excluded_from_years: coalesce(r.excluded_from_years, []),
+          added_date: r.added_date, modified_date: r.modified_date, added_by: r.added_by
+        }
+      } ],
+      supporting_notes: [ (impl)-[r:is_documented_by]->(n:Note) | {
+        unique_id: n.unique_id, name: n.name, content: n.content, date_created: n.date_created,
+        depreciated: n.depreciated, depreciated_date: n.depreciated_date, include_in_report: coalesce(n.include_in_report, true),
+        created_by: head([ (n)-[:created_by]->(c:Person) |
+          { unique_id: c.unique_id, name: c.name, email: c.email, employee_id: c.employee_id, title: c.title } ]),
+        relationship: {
+          included_in_years: coalesce(r.included_in_years, []),
+          excluded_from_years: coalesce(r.excluded_from_years, []),
+          added_date: r.added_date, modified_date: r.modified_date, added_by: r.added_by
+        }
+      } ],
+      supporting_messages: [ (impl)-[r:is_documented_by]->(msg:Message) | {
+        unique_id: msg.unique_id, name: msg.name, content: msg.content, file_path: msg.file_path,
+        uri_path: msg.uri_path, date_created: msg.date_created, type: msg.type, depreciated: msg.depreciated,
+        depreciated_date: msg.depreciated_date, include_in_report: coalesce(msg.include_in_report, true),
+        created_by: head([ (msg)-[:created_by]->(c:Person) |
+          { unique_id: c.unique_id, name: c.name, email: c.email, employee_id: c.employee_id, title: c.title } ]),
+        relationship: {
+          included_in_years: coalesce(r.included_in_years, []),
+          excluded_from_years: coalesce(r.excluded_from_years, []),
+          added_date: r.added_date, modified_date: r.modified_date, added_by: r.added_by
+        }
+      } ],
+      supporting_metrics: [ (impl)-[:has_metric]->(mt:Metric) | {
+        unique_id: mt.unique_id, name: mt.name, composite_key: mt.composite_key, metric_type: mt.metric_type,
+        file_path: mt.file_path, uri_path: mt.uri_path, description: mt.description, single_value: mt.single_value,
+        comment: mt.comment, include_in_report: coalesce(mt.include_in_report, true),
+        created_by: head([ (mt)-[:created_by]->(c:Person) |
+          { unique_id: c.unique_id, name: c.name, email: c.email, employee_id: c.employee_id, title: c.title } ])
+      } ],
+      is_evidence_for: [ (impl)-[:is_evidence_for]->(yse:YearSuccessEvidence) | {
+        year_identifier: yse.year_identifier, unique_id: yse.unique_id,
+        success_indicator: head([ (yse)-[:tracks]->(si:SuccessIndicator) | si.success_indicator ]),
+        indicator_number: head([ (yse)-[:tracks]->(si:SuccessIndicator) | si.number ]),
+        indicator_composite_key: head([ (yse)-[:tracks]->(si:SuccessIndicator) | si.composite_key ]),
+        campus: head([ (yse)-[:evidence_at_campus]->(c:Campus) |
+          { unique_id: c.unique_id, name: c.name, abbreviation: c.abbreviation } ])
+      } ],
+      dimensions: [ (impl)-[:classified_under]->(dim:Dimension) | { handle: dim.handle, name: dim.name } ],
+      participants: [ (impl)<-[w:worked_on]-(p:Person) |
+        { person: { unique_id: p.unique_id, name: p.name }, role_handle: w.role_handle, note: w.note } ],
+      assets_raw:
+        [ (impl)-[:remediates]->(a:Asset) |
+          a { .asset_identifier, .title, .unique_id, .scope, .asset_class, reach: 'direct' } ]
+        + [ (impl)-[:remediates_interface]->(:Interface)-[:presented_by]->(a:Asset) |
+          a { .asset_identifier, .title, .unique_id, .scope, .asset_class, reach: 'interface' } ]
+    })) AS j
+"""
+
+
+def _all_implementations_of_type(label):
+    """Batched projection of every node of one implementation type — a single apoc query that
+    reproduces the legacy per-impl dict (plus light post-processing for the two derived fields:
+    `campuses` and the deduped `assets`)."""
+    import json
+
+    rows, _meta = db.cypher_query(_IMPL_PROJECTION % {"label": label}, {"type_name": label})
+    impls = json.loads(rows[0][0]) if rows and rows[0] and rows[0][0] else []
+
+    for impl in impls:
+        # Deduped, sorted campus abbreviations across this impl's YSEs (legacy: read.py campuses).
+        impl["campuses"] = sorted({
+            yse["campus"]["abbreviation"]
+            for yse in impl.get("is_evidence_for", [])
+            if yse.get("campus") and yse["campus"].get("abbreviation")
+        })
+
+        # Dedupe applied assets by unique_id, merging the reach tags (legacy: serialize_applied_assets).
+        merged = {}
+        for asset in impl.pop("assets_raw", []):
+            uid = asset.get("unique_id")
+            if not uid:
+                continue
+            reach = asset.pop("reach", None)
+            if uid not in merged:
+                merged[uid] = {**asset, "reach": []}
+            if reach and reach not in merged[uid]["reach"]:
+                merged[uid]["reach"].append(reach)
+        impl["assets"] = list(merged.values())
+
+    return impls
 
 
 def get_all_implementations() -> dict:
     """
     Get all implementation nodes across all types with their relationships.
 
+    One batched apoc query per implementation type (7 round-trips total) instead of the legacy
+    per-node N+1 (~40 round-trips × every node). The returned shape is identical to the legacy
+    function — see _all_implementations_of_type / _IMPL_PROJECTION.
+
     :return: Dictionary with implementation types as keys and lists of implementations as values
     """
     from app.database.class_factory import implementation_classes
 
     try:
-        all_implementations = {}
-
-        for implementation_type, implementation_class in implementation_classes.items():
-            implementations = implementation_class.nodes.all()
-            all_implementations[implementation_type] = []
-
-            for impl in implementations:
-                impl_data = {
-                    'unique_id': impl.unique_id,
-                    'title': impl.title,
-                    'description': impl.description,
-                    'type': implementation_type,
-                    'supporting_documents': [],
-                    'supporting_webpages': [],
-                    'supporting_notes': [],
-                    'supporting_messages': [],
-                    'supporting_metrics': [],
-                    'is_evidence_for': [],
-                    'owned_by': [],
-                }
-
-                # People who own this implementation (owned_by edge)
-                for person in impl.owned_by.all():
-                    impl_data['owned_by'].append({
-                        'unique_id': person.unique_id,
-                        'name': person.name,
-                        'title': person.title,
-                        'email': person.email,
-                        'employee_id': person.employee_id,
-                    })
-
-                # Process supporting documents with relationship data
-                for doc in impl.supporting_documents.all():
-                    rel = impl.supporting_documents.relationship(doc)
-                    doc_data = {
-                        'unique_id': doc.unique_id,
-                        'name': doc.name,
-                        'hash': doc.hash,
-                        'file_path': doc.file_path,
-                        'uri_path': doc.uri_path,
-                        'description': doc.description,
-                        'depreciated': doc.depreciated,
-                        'depreciated_date': doc.depreciated_date.isoformat() if doc.depreciated_date else None,
-                        'include_in_report': doc.include_in_report,
-                        'is_administrative_review_documentation': doc.is_administrative_review_documentation,
-                        'is_milestone_and_measures_documentation': doc.is_milestone_and_measures_documentation,
-                        'maintained_by': {
-                            'unique_id': maintainer.unique_id,
-                            'name': maintainer.name,
-                            'email': maintainer.email,
-                            'employee_id': maintainer.employee_id,
-                            'title': maintainer.title
-                        } if (maintainer := doc.maintained_by.single()) else None,
-                        # Add relationship data - ArrayProperty handles lists directly
-                        'relationship': {
-                            'included_in_years': rel.included_in_years if rel else [],
-                            'excluded_from_years': rel.excluded_from_years if rel else [],
-                            'added_date': rel.added_date.isoformat() if rel and rel.added_date else None,
-                            'modified_date': rel.modified_date.isoformat() if rel and rel.modified_date else None,
-                            'added_by': rel.added_by if rel else None
-                        }
-                    }
-                    impl_data['supporting_documents'].append(doc_data)
-
-                # Process supporting webpages with relationship data
-                for wp in impl.supporting_webpages.all():
-                    rel = impl.supporting_webpages.relationship(wp)
-                    wp_data = {
-                        'unique_id': wp.unique_id,
-                        'url': wp.url,
-                        'name': wp.name,
-                        'description': wp.description,
-                        'no_longer_exists': wp.no_longer_exists,
-                        'depreciated': wp.depreciated,
-                        'depreciated_date': wp.depreciated_date.isoformat() if wp.depreciated_date else None,
-                        'include_in_report': wp.include_in_report,
-                        'maintained_by': {
-                            'unique_id': maintainer.unique_id,
-                            'name': maintainer.name,
-                            'email': maintainer.email,
-                            'employee_id': maintainer.employee_id,
-                            'title': maintainer.title
-                        } if (maintainer := wp.maintained_by.single()) else None,
-                        # Add relationship data - ArrayProperty handles lists directly
-                        'relationship': {
-                            'included_in_years': rel.included_in_years if rel else [],
-                            'excluded_from_years': rel.excluded_from_years if rel else [],
-                            'added_date': rel.added_date.isoformat() if rel and rel.added_date else None,
-                            'modified_date': rel.modified_date.isoformat() if rel and rel.modified_date else None,
-                            'added_by': rel.added_by if rel else None
-                        }
-                    }
-                    impl_data['supporting_webpages'].append(wp_data)
-
-                # Process supporting notes with relationship data
-                for note in impl.supporting_notes.all():
-                    rel = impl.supporting_notes.relationship(note)
-                    note_data = {
-                        'unique_id': note.unique_id,
-                        'name': note.name,
-                        'content': note.content,
-                        'date_created': note.date_created.isoformat() if note.date_created else None,
-                        'depreciated': note.depreciated,
-                        'depreciated_date': note.depreciated_date.isoformat() if note.depreciated_date else None,
-                        'include_in_report': note.include_in_report,
-                        'created_by': {
-                            'unique_id': creator.unique_id,
-                            'name': creator.name,
-                            'email': creator.email,
-                            'employee_id': creator.employee_id,
-                            'title': creator.title
-                        } if (creator := note.created_by.single()) else None,
-                        # Add relationship data - ArrayProperty handles lists directly
-                        'relationship': {
-                            'included_in_years': rel.included_in_years if rel else [],
-                            'excluded_from_years': rel.excluded_from_years if rel else [],
-                            'added_date': rel.added_date.isoformat() if rel and rel.added_date else None,
-                            'modified_date': rel.modified_date.isoformat() if rel and rel.modified_date else None,
-                            'added_by': rel.added_by if rel else None
-                        }
-                    }
-                    impl_data['supporting_notes'].append(note_data)
-
-                # Process supporting messages with relationship data
-                for msg in impl.supporting_messages.all():
-                    rel = impl.supporting_messages.relationship(msg)
-                    msg_data = {
-                        'unique_id': msg.unique_id,
-                        'name': msg.name,
-                        'content': msg.content,
-                        'file_path': msg.file_path,
-                        'uri_path': msg.uri_path,
-                        'date_created': msg.date_created.isoformat() if msg.date_created else None,
-                        'type': msg.type,
-                        'depreciated': msg.depreciated,
-                        'depreciated_date': msg.depreciated_date.isoformat() if msg.depreciated_date else None,
-                        'include_in_report': msg.include_in_report,
-                        'created_by': {
-                            'unique_id': creator.unique_id,
-                            'name': creator.name,
-                            'email': creator.email,
-                            'employee_id': creator.employee_id,
-                            'title': creator.title
-                        } if (creator := msg.created_by.single()) else None,
-                        # Add relationship data - ArrayProperty handles lists directly
-                        'relationship': {
-                            'included_in_years': rel.included_in_years if rel else [],
-                            'excluded_from_years': rel.excluded_from_years if rel else [],
-                            'added_date': rel.added_date.isoformat() if rel and rel.added_date else None,
-                            'modified_date': rel.modified_date.isoformat() if rel and rel.modified_date else None,
-                            'added_by': rel.added_by if rel else None
-                        }
-                    }
-                    impl_data['supporting_messages'].append(msg_data)
-
-                # Supporting metrics (no DocumentedByRel for metrics currently)
-                for metric in impl.supporting_metrics.all():
-                    metric_data = {
-                        'unique_id': metric.unique_id,
-                        'name': metric.name,
-                        'composite_key': metric.composite_key,
-                        'metric_type': metric.metric_type,
-                        'file_path': metric.file_path,
-                        'uri_path': metric.uri_path,
-                        'description': metric.description,
-                        'single_value': metric.single_value,
-                        'comment': metric.comment,
-                        'include_in_report': metric.include_in_report,
-                        'created_by': {
-                            'unique_id': creator.unique_id,
-                            'name': creator.name,
-                            'email': creator.email,
-                            'employee_id': creator.employee_id,
-                            'title': creator.title
-                        } if (creator := metric.created_by.single()) else None
-                    }
-                    impl_data['supporting_metrics'].append(metric_data)
-
-                # Process YSE relationships
-                for yse in impl.is_evidence_for.all():
-                    yse_data = {
-                        'year_identifier': yse.year_identifier,
-                        'unique_id': yse.unique_id,
-                        'success_indicator': None,
-                        'indicator_number': None,
-                        'indicator_composite_key': None,
-                        'campus': None,
-                    }
-
-                    success_indicators = yse.tracks_success_indicator.all()
-                    if success_indicators:
-                        indicator = success_indicators[0]
-                        yse_data['success_indicator'] = indicator.success_indicator
-                        yse_data['indicator_number'] = indicator.number
-                        yse_data['indicator_composite_key'] = indicator.composite_key
-
-                    yse_campus = yse.campus.single()
-                    if yse_campus:
-                        yse_data['campus'] = {
-                            'unique_id': yse_campus.unique_id,
-                            'name': yse_campus.name,
-                            'abbreviation': yse_campus.abbreviation,
-                        }
-
-                    impl_data['is_evidence_for'].append(yse_data)
-
-                # Deduped, sorted list of campus abbreviations across this impl's YSEs
-                impl_data['campuses'] = sorted({
-                    yse['campus']['abbreviation']
-                    for yse in impl_data['is_evidence_for']
-                    if yse.get('campus') and yse['campus'].get('abbreviation')
-                })
-
-                # AMM dimensions classify only the four doing-implementations
-                # (Process/Project/Procedure/Service); other types have no such edge.
-                impl_data['dimensions'] = [
-                    {'handle': d.handle, 'name': d.name} for d in impl.classified_under.all()
-                ] if hasattr(impl, 'classified_under') else []
-
-                # Participants (the working team — people in their roles), distinct from owned_by.
-                impl_data['participants'] = serialize_participants(impl) if hasattr(impl, 'participants') else []
-
-                all_implementations[implementation_type].append(impl_data)
-
-        return all_implementations
+        return {
+            implementation_type: _all_implementations_of_type(implementation_type)
+            for implementation_type in implementation_classes
+        }
     except Exception as e:
         raise CrudError(f"Error retrieving all implementations: {e}")
 

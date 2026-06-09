@@ -1,4 +1,4 @@
-import React, { createContext, useState, useEffect } from 'react';
+import React, { createContext, useState, useEffect, useRef, useCallback } from 'react';
 import {fetchPrimaryData, fetchCurrentYearIndicator, fetchTrends, fetchAllImplementations} from '../services/api/get';
 import { useToast } from '@chakra-ui/react';
 import {year_difference} from "../services/utils/tools";
@@ -34,6 +34,47 @@ export const DataProvider = ({ children }) => {
 
     // Add a simple version counter to force re-renders
     const [dataVersion, setDataVersion] = useState(0);
+
+    // Goal report cache (the dashboard "View" report fetches a whole goal). Kept in a ref so
+    // it survives route unmounts and never triggers re-renders. Keyed by group|goal|year|campus
+    // so once a goal is fetched, revisiting reads from here instead of refetching.
+    const reportCacheRef = useRef({});
+    // In-flight requests, keyed the same way. Ensures concurrent callers for the same key share
+    // ONE network request — so React 18 StrictMode's double-invoked effect (and any genuine
+    // double-mount) never fires the (slow) report fetch twice.
+    const reportInflightRef = useRef({});
+
+    const getCachedReport = useCallback((key) => reportCacheRef.current[key], []);
+    const setCachedReport = useCallback((key, value) => { reportCacheRef.current[key] = value; }, []);
+    const invalidateReport = useCallback((key) => {
+        delete reportCacheRef.current[key];
+        delete reportInflightRef.current[key];
+    }, []);
+    const clearReportCache = useCallback(() => {
+        reportCacheRef.current = {};
+        reportInflightRef.current = {};
+    }, []);
+
+    // Cache-and-dedupe: resolves to cached data if present; otherwise runs `fetcher` once and
+    // shares that single promise with any concurrent caller for the same key, caching the
+    // result on success. This is what makes the double-effect under StrictMode a single fetch.
+    const getOrFetchReport = useCallback((key, fetcher) => {
+        if (reportCacheRef.current[key]) return Promise.resolve(reportCacheRef.current[key]);
+        if (reportInflightRef.current[key]) return reportInflightRef.current[key];
+        const pending = Promise.resolve()
+            .then(fetcher)
+            .then((data) => {
+                if (data) reportCacheRef.current[key] = data;
+                delete reportInflightRef.current[key];
+                return data;
+            })
+            .catch((err) => {
+                delete reportInflightRef.current[key];
+                throw err;
+            });
+        reportInflightRef.current[key] = pending;
+        return pending;
+    }, []);
 
     const toast = useToast();
 
@@ -91,6 +132,9 @@ export const DataProvider = ({ children }) => {
                 ...prevData,
                 [dataKey]: groupData.data,
             }));
+
+            // A mutation just happened — drop cached reports so the next View refetches.
+            clearReportCache();
 
             // Increment version to trigger re-renders
             setDataVersion(v => v + 1);
@@ -162,6 +206,9 @@ export const DataProvider = ({ children }) => {
                 implementations: implementationsData.status?.data || implementationsData.data || {}
             }));
 
+            // A mutation just happened — drop cached reports so the next View refetches.
+            clearReportCache();
+
             // Increment version to trigger re-renders
             setDataVersion(v => v + 1);
         } catch (err) {
@@ -188,7 +235,12 @@ export const DataProvider = ({ children }) => {
             loadSingleWorkingGroupData,
             refreshIndicators,
             refreshImplementations,
-            dataVersion
+            dataVersion,
+            getCachedReport,
+            setCachedReport,
+            invalidateReport,
+            clearReportCache,
+            getOrFetchReport
         }}>
             {children}
         </DataContext.Provider>

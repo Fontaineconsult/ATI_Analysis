@@ -11,7 +11,7 @@ from ...database.queries.implementation.update import update_plan, assign_person
     set_implementation_dimensions, set_implementation_participants
 from app.endpoints.data_api.util.response import make_response
 from app.endpoints.data_api.errors.custom_exceptions import ApiError, ValidationError, CrudError, NotFoundError
-from app.database.graph_schema import serialize_participants
+from app.database.graph_schema import serialize_participants, serialize_applied_assets
 
 class ImplementationAPI(MethodView):
 
@@ -170,6 +170,7 @@ class ImplementationAPI(MethodView):
                         for d in implementation_node.classified_under.all()
                     ] if hasattr(implementation_node, "classified_under") else [],
                     "participants": serialize_participants(implementation_node) if hasattr(implementation_node, "participants") else [],
+                    "assets": serialize_applied_assets(implementation_node) if hasattr(implementation_node, "remediates_interface") else [],
                 }
 
                 # Helper function to check if doc should be included for specific year

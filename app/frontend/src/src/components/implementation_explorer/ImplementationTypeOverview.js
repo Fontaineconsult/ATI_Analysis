@@ -536,6 +536,58 @@ function ImplementationTypeOverview({ implementationType, initialImplementationI
                                     {isParticipantType && (
                                         <FormControl>
                                             <FormLabel fontSize="xs" color="gray.600" fontWeight="semibold">
+                                                Assets it applies to
+                                            </FormLabel>
+                                            {Array.isArray(selectedImpl.assets) && selectedImpl.assets.length > 0 ? (
+                                                <VStack align="stretch" spacing={1}>
+                                                    {selectedImpl.assets.map((a) => (
+                                                        <HStack
+                                                            key={a.unique_id}
+                                                            spacing={2}
+                                                            flexWrap="wrap"
+                                                            borderWidth="1px"
+                                                            borderColor="gray.200"
+                                                            borderRadius="md"
+                                                            px={3}
+                                                            py={1.5}
+                                                            bg="white"
+                                                        >
+                                                            <Text fontSize="sm" color="gray.800" fontWeight="medium">{a.title}</Text>
+                                                            {a.scope && (
+                                                                <Badge colorScheme="gray" fontSize="2xs">{a.scope}</Badge>
+                                                            )}
+                                                            {a.asset_class && (
+                                                                <Badge colorScheme="teal" fontSize="2xs">
+                                                                    {a.asset_class.replace(/_/g, ' ')}
+                                                                </Badge>
+                                                            )}
+                                                            {(a.reach || []).map((r) => (
+                                                                <Badge
+                                                                    key={r}
+                                                                    colorScheme={r === 'direct' ? 'green' : 'blue'}
+                                                                    variant="subtle"
+                                                                    fontSize="2xs"
+                                                                >
+                                                                    {r === 'direct' ? 'remediated' : 'via interface'}
+                                                                </Badge>
+                                                            ))}
+                                                            <Text fontSize="2xs" color="gray.400" fontFamily="mono">
+                                                                {a.asset_identifier}
+                                                            </Text>
+                                                        </HStack>
+                                                    ))}
+                                                </VStack>
+                                            ) : (
+                                                <Text fontSize="xs" color="gray.500" fontStyle="italic">
+                                                    Not linked to any remediated asset or interface.
+                                                </Text>
+                                            )}
+                                        </FormControl>
+                                    )}
+
+                                    {isParticipantType && (
+                                        <FormControl>
+                                            <FormLabel fontSize="xs" color="gray.600" fontWeight="semibold">
                                                 Participants (working team)
                                             </FormLabel>
                                             <ParticipantsEditor

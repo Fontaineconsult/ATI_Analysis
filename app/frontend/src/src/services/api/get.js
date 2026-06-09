@@ -19,6 +19,40 @@ export const fetchPrimaryData = async (wg, ay, campus) => {
 };
 
 
+// The dedicated single-indicator report payload behind the dashboard "View" report.
+// Returns the rich, render-ready graph backbone for one indicator: implementations
+// (with owner / AMM dimensions / participants), the remediation layer (assets,
+// interfaces, tools, vendors), TAAPs, plans, and documentation — all pre-filtered
+// server-side. Read the payload from `response.data.data`.
+export const fetchIndicatorReport = async (compositeKey, year, campus) => {
+    const apiUrl = process.env.REACT_APP_API_URL;
+    const params = { composite_key: compositeKey, year };
+    if (campus) params.campus = campus;
+    const response = await axios.get(`${apiUrl}/report/indicator`, { params });
+    if (response.status === 200) {
+        return response.data;
+    }
+    throw new Error(`Failed to fetch report: ${response.data?.error}`);
+};
+
+
+// The full report for every indicator in one goal (within a working group) at a year/campus,
+// in one fetch. The dashboard caches the goal and serves each indicator's "View" report from
+// it, so opening one report pre-loads its goal siblings. `workingGroupCode` is the
+// composite-key suffix: web | pro | ins. Payload at response.data.data:
+// { indicators: { <composite_key>: report } }.
+export const fetchGoalReport = async (goalNumber, workingGroupCode, year, campus) => {
+    const apiUrl = process.env.REACT_APP_API_URL;
+    const params = { goal: goalNumber, working_group: workingGroupCode, year };
+    if (campus) params.campus = campus;
+    const response = await axios.get(`${apiUrl}/report/goal`, { params });
+    if (response.status === 200) {
+        return response.data;
+    }
+    throw new Error(`Failed to fetch goal report: ${response.data?.error}`);
+};
+
+
 export const fetchYsesByCampusForYear = async (academicYear) => {
     try {
         const response = await axios.get(

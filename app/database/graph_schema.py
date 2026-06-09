@@ -527,16 +527,65 @@ def serialize_role_holdings(person):
 
 
 def serialize_participants(impl):
-    """Project an implementation's participant edges → [{person, role_handle, note}]."""
-    rows = []
-    for person in impl.participants.all():
-        rel = impl.participants.relationship(person)
-        rows.append({
-            "person": {"unique_id": person.unique_id, "name": person.name},
-            "role_handle": rel.role_handle if rel else None,
-            "note": rel.note if rel else None,
-        })
-    return rows
+    """Project an implementation's participant edges → [{person, role_handle, note}], one
+    row per `worked_on` edge.
+
+    A person may be a participant in more than one role (multiple edges to the same impl).
+    We MUST read each edge individually: neomodel's ``manager.relationship(node)`` returns a
+    SINGLE relationship per node, so iterating people and looking up "the" relationship
+    collapses every role for a given person to one value (the multi-role bug). A direct
+    Cypher over the edges keeps them distinct.
+    """
+    from neomodel import db
+    query = """
+        MATCH (p:Person)-[w:worked_on]->(impl)
+        WHERE impl.unique_id = $impl_uid
+        RETURN p.unique_id AS unique_id, p.name AS name,
+               w.role_handle AS role_handle, w.note AS note
+        ORDER BY p.name, w.role_handle
+    """
+    rows, _meta = db.cypher_query(query, {"impl_uid": impl.unique_id})
+    return [
+        {"person": {"unique_id": unique_id, "name": name}, "role_handle": role_handle, "note": note}
+        for (unique_id, name, role_handle, note) in rows
+    ]
+
+
+def serialize_applied_assets(impl):
+    """The Assets an implementation applies to → [{asset_identifier, title, unique_id, scope,
+    asset_class, reach: [...]}], deduped by asset.
+
+    An implementation applies to an asset two ways: it remediates the asset directly
+    (`remediates`), or it remediates an interface the asset presents
+    (`remediates_interface` → `presented_by`). Both are read via Cypher because the
+    implementation side has no forward neomodel manager for these — they live as reverse
+    edges on Asset/Interface. `reach` records how each asset is reached ('direct' |
+    'interface'); an asset reached both ways carries both tags.
+    """
+    from neomodel import db
+    query = """
+        MATCH (impl {unique_id: $impl_uid})
+        RETURN
+          [ (impl)-[:remediates]->(a:Asset)
+              | a {.asset_identifier, .title, .unique_id, .scope, .asset_class, reach: 'direct'} ]
+          + [ (impl)-[:remediates_interface]->(:Interface)-[:presented_by]->(a:Asset)
+              | a {.asset_identifier, .title, .unique_id, .scope, .asset_class, reach: 'interface'} ]
+          AS assets
+    """
+    rows, _meta = db.cypher_query(query, {"impl_uid": impl.unique_id})
+    raw = rows[0][0] if rows and rows[0] else []
+
+    merged = {}
+    for asset in raw:
+        if not asset or not asset.get("unique_id"):
+            continue
+        uid = asset["unique_id"]
+        reach = asset.pop("reach", None)
+        if uid not in merged:
+            merged[uid] = {**asset, "reach": []}
+        if reach and reach not in merged[uid]["reach"]:
+            merged[uid]["reach"].append(reach)
+    return list(merged.values())
 
 
 
