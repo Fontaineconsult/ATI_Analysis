@@ -40,6 +40,7 @@ import {
     Copy
 } from "lucide-react";
 import {getStatusColor} from "../../../services/utils/tools";
+import ViewReportButton from "../../functional_components/ViewReportButton";
 import AtiStats from "./atistats";
 import StatusLevels from "./StatusLevelDefs";
 import Members from "./members";
@@ -167,23 +168,8 @@ const ReportMasterList = () => {
         );
     };
 
-    // Helper function to get View URL from composite key
-    const getUrlFromCompositeKey = (compositeKey) => {
-        const [numbers, suffix] = compositeKey.split('-');
-        const [goalNumber, indicatorNumber] = numbers.split('.');
-
-        const workingGroupMap = {
-            'web': 'web',
-            'pro': 'procurement',
-            'ins': 'instructional-materials'
-        };
-
-        const workingGroupSegment = workingGroupMap[suffix] || suffix;
-        return `${workingGroupSegment}/${goalNumber}/${indicatorNumber}`;
-    };
-
     // Helper to build the goal-view edit path segment for a composite key.
-    // Mirrors getUrlFromCompositeKey but targets the editable goal view and
+    // Targets the editable goal view and
     // deep-links the specific success indicator (its number is the last segment,
     // which EvidenceMasterContainer reads to pre-select on arrival).
     const getEditUrlFromCompositeKey = (compositeKey) => {
@@ -424,18 +410,7 @@ const ReportMasterList = () => {
                                             </Td>
                                             <Td>
                                                 <HStack spacing={2}>
-                                                    <Button
-                                                        size="xs"
-                                                        colorScheme="teal"
-                                                        variant="solid"
-                                                        onClick={() => {
-                                                            const urlSegment = getUrlFromCompositeKey(compositeKey);
-                                                            navigate(`/${campus}/dashboard/reports/${urlSegment}`);
-                                                        }}
-                                                        _hover={{ bg: "teal.600" }}
-                                                    >
-                                                        View
-                                                    </Button>
+                                                    <ViewReportButton compositeKey={compositeKey} campus={campus} size="xs" />
                                                     <Button
                                                         size="xs"
                                                         colorScheme="gray"

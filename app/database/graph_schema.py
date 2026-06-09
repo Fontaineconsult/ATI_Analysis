@@ -498,6 +498,47 @@ class YseProgressRel(StructuredRel):
     updated_by = StringProperty()  # unique_id of the Person who added the update
 
 
+class RoleHoldingRel(StructuredRel):
+    """A person's holding of a Role, carrying whether their position description covers it."""
+    in_position_description = BooleanProperty(default=False)   # is this capacity formally in their PD?
+    pd_description = StringProperty()                          # free text: HOW the PD addresses it (or that it doesn't)
+    added_date = DateProperty()
+
+
+class ParticipationRel(StructuredRel):
+    """A person's participation in an implementation, in a given role (the working team)."""
+    role_handle = StringProperty()      # which Role the person acted in (e.g. "role:qa-specialist")
+    note = StringProperty()             # optional: what they did
+    added_date = DateProperty()
+
+
+def serialize_role_holdings(person):
+    """Project a Person's holds_role edges → [{handle, name, in_position_description, pd_description}]."""
+    rows = []
+    for role in person.holds_role.all():
+        rel = person.holds_role.relationship(role)
+        rows.append({
+            "handle": role.handle,
+            "name": role.name,
+            "in_position_description": rel.in_position_description if rel else False,
+            "pd_description": rel.pd_description if rel else None,
+        })
+    return rows
+
+
+def serialize_participants(impl):
+    """Project an implementation's participant edges → [{person, role_handle, note}]."""
+    rows = []
+    for person in impl.participants.all():
+        rel = impl.participants.relationship(person)
+        rows.append({
+            "person": {"unique_id": person.unique_id, "name": person.name},
+            "role_handle": rel.role_handle if rel else None,
+            "note": rel.note if rel else None,
+        })
+    return rows
+
+
 
 class Accomplishment(StructuredNode):
 
@@ -740,6 +781,7 @@ class Process(StructuredNode):
     remediates_interface = RelationshipTo("Interface", "remediates_interface")
     accountable_working_group = RelationshipTo("ATIWorkingGroup", "accountable_working_group")  # committee accountable for this work (distinct from owned_by Person)
     classified_under = RelationshipTo("Dimension", "classified_under")  # cross-cutting AMM dimension(s) of the work
+    participants = RelationshipFrom("Person", "worked_on", model=ParticipationRel)  # the working team (people in their roles); distinct from owned_by
 
 
     #serialize
@@ -749,6 +791,7 @@ class Process(StructuredNode):
             'description': self.description,
             "unique_id": self.unique_id,
             "dimensions": [{"handle": d.handle, "name": d.name} for d in self.classified_under.all()],
+            "participants": serialize_participants(self),
         }
 
 
@@ -781,6 +824,7 @@ class Project(StructuredNode):
     remediates_interface = RelationshipTo("Interface", "remediates_interface")
     accountable_working_group = RelationshipTo("ATIWorkingGroup", "accountable_working_group")  # committee accountable for this work (distinct from owned_by Person)
     classified_under = RelationshipTo("Dimension", "classified_under")  # cross-cutting AMM dimension(s) of the work
+    participants = RelationshipFrom("Person", "worked_on", model=ParticipationRel)  # the working team (people in their roles); distinct from owned_by
     start_date = DateProperty()
     end_date = DateProperty()
 
@@ -792,6 +836,7 @@ class Project(StructuredNode):
             'description': self.description,
             "unique_id": self.unique_id,
             "dimensions": [{"handle": d.handle, "name": d.name} for d in self.classified_under.all()],
+            "participants": serialize_participants(self),
         }
 
 
@@ -821,6 +866,7 @@ class Procedure(StructuredNode):
     remediates_interface = RelationshipTo("Interface", "remediates_interface")
     accountable_working_group = RelationshipTo("ATIWorkingGroup", "accountable_working_group")  # committee accountable for this work (distinct from owned_by Person)
     classified_under = RelationshipTo("Dimension", "classified_under")  # cross-cutting AMM dimension(s) of the work
+    participants = RelationshipFrom("Person", "worked_on", model=ParticipationRel)  # the working team (people in their roles); distinct from owned_by
 
 
     #serialize
@@ -830,6 +876,7 @@ class Procedure(StructuredNode):
             'description': self.description,
             "unique_id": self.unique_id,
             "dimensions": [{"handle": d.handle, "name": d.name} for d in self.classified_under.all()],
+            "participants": serialize_participants(self),
         }
 
 
@@ -859,6 +906,7 @@ class Service(StructuredNode):
     remediates_interface = RelationshipTo("Interface", "remediates_interface")
     accountable_working_group = RelationshipTo("ATIWorkingGroup", "accountable_working_group")  # committee accountable for this work (distinct from owned_by Person)
     classified_under = RelationshipTo("Dimension", "classified_under")  # cross-cutting AMM dimension(s) of the work
+    participants = RelationshipFrom("Person", "worked_on", model=ParticipationRel)  # the working team (people in their roles); distinct from owned_by
 
 
     #serialize
@@ -868,6 +916,7 @@ class Service(StructuredNode):
             'description': self.description,
             "unique_id": self.unique_id,
             "dimensions": [{"handle": d.handle, "name": d.name} for d in self.classified_under.all()],
+            "participants": serialize_participants(self),
         }
 
 
@@ -1246,6 +1295,41 @@ class Dimension(StructuredNode):
         }
 
 
+class Role(StructuredNode):
+    """
+    A capacity a person provides to accessibility work — what a person DOES
+    (QA specialist, procurement reviewer, designer, developer, captioner, etc.).
+    The active "verb" side, complementary to Dimension (the categorical "noun" of
+    the work). A person holds one or more Roles (Person.holds_role; the holding edge
+    carries position-description tracking), and a Role is the capacity a person
+    participates in the Implementations they actually work on (the worked_on
+    participant edge, where the role is recorded as ParticipationRel.role_handle) —
+    distinct from owned_by, which is custodial (who maintains the evidence record).
+
+    Seeded from the applicable W3C Accessibility Maturity Model role-categories, kept
+    general rather than projecting institution-specific titles. A shared node;
+    relationship anchor only — no first-order operational data lives here. The
+    role↔dimension relationship is deliberately NOT modeled — it emerges from people
+    in roles participating in dimension-classified work.
+    """
+    unique_id = UniqueIdProperty()
+
+    handle = StringProperty(unique_index=True, required=True)  # e.g. "role:qa-specialist"
+    name = StringProperty(unique_index=True, required=True)    # e.g. "QA Specialist"
+    description = StringProperty()                              # general capacity description (seeded)
+
+    # Reverse of Person.holds_role; the holding edge carries the PD tracking (RoleHoldingRel).
+    held_by = RelationshipFrom("Person", "holds_role", model=RoleHoldingRel)
+
+    def serialize(self):
+        return {
+            "unique_id": self.unique_id,
+            "handle": self.handle,
+            "name": self.name,
+            "description": self.description,
+        }
+
+
 """
 Individuals
 
@@ -1285,6 +1369,14 @@ class Person(StructuredNode):
     in_ati_working_group = RelationshipTo('ATIWorkingGroup', 'participates_in')
     implements_yse = RelationshipTo("YearSuccessEvidence", "implements")
     host_campus = RelationshipTo("Campus", "works_at_campus", cardinality=ZeroOrOne)
+    holds_role = RelationshipTo("Role", "holds_role", model=RoleHoldingRel)  # capacities the person provides (PD tracking lives on the edge)
+    # Participatory "working team" edges to the four doing-implementations — the role
+    # acted in is a property on the edge (ParticipationRel.role_handle); distinct from
+    # owned_by (custodial). One shared rel-type "worked_on" across the four.
+    worked_on_processes  = RelationshipTo("Process",   "worked_on", model=ParticipationRel)
+    worked_on_projects   = RelationshipTo("Project",   "worked_on", model=ParticipationRel)
+    worked_on_procedures = RelationshipTo("Procedure", "worked_on", model=ParticipationRel)
+    worked_on_services   = RelationshipTo("Service",   "worked_on", model=ParticipationRel)
 
     #serialize
     def serialize(self):
@@ -1300,6 +1392,7 @@ class Person(StructuredNode):
             "unique_id": self.unique_id,
             "non_committee_member_active": self.non_committee_member_active,
             "host_campus": host_campus_node.abbreviation if host_campus_node else None,
+            "roles": serialize_role_holdings(self),
         }
 
 

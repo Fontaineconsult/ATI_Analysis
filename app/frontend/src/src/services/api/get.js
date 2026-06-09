@@ -712,3 +712,16 @@ export const fetchAllDimensions = async () => {
         throw error;
     }
 };
+
+// The seeded Role nodes (capacities) — options for the Person Roles editor and the
+// implementation Participants control. Returns the wrapper; consumers read data.items.
+export const fetchAllRoles = async () => {
+    try {
+        const response = await axios.get(`${process.env.REACT_APP_API_URL}/roles`);
+        if (response.status === 200) return response.data;
+        throw new Error(`Failed to fetch roles: ${response.data?.error}`);
+    } catch (error) {
+        console.error('Error fetching roles:', error.message);
+        throw error;
+    }
+};

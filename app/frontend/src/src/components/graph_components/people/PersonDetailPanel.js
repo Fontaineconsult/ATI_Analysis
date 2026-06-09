@@ -12,6 +12,7 @@ import {
 import { useSettings } from '../../../context/SettingsContext';
 import PersonHeader from './PersonHeader';
 import PersonYseList from './PersonYseList';
+import RoleHoldingsEditor from './RoleHoldingsEditor';
 import YseAssignmentSelector from '../../functional_components/YseAssignmentSelector';
 
 /**
@@ -64,6 +65,23 @@ function PersonDetailPanel({ person, onChange, placeholder }) {
     return (
         <VStack align="stretch" spacing={4}>
             <PersonHeader person={person} />
+
+            <Box bg="white" borderWidth="1px" borderColor="gray.200" borderRadius="lg" p={4} boxShadow="sm">
+                <HStack mb={3} justify="space-between" align="baseline">
+                    <Heading as="h3" size="sm" color="teal.700">
+                        Roles
+                    </Heading>
+                    <Text fontSize="xs" color="gray.500">
+                        held + worked · PD coverage
+                    </Text>
+                </HStack>
+                <RoleHoldingsEditor
+                    employeeId={person.employee_id}
+                    roles={Array.isArray(person.roles) ? person.roles : []}
+                    participatedRoleHandles={Array.isArray(person.participatedRoleHandles) ? person.participatedRoleHandles : []}
+                    onChange={onChange}
+                />
+            </Box>
 
             <Box bg="white" borderWidth="1px" borderColor="gray.200" borderRadius="lg" p={4} boxShadow="sm">
                 <HStack mb={3} justify="space-between" align="baseline">

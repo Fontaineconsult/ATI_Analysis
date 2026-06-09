@@ -366,6 +366,64 @@ def set_implementation_dimensions(implementation_type, implementation_unique_id,
         )
 
 
+# Participants (the working team — people in their roles) attach to the four doing-
+# implementations; the role acted in + an optional note live on the worked_on edge.
+_PARTICIPANT_TYPES = ("Process", "Project", "Procedure", "Service")
+
+
+def set_implementation_participants(implementation_type, implementation_unique_id, participants):
+    """
+    Replace an implementation's participants — the day-to-day working team, recorded as
+    {person, role, note} on the `worked_on` edge (ParticipationRel). Distinct from and
+    additive to `owned_by` (the evidence-record custodian), which is NOT touched.
+
+    Replace-semantics: `participants` is the full intended set; each is
+    {person_unique_id, role_handle, note?}. A person may appear more than once (in
+    different roles) → multiple edges. Only the four doing-implementations carry this.
+
+    Raises ValidationError on a non-participant type / bad list, NotFoundError if the
+    implementation or any person is missing, CrudError on failure. Returns the impl node.
+    """
+    if implementation_type not in _PARTICIPANT_TYPES:
+        raise ValidationError(
+            f"implementation_type must be one of {list(_PARTICIPANT_TYPES)} to carry "
+            f"participants; got {implementation_type!r}"
+        )
+    impl_node = _resolve_implementation(implementation_unique_id, implementation_type)
+
+    if participants is None:
+        participants = []
+    if not isinstance(participants, (list, tuple)):
+        raise ValidationError("participants must be a list")
+
+    # Resolve all people up front so a bad id fails before we mutate any edges.
+    resolved = []
+    for entry in participants:
+        entry = entry or {}
+        person_uid = entry.get("person_unique_id")
+        if not person_uid:
+            raise ValidationError("each participant requires a person_unique_id")
+        try:
+            person = Person.nodes.get(unique_id=person_uid)
+        except Person.DoesNotExist:
+            raise NotFoundError(f"Person {person_uid!r} not found")
+        resolved.append((person, entry))
+
+    try:
+        impl_node.participants.disconnect_all()
+        for person, entry in resolved:
+            impl_node.participants.connect(person, {
+                "role_handle": entry.get("role_handle"),
+                "note": entry.get("note"),
+                "added_date": date.today(),
+            })
+        return impl_node
+    except Exception as e:
+        raise CrudError(
+            f"Failed to set participants on {implementation_type} {implementation_unique_id!r}: {e}"
+        )
+
+
 def assign_note_to_implementation(implementation_title, implementation_type, note_title):
     if implementation_type not in implementation_classes:
         raise ValidationError(f"Invalid implementation_type: {implementation_type}")

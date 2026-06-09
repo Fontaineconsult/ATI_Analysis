@@ -19,6 +19,7 @@ from . import (assets,
                interfaces,
                organizational_units,
                principles,
+               roles,
                settings,
                tools,
                vendors)

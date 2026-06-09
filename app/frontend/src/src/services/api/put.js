@@ -1032,3 +1032,36 @@ export const setImplementationDimensions = async (implementationType, implementa
         throw error;
     }
 };
+
+// Replace a person's role holdings (each with PD tracking). Keyed on employee_id.
+// holdings: [{ role_handle, in_position_description, pd_description }]
+export const setPersonRoleHoldings = async (employeeId, holdings) => {
+    try {
+        const response = await axios.put(`${process.env.REACT_APP_API_URL}/individuals`, {
+            action: 'set_role_holdings',
+            employee_id: employeeId,
+            roles: holdings,
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error setting role holdings:', error);
+        throw error;
+    }
+};
+
+// Replace a doing-implementation's participants (the working team — people in their
+// roles), distinct from owner. participants: [{ person_unique_id, role_handle, note }]
+export const setImplementationParticipants = async (implementationType, implementationUniqueId, participants) => {
+    try {
+        const response = await axios.put(`${process.env.REACT_APP_API_URL}/implementations`, {
+            action: 'set_participants',
+            implementation_type: implementationType,
+            implementation_unique_id: implementationUniqueId,
+            participants,
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error setting implementation participants:', error);
+        throw error;
+    }
+};

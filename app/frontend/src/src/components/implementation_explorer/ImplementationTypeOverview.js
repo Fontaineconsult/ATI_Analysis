@@ -47,6 +47,7 @@ import {
 } from '../../services/api/put';
 import { fetchAllDimensions } from '../../services/api/get';
 import { useDescriptors } from '../../hooks/useDescriptors';
+import ParticipantsEditor from './ParticipantsEditor';
 import { DataContext } from '../../context/DataContext';
 import { SettingsContext } from '../../context/SettingsContext';
 import { UserContext } from '../../context/UserContext';
@@ -63,6 +64,8 @@ import {getEditUrlFromCompositeKey} from "../../services/utils/tools";
 
 // Implementation types that carry the classified_under edge to Dimension.
 const DIMENSION_TYPES = ['Process', 'Project', 'Procedure', 'Service', 'InternalPolicy', 'Guidance'];
+// The four doing-implementations carry the worked_on participant edge (the working team).
+const PARTICIPANT_TYPES = ['Process', 'Project', 'Procedure', 'Service'];
 
 function ImplementationTypeOverview({ implementationType, initialImplementationId }) {
     const { data, refreshImplementations } = useContext(DataContext);
@@ -71,6 +74,7 @@ function ImplementationTypeOverview({ implementationType, initialImplementationI
     const { describeField } = useDescriptors();
 
     const isDimensioned = DIMENSION_TYPES.includes(implementationType);
+    const isParticipantType = PARTICIPANT_TYPES.includes(implementationType);
     const [dimensionOptions, setDimensionOptions] = useState([]);
 
     // Make sure the individuals list is loaded for the Owners tab dropdown.
@@ -528,6 +532,21 @@ function ImplementationTypeOverview({ implementationType, initialImplementationI
                                             </Text>
                                         )}
                                     </FormControl>
+
+                                    {isParticipantType && (
+                                        <FormControl>
+                                            <FormLabel fontSize="xs" color="gray.600" fontWeight="semibold">
+                                                Participants (working team)
+                                            </FormLabel>
+                                            <ParticipantsEditor
+                                                implementationType={implementationType}
+                                                implementationUniqueId={selectedImpl.unique_id}
+                                                participants={selectedImpl.participants || []}
+                                                individuals={individuals || []}
+                                                onSaved={refreshImplementations}
+                                            />
+                                        </FormControl>
+                                    )}
                                 </VStack>
                             </TabPanel>
 

@@ -108,10 +108,31 @@ const getImplementationURL = (type, uniqueId, campus) => {
 };
 
 
+// The read-only Report view URL for a success indicator — the dashboard's "View" target:
+// /{campus}/dashboard/reports/{workingGroup}/{goal}/{indicator}. This is the canonical
+// home for the logic that was inlined in ReportMasterList; ViewReportButton consumes it
+// so the Reports table and the Web/IM/Procurement detail panels stay in lockstep.
+const getReportUrlFromCompositeKey = (compositeKey, campus) => {
+    const [numbers, suffix] = compositeKey.split('-');
+    const [goalNumber, indicatorNumber] = numbers.split('.');
+
+    const workingGroupMap = {
+        'web': 'web',
+        'pro': 'procurement',
+        'ins': 'instructional-materials'
+    };
+
+    const workingGroupSegment = workingGroupMap[suffix] || suffix;
+    const campusPrefix = campus ? `/${campus}` : '';
+    return `${campusPrefix}/dashboard/reports/${workingGroupSegment}/${goalNumber}/${indicatorNumber}`;
+};
+
+
 export { getUrlFromCompositeKey,
     getStatusColor,
     year_difference,
     getEditUrlFromCompositeKey,
     getImplementationURL,
+    getReportUrlFromCompositeKey,
     workingGroupCodeFromName,
     workingGroupWebSafe};

@@ -18,6 +18,7 @@ import {
 } from '@chakra-ui/react';
 import DropdownSelect from '../../functional_components/DropdownSelect';
 import StatusLevelLadder from '../../functional_components/StatusLevelLadder';
+import ViewReportButton from '../../functional_components/ViewReportButton';
 import PersonAssignmentSelector from '../../functional_components/PersonAssignmentSelector';
 import ImplementationMasterContainer from '../implementation/ImplementationMasterContainer';
 import YSEAnnotationMasterContainer from '../documentation/YSEAnnotationMasterContainer';
@@ -143,6 +144,7 @@ function SuccessIndicatorDetailPanel({ wrapper }) {
                                 onChange={handleStatusChange}
                             />
                         </Box>
+                        <ViewReportButton compositeKey={s.compositeKey} size="sm" />
                         <Button
                             size="sm"
                             colorScheme={s.approved ? 'green' : 'yellow'}

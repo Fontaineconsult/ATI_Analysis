@@ -1,5 +1,7 @@
+from datetime import date
+
 from app.database.graph_schema import *
-from app.endpoints.data_api.errors.custom_exceptions import CrudError, NotFoundError
+from app.endpoints.data_api.errors.custom_exceptions import CrudError, NotFoundError, ValidationError
 
 from neomodel import db
 
@@ -85,4 +87,57 @@ def update_person_by_employee_id(data: dict) -> Person:
         raise
     except Exception as e:
         raise CrudError(f"Error updating person with employee_id '{employee_id}': {e}")
+
+
+def set_person_role_holdings(employee_id: str, holdings: list) -> Person:
+    """
+    Replace a person's role holdings (holds_role) with the given set. Replace-semantics:
+    `holdings` is the full intended set; each is
+    {role_handle, in_position_description, pd_description}. The PD-tracking props live on
+    the holds_role edge (RoleHoldingRel) — whether the role is in the person's position
+    description, and free text on how it's addressed.
+
+    Raises ValidationError on a bad list / missing role_handle, NotFoundError if the
+    person or any role is missing, CrudError on failure. Returns the person node.
+    """
+    if not employee_id:
+        raise ValidationError("employee_id is required")
+    if holdings is None:
+        holdings = []
+    if not isinstance(holdings, list):
+        raise ValidationError("roles must be a list of role holdings")
+
+    try:
+        person = Person.nodes.get(employee_id=employee_id)
+    except Person.DoesNotExist:
+        raise NotFoundError(f"Person with employee_id {employee_id!r} not found")
+
+    # Resolve all roles up front so a bad handle fails before we mutate any edges.
+    resolved = []
+    for h in holdings:
+        h = h or {}
+        handle = h.get("role_handle")
+        if not handle:
+            raise ValidationError("each role holding requires a role_handle")
+        try:
+            role = Role.nodes.get(handle=handle)
+        except Role.DoesNotExist:
+            raise NotFoundError(f"Role {handle!r} not found")
+        resolved.append((role, h))
+
+    try:
+        person.holds_role.disconnect_all()
+        seen = set()
+        for role, h in resolved:
+            if role.handle in seen:
+                continue
+            seen.add(role.handle)
+            person.holds_role.connect(role, {
+                "in_position_description": bool(h.get("in_position_description", False)),
+                "pd_description": h.get("pd_description"),
+                "added_date": date.today(),
+            })
+        return person
+    except Exception as e:
+        raise CrudError(f"Failed to set role holdings for {employee_id!r}: {e}")
 

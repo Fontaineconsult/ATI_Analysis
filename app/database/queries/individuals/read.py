@@ -92,6 +92,8 @@ def get_person_implementation_details(employee_id: str) -> dict:
           non_committee_member_active: p.non_committee_member_active,
           host_campus: host.abbreviation,
           workingGroups: workingGroupNames,
+          roles: [(p)-[hr:holds_role]->(role:Role) | {handle: role.handle, name: role.name, in_position_description: hr.in_position_description, pd_description: hr.pd_description}],
+          participatedRoleHandles: [(p)-[w:worked_on]->() WHERE w.role_handle IS NOT NULL | w.role_handle],
           yearSuccessEvidences: yses
         }) AS jsonResult
     """

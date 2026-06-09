@@ -8,9 +8,10 @@ from ...database.queries.implementation.update import update_plan, assign_person
     assign_documentation_to_implementation, add_progress_note_to_plan, \
     assign_person_as_owner, unassign_person_as_owner, \
     assign_accountable_working_group, unassign_accountable_working_group, \
-    set_implementation_dimensions
+    set_implementation_dimensions, set_implementation_participants
 from app.endpoints.data_api.util.response import make_response
 from app.endpoints.data_api.errors.custom_exceptions import ApiError, ValidationError, CrudError, NotFoundError
+from app.database.graph_schema import serialize_participants
 
 class ImplementationAPI(MethodView):
 
@@ -168,6 +169,7 @@ class ImplementationAPI(MethodView):
                         {"handle": d.handle, "name": d.name}
                         for d in implementation_node.classified_under.all()
                     ] if hasattr(implementation_node, "classified_under") else [],
+                    "participants": serialize_participants(implementation_node) if hasattr(implementation_node, "participants") else [],
                 }
 
                 # Helper function to check if doc should be included for specific year
@@ -361,6 +363,8 @@ class ImplementationAPI(MethodView):
                 return self.handle_unassign_accountable_working_group(data)
             elif action == "set_dimensions":
                 return self.handle_set_dimensions(data)
+            elif action == "set_participants":
+                return self.handle_set_participants(data)
             elif action == "assign_documentation_to_implementation":
                 return self.handle_assign_documentation_to_implementation(data)
             elif action == "update_implementation":
@@ -615,6 +619,24 @@ class ImplementationAPI(MethodView):
             dimension_handles=data['dimension_handles'],
         )
         return make_response({"status": "success", "message": "Dimensions updated successfully"}), 200
+
+    def handle_set_participants(self, data):
+        """
+        Replace a doing-implementation's participants (the working team — people in their
+        roles), distinct from owned_by. Replace-semantics: participants is the full set.
+
+        Body: { action: "set_participants", implementation_type, implementation_unique_id,
+                participants: [{person_unique_id, role_handle, note?}, ...] }
+        """
+        required = ['implementation_type', 'implementation_unique_id', 'participants']
+        if not all(field in data for field in required):
+            raise ValidationError(f"Missing required fields: {required}")
+        set_implementation_participants(
+            implementation_type=data['implementation_type'],
+            implementation_unique_id=data['implementation_unique_id'],
+            participants=data['participants'],
+        )
+        return make_response({"status": "success", "message": "Participants updated successfully"}), 200
 
     def handle_assign_documentation_to_implementation(self, data):
         """
