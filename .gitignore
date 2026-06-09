@@ -21,3 +21,6 @@ app/frontend/src/src/context/admins.json
 # Jupyter scratch notebooks (contain connection strings and query output data)
 app/database/jupyter/
 .ipynb_checkpoints/
+
+# Graphify knowledge-graph output
+graphify-out/
