@@ -22,6 +22,15 @@ export const AboutPage = ({ title, lede, children }) => (
         <Heading as="h2" size="lg" color="gray.800" mb={2}>
             {title}
         </Heading>
+        {/* Brand rule — the SFBRN accent trio */}
+        <Box
+            height="3px"
+            width="72px"
+            borderRadius="full"
+            bgGradient="linear(to-r, teal.500, purple.500, coral.500)"
+            mb={3}
+            aria-hidden="true"
+        />
         {lede && (
             <Text fontSize="sm" color="gray.600" mb={5} maxW="80ch">
                 {lede}

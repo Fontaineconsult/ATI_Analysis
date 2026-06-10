@@ -37,10 +37,12 @@ function SubNavbar() {
             { label: 'Assets', path: `${campusPrefix}/ati-explorer/assets` },
         ];
     } else if (location.pathname.includes('/dashboard')) {
+        // The three working groups carry the brand accent trio as their
+        // identity marks (blue/purple/coral — see design-sense §2).
         subNavItems = [
-            { label: 'Web', path: `${campusPrefix}/dashboard/web/goal/1` },
-            { label: 'Instructional Materials', path: `${campusPrefix}/dashboard/instructional-materials/goal/1` },
-            { label: 'Procurement', path: `${campusPrefix}/dashboard/procurement/goal/1` },
+            { label: 'Web', path: `${campusPrefix}/dashboard/web/goal/1`, accent: 'teal.500' },
+            { label: 'Instructional Materials', path: `${campusPrefix}/dashboard/instructional-materials/goal/1`, accent: 'purple.500' },
+            { label: 'Procurement', path: `${campusPrefix}/dashboard/procurement/goal/1`, accent: 'coral.500' },
             { label: 'View Reports', path: `${campusPrefix}/dashboard/reports` },
             { label: 'Copy Report', path: `${campusPrefix}/dashboard/report-overview` },
             { label: 'Campus Plan', path: `${campusPrefix}/dashboard/campus-plan` },
@@ -114,10 +116,22 @@ function SubNavbar() {
                                     left: '10%',
                                     right: '10%',
                                     height: '2px',
-                                    bg: 'teal.500',
+                                    bg: item.accent || 'teal.500',
                                     borderRadius: 'full'
                                 } : {}}
                             >
+                                {item.accent && (
+                                    <Box
+                                        as="span"
+                                        display="inline-block"
+                                        w="7px"
+                                        h="7px"
+                                        borderRadius="full"
+                                        bg={item.accent}
+                                        mr={2}
+                                        aria-hidden="true"
+                                    />
+                                )}
                                 {item.label}
                             </Button>
                             {index < subNavItems.length - 1 && (

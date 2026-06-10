@@ -20,7 +20,7 @@ const STATUS_COLORS = {
     '2': 'yellow',
     '3': 'green',
     '4': 'green',
-    '5': 'teal',
+    '5': 'green', // not 'teal' — that key is the brand-blue alias, and status must stay in the maturity ramp
 };
 
 const SubNodeColumn = ({ label, descriptions, requirements, descField, reqField }) => {

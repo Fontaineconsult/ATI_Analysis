@@ -46,7 +46,9 @@ export function getStatusBackgroundColor(statusLevel) {
         case 'managed':
             return 'green.100';
         case 'optimizing':
-            return 'teal.50';
+            // Stays in the green family — `teal` is the brand alias now, and
+            // status tints must read as maturity, not chrome.
+            return 'green.200';
         default:
             return 'gray.50';
     }

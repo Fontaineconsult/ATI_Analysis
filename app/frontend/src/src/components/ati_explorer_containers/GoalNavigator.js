@@ -6,10 +6,12 @@ import Goal from '../graph_components/indicators/Goal';
 // URL slug -> display name + the key of `data` that holds this group's goals. The three
 // working groups render the SAME goal display, so one config replaces the old per-group
 // WebData / InstructionalMaterialsData / ProcurementData wrappers and the switch statements.
+// `accent` is each group's identity mark from the brand trio (blue/purple/coral) —
+// keep in sync with the SubNavbar working-group dots (design-sense §2).
 const WORKING_GROUPS = {
-    'web': { name: 'Web', dataKey: 'web' },
-    'instructional-materials': { name: 'Instructional Materials', dataKey: 'instructionalMaterials' },
-    'procurement': { name: 'Procurement', dataKey: 'procurement' },
+    'web': { name: 'Web', dataKey: 'web', accent: 'teal.500' },
+    'instructional-materials': { name: 'Instructional Materials', dataKey: 'instructionalMaterials', accent: 'purple.500' },
+    'procurement': { name: 'Procurement', dataKey: 'procurement', accent: 'coral.500' },
 };
 
 function GoalNavigator({ data }) {
@@ -45,9 +47,29 @@ function GoalNavigator({ data }) {
             {/* Header */}
             <Box mb={2} textAlign="center">
                 <Heading id="wg-area-heading" as="h2" size="md" color="teal.700" mb={2}>
+                    <Box
+                        as="span"
+                        display="inline-block"
+                        w="9px"
+                        h="9px"
+                        borderRadius="full"
+                        bg={config.accent}
+                        mr={2}
+                        verticalAlign="middle"
+                        aria-hidden="true"
+                    />
                     {config.name} Working Group
                     {goalId && ` - Goal ${goalId}`}
                 </Heading>
+                <Box
+                    height="2px"
+                    width="96px"
+                    mx="auto"
+                    borderRadius="full"
+                    bg={config.accent}
+                    mb={1}
+                    aria-hidden="true"
+                />
                 <Divider borderColor="gray.200" />
             </Box>
 

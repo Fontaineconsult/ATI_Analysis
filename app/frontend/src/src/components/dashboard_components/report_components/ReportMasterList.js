@@ -204,7 +204,7 @@ const ReportMasterList = () => {
 
         // Start HTML
         let html = `<div style="font-family: Arial, sans-serif;">`;
-        html += `<h3 style="color: #2C7A7B; margin-bottom: 10px;">Goal ${goalNumber}: ${goalName}</h3>`;
+        html += `<h3 style="color: #354A7A; margin-bottom: 10px;">Goal ${goalNumber}: ${goalName}</h3>`;
         html += `<table style="border-collapse: collapse; width: 100%; margin-bottom: 20px; font-size: 12px;">`;
         html += `<thead>`;
         html += `<tr style="background-color: #F7FAFC; border-bottom: 2px solid #E2E8F0;">`;
@@ -238,8 +238,8 @@ const ReportMasterList = () => {
             html += `<tr style="border-bottom: 1px solid #E2E8F0;">`;
             html += `<td style="padding: 8px; color: #2D3748;">${goalNumber}.${indicatorNumber}</td>`;
             html += `<td style="padding: 8px; color: #2D3748;">${description}</td>`;
-            html += `<td style="padding: 8px;"><a href="${viewUrl}" style="color: #319795; text-decoration: none;">View Report</a></td>`;
-            html += `<td style="padding: 8px;"><a href="${directLinkUrl}" style="color: #319795; text-decoration: none;">Direct Link</a></td>`;
+            html += `<td style="padding: 8px;"><a href="${viewUrl}" style="color: #40598F; text-decoration: none;">View Report</a></td>`;
+            html += `<td style="padding: 8px;"><a href="${directLinkUrl}" style="color: #40598F; text-decoration: none;">Direct Link</a></td>`;
             html += `</tr>`;
         });
 

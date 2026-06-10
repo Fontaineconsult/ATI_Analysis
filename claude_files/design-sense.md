@@ -41,18 +41,43 @@ These are the load-bearing instincts. Keep them even if specific tokens change.
 
 ### Color
 
-**Brand / primary — teal.** Use for headings, primary actions, active nav, selection.
+**Brand / primary — SFBRN blue.** The brand palette comes from `app/static/img/sfbrn-logo.svg`:
+charcoal `#231F20`, blue `#4966A4`, purple `#635098`, coral `#DB5850`. The blue is the
+primary accent, published in `App.js` `extendTheme` **under the `teal` key** (a 50–900 scale
+around `#4966A4`) so every existing `teal.*` / `colorScheme="teal"` usage resolves to brand
+blue with no per-component edits. Writing `teal.*` *means* "brand accent" in this codebase.
+The raw logo colors are also addressable as `brand.blue/purple/coral/charcoal`.
+
 | Use | Token |
 |---|---|
-| Section/card headings, accents | `teal.700` |
-| Primary buttons / active solid | `colorScheme="teal"` (solid) |
-| Selection highlight bg, active nav bg | `teal.50` |
+| Section/card headings, accents | `teal.700` (`#354A7A`) |
+| Primary buttons / active solid | `colorScheme="teal"` (solid 500 `#4966A4`) |
+| Selection highlight bg, active nav bg | `teal.50` (`#F4F6FB`) |
 | Selection left-border / focus ring | `teal.500` |
+| Header / top-nav surface | `teal.800` (`#2A3A62`) flat — no gradients |
+
+**Accent trio in use.** Full 50–900 scales exist for all three accents: `teal` (brand
+blue), `purple` (overridden to the SFBRN purple), and `coral` (custom key). Sanctioned uses:
+
+- **Brand rule** — a thin `linear(to-r, teal, purple, coral)` gradient line: 2px under the
+  header logo (use the `.400` stops on navy), 3px × 72px under About page titles (`.500`
+  stops on light). It marks *brand moments*, not arbitrary dividers.
+- **Working-group identity** (the trio's main job): **Web = `teal.500` · Instructional
+  Materials = `purple.500` · Procurement = `coral.500`**. Rendered as a 7px dot in the
+  SubNavbar items, and as the dot + 2px underline in the `GoalNavigator` header (config:
+  `WORKING_GROUPS` in `GoalNavigator.js` — keep the two in sync).
+- `colorScheme="purple"` / `colorScheme="coral"` are available for categorical badges where
+  a domain config calls for them.
+
+**Coral is identity-only** — it sits next to the danger reds (`red.500`, the "Not Started"
+ramp stop), so it must never signal status/severity; if a coral element could be read as an
+error, use purple instead. Deliberately calm: this is a data-heavy app, so chrome stays
+desaturated and saturated color carries *meaning* (status) or *identity* (working group).
 
 **Neutrals — structure.**
 | Use | Token |
 |---|---|
-| Page background | `gray.50` (App.css `#f0f4f7`) |
+| Page background | App.css `.App` `#eceef2` (calm cool neutral — cards read with less glare) |
 | Card / surface background | `white` |
 | Borders, dividers | `gray.200` |
 | Primary text | `gray.800` |
@@ -71,9 +96,11 @@ These are the load-bearing instincts. Keep them even if specific tokens change.
   Not Started=`#E53E3E` (red) · Initiated=`#ED8936` (orange) · Defined=`#ECC94B` (yellow) ·
   Established=`#41b441` · Managed=`#246f24` · Optimizing=`#157744` (greens) · none=gray.
 
-> ⚠️ Teal currently doubles as both the brand accent *and* an "advanced" status tone. When
-> you add status visuals, prefer the red→green maturity ramp for *status* and keep teal for
-> *chrome/brand*, so a teal element never ambiguously means "maxed out."
+> ✔ Resolved (2026-06): brand and status are now disjoint. The `teal` key is the brand-blue
+> alias and appears only as chrome; the maturity ramp is strictly red→green (the former
+> `teal` entries for "Optimizing"/level 5 were moved into the green family in
+> `statusColors.js`, `indicatorHelpers.js`, and `StatusLevelsControls.js`). When adding
+> status visuals, never reach for `teal.*` — use the ramp helpers.
 
 ### Typography
 
@@ -278,11 +305,15 @@ Tracked here so choices are deliberate, not accidental:
 1. **No theme-level component defaults.** Everything is inline; a restyle touches many files.
    *Aspiration:* lift `Card`, `Section`, `StatusBadge`, and color tokens into `extendTheme` /
    shared components so areas inherit instead of copy. Until then, this doc is the contract.
-2. **Teal double-duty** (brand + "advanced" status) — see §2 warning.
+2. ~~Teal double-duty (brand + "advanced" status).~~ **Resolved** — `teal` is the SFBRN
+   brand-blue alias; status visuals are strictly the red→green ramp (see §2). Residual debt:
+   the alias itself — `teal.*` reads oddly for a blue. A future mechanical rename to a
+   `brand.*` scale would finish the job.
 3. **Two visual languages** still coexist (canon vs legacy) — converge over time.
-4. **Working groups (Web / Instructional Materials / Procurement) have no visual identity** —
-   they render identically. Open opportunity: add `color` + `icon` to the `WORKING_GROUPS`
-   config and thread through the subnav chip + `GoalNavigator` header.
+4. ~~Working groups have no visual identity.~~ **Partially addressed** — the brand accent
+   trio now marks them (Web=blue, IM=purple, Pro=coral) in the SubNavbar dots and the
+   `GoalNavigator` header (see §2). Remaining: the accents live in two configs (SubNavbar
+   items + `WORKING_GROUPS`) and aren't yet threaded into goal/indicator cards or icons.
 5. ~~Maturity shown as a single pill, not a ladder.~~ **Addressed** — `StatusLevelLadder`
    (`functional_components/StatusLevelLadder.js`) renders the six-rung ladder with the current
    level emphasized (compact bar in indicator rows; labeled stepper in the detail header). See

@@ -12,7 +12,8 @@ import {
     MenuList,
     MenuItem,
     HStack,
-    Divider
+    Divider,
+    Image
 } from '@chakra-ui/react';
 import { ChevronDownIcon } from '@chakra-ui/icons';
 import { Routes, Route, Link as RouterLink, Navigate, useParams, useNavigate, useLocation } from 'react-router-dom';
@@ -24,6 +25,7 @@ import About from './components/About';
 import SubNavbar from './components/SubNavbar';
 import './styles/App.css';
 import { useSettings } from "./context/SettingsContext";
+import sfbrnLogoLight from './assets/img/sfbrn-logo-light.svg';
 
 // Theme extension
 import { extendTheme } from '@chakra-ui/react'
@@ -41,17 +43,60 @@ const theme = extendTheme({
     },
 
     colors: {
+        // SFBRN brand blue (#4966A4 from sfbrn-logo.svg), published under the
+        // `teal` key so every existing teal.* / colorScheme="teal" usage picks
+        // it up without touching each component. Desaturated on purpose — this
+        // is a data-heavy app, so chrome stays quiet and saturated color is
+        // reserved for status/severity meaning.
         teal: {
-            50: "#E6FFFA",
-            100: "#B2F5EA",
-            200: "#81E6D9",
-            300: "#4FD1C5",
-            400: "#38B2AC",
-            500: "#319795",
-            600: "#2C7A7B",
-            700: "#285E61",
-            800: "#234E52",
-            900: "#1D4044"
+            50: "#F4F6FB",
+            100: "#E4E9F4",
+            200: "#C9D3E8",
+            300: "#A7B7D7",
+            400: "#7E93BF",
+            500: "#4966A4",
+            600: "#40598F",
+            700: "#354A7A",
+            800: "#2A3A62",
+            900: "#202C4A"
+        },
+        // SFBRN accent purple (#635098), published over Chakra's `purple` so
+        // existing colorScheme="purple" usages harmonize with the logo.
+        purple: {
+            50: "#F6F4FA",
+            100: "#E9E5F3",
+            200: "#D3CCE6",
+            300: "#B6AAD4",
+            400: "#8F7DB9",
+            500: "#635098",
+            600: "#574686",
+            700: "#483A70",
+            800: "#3A2F5A",
+            900: "#2B2343"
+        },
+        // SFBRN accent coral (#DB5850). Identity/chrome accents only (working
+        // group marks, the brand rule) — never status/severity, where it would
+        // blur into the danger reds.
+        coral: {
+            50: "#FCF1F0",
+            100: "#F9DEDC",
+            200: "#F2BDB9",
+            300: "#EA9A94",
+            400: "#E27970",
+            500: "#DB5850",
+            600: "#C24A43",
+            700: "#A03C36",
+            800: "#7E2F2A",
+            900: "#5C221F"
+        },
+        // The full logo palette, addressable directly (brand.coral is near the
+        // danger reds — decorative use would blur error semantics; see
+        // claude_files/design-sense.md).
+        brand: {
+            blue: "#4966A4",
+            purple: "#635098",
+            coral: "#DB5850",
+            charcoal: "#231F20"
         }
     }
 })
@@ -116,9 +161,9 @@ function AppContent() {
         <>
             {/* Header Section */}
             <Box
-                bgGradient="linear(to-r, teal.600, teal.500, teal.400)"
+                bg="teal.800"
                 borderBottomWidth="2px"
-                borderColor="teal.700"
+                borderColor="teal.900"
                 boxShadow="md"
                 position="sticky"
                 top={0}
@@ -134,20 +179,40 @@ function AppContent() {
                 >
                     {/* Left side - Logo and Navigation */}
                     <HStack spacing={6} align="center">
-                        <Heading
-                            as="h1"
-                            size="md"
-                            color="white"
-                            fontWeight="bold"
-                            whiteSpace="nowrap"
-                            textShadow="1px 1px 2px rgba(0,0,0,0.1)"
-                        >
-                            {campusDisplayName} ATI Annual Report
-                        </Heading>
+                        <Box>
+                            <Heading as="h1" size="md" whiteSpace="nowrap">
+                                <Image
+                                    src={sfbrnLogoLight}
+                                    alt={`SFBRN — ${campusDisplayName} ATI Annual Report`}
+                                    height="24px"
+                                    width="auto"
+                                    draggable={false}
+                                />
+                            </Heading>
+                            {/* Thin brand rule — the logo's accent trio, in the
+                                lightened on-navy variants */}
+                            <Box
+                                mt="5px"
+                                height="2px"
+                                borderRadius="full"
+                                bgGradient="linear(to-r, teal.400, purple.400, coral.400)"
+                                aria-hidden="true"
+                            />
+                            <Text
+                                mt="3px"
+                                fontSize="2xs"
+                                color="whiteAlpha.800"
+                                textTransform="uppercase"
+                                letterSpacing="0.18em"
+                                whiteSpace="nowrap"
+                            >
+                                Accessible Technology Initiative
+                            </Text>
+                        </Box>
 
                         <Divider
                             orientation="vertical"
-                            height="24px"
+                            height="40px"
                             borderColor="whiteAlpha.400"
                         />
 
