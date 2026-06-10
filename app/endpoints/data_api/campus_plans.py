@@ -15,6 +15,8 @@ from app.database.queries.committees.create import create_campus_plan
 from app.database.queries.committees.read import fetch_campus_plan
 from app.database.queries.committees.update import (
     add_prioritized_indicator,
+    remove_prioritized_indicator,
+    update_campus_plan_summary,
     add_progress_update,
     assign_executive_sponsor_to_campus_plan,
     unassign_executive_sponsor_from_campus_plan,
@@ -93,6 +95,52 @@ class CampusPlansAPI(MethodView):
                         message="Indicator prioritized.",
                     ),
                     201,
+                )
+
+            if action == "remove_prioritized_indicator":
+                required = ["working_group_plan_identifier", "indicator_composite_key"]
+                missing = [k for k in required if k not in data]
+                if missing:
+                    return (
+                        make_response(
+                            status="error",
+                            error=f"Missing required fields: {missing}",
+                        ),
+                        400,
+                    )
+
+                remove_prioritized_indicator(
+                    data["working_group_plan_identifier"],
+                    data["indicator_composite_key"],
+                )
+                return (
+                    make_response(
+                        status="success",
+                        message="Indicator un-prioritized.",
+                    ),
+                    200,
+                )
+
+            if action == "update_campus_plan_summary":
+                if "plan_identifier" not in data:
+                    return (
+                        make_response(
+                            status="error",
+                            error="Missing required fields: ['plan_identifier']",
+                        ),
+                        400,
+                    )
+
+                update_campus_plan_summary(
+                    data["plan_identifier"],
+                    data.get("executive_summary"),
+                )
+                return (
+                    make_response(
+                        status="success",
+                        message="Executive summary updated.",
+                    ),
+                    200,
                 )
 
             if action == "add_progress_update":

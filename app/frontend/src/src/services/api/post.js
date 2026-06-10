@@ -364,6 +364,40 @@ export const addPrioritizedIndicator = async (workingGroupPlanIdentifier, indica
     }
 }
 
+export const removePrioritizedIndicator = async (workingGroupPlanIdentifier, indicatorCompositeKey) => {
+    try {
+        const response = await axios.post(
+            `${process.env.REACT_APP_API_URL}/campus-plans`,
+            {
+                action: 'remove_prioritized_indicator',
+                working_group_plan_identifier: workingGroupPlanIdentifier,
+                indicator_composite_key: indicatorCompositeKey,
+            }
+        );
+        return response.data;
+    } catch (error) {
+        console.error('Error removing prioritized indicator:', error);
+        throw error;
+    }
+}
+
+export const updateCampusPlanSummary = async (planIdentifier, executiveSummary) => {
+    try {
+        const response = await axios.post(
+            `${process.env.REACT_APP_API_URL}/campus-plans`,
+            {
+                action: 'update_campus_plan_summary',
+                plan_identifier: planIdentifier,
+                executive_summary: executiveSummary,
+            }
+        );
+        return response.data;
+    } catch (error) {
+        console.error('Error updating campus plan summary:', error);
+        throw error;
+    }
+}
+
 export const assignExecutiveSponsor = async (planIdentifier, personUniqueId) => {
     try {
         const response = await axios.post(

@@ -115,15 +115,26 @@ _PLANS_FOR_WGP_QUERY = """
     OPTIONAL MATCH (p)-[:in_academic_year]->(planYear:AcademicYear)
     OPTIONAL MATCH (p)-[:completed_in_year]->(completedYear:AcademicYear)
     OPTIONAL MATCH (p)-[:abandoned_in_year]->(abandonedYear:AcademicYear)
-    // Hide plans completed in another year, and plans abandoned in another year.
-    // A plan completed/abandoned in the *current* selected year remains visible;
-    // active plans (no completed/abandoned year set) also remain visible.
-    // Note: `p.abandoned = true` without an :abandoned_in_year edge has no
-    // year info — we treat that as "not current year" and hide it.
+    // Visibility rule:
+    //   - Plans from the current year (or a future/unknown year) always show,
+    //     whatever their status — they're this year's work.
+    //   - Plans carried over from a PREVIOUS year show ONLY if they're still
+    //     active. A prior-year plan that is abandoned, on hold, or complete is
+    //     hidden, so the campus plan surfaces current, actionable work instead of
+    //     last year's finished/dead carry-overs.
+    //   "Done/dead" is detected from plan_status, the abandoned flag, OR the
+    //   completed_in_year / abandoned_in_year edges, so inconsistently-recorded
+    //   plans are still filtered. Stored statuses are 'Completed'/'Abandoned'/
+    //   'On Hold' (data_config spells complete as 'Complete' — match both).
+    //   AcademicYear names are fixed-width "YYYY-YYYY", so lexical >= is chronological.
     WITH p, planYear, completedYear, abandonedYear
-    WHERE (completedYear IS NULL OR completedYear.name = $year_name)
-      AND (NOT coalesce(p.abandoned, false)
-           OR (abandonedYear IS NOT NULL AND abandonedYear.name = $year_name))
+    WHERE coalesce(planYear.name, $year_name) >= $year_name
+       OR NOT (
+            coalesce(p.abandoned, false)
+            OR p.plan_status IN ['On Hold', 'Complete', 'Completed', 'Abandoned']
+            OR completedYear IS NOT NULL
+            OR abandonedYear IS NOT NULL
+          )
     RETURN DISTINCT p,
                     planYear.name      AS plan_year,
                     completedYear.name AS completed_year,

@@ -22,6 +22,7 @@ import {
     TagCloseButton,
     TagLabel,
     Text,
+    Textarea,
     useDisclosure,
     VStack,
     Wrap,
@@ -35,6 +36,7 @@ import { useCampusPlans } from '../../../hooks/useCampusPlans';
 import {
     assignExecutiveSponsor,
     unassignExecutiveSponsor,
+    updateCampusPlanSummary,
 } from '../../../services/api/post';
 import PersonAssignmentSelector from '../../functional_components/PersonAssignmentSelector';
 import WorkingGroupPlan from './WorkingGroupPlan';
@@ -75,8 +77,30 @@ function CampusPlanContainer() {
 
     const sponsorsModal = useDisclosure();
 
+    // Inline executive-summary editor state.
+    const [editingSummary, setEditingSummary] = useState(false);
+    const [summaryDraft, setSummaryDraft] = useState('');
+    const [savingSummary, setSavingSummary] = useState(false);
+
     const handleReloadPrimary = () => refreshOne(currentCampus);
     const handleCreatePrimary = () => createPlanFor(currentCampus);
+
+    const openSummaryEditor = () => {
+        setSummaryDraft(plan?.executive_summary || '');
+        setEditingSummary(true);
+    };
+    const saveSummary = async () => {
+        setSavingSummary(true);
+        try {
+            await updateCampusPlanSummary(plan.plan_identifier, summaryDraft);
+            setEditingSummary(false);
+            await handleReloadPrimary();
+        } catch (err) {
+            console.error('Failed to save executive summary', err);
+        } finally {
+            setSavingSummary(false);
+        }
+    };
 
     // Map of campus abbreviation → display name, from SettingsContext.
     const campusNameByAbbrev = useMemo(() => {
@@ -164,9 +188,41 @@ function CampusPlanContainer() {
                     <Text fontSize="sm" color="gray.600" mb={4}>
                         {plan.campus?.name || currentCampus} · {plan.academic_year} · <Text as="span" fontFamily="mono">{plan.plan_identifier}</Text>
                     </Text>
-                    {plan.executive_summary && (
-                        <Text color="gray.700" mb={4}>{plan.executive_summary}</Text>
-                    )}
+                    <Box mb={4}>
+                        <HStack justify="space-between" align="center" mb={1}>
+                            <Heading as="h3" size="xs" color="gray.700" textTransform="uppercase" letterSpacing="wide">
+                                Executive Summary
+                            </Heading>
+                            {!editingSummary && (
+                                <Button size="xs" variant="outline" colorScheme="teal" onClick={openSummaryEditor}>
+                                    {plan.executive_summary ? 'Edit' : 'Add'}
+                                </Button>
+                            )}
+                        </HStack>
+                        {editingSummary ? (
+                            <VStack align="stretch" spacing={2}>
+                                <Textarea
+                                    value={summaryDraft}
+                                    onChange={(e) => setSummaryDraft(e.target.value)}
+                                    size="sm"
+                                    rows={4}
+                                    placeholder="Plan-level narrative for this campus and year…"
+                                />
+                                <HStack justify="flex-end" spacing={2}>
+                                    <Button size="xs" variant="ghost" onClick={() => setEditingSummary(false)} isDisabled={savingSummary}>
+                                        Cancel
+                                    </Button>
+                                    <Button size="xs" colorScheme="teal" onClick={saveSummary} isLoading={savingSummary} loadingText="Saving…">
+                                        Save
+                                    </Button>
+                                </HStack>
+                            </VStack>
+                        ) : plan.executive_summary ? (
+                            <Text color="gray.700" whiteSpace="pre-wrap">{plan.executive_summary}</Text>
+                        ) : (
+                            <Text fontSize="sm" color="gray.500" fontStyle="italic">No summary yet.</Text>
+                        )}
+                    </Box>
 
                     <Box mt={4}>
                         <HStack justify="space-between" align="center" mb={2}>

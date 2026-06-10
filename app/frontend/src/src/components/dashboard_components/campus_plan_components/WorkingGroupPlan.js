@@ -6,6 +6,7 @@ import {
     Collapse,
     Heading,
     HStack,
+    IconButton,
     Link,
     Modal,
     ModalBody,
@@ -15,16 +16,18 @@ import {
     ModalHeader,
     ModalOverlay,
     Text,
+    Tooltip,
     useDisclosure,
     VStack,
 } from '@chakra-ui/react';
-import { ChevronDownIcon, ChevronUpIcon } from '@chakra-ui/icons';
+import { ChevronDownIcon, ChevronUpIcon, CloseIcon } from '@chakra-ui/icons';
 import { Link as RouterLink } from 'react-router-dom';
 
 import { UserContext } from '../../../context/UserContext';
 import { getUrlFromCompositeKey } from '../../../services/utils/tools';
 import {
     addPrioritizedIndicator,
+    removePrioritizedIndicator,
     assignGroupLead,
     unassignGroupLead,
 } from '../../../services/api/post';
@@ -151,19 +154,22 @@ function WorkingGroupPlan({
         return Array.from(byKey.values()).sort((a, b) => a.composite_key.localeCompare(b.composite_key));
     })();
 
+    // Toggle this indicator's priority for a given campus. Adding and removing both run
+    // through here; the campus badge reflects current state and flips it on click.
+    // Un-prioritizing only drops the priority edge — any logged progress / companion plans
+    // for the indicator stay put and reappear if it's re-prioritized.
     const handleToggleCampusPriority = async (entry, campusEntry) => {
         const { campusAbbrev: targetAbbrev, wgp: targetWgp, isPrimary } = campusEntry;
-        const alreadyPrioritized = entry.prioritizedByAbbrevs.has(targetAbbrev);
-        if (alreadyPrioritized) {
-            // Remove isn't wired yet — no removePrioritizedIndicator API.
-            // No-op for now; the visual state communicates "already on".
-            return;
-        }
         if (!targetWgp?.plan_identifier) return;
+        const alreadyPrioritized = entry.prioritizedByAbbrevs.has(targetAbbrev);
         const tkey = `${targetAbbrev}|${entry.composite_key}`;
         setTogglingKey(tkey);
         try {
-            await addPrioritizedIndicator(targetWgp.plan_identifier, entry.composite_key);
+            if (alreadyPrioritized) {
+                await removePrioritizedIndicator(targetWgp.plan_identifier, entry.composite_key);
+            } else {
+                await addPrioritizedIndicator(targetWgp.plan_identifier, entry.composite_key);
+            }
             if (isPrimary) {
                 if (onIndicatorAdded) onIndicatorAdded();
             } else {
@@ -171,7 +177,7 @@ function WorkingGroupPlan({
             }
         } catch (err) {
             // Surface to console; toast handling can be wired by caller if desired.
-            console.error('Failed to add prioritized indicator', err);
+            console.error('Failed to toggle prioritized indicator', err);
         } finally {
             setTogglingKey(null);
         }
@@ -256,10 +262,10 @@ function WorkingGroupPlan({
                                                     colorScheme={has ? 'teal' : 'gray'}
                                                     onClick={() => handleToggleCampusPriority(entry, c)}
                                                     isLoading={isBusy}
-                                                    isDisabled={has /* remove not yet wired */}
+                                                    isDisabled={isBusy}
                                                     title={
                                                         has
-                                                            ? `Prioritized by ${c.campusName}`
+                                                            ? `Prioritized by ${c.campusName} — click to remove`
                                                             : `Click to prioritize for ${c.campusName}`
                                                     }
                                                     px={2}
@@ -336,6 +342,17 @@ function WorkingGroupPlan({
                                                             Log
                                                         </Button>
                                                     )}
+                                                    <Tooltip label={`Remove from ${campusName || campusAbbrev}'s plan`} hasArrow openDelay={300}>
+                                                        <IconButton
+                                                            aria-label="Remove indicator from this plan"
+                                                            icon={<CloseIcon boxSize={2} />}
+                                                            size="xs"
+                                                            variant="ghost"
+                                                            colorScheme="red"
+                                                            isLoading={togglingKey === `${campusAbbrev}|${entry.composite_key}`}
+                                                            onClick={() => handleToggleCampusPriority(entry, allCampusEntries[0])}
+                                                        />
+                                                    </Tooltip>
                                                 </>
                                             ) : (
                                                 <Text fontSize="xs" color="gray.400" fontStyle="italic" whiteSpace="nowrap">

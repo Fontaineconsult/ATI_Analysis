@@ -57,6 +57,67 @@ def add_prioritized_indicator(working_group_plan_identifier: str, indicator_comp
         )
 
 
+def remove_prioritized_indicator(working_group_plan_identifier: str, indicator_composite_key: str) -> bool:
+    """
+    Remove the `prioritizes_success_indicator` edge from the WorkingGroupPlan to the
+    SuccessIndicator. The inverse of `add_prioritized_indicator`.
+
+    Idempotent: removing an edge that isn't there is a no-op. Only the priority edge is
+    deleted — any ProgressUpdates or companion Plans tied to the indicator are left intact
+    (re-prioritizing surfaces them again).
+
+    Raises NotFoundError if the WorkingGroupPlan is missing, CrudError on failure.
+    """
+    try:
+        WorkingGroupPlan.nodes.get(plan_identifier=working_group_plan_identifier)
+    except WorkingGroupPlan.DoesNotExist:
+        raise NotFoundError(
+            f"WorkingGroupPlan {working_group_plan_identifier!r} not found"
+        )
+
+    try:
+        db.cypher_query(
+            """
+            MATCH (wgp:WorkingGroupPlan {plan_identifier: $wgp_id})
+                  -[r:prioritizes_success_indicator]->
+                  (si:SuccessIndicator {composite_key: $si_key})
+            DELETE r
+            """,
+            {
+                "wgp_id": working_group_plan_identifier,
+                "si_key": indicator_composite_key,
+            },
+        )
+        return True
+    except Exception as e:
+        raise CrudError(
+            f"Failed to un-prioritize {indicator_composite_key!r} on {working_group_plan_identifier!r}: {e}"
+        )
+
+
+def update_campus_plan_summary(plan_identifier: str, executive_summary) -> bool:
+    """
+    Set the CampusPlan's `executive_summary` (the plan-level narrative shown in the header).
+    An empty/blank string clears it (stored as None).
+
+    Raises NotFoundError if the CampusPlan is missing, CrudError on failure.
+    """
+    try:
+        plan = CampusPlan.nodes.get(plan_identifier=plan_identifier)
+    except CampusPlan.DoesNotExist:
+        raise NotFoundError(f"CampusPlan {plan_identifier!r} not found")
+
+    summary = executive_summary.strip() if isinstance(executive_summary, str) else executive_summary
+    try:
+        plan.executive_summary = summary or None
+        plan.save()
+        return True
+    except Exception as e:
+        raise CrudError(
+            f"Failed to update executive summary for {plan_identifier!r}: {e}"
+        )
+
+
 def add_progress_update(
     working_group_plan_identifier: str,
     yse_identifier: str,
