@@ -48,7 +48,13 @@ function SubNavbar() {
         ];
     } else if (location.pathname.includes('/about')) {
         subNavItems = [
-            { label: 'ATI Overview', path: `${campusPrefix}/about/sf-state-ati-overview` },
+            { label: 'Overview', path: `${campusPrefix}/about/overview` },
+            { label: 'Core Model', path: `${campusPrefix}/about/core-model` },
+            { label: 'Evidence & Implementations', path: `${campusPrefix}/about/evidence` },
+            { label: 'Plans & Progress', path: `${campusPrefix}/about/plans` },
+            { label: 'Assets & Interfaces', path: `${campusPrefix}/about/assets` },
+            { label: 'Adding Data', path: `${campusPrefix}/about/adding-data` },
+            { label: 'Glossary', path: `${campusPrefix}/about/glossary` },
         ];
     } else {
         subNavItems = [];
