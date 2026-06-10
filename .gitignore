@@ -3,7 +3,7 @@
 /.idea/
 /app/.env.production
 /app/.env.remote
-
+ATI_Analysis.iml
 
 # Python bytecode
 __pycache__/
