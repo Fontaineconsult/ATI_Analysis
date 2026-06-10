@@ -1,16 +1,19 @@
-import React, { createContext, useState, useEffect } from 'react';
+import React, { createContext, useState, useEffect, useContext } from 'react';
 import { fetchUserByEmployeeId, fetchAllIndividuals } from '../services/api/get';
 import { useToast } from '@chakra-ui/react';
-import adminData from './admins.json';
+import { AuthContext } from './AuthContext';
 
 // Create the UserContext
 export const UserContext = createContext();
 
-// Create the UserProvider that will wrap the app
+// Create the UserProvider that will wrap the app.
+// Identity (who is logged in) lives in AuthContext; this context tracks the
+// "notating as" attribution Person — a deliberately separate concern, since an
+// admin may record notes on someone else's behalf.
 export const UserProvider = ({ children }) => {
+    const { authUser, enforced } = useContext(AuthContext);
     const [currentUser, setCurrentUser] = useState(null);
     const [individuals, setIndividuals] = useState(null);
-    const [admins, setAdmins] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const toast = useToast();
@@ -21,21 +24,11 @@ export const UserProvider = ({ children }) => {
         return params.get('employee_id');
     };
 
-    // Load admins from JSON file
-    const loadAdmins = () => {
-        try {
-            setAdmins(adminData.admins || []);
-        } catch (err) {
-            console.error('Error loading admin data:', err);
-            setAdmins([]);
-        }
-    };
-
-    // Check if a user is an admin based on query string
+    // Admin status is server-driven (AUTH_ADMINS env on the backend, surfaced
+    // through /me). With the auth kill-switch off (dev), everything is open.
     const isUserAdmin = () => {
-        const employeeId = getEmployeeIdFromQuery();
-        if (!employeeId) return false;
-        return admins.includes(String(employeeId));
+        if (!enforced) return true;
+        return !!authUser?.is_admin;
     };
 
     // Set the current user
@@ -154,9 +147,6 @@ export const UserProvider = ({ children }) => {
         const initializeUser = async () => {
             setLoading(true);
 
-            // Load admins
-            loadAdmins();
-
             // Load individuals
             await loadAllIndividuals();
 
@@ -172,15 +162,21 @@ export const UserProvider = ({ children }) => {
                 }
             }
 
-            // Try to load user from query parameter if not in localStorage
+            // No saved selection: default the notating user to the logged-in
+            // account's linked Person (from /me), falling back to the legacy
+            // ?employee_id= query parameter.
             if (!savedUser) {
-                const employeeId = getEmployeeIdFromQuery();
-                if (employeeId) {
-                    try {
-                        const person = await fetchUserByEmployeeId(employeeId);
-                        setUser(person.data.person);
-                    } catch (error) {
-                        setError('Failed to fetch user data');
+                if (authUser?.person) {
+                    setUser(authUser.person);
+                } else {
+                    const employeeId = getEmployeeIdFromQuery();
+                    if (employeeId) {
+                        try {
+                            const person = await fetchUserByEmployeeId(employeeId);
+                            setUser(person.data.person);
+                        } catch (error) {
+                            setError('Failed to fetch user data');
+                        }
                     }
                 }
             }
@@ -189,6 +185,7 @@ export const UserProvider = ({ children }) => {
         };
 
         initializeUser();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     return (
@@ -204,9 +201,8 @@ export const UserProvider = ({ children }) => {
             clearUser,
             getUserById,
 
-            // Admin functionality
+            // Admin functionality (server-driven via AuthContext)
             isUserAdmin,
-            admins,
 
             // Individuals management
             individuals,

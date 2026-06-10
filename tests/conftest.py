@@ -211,6 +211,9 @@ def flask_client(neo4j_connection):
 
     app = create_app()
     app.config["TESTING"] = True
+    # Auth kill-switch off for the functional suite — these tests exercise the
+    # data API, not the login flow. Auth-specific tests flip it back on.
+    app.config["AUTH_ENFORCED"] = False
 
     test_url = os.environ.get("NEO4J_TEST_DATABASE_URL")
     test_db = os.environ.get("NEO4J_TEST_DATABASE")
@@ -219,4 +222,44 @@ def flask_client(neo4j_connection):
         config.DATABASE_NAME = test_db
 
     with app.test_client() as client:
+        yield client
+
+
+@pytest.fixture
+def auth_db(tmp_path, monkeypatch):
+    """Point the auth store at a throwaway SQLite file. Pure-unit safe (no Neo4j)."""
+    db_file = tmp_path / "auth_users_test.sqlite3"
+    monkeypatch.setenv("AUTH_DB_PATH", str(db_file))
+    from app.auth import store
+
+    store.init_db()
+    return db_file
+
+
+@pytest.fixture
+def auth_app(auth_db):
+    """A Flask app with auth ENFORCED and the store pointed at the tmp sqlite.
+
+    No Neo4j fixtures required — auth endpoints only touch the graph through
+    the guarded lazy Person lookup, which degrades to person=null.
+    """
+    from app import create_app
+
+    app = create_app()
+    app.config["TESTING"] = True
+    app.config["AUTH_ENFORCED"] = True
+    return app
+
+
+@pytest.fixture
+def authed_client(auth_app):
+    """Test client with a pre-seeded session (bypasses the login form)."""
+    with auth_app.test_client() as client:
+        with client.session_transaction() as sess:
+            sess["user"] = {
+                "username": "testuser",
+                "display_name": "Test User",
+                "employee_id": "0000000",
+                "provider": "local",
+            }
         yield client

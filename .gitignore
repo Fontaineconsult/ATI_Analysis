@@ -17,9 +17,21 @@ __pycache__/
 .claude/settings.local.json
 **/.claude/settings.local.json
 
+# Local auth user store (SQLite sidecar — credentials, never commit)
+app/auth_users.sqlite3
+app/auth_users.sqlite3-wal
+app/auth_users.sqlite3-shm
+
 # Jupyter scratch notebooks (contain connection strings and query output data)
 app/database/jupyter/
 .ipynb_checkpoints/
 
 # Graphify knowledge-graph output
 graphify-out/
+
+# Application logs — the rotating per-process files (app/logging_config.py) and the
+# wfastcgi stdout capture. Runtime artifacts, never commit.
+app.log
+app-*.log
+app-*.log.*
+wfastcgi.log

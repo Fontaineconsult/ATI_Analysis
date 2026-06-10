@@ -1,36 +1,33 @@
-import os
 import sys
 import logging
-import traceback
-from datetime import datetime
 
-# Add paths for imports
+# Add paths for imports (deployed layout under C:\www\ati).
 sys.path.insert(0, r"C:\www\ati")
 sys.path.insert(0, r"C:\www\ati\app")
 
-# Setup logging to wfastcgi.log only
-log_file = r"C:\www\ati\wfastcgi.log"
-
-# Configure basic logging to wfastcgi.log - set to DEBUG to capture everything
+# Log to STDERR only — do NOT attach a FileHandler to C:\www\ati\wfastcgi.log here.
+# wfastcgi already owns that file as WSGI_LOG and opens it for exclusive write; a second
+# handle to it fails with PermissionError (sharing violation), which crashes this handler's
+# import and 500s every request (the root cause we just diagnosed). wfastcgi captures
+# stderr into WSGI_LOG, so logging to stderr still lands in wfastcgi.log — without the
+# competing file handle.
 logging.basicConfig(
-    level=logging.DEBUG,  # Changed to DEBUG to capture all levels
+    level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.FileHandler(log_file, mode='a')
-    ]
+    handlers=[logging.StreamHandler(sys.stderr)],
 )
 
-# Add Seq handler
+logger = logging.getLogger(__name__)
+
+# Optional structured logging to a local Seq server, if one is running. Guarded so a
+# missing/unreachable Seq never breaks startup.
 try:
     from seqlog.structured_logging import SeqLogHandler
     seq_handler = SeqLogHandler('http://localhost:5341', api_key=None)
-    seq_handler.setLevel(logging.DEBUG)  # Changed to DEBUG to send all levels to Seq
+    seq_handler.setLevel(logging.INFO)
     logging.getLogger().addHandler(seq_handler)
 except Exception as e:
-    # If Seq fails, just continue with file logging
-    logging.error(f"Failed to setup Seq: {e}")
-
-logger = logging.getLogger(__name__)
+    logger.warning(f"Seq logging unavailable, continuing without it: {e}")
 
 try:
     from app import create_app
@@ -40,25 +37,16 @@ try:
 
     @app.errorhandler(Exception)
     def handle_exception(e):
-        # Build context if in a request
         extra = {}
         if has_request_context():
-            extra = {
-                'RequestPath': request.path,
-                'RequestMethod': request.method
-            }
-
-        logger.error(f"Unhandled exception: {str(e)}", exc_info=True, extra=extra)
+            extra = {'RequestPath': request.path, 'RequestMethod': request.method}
+        # exc_info=True records the full traceback into WSGI_LOG (via stderr).
+        logger.error(f"Unhandled exception: {e}", exc_info=True, extra=extra)
         return "Internal Server Error", 500
 
     application = app
-
-    # Now you can use different log levels
-    logger.debug("Application starting up")
-    logger.info("Application initialized")
-    logger.warning("This is a warning")
-    logger.error("Application started successfully")  # Using error level to ensure it shows
+    logger.info("ATI application initialized")
 
 except Exception as e:
-    logger.error(f"Failed to start application: {str(e)}", exc_info=True)
+    logger.error(f"Failed to start application: {e}", exc_info=True)
     raise

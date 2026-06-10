@@ -83,10 +83,54 @@ application = create_app()
     <!-- Log file for wfastcgi -->
     <add key="WSGI_LOG" value="C:\www\ati\logs\wfastcgi.log" />
     <add key="WSGI_DEBUG" value="1" />
+
+    <!-- ===== Authentication (wfastcgi exposes appSettings as env vars) ===== -->
+    <!-- REQUIRED: cookie-signing secret, identical across all FastCGI workers.
+         Generate once: python -c "import secrets; print(secrets.token_hex(32))" -->
+    <add key="FLASK_SECRET_KEY" value="REPLACE-WITH-GENERATED-SECRET" />
+    <add key="FLASK_ENV" value="production" />
+    <!-- Global kill-switch: 0 = login disabled app-wide, 1 = enforced.
+         Deploy with 0 first, seed users, then flip to 1 (edits recycle the pool). -->
+    <add key="AUTH_ENFORCED" value="1" />
+    <add key="AUTH_PROVIDER" value="local" />
+    <!-- Comma-separated usernames and/or employee_ids granted admin -->
+    <add key="AUTH_ADMINS" value="913678186" />
+    <!-- Optional allowlist; empty = any active account may log in -->
+    <add key="AUTH_ALLOWED_USERS" value="" />
+    <add key="AUTH_DB_PATH" value="C:\www\ati\data\auth_users.sqlite3" />
+    <add key="AUTH_SESSION_HOURS" value="12" />
+    <!-- Flip to 1 only after the site has an HTTPS binding -->
+    <add key="SESSION_COOKIE_SECURE" value="0" />
   </appSettings>
 </configuration>
 
 ```
+
+### 5b. Auth store setup (one-time)
+
+```cmd
+:: SQLite needs WRITE on the directory (WAL/journal side files), not just the file
+mkdir C:\www\ati\data
+icacls C:\www\ati\data /grant "IIS AppPool\AtiApp:(OI)(CI)M"
+
+:: Seed accounts (prompts for password; AUTH_DB_PATH targets the prod store)
+cd C:\www\ati
+set AUTH_DB_PATH=C:\www\ati\data\auth_users.sqlite3
+set PYTHONPATH=C:\www\ati
+python -m app.database.tools.manage_auth_users create-user jdoe --display-name "Jane Doe" --employee-id 913678186
+python -m app.database.tools.manage_auth_users list
+```
+
+**Rollout that never hard-breaks:** deploy backend with `AUTH_ENFORCED=0` →
+verify `POST /ati/auth/v1/login` and `GET /ati/auth/v1/me` with curl → deploy
+the frontend build (login screen appears) → flip `AUTH_ENFORCED` to `1`.
+
+**Protect web.config** (it now holds the secret key):
+`icacls C:\www\ati\web.config /inheritance:r /grant "Administrators:F" "IIS AppPool\AtiApp:R" "IIS_IUSRS:R"`
+
+**HTTPS:** until the site gets an HTTPS binding, the session cookie travels
+over plain HTTP on the campus LAN. Add the binding (campus cert) and set
+`SESSION_COOKIE_SECURE=1` as soon as practical.
 
 ## 6  Set Folder and File Permissions
 6.1 For the Deployment Root (C:\www\ati) and Its Subfolders:
