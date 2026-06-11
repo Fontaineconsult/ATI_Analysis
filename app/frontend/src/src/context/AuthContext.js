@@ -17,12 +17,19 @@ export const useAuth = () => {
     return context;
 };
 
+// Build-time dev bypass (REACT_APP_DISABLE_LOGIN=true): force the gate
+// transparent and skip the /me probe entirely, so the login screen never shows
+// even if the backend/proxy is unreachable. Independent of the server's
+// AUTH_ENFORCED. Baked at build time — must be false for any real deployment.
+const LOGIN_DISABLED = process.env.REACT_APP_DISABLE_LOGIN === 'true';
+
 export const AuthProvider = ({ children }) => {
     const [authUser, setAuthUser] = useState(null);
-    const [enforced, setEnforced] = useState(true);
-    const [authLoading, setAuthLoading] = useState(true);
+    const [enforced, setEnforced] = useState(!LOGIN_DISABLED);
+    const [authLoading, setAuthLoading] = useState(!LOGIN_DISABLED);
 
     useEffect(() => {
+        if (LOGIN_DISABLED) return;  // dev bypass: never probe /me, never gate
         let cancelled = false;
         const initialize = async () => {
             try {
