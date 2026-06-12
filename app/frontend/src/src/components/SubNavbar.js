@@ -51,6 +51,7 @@ function SubNavbar() {
     } else if (location.pathname.includes('/about')) {
         subNavItems = [
             { label: 'Overview', path: `${campusPrefix}/about/overview` },
+            { label: 'Executive Summary', path: `${campusPrefix}/about/executive-summary` },
             { label: 'Core Model', path: `${campusPrefix}/about/core-model` },
             { label: 'Evidence & Implementations', path: `${campusPrefix}/about/evidence` },
             { label: 'Plans & Progress', path: `${campusPrefix}/about/plans` },
