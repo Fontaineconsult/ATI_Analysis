@@ -1,6 +1,7 @@
 import React, { useContext, useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import { DataContext } from "../../../context/DataContext";
+import { navigateToIndicator } from '../../../services/utils/tools';
 import {
     Box,
     Table,
@@ -40,6 +41,7 @@ import {
     Copy
 } from "lucide-react";
 import {getStatusColor} from "../../../services/utils/tools";
+import { getIndicatorSummary } from "../../graph_components/indicators/indicatorHelpers";
 import ViewReportButton from "../../functional_components/ViewReportButton";
 import AtiStats from "./atistats";
 import StatusLevels from "./StatusLevelDefs";
@@ -166,24 +168,6 @@ const ReportMasterList = () => {
                 </Box>
             </Tooltip>
         );
-    };
-
-    // Helper to build the goal-view edit path segment for a composite key.
-    // Targets the editable goal view and
-    // deep-links the specific success indicator (its number is the last segment,
-    // which EvidenceMasterContainer reads to pre-select on arrival).
-    const getEditUrlFromCompositeKey = (compositeKey) => {
-        const [numbers, suffix] = compositeKey.split('-');
-        const [goalNumber, indicatorNumber] = numbers.split('.');
-
-        const workingGroupMap = {
-            'web': 'web',
-            'pro': 'procurement',
-            'ins': 'instructional-materials'
-        };
-
-        const workingGroupSegment = workingGroupMap[suffix] || suffix;
-        return `${workingGroupSegment}/goal/${goalNumber}/${indicatorNumber}`;
     };
 
     // Function to generate HTML for copying goal group to clipboard
@@ -364,6 +348,11 @@ const ReportMasterList = () => {
                                     const indicatorNumber = compositeKey?.split('-')[0]?.split('.')[1];
                                     const statusLevel = indicator.evidences?.[0]?.statusLevel?.properties?.status_level;
 
+                                    // Documentation/implementation diagnostics (same source as the SI list).
+                                    // noActiveDocs only fires when implementations exist, so it stays quiet
+                                    // when none are assigned — that case gets a muted note instead.
+                                    const diag = getIndicatorSummary(indicator);
+
                                     // Check for admin reviewers and evidence summary
                                     const adminReviewers = indicator.evidences?.[0]?.adminReviewers || [];
                                     const hasReviewers = adminReviewers.length > 0;
@@ -392,7 +381,27 @@ const ReportMasterList = () => {
                                             id={compositeKey}
                                         >
                                             <Td fontWeight="medium" color="gray.700" fontSize="xs">{indicatorNumber}</Td>
-                                            <Td color="gray.700" fontSize="xs">{indicator.indicator?.properties?.success_indicator}</Td>
+                                            <Td color="gray.700" fontSize="xs">
+                                                <Text fontSize="xs">{indicator.indicator?.properties?.success_indicator}</Text>
+                                                {diag.noActiveDocs && (
+                                                    <Badge
+                                                        mt={1}
+                                                        colorScheme="orange"
+                                                        variant="solid"
+                                                        fontSize="2xs"
+                                                        borderRadius="full"
+                                                        px={2}
+                                                        title="This indicator's implementations have documents, but every one is depreciated — no active documentation"
+                                                    >
+                                                        ⚠ No active documentation
+                                                    </Badge>
+                                                )}
+                                                {diag.flagMissingImplementation && (
+                                                    <Text mt={1} fontSize="2xs" color="gray.400" fontStyle="italic">
+                                                        No implementations assigned
+                                                    </Text>
+                                                )}
+                                            </Td>
                                             <Td>
                                                 <Badge
                                                     bg={getStatusColor(statusLevel)}
@@ -415,9 +424,7 @@ const ReportMasterList = () => {
                                                         size="xs"
                                                         colorScheme="gray"
                                                         variant="outline"
-                                                        onClick={() => {
-                                                            navigate(`/${campus}/dashboard/${getEditUrlFromCompositeKey(compositeKey)}`);
-                                                        }}
+                                                        onClick={() => navigateToIndicator(navigate, compositeKey, campus)}
                                                         _hover={{ bg: "gray.50" }}
                                                     >
                                                         Edit

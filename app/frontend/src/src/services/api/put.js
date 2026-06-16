@@ -2,6 +2,7 @@ import axios from "axios";
 import {
     assignApproverPayload,
     updateIndicatorRemovedStatus,
+    updateIndicatorOverrideImplementationRequirement,
     generateUpdateStatusLevelPayload,
     updateIndividualPayload,
     updatePlanPayload,
@@ -219,6 +220,17 @@ export const updateRemovedStatus = async (composite_key, removed) => {
         );
     } catch (error) {
         console.error('Error updating removed status:', error);
+        throw error;
+    }
+}
+
+export const updateOverrideImplementationRequirement = async (composite_key, override) => {
+    try {
+        await axios.put(`${process.env.REACT_APP_API_URL}/indicators`,
+            updateIndicatorOverrideImplementationRequirement(composite_key, override)
+        );
+    } catch (error) {
+        console.error('Error updating implementation-requirement override:', error);
         throw error;
     }
 }

@@ -7,7 +7,7 @@ from datetime import datetime as dt  # Added import
 from app.database.queries.evidence.delete import delete_year_success_evidence
 from app.database.queries.indicators.create import create_success_indicator, add_goal
 from app.database.queries.indicators.read import fetch_success_indicators_for_working_group
-from app.database.queries.indicators.update import set_removed_status_for_success_indicator
+from app.database.queries.indicators.update import set_removed_status_for_success_indicator, set_override_implementation_requirement
 
 from app.endpoints.data_api.errors.custom_exceptions import NotFoundError, ValidationError, CrudError
 
@@ -101,11 +101,14 @@ class IndicatorsAPI(MethodView):
                 if set_removed_status_for_success_indicator(data['composite_key'], data['removed']):
                     return make_response(status="success", data=f"SuccessIndicator {data['composite_key']} updated successfully."), 200
 
-            # Additional actions can be added here with similar structure, such as 'update_indicator_status' or 'modify_goal'
-            # elif action == 'another_action':
-            #     required_keys = ['required_field_1', 'required_field_2']
-            #     # Validate fields and call the appropriate function
-            #     pass
+            elif action == 'update_override_implementation_requirement':
+                # Toggle whether this indicator is exempt from the implementation expectation
+                required_keys = ['composite_key', 'override_implementation_requirement']
+                if not all(key in data for key in required_keys):
+                    return make_response(status="error", error="Missing required fields for updating implementation-requirement override."), 400
+
+                if set_override_implementation_requirement(data['composite_key'], data['override_implementation_requirement']):
+                    return make_response(status="success", data=f"SuccessIndicator {data['composite_key']} updated successfully."), 200
 
             else:
                 return make_response(status="error", error=f"Unknown action: {action}"), 400

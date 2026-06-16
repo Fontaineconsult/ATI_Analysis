@@ -1,66 +1,58 @@
 import React from 'react';
-import { Badge, Box, Heading, HStack, Text, VStack, Wrap, WrapItem } from '@chakra-ui/react';
+import { Badge, Heading, HStack, Text, VStack, Wrap, WrapItem } from '@chakra-ui/react';
+import Card from '../common/Card';
 
 /**
- * Compact header for the People Explorer right panel. Pure presentational —
- * pass in a person object (rich detail from get_person_implementation_details
- * or any equivalently-shaped object).
- *
- * Reused anywhere a person's summary needs to be shown above a detail body.
+ * Identity header for the People Explorer right panel. Pure presentational —
+ * pass a person object (rich detail from get_person_implementation_details or
+ * any equivalently-shaped object).
  */
 function PersonHeader({ person }) {
     if (!person) return null;
 
+    const workingGroups = Array.isArray(person.workingGroups) ? person.workingGroups : [];
+
     return (
-        <Box
-            bg="white"
-            borderWidth="1px"
-            borderColor="gray.200"
-            borderRadius="lg"
-            p={4}
-            boxShadow="sm"
-        >
+        <Card>
             <VStack align="stretch" spacing={2}>
-                <HStack justify="space-between" align="baseline">
-                    <Heading as="h2" size="md" color="gray.800">
+                <HStack justify="space-between" align="start">
+                    <Heading as="h2" size="md" color="gray.800" minW={0}>
                         {person.name}
                     </Heading>
-                    {person.host_campus && (
-                        <Badge colorScheme="teal" textTransform="uppercase" fontSize="xs">
-                            {person.host_campus}
-                        </Badge>
-                    )}
+                    <HStack spacing={2} flexShrink={0}>
+                        {person.can_approve_yse && (
+                            <Badge colorScheme="teal" variant="solid" fontSize="2xs">Approver</Badge>
+                        )}
+                        {person.host_campus && (
+                            <Badge colorScheme="teal" variant="outline" textTransform="uppercase" fontSize="2xs">
+                                {person.host_campus}
+                            </Badge>
+                        )}
+                    </HStack>
                 </HStack>
 
-                {person.title && (
-                    <Text fontSize="sm" color="gray.700">
-                        {person.title}
-                    </Text>
-                )}
-                {person.ati_role && (
-                    <Text fontSize="xs" color="gray.500" fontStyle="italic">
-                        {person.ati_role}
-                    </Text>
-                )}
-                {person.email && (
-                    <Text fontSize="xs" color="gray.500">
-                        {person.email}
-                    </Text>
-                )}
+                {person.title && <Text fontSize="sm" color="gray.700">{person.title}</Text>}
+                {person.ati_role && <Text fontSize="xs" color="gray.500" fontStyle="italic">{person.ati_role}</Text>}
+                {person.email && <Text fontSize="xs" color="gray.500">{person.email}</Text>}
 
-                {Array.isArray(person.workingGroups) && person.workingGroups.length > 0 && (
+                {(workingGroups.length > 0 || person.non_committee_member_active) && (
                     <Wrap spacing={2} pt={1}>
-                        {person.workingGroups.map((wg) => (
+                        {workingGroups.map((wg) => (
                             <WrapItem key={typeof wg === 'string' ? wg : wg.name}>
                                 <Badge colorScheme="purple" variant="subtle" fontSize="2xs">
                                     {typeof wg === 'string' ? wg : wg.name}
                                 </Badge>
                             </WrapItem>
                         ))}
+                        {workingGroups.length === 0 && person.non_committee_member_active && (
+                            <WrapItem>
+                                <Badge colorScheme="gray" variant="subtle" fontSize="2xs">Non-committee active</Badge>
+                            </WrapItem>
+                        )}
                     </Wrap>
                 )}
             </VStack>
-        </Box>
+        </Card>
     );
 }
 

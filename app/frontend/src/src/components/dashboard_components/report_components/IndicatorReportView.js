@@ -13,7 +13,7 @@ import {
     WrapItem,
 } from '@chakra-ui/react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { getImplementationURL, getEditUrlFromCompositeKey } from '../../../services/utils/tools';
+import { getImplementationURL, navigateToIndicator } from '../../../services/utils/tools';
 import StatusLevelLadder from '../../functional_components/StatusLevelLadder';
 import EvidenceQualityPanel from './EvidenceQualityPanel';
 
@@ -114,9 +114,13 @@ const REACHED_VIA_SCHEME = { remediated: 'green', interface: 'blue', tool: 'purp
 
 const ImplementationCard = ({ impl, campus, navigate }) => {
     const hasDocs = impl.documents?.length || impl.webpages?.length;
+    // Server-computed from ALL of the implementation's documents (see get_indicator_report
+    // _no_active_documents), so this agrees with the implementations view even when the
+    // report's year/include filter would otherwise hide the deprecated docs.
+    const noActiveDocs = Boolean(impl.no_active_documents);
     return (
         <Box borderWidth="1px" borderColor="gray.200" borderRadius="lg" bg="gray.50" p={4}
-             borderLeftWidth="3px" borderLeftColor="teal.400">
+             borderLeftWidth="3px" borderLeftColor={noActiveDocs ? 'orange.400' : 'teal.400'}>
             <HStack spacing={2} mb={1} flexWrap="wrap">
                 <Badge colorScheme="teal" textTransform="uppercase" fontSize="2xs">{impl.type}</Badge>
                 <Heading as="h5" size="xs" color="gray.800" cursor="pointer"
@@ -124,6 +128,16 @@ const ImplementationCard = ({ impl, campus, navigate }) => {
                          onClick={() => impl.unique_id && navigate(getImplementationURL(impl.type, impl.unique_id, campus))}>
                     {impl.title}
                 </Heading>
+                {noActiveDocs && (
+                    <Badge
+                        colorScheme="orange"
+                        variant="solid"
+                        fontSize="2xs"
+                        title="Every document on this implementation is depreciated — no active documentation"
+                    >
+                        ⚠ No active documentation
+                    </Badge>
+                )}
             </HStack>
             {impl.description && <Text fontSize="xs" color="gray.700" mb={2}>{impl.description}</Text>}
 
@@ -288,8 +302,7 @@ const IndicatorReportView = ({ report }) => {
     const { indicator, status, yse, people, plans = [], accomplishments = [], notes = [], messages = [], metrics = [] } = report;
 
     const openEdit = () => {
-        const editUrl = getEditUrlFromCompositeKey(indicator.composite_key, campus);
-        navigate(editUrl);
+        navigateToIndicator(navigate, indicator.composite_key, campus);
     };
 
     return (

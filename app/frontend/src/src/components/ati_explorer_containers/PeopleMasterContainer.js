@@ -13,6 +13,7 @@ import { UserContext } from '../../context/UserContext';
 import { fetchPersonImplementationDetails } from '../../services/api/get';
 import PeopleList from '../graph_components/people/PeopleList';
 import PersonDetailPanel from '../graph_components/people/PersonDetailPanel';
+import PeopleStatStrip from '../graph_components/people/PeopleStatStrip';
 
 /**
  * People category for the ATI Explorer. Two-column layout (1/3 + 2/3).
@@ -48,6 +49,16 @@ function PeopleMasterContainer() {
             .sort((a, b) => (a.name || '').localeCompare(b.name || ''));
     }, [individuals]);
 
+    const stats = useMemo(() => {
+        let approvers = 0;
+        let noWorkingGroup = 0;
+        activePeople.forEach((p) => {
+            if (p.can_approve_yse) approvers += 1;
+            if (!(Array.isArray(p.workingGroups) && p.workingGroups.length)) noWorkingGroup += 1;
+        });
+        return { total: activePeople.length, approvers, noWorkingGroup };
+    }, [activePeople]);
+
     const loadDetail = useCallback(async (employeeId) => {
         if (!employeeId) return;
         setDetailLoading(true);
@@ -76,14 +87,14 @@ function PeopleMasterContainer() {
 
     return (
         <Box>
-            <HStack justify="space-between" align="baseline" mb={4}>
-                <Heading as="h2" size="lg" color="gray.800">
-                    People
-                </Heading>
-                <Text fontSize="sm" color="gray.500">
-                    {activePeople.length} active
-                </Text>
-            </HStack>
+            <Heading as="h2" size="lg" color="gray.800" mb={4}>People</Heading>
+
+            <PeopleStatStrip
+                total={stats.total}
+                approvers={stats.approvers}
+                noWorkingGroup={stats.noWorkingGroup}
+                loading={!individuals}
+            />
 
             <Flex gap={6} align="flex-start">
                 {/* Left: 1/3 */}

@@ -244,6 +244,14 @@ export function updateIndicatorRemovedStatus(composite_key, removed) {
     };
 }
 
+export function updateIndicatorOverrideImplementationRequirement(composite_key, override_implementation_requirement) {
+    return {
+        action: "update_override_implementation_requirement",
+        composite_key: composite_key,  // indicator identifier
+        override_implementation_requirement: override_implementation_requirement  // bool
+    };
+}
+
 export function createSuccessIndicatorPayload(number, goalNumber, subCommittee, successIndicatorText, dateAdded, removed) {
     return {
         action: "create_success_indicator",

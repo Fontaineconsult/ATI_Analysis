@@ -20,7 +20,7 @@ import {
     Td
 } from '@chakra-ui/react';
 import {useNavigate, useParams} from "react-router-dom";
-import {getEditUrlFromCompositeKey, getStatusColor} from "./utils/tools";
+import {navigateToIndicator, getStatusColor} from "./utils/tools";
 import EvidenceQualityPanel from "../components/dashboard_components/report_components/EvidenceQualityPanel";
 
 let datas = {
@@ -554,26 +554,7 @@ function GenerateReportComponent({ evidenceItem }) {
                             mb={3}
                             cursor="pointer"
                             _hover={{ color: 'teal.600', textDecoration: 'underline' }}
-                            onClick={() => {
-                                const editUrl = getEditUrlFromCompositeKey(evidenceItem.indicator.properties.composite_key, campus);
-                                const [pathname, hash] = editUrl.split('#');
-                                navigate(pathname + '#' + hash);
-                                setTimeout(() => {
-                                    if (hash) {
-                                        const element = document.getElementById(hash);
-                                        if (element) {
-                                            element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                                        } else {
-                                            setTimeout(() => {
-                                                const retryElement = document.getElementById(hash);
-                                                if (retryElement) {
-                                                    retryElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                                                }
-                                            }, 300);
-                                        }
-                                    }
-                                }, 100);
-                            }}
+                            onClick={() => navigateToIndicator(navigate, evidenceItem.indicator.properties.composite_key, campus)}
                         >
                             {evidenceItem.evidence.properties.year_identifier}
                         </Heading>

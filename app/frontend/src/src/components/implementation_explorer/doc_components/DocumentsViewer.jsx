@@ -1,40 +1,28 @@
 import React, { useState, useContext } from 'react';
-import {
-    Box, VStack, Heading, Text, Badge, Link, HStack, Button, Input, Switch,
-    FormControl, FormLabel, Flex, Collapse, useToast, Select
-} from '@chakra-ui/react';
-import { ExternalLinkIcon } from '@chakra-ui/icons';
+import { Badge, Box, Collapse, Flex, Text, VStack, WrapItem, useToast } from '@chakra-ui/react';
 import { addDocumentToImplementation } from '../../../services/api/post';
 import { updateDocument } from '../../../services/api/put';
 import { DataContext } from '../../../context/DataContext';
 import { useSettings } from '../../../context/SettingsContext';
 import { UserContext } from '../../../context/UserContext';
+import {
+    AddRow, EmptyText, Field, FieldLabel, FormActions, FormShell,
+    ItemShell, MetaLine, PathLinks, ReportBadges, SwitchRow,
+} from './docPrimitives';
 
-function formatDate(dateString) {
-    if (!dateString) return null;
-    return new Date(dateString).toLocaleDateString();
-}
+const truthy = (v) => v === true || v === 'True';
 
 function DocumentForm({ document, onSubmit, onCancel, isNewDocument }) {
-    const { user, individuals } = useContext(UserContext);
+    const { individuals } = useContext(UserContext);
     const { currentAcademicYear } = useSettings();
 
-    // Check if document is included for current year
     const isIncludedInCurrentYear = () => {
-        if (!document?.relationship) return true; // Default to included for new documents
+        if (!document?.relationship) return true;
         const { included_in_years = [], excluded_from_years = [] } = document.relationship;
-
-        // If no year data exists, default to included
-        if (!included_in_years.length && !excluded_from_years.length) {
-            return true;
-        }
-
-        // Check if current year is explicitly included and not excluded
-        return included_in_years.includes(currentAcademicYear) &&
-            !excluded_from_years.includes(currentAcademicYear);
+        if (!included_in_years.length && !excluded_from_years.length) return true;
+        return included_in_years.includes(currentAcademicYear) && !excluded_from_years.includes(currentAcademicYear);
     };
 
-    // Initialize form data
     const [documentData, setDocumentData] = useState({
         unique_id: document?.unique_id || '',
         name: document?.name || '',
@@ -43,210 +31,74 @@ function DocumentForm({ document, onSubmit, onCancel, isNewDocument }) {
         description: document?.description || '',
         is_administrative_review_documentation: document?.is_administrative_review_documentation || false,
         is_milestone_and_measures_documentation: document?.is_milestone_and_measures_documentation || false,
-        include_in_report: document?.include_in_report ?? false, // Global flag
-        include_in_current_year: isIncludedInCurrentYear(), // Year-specific flag
+        include_in_report: document?.include_in_report ?? false,
+        include_in_current_year: isIncludedInCurrentYear(),
         depreciated: document?.depreciated || false,
         depreciated_date: document?.depreciated_date || '',
         date_created: document?.date_created || new Date().toISOString().split('T')[0],
-        maintainer_id: document?.maintained_by?.unique_id || ''
+        maintainer_id: document?.maintained_by?.unique_id || '',
     });
-
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     const handleChange = (e) => {
         const { name, value, type, checked } = e.target;
-        setDocumentData({
-            ...documentData,
-            [name]: type === 'checkbox' ? checked : value,
-        });
+        setDocumentData({ ...documentData, [name]: type === 'checkbox' ? checked : value });
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setIsSubmitting(true);
         try {
-            // Pass the academic year and inclusion flag along with the document data
-            await onSubmit({
-                ...documentData,
-                academic_year: currentAcademicYear,
-                include_in_year: documentData.include_in_current_year
-            });
+            await onSubmit({ ...documentData, academic_year: currentAcademicYear, include_in_year: documentData.include_in_current_year });
         } finally {
             setIsSubmitting(false);
         }
     };
 
-    // Sort individuals alphabetically by name for the dropdown
-    const sortedIndividuals = individuals ?
-        [...individuals].sort((a, b) => a.name.localeCompare(b.name)) :
-        [];
-
-    // Find the current maintainer to show their name if individuals haven't loaded yet
+    const sortedIndividuals = individuals ? [...individuals].sort((a, b) => a.name.localeCompare(b.name)) : [];
     const currentMaintainer = document?.maintained_by;
+    const maintainerOptions = (
+        <>
+            {currentMaintainer && !sortedIndividuals.find((p) => p.unique_id === currentMaintainer.unique_id) && (
+                <option value={currentMaintainer.unique_id}>
+                    {currentMaintainer.name} {currentMaintainer.title ? `(${currentMaintainer.title})` : ''}
+                </option>
+            )}
+            {sortedIndividuals.map((person) => (
+                <option key={person.unique_id} value={person.unique_id}>
+                    {person.name} {person.title ? `(${person.title})` : ''}
+                </option>
+            ))}
+        </>
+    );
 
     return (
-        <Box as="form" onSubmit={handleSubmit} p={4} bg="white" borderRadius="lg" borderWidth="1px" borderColor="teal.300">
-            <FormControl mb={3}>
-                <FormLabel fontSize="sm">Document Name</FormLabel>
-                <Input size="sm" name="name" value={documentData.name} onChange={handleChange} required />
-            </FormControl>
-
-            <FormControl mb={3}>
-                <FormLabel fontSize="sm">Description</FormLabel>
-                <Input size="sm" name="description" value={documentData.description} onChange={handleChange} />
-            </FormControl>
-
-            <FormControl mb={3}>
-                <FormLabel fontSize="sm">
-                    Maintained By
-                    {currentMaintainer && !individuals && (
-                        <Text as="span" fontSize="xs" color="gray.500" ml={2}>
-                            (Current: {currentMaintainer.name})
-                        </Text>
-                    )}
-                </FormLabel>
-                <Select
-                    size="sm"
-                    name="maintainer_id"
-                    value={documentData.maintainer_id}
-                    onChange={handleChange}
-                    placeholder="Select a maintainer"
-                >
-                    {/* If we have a current maintainer but individuals haven't loaded, show the current one */}
-                    {currentMaintainer && !sortedIndividuals.find(p => p.unique_id === currentMaintainer.unique_id) && (
-                        <option key={currentMaintainer.unique_id} value={currentMaintainer.unique_id}>
-                            {currentMaintainer.name} {currentMaintainer.title ? `(${currentMaintainer.title})` : ''}
-                        </option>
-                    )}
-
-                    {/* Show all available individuals */}
-                    {sortedIndividuals.map(person => (
-                        <option key={person.unique_id} value={person.unique_id}>
-                            {person.name} {person.title ? `(${person.title})` : ''}
-                        </option>
-                    ))}
-                </Select>
-            </FormControl>
-
-            <FormControl mb={3}>
-                <FormLabel fontSize="sm">Date Created</FormLabel>
-                <Input size="sm" name="date_created" type="date" value={documentData.date_created} onChange={handleChange} />
-            </FormControl>
-
-            <FormControl mb={3}>
-                <FormLabel fontSize="sm">File Path</FormLabel>
-                <Input size="sm" name="file_path" value={documentData.file_path} onChange={handleChange} />
-            </FormControl>
-
-            <FormControl mb={3}>
-                <FormLabel fontSize="sm">URI Path</FormLabel>
-                <Input size="sm" name="uri_path" value={documentData.uri_path} onChange={handleChange} />
-            </FormControl>
-
-            <Flex gap={4} mb={4}>
-                <Box flex="1">
-                    <FormControl mb={2}>
-                        <HStack>
-                            <Switch
-                                size="sm"
-                                name="is_administrative_review_documentation"
-                                isChecked={documentData.is_administrative_review_documentation === true || documentData.is_administrative_review_documentation === "True"}
-                                onChange={handleChange}
-                            />
-                            <FormLabel fontSize="sm" mb={0}>Admin Review Doc</FormLabel>
-                        </HStack>
-                    </FormControl>
-                    <FormControl mb={2}>
-                        <HStack>
-                            <Switch
-                                size="sm"
-                                name="is_milestone_and_measures_documentation"
-                                isChecked={documentData.is_milestone_and_measures_documentation === true || documentData.is_milestone_and_measures_documentation === "True"}
-                                onChange={handleChange}
-                            />
-                            <FormLabel fontSize="sm" mb={0}>Milestones Doc</FormLabel>
-                        </HStack>
-                    </FormControl>
-
-                    {/* Year-specific inclusion switch */}
-                    <FormControl mb={2}>
-                        <HStack>
-                            <Switch
-                                size="sm"
-                                name="include_in_current_year"
-                                isChecked={documentData.include_in_current_year}
-                                onChange={handleChange}
-                                colorScheme="teal"
-                            />
-                            <FormLabel fontSize="sm" mb={0} fontWeight="bold">
-                                Include in {currentAcademicYear} Report
-                            </FormLabel>
-                        </HStack>
-                    </FormControl>
-
-                    {/* Global inclusion switch (optional - you might want to hide this) */}
-                    <FormControl mb={2}>
-                        <HStack>
-                            <Switch
-                                size="sm"
-                                name="include_in_report"
-                                isChecked={documentData.include_in_report}
-                                onChange={handleChange}
-                            />
-                            <FormLabel fontSize="sm" mb={0} color="gray.600">
-                                Include in All Reports (Global)
-                            </FormLabel>
-                        </HStack>
-                    </FormControl>
-                </Box>
-
-                <Box flex="1">
-                    <FormControl mb={2}>
-                        <HStack>
-                            <Switch
-                                size="sm"
-                                name="depreciated"
-                                isChecked={documentData.depreciated}
-                                onChange={handleChange}
-                            />
-                            <FormLabel fontSize="sm" mb={0}>Depreciated</FormLabel>
-                        </HStack>
-                    </FormControl>
-                    {documentData.depreciated && (
-                        <FormControl mb={2}>
-                            <FormLabel fontSize="sm">Depreciation Date</FormLabel>
-                            <Input
-                                size="sm"
-                                type="date"
-                                name="depreciated_date"
-                                value={documentData.depreciated_date}
-                                onChange={handleChange}
-                            />
-                        </FormControl>
-                    )}
-                </Box>
+        <FormShell onSubmit={handleSubmit}>
+            <Field label="Document Name" name="name" value={documentData.name} onChange={handleChange} isRequired />
+            <Field label="Description" name="description" value={documentData.description} onChange={handleChange} />
+            <Field as="select" label="Maintained By" name="maintainer_id" value={documentData.maintainer_id} onChange={handleChange} placeholder="Select a maintainer" options={maintainerOptions} />
+            <Flex gap={3}>
+                <Field label="Date Created" name="date_created" type="date" value={documentData.date_created} onChange={handleChange} />
+                <Field label="File Path" name="file_path" value={documentData.file_path} onChange={handleChange} />
             </Flex>
-
-            <HStack spacing={2}>
-                <Button
-                    size="sm"
-                    type="submit"
-                    colorScheme="teal"
-                    isLoading={isSubmitting}
-                    loadingText={isNewDocument ? 'Adding...' : 'Updating...'}
-                >
-                    {isNewDocument ? 'Add Document' : 'Update Document'}
-                </Button>
-                <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={onCancel}
-                    isDisabled={isSubmitting}
-                >
-                    Cancel
-                </Button>
-            </HStack>
-        </Box>
+            <Field label="URI Path" name="uri_path" value={documentData.uri_path} onChange={handleChange} />
+            <Box>
+                <FieldLabel mb={2}>Flags</FieldLabel>
+                <VStack align="stretch" spacing={1.5}>
+                    <SwitchRow name="include_in_current_year" label={`Include in ${currentAcademicYear} report`} isChecked={documentData.include_in_current_year} onChange={handleChange} emphasize />
+                    <SwitchRow name="include_in_report" label="Include in all reports (global)" isChecked={documentData.include_in_report} onChange={handleChange} colorScheme="gray" />
+                    <SwitchRow name="is_administrative_review_documentation" label="Admin review doc" isChecked={truthy(documentData.is_administrative_review_documentation)} onChange={handleChange} colorScheme="purple" />
+                    <SwitchRow name="is_milestone_and_measures_documentation" label="Milestones doc" isChecked={truthy(documentData.is_milestone_and_measures_documentation)} onChange={handleChange} colorScheme="blue" />
+                    <SwitchRow name="depreciated" label="Depreciated" isChecked={documentData.depreciated} onChange={handleChange} colorScheme="orange" />
+                </VStack>
+                {documentData.depreciated && (
+                    <Box mt={2}>
+                        <Field label="Depreciation Date" name="depreciated_date" type="date" value={documentData.depreciated_date} onChange={handleChange} />
+                    </Box>
+                )}
+            </Box>
+            <FormActions isSubmitting={isSubmitting} onCancel={onCancel} submitLabel={isNewDocument ? 'Add Document' : 'Update Document'} loadingText={isNewDocument ? 'Adding…' : 'Updating…'} />
+        </FormShell>
     );
 }
 
@@ -254,215 +106,86 @@ export default function DocumentsViewer({ documents = [], implementation_id, imp
     const [isAddingNew, setIsAddingNew] = useState(false);
     const [editingIndex, setEditingIndex] = useState(null);
     const { refreshImplementations } = useContext(DataContext);
-    const { currentWorkingGroup, currentAcademicYear } = useSettings();
-    const { user } = useContext(UserContext);
+    const { currentAcademicYear } = useSettings();
     const toast = useToast();
+    const canManage = Boolean(implementation_id && implementation_type);
 
     const handleAddDocument = async (documentData) => {
         try {
             const { maintainer_id, academic_year, include_in_year, ...documentDataForAPI } = documentData;
-
-            const response = await addDocumentToImplementation(
-                implementation_id,
-                implementation_type,
-                documentDataForAPI,
-                maintainer_id,
-                academic_year,
-                include_in_year
-            );
-
-            toast({
-                title: "Document added successfully",
-                status: "success",
-                duration: 3000,
-                isClosable: true,
-            });
-
+            await addDocumentToImplementation(implementation_id, implementation_type, documentDataForAPI, maintainer_id, academic_year, include_in_year);
+            toast({ title: 'Document added', status: 'success', duration: 3000, isClosable: true });
             await refreshImplementations();
             setIsAddingNew(false);
         } catch (error) {
-            toast({
-                title: "Error adding document",
-                description: error.message,
-                status: "error",
-                duration: 3000,
-                isClosable: true,
-            });
+            toast({ title: 'Error adding document', description: error.message, status: 'error', duration: 3000, isClosable: true });
         }
     };
 
     const handleUpdateDocument = async (documentData, index) => {
         try {
             const { maintainer_id, academic_year, include_in_year, ...documentDataForAPI } = documentData;
-
-            const response = await updateDocument(
-                implementation_id,
-                implementation_type,
-                documentDataForAPI,
-                maintainer_id,
-                academic_year,
-                include_in_year
-            );
-
-            toast({
-                title: "Document updated successfully",
-                status: "success",
-                duration: 3000,
-                isClosable: true,
-            });
-
+            await updateDocument(implementation_id, implementation_type, documentDataForAPI, maintainer_id, academic_year, include_in_year);
+            toast({ title: 'Document updated', status: 'success', duration: 3000, isClosable: true });
             await refreshImplementations();
             setEditingIndex(null);
         } catch (error) {
-            toast({
-                title: "Error updating document",
-                description: error.message,
-                status: "error",
-                duration: 3000,
-                isClosable: true,
-            });
+            toast({ title: 'Error updating document', description: error.message, status: 'error', duration: 3000, isClosable: true });
         }
     };
 
-    // Helper to check if document is included in current year
-    const isDocumentIncludedInCurrentYear = (doc) => {
+    const isIncludedInCurrentYear = (doc) => {
         if (!doc.relationship) return doc.include_in_report !== false;
         const { included_in_years = [], excluded_from_years = [] } = doc.relationship;
-
-        if (!included_in_years.length && !excluded_from_years.length) {
-            return doc.include_in_report !== false;
-        }
-
-        return included_in_years.includes(currentAcademicYear) &&
-            !excluded_from_years.includes(currentAcademicYear);
+        if (!included_in_years.length && !excluded_from_years.length) return doc.include_in_report !== false;
+        return included_in_years.includes(currentAcademicYear) && !excluded_from_years.includes(currentAcademicYear);
     };
 
     return (
         <Box>
-            <HStack justify="space-between" mb={3}>
-                <Heading size="sm" color="teal.700" fontWeight="bold">
-                    Documents ({documents.length || 0})
-                </Heading>
-                {implementation_id && implementation_type && (
-                    <Button
-                        size="sm"
-                        colorScheme="teal"
-                        onClick={() => {setIsAddingNew(true); setEditingIndex(null);}}
-                        isDisabled={isAddingNew}
-                    >
-                        Add Document
-                    </Button>
-                )}
-            </HStack>
+            <AddRow onAdd={() => { setIsAddingNew(true); setEditingIndex(null); }} label="Add Document" canAdd={canManage} isAdding={isAddingNew} />
 
             {isAddingNew && (
-                <Box mb={4}>
-                    <DocumentForm
-                        document={null}
-                        onSubmit={handleAddDocument}
-                        onCancel={() => setIsAddingNew(false)}
-                        isNewDocument={true}
-                    />
+                <Box mb={3}>
+                    <DocumentForm document={null} onSubmit={handleAddDocument} onCancel={() => setIsAddingNew(false)} isNewDocument />
                 </Box>
             )}
 
             {documents.length > 0 ? (
-                <VStack align="stretch" spacing={3}>
+                <VStack align="stretch" spacing={2}>
                     {documents.map((doc, index) => (
                         <Box key={doc.unique_id || index}>
                             <Collapse in={editingIndex === index} animateOpacity>
-                                <Box mb={3}>
-                                    <DocumentForm
-                                        document={doc}
-                                        onSubmit={(data) => handleUpdateDocument(data, index)}
-                                        onCancel={() => setEditingIndex(null)}
-                                        isNewDocument={false}
-                                    />
+                                <Box mb={2}>
+                                    <DocumentForm document={doc} onSubmit={(data) => handleUpdateDocument(data, index)} onCancel={() => setEditingIndex(null)} isNewDocument={false} />
                                 </Box>
                             </Collapse>
-
                             <Collapse in={editingIndex !== index} animateOpacity>
-                                <Box
-                                    p={4}
-                                    bg="white"
-                                    borderRadius="lg"
-                                    borderWidth="1px"
-                                    borderColor="gray.200"
+                                <ItemShell
+                                    titleNode={<Text fontSize="sm" fontWeight="semibold" color="gray.800" noOfLines={1}>{doc.name}</Text>}
+                                    onEdit={() => { setEditingIndex(index); setIsAddingNew(false); }}
+                                    canEdit={canManage}
                                 >
-                                    <HStack justify="space-between" align="start">
-                                        <Box flex="1">
-                                            <Heading as='h3' fontSize="sm" fontWeight="bold" color="gray.800">
-                                                {doc.name}
-                                            </Heading>
-
-                                            {doc.description && (
-                                                <Text fontSize="xs" color="gray.700" mt={2}>
-                                                    {doc.description}
-                                                </Text>
-                                            )}
-
-                                            {doc.maintained_by && (
-                                                <Text fontSize="xs" color="gray.600" mt={1}>
-                                                    Maintained by: {doc.maintained_by.name || 'Unknown'}
-                                                </Text>
-                                            )}
-
-                                            {doc.file_path && (
-                                                <Link fontSize="xs" color="teal.600" mt={2} display="block">
-                                                    {doc.file_path}
-                                                </Link>
-                                            )}
-
-                                            {doc.uri_path && (
-                                                <Link href={doc.uri_path} isExternal fontSize="xs" color="teal.600" mt={2} display="block">
-                                                    <HStack spacing={1}>
-                                                        <Text>URI: {doc.uri_path}</Text>
-                                                        <ExternalLinkIcon />
-                                                    </HStack>
-                                                </Link>
-                                            )}
-
-                                            <HStack mt={3} spacing={2} flexWrap="wrap">
-                                                {(doc.is_administrative_review_documentation === "True" || doc.is_administrative_review_documentation === true) && (
-                                                    <Badge colorScheme="purple" fontSize="xs">Admin Review</Badge>
-                                                )}
-                                                {(doc.is_milestone_and_measures_documentation === "True" || doc.is_milestone_and_measures_documentation === true) && (
-                                                    <Badge colorScheme="blue" fontSize="xs">Milestones</Badge>
-                                                )}
-                                                {doc.depreciated === true && (
-                                                    <Badge colorScheme="orange" fontSize="xs">Depreciated</Badge>
-                                                )}
-                                                {isDocumentIncludedInCurrentYear(doc) && (
-                                                    <Badge colorScheme="green" fontSize="xs">
-                                                        In {currentAcademicYear} Report
-                                                    </Badge>
-                                                )}
-                                                {doc.include_in_report !== false && (
-                                                    <Badge colorScheme="gray" fontSize="xs">Global Include</Badge>
-                                                )}
-                                            </HStack>
-                                        </Box>
-
-                                        {implementation_id && implementation_type && (
-                                            <Button
-                                                size="sm"
-                                                variant="outline"
-                                                colorScheme="teal"
-                                                onClick={() => {setEditingIndex(index); setIsAddingNew(false);}}
-                                            >
-                                                Edit
-                                            </Button>
-                                        )}
-                                    </HStack>
-                                </Box>
+                                    {doc.description && <Text fontSize="xs" color="gray.600" noOfLines={2}>{doc.description}</Text>}
+                                    {doc.maintained_by && <MetaLine>Maintained by {doc.maintained_by.name || 'Unknown'}</MetaLine>}
+                                    <PathLinks filePath={doc.file_path} uriPath={doc.uri_path} />
+                                    <ReportBadges
+                                        inYear={isIncludedInCurrentYear(doc)}
+                                        year={currentAcademicYear}
+                                        global={doc.include_in_report !== false}
+                                        depreciated={doc.depreciated === true}
+                                        extra={<>
+                                            {truthy(doc.is_administrative_review_documentation) && <WrapItem><Badge colorScheme="purple" fontSize="2xs">Admin Review</Badge></WrapItem>}
+                                            {truthy(doc.is_milestone_and_measures_documentation) && <WrapItem><Badge colorScheme="blue" fontSize="2xs">Milestones</Badge></WrapItem>}
+                                        </>}
+                                    />
+                                </ItemShell>
                             </Collapse>
                         </Box>
                     ))}
                 </VStack>
             ) : (
-                <Text fontSize="xs" color="gray.500" fontStyle="italic">
-                    No documents attached
-                </Text>
+                <EmptyText>No documents attached.</EmptyText>
             )}
         </Box>
     );

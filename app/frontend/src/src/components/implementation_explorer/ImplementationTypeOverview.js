@@ -60,7 +60,7 @@ import NotesViewer from './doc_components/NotesViewer';
 import MessagesViewer from './doc_components/MessagesViewer';
 import MetricsViewer from './doc_components/MetricsSection';
 import YseAssignmentSelector from '../functional_components/YseAssignmentSelector';
-import {getEditUrlFromCompositeKey} from "../../services/utils/tools";
+import {navigateToIndicator} from "../../services/utils/tools";
 
 // Implementation types that carry the classified_under edge to Dimension.
 const DIMENSION_TYPES = ['Process', 'Project', 'Procedure', 'Service', 'InternalPolicy', 'Guidance'];
@@ -639,28 +639,7 @@ function ImplementationTypeOverview({ implementationType, initialImplementationI
                                                             color="teal.700"
                                                             cursor="pointer"
                                                             _hover={{ color: 'teal.600', textDecoration: 'underline' }}
-                                                            onClick={() => {
-                                                                const editUrl = getEditUrlFromCompositeKey(yse.indicator_composite_key, campus);
-                                                                const [pathname, hash] = editUrl.split('#');
-
-                                                                navigate(pathname + '#' + hash);
-
-                                                                setTimeout(() => {
-                                                                    if (hash) {
-                                                                        const element = document.getElementById(hash);
-                                                                        if (element) {
-                                                                            element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                                                                        } else {
-                                                                            setTimeout(() => {
-                                                                                const retryElement = document.getElementById(hash);
-                                                                                if (retryElement) {
-                                                                                    retryElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                                                                                }
-                                                                            }, 300);
-                                                                        }
-                                                                    }
-                                                                }, 100);
-                                                            }}
+                                                            onClick={() => navigateToIndicator(navigate, yse.indicator_composite_key, campus)}
                                                         >
                                                             {yse.year_identifier}
                                                         </Text>

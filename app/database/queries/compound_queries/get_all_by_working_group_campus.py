@@ -300,9 +300,12 @@ def fetch_evidence_for_working_group(working_group, academic_year, campus_abbrev
            metrics: metrics
          } AS evidenceTypeData
 
-    // Collect all evidence types under each evidence
+    // Collect all evidence types under each evidence. The CASE filters out the
+    // phantom entry the OPTIONAL MATCH on (evidenceType) leaves when it finds none:
+    // collect() of the map literal would otherwise yield one {type: null, ...} row,
+    // reporting "Implementations (1)" where there are zero. collect() drops nulls.
     WITH wg, goal, indicator, evidence, evidenceCampus, evidenceNotes, evidenceMessages, evidenceMetrics, statusLevel, adminReviewers, adminReviewNotes, persons, plans, plansWithNotes,
-         collect(evidenceTypeData) AS evidenceTypes
+         collect(CASE WHEN evidenceTypeData.type IS NOT NULL THEN evidenceTypeData END) AS evidenceTypes
 
     // Create a map for each evidence with its data, including plans and campus
     WITH wg, goal, indicator, statusLevel, adminReviewers, adminReviewNotes, persons, plans, plansWithNotes, evidenceTypes, evidence, evidenceCampus, evidenceNotes, evidenceMessages, evidenceMetrics,

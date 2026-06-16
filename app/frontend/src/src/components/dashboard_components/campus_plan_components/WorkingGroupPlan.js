@@ -24,7 +24,7 @@ import { ChevronDownIcon, ChevronUpIcon, CloseIcon } from '@chakra-ui/icons';
 import { Link as RouterLink } from 'react-router-dom';
 
 import { UserContext } from '../../../context/UserContext';
-import { getUrlFromCompositeKey } from '../../../services/utils/tools';
+import { getUrlFromCompositeKey, getGoalViewUrlFromCompositeKey } from '../../../services/utils/tools';
 import {
     addPrioritizedIndicator,
     removePrioritizedIndicator,
@@ -35,32 +35,24 @@ import IndicatorSelectorModal from './IndicatorSelectorModal';
 import PersonAssignmentSelector from '../../functional_components/PersonAssignmentSelector';
 import ProgressUpdateModal from './ProgressUpdateModal';
 import StatusProgression from './StatusProgression';
-
-// Trajectory pill colors. Mirrors data_config.trajectory_choices keys.
-const TRAJECTORY_COLOR = {
-    improving: 'green',
-    on_track:  'blue',
-    stagnant:  'yellow',
-    at_risk:   'orange',
-    failing:   'red',
-};
-const TRAJECTORY_LABEL = {
-    improving: 'Improving',
-    on_track:  'On Track',
-    stagnant:  'Stagnant',
-    at_risk:   'At Risk',
-    failing:   'Failing',
-};
+import Card from '../../graph_components/common/Card';
+import Section from '../../graph_components/common/Section';
+import { getPlanStatusColorScheme } from '../../../styles/planStatusColors';
+import {
+    PLAN_STATUS_ORDER,
+    getTrajectoryColorScheme,
+    getTrajectoryLabel,
+} from './campusPlanConfig';
 
 function TrajectoryBadge({ trajectory }) {
     if (!trajectory) return null;
     return (
         <Badge
-            colorScheme={TRAJECTORY_COLOR[trajectory] || 'gray'}
+            colorScheme={getTrajectoryColorScheme(trajectory)}
             fontSize="xs"
             textTransform="none"
         >
-            {TRAJECTORY_LABEL[trajectory] || trajectory}
+            {getTrajectoryLabel(trajectory)}
         </Badge>
     );
 }
@@ -74,14 +66,6 @@ function TrajectoryBadge({ trajectory }) {
  * Instructional Materials). The shape it expects is the WGP object the
  * /campus-plans/<campus>/<year> endpoint returns under working_group_plans.
  */
-function SectionHeading({ children, mb = 2 }) {
-    return (
-        <Heading as="h4" size="xs" color="gray.700" mb={mb} textTransform="uppercase" letterSpacing="wide">
-            {children}
-        </Heading>
-    );
-}
-
 function EmptyText({ children }) {
     return (
         <Text fontSize="sm" color="gray.500" fontStyle="italic">{children}</Text>
@@ -184,20 +168,18 @@ function WorkingGroupPlan({
     };
 
     return (
-        <Box p={4} borderWidth="1px" borderColor="gray.200" borderRadius="md">
-            <HStack justify="space-between" mb={4}>
-                <Heading as="h3" size="sm" color="teal.700">
-                    {wgp.working_group}
-                </Heading>
-                <Text fontSize="xs" color="gray.500" fontFamily="mono">
+        <Card
+            title={wgp.working_group}
+            action={(
+                <Text fontSize="xs" color="gray.400" fontFamily="mono">
                     {wgp.plan_identifier}
                 </Text>
-            </HStack>
-
+            )}
+        >
             <VStack align="stretch" spacing={4}>
-                <Box>
-                    <HStack justify="space-between" align="center" mb={2}>
-                        <SectionHeading mb={0}>Group Leads</SectionHeading>
+                <Section
+                    title="Group Leads"
+                    action={(
                         <Button
                             size="xs"
                             variant="outline"
@@ -206,7 +188,8 @@ function WorkingGroupPlan({
                         >
                             Manage
                         </Button>
-                    </HStack>
+                    )}
+                >
                     {wgp.group_leads.length === 0 ? (
                         <EmptyText>No leads assigned.</EmptyText>
                     ) : (
@@ -221,11 +204,11 @@ function WorkingGroupPlan({
                             ))}
                         </VStack>
                     )}
-                </Box>
+                </Section>
 
-                <Box>
-                    <HStack justify="space-between" align="center" mb={2}>
-                        <SectionHeading mb={0}>Prioritized Indicators</SectionHeading>
+                <Section
+                    title="Prioritized Indicators"
+                    action={(
                         <Button
                             size="xs"
                             variant="outline"
@@ -234,7 +217,8 @@ function WorkingGroupPlan({
                         >
                             + Add Indicator
                         </Button>
-                    </HStack>
+                    )}
+                >
                     {unionIndicators.length === 0 ? (
                         <EmptyText>None selected.</EmptyText>
                     ) : (
@@ -302,9 +286,26 @@ function WorkingGroupPlan({
                                             >
                                                 {entry.composite_key}
                                             </Heading>
-                                            <Text fontSize="sm" color="gray.900" flex={1} textAlign="left">
-                                                {entry.success_indicator}
-                                            </Text>
+                                            {campusAbbrev ? (
+                                                <Link
+                                                    as={RouterLink}
+                                                    to={getGoalViewUrlFromCompositeKey(entry.composite_key, campusAbbrev)}
+                                                    flex={1}
+                                                    fontSize="sm"
+                                                    color="teal.700"
+                                                    fontWeight="medium"
+                                                    textAlign="left"
+                                                    _hover={{ textDecoration: 'underline' }}
+                                                    _focusVisible={{ outline: '2px solid', outlineColor: 'teal.500', borderRadius: 'sm' }}
+                                                    title={`Open the ${entry.composite_key} success indicator`}
+                                                >
+                                                    {entry.success_indicator}
+                                                </Link>
+                                            ) : (
+                                                <Text fontSize="sm" color="gray.900" flex={1} textAlign="left">
+                                                    {entry.success_indicator}
+                                                </Text>
+                                            )}
                                             {isPrimaryPrioritized ? (
                                                 <>
                                                     <StatusProgression
@@ -380,11 +381,11 @@ function WorkingGroupPlan({
                                                             )}
                                                             {upd.trajectory && (
                                                                 <Badge
-                                                                    colorScheme={TRAJECTORY_COLOR[upd.trajectory] || 'gray'}
+                                                                    colorScheme={getTrajectoryColorScheme(upd.trajectory)}
                                                                     fontSize="2xs"
                                                                     textTransform="none"
                                                                 >
-                                                                    {TRAJECTORY_LABEL[upd.trajectory] || upd.trajectory}
+                                                                    {getTrajectoryLabel(upd.trajectory)}
                                                                 </Badge>
                                                             )}
                                                             <Text color="gray.600" fontStyle="italic">"{upd.note}"</Text>
@@ -401,13 +402,9 @@ function WorkingGroupPlan({
                             })}
                         </VStack>
                     )}
-                </Box>
+                </Section>
 
-                <Box>
-                    <SectionHeading>
-                        Plans{wgp.plans.length > 0 ? ` (${wgp.plans.length})` : ''}
-                    </SectionHeading>
-
+                <Section title={`Plans${wgp.plans.length > 0 ? ` (${wgp.plans.length})` : ''}`}>
                     {wgp.plans.length === 0 ? (
                         <EmptyText>No campus-plan plans yet.</EmptyText>
                     ) : (
@@ -419,16 +416,10 @@ function WorkingGroupPlan({
                                         acc[key] = (acc[key] || 0) + 1;
                                         return acc;
                                     }, {});
-                                    const order = ['In Progress', 'Not Started', 'On Hold', 'Completed', 'Abandoned'];
-                                    const colorFor = (status) => ({
-                                        'Completed': 'green',
-                                        'In Progress': 'blue',
-                                        'Abandoned': 'red',
-                                    }[status] || 'gray');
-                                    return order
+                                    return PLAN_STATUS_ORDER
                                         .filter((status) => counts[status])
                                         .map((status) => (
-                                            <Badge key={status} colorScheme={colorFor(status)} fontSize="xs">
+                                            <Badge key={status} colorScheme={getPlanStatusColorScheme(status)} fontSize="xs">
                                                 {counts[status]} {status}
                                             </Badge>
                                         ));
@@ -510,7 +501,7 @@ function WorkingGroupPlan({
                             </Collapse>
                         </>
                     )}
-                </Box>
+                </Section>
             </VStack>
 
             <IndicatorSelectorModal
@@ -560,7 +551,7 @@ function WorkingGroupPlan({
                     </ModalFooter>
                 </ModalContent>
             </Modal>
-        </Box>
+        </Card>
     );
 }
 

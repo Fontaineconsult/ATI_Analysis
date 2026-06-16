@@ -1,5 +1,7 @@
 import React, { useContext, useMemo, useState } from 'react';
 import {
+    Alert,
+    AlertIcon,
     Box,
     Button,
     Heading,
@@ -39,7 +41,10 @@ import {
     updateCampusPlanSummary,
 } from '../../../services/api/post';
 import PersonAssignmentSelector from '../../functional_components/PersonAssignmentSelector';
+import Card from '../../graph_components/common/Card';
+import Section from '../../graph_components/common/Section';
 import WorkingGroupPlan from './WorkingGroupPlan';
+import CampusPlanStatStrip from './CampusPlanStatStrip';
 
 /**
  * Pick the WGP that matches `wgName` out of a campus plan's
@@ -147,16 +152,19 @@ function CampusPlanContainer() {
 
     if (error) {
         return (
-            <Box p={8}>
-                <Text color="red.500" fontSize="sm">Error: {error}</Text>
+            <Box maxW="container.xl" mx="auto" px={6} py={6}>
+                <Alert status="error" borderRadius="md" fontSize="sm">
+                    <AlertIcon />
+                    Error: {error}
+                </Alert>
             </Box>
         );
     }
 
     if (notFound) {
         return (
-            <Box maxW="1200px" mx="auto" p={6}>
-                <Box bg="white" borderRadius="lg" p={6} boxShadow="sm" textAlign="center">
+            <Box maxW="container.xl" mx="auto" px={6} py={6}>
+                <Card textAlign="center">
                     <Heading as="h1" size="lg" color="gray.800" mb={3}>
                         Campus Plan
                     </Heading>
@@ -171,7 +179,7 @@ function CampusPlanContainer() {
                     >
                         Create Campus Plan
                     </Button>
-                </Box>
+                </Card>
             </Box>
         );
     }
@@ -179,115 +187,101 @@ function CampusPlanContainer() {
     if (!plan) return null;
 
     return (
-        <Box maxW="1200px" mx="auto" p={6}>
-            <VStack align="stretch" spacing={6}>
-                <Box bg="white" borderRadius="lg" p={6} boxShadow="sm">
-                    <Heading as="h1" size="lg" color="gray.800" mb={2}>
-                        Campus Plan
-                    </Heading>
-                    <Text fontSize="sm" color="gray.600" mb={4}>
-                        {plan.campus?.name || currentCampus} · {plan.academic_year} · <Text as="span" fontFamily="mono">{plan.plan_identifier}</Text>
+        <Box maxW="container.xl" mx="auto" px={6} py={6}>
+            <Heading as="h2" size="lg" color="gray.800" mb={4}>
+                Campus Plan
+            </Heading>
+
+            <CampusPlanStatStrip plan={plan} />
+
+            <VStack align="stretch" spacing={4}>
+                {/* Identity card — campus · year · plan identifier. */}
+                <Card>
+                    <Text fontSize="sm" color="gray.600">
+                        {plan.campus?.name || currentCampus} · {plan.academic_year} · <Text as="span" fontFamily="mono" color="gray.400">{plan.plan_identifier}</Text>
                     </Text>
-                    <Box mb={4}>
-                        <HStack justify="space-between" align="center" mb={1}>
-                            <Heading as="h3" size="xs" color="gray.700" textTransform="uppercase" letterSpacing="wide">
-                                Executive Summary
-                            </Heading>
-                            {!editingSummary && (
-                                <Button size="xs" variant="outline" colorScheme="teal" onClick={openSummaryEditor}>
-                                    {plan.executive_summary ? 'Edit' : 'Add'}
+                </Card>
+
+                <Section
+                    title="Executive Summary"
+                    action={!editingSummary && (
+                        <Button size="xs" variant="outline" colorScheme="teal" onClick={openSummaryEditor}>
+                            {plan.executive_summary ? 'Edit' : 'Add'}
+                        </Button>
+                    )}
+                >
+                    {editingSummary ? (
+                        <VStack align="stretch" spacing={2}>
+                            <Textarea
+                                value={summaryDraft}
+                                onChange={(e) => setSummaryDraft(e.target.value)}
+                                size="sm"
+                                rows={4}
+                                placeholder="Plan-level narrative for this campus and year…"
+                            />
+                            <HStack justify="flex-end" spacing={2}>
+                                <Button size="xs" variant="ghost" onClick={() => setEditingSummary(false)} isDisabled={savingSummary}>
+                                    Cancel
                                 </Button>
-                            )}
-                        </HStack>
-                        {editingSummary ? (
-                            <VStack align="stretch" spacing={2}>
-                                <Textarea
-                                    value={summaryDraft}
-                                    onChange={(e) => setSummaryDraft(e.target.value)}
-                                    size="sm"
-                                    rows={4}
-                                    placeholder="Plan-level narrative for this campus and year…"
-                                />
-                                <HStack justify="flex-end" spacing={2}>
-                                    <Button size="xs" variant="ghost" onClick={() => setEditingSummary(false)} isDisabled={savingSummary}>
-                                        Cancel
-                                    </Button>
-                                    <Button size="xs" colorScheme="teal" onClick={saveSummary} isLoading={savingSummary} loadingText="Saving…">
-                                        Save
-                                    </Button>
+                                <Button size="xs" colorScheme="teal" onClick={saveSummary} isLoading={savingSummary} loadingText="Saving…">
+                                    Save
+                                </Button>
+                            </HStack>
+                        </VStack>
+                    ) : plan.executive_summary ? (
+                        <Text color="gray.700" whiteSpace="pre-wrap">{plan.executive_summary}</Text>
+                    ) : (
+                        <Text fontSize="sm" color="gray.500" fontStyle="italic">No summary yet.</Text>
+                    )}
+                </Section>
+
+                <Section
+                    title="Executive Sponsors"
+                    action={(
+                        <Button size="xs" variant="outline" colorScheme="teal" onClick={sponsorsModal.onOpen}>
+                            Manage
+                        </Button>
+                    )}
+                >
+                    {plan.executive_sponsors.length === 0 ? (
+                        <Text fontSize="sm" color="gray.500" fontStyle="italic">None assigned.</Text>
+                    ) : (
+                        <VStack align="stretch" spacing={1}>
+                            {plan.executive_sponsors.map((person) => (
+                                <HStack key={person.unique_id} spacing={2}>
+                                    <Text fontSize="sm" fontWeight="medium" color="gray.800">{person.name}</Text>
+                                    {person.title && (
+                                        <Text fontSize="sm" color="gray.500">— {person.title}</Text>
+                                    )}
                                 </HStack>
-                            </VStack>
-                        ) : plan.executive_summary ? (
-                            <Text color="gray.700" whiteSpace="pre-wrap">{plan.executive_summary}</Text>
-                        ) : (
-                            <Text fontSize="sm" color="gray.500" fontStyle="italic">No summary yet.</Text>
-                        )}
-                    </Box>
+                            ))}
+                        </VStack>
+                    )}
+                </Section>
 
-                    <Box mt={4}>
-                        <HStack justify="space-between" align="center" mb={2}>
-                            <Heading as="h3" size="xs" color="gray.700" textTransform="uppercase" letterSpacing="wide">
-                                Executive Sponsors
-                            </Heading>
-                            <Button
-                                size="xs"
-                                variant="outline"
-                                colorScheme="teal"
-                                onClick={sponsorsModal.onOpen}
-                            >
-                                Manage
-                            </Button>
-                        </HStack>
-                        {plan.executive_sponsors.length === 0 ? (
-                            <Text fontSize="sm" color="gray.500" fontStyle="italic">None assigned.</Text>
-                        ) : (
-                            <VStack align="stretch" spacing={1}>
-                                {plan.executive_sponsors.map((person) => (
-                                    <HStack key={person.unique_id} spacing={2}>
-                                        <Text fontSize="sm" fontWeight="medium" color="gray.800">{person.name}</Text>
-                                        {person.title && (
-                                            <Text fontSize="sm" color="gray.500">— {person.title}</Text>
-                                        )}
-                                    </HStack>
-                                ))}
-                            </VStack>
-                        )}
-                    </Box>
-
-                    <Box mt={4}>
-                        <Heading as="h3" size="xs" color="gray.700" mb={2} textTransform="uppercase" letterSpacing="wide">
-                            President's Report
-                        </Heading>
-                        {plan.presidents_report ? (
-                            <Link
-                                href={plan.presidents_report.uri_path || plan.presidents_report.file_path}
-                                color="teal.600"
-                                fontSize="sm"
-                                isExternal
-                            >
-                                {plan.presidents_report.name || 'View report'}
-                            </Link>
-                        ) : (
-                            <Text fontSize="sm" color="gray.500" fontStyle="italic">
-                                No president's report yet.
-                            </Text>
-                        )}
-                    </Box>
-                </Box>
+                <Section title="President's Report">
+                    {plan.presidents_report ? (
+                        <Link
+                            href={plan.presidents_report.uri_path || plan.presidents_report.file_path}
+                            color="teal.600"
+                            fontSize="sm"
+                            isExternal
+                        >
+                            {plan.presidents_report.name || 'View report'}
+                        </Link>
+                    ) : (
+                        <Text fontSize="sm" color="gray.500" fontStyle="italic">
+                            No president's report yet.
+                        </Text>
+                    )}
+                </Section>
 
                 {/* Cross-campus comparison selector. Loads peer campus plans
                     into the same view so each WG's Prioritized Indicators
                     block can show per-campus badges. */}
-                <Box bg="white" borderRadius="lg" p={4} boxShadow="sm">
-                    <HStack justify="space-between" align="start" mb={peerCampusPlans.length > 0 ? 3 : 0} flexWrap="wrap" gap={2}>
-                        <Box>
-                            <Heading as="h3" size="xs" color="gray.700" textTransform="uppercase" letterSpacing="wide">
-                                Cross-campus comparison
-                            </Heading>
-                            <Text fontSize="xs" color="gray.500" mt={1}>
-                                Add peer campuses to compare prioritized indicators in each working group below.
-                            </Text>
-                        </Box>
+                <Card
+                    title="Cross-campus comparison"
+                    action={(
                         <Menu closeOnSelect={false}>
                             <MenuButton
                                 as={Button}
@@ -312,7 +306,11 @@ function CampusPlanContainer() {
                                 </MenuOptionGroup>
                             </MenuList>
                         </Menu>
-                    </HStack>
+                    )}
+                >
+                    <Text fontSize="xs" color="gray.500" mb={peerCampusPlans.length > 0 ? 3 : 0}>
+                        Add peer campuses to compare prioritized indicators in each working group below.
+                    </Text>
                     {peerCampusPlans.length > 0 && (
                         <Wrap spacing={2}>
                             {peerCampusPlans.map(({ campusAbbrev, campusName, state }) => {
@@ -336,10 +334,10 @@ function CampusPlanContainer() {
                             })}
                         </Wrap>
                     )}
-                </Box>
+                </Card>
 
-                <Box bg="white" borderRadius="lg" p={6} boxShadow="sm">
-                    <Heading as="h2" size="md" color="gray.800" mb={4}>
+                <Box>
+                    <Heading as="h2" size="md" color="gray.800" mb={3}>
                         Working Group Plans
                     </Heading>
                     <VStack align="stretch" spacing={3}>

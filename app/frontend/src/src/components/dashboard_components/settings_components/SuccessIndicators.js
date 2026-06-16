@@ -18,9 +18,11 @@ import {
     Divider,
     Spinner,
     Center,
+    Switch,
+    Tooltip,
 } from '@chakra-ui/react';
 import { DataContext } from '../../../context/DataContext';
-import { updateRemovedStatus } from '../../../services/api/put';
+import { updateRemovedStatus, updateOverrideImplementationRequirement } from '../../../services/api/put';
 import { createYearSuccessEvidence } from '../../../services/api/post';
 import { sortGoals, sortSuccessIndicators } from "../../../services/utils/sorters";
 import AddIndicator from './AddIndicator';
@@ -58,6 +60,25 @@ const SuccessIndicators = () => {
         } catch (error) {
             console.error("Failed to update status:", error);
             indicator.removed = originalRemovedStatus;
+            refreshIndicators();
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const handleOverrideChange = async (indicator, override) => {
+        const original = indicator.override_implementation_requirement;
+
+        indicator.override_implementation_requirement = override;
+        refreshIndicators();
+
+        try {
+            setIsLoading(true);
+            await updateOverrideImplementationRequirement(indicator.composite_key, override);
+            refreshIndicators();
+        } catch (error) {
+            console.error("Failed to update implementation-requirement override:", error);
+            indicator.override_implementation_requirement = original;
             refreshIndicators();
         } finally {
             setIsLoading(false);
@@ -181,6 +202,7 @@ const SuccessIndicators = () => {
                                                             <Th color="gray.600" fontSize="xs" fontWeight="semibold">Success Indicator</Th>
                                                             <Th color="gray.600" fontSize="xs" fontWeight="semibold" w="120px">Key</Th>
                                                             <Th color="gray.600" fontSize="xs" fontWeight="semibold" w="130px">Status</Th>
+                                                            <Th color="gray.600" fontSize="xs" fontWeight="semibold" w="150px">Implementations</Th>
                                                             <Th color="gray.600" fontSize="xs" fontWeight="semibold" w="130px">Actions</Th>
                                                         </Tr>
                                                     </Thead>
@@ -224,6 +246,25 @@ const SuccessIndicators = () => {
                                                                                 <option value="Active">Active</option>
                                                                                 <option value="Removed">Removed</option>
                                                                             </Select>
+                                                                        </Td>
+                                                                        <Td>
+                                                                            <Tooltip
+                                                                                label="When on, this indicator does not require traditional implementations — the dashboard won't flag it as missing implementations."
+                                                                                openDelay={400}
+                                                                                hasArrow
+                                                                            >
+                                                                                <HStack spacing={2}>
+                                                                                    <Switch
+                                                                                        size="sm"
+                                                                                        colorScheme="orange"
+                                                                                        isChecked={Boolean(indicator.override_implementation_requirement)}
+                                                                                        onChange={(e) => handleOverrideChange(indicator, e.target.checked)}
+                                                                                    />
+                                                                                    <Text fontSize="2xs" color="gray.500">
+                                                                                        {indicator.override_implementation_requirement ? 'Not required' : 'Required'}
+                                                                                    </Text>
+                                                                                </HStack>
+                                                                            </Tooltip>
                                                                         </Td>
                                                                         <Td>
                                                                             <Button

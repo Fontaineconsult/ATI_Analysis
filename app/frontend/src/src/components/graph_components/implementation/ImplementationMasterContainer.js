@@ -33,7 +33,10 @@ const IMPLEMENTATION_TYPES = ['Tracking', 'Guidance', 'Process', 'Project', 'Pro
  * Add is one click. Used inside SuccessIndicatorDetailPanel.
  */
 function ImplementationMasterContainer({ evidenceData = {}, yearIdentifier }) {
-    const { evidenceTypes = [] } = evidenceData;
+    // Drop any phantom entry with no node type (the compound query leaves one when
+    // an indicator has zero implementations) so the count reads 0, not "Implementations (1)".
+    const { evidenceTypes: rawEvidenceTypes = [] } = evidenceData;
+    const evidenceTypes = rawEvidenceTypes.filter((et) => et && et.type);
     const [selectedType, setSelectedType] = useState(null);
     const [tabIndex, setTabIndex] = useState(0);
     const { isOpen, onOpen, onClose } = useDisclosure();

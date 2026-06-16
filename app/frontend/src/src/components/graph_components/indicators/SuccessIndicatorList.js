@@ -132,10 +132,39 @@ function SuccessIndicatorList({ indicators = [], selectedKey, onSelect }) {
                             <Text fontSize="xs" color="gray.600" noOfLines={2} mb={2}>{s.description}</Text>
                         )}
 
+                        {(s.flagMissingImplementation || s.noActiveDocs) && (
+                            <HStack spacing={1.5} mb={2} flexWrap="wrap">
+                                {s.flagMissingImplementation && (
+                                    <Badge
+                                        colorScheme="red"
+                                        variant="solid"
+                                        fontSize="2xs"
+                                        borderRadius="full"
+                                        px={2}
+                                        title="No implementations are linked to this indicator"
+                                    >
+                                        ⚠ No implementations
+                                    </Badge>
+                                )}
+                                {s.noActiveDocs && (
+                                    <Badge
+                                        colorScheme="orange"
+                                        variant="solid"
+                                        fontSize="2xs"
+                                        borderRadius="full"
+                                        px={2}
+                                        title="Every document on this indicator's implementations is depreciated — no active documentation"
+                                    >
+                                        ⚠ Docs deprecated
+                                    </Badge>
+                                )}
+                            </HStack>
+                        )}
+
                         <HStack justify="space-between" align="center">
                             <HStack spacing={3}>
                                 <CountChip icon={FaUser} count={s.personCount} label="responsible persons" zeroColor="red.500" />
-                                <CountChip icon={FaListUl} count={s.implCount} label="implementations" />
+                                <CountChip icon={FaListUl} count={s.implCount} label="implementations" zeroColor={s.flagMissingImplementation ? 'red.500' : 'gray.300'} />
                                 <CountChip icon={FaRegComment} count={s.annotationCount} label="annotations" />
                             </HStack>
                             <HStack spacing={1}>

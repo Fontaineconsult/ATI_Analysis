@@ -36,6 +36,38 @@ export function getIndicatorSummary(wrapper) {
         (ev.has_metrics?.length || 0) +
         (ev.plans?.length || 0);
 
+    // Documentation health across the indicator's implementations (evidenceTypes).
+    // A document is "active" unless flagged depreciated (stored boolean, or the
+    // legacy string "True"). We flag when ANY implementation has documents but every
+    // one is depreciated — the same per-implementation rule the implementations view
+    // uses (allDocumentsDepreciated), so a report agrees with that view.
+    //
+    // Two compound-query artifacts are filtered out:
+    //   - phantom evidenceTypes ({type: null}) left when an SI has zero implementations,
+    //   - phantom docs ({document: null}) left when an implementation has zero documents
+    //     (otherwise that null counts as a spurious "active" doc and suppresses the flag).
+    const evidenceTypes = (ev.evidenceTypes || []).filter((et) => et && et.type);
+    const isDeprecated = (v) => v === true || v === 'True';
+    let totalDocCount = 0;
+    let activeDocCount = 0;
+    let anyImplAllDepreciated = false;
+    for (const et of evidenceTypes) {
+        const etDocs = (et.docs || []).filter((d) => d && d.document);
+        let etActive = 0;
+        for (const d of etDocs) {
+            totalDocCount += 1;
+            if (!isDeprecated(d.document.properties?.depreciated)) { activeDocCount += 1; etActive += 1; }
+        }
+        if (etDocs.length > 0 && etActive === 0) anyImplAllDepreciated = true;
+    }
+    const implCount = evidenceTypes.length;
+
+    // Some indicators are not met through traditional implementation work; when the
+    // SI settings flag is set we suppress the missing-implementation diagnostic.
+    const overrideImplementationRequirement =
+        indicator.override_implementation_requirement === true ||
+        indicator.override_implementation_requirement === 'True';
+
     return {
         compositeKey: indicator.composite_key,
         description: indicator.success_indicator,
@@ -44,7 +76,15 @@ export function getIndicatorSummary(wrapper) {
         statusLevel: statusProps.status_level || null,
         statusValue: statusProps.status_value ?? null,
         personCount: ev.persons?.length || 0,
-        implCount: ev.evidenceTypes?.length || 0,
+        implCount,
+        noImplementations: implCount === 0,
+        overrideImplementationRequirement,
+        // Only flag missing implementations when the indicator actually requires them.
+        flagMissingImplementation: implCount === 0 && !overrideImplementationRequirement,
+        totalDocCount,
+        activeDocCount,
+        // At least one implementation has documents but every one is depreciated.
+        noActiveDocs: anyImplAllDepreciated,
         annotationCount,
         approved: (ev.adminReviewers?.length || 0) > 0 || Boolean(evProps.administrative_review_complete),
         readyForReview: Boolean(evProps.ready_for_admin_review),

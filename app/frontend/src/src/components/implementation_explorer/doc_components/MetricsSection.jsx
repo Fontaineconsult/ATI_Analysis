@@ -1,16 +1,16 @@
 import React, { useState, useContext } from 'react';
-import {
-    Box, VStack, Heading, Text, Badge, Link, HStack, Button, Input, Switch,
-    FormControl, FormLabel, Flex, Collapse, useToast, Textarea, Select
-} from '@chakra-ui/react';
-import { ExternalLinkIcon } from '@chakra-ui/icons';
+import { Badge, Box, Collapse, Flex, Text, VStack, WrapItem, useToast } from '@chakra-ui/react';
 import { addMetricToImplementation } from '../../../services/api/post';
 import { updateMetric } from '../../../services/api/put';
 import { DataContext } from '../../../context/DataContext';
 import { useSettings } from '../../../context/SettingsContext';
 import { UserContext } from '../../../context/UserContext';
+import {
+    AddRow, EmptyText, Field, FieldLabel, FormActions, FormShell,
+    ItemShell, MetaLine, PathLinks, ReportBadges, SwitchRow,
+} from './docPrimitives';
 
-const metricTypes = ["tabular", "graphical", "descriptive"];
+const metricTypes = ['tabular', 'graphical', 'descriptive'];
 
 function MetricForm({ metric, onSubmit, onCancel, isNewMetric }) {
     const { user } = useContext(UserContext);
@@ -30,17 +30,13 @@ function MetricForm({ metric, onSubmit, onCancel, isNewMetric }) {
         include_in_report: metric?.include_in_report ?? true,
         date_created: metric?.date_created || new Date().toISOString().split('T')[0],
         academic_year: metric?.academic_year || currentAcademicYear,
-        created_by: user || {}
+        created_by: user || {},
     });
-
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     const handleChange = (e) => {
         const { name, value, type, checked } = e.target;
-        setMetricData({
-            ...metricData,
-            [name]: type === 'checkbox' ? checked : value,
-        });
+        setMetricData({ ...metricData, [name]: type === 'checkbox' ? checked : value });
     };
 
     const handleSubmit = async (e) => {
@@ -53,303 +49,116 @@ function MetricForm({ metric, onSubmit, onCancel, isNewMetric }) {
         }
     };
 
+    const typeOptions = metricTypes.map((t) => <option key={t} value={t}>{t}</option>);
+
     return (
-        <Box as="form" onSubmit={handleSubmit} p={4} bg="white" borderRadius="lg" borderWidth="1px" borderColor="teal.300">
-            <FormControl mb={3}>
-                <FormLabel fontSize="sm">Metric Name</FormLabel>
-                <Input size="sm" name="name" value={metricData.name} onChange={handleChange} required />
-            </FormControl>
-
-            <Flex gap={4} mb={3}>
-                <FormControl flex="1">
-                    <FormLabel fontSize="sm">Metric Type</FormLabel>
-                    <Select size="sm" name="metric_type" value={metricData.metric_type} onChange={handleChange}>
-                        {metricTypes.map((type) => (
-                            <option key={type} value={type}>{type}</option>
-                        ))}
-                    </Select>
-                </FormControl>
-
-                <FormControl flex="1">
-                    <FormLabel fontSize="sm">Single Value</FormLabel>
-                    <Input size="sm" name="single_value" value={metricData.single_value} onChange={handleChange} />
-                </FormControl>
+        <FormShell onSubmit={handleSubmit}>
+            <Field label="Metric Name" name="name" value={metricData.name} onChange={handleChange} isRequired />
+            <Flex gap={3}>
+                <Field as="select" label="Metric Type" name="metric_type" value={metricData.metric_type} onChange={handleChange} options={typeOptions} />
+                <Field label="Single Value" name="single_value" value={metricData.single_value} onChange={handleChange} />
             </Flex>
-
-            <FormControl mb={3}>
-                <FormLabel fontSize="sm">Description</FormLabel>
-                <Textarea size="sm" name="description" value={metricData.description} onChange={handleChange} rows={2} />
-            </FormControl>
-
-            <FormControl mb={3}>
-                <FormLabel fontSize="sm">Comment</FormLabel>
-                <Textarea size="sm" name="comment" value={metricData.comment} onChange={handleChange} rows={2} />
-            </FormControl>
-
-            <FormControl mb={3}>
-                <FormLabel fontSize="sm">Composite Key</FormLabel>
-                <Input size="sm" name="composite_key" value={metricData.composite_key} onChange={handleChange} />
-            </FormControl>
-
-            <Flex gap={4} mb={3}>
-                <FormControl flex="1">
-                    <FormLabel fontSize="sm">File Path</FormLabel>
-                    <Input size="sm" name="file_path" value={metricData.file_path} onChange={handleChange} />
-                </FormControl>
-
-                <FormControl flex="1">
-                    <FormLabel fontSize="sm">URI Path</FormLabel>
-                    <Input size="sm" name="uri_path" value={metricData.uri_path} onChange={handleChange} />
-                </FormControl>
+            <Field as="textarea" label="Description" name="description" value={metricData.description} onChange={handleChange} rows={2} />
+            <Field as="textarea" label="Comment" name="comment" value={metricData.comment} onChange={handleChange} rows={2} />
+            <Field label="Composite Key" name="composite_key" value={metricData.composite_key} onChange={handleChange} />
+            <Flex gap={3}>
+                <Field label="File Path" name="file_path" value={metricData.file_path} onChange={handleChange} />
+                <Field label="URI Path" name="uri_path" value={metricData.uri_path} onChange={handleChange} />
             </Flex>
-
-            <Flex gap={4} mb={4}>
-                <Box flex="1">
-                    <FormControl mb={2}>
-                        <HStack>
-                            <Switch size="sm" name="include_in_report"
-                                    isChecked={metricData.include_in_report} onChange={handleChange} />
-                            <FormLabel fontSize="sm" mb={0}>Include in Report</FormLabel>
-                        </HStack>
-                    </FormControl>
-                    <FormControl mb={2}>
-                        <HStack>
-                            <Switch size="sm" name="depreciated"
-                                    isChecked={metricData.depreciated} onChange={handleChange} />
-                            <FormLabel fontSize="sm" mb={0}>Depreciated</FormLabel>
-                        </HStack>
-                    </FormControl>
-                </Box>
-
-                <Box flex="1">
-                    {metricData.depreciated && (
-                        <FormControl>
-                            <FormLabel fontSize="sm">Depreciation Date</FormLabel>
-                            <Input size="sm" type="date" name="depreciated_date"
-                                   value={metricData.depreciated_date} onChange={handleChange} />
-                        </FormControl>
-                    )}
-                </Box>
-            </Flex>
-
-            <HStack spacing={2}>
-                <Button size="sm" type="submit" colorScheme="teal"
-                        isLoading={isSubmitting} loadingText={isNewMetric ? 'Adding...' : 'Updating...'}>
-                    {isNewMetric ? 'Add Metric' : 'Update Metric'}
-                </Button>
-                <Button size="sm" variant="outline" onClick={onCancel} isDisabled={isSubmitting}>
-                    Cancel
-                </Button>
-            </HStack>
-        </Box>
+            <Box>
+                <FieldLabel mb={2}>Flags</FieldLabel>
+                <VStack align="stretch" spacing={1.5}>
+                    <SwitchRow name="include_in_report" label="Include in report" isChecked={metricData.include_in_report} onChange={handleChange} />
+                    <SwitchRow name="depreciated" label="Depreciated" isChecked={metricData.depreciated} onChange={handleChange} colorScheme="orange" />
+                </VStack>
+                {metricData.depreciated && (
+                    <Box mt={2}>
+                        <Field label="Depreciation Date" name="depreciated_date" type="date" value={metricData.depreciated_date} onChange={handleChange} />
+                    </Box>
+                )}
+            </Box>
+            <FormActions isSubmitting={isSubmitting} onCancel={onCancel} submitLabel={isNewMetric ? 'Add Metric' : 'Update Metric'} loadingText={isNewMetric ? 'Adding…' : 'Updating…'} />
+        </FormShell>
     );
 }
 
-const MetricsViewer = ({ metrics = [], implementation_id, implementation_type }) => {
+export default function MetricsViewer({ metrics = [], implementation_id, implementation_type }) {
     const [isAddingNew, setIsAddingNew] = useState(false);
     const [editingIndex, setEditingIndex] = useState(null);
     const { refreshImplementations } = useContext(DataContext);
     const { user } = useContext(UserContext);
     const toast = useToast();
+    const canManage = Boolean(implementation_id && implementation_type);
 
     const handleAddMetric = async (metricData) => {
         try {
-            await addMetricToImplementation(
-                implementation_id,
-                implementation_type,
-                metricData,
-                user?.employee_id || ''
-            );
-
-            toast({
-                title: "Metric added successfully",
-                status: "success",
-                duration: 3000,
-                isClosable: true,
-            });
-
-            await refreshImplementations()
+            await addMetricToImplementation(implementation_id, implementation_type, metricData, user?.employee_id || '');
+            toast({ title: 'Metric added', status: 'success', duration: 3000, isClosable: true });
+            await refreshImplementations();
             setIsAddingNew(false);
         } catch (error) {
-            toast({
-                title: "Error adding metric",
-                description: error.message,
-                status: "error",
-                duration: 3000,
-                isClosable: true,
-            });
+            toast({ title: 'Error adding metric', description: error.message, status: 'error', duration: 3000, isClosable: true });
         }
     };
 
     const handleUpdateMetric = async (metricData, index) => {
         try {
-            await updateMetric(
-                implementation_id,
-                implementation_type,
-                metricData,
-                user?.employee_id || ''
-            );
-
-            toast({
-                title: "Metric updated successfully",
-                status: "success",
-                duration: 3000,
-                isClosable: true,
-            });
-
-            await refreshImplementations()
+            await updateMetric(implementation_id, implementation_type, metricData, user?.employee_id || '');
+            toast({ title: 'Metric updated', status: 'success', duration: 3000, isClosable: true });
+            await refreshImplementations();
             setEditingIndex(null);
         } catch (error) {
-            toast({
-                title: "Error updating metric",
-                description: error.message,
-                status: "error",
-                duration: 3000,
-                isClosable: true,
-            });
+            toast({ title: 'Error updating metric', description: error.message, status: 'error', duration: 3000, isClosable: true });
         }
     };
 
     return (
         <Box>
-            <HStack justify="space-between" mb={3}>
-                <Heading size="sm" color="teal.700" fontWeight="bold">
-                    Metrics ({metrics.length})
-                </Heading>
-                {implementation_id && implementation_type && (
-                    <Button
-                        size="sm"
-                        colorScheme="teal"
-                        onClick={() => {setIsAddingNew(true); setEditingIndex(null);}}
-                        isDisabled={isAddingNew}
-                    >
-                        Add Metric
-                    </Button>
-                )}
-            </HStack>
+            <AddRow onAdd={() => { setIsAddingNew(true); setEditingIndex(null); }} label="Add Metric" canAdd={canManage} isAdding={isAddingNew} />
 
             {isAddingNew && (
-                <Box mb={4}>
-                    <MetricForm
-                        metric={null}
-                        onSubmit={handleAddMetric}
-                        onCancel={() => setIsAddingNew(false)}
-                        isNewMetric={true}
-                    />
+                <Box mb={3}>
+                    <MetricForm metric={null} onSubmit={handleAddMetric} onCancel={() => setIsAddingNew(false)} isNewMetric />
                 </Box>
             )}
 
             {metrics.length > 0 ? (
-                <VStack align="stretch" spacing={3}>
+                <VStack align="stretch" spacing={2}>
                     {metrics.map((metric, index) => (
                         <Box key={metric.unique_id || index}>
                             <Collapse in={editingIndex === index} animateOpacity>
-                                <Box mb={3}>
-                                    <MetricForm
-                                        metric={metric}
-                                        onSubmit={(data) => handleUpdateMetric(data, index)}
-                                        onCancel={() => setEditingIndex(null)}
-                                        isNewMetric={false}
-                                    />
+                                <Box mb={2}>
+                                    <MetricForm metric={metric} onSubmit={(data) => handleUpdateMetric(data, index)} onCancel={() => setEditingIndex(null)} isNewMetric={false} />
                                 </Box>
                             </Collapse>
-
                             <Collapse in={editingIndex !== index} animateOpacity>
-                                <Box
-                                    p={4}
-                                    bg="white"
-                                    borderRadius="lg"
-                                    borderWidth="1px"
-                                    borderColor="gray.200"
-                                    boxShadow="sm"
-                                    _hover={{ boxShadow: 'md' }}
-                                    transition="box-shadow 0.2s"
+                                <ItemShell
+                                    titleNode={<Text fontSize="sm" fontWeight="semibold" color="gray.800" noOfLines={1}>{metric.name}</Text>}
+                                    badge={metric.metric_type && <Badge colorScheme="orange" fontSize="2xs">{metric.metric_type}</Badge>}
+                                    onEdit={() => { setEditingIndex(index); setIsAddingNew(false); }}
+                                    canEdit={canManage}
                                 >
-                                    <HStack justify="space-between" align="start">
-                                        <Box flex="1">
-                                            <HStack justify="space-between" mb={2}>
-                                                <Text fontSize="sm" fontWeight="bold" color="gray.800">
-                                                    {metric.name}
-                                                </Text>
-                                                {metric.metric_type && (
-                                                    <Badge colorScheme="orange" fontSize="xs">
-                                                        {metric.metric_type}
-                                                    </Badge>
-                                                )}
-                                            </HStack>
-
-                                            {metric.description && (
-                                                <Text fontSize="xs" color="gray.700" mt={2}>
-                                                    {metric.description}
-                                                </Text>
-                                            )}
-
-                                            {metric.single_value && (
-                                                <Text fontSize="sm" color="gray.800" fontWeight="semibold" mt={2}>
-                                                    Value: {metric.single_value}
-                                                </Text>
-                                            )}
-
-                                            {metric.comment && (
-                                                <Text fontSize="xs" color="gray.600" mt={2} fontStyle="italic">
-                                                    {metric.comment}
-                                                </Text>
-                                            )}
-
-                                            {metric.file_path && (
-                                                <Link fontSize="xs" color="teal.600" mt={2} display="block">
-                                                    File: {metric.file_path}
-                                                </Link>
-                                            )}
-
-                                            {metric.uri_path && (
-                                                <Link href={metric.uri_path} isExternal fontSize="xs" color="teal.600" mt={2} display="block">
-                                                    <HStack spacing={1}>
-                                                        <Text>URI: {metric.uri_path}</Text>
-                                                        <ExternalLinkIcon />
-                                                    </HStack>
-                                                </Link>
-                                            )}
-
-                                            {metric.composite_key && (
-                                                <Text fontSize="xs" color="gray.500" mt={2}>
-                                                    Key: {metric.composite_key}
-                                                </Text>
-                                            )}
-
-                                            <HStack mt={3} spacing={2}>
-                                                {metric.include_in_report !== false && (
-                                                    <Badge colorScheme="green" fontSize="xs">In Report</Badge>
-                                                )}
-                                                {metric.depreciated === true && (
-                                                    <Badge colorScheme="orange" fontSize="xs">Depreciated</Badge>
-                                                )}
-                                            </HStack>
-                                        </Box>
-
-                                        {implementation_id && implementation_type && (
-                                            <Button
-                                                size="sm"
-                                                variant="outline"
-                                                colorScheme="teal"
-                                                onClick={() => {setEditingIndex(index); setIsAddingNew(false);}}
-                                            >
-                                                Edit
-                                            </Button>
-                                        )}
-                                    </HStack>
-                                </Box>
+                                    {metric.single_value && (
+                                        <Text fontSize="xs" color="gray.800" fontWeight="semibold">Value: {metric.single_value}</Text>
+                                    )}
+                                    {metric.description && <Text fontSize="xs" color="gray.600" noOfLines={2}>{metric.description}</Text>}
+                                    {metric.comment && <Text fontSize="2xs" color="gray.500" fontStyle="italic" mt={1}>{metric.comment}</Text>}
+                                    <PathLinks filePath={metric.file_path} uriPath={metric.uri_path} />
+                                    {metric.composite_key && (
+                                        <MetaLine><Text as="span" fontFamily="mono">{metric.composite_key}</Text></MetaLine>
+                                    )}
+                                    <ReportBadges
+                                        depreciated={metric.depreciated === true}
+                                        extra={metric.include_in_report !== false && <WrapItem><Badge colorScheme="green" fontSize="2xs">In Report</Badge></WrapItem>}
+                                    />
+                                </ItemShell>
                             </Collapse>
                         </Box>
                     ))}
                 </VStack>
             ) : (
-                <Text fontSize="xs" color="gray.500" fontStyle="italic">
-                    No metrics attached
-                </Text>
+                <EmptyText>No metrics attached.</EmptyText>
             )}
         </Box>
     );
-};
-
-export default MetricsViewer;
+}

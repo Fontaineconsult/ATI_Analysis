@@ -3,8 +3,7 @@ import { Box, Spinner, Text } from '@chakra-ui/react';
 import { Routes, Route } from 'react-router-dom';
 import { DataContext } from "../../context/DataContext";
 import '../../styles/App.css';
-import ImplementationMasterContainer from "../implementation_explorer/ImplementationMasterContainer";
-import ImplementationTypeOverviewWrapper from "../implementation_explorer/ImplementationTypeOverviewWrapper";
+import ImplementationsArea from "../graph_components/implementation/ImplementationsArea";
 import PlansAccomplishmentsManager from "../PlansAndAccomplishments/PlansAccomplishmentsManager";
 import PeopleMasterContainer from "./PeopleMasterContainer";
 import GovernanceArea from "./GovernanceArea";
@@ -19,18 +18,18 @@ function WorkingGroupMasterContainer() {
     return (
         <Box className="working-group-container">
             <Routes>
-                {/* Implementation routes */}
+                {/* Implementation routes (canon area; deep-link :type/:id pre-selects) */}
                 <Route
                     path="implementations/:implementationType/:implementationId"
-                    element={<ImplementationMasterContainer />}
+                    element={<ImplementationsArea />}
                 />
                 <Route
                     path="implementations/:implementationType"
-                    element={<ImplementationMasterContainer />}
+                    element={<ImplementationsArea />}
                 />
                 <Route
                     path="implementations"
-                    element={<ImplementationMasterContainer />}
+                    element={<ImplementationsArea />}
                 />
 
                 <Route path="plans" element={<PlansAccomplishmentsManager />} />

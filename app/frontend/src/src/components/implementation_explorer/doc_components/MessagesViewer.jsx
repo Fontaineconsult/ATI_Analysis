@@ -1,41 +1,29 @@
 import React, { useState, useContext } from 'react';
-import {
-    Box, VStack, Heading, Text, Badge, Link, HStack, Button, Input, Switch,
-    FormControl, FormLabel, Flex, Collapse, useToast, Textarea, Select
-} from '@chakra-ui/react';
-import { ExternalLinkIcon } from '@chakra-ui/icons';
-import {addMessageToImplementation, addNewMessage} from '../../../services/api/post';
-import {updateMessage, updateMessageForImplementation} from '../../../services/api/put';
+import { Badge, Box, Collapse, Flex, Text, VStack, useToast } from '@chakra-ui/react';
+import { addMessageToImplementation } from '../../../services/api/post';
+import { updateMessageForImplementation } from '../../../services/api/put';
 import { DataContext } from '../../../context/DataContext';
 import { useSettings } from '../../../context/SettingsContext';
 import { UserContext } from '../../../context/UserContext';
+import {
+    AddRow, EmptyText, Field, FieldLabel, FormActions, FormShell,
+    ItemShell, MetaLine, PathLinks, ReportBadges, SwitchRow,
+} from './docPrimitives';
 
 const messageTypes = [
-    'e-mail',
-    'voice mail',
-    'text message',
-    'letter',
-    'memo',
-    'report',
-    'meeting minutes',
-    'presentation',
+    'e-mail', 'voice mail', 'text message', 'letter',
+    'memo', 'report', 'meeting minutes', 'presentation',
 ];
 
 function MessageForm({ message, onSubmit, onCancel, isNewMessage }) {
     const { user } = useContext(UserContext);
     const { currentAcademicYear } = useSettings();
 
-    // Check if message is included for current year
     const isIncludedInCurrentYear = () => {
-        if (!message?.relationship) return true; // Default to included for new messages
+        if (!message?.relationship) return true;
         const { included_in_years = [], excluded_from_years = [] } = message.relationship;
-
-        if (!included_in_years.length && !excluded_from_years.length) {
-            return true;
-        }
-
-        return included_in_years.includes(currentAcademicYear) &&
-            !excluded_from_years.includes(currentAcademicYear);
+        if (!included_in_years.length && !excluded_from_years.length) return true;
+        return included_in_years.includes(currentAcademicYear) && !excluded_from_years.includes(currentAcademicYear);
     };
 
     const [messageData, setMessageData] = useState({
@@ -49,354 +37,143 @@ function MessageForm({ message, onSubmit, onCancel, isNewMessage }) {
         depreciated: message?.depreciated || false,
         depreciated_date: message?.depreciated_date || '',
         include_in_report: message?.include_in_report ?? false,
-        include_in_current_year: isIncludedInCurrentYear(), // Add year-specific flag
-        created_by: user || {}
+        include_in_current_year: isIncludedInCurrentYear(),
+        created_by: user || {},
     });
-
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     const handleChange = (e) => {
         const { name, value, type, checked } = e.target;
-        setMessageData({
-            ...messageData,
-            [name]: type === 'checkbox' ? checked : value,
-        });
+        setMessageData({ ...messageData, [name]: type === 'checkbox' ? checked : value });
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setIsSubmitting(true);
         try {
-            await onSubmit({
-                ...messageData,
-                academic_year: currentAcademicYear,
-                include_in_year: messageData.include_in_current_year
-            });
+            await onSubmit({ ...messageData, academic_year: currentAcademicYear, include_in_year: messageData.include_in_current_year });
         } finally {
             setIsSubmitting(false);
         }
     };
 
+    const typeOptions = messageTypes.map((t) => <option key={t} value={t}>{t}</option>);
+
     return (
-        <Box as="form" onSubmit={handleSubmit} p={4} bg="white" borderRadius="lg" borderWidth="1px" borderColor="teal.300">
-            <FormControl mb={3}>
-                <FormLabel fontSize="sm">Message Name</FormLabel>
-                <Input size="sm" name="name" value={messageData.name} onChange={handleChange} required />
-            </FormControl>
-
-            <FormControl mb={3}>
-                <FormLabel fontSize="sm">Content</FormLabel>
-                <Textarea size="sm" name="content" value={messageData.content} onChange={handleChange} rows={3} />
-            </FormControl>
-
-            <Flex gap={4} mb={3}>
-                <FormControl flex="1">
-                    <FormLabel fontSize="sm">Message Type</FormLabel>
-                    <Select size="sm" name="type" value={messageData.type} onChange={handleChange}>
-                        {messageTypes.map((type) => (
-                            <option key={type} value={type}>{type}</option>
-                        ))}
-                    </Select>
-                </FormControl>
-
-                <FormControl flex="1">
-                    <FormLabel fontSize="sm">Date Created</FormLabel>
-                    <Input size="sm" name="date_created" type="date" value={messageData.date_created} onChange={handleChange} />
-                </FormControl>
+        <FormShell onSubmit={handleSubmit}>
+            <Field label="Message Name" name="name" value={messageData.name} onChange={handleChange} isRequired />
+            <Field as="textarea" label="Content" name="content" value={messageData.content} onChange={handleChange} rows={3} />
+            <Flex gap={3}>
+                <Field as="select" label="Message Type" name="type" value={messageData.type} onChange={handleChange} options={typeOptions} />
+                <Field label="Date Created" name="date_created" type="date" value={messageData.date_created} onChange={handleChange} />
             </Flex>
-
-            <FormControl mb={3}>
-                <FormLabel fontSize="sm">File Path</FormLabel>
-                <Input size="sm" name="file_path" value={messageData.file_path} onChange={handleChange} />
-            </FormControl>
-
-            <FormControl mb={3}>
-                <FormLabel fontSize="sm">URI Path</FormLabel>
-                <Input size="sm" name="uri_path" value={messageData.uri_path} onChange={handleChange} />
-            </FormControl>
-
-            <Flex gap={4} mb={4}>
-                <Box flex="1">
-                    {/* Year-specific inclusion */}
-                    <FormControl mb={2}>
-                        <HStack>
-                            <Switch
-                                size="sm"
-                                name="include_in_current_year"
-                                isChecked={messageData.include_in_current_year}
-                                onChange={handleChange}
-                                colorScheme="teal"
-                            />
-                            <FormLabel fontSize="sm" mb={0} fontWeight="bold">
-                                Include in {currentAcademicYear} Report
-                            </FormLabel>
-                        </HStack>
-                    </FormControl>
-
-                    {/* Global inclusion (optional) */}
-                    <FormControl mb={2}>
-                        <HStack>
-                            <Switch size="sm" name="include_in_report"
-                                    isChecked={messageData.include_in_report} onChange={handleChange} />
-                            <FormLabel fontSize="sm" mb={0} color="gray.600">
-                                Include in All Reports (Global)
-                            </FormLabel>
-                        </HStack>
-                    </FormControl>
-
-                    <FormControl mb={2}>
-                        <HStack>
-                            <Switch size="sm" name="depreciated"
-                                    isChecked={messageData.depreciated} onChange={handleChange} />
-                            <FormLabel fontSize="sm" mb={0}>Depreciated</FormLabel>
-                        </HStack>
-                    </FormControl>
-                </Box>
-
-                <Box flex="1">
-                    {messageData.depreciated && (
-                        <FormControl>
-                            <FormLabel fontSize="sm">Depreciation Date</FormLabel>
-                            <Input size="sm" type="date" name="depreciated_date"
-                                   value={messageData.depreciated_date} onChange={handleChange} />
-                        </FormControl>
-                    )}
-                </Box>
+            <Flex gap={3}>
+                <Field label="File Path" name="file_path" value={messageData.file_path} onChange={handleChange} />
+                <Field label="URI Path" name="uri_path" value={messageData.uri_path} onChange={handleChange} />
             </Flex>
-
-            <HStack spacing={2}>
-                <Button size="sm" type="submit" colorScheme="teal"
-                        isLoading={isSubmitting} loadingText={isNewMessage ? 'Adding...' : 'Updating...'}>
-                    {isNewMessage ? 'Add Message' : 'Update Message'}
-                </Button>
-                <Button size="sm" variant="outline" onClick={onCancel} isDisabled={isSubmitting}>
-                    Cancel
-                </Button>
-            </HStack>
-        </Box>
+            <Box>
+                <FieldLabel mb={2}>Flags</FieldLabel>
+                <VStack align="stretch" spacing={1.5}>
+                    <SwitchRow name="include_in_current_year" label={`Include in ${currentAcademicYear} report`} isChecked={messageData.include_in_current_year} onChange={handleChange} emphasize />
+                    <SwitchRow name="include_in_report" label="Include in all reports (global)" isChecked={messageData.include_in_report} onChange={handleChange} colorScheme="gray" />
+                    <SwitchRow name="depreciated" label="Depreciated" isChecked={messageData.depreciated} onChange={handleChange} colorScheme="orange" />
+                </VStack>
+                {messageData.depreciated && (
+                    <Box mt={2}>
+                        <Field label="Depreciation Date" name="depreciated_date" type="date" value={messageData.depreciated_date} onChange={handleChange} />
+                    </Box>
+                )}
+            </Box>
+            <FormActions isSubmitting={isSubmitting} onCancel={onCancel} submitLabel={isNewMessage ? 'Add Message' : 'Update Message'} loadingText={isNewMessage ? 'Adding…' : 'Updating…'} />
+        </FormShell>
     );
 }
 
-const MessagesViewer = ({ messages = [], implementation_id, implementation_type, formatDate }) => {
+export default function MessagesViewer({ messages = [], implementation_id, implementation_type, formatDate }) {
     const [isAddingNew, setIsAddingNew] = useState(false);
     const [editingIndex, setEditingIndex] = useState(null);
     const { refreshImplementations } = useContext(DataContext);
     const { currentAcademicYear } = useSettings();
     const { user } = useContext(UserContext);
     const toast = useToast();
+    const canManage = Boolean(implementation_id && implementation_type);
 
     const handleAddMessage = async (messageData) => {
         try {
             const { academic_year, include_in_year, created_by, ...messageDataForAPI } = messageData;
-
-            await addMessageToImplementation(
-                implementation_id,
-                implementation_type,
-                messageDataForAPI,
-                user?.employee_id || '',
-                academic_year,
-                include_in_year
-            );
-
-            toast({
-                title: "Message added successfully",
-                status: "success",
-                duration: 3000,
-                isClosable: true,
-            });
-
+            await addMessageToImplementation(implementation_id, implementation_type, messageDataForAPI, user?.employee_id || '', academic_year, include_in_year);
+            toast({ title: 'Message added', status: 'success', duration: 3000, isClosable: true });
             await refreshImplementations();
             setIsAddingNew(false);
         } catch (error) {
-            toast({
-                title: "Error adding message",
-                description: error.message,
-                status: "error",
-                duration: 3000,
-                isClosable: true,
-            });
+            toast({ title: 'Error adding message', description: error.message, status: 'error', duration: 3000, isClosable: true });
         }
     };
 
     const handleUpdateMessage = async (messageData, index) => {
         try {
             const { academic_year, include_in_year, created_by, ...messageDataForAPI } = messageData;
-            console.log("FDEEEEEE", messageData)
-            await updateMessageForImplementation(
-                implementation_id,
-                implementation_type,
-                messageDataForAPI,
-                user?.employee_id || '',
-                academic_year,
-                include_in_year
-            );
-
-            toast({
-                title: "Message updated successfully",
-                status: "success",
-                duration: 3000,
-                isClosable: true,
-            });
-
+            await updateMessageForImplementation(implementation_id, implementation_type, messageDataForAPI, user?.employee_id || '', academic_year, include_in_year);
+            toast({ title: 'Message updated', status: 'success', duration: 3000, isClosable: true });
             await refreshImplementations();
             setEditingIndex(null);
         } catch (error) {
-            toast({
-                title: "Error updating message",
-                description: error.message,
-                status: "error",
-                duration: 3000,
-                isClosable: true,
-            });
+            toast({ title: 'Error updating message', description: error.message, status: 'error', duration: 3000, isClosable: true });
         }
     };
 
-    // Helper to check if message is included in current year
-    const isMessageIncludedInCurrentYear = (msg) => {
+    const isIncludedInCurrentYear = (msg) => {
         if (!msg.relationship) return msg.include_in_report !== false;
         const { included_in_years = [], excluded_from_years = [] } = msg.relationship;
-
-        if (!included_in_years.length && !excluded_from_years.length) {
-            return msg.include_in_report !== false;
-        }
-
-        return included_in_years.includes(currentAcademicYear) &&
-            !excluded_from_years.includes(currentAcademicYear);
+        if (!included_in_years.length && !excluded_from_years.length) return msg.include_in_report !== false;
+        return included_in_years.includes(currentAcademicYear) && !excluded_from_years.includes(currentAcademicYear);
     };
 
     return (
         <Box>
-            <HStack justify="space-between" mb={3}>
-                <Heading size="sm" color="teal.700" fontWeight="bold">
-                    Messages ({messages.length})
-                </Heading>
-                {implementation_id && implementation_type && (
-                    <Button
-                        size="sm"
-                        colorScheme="teal"
-                        onClick={() => {setIsAddingNew(true); setEditingIndex(null);}}
-                        isDisabled={isAddingNew}
-                    >
-                        Add Message
-                    </Button>
-                )}
-            </HStack>
+            <AddRow onAdd={() => { setIsAddingNew(true); setEditingIndex(null); }} label="Add Message" canAdd={canManage} isAdding={isAddingNew} />
 
             {isAddingNew && (
-                <Box mb={4}>
-                    <MessageForm
-                        message={null}
-                        onSubmit={handleAddMessage}
-                        onCancel={() => setIsAddingNew(false)}
-                        isNewMessage={true}
-                    />
+                <Box mb={3}>
+                    <MessageForm message={null} onSubmit={handleAddMessage} onCancel={() => setIsAddingNew(false)} isNewMessage />
                 </Box>
             )}
 
             {messages.length > 0 ? (
-                <VStack align="stretch" spacing={3}>
+                <VStack align="stretch" spacing={2}>
                     {messages.map((msg, index) => (
                         <Box key={msg.unique_id || index}>
                             <Collapse in={editingIndex === index} animateOpacity>
-                                <Box mb={3}>
-                                    <MessageForm
-                                        message={msg}
-                                        onSubmit={(data) => handleUpdateMessage(data, index)}
-                                        onCancel={() => setEditingIndex(null)}
-                                        isNewMessage={false}
-                                    />
+                                <Box mb={2}>
+                                    <MessageForm message={msg} onSubmit={(data) => handleUpdateMessage(data, index)} onCancel={() => setEditingIndex(null)} isNewMessage={false} />
                                 </Box>
                             </Collapse>
-
                             <Collapse in={editingIndex !== index} animateOpacity>
-                                <Box
-                                    p={4}
-                                    bg="white"
-                                    borderRadius="lg"
-                                    borderWidth="1px"
-                                    borderColor="gray.200"
-                                    boxShadow="sm"
-                                    _hover={{ boxShadow: 'md' }}
-                                    transition="box-shadow 0.2s"
+                                <ItemShell
+                                    titleNode={<Text fontSize="sm" fontWeight="semibold" color="gray.800" noOfLines={1}>{msg.name}</Text>}
+                                    badge={msg.type && <Badge colorScheme="purple" fontSize="2xs">{msg.type}</Badge>}
+                                    onEdit={() => { setEditingIndex(index); setIsAddingNew(false); }}
+                                    canEdit={canManage}
                                 >
-                                    <HStack justify="space-between" align="start">
-                                        <Box flex="1">
-                                            <HStack justify="space-between" mb={2}>
-                                                <Heading as='h3' fontSize="sm" fontWeight="bold" color="gray.800">
-                                                    {msg.name}
-                                                </Heading>
-                                                {msg.type && (
-                                                    <Badge colorScheme="purple" fontSize="xs">
-                                                        {msg.type}
-                                                    </Badge>
-                                                )}
-                                            </HStack>
-
-                                            {msg.content && (
-                                                <Text fontSize="xs" color="gray.700" mt={2} noOfLines={3}>
-                                                    {msg.content}
-                                                </Text>
-                                            )}
-
-                                            {msg.file_path && (
-                                                <Link fontSize="xs" color="teal.600" mt={2} display="block">
-                                                    File: {msg.file_path}
-                                                </Link>
-                                            )}
-
-                                            {msg.uri_path && (
-                                                <Link href={msg.uri_path} isExternal fontSize="xs" color="teal.600" mt={2} display="block">
-                                                    <HStack spacing={1}>
-                                                        <Text>URI: {msg.uri_path}</Text>
-                                                        <ExternalLinkIcon />
-                                                    </HStack>
-                                                </Link>
-                                            )}
-
-                                            {msg.date_created && (
-                                                <Text fontSize="xs" color="gray.500" mt={2}>
-                                                    Created: {formatDate ? formatDate(msg.date_created) : msg.date_created}
-                                                </Text>
-                                            )}
-
-                                            <HStack mt={3} spacing={2} flexWrap="wrap">
-                                                {msg.depreciated === true && (
-                                                    <Badge colorScheme="orange" fontSize="xs">Depreciated</Badge>
-                                                )}
-                                                {isMessageIncludedInCurrentYear(msg) && (
-                                                    <Badge colorScheme="green" fontSize="xs">
-                                                        In {currentAcademicYear} Report
-                                                    </Badge>
-                                                )}
-                                                {msg.include_in_report !== false && (
-                                                    <Badge colorScheme="gray" fontSize="xs">Global Include</Badge>
-                                                )}
-                                            </HStack>
-                                        </Box>
-
-                                        {implementation_id && implementation_type && (
-                                            <Button
-                                                size="sm"
-                                                variant="outline"
-                                                colorScheme="teal"
-                                                onClick={() => {setEditingIndex(index); setIsAddingNew(false);}}
-                                            >
-                                                Edit
-                                            </Button>
-                                        )}
-                                    </HStack>
-                                </Box>
+                                    {msg.content && <Text fontSize="xs" color="gray.700" noOfLines={3}>{msg.content}</Text>}
+                                    <PathLinks filePath={msg.file_path} uriPath={msg.uri_path} />
+                                    {msg.date_created && (
+                                        <MetaLine>Created {formatDate ? formatDate(msg.date_created) : msg.date_created}</MetaLine>
+                                    )}
+                                    <ReportBadges
+                                        inYear={isIncludedInCurrentYear(msg)}
+                                        year={currentAcademicYear}
+                                        global={msg.include_in_report !== false}
+                                        depreciated={msg.depreciated === true}
+                                    />
+                                </ItemShell>
                             </Collapse>
                         </Box>
                     ))}
                 </VStack>
             ) : (
-                <Text fontSize="xs" color="gray.500" fontStyle="italic">
-                    No messages attached
-                </Text>
+                <EmptyText>No messages attached.</EmptyText>
             )}
         </Box>
     );
-};
-
-export default MessagesViewer;
+}

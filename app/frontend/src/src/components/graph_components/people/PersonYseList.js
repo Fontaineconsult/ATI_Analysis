@@ -2,32 +2,30 @@ import React, { useMemo, useState } from 'react';
 import {
     Badge,
     Box,
-    Button,
-    Heading,
     HStack,
-    Spacer,
+    IconButton,
+    Spinner,
     Text,
+    Tooltip,
     useToast,
     VStack,
     Wrap,
     WrapItem,
 } from '@chakra-ui/react';
+import { CloseIcon } from '@chakra-ui/icons';
 import { unassignPersonAsImplementor } from '../../../services/api/put';
 import { getStatusColor, getStatusBackgroundColor } from '../../../services/utils/statusColors';
 
 /**
- * Read + unassign view of the YSEs a person is linked to as implementor.
- * Groups by campus → working group (inferred from the indicator composite_key
- * suffix, e.g. "7.6-web"). Each row surfaces the implementation nodes
- * attached to the YSE via :is_evidence_for so the reader can see "what is
- * this person actually working on".
+ * Read + unassign view of the YSEs a person implements, grouped by campus →
+ * working group (inferred from the indicator composite_key suffix). Each row
+ * surfaces the implementation nodes attached to the YSE so the reader can see
+ * "what is this person actually working on". Compact rows; inline icon remove.
  *
  * Props:
- *   yses                Array of enriched YSE objects from
- *                       get_person_implementation_details.
- *   personEmployeeId    Required for the unassign action.
- *   onChange()          Called after a successful unassign so the parent
- *                       can refetch.
+ *   yses             Enriched YSE objects from get_person_implementation_details.
+ *   personEmployeeId Required for the unassign action.
+ *   onChange()       Called after a successful unassign so the parent refetches.
  */
 function PersonYseList({ yses = [], personEmployeeId, onChange }) {
     const [pendingId, setPendingId] = useState(null);
@@ -40,22 +38,14 @@ function PersonYseList({ yses = [], personEmployeeId, onChange }) {
         try {
             await unassignPersonAsImplementor(personEmployeeId, yse.year_identifier);
             toast({
-                title: 'Removed from YSE',
-                description: yse.year_identifier,
-                status: 'success',
-                duration: 2000,
-                isClosable: true,
-                position: 'top-right',
+                title: 'Removed from YSE', description: yse.year_identifier,
+                status: 'success', duration: 2000, isClosable: true, position: 'top-right',
             });
             if (onChange) await onChange();
         } catch (error) {
             toast({
-                title: 'Failed to unassign',
-                description: error?.message || 'Please try again.',
-                status: 'error',
-                duration: 3000,
-                isClosable: true,
-                position: 'top-right',
+                title: 'Failed to unassign', description: error?.message || 'Please try again.',
+                status: 'error', duration: 3000, isClosable: true, position: 'top-right',
             });
         } finally {
             setPendingId(null);
@@ -63,103 +53,88 @@ function PersonYseList({ yses = [], personEmployeeId, onChange }) {
     };
 
     if (!yses || yses.length === 0) {
-        return (
-            <Box p={4} color="gray.500" fontSize="sm" fontStyle="italic">
-                Not assigned to any YSEs.
-            </Box>
-        );
+        return <Text fontSize="xs" color="gray.500" fontStyle="italic">Not assigned to any YSEs.</Text>;
     }
 
     return (
-        <VStack align="stretch" spacing={4}>
+        <VStack align="stretch" spacing={3}>
             {grouped.map((campusGroup) => (
-                <Box
-                    key={campusGroup.campusKey}
-                    borderWidth="1px"
-                    borderColor="gray.200"
-                    borderRadius="lg"
-                    bg="white"
-                    p={4}
-                >
-                    <HStack mb={3} spacing={2} align="baseline">
-                        <Badge colorScheme="teal" textTransform="uppercase" fontSize="xs" px={2} py={1} borderRadius="md">
+                <Box key={campusGroup.campusKey}>
+                    <HStack mb={2} spacing={2} align="center">
+                        <Badge colorScheme="teal" variant="outline" textTransform="uppercase" fontSize="2xs">
                             {campusGroup.campusAbbrev || '—'}
                         </Badge>
-                        <Heading as="h4" size="xs" color="teal.700" textTransform="uppercase" letterSpacing="wide">
+                        <Text fontSize="2xs" color="gray.500" textTransform="uppercase" letterSpacing="wide">
                             {campusGroup.campusName || 'Unknown campus'}
-                        </Heading>
+                        </Text>
                     </HStack>
 
-                    <VStack align="stretch" spacing={3}>
+                    <VStack align="stretch" spacing={2}>
                         {campusGroup.workingGroups.map((wg) => (
                             <Box key={wg.name}>
-                                <Text fontSize="xs" color="teal.700" fontWeight="semibold" textTransform="uppercase" letterSpacing="wide" mb={1}>
+                                <Text fontSize="2xs" color="teal.700" fontWeight="semibold" textTransform="uppercase" letterSpacing="wide" mb={1}>
                                     {wg.name}
                                 </Text>
-                                <VStack align="stretch" spacing={2} pl={2}>
+                                <VStack align="stretch" spacing={1}>
                                     {wg.yses.map((yse) => (
-                                        <Box
+                                        <HStack
                                             key={yse.year_identifier}
+                                            align="start"
+                                            spacing={2}
+                                            px={2}
+                                            py={1.5}
                                             borderWidth="1px"
                                             borderColor="gray.200"
-                                            borderRadius="lg"
-                                            p={3}
-                                            bg="gray.50"
+                                            borderRadius="md"
                                         >
-                                            <HStack align="start">
-                                                <VStack align="stretch" spacing={1} flex="1">
-                                                    <HStack spacing={2} align="baseline" flexWrap="wrap">
-                                                        <Text fontFamily="mono" fontSize="xs" color="gray.700" fontWeight="bold">
-                                                            {yse.indicator_composite_key || yse.year_identifier}
-                                                        </Text>
-                                                        {yse.status_level && (
-                                                            <Badge
-                                                                bg={getStatusBackgroundColor(yse.status_level)}
-                                                                color={getStatusColor(yse.status_level)}
-                                                                fontSize="2xs"
-                                                                px={2}
-                                                                py={0.5}
-                                                                borderRadius="md"
-                                                            >
-                                                                {yse.status_level}
-                                                            </Badge>
-                                                        )}
-                                                        {yse.administrative_review_complete && (
-                                                            <Badge colorScheme="green" variant="subtle" fontSize="2xs">
-                                                                reviewed
-                                                            </Badge>
-                                                        )}
-                                                    </HStack>
-                                                    {yse.indicator_description && (
-                                                        <Text fontSize="xs" color="gray.700">
-                                                            {yse.indicator_description}
-                                                        </Text>
+                                            <VStack align="stretch" spacing={1} flex="1" minW={0}>
+                                                <HStack spacing={2} align="baseline" flexWrap="wrap">
+                                                    <Text fontFamily="mono" fontSize="xs" color="gray.700" fontWeight="semibold">
+                                                        {yse.indicator_composite_key || yse.year_identifier}
+                                                    </Text>
+                                                    {yse.status_level && (
+                                                        <Badge
+                                                            bg={getStatusBackgroundColor(yse.status_level)}
+                                                            color={getStatusColor(yse.status_level)}
+                                                            fontSize="2xs"
+                                                            px={2}
+                                                            borderRadius="md"
+                                                        >
+                                                            {yse.status_level}
+                                                        </Badge>
                                                     )}
-                                                    {Array.isArray(yse.implementations) && yse.implementations.length > 0 && (
-                                                        <Wrap spacing={1} pt={1}>
-                                                            {yse.implementations.map((impl) => (
-                                                                <WrapItem key={impl.unique_id || `${impl.type}-${impl.title}`}>
-                                                                    <Badge colorScheme="orange" variant="outline" fontSize="2xs">
-                                                                        {impl.type}: {impl.title}
-                                                                    </Badge>
-                                                                </WrapItem>
-                                                            ))}
-                                                        </Wrap>
+                                                    {yse.administrative_review_complete && (
+                                                        <Badge colorScheme="green" variant="subtle" fontSize="2xs">reviewed</Badge>
                                                     )}
-                                                </VStack>
-                                                <Spacer />
-                                                <Button
+                                                </HStack>
+                                                {yse.indicator_description && (
+                                                    <Text fontSize="2xs" color="gray.600" noOfLines={1}>{yse.indicator_description}</Text>
+                                                )}
+                                                {Array.isArray(yse.implementations) && yse.implementations.length > 0 && (
+                                                    <Wrap spacing={1}>
+                                                        {yse.implementations.map((impl) => (
+                                                            <WrapItem key={impl.unique_id || `${impl.type}-${impl.title}`}>
+                                                                <Badge colorScheme="orange" variant="outline" fontSize="2xs">
+                                                                    {impl.type}: {impl.title}
+                                                                </Badge>
+                                                            </WrapItem>
+                                                        ))}
+                                                    </Wrap>
+                                                )}
+                                            </VStack>
+                                            <Tooltip label="Remove implementor assignment">
+                                                <IconButton
+                                                    aria-label="Remove implementor assignment"
+                                                    icon={pendingId === yse.year_identifier ? <Spinner size="xs" /> : <CloseIcon boxSize={2} />}
                                                     size="xs"
-                                                    colorScheme="red"
                                                     variant="ghost"
-                                                    onClick={() => handleUnassign(yse)}
-                                                    isLoading={pendingId === yse.year_identifier}
+                                                    colorScheme="gray"
+                                                    flexShrink={0}
                                                     isDisabled={pendingId !== null}
-                                                >
-                                                    Remove
-                                                </Button>
-                                            </HStack>
-                                        </Box>
+                                                    onClick={() => handleUnassign(yse)}
+                                                />
+                                            </Tooltip>
+                                        </HStack>
                                     ))}
                                 </VStack>
                             </Box>

@@ -62,6 +62,23 @@ def _included(node):
     return getattr(node, "include_in_report", True) is not False
 
 
+def _depreciated(node):
+    """True when a Document is flagged depreciated (bool, or the legacy string 'True')."""
+    v = getattr(node, "depreciated", None)
+    return v is True or v == "True"
+
+
+def _no_active_documents(impl):
+    """True when the implementation has documents but every one is depreciated.
+
+    Mirrors the implementations view's allDocumentsDepreciated — and deliberately
+    reads ALL supporting_documents (not the report/year-filtered subset), so the
+    report agrees with that view instead of going quiet when deprecated docs are
+    filtered out of the report."""
+    docs = list(impl.supporting_documents.all())
+    return len(docs) > 0 and all(_depreciated(d) for d in docs)
+
+
 def _supporting(manager, academic_year):
     """Serialize a supporting_documents/webpages/notes/messages manager, dropping nodes
     that opt out of the report and (when the edge carries a DocumentedByRel) those whose
@@ -102,6 +119,9 @@ def _implementation_payload(impl, type_name, academic_year):
             if hasattr(impl, "classified_under") else []
         ),
         "documents": _supporting(impl.supporting_documents, academic_year),
+        # Computed from ALL documents (not the filtered list above) so the report's
+        # "no active documentation" flag agrees with the implementations view.
+        "no_active_documents": _no_active_documents(impl),
         "webpages": _supporting(impl.supporting_webpages, academic_year),
         "notes": _supporting(impl.supporting_notes, academic_year),
         "messages": _supporting(impl.supporting_messages, academic_year),

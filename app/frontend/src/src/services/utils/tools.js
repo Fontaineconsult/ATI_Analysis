@@ -85,8 +85,15 @@ const year_difference = (current_year) => {
 
 
 
-// Helper function to get Edit URL for ATI Explorer
-const getEditUrlFromCompositeKey = (compositeKey, campus) => {
+// The dashboard "working" view URL for a success indicator — the GoalNavigator
+// deep-link that pre-selects the indicator via the :indicatorNumber route param:
+// /{campus}/dashboard/{workingGroup}/goal/{goalNumber}/{indicatorNumber}. The param
+// is consumed by GoalNavigator (initialIndicatorNumber) to land on and highlight the
+// specific indicator. (An older #<compositeKey> anchor form was removed — nothing
+// read the hash, and it leaked a stale "#1.5-pro" into the URL.) Mirrors the deep
+// link EvidenceMasterContainer builds on selection so arrival and in-context
+// selection stay in sync.
+const getGoalViewUrlFromCompositeKey = (compositeKey, campus) => {
     const [numbers, suffix] = compositeKey.split('-');
     const [goalNumber, indicatorNumber] = numbers.split('.');
 
@@ -98,7 +105,19 @@ const getEditUrlFromCompositeKey = (compositeKey, campus) => {
 
     const workingGroupSegment = workingGroupMap[suffix] || suffix;
     const campusPrefix = campus ? `/${campus}` : '';
-    return `${campusPrefix}/dashboard/${workingGroupSegment}/goal/${goalNumber}#${compositeKey}`;
+    return `${campusPrefix}/dashboard/${workingGroupSegment}/goal/${goalNumber}/${indicatorNumber}`;
+};
+
+
+// THE single entry point for "navigate to a success indicator's dashboard goal view
+// from its composite key". Consolidates the duplicated edit-URL + split('#') +
+// scrollIntoView blocks that were copy-pasted across the implementation, evidence,
+// plans, and report views. Pass the caller's react-router `navigate` (works from
+// components and the report builder alike). No hash, no manual scroll — the goal view
+// selects the indicator from the path param.
+const navigateToIndicator = (navigate, compositeKey, campus) => {
+    if (!navigate || !compositeKey || !campus) return;
+    navigate(getGoalViewUrlFromCompositeKey(compositeKey, campus));
 };
 
 
@@ -131,7 +150,8 @@ const getReportUrlFromCompositeKey = (compositeKey, campus) => {
 export { getUrlFromCompositeKey,
     getStatusColor,
     year_difference,
-    getEditUrlFromCompositeKey,
+    getGoalViewUrlFromCompositeKey,
+    navigateToIndicator,
     getImplementationURL,
     getReportUrlFromCompositeKey,
     workingGroupCodeFromName,

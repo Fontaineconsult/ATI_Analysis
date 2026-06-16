@@ -441,6 +441,10 @@ class SuccessIndicator(StructuredNode):
     success_indicator = StringProperty()
     composite_key = StringProperty(unique_index=True)  # Combination of goal_number and ATISubCommittee name
     removed = BooleanProperty(default=False)
+    # When True, this indicator is exempt from the "has implementations" expectation
+    # — not every SI is met through traditional implementation work, so the dashboard
+    # suppresses its missing-implementation flag. Set via the SI settings area.
+    override_implementation_requirement = BooleanProperty(default=False)
     notes = RelationshipTo("Note", "has_note")
     date_added = DateProperty()
     tracked_by = RelationshipFrom("SuccessIndicator", "tracks")
@@ -457,6 +461,7 @@ class SuccessIndicator(StructuredNode):
             'success_indicator': self.success_indicator,
             'composite_key': self.composite_key,
             'removed': self.removed,
+            'override_implementation_requirement': self.override_implementation_requirement,
             'date_added': self.date_added,
             "unique_id": self.unique_id
         }

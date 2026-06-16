@@ -30,7 +30,7 @@ import {
     detachPlanFromYse,
     unassignPlanFromCampus,
 } from '../../services/api/put';
-import { getEditUrlFromCompositeKey } from '../../services/utils/tools';
+import { navigateToIndicator } from '../../services/utils/tools';
 
 // Local color mapping for ATI StatusLevel values. Returns Chakra colorScheme
 // keys (not hex) because Chakra <Badge colorScheme> expects names.
@@ -91,26 +91,10 @@ function AssociatedYearSuccessEvidence({ plan, onChanged }) {
 
     useEffect(() => { load(); }, [load]);
 
-    // Mirrors the click handler in ImplementationTypeOverview.js — uses the
-    // evidence's OWN campus so a cross-campus YSE opens in that campus's
-    // explorer.
+    // Uses the evidence's OWN campus so a cross-campus YSE opens in that campus's
+    // explorer (falls back to the current campus).
     const handleYseClick = (compositeKey, yseCampus) => {
-        if (!compositeKey) return;
-        const editUrl = getEditUrlFromCompositeKey(compositeKey, yseCampus || campus);
-        const [pathname, hash] = editUrl.split('#');
-        navigate(pathname + (hash ? '#' + hash : ''));
-        if (!hash) return;
-        setTimeout(() => {
-            const el = document.getElementById(hash);
-            if (el) {
-                el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                return;
-            }
-            setTimeout(() => {
-                const retry = document.getElementById(hash);
-                if (retry) retry.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }, 300);
-        }, 100);
+        navigateToIndicator(navigate, compositeKey, yseCampus || campus);
     };
 
     const handleAssign = async (campusEntry) => {
