@@ -82,11 +82,17 @@ application = create_app()
     <add key="WSGI_HANDLER" value="wsgi.application" />
     <!-- Log file for wfastcgi -->
     <add key="WSGI_LOG" value="C:\www\ati\logs\wfastcgi.log" />
-    <add key="WSGI_DEBUG" value="1" />
+    <!-- 0 in steady state: WSGI_DEBUG=1 logs every request AND every
+         print()/traceback, which ballooned this file to ~800 MB. Only set 1
+         temporarily while diagnosing a bring-up failure. -->
+    <add key="WSGI_DEBUG" value="0" />
 
     <!-- ===== Authentication (wfastcgi exposes appSettings as env vars) ===== -->
     <!-- REQUIRED: cookie-signing secret, identical across all FastCGI workers.
-         Generate once: python -c "import secrets; print(secrets.token_hex(32))" -->
+         Generate once: python -c "import secrets; print(secrets.token_hex(32))"
+         The app now FAILS TO BOOT in production if this is empty, a known
+         placeholder (including this REPLACE-WITH-... text), or under 32 chars —
+         a guessable signing key lets anyone forge an admin session cookie. -->
     <add key="FLASK_SECRET_KEY" value="REPLACE-WITH-GENERATED-SECRET" />
     <add key="FLASK_ENV" value="production" />
     <!-- Global kill-switch: 0 = login disabled app-wide, 1 = enforced.

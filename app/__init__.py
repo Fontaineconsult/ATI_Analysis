@@ -50,15 +50,36 @@ def create_app():
     # Set up database connection
     config.DATABASE_URL = app.config['DATABASE_URL']
 
+    is_production = os.environ.get('FLASK_ENV', 'development') == 'production'
+
     # Sessions are signed cookies, so the secret MUST be identical across the
     # IIS FastCGI worker processes — a per-process random key would log users
     # out whenever a different worker handled the request. Production
-    # (FLASK_ENV=production) therefore requires FLASK_SECRET_KEY; dev falls
-    # back to a fixed constant so sessions survive reloader restarts.
+    # (FLASK_ENV=production) therefore requires a real, high-entropy
+    # FLASK_SECRET_KEY; dev falls back to a fixed constant so sessions survive
+    # reloader restarts.
     secret = os.environ.get('FLASK_SECRET_KEY')
-    if not secret:
-        if os.environ.get('FLASK_ENV') == 'production':
-            raise RuntimeError('FLASK_SECRET_KEY must be set in production (web.config appSettings)')
+    # A signed-cookie secret that anyone can guess defeats AUTH_ENFORCED
+    # entirely: an attacker can forge an admin session cookie. Reject empty,
+    # known-placeholder, and low-entropy values in production and fail closed at
+    # boot, rather than running silently compromised. The web.config placeholder
+    # is checked into source control, so it MUST be on this denylist.
+    insecure_secrets = {
+        'PASTE-GENERATED-SECRET',
+        'ati-dev-only-secret-not-for-production',
+        'changeme',
+        'secret',
+    }
+    if is_production:
+        if not secret or secret.strip() in insecure_secrets or len(secret.strip()) < 32:
+            raise RuntimeError(
+                'FLASK_SECRET_KEY is missing, a known placeholder, or too short '
+                'for production. Generate one with '
+                '`python -c "import secrets; print(secrets.token_hex(32))"` and set '
+                'it in the deployed web.config appSettings (and app/.env.production '
+                'for local prod runs).'
+            )
+    elif not secret:
         secret = 'ati-dev-only-secret-not-for-production'
     app.config['SECRET_KEY'] = secret
 
@@ -82,10 +103,16 @@ def create_app():
     app.config['AUTH_ADMINS'] = parse_admins(os.environ.get('AUTH_ADMINS'))
     app.config['AUTH_ALLOWED_USERS'] = parse_admins(os.environ.get('AUTH_ALLOWED_USERS'))
 
+    # Debug surfaces are gated on environment. In production (FLASK_ENV=production)
+    # Flask debug, the debug-toolbar profiler, and exception propagation are all
+    # OFF, so tracebacks and the interactive debugger never reach a browser and the
+    # Exception handler registered in app/wsgi.py returns a clean 500. Dev keeps
+    # them on. (Pair this with httpErrors errorMode="DetailedLocalOnly" in web.config
+    # so IIS doesn't leak its own detailed error pages to remote clients either.)
     app.config['DEBUG_TB_INTERCEPT_REDIRECTS'] = False
-    app.config['DEBUG_TB_PROFILER_ENABLED'] = True
-    app.config["DEBUG"] = True
-    app.config["PROPAGATE_EXCEPTIONS"] = True
+    app.config['DEBUG_TB_PROFILER_ENABLED'] = not is_production
+    app.config["DEBUG"] = not is_production
+    app.config["PROPAGATE_EXCEPTIONS"] = not is_production
 
     # Logging (10 MB rotating file + stdout/stderr funnel) is configured at the top of
     # create_app() via app.logging_config.configure_logging().
