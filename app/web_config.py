@@ -16,7 +16,7 @@ dotenv_path = os.path.join(base_dir, f'.env.{env_name}')
 load_dotenv(dotenv_path)
 print(os.environ.get('DATABASE_URL'))
 
-config.DATABASE_NAME = 'ati'
+config.DATABASE_NAME = os.environ.get('NEO4J_DATABASE', 'neo4j')
 
 class Config:
     FLASK_APP = os.environ.get('FLASK_APP', 'application.py')
