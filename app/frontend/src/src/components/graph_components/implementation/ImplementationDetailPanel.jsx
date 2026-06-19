@@ -59,6 +59,7 @@ import { navigateToIndicator } from '../../../services/utils/tools';
 import { useDescriptors } from '../../../hooks/useDescriptors';
 import { SettingsContext } from '../../../context/SettingsContext';
 import { UserContext } from '../../../context/UserContext';
+import { HelpTip } from '../../functional_components/DescriptorHelp';
 import PersonAssignmentSelector from '../../functional_components/PersonAssignmentSelector';
 import YseAssignmentSelector from '../../functional_components/YseAssignmentSelector';
 import ParticipantsEditor from '../../implementation_explorer/ParticipantsEditor';
@@ -243,6 +244,7 @@ function ImplementationDetailPanel({ implementation, onAfterChange }) {
                         <Badge colorScheme={typeColor(type)} fontSize="xs" px={2} py={1} borderRadius="md">
                             {typeLabel(type)}
                         </Badge>
+                        <HelpTip nodeType={type} />
                         <Button size="xs" variant="ghost" colorScheme="teal" leftIcon={<LinkIcon />} onClick={copyLink}>
                             Copy link
                         </Button>
@@ -301,7 +303,7 @@ function ImplementationDetailPanel({ implementation, onAfterChange }) {
                 <Divider mb={4} borderColor="gray.200" />
                 <VStack align="stretch" spacing={4}>
                     <FormControl>
-                        <FormLabel fontSize="xs" color="gray.600" fontWeight="semibold">Title</FormLabel>
+                        <FormLabel fontSize="xs" color="gray.600" fontWeight="semibold">Title <HelpTip field={['Implementation', 'title']} /></FormLabel>
                         {isEditing ? (
                             <Input
                                 value={editForm.title}
@@ -316,7 +318,7 @@ function ImplementationDetailPanel({ implementation, onAfterChange }) {
                     </FormControl>
 
                     <FormControl>
-                        <FormLabel fontSize="xs" color="gray.600" fontWeight="semibold">Description</FormLabel>
+                        <FormLabel fontSize="xs" color="gray.600" fontWeight="semibold">Description <HelpTip field={['Implementation', 'description']} /></FormLabel>
                         {isEditing ? (
                             <Textarea
                                 value={editForm.description}
@@ -335,7 +337,7 @@ function ImplementationDetailPanel({ implementation, onAfterChange }) {
 
                     {dimensioned && (
                         <FormControl>
-                            <FormLabel fontSize="xs" color="gray.600" fontWeight="semibold">{dimensionLabel}</FormLabel>
+                            <FormLabel fontSize="xs" color="gray.600" fontWeight="semibold">{dimensionLabel} <HelpTip field={['Implementation', 'dimensions']} /></FormLabel>
                             {isEditing ? (
                                 <CheckboxGroup
                                     value={editForm.dimensions}
@@ -425,7 +427,7 @@ function ImplementationDetailPanel({ implementation, onAfterChange }) {
             {/* Evidence For — current year's links at this campus (compact rows,
                 modeled on the plans evidence board); full management behind the modal */}
             <Card
-                title={`Evidence For · ${currentAcademicYear} (${ysesThisYearHere.length})`}
+                title={<>Evidence For · {currentAcademicYear} ({ysesThisYearHere.length}) <HelpTip relType="is_evidence_for" /></>}
                 action={
                     <Button size="xs" colorScheme="teal" variant="outline" onClick={onManageYsesOpen}>
                         Manage Linked YSEs
@@ -491,7 +493,7 @@ function ImplementationDetailPanel({ implementation, onAfterChange }) {
             </Card>
 
             {/* Owners */}
-            <Card title={`Owners (${ownerCount})`}>
+            <Card title={<>Owners ({ownerCount}) <HelpTip field={['Implementation', 'owned_by']} /></>}>
                 <Divider mb={4} borderColor="gray.200" />
                 <PersonAssignmentSelector
                     assignedPersons={implementation.owned_by || []}
@@ -506,7 +508,7 @@ function ImplementationDetailPanel({ implementation, onAfterChange }) {
 
             {/* Participants — the working team (doing types only) */}
             {participantType && (
-                <Card title="Participants (working team)">
+                <Card title={<>Participants (working team) <HelpTip field={['Implementation', 'participants']} /></>}>
                     <Divider mb={4} borderColor="gray.200" />
                     <ParticipantsEditor
                         implementationType={type}

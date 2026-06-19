@@ -2,6 +2,7 @@ import React from 'react';
 import { Box, Heading, Text, VStack, Divider } from '@chakra-ui/react';
 import GoalDetails from "../implementation/GoalDetails";
 import EvidenceMasterContainer from "../../ati_explorer_containers/EvidenceMasterContainer";
+import { HelpTip } from '../../functional_components/DescriptorHelp';
 
 function Goal({ goalData, plans, plansWithProgressNotes, accomplishments, indicators, workingGroup, initialIndicatorNumber }) {
     if (!goalData) return null;
@@ -13,7 +14,7 @@ function Goal({ goalData, plans, plansWithProgressNotes, accomplishments, indica
             {/* Goal header — clean teal section heading + statement, per design-sense */}
             <Box mb={3}>
                 <Heading tabIndex={0} as="h3" size="md" color="teal.700" mb={1}>
-                    Goal {goal_number}: {name}
+                    Goal {goal_number}: {name} <HelpTip nodeType="Goal" />
                 </Heading>
                 {goal && (
                     <Text tabIndex={0} fontSize="sm" color="gray.700">

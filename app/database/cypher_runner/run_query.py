@@ -13,7 +13,7 @@ Credentials are read from the environment / a .env file. Two supported styles:
   1. Single neomodel-style URL (matches app/.env.development):
          DATABASE_URL=bolt://<user>:<password>@<host>:7687
      plus optional:
-         NEO4J_DATABASE=ati        # defaults to "ati"
+         NEO4J_DATABASE=ati        # defaults to "neo4j" (Aura's default DB)
 
   2. Split variables:
          NEO4J_URI=bolt://<host>:7687
@@ -109,7 +109,10 @@ def resolve_connection():
     """
     _load_dotenv_if_present()
 
-    database = os.environ.get("NEO4J_DATABASE", "ati")
+    # Default mirrors app/web_config.py (the "point to aura" change): Aura's
+    # only database is "neo4j". .env.development sets NEO4J_DATABASE explicitly,
+    # so this fallback only matters when it's left unset.
+    database = os.environ.get("NEO4J_DATABASE", "neo4j")
 
     database_url = os.environ.get("DATABASE_URL")
     if database_url:

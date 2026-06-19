@@ -34,11 +34,13 @@ python -m app.database.cypher_runner.mcp
 
 ```bash
 claude mcp add ati-graph -- \
-  "C:\Users\913678186\IdeaProjects\ATI_Analysis\windowsvenvpy12\Scripts\python.exe" \
+  "C:\Users\Fonta\PycharmProjects\ATI_Analysis\.venv\Scripts\python.exe" \
   -m app.database.cypher_runner.mcp
 ```
 
-Run it from the repo root (or set `cwd`) so the module path resolves.
+Run it from the repo root (or set `cwd`) so the module path resolves. Point
+`command` at this project's venv interpreter (the one that has `mcp`, `neo4j`,
+and `pyyaml` installed) — adjust the path if your checkout lives elsewhere.
 
 **Claude Desktop** (`%APPDATA%\Claude\claude_desktop_config.json`):
 
@@ -46,9 +48,9 @@ Run it from the repo root (or set `cwd`) so the module path resolves.
 {
   "mcpServers": {
     "ati-graph": {
-      "command": "C:\\Users\\913678186\\IdeaProjects\\ATI_Analysis\\windowsvenvpy12\\Scripts\\python.exe",
+      "command": "C:\\Users\\Fonta\\PycharmProjects\\ATI_Analysis\\.venv\\Scripts\\python.exe",
       "args": ["-m", "app.database.cypher_runner.mcp"],
-      "cwd": "C:\\Users\\913678186\\IdeaProjects\\ATI_Analysis"
+      "cwd": "C:\\Users\\Fonta\\PycharmProjects\\ATI_Analysis"
     }
   }
 }

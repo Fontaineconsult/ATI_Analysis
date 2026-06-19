@@ -2,6 +2,7 @@ import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Box, Heading, Divider, Button, HStack } from '@chakra-ui/react';
 import Goal from '../graph_components/indicators/Goal';
+import { HelpTip } from '../functional_components/DescriptorHelp';
 
 // URL slug -> display name + the key of `data` that holds this group's goals. The three
 // working groups render the SAME goal display, so one config replaces the old per-group
@@ -58,7 +59,7 @@ function GoalNavigator({ data }) {
                         verticalAlign="middle"
                         aria-hidden="true"
                     />
-                    {config.name} Working Group
+                    {config.name} Working Group<HelpTip fieldValue={['working_groups', config.name]} />
                     {goalId && ` - Goal ${goalId}`}
                 </Heading>
                 <Box

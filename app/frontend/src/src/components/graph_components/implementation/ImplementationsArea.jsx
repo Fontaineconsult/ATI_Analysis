@@ -20,6 +20,7 @@ import {
 } from '@chakra-ui/react';
 import { DataContext } from '../../../context/DataContext';
 import { useDescriptors } from '../../../hooks/useDescriptors';
+import { HelpTip } from '../../functional_components/DescriptorHelp';
 import ImplementationStatStrip from './ImplementationStatStrip';
 import ImplementationList from './ImplementationList';
 import ImplementationDetailPanel from './ImplementationDetailPanel';
@@ -171,6 +172,7 @@ function ImplementationsArea() {
                             >
                                 {label}{count ? ` (${count})` : ''}
                             </Button>
+                            <HelpTip nodeType={key} placement="top" />
                         </WrapItem>
                     );
                 })}

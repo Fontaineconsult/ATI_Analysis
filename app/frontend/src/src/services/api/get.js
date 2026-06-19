@@ -760,6 +760,34 @@ export const fetchAllRoles = async () => {
     }
 };
 
+// The assembled ontology — node types / fields / field values / relationship types of the
+// schema, each joined to its descriptor prose and the principles that shape it. Same payload
+// the MCP server exposes. Returns the wrapper; the browser reads data (a structured object,
+// not a list).
+export const fetchOntology = async () => {
+    try {
+        const response = await axios.get(`${process.env.REACT_APP_API_URL}/ontology`);
+        if (response.status === 200) return response.data;
+        throw new Error(`Failed to fetch ontology: ${response.data?.error}`);
+    } catch (error) {
+        console.error('Error fetching ontology:', error.message);
+        throw error;
+    }
+};
+
+// Ontology integrity: description coverage per element kind, orphan descriptors, and
+// ungrounded / inert principles. Drives the browser's diagnostic stat strip.
+export const fetchOntologyHealth = async () => {
+    try {
+        const response = await axios.get(`${process.env.REACT_APP_API_URL}/ontology/health`);
+        if (response.status === 200) return response.data;
+        throw new Error(`Failed to fetch ontology health: ${response.data?.error}`);
+    } catch (error) {
+        console.error('Error fetching ontology health:', error.message);
+        throw error;
+    }
+};
+
 // A plan's mirrored Asana subtasks (AsanaSubtask nodes written by the Asana
 // Refresh sync). Open subtasks first, then by due date. Returns the list
 // directly (already unwrapped from the response envelope).

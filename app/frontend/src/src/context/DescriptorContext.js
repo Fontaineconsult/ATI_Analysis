@@ -60,12 +60,16 @@ export const DescriptorProvider = ({ children }) => {
     // Legacy-shaped accessor: returns { name, description } for a node-type label, sourced from
     // its node_type descriptor. Drop-in replacement for the old context/definitions.js
     // getDefinition(); returns null when no descriptor is seeded for that label.
+    //
+    // Prefer description_SHORT — it's the curated, user-facing prose. description_full holds the
+    // long-form rationale (currently the seeded class docstrings, e.g. "Class representing a …
+    // node"), which should not surface as a definition card.
     const getNodeTypeDefinition = useCallback((label) => {
         const d = byHandle[makeNodeTypeHandle(label)];
         if (!d) return null;
         return {
             name: d.title || label,
-            description: d.description_full || d.description_short || '',
+            description: d.description_short || d.description_full || '',
         };
     }, [byHandle]);
 

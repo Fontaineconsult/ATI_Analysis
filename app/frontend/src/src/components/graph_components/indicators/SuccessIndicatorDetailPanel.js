@@ -30,6 +30,7 @@ import { DataContext } from '../../../context/DataContext';
 import { updateStatusLevel, assignPersonAsImplementor, unassignPersonAsImplementor } from '../../../services/api/put';
 import { getIndicatorSummary, getStatusColor, PRIORITY_COLORS } from './indicatorHelpers';
 import IndicatorAssetsPanel from './IndicatorAssetsPanel';
+import { HelpTip } from '../../functional_components/DescriptorHelp';
 
 // A flat, titled section card. Everything for the selected indicator is rendered inline as
 // stacked sections — no modals (except the review process, which is action-gated).
@@ -161,7 +162,7 @@ function SuccessIndicatorDetailPanel({ wrapper }) {
                 </Box>
             </Box>
 
-            <Section title="Responsible Persons">
+            <Section title={<>Responsible Persons <HelpTip field={['YearSuccessEvidence', 'responsible_persons']} /></>}>
                 <PersonAssignmentSelector
                     assignedPersons={assignedPersons}
                     candidatePersons={candidatePersons}
@@ -191,7 +192,7 @@ function SuccessIndicatorDetailPanel({ wrapper }) {
                 tools={wrapper.tools}
             />
 
-            <Section title="Annotations">
+            <Section title={<>Annotations <HelpTip field={['YearSuccessEvidence', 'annotations']} /></>}>
                 <YSEAnnotationMasterContainer
                     hasNotes={ev.has_notes}
                     hasMessages={ev.has_messages}

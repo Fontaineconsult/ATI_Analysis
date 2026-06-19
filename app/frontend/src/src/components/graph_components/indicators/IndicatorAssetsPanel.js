@@ -13,6 +13,7 @@ import {
     Text,
 } from '@chakra-ui/react';
 import { Link as RouterLink, useParams } from 'react-router-dom';
+import { HelpBox } from '../../functional_components/DescriptorHelp';
 
 /**
  * Per–success-indicator view of the Assets, Interfaces, and Tools that touch it —
@@ -102,6 +103,7 @@ function IndicatorAssetsPanel({ assets = [], interfaces = [], tools = [] }) {
                 <TabPanels>
                     {/* Assets — remediated by this indicator's implementations */}
                     <TabPanel px={0} pt={3}>
+                        <HelpBox nodeType="Asset" />
                         {assets.length ? (
                             <ListBox>
                                 {assets.map((a) => (
@@ -131,6 +133,7 @@ function IndicatorAssetsPanel({ assets = [], interfaces = [], tools = [] }) {
 
                     {/* Interfaces — remediated_interface by this indicator's implementations */}
                     <TabPanel px={0} pt={3}>
+                        <HelpBox nodeType="Interface" />
                         {interfaces.length ? (
                             <ListBox>
                                 {interfaces.map((i) => (
@@ -160,6 +163,7 @@ function IndicatorAssetsPanel({ assets = [], interfaces = [], tools = [] }) {
 
                     {/* Tools — uses_tool by this indicator's implementations */}
                     <TabPanel px={0} pt={3}>
+                        <HelpBox nodeType="Tool" />
                         {tools.length ? (
                             <ListBox>
                                 {tools.map((t) => (
