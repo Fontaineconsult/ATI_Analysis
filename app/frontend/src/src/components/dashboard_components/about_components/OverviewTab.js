@@ -1,5 +1,5 @@
 import React from 'react';
-import { List, ListItem, Box } from '@chakra-ui/react';
+import { Alert, AlertIcon, List, ListItem, Box } from '@chakra-ui/react';
 import { Link as RouterLink, useParams } from 'react-router-dom';
 import { Link } from '@chakra-ui/react';
 import { AboutPage, Card, Section, Para } from './aboutPrimitives';
@@ -11,7 +11,7 @@ function OverviewTab() {
     return (
         <AboutPage
             title="About this Application"
-            lede="What the Accessible Technology Initiative is, what this application does, and how to think about the information inside it."
+            lede="What the Accessible Technology Initiative is, what this application does, how to think about the information inside it — and, if you are recording evidence, how to get started."
         >
             <Card title="The Accessible Technology Initiative (ATI)">
                 <Para>
@@ -81,6 +81,98 @@ function OverviewTab() {
                 </List>
             </Card>
 
+            <Card title="Getting started — recording evidence">
+                <Para>
+                    If you are the ATI Coordinator or are coding evidence, this is your path.
+                    Recording evidence means showing — for one <b>success indicator</b>, in one{' '}
+                    <b>academic year</b>, on one <b>campus</b> — where the campus stands and why,
+                    backed by the work that proves it. Here is the core loop; the{' '}
+                    <Link as={RouterLink} to={`${prefix}/about/adding-data`} color="teal.600" textDecoration="underline">Adding Data</Link>{' '}
+                    tab has the step-by-step detail for each piece.
+                </Para>
+                <Section title="The core loop">
+                    <List spacing={1.5} pl={5} styleType="decimal" fontSize="sm" color="gray.700">
+                        <ListItem>
+                            <b>Set your context first.</b> In the header, choose the <b>campus</b>{' '}
+                            and <b>academic year</b> you are recording for, and set{' '}
+                            <b>&quot;Notating as…&quot;</b> to yourself so notes and updates are
+                            attributed to the right person. Everything you add lands in the selected
+                            scope.
+                        </ListItem>
+                        <ListItem>
+                            <b>Find the indicator.</b> Open the{' '}
+                            <Link as={RouterLink} to={`${prefix}/dashboard/web/goal/1`} color="teal.600" textDecoration="underline">Dashboard</Link>,
+                            pick the working group (Web, Instructional Materials, or Procurement),
+                            then the goal, then the success indicator you are documenting.
+                        </ListItem>
+                        <ListItem>
+                            <b>Set the status honestly.</b> Choose the maturity rung (Not Started →
+                            Initiated → Defined → Established → Managed → Optimizing) you can
+                            actually defend — see <i>How to think about it</i> below. This is a
+                            claim about reality, not a target.
+                        </ListItem>
+                        <ListItem>
+                            <b>Attach the proof.</b> Add an <b>implementation</b> — link an existing
+                            Process, Project, Procedure, Service, Guidance, Tracking, or Internal
+                            Policy, or create one — then hang <b>documentation</b> on it. Documents,
+                            webpages, and metrics count as <i>documented evidence</i>; notes and
+                            messages add context.
+                        </ListItem>
+                        <ListItem>
+                            <b>Record who and what.</b> Assign the <b>responsible persons</b>, set
+                            the working flags (worked on this year / planned for next year) and
+                            priority, and use <b>Annotations</b> for observations and anything a
+                            reviewer should know.
+                        </ListItem>
+                        <ListItem>
+                            <b>Hand it off.</b> When the record is defensible, mark it{' '}
+                            <b>ready for admin review</b>; a designated reviewer confirms the status
+                            and evidence hold up.
+                        </ListItem>
+                    </List>
+                </Section>
+                <Section title="What to pay attention to">
+                    <List spacing={2} pl={5} styleType="disc" fontSize="sm" color="gray.700">
+                        <ListItem>
+                            <b>Scope is sticky.</b> Evidence lands in whatever campus and year the
+                            header shows — glance at it before you start, and again if you have been
+                            away.
+                        </ListItem>
+                        <ListItem>
+                            <b>Search before you create.</b> A service, document, or vendor you want
+                            to add usually already exists — link to the shared node instead of
+                            making a duplicate. The graph&apos;s value is in connections, not copies.
+                        </ListItem>
+                        <ListItem>
+                            <b>Documented vs. context.</b> Documents, webpages, and metrics{' '}
+                            <i>substantiate</i> a status; notes and messages give it context. Both
+                            matter, but a status claim needs documented evidence behind it.
+                        </ListItem>
+                        <ListItem>
+                            <b>Absence is information.</b> A red zero — no evidence, no owner, no
+                            remediation — is a real signal the app exists to surface. Never invent a
+                            link just to silence a warning.
+                        </ListItem>
+                        <ListItem>
+                            <b>Deprecate, don&apos;t delete</b>, and remember composite{' '}
+                            <b>identifiers are immutable</b>: to &quot;rename&quot; an indicator,
+                            asset, or plan, create the correct node and retire the old one.
+                        </ListItem>
+                        <ListItem>
+                            <b>Write notes liberally.</b> Candor is free — notes never inflate
+                            evidence, so record uncertainty and rationale for the next coordinator
+                            and the reviewer.
+                        </ListItem>
+                    </List>
+                </Section>
+                <Alert status="info" borderRadius="md" fontSize="sm" mt={3}>
+                    <AlertIcon />
+                    The honest question is never &quot;did we do something?&quot; but &quot;is this
+                    a defined, managed, improving capability?&quot; When in doubt, claim the lower
+                    rung and note the trajectory — reviewers lower statuses that overreach.
+                </Alert>
+            </Card>
+
             <Card title="How to think about it">
                 <Para>
                     The database is a <b>graph</b>, not a set of tables. Every meaningful thing —
@@ -137,8 +229,10 @@ function OverviewTab() {
                 <Section title="About (this area)">
                     <Para>
                         Reference material: the data model, what each category means, and recipes
-                        for adding data. Start with <b>Core Model</b> if you are new — everything
-                        else builds on it.
+                        for adding data. If you are new, start with <b>Core Model</b>; if your job
+                        is to record evidence, the <b>Getting started</b> section above and the{' '}
+                        <Link as={RouterLink} to={`${prefix}/about/adding-data`} color="teal.600" textDecoration="underline">Adding Data</Link>{' '}
+                        tab walk you through it end to end.
                     </Para>
                 </Section>
             </Card>
