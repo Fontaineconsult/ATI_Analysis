@@ -6,7 +6,7 @@ from neomodel import (StructuredNode, StringProperty,
                       IntegerProperty, RelationshipTo,
                       RelationshipFrom, UniqueIdProperty,
                       StructuredRel, Relationship, DateProperty,
-                      install_all_labels, BooleanProperty, IntegerProperty, JSONProperty, ArrayProperty, ZeroOrOne)
+                      BooleanProperty, IntegerProperty, JSONProperty, ArrayProperty, ZeroOrOne)
 from dotenv import load_dotenv
 import os
 
@@ -2208,7 +2208,7 @@ class TAAP(StructuredNode):
 
 
 def update_remote():
-    from neomodel import config
+    from neomodel import config, db
     print("Updating remote connection")
 
     # Construct path to .env.remote file
@@ -2235,7 +2235,7 @@ def update_remote():
 
     config.DATABASE_NAME = neo4j_database
     config.DATABASE_URL = database_url
-    install_all_labels()
+    db.install_all_labels()
 
     print(f"Config set - DATABASE_NAME: {config.DATABASE_NAME}, DATABASE_URL: {config.DATABASE_URL}")
 
@@ -2262,6 +2262,7 @@ if __name__=="__main__":
     dotenv_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), '.env.development')
     load_dotenv(dotenv_path)
     set_connection()
-    install_all_labels()
+    from neomodel import db
+    db.install_all_labels()
 
 

@@ -78,7 +78,9 @@ if ($RelaxPins) {
     # The app's actual runtime imports (derived from the code), current versions -> 3.14 wheels.
     # Web framework + graph + the feature libs (export / viz / excel / charts / AI / logging).
     $core = @(
-        'Flask','Flask-Cors','neomodel','neo4j','python-dotenv','requests','PyYAML','python-dateutil',
+        # The app's runtime deps, pinned to the 3.14-verified versions (matches app/requirements.txt).
+        'Flask==3.1.3','Flask-Cors==6.0.5','waitress==3.0.2','neomodel==6.1.0','neo4j==6.1.0',
+        'python-dotenv','requests','PyYAML','python-dateutil',
         'networkx','pyvis','openpyxl','plotly','openai','seqlog'
     )
     Info "Installing the app's runtime deps UNPINNED: $($core -join ', ')"
@@ -86,15 +88,23 @@ if ($RelaxPins) {
     if ($LASTEXITCODE -ne 0) { throw "core dependency install failed." }
 } else {
     if (-not (Test-Path $Requirements)) { throw "Requirements file not found: '$Requirements' (or pass -RelaxPins)." }
-    # Normalize encoding: Get-Content auto-detects the BOM (UTF-16/UTF-8), then rewrite UTF-8 no-BOM.
-    Info "Normalizing requirements to UTF-8 (handles a UTF-16 pip-freeze file)"
+    # Normalize to UTF-8. Detect from the BYTES so it survives any save format an editor
+    # produces -- UTF-16 LE/BE with OR without a BOM (pip can't parse those), or UTF-8.
+    Info "Normalizing requirements to UTF-8"
     $reqUtf8 = Join-Path $env:TEMP 'ati-requirements-utf8.txt'
-    [System.IO.File]::WriteAllLines($reqUtf8, (Get-Content -Path $Requirements), (New-Object System.Text.UTF8Encoding($false)))
+    $bytes = [System.IO.File]::ReadAllBytes($Requirements)
+    if     ($bytes.Length -ge 2 -and $bytes[0] -eq 0xFF -and $bytes[1] -eq 0xFE) { $enc = [System.Text.Encoding]::Unicode }            # UTF-16 LE + BOM
+    elseif ($bytes.Length -ge 2 -and $bytes[0] -eq 0xFE -and $bytes[1] -eq 0xFF) { $enc = [System.Text.Encoding]::BigEndianUnicode }   # UTF-16 BE + BOM
+    elseif ($bytes.Length -ge 3 -and $bytes[0] -eq 0xEF -and $bytes[1] -eq 0xBB -and $bytes[2] -eq 0xBF) { $enc = [System.Text.Encoding]::UTF8 }  # UTF-8 + BOM
+    elseif (($bytes | Select-Object -First 400) -contains 0) { $enc = [System.Text.Encoding]::Unicode }  # null bytes, no BOM -> UTF-16 LE
+    else { $enc = [System.Text.Encoding]::UTF8 }
+    $text = $enc.GetString($bytes).TrimStart([char]0xFEFF)
+    [System.IO.File]::WriteAllText($reqUtf8, $text, (New-Object System.Text.UTF8Encoding($false)))
     Info "Installing app requirements from $Requirements"
     & $venvPy -m pip install -r $reqUtf8
     if ($LASTEXITCODE -ne 0) {
-        Warn "pip install -r failed. The 2024 freeze has pins with no 3.14 wheel (e.g. pywin32==306)"
-        Warn "and dev cruft the app never imports. Re-run with -RelaxPins to install the real runtime deps."
+        Warn "pip install -r failed. Re-run with -RelaxPins to install the pinned runtime deps directly,"
+        Warn "or check the error above for a package needing a different version."
         throw "Dependency install failed."
     }
 }
