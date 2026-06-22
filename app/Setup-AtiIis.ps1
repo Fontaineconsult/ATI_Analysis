@@ -1,0 +1,198 @@
+#Requires -RunAsAdministrator
+<#
+.SYNOPSIS
+    Provision the ATI Flask app under IIS using a Python 3.14 virtual environment + wfastcgi.
+
+.DESCRIPTION
+    Idempotent. Run from an ELEVATED PowerShell on the IIS server. It:
+      1. Creates a venv from the all-users Python 3.14, in a location IIS can read
+         (NOT under "C:\Program Files", which isn't writable -> pip silently does a
+          per-user install the app-pool identity can't see).
+      2. Installs wfastcgi + the app's dependencies INTO the venv.
+         - Default: install from requirements.txt (normalizes a UTF-16 file to UTF-8 first).
+         - -RelaxPins: install only the app's real runtime deps, UNPINNED, so pip grabs
+           clean 3.14 wheels. Use this when the 2024 freeze has dead pins (e.g. pywin32==306
+           has no 3.14 build) or dev cruft (Jupyter, ipython, debugpy) the app never imports.
+      3. Registers the venv's wfastcgi as an IIS FastCGI application (+ sane timeouts).
+      4. Ensures an app pool set to "No Managed Code".
+      5. Writes the site web.config so the handler's scriptProcessor EXACTLY matches the
+         FastCGI app, plus the wfastcgi appSettings (WSGI_HANDLER/PYTHONPATH/WSGI_LOG).
+      6. Grants IIS_IUSRS read/execute on the app + venv, and write on the log file.
+      7. Verifies the app imports under the venv, then recycles the pool.
+
+.EXAMPLE
+    .\Setup-AtiIis.ps1 -RelaxPins -SiteName "ati"
+#>
+
+[CmdletBinding()]
+param(
+    [string] $PythonExe    = 'C:\Program Files\Python314\python.exe',
+    [string] $SiteRoot     = 'C:\www\ati',                 # holds web.config + wsgi.py; the PYTHONPATH root
+    [string] $VenvPath     = 'C:\www\ati\venv314',
+    [string] $Requirements = 'C:\www\ati\app\requirements.txt',
+    [string] $WsgiHandler  = 'wsgi.application',            # wsgi.py exposes 'application'
+    [string] $LogFile      = 'C:\www\ati\wfastcgi.log',
+    [string] $AppPoolName  = 'ati',
+    [string] $SiteName     = '',                            # optional: assign the pool to this IIS site
+    [string] $WsgiDebug    = '1',                           # 1 while bringing up; set 0 in production
+    [switch] $RelaxPins,                                    # install the real runtime deps UNPINNED (recommended on 3.14)
+    [switch] $SkipWebConfig                                 # don't (re)write SiteRoot\web.config
+)
+
+$ErrorActionPreference = 'Stop'
+function Info($m) { Write-Host "[*] $m" -ForegroundColor Cyan }
+function Good($m) { Write-Host "[+] $m" -ForegroundColor Green }
+function Warn($m) { Write-Host "[!] $m" -ForegroundColor Yellow }
+
+# --- 0. Preflight ----------------------------------------------------------
+if (-not (Test-Path $PythonExe)) {
+    throw "Python not found at '$PythonExe'. Install Python 3.14 (all users) or pass -PythonExe."
+}
+Import-Module WebAdministration -ErrorAction Stop
+$venvPy   = Join-Path $VenvPath 'Scripts\python.exe'
+$wfastcgi = Join-Path $VenvPath 'Lib\site-packages\wfastcgi.py'
+if (-not (Test-Path (Join-Path $SiteRoot 'wsgi.py'))) {
+    Warn "No wsgi.py at '$SiteRoot' - WSGI_HANDLER='$WsgiHandler' needs a wsgi.py in SiteRoot exposing 'application'."
+}
+
+# --- 1. Create the venv ----------------------------------------------------
+if (Test-Path $venvPy) {
+    Info "venv already present at $VenvPath"
+} else {
+    Info "Creating venv at $VenvPath"
+    & $PythonExe -m venv $VenvPath
+    if ($LASTEXITCODE -ne 0) { throw "venv creation failed (exit $LASTEXITCODE)." }
+}
+Good "venv python: $venvPy"
+
+# --- 2. Install dependencies into the venv ---------------------------------
+Info "Upgrading pip / setuptools / wheel (so pip can find 3.14 wheels)"
+& $venvPy -m pip install --upgrade pip setuptools wheel
+if ($LASTEXITCODE -ne 0) { throw "pip upgrade failed." }
+
+Info "Installing wfastcgi into the venv"
+& $venvPy -m pip install wfastcgi
+if ($LASTEXITCODE -ne 0) { throw "wfastcgi install failed." }
+
+if ($RelaxPins) {
+    # The app's actual runtime imports (derived from the code), current versions -> 3.14 wheels.
+    # Web framework + graph + the feature libs (export / viz / excel / charts / AI / logging).
+    $core = @(
+        'Flask','Flask-Cors','neomodel','neo4j','python-dotenv','requests','PyYAML','python-dateutil',
+        'networkx','pyvis','openpyxl','plotly','openai','seqlog'
+    )
+    Info "Installing the app's runtime deps UNPINNED: $($core -join ', ')"
+    & $venvPy -m pip install $core
+    if ($LASTEXITCODE -ne 0) { throw "core dependency install failed." }
+} else {
+    if (-not (Test-Path $Requirements)) { throw "Requirements file not found: '$Requirements' (or pass -RelaxPins)." }
+    # Normalize encoding: Get-Content auto-detects the BOM (UTF-16/UTF-8), then rewrite UTF-8 no-BOM.
+    Info "Normalizing requirements to UTF-8 (handles a UTF-16 pip-freeze file)"
+    $reqUtf8 = Join-Path $env:TEMP 'ati-requirements-utf8.txt'
+    [System.IO.File]::WriteAllLines($reqUtf8, (Get-Content -Path $Requirements), (New-Object System.Text.UTF8Encoding($false)))
+    Info "Installing app requirements from $Requirements"
+    & $venvPy -m pip install -r $reqUtf8
+    if ($LASTEXITCODE -ne 0) {
+        Warn "pip install -r failed. The 2024 freeze has pins with no 3.14 wheel (e.g. pywin32==306)"
+        Warn "and dev cruft the app never imports. Re-run with -RelaxPins to install the real runtime deps."
+        throw "Dependency install failed."
+    }
+}
+if (-not (Test-Path $wfastcgi)) { throw "wfastcgi.py not found at '$wfastcgi' after install." }
+Good "Dependencies installed."
+
+# --- 3. Register the FastCGI application (matches the handler in step 5) ----
+$apphost   = 'MACHINE/WEBROOT/APPHOST'
+$appFilter = "system.webServer/fastCgi/application[@fullPath='$venvPy' and @arguments='$wfastcgi']"
+if (-not (Get-WebConfiguration -PSPath $apphost -Filter $appFilter -ErrorAction SilentlyContinue)) {
+    Info "Registering FastCGI application"
+    Add-WebConfiguration -PSPath $apphost -Filter 'system.webServer/fastCgi' -Value @{ fullPath = $venvPy; arguments = $wfastcgi }
+} else {
+    Info "FastCGI application already registered"
+}
+Set-WebConfigurationProperty -PSPath $apphost -Filter $appFilter -Name 'instanceMaxRequests' -Value 10000
+Set-WebConfigurationProperty -PSPath $apphost -Filter $appFilter -Name 'activityTimeout'     -Value 600
+Set-WebConfigurationProperty -PSPath $apphost -Filter $appFilter -Name 'requestTimeout'      -Value 600
+Set-WebConfigurationProperty -PSPath $apphost -Filter $appFilter -Name 'idleTimeout'         -Value 300
+Good "FastCGI app: $venvPy|$wfastcgi"
+
+# --- 4. App pool: No Managed Code ------------------------------------------
+if (-not (Test-Path "IIS:\AppPools\$AppPoolName")) {
+    Info "Creating app pool '$AppPoolName'"
+    New-WebAppPool -Name $AppPoolName | Out-Null
+}
+Set-ItemProperty "IIS:\AppPools\$AppPoolName" -Name 'managedRuntimeVersion' -Value ''   # "No Managed Code"
+try {
+    Set-ItemProperty "IIS:\AppPools\$AppPoolName" -Name 'startMode' -Value 'AlwaysRunning'
+    Set-ItemProperty "IIS:\AppPools\$AppPoolName" -Name 'processModel.idleTimeout' -Value ([TimeSpan]::Zero)
+} catch { Warn "Could not set startMode/idleTimeout (non-fatal): $($_.Exception.Message)" }
+Good "App pool '$AppPoolName' -> No Managed Code"
+
+if ($SiteName) {
+    Info "Assigning app pool '$AppPoolName' to site '$SiteName'"
+    Set-ItemProperty "IIS:\Sites\$SiteName" -Name applicationPool -Value $AppPoolName
+}
+
+# --- 5. web.config: handler scriptProcessor EXACTLY matches the FastCGI app -
+if (-not $SkipWebConfig) {
+    $webConfigPath   = Join-Path $SiteRoot 'web.config'
+    $scriptProcessor = "$venvPy|$wfastcgi"
+    if (Test-Path $webConfigPath) {
+        $backup = "$webConfigPath.bak-" + (Get-Date -Format 'yyyyMMdd-HHmmss')
+        Copy-Item $webConfigPath $backup
+        Info "Backed up web.config -> $backup"
+    }
+    $webConfig = @"
+<configuration>
+  <system.webServer>
+    <handlers>
+      <add name="AtiHandler"
+           path="*"
+           verb="*"
+           modules="FastCgiModule"
+           scriptProcessor="$scriptProcessor"
+           resourceType="Unspecified"
+           requireAccess="Script" />
+    </handlers>
+    <httpErrors errorMode="Detailed" />
+  </system.webServer>
+  <appSettings>
+    <add key="PYTHONPATH" value="$SiteRoot" />
+    <add key="WSGI_HANDLER" value="$WsgiHandler" />
+    <add key="WSGI_LOG" value="$LogFile" />
+    <add key="WSGI_DEBUG" value="$WsgiDebug" />
+  </appSettings>
+  <system.web>
+    <customErrors mode="Off" />
+  </system.web>
+</configuration>
+"@
+    Set-Content -Path $webConfigPath -Value $webConfig -Encoding UTF8
+    Good "Wrote $webConfigPath"
+}
+
+# --- 6. Filesystem permissions ---------------------------------------------
+Info "Granting IIS_IUSRS read/execute on app + venv, write on the log"
+& icacls $SiteRoot /grant "IIS_IUSRS:(OI)(CI)(RX)" /T /Q | Out-Null
+& icacls $VenvPath /grant "IIS_IUSRS:(OI)(CI)(RX)" /T /Q | Out-Null
+if (-not (Test-Path $LogFile)) { New-Item -ItemType File -Path $LogFile | Out-Null }
+& icacls $LogFile  /grant "IIS_IUSRS:(M)" /Q | Out-Null
+Good "Permissions applied"
+
+# --- 7. Verify the app imports under the venv ------------------------------
+Info "Verifying imports under Python 3.14..."
+$probe = "import sys; sys.path.insert(0, r'$SiteRoot'); import flask, neomodel, neo4j; from app import create_app; print('IMPORT_OK')"
+$result = & $venvPy -c $probe 2>&1
+if ($result -match 'IMPORT_OK') {
+    Good "App + core dependencies import cleanly."
+} else {
+    Warn "App did NOT import cleanly:"
+    Write-Host ($result | Out-String) -ForegroundColor Yellow
+    Warn "If it's ModuleNotFoundError for a feature lib, add it to the -RelaxPins list and re-run."
+}
+
+# --- 8. Recycle ------------------------------------------------------------
+try { Restart-WebAppPool -Name $AppPoolName } catch { Start-WebAppPool -Name $AppPoolName -ErrorAction SilentlyContinue }
+Good "App pool '$AppPoolName' recycled."
+Write-Host ""
+Write-Host "Browse the site. If it still 500s, open $LogFile for the Python traceback." -ForegroundColor Cyan

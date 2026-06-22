@@ -126,7 +126,9 @@ function CapacityRow({ assetIdentifier, capacity, holders, people, orgUnits, onC
 function StewardshipCard({ asset, onChanged }) {
     const userCtx = useContext(UserContext);
     const people = useMemo(
-        () => (userCtx?.individuals || []).map((p) => ({ unique_id: p.unique_id, name: p.name })),
+        () => (userCtx?.individuals || [])
+            .filter((p) => p.active || p.non_committee_member_active)
+            .map((p) => ({ unique_id: p.unique_id, name: p.name })),
         [userCtx],
     );
     const [orgUnits, setOrgUnits] = useState([]);

@@ -261,7 +261,11 @@ _IMPL_PROJECTION = """
         [ (impl)-[:remediates]->(a:Asset) |
           a { .asset_identifier, .title, .unique_id, .scope, .asset_class, reach: 'direct' } ]
         + [ (impl)-[:remediates_interface]->(:Interface)-[:presented_by]->(a:Asset) |
-          a { .asset_identifier, .title, .unique_id, .scope, .asset_class, reach: 'interface' } ]
+          a { .asset_identifier, .title, .unique_id, .scope, .asset_class, reach: 'interface' } ],
+      interfaces: [ (impl)-[:remediates_interface]->(i:Interface) |
+        i { .interface_identifier, .title, .unique_id, .function, .locus } ],
+      tools: [ (impl)-[:uses_tool]->(t:Tool) |
+        t { .tool_identifier, .title, .unique_id } ]
     })) AS j
 """
 

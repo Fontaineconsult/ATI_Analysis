@@ -382,7 +382,7 @@ function CampusPlanContainer() {
                     <ModalBody pb={4}>
                         <PersonAssignmentSelector
                             assignedPersons={plan.executive_sponsors || []}
-                            candidatePersons={individuals.filter((i) => i.active)}
+                            candidatePersons={individuals.filter((i) => i.active || i.non_committee_member_active)}
                             onAssign={(personUniqueId) => assignExecutiveSponsor(plan.plan_identifier, personUniqueId)}
                             onUnassign={(personUniqueId) => unassignExecutiveSponsor(plan.plan_identifier, personUniqueId)}
                             afterChange={handleReloadPrimary}

@@ -93,7 +93,7 @@ function ParticipantsEditor({ implementationType, implementationUniqueId, partic
 
             <Flex gap={2} flexWrap="wrap">
                 <Select size="sm" placeholder="Person…" value={pPerson} onChange={(e) => setPPerson(e.target.value)} flex="1" minW="140px">
-                    {(individuals || []).map((i) => <option key={i.unique_id} value={i.unique_id}>{i.name}</option>)}
+                    {(individuals || []).filter((i) => i.active || i.non_committee_member_active).map((i) => <option key={i.unique_id} value={i.unique_id}>{i.name}</option>)}
                 </Select>
                 <Select size="sm" placeholder="Role…" value={pRole} onChange={(e) => setPRole(e.target.value)} flex="1" minW="140px">
                     {roles.map((r) => <option key={r.handle} value={r.handle}>{r.name}</option>)}

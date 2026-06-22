@@ -538,7 +538,7 @@ function WorkingGroupPlan({
                     <ModalBody pb={4}>
                         <PersonAssignmentSelector
                             assignedPersons={wgp.group_leads || []}
-                            candidatePersons={individuals.filter((i) => i.active)}
+                            candidatePersons={individuals.filter((i) => i.active || i.non_committee_member_active)}
                             onAssign={(personUniqueId) => assignGroupLead(wgp.plan_identifier, personUniqueId)}
                             onUnassign={(personUniqueId) => unassignGroupLead(wgp.plan_identifier, personUniqueId)}
                             afterChange={async () => {

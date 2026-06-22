@@ -74,7 +74,9 @@ function TaapDetailPanel({ title, onAfterMutate, onGoToAsset }) {
     const [removingYse, setRemovingYse] = useState(null);
 
     const candidatePersons = useMemo(
-        () => (userCtx?.individuals || []).map((p) => ({ unique_id: p.unique_id, name: p.name, title: p.title })),
+        () => (userCtx?.individuals || [])
+            .filter((p) => p.active || p.non_committee_member_active)
+            .map((p) => ({ unique_id: p.unique_id, name: p.name, title: p.title })),
         [userCtx],
     );
 

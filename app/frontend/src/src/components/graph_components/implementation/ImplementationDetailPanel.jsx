@@ -36,7 +36,7 @@ import {
     useDisclosure,
     useToast,
 } from '@chakra-ui/react';
-import { CheckIcon, CloseIcon, EditIcon, LinkIcon } from '@chakra-ui/icons';
+import { CheckIcon, CloseIcon, CopyIcon, EditIcon, LinkIcon } from '@chakra-ui/icons';
 import { useNavigate, useParams } from 'react-router-dom';
 import Card from '../common/Card';
 import {
@@ -62,6 +62,7 @@ import { UserContext } from '../../../context/UserContext';
 import { HelpTip } from '../../functional_components/DescriptorHelp';
 import PersonAssignmentSelector from '../../functional_components/PersonAssignmentSelector';
 import YseAssignmentSelector from '../../functional_components/YseAssignmentSelector';
+import ImplementationRemediationManager from './ImplementationRemediationManager';
 import ParticipantsEditor from '../../implementation_explorer/ParticipantsEditor';
 import DocumentsViewer from '../../implementation_explorer/doc_components/DocumentsViewer';
 import WebpagesViewer from '../../implementation_explorer/doc_components/WebpagesViewer';
@@ -92,6 +93,7 @@ function ImplementationDetailPanel({ implementation, onAfterChange }) {
     const { individuals, loadAllIndividuals } = useContext(UserContext);
     const { describeField } = useDescriptors();
     const { isOpen: isManageYsesOpen, onOpen: onManageYsesOpen, onClose: onManageYsesClose } = useDisclosure();
+    const { isOpen: isManageRemediationOpen, onOpen: onManageRemediationOpen, onClose: onManageRemediationClose } = useDisclosure();
 
     const type = implementation?.type;
     const dimensioned = isDimensioned(type);
@@ -184,6 +186,32 @@ function ImplementationDetailPanel({ implementation, onAfterChange }) {
         toast({
             title: 'Link copied!', description: 'Direct link to this implementation copied to clipboard.',
             status: 'success', duration: 2000, isClosable: true,
+        });
+    };
+
+    // Copy the supporting Documents + Webpages as email-ready bullets (title — URL, one per
+    // line). Plain text so it pastes cleanly into an email; raw URLs auto-link in most clients.
+    const copyDocumentationLinks = () => {
+        const bullet = (title, href) => {
+            const t = (title || '').trim() || '(untitled)';
+            return href ? `• ${t} — ${href}` : `• ${t}`;
+        };
+        const lines = [
+            ...(implementation.supporting_documents || []).map((d) => bullet(d.name, d.uri_path || d.file_path)),
+            ...(implementation.supporting_webpages || []).map((w) => bullet(w.name, w.url)),
+        ];
+        if (lines.length === 0) {
+            toast({ title: 'Nothing to copy', description: 'No documents or webpages on this implementation.', status: 'info', duration: 2000, isClosable: true });
+            return;
+        }
+        navigator.clipboard.writeText(lines.join('\n')).then(() => {
+            toast({
+                title: 'Copied for email',
+                description: `${lines.length} link${lines.length === 1 ? '' : 's'} copied — paste into an email.`,
+                status: 'success', duration: 2500, isClosable: true,
+            });
+        }).catch(() => {
+            toast({ title: 'Copy failed', description: 'Could not access the clipboard.', status: 'error', duration: 3000, isClosable: true });
         });
     };
 
@@ -372,6 +400,19 @@ function ImplementationDetailPanel({ implementation, onAfterChange }) {
             {/* Supporting Documentation — tabbed by type, raised high in the panel */}
             <Card title={`Supporting Documentation (${totalSupporting})`}>
                 <Divider mb={3} borderColor="gray.200" />
+                <HStack justify="flex-end" mb={2}>
+                    <Button
+                        size="xs"
+                        variant="outline"
+                        colorScheme="teal"
+                        leftIcon={<CopyIcon />}
+                        onClick={copyDocumentationLinks}
+                        isDisabled={(implementation.supporting_documents?.length || 0) + (implementation.supporting_webpages?.length || 0) === 0}
+                        title="Copy documents & webpages (title and URL) as bullets for an email"
+                    >
+                        Copy links for email
+                    </Button>
+                </HStack>
                 <Tabs colorScheme="teal" size="sm" variant="line" isLazy>
                     <TabList flexWrap="wrap">
                         <Tab fontSize="sm">Documents ({implementation.supporting_documents?.length || 0})</Tab>
@@ -497,7 +538,7 @@ function ImplementationDetailPanel({ implementation, onAfterChange }) {
                 <Divider mb={4} borderColor="gray.200" />
                 <PersonAssignmentSelector
                     assignedPersons={implementation.owned_by || []}
-                    candidatePersons={(individuals || []).filter((i) => i.active)}
+                    candidatePersons={(individuals || []).filter((i) => i.active || i.non_committee_member_active)}
                     onAssign={(personUniqueId) => assignPersonAsOwner(type, implementation.unique_id, personUniqueId)}
                     onUnassign={(personUniqueId) => unassignPersonAsOwner(type, implementation.unique_id, personUniqueId)}
                     afterChange={refresh}
@@ -520,10 +561,19 @@ function ImplementationDetailPanel({ implementation, onAfterChange }) {
                 </Card>
             )}
 
-            {/* Assets it applies to (doing types only) — read-only */}
+            {/* Assets it applies to (doing types only) — derived from remediated interfaces;
+                manage the interfaces/tools that produce them via the modal. */}
             {assetType && (
                 <Card title="Assets It Applies To">
                     <Divider mb={4} borderColor="gray.200" />
+                    <HStack justify="space-between" align="center" mb={3} spacing={3}>
+                        <Text fontSize="xs" color="gray.500">
+                            Assets are derived from the interfaces this implementation remediates.
+                        </Text>
+                        <Button size="xs" colorScheme="teal" variant="outline" flexShrink={0} onClick={onManageRemediationOpen}>
+                            Manage interfaces &amp; tools
+                        </Button>
+                    </HStack>
                     {Array.isArray(implementation.assets) && implementation.assets.length > 0 ? (
                         <VStack align="stretch" spacing={1}>
                             {implementation.assets.map((a) => (
@@ -570,6 +620,32 @@ function ImplementationDetailPanel({ implementation, onAfterChange }) {
                     </ModalBody>
                     <ModalFooter>
                         <Button size="sm" colorScheme="teal" onClick={onManageYsesClose}>Done</Button>
+                    </ModalFooter>
+                </ModalContent>
+            </Modal>
+
+            {/* Manage remediated interfaces & used tools — inverse-mount of the entity-side flows */}
+            <Modal isOpen={isManageRemediationOpen} onClose={onManageRemediationClose} size="2xl" scrollBehavior="inside">
+                <ModalOverlay />
+                <ModalContent>
+                    <ModalHeader fontSize="md" color="teal.700">
+                        Manage Interfaces &amp; Tools
+                        {implementation.title && (
+                            <Text as="span" fontSize="sm" color="gray.500" fontWeight="normal" ml={2}>— {implementation.title}</Text>
+                        )}
+                    </ModalHeader>
+                    <ModalCloseButton />
+                    <ModalBody pb={6}>
+                        <ImplementationRemediationManager
+                            implementationType={type}
+                            implementationUniqueId={implementation.unique_id}
+                            interfaces={implementation.interfaces || []}
+                            tools={implementation.tools || []}
+                            onChanged={refresh}
+                        />
+                    </ModalBody>
+                    <ModalFooter>
+                        <Button size="sm" colorScheme="teal" onClick={onManageRemediationClose}>Done</Button>
                     </ModalFooter>
                 </ModalContent>
             </Modal>
