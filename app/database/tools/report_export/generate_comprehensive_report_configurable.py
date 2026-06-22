@@ -15,7 +15,7 @@ from dotenv import load_dotenv
 # Add parent directory to path for imports
 sys.path.append(str(Path(__file__).parent.parent.parent.parent))
 
-from neomodel import config
+from neomodel import get_config
 
 
 def configure_database_connection(use_remote: bool = False, env_file: Optional[str] = None):
@@ -58,8 +58,8 @@ def configure_database_connection(use_remote: bool = False, env_file: Optional[s
     if not database_url:
         raise ValueError("DATABASE_CONNECTOR or DATABASE_URL must be set in environment file")
 
-    config.DATABASE_URL = database_url
-    config.DATABASE_NAME = database_name
+    get_config().database_url = database_url
+    get_config().database_name = database_name
 
     print(f"Database Configuration:")
     print(f"  URL: {database_url}")

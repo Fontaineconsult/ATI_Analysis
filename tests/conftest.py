@@ -44,7 +44,7 @@ Run only pure unit tests:
 import os
 
 import pytest
-from neomodel import config, db
+from neomodel import get_config, db
 
 
 TEST_ACADEMIC_YEAR_NAME = "9999-9999"  # Sentinel — never used by production data
@@ -92,8 +92,8 @@ def neo4j_connection():
     test_db = os.environ.get("NEO4J_TEST_DATABASE")
 
     if test_url and test_db:
-        config.DATABASE_URL = test_url
-        config.DATABASE_NAME = test_db
+        get_config().database_url = test_url
+        get_config().database_name = test_db
         print(f"\n[pytest] Neo4j connection: TEST DB ({test_db})")
     else:
         # Defer the import so unit-only test runs don't pay the schema-load cost.
@@ -101,7 +101,7 @@ def neo4j_connection():
 
         set_connection()
         print(
-            f"\n[pytest] Neo4j connection: LIVE DB ({config.DATABASE_NAME}) "
+            f"\n[pytest] Neo4j connection: LIVE DB ({get_config().database_name}) "
             f"— cleanup is scoped to sentinel year {TEST_ACADEMIC_YEAR_NAME!r} only"
         )
     yield
@@ -202,7 +202,7 @@ def flask_client(neo4j_connection):
     via create_app() so blueprint routes, error handlers, and JSON formatting
     all match production.
 
-    Note: create_app() resets `neomodel.config.DATABASE_URL` from the
+    Note: create_app() resets `neomodel.get_config().database_url` from the
     production env vars, so we re-apply the test connection (if set) afterward
     to keep us pointed at the test DB. When NEO4J_TEST_DATABASE is unset
     (current default), this is a no-op — both paths point to live.
@@ -218,8 +218,8 @@ def flask_client(neo4j_connection):
     test_url = os.environ.get("NEO4J_TEST_DATABASE_URL")
     test_db = os.environ.get("NEO4J_TEST_DATABASE")
     if test_url and test_db:
-        config.DATABASE_URL = test_url
-        config.DATABASE_NAME = test_db
+        get_config().database_url = test_url
+        get_config().database_name = test_db
 
     with app.test_client() as client:
         yield client

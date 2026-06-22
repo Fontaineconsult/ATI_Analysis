@@ -2208,7 +2208,7 @@ class TAAP(StructuredNode):
 
 
 def update_remote():
-    from neomodel import config, db
+    from neomodel import get_config, db
     print("Updating remote connection")
 
     # Construct path to .env.remote file
@@ -2233,26 +2233,26 @@ def update_remote():
     if not database_url:
         raise ValueError("Required environment variable DATABASE_URL must be set")
 
-    config.DATABASE_NAME = neo4j_database
-    config.DATABASE_URL = database_url
+    get_config().database_name = neo4j_database
+    get_config().database_url = database_url
     db.install_all_labels()
 
-    print(f"Config set - DATABASE_NAME: {config.DATABASE_NAME}, DATABASE_URL: {config.DATABASE_URL}")
+    print(f"Config set - DATABASE_NAME: {get_config().database_name}, DATABASE_URL: {get_config().database_url}")
 
 
 def set_connection():
 
-    from neomodel import config
+    from neomodel import get_config
 
     dotenv_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), '.env.development')
     load_dotenv(dotenv_path)
 
 
-    config.DATABASE_NAME = os.environ.get('NEO4J_DATABASE', 'ati')
+    get_config().database_name = os.environ.get('NEO4J_DATABASE', 'ati')
 
-    config.DATABASE_URL = os.environ.get('DATABASE_URL')
-    print(config.DATABASE_NAME)
-    print(f"NEO4J_DATABASE: {config.DATABASE_URL}")
+    get_config().database_url = os.environ.get('DATABASE_URL')
+    print(get_config().database_name)
+    print(f"NEO4J_DATABASE: {get_config().database_url}")
 
 
 # set_connection()

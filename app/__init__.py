@@ -22,7 +22,7 @@ def create_app():
     from datetime import timedelta
     from flask import Flask
     from flask_cors import CORS
-    from neomodel import config, db
+    from neomodel import get_config, db
     from app.endpoints.data_api import data_api_endpoints
     from app.endpoints.react_endpoints import react_pages
     from app.auth import auth_endpoints
@@ -48,7 +48,7 @@ def create_app():
     app.config.from_object(Config)
 
     # Set up database connection
-    config.DATABASE_URL = app.config['DATABASE_URL']
+    get_config().database_url = app.config['DATABASE_URL']
 
     is_production = os.environ.get('FLASK_ENV', 'development') == 'production'
 
