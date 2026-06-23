@@ -3,8 +3,6 @@
 #
 from datetime import date
 
-from pycparser.c_ast import Return
-
 from app.database.graph_schema import *
 from app.database.class_factory import implementation_classes, documentation_classes, documentation_relationships
 from app.database.queries.implementation.read import get_goal_node

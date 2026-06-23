@@ -129,8 +129,7 @@ function Login() {
                     </form>
 
                     <Text fontSize="xs" color="gray.500" mt={4}>
-                        Access is managed by the ATI coordinator. Contact them for an
-                        account or a password reset.
+                        email fontaine@sfsu.edu for access.
                     </Text>
                 </Box>
             </Box>

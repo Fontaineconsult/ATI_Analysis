@@ -20,6 +20,14 @@ logging.basicConfig(
     ]
 )
 
+# The neo4j 6.x driver logs EVERY server notification (e.g. "null value eliminated
+# in set function", "property key does not exist") at WARNING. Under DEBUG that
+# floods wfastcgi.log and buries real errors. Clamp the driver/server loggers to
+# ERROR — genuine failures still surface as raised exceptions (logged via the app's
+# error path), not as these informational notification records.
+for _noisy in ("neo4j", "neo4j.notifications", "neo4j.pool", "neobolt", "werkzeug"):
+    logging.getLogger(_noisy).setLevel(logging.ERROR)
+
 # Add Seq handler
 try:
     from seqlog.structured_logging import SeqLogHandler
@@ -35,29 +43,40 @@ logger = logging.getLogger(__name__)
 try:
     from app import create_app
     from flask import request, has_request_context
+    from werkzeug.exceptions import HTTPException
 
     app = create_app()
 
     @app.errorhandler(Exception)
     def handle_exception(e):
-        # Build context if in a request
-        extra = {}
-        if has_request_context():
-            extra = {
-                'RequestPath': request.path,
-                'RequestMethod': request.method
-            }
+        method = request.method if has_request_context() else '?'
+        path = request.path if has_request_context() else '?'
 
-        logger.error(f"Unhandled exception: {str(e)}", exc_info=True, extra=extra)
+        # Werkzeug HTTPExceptions (404, 401, 405, 400, ...) are normal HTTP
+        # outcomes, not server faults. Return them UNCHANGED so the client gets
+        # the correct status code -- the previous handler rewrote EVERY one to a
+        # 500 and logged it with a full traceback (that's why a missing URL
+        # showed up as an "Unhandled exception"). Log quietly instead: INFO for
+        # client 4xx, ERROR only for genuine 5xx, and no traceback.
+        if isinstance(e, HTTPException):
+            code = e.code or 500
+            logger.log(
+                logging.ERROR if code >= 500 else logging.INFO,
+                "HTTP %s on %s %s: %s", code, method, path, e.name,
+            )
+            return e
+
+        # Anything else is an unexpected server fault: full traceback + 500.
+        logger.error(
+            "Unhandled exception on %s %s: %s", method, path, e,
+            exc_info=True,
+            extra={'RequestPath': path, 'RequestMethod': method},
+        )
         return "Internal Server Error", 500
 
     application = app
 
-    # Now you can use different log levels
-    logger.debug("Application starting up")
-    logger.info("Application initialized")
-    logger.warning("This is a warning")
-    logger.error("Application started successfully")  # Using error level to ensure it shows
+    logger.info("ATI application initialized (pid %s)", os.getpid())
 
 except Exception as e:
     logger.error(f"Failed to start application: {str(e)}", exc_info=True)

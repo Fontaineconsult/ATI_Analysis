@@ -37,7 +37,11 @@ class EvidenceAPI(MethodView):
             return make_response(status="error", error=str(e)), 400
         except NotFoundError as e:
             return make_response(status="error", error=str(e)), 404
-        except ApiError as e:
+        except (ApiError, CrudError) as e:
+            # CrudError is the wrapper fetch_evidence_for_working_group raises for any
+            # query failure (e.g. a missing APOC procedure on the target DB). It is a
+            # plain Exception, not an ApiError subclass, so without this branch it
+            # escaped uncaught and became an opaque raw 500 with no diagnostic body.
             return make_response(status="error", error="Failed to fetch evidence", data=str(e)), 500
 
     def post(self):

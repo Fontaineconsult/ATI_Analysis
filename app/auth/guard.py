@@ -15,7 +15,6 @@ def require_login():
     AUTH_ENFORCED is the global kill-switch: off (the dev default) makes this
     guard a no-op end to end.
     """
-    print(current_app.config.get('AUTH_ENFORCED'))
     if not current_app.config.get('AUTH_ENFORCED', False):
         return None
     if request.method == 'OPTIONS':

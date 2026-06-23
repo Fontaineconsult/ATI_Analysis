@@ -14,7 +14,13 @@ from app.data_config import (trajectory_choices, asset_classes, asset_scopes, ta
                              functions, component_kinds, coverage_domains, audiences, interface_provenances,
                              descriptor_kinds)
 
-dotenv_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'app', '.env.development')
+# Load app/.env.<FLASK_ENV> at import so standalone use of this module has DB
+# config. FLASK_ENV-aware (matching web_config.py) so a production deploy loads
+# .env.production instead of being pinned to .env.development. load_dotenv uses
+# override=False, and this module is imported BEFORE web_config in create_app,
+# so the file picked here is the one that wins — it MUST honor FLASK_ENV.
+_env_name = os.environ.get('FLASK_ENV', 'development')
+dotenv_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), f'.env.{_env_name}')
 load_dotenv(dotenv_path)
 
 
@@ -2244,7 +2250,8 @@ def set_connection():
 
     from neomodel import get_config
 
-    dotenv_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), '.env.development')
+    env_name = os.environ.get('FLASK_ENV', 'development')
+    dotenv_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), f'.env.{env_name}')
     load_dotenv(dotenv_path)
 
 
@@ -2259,7 +2266,8 @@ def set_connection():
 
 if __name__=="__main__":
 
-    dotenv_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), '.env.development')
+    env_name = os.environ.get('FLASK_ENV', 'development')
+    dotenv_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), f'.env.{env_name}')
     load_dotenv(dotenv_path)
     set_connection()
     from neomodel import db
