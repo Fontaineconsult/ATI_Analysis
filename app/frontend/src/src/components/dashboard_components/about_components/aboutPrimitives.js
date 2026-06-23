@@ -4,6 +4,7 @@ import {
     Heading,
     Text,
     Badge,
+    Image,
     Table,
     Thead,
     Tbody,
@@ -101,6 +102,38 @@ export const CodePattern = ({ children }) => (
         whiteSpace="pre"
     >
         {children}
+    </Box>
+);
+
+// A diagram with an accessible caption, framed to match the Card language.
+// `src` is an imported SVG/PNG URL; `alt` is the screen-reader summary (the SVG's
+// own <title>/<desc> aren't exposed when it's loaded as an <img>, so alt carries
+// the meaning). The surrounding prose holds the detail — the figure is supplementary.
+export const Figure = ({ src, alt, caption, maxW = '720px' }) => (
+    <Box as="figure" m={0} my={2}>
+        <Box
+            bg="white"
+            borderWidth="1px"
+            borderColor="gray.200"
+            borderRadius="md"
+            p={3}
+            overflowX="auto"
+        >
+            <Image
+                src={src}
+                alt={alt}
+                width="100%"
+                maxW={maxW}
+                mx="auto"
+                height="auto"
+                display="block"
+            />
+        </Box>
+        {caption && (
+            <Text as="figcaption" fontSize="xs" color="gray.500" mt={1.5} textAlign="center">
+                {caption}
+            </Text>
+        )}
     </Box>
 );
 

@@ -1,7 +1,8 @@
 import React from 'react';
 import { Alert, AlertIcon, List, ListItem } from '@chakra-ui/react';
 import { useSettings } from '../../../context/SettingsContext';
-import { AboutPage, Card, Section, Para, CodePattern, VocabTable } from './aboutPrimitives';
+import { AboutPage, Card, Section, Para, CodePattern, VocabTable, Figure } from './aboutPrimitives';
+import assetsInterfacesDiagram from '../../../assets/img/assets-interfaces.svg';
 
 const ASSET_CLASS_NOTES = {
     institutional_system: 'Enterprise systems the institution runs — LMS, SIS, portals.',
@@ -81,6 +82,12 @@ function AssetsInterfacesTab() {
                     institution</b> (Title II §35.205). The model is built to make that rise
                     visible rather than letting it hide.
                 </Para>
+                <Figure
+                    src={assetsInterfacesDiagram}
+                    alt="The inventory model: ICT at three grains — Asset, Interface, Component. Stewardship (procured, developed, maintained, used by a Person or OrgUnit) sits on the Asset; remediation accountability (remediates interface, uses tool, owned by, accountable working group) sits on the work. An asset stewarded with no remediating implementation is the elevation signal where responsibility rises to the institution."
+                    caption="Three grains of ICT, with stewardship on the Asset and remediation on the work — and the elevation signal where the two diverge."
+                    maxW="900px"
+                />
             </Card>
 
             <Card title="Assets — stewardship, not ownership">

@@ -1,0 +1,83 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 600" font-family="Roboto, 'Segoe UI', Helvetica, Arial, sans-serif" role="img" aria-labelledby="t d">
+  <title id="t">The annual rhythm</title>
+  <desc id="d">Each academic year, per campus, the app cycles through five stages: Rollover, Prioritize, Work and Document, Review, and Report.</desc>
+
+  <defs>
+    <marker id="ring" markerWidth="11" markerHeight="11" refX="5" refY="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#A0AEC0"/></marker>
+    <style>
+      .h1   { fill:#202C4A; font-size:24px; font-weight:700; }
+      .sub  { fill:#4A5568; font-size:13px; }
+      .nT   { font-size:14px; font-weight:700; }
+      .nD   { font-size:10px; fill:#4A5568; }
+      .badge{ font-size:13px; font-weight:800; fill:#ffffff; }
+    </style>
+  </defs>
+
+  <rect width="880" height="600" fill="#ffffff"/>
+
+  <text class="h1" x="28" y="42">The annual rhythm</text>
+  <rect x="28" y="54" width="80" height="4" rx="2" fill="#4966A4"/>
+  <rect x="108" y="54" width="40" height="4" rx="2" fill="#635098"/>
+  <rect x="148" y="54" width="40" height="4" rx="2" fill="#DB5850"/>
+
+  <!-- ring -->
+  <circle cx="440" cy="330" r="200" fill="none" stroke="#E2E8F0" stroke-width="2"/>
+  <path d="M495 138 A 200 200 0 0 1 606 218" fill="none" stroke="#A0AEC0" stroke-width="2" marker-end="url(#ring)"/>
+  <path d="M640 323 A 200 200 0 0 1 598 453" fill="none" stroke="#A0AEC0" stroke-width="2" marker-end="url(#ring)"/>
+  <path d="M508 518 A 200 200 0 0 1 372 518" fill="none" stroke="#A0AEC0" stroke-width="2" marker-end="url(#ring)"/>
+  <path d="M282 453 A 200 200 0 0 1 240 323" fill="none" stroke="#A0AEC0" stroke-width="2" marker-end="url(#ring)"/>
+  <path d="M274 218 A 200 200 0 0 1 385 138" fill="none" stroke="#A0AEC0" stroke-width="2" marker-end="url(#ring)"/>
+
+  <!-- center -->
+  <circle cx="440" cy="330" r="94" fill="#F7FAFC" stroke="#CBD5E0"/>
+  <text x="440" y="318" text-anchor="middle" font-size="16px" font-weight="700" fill="#354A7A">ANNUAL</text>
+  <text x="440" y="340" text-anchor="middle" font-size="16px" font-weight="700" fill="#354A7A">RHYTHM</text>
+  <text x="440" y="362" text-anchor="middle" font-size="10.5px" fill="#718096">per year &#183; per campus</text>
+
+  <!-- node 1 Rollover -->
+  <rect x="352" y="96" width="176" height="68" rx="10" fill="#ffffff" stroke="#E2E8F0" stroke-width="1.5"/>
+  <rect x="352" y="96" width="176" height="5" rx="2.5" fill="#4966A4"/>
+  <circle cx="374" cy="124" r="13" fill="#4966A4"/><text class="badge" x="374" y="129" text-anchor="middle">1</text>
+  <text class="nT" x="396" y="122" fill="#354A7A">Rollover</text>
+  <text class="nD" x="396" y="138">Evidence duplicated forward for</text>
+  <text class="nD" x="396" y="151">every campus; plans stubbed;</text>
+  <text class="nD" x="396" y="160" font-size="9px">review flags reset.</text>
+
+  <!-- node 2 Prioritize -->
+  <rect x="542" y="234" width="176" height="68" rx="10" fill="#ffffff" stroke="#E2E8F0" stroke-width="1.5"/>
+  <rect x="542" y="234" width="176" height="5" rx="2.5" fill="#635098"/>
+  <circle cx="564" cy="262" r="13" fill="#635098"/><text class="badge" x="564" y="267" text-anchor="middle">2</text>
+  <text class="nT" x="586" y="260" fill="#483A70">Prioritize</text>
+  <text class="nD" x="586" y="276">Each working group picks the</text>
+  <text class="nD" x="586" y="289">indicators to focus on and</text>
+  <text class="nD" x="586" y="298" font-size="9px">records its rationale.</text>
+
+  <!-- node 3 Work & Document -->
+  <rect x="470" y="458" width="176" height="68" rx="10" fill="#ffffff" stroke="#E2E8F0" stroke-width="1.5"/>
+  <rect x="470" y="458" width="176" height="5" rx="2.5" fill="#DB5850"/>
+  <circle cx="492" cy="486" r="13" fill="#DB5850"/><text class="badge" x="492" y="491" text-anchor="middle">3</text>
+  <text class="nT" x="514" y="484" fill="#A03C36">Work &amp; Document</text>
+  <text class="nD" x="514" y="500">Implementations grow; evidence</text>
+  <text class="nD" x="514" y="513">accumulates; progress updates</text>
+  <text class="nD" x="514" y="522" font-size="9px">record trajectory.</text>
+
+  <!-- node 4 Review -->
+  <rect x="234" y="458" width="176" height="68" rx="10" fill="#ffffff" stroke="#E2E8F0" stroke-width="1.5"/>
+  <rect x="234" y="458" width="176" height="5" rx="2.5" fill="#2F855A"/>
+  <circle cx="256" cy="486" r="13" fill="#2F855A"/><text class="badge" x="256" y="491" text-anchor="middle">4</text>
+  <text class="nT" x="278" y="484" fill="#22543D">Review</text>
+  <text class="nD" x="278" y="500">Designated reviewers confirm</text>
+  <text class="nD" x="278" y="513">each YSE&#8217;s status and evidence</text>
+  <text class="nD" x="278" y="522" font-size="9px">are defensible.</text>
+
+  <!-- node 5 Report -->
+  <rect x="162" y="234" width="176" height="68" rx="10" fill="#ffffff" stroke="#E2E8F0" stroke-width="1.5"/>
+  <rect x="162" y="234" width="176" height="5" rx="2.5" fill="#2A3A62"/>
+  <circle cx="184" cy="262" r="13" fill="#2A3A62"/><text class="badge" x="184" y="267" text-anchor="middle">5</text>
+  <text class="nT" x="206" y="260" fill="#2A3A62">Report</text>
+  <text class="nD" x="206" y="276">Reports &amp; exports generated for</text>
+  <text class="nD" x="206" y="289">the committee, leadership, and</text>
+  <text class="nD" x="206" y="298" font-size="9px">the Chancellor&#8217;s Office.</text>
+
+  <text x="440" y="576" text-anchor="middle" font-size="12px" fill="#718096">History is never overwritten &#8212; each turn of the cycle adds a new year&#8217;s slice beside the last.</text>
+</svg>

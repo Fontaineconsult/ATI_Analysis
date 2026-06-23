@@ -23,6 +23,7 @@ import AtiExplorer from './components/AtiExplorer';
 import Dashboard from './components/Dashboard';
 import About from './components/About';
 import SubNavbar from './components/SubNavbar';
+import YseAvailabilityBanner from './components/functional_components/YseAvailabilityBanner';
 import './styles/App.css';
 import { useSettings } from "./context/SettingsContext";
 import sfbrnLogoLight from './assets/img/sfbrn-logo-light.svg';
@@ -443,6 +444,9 @@ function AppContent() {
                     maxW="container.xl"
                     px={6}
                 >
+                    {/* Global "no Year Success Evidence for this campus/year" banner — shows
+                        on every YSE-displaying view; renders nothing when evidence exists. */}
+                    <YseAvailabilityBanner />
                     <Routes>
                         <Route path="ati-explorer/*" element={<AtiExplorer />} />
                         <Route path="dashboard/*" element={<Dashboard />} />

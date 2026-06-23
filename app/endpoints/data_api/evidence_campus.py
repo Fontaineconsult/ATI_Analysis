@@ -45,7 +45,9 @@ class EvidenceAPI(MethodView):
             return make_response(status="error", error=str(e)), 400
         except NotFoundError as e:
             return make_response(status="error", error=str(e)), 404
-        except ApiError as e:
+        except (ApiError, CrudError) as e:
+            # CrudError is what fetch_evidence_for_working_group raises for a real query
+            # failure; without this it escaped uncaught and became an opaque raw 500.
             return make_response(status="error", error="Failed to fetch evidence", data=str(e)), 500
 
     def post(self):

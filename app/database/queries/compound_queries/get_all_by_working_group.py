@@ -383,13 +383,19 @@ def fetch_evidence_for_working_group(working_group, academic_year):
     }) AS jsonResults
 """
 
+    # Only the DB call is wrapped — a real query/driver failure surfaces as CrudError (500),
+    # but "no rows" is a legitimate empty selection (e.g. a year/campus with no evidence) and
+    # must NOT become a 500. Return a valid empty shape so the read path stays 200 and the
+    # frontend can render its own "no evidence" state. (Do not swallow real errors here — see
+    # the no-suppress-500 convention.)
     try:
         results, meta = db.cypher_query(query, {'working_group': working_group, 'academic_year': academic_year})
-        if not results:
-            raise NotFoundError(f"No data found for the working group '{working_group}' and academic year '{academic_year}'.")
-        return json.loads(results[0][0])
     except Exception as e:
         raise CrudError(f"Failed to fetch evidence: {str(e)}")
+
+    if not results or not results[0] or results[0][0] is None:
+        return {"workingGroup": working_group, "goals": []}
+    return json.loads(results[0][0])
 
 if __name__=='__main__':
     print(fetch_evidence_for_working_group("Procurement", "2023-2024"))

@@ -2,7 +2,9 @@ import React, { useContext } from 'react';
 import { Box, Flex, List, ListItem, Spinner, Text, Badge } from '@chakra-ui/react';
 import { StatusLevelContext } from '../../../context/StatusLevelContext';
 import { getStatusColor } from '../../../services/utils/statusColors';
-import { AboutPage, Card, Section, Para, CodePattern, TermDef } from './aboutPrimitives';
+import { AboutPage, Card, Section, Para, CodePattern, TermDef, Figure } from './aboutPrimitives';
+import coreChainDiagram from '../../../assets/img/core-chain.svg';
+import maturityLadderDiagram from '../../../assets/img/maturity-ladder.svg';
 
 // The conceptual spine of the graph: governance → goals → indicators →
 // year-scoped evidence → status maturity. Status-level definitions render live
@@ -20,6 +22,12 @@ function CoreModelTab() {
                     Everything in the app hangs off one chain. Read it left to right as
                     &quot;why → what → how measured → what we did → how mature&quot;:
                 </Para>
+                <Figure
+                    src={coreChainDiagram}
+                    alt="The core chain: Governance informs a Goal, which is supported by a Success Indicator. YearSuccessEvidence, the hub, tracks that indicator one per year per campus, is evidenced by implementations, and carries a maturity Status Level. It is scoped by Academic Year and Campus."
+                    caption="The core chain — requirements are shared and stable; evidence and status are re-recorded every year, per campus."
+                    maxW="900px"
+                />
                 <CodePattern>
 {`Law / Directive / Policy ──informs──▶ Goal ──supported_by──▶ SuccessIndicator
                                                                     ▲
@@ -136,6 +144,12 @@ function CoreModelTab() {
                     <i>documentation</i> at that level. The definitions below are live from the
                     database — they are the actual rubric used at review time.
                 </Para>
+                <Figure
+                    src={maturityLadderDiagram}
+                    alt="A six-rung ascending staircase on a red-to-green ramp: Not Started (0), Initiated (1), Defined (2), Established (3, the baseline target), Managed (4), Optimizing (5). Status is a position on a journey, not a done/not-done flag."
+                    caption="Status is a six-rung capability-maturity ladder — Established is the baseline target; every rung requires evidence."
+                    maxW="820px"
+                />
                 {statusLoading ? (
                     <Flex align="center" gap={2} py={3}>
                         <Spinner size="sm" color="teal.500" />

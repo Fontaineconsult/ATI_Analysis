@@ -1,3 +1,7 @@
+// SUPERSEDED (2026-06): the View Reports landing now derives its working-group / status /
+// unassigned counts from reportMetrics.computeReportMetrics, rendered by
+// ReportMetricsOverview. This component is no longer mounted by ReportMasterList and is
+// kept only to keep that redesign diff reviewable — safe to delete in a follow-up.
 import React, { useContext, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {

@@ -1,0 +1,108 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 560" font-family="Roboto, 'Segoe UI', Helvetica, Arial, sans-serif" role="img" aria-labelledby="t d">
+  <title id="t">The core chain — from mandate to maturity</title>
+  <desc id="d">Governance informs Goals, which are measured by Success Indicators. YearSuccessEvidence tracks one indicator per academic year per campus, is evidenced by implementations, and carries a maturity status level.</desc>
+
+  <defs>
+    <marker id="ar" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0,0 L9,5 L0,10 z" fill="#4A5568"/></marker>
+    <style>
+      .h1   { fill:#202C4A; font-size:24px; font-weight:700; }
+      .sub  { fill:#4A5568; font-size:13px; }
+      .boxT { font-size:15px; font-weight:700; }
+      .boxS { font-size:11px; }
+      .rel  { fill:#4A5568; font-size:12px; font-style:italic; }
+      .relS { fill:#4A5568; font-size:10.5px; font-style:italic; }
+      .lab  { fill:#718096; font-size:11.5px; font-weight:600; letter-spacing:0.04em; }
+      .foot { fill:#718096; font-size:12px; }
+      .edge { stroke:#4A5568; stroke-width:1.8; fill:none; }
+    </style>
+  </defs>
+
+  <rect width="1080" height="560" fill="#ffffff"/>
+
+  <!-- header -->
+  <text class="h1" x="28" y="44">The core chain — from mandate to maturity</text>
+  <rect x="28" y="56" width="80" height="4" rx="2" fill="#4966A4"/>
+  <rect x="108" y="56" width="40" height="4" rx="2" fill="#635098"/>
+  <rect x="148" y="56" width="40" height="4" rx="2" fill="#DB5850"/>
+  <text class="sub" x="28" y="82">Everything in the app hangs off this one chain. Read it as &#8220;why &#8594; what &#8594; how measured &#8594; what we did &#8594; how mature.&#8221;</text>
+
+  <!-- requirement bracket -->
+  <path d="M40 116 L40 108 L752 108 L752 116" stroke="#A7B7D7" stroke-width="1.4" fill="none"/>
+  <text class="lab" x="396" y="102" text-anchor="middle" fill="#5A6B8C">REQUIREMENTS &#183; shared across campuses, stable year to year</text>
+
+  <!-- spine: Governance -> Goal -> Success Indicator -->
+  <g>
+    <rect x="40" y="128" width="180" height="58" rx="9" fill="#F4F6FB" stroke="#4966A4" stroke-width="1.6"/>
+    <text class="boxT" x="130" y="153" text-anchor="middle" fill="#354A7A">Governance</text>
+    <text class="boxS" x="130" y="172" text-anchor="middle" fill="#5A6B8C">Law &#183; Directive &#183; Policy</text>
+
+    <rect x="300" y="128" width="150" height="58" rx="9" fill="#F6F4FA" stroke="#635098" stroke-width="1.6"/>
+    <text class="boxT" x="375" y="153" text-anchor="middle" fill="#483A70">Goal</text>
+    <text class="boxS" x="375" y="172" text-anchor="middle" fill="#7A6BA3">broad objective</text>
+
+    <rect x="542" y="128" width="210" height="58" rx="9" fill="#EDE9F4" stroke="#635098" stroke-width="2"/>
+    <text class="boxT" x="647" y="153" text-anchor="middle" fill="#3A2F5A">Success Indicator</text>
+    <text class="boxS" x="647" y="172" text-anchor="middle" fill="#7A6BA3">numbered benchmark</text>
+  </g>
+
+  <!-- spine arrows -->
+  <path class="edge" d="M222 157 L296 157" marker-end="url(#ar)"/>
+  <text class="rel" x="259" y="150" text-anchor="middle">informs</text>
+  <path class="edge" d="M452 157 L538 157" marker-end="url(#ar)"/>
+  <text class="rel" x="495" y="150" text-anchor="middle">supported_by</text>
+
+  <!-- tracks: YSE up to Success Indicator -->
+  <path class="edge" d="M640 318 L644 192" marker-end="url(#ar)"/>
+  <text class="rel" x="654" y="262" text-anchor="start">tracks</text>
+
+  <!-- HUB: YearSuccessEvidence -->
+  <rect x="470" y="320" width="300" height="94" rx="12" fill="#F0FAF3" stroke="#2F855A" stroke-width="2.4"/>
+  <text x="620" y="352" text-anchor="middle" font-size="18px" font-weight="700" fill="#22543D">YearSuccessEvidence</text>
+  <text x="620" y="372" text-anchor="middle" font-size="12px" fill="#2F855A" font-weight="600">the heart of the system</text>
+  <text x="620" y="394" text-anchor="middle" font-size="11.5px" fill="#48916A">one per Success Indicator &#215; Academic Year &#215; Campus</text>
+
+  <!-- implementations -> YSE -->
+  <rect x="40" y="320" width="300" height="104" rx="10" fill="#FCF1F0" stroke="#DB5850" stroke-width="1.8"/>
+  <text class="boxT" x="190" y="346" text-anchor="middle" fill="#A03C36">Implementations</text>
+  <text x="190" y="368" text-anchor="middle" font-size="11.5px" fill="#9a4640">Process &#183; Project &#183; Procedure</text>
+  <text x="190" y="384" text-anchor="middle" font-size="11.5px" fill="#9a4640">Service &#183; Internal Policy</text>
+  <text x="190" y="400" text-anchor="middle" font-size="11.5px" fill="#9a4640">Guidance &#183; Tracking &#183; TAAP</text>
+  <path class="edge" d="M342 366 L466 366" marker-end="url(#ar)"/>
+  <text class="rel" x="404" y="358" text-anchor="middle">is_evidence_for</text>
+
+  <!-- YSE -> Status -->
+  <rect x="836" y="330" width="200" height="70" rx="10" fill="#EAF6EE" stroke="#2F855A" stroke-width="1.8"/>
+  <text class="boxT" x="936" y="356" text-anchor="middle" fill="#22543D">Status Level</text>
+  <text class="boxS" x="936" y="374" text-anchor="middle" fill="#48916A">a maturity rung</text>
+  <path class="edge" d="M772 366 L832 366" marker-end="url(#ar)"/>
+  <text class="rel" x="802" y="358" text-anchor="middle">status_is</text>
+
+  <!-- maturity ramp under status -->
+  <g>
+    <rect x="836" y="418" width="26" height="13" fill="#E53E3E"/>
+    <rect x="862" y="418" width="26" height="13" fill="#ED8936"/>
+    <rect x="888" y="418" width="26" height="13" fill="#ECC94B"/>
+    <rect x="914" y="418" width="26" height="13" fill="#41b441"/>
+    <rect x="940" y="418" width="26" height="13" fill="#246f24"/>
+    <rect x="966" y="418" width="26" height="13" fill="#157744"/>
+    <text x="836" y="448" font-size="10.5px" fill="#718096">Not Started</text>
+    <text x="992" y="448" font-size="10.5px" fill="#718096" text-anchor="end">Optimizing</text>
+    <path d="M900 442 L928 442" stroke="#A0AEC0" stroke-width="1.2" marker-end="url(#ar)"/>
+  </g>
+
+  <!-- scope chips -->
+  <rect x="486" y="462" width="140" height="44" rx="9" fill="#F4F6FB" stroke="#7E93BF" stroke-width="1.5"/>
+  <text class="boxT" x="556" y="482" text-anchor="middle" font-size="13px" fill="#354A7A">Academic Year</text>
+  <text class="boxS" x="556" y="497" text-anchor="middle" fill="#5A6B8C">the reporting cycle</text>
+
+  <rect x="640" y="462" width="130" height="44" rx="9" fill="#F4F6FB" stroke="#7E93BF" stroke-width="1.5"/>
+  <text class="boxT" x="705" y="482" text-anchor="middle" font-size="13px" fill="#354A7A">Campus</text>
+  <text class="boxS" x="705" y="497" text-anchor="middle" fill="#5A6B8C">the institution scope</text>
+
+  <path class="edge" d="M556 416 L556 458" marker-end="url(#ar)"/>
+  <text class="relS" x="562" y="440" text-anchor="start">evidence_in_year</text>
+  <path class="edge" d="M705 416 L705 458" marker-end="url(#ar)"/>
+  <text class="relS" x="711" y="440" text-anchor="start">evidence_at_campus</text>
+
+  <text class="foot" x="28" y="538">Requirements (goals, indicators) are <tspan font-weight="700" fill="#635098">shared &amp; stable</tspan>; evidence and status are <tspan font-weight="700" fill="#2F855A">re-recorded every year, per campus</tspan> — so history is never overwritten and year-over-year comparison is built in.</text>
+</svg>

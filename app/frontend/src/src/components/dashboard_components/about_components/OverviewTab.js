@@ -2,7 +2,9 @@ import React from 'react';
 import { Alert, AlertIcon, List, ListItem, Box } from '@chakra-ui/react';
 import { Link as RouterLink, useParams } from 'react-router-dom';
 import { Link } from '@chakra-ui/react';
-import { AboutPage, Card, Section, Para } from './aboutPrimitives';
+import { AboutPage, Card, Section, Para, Figure } from './aboutPrimitives';
+import ontologyMapDiagram from '../../../assets/img/ontology-map.svg';
+import annualRhythmDiagram from '../../../assets/img/annual-rhythm.svg';
 
 function OverviewTab() {
     const { campus } = useParams();
@@ -184,6 +186,12 @@ function OverviewTab() {
                     captioning service implements, which this person owns</i> — and equally to
                     notice when a link in that chain is missing.
                 </Para>
+                <Figure
+                    src={ontologyMapDiagram}
+                    alt="The lay of the land: every node type sorted into eight role bands, top to bottom — Governance, Indicators, Implementation, Evidence and maturity, Assets and interfaces, People and org, Documentation, and a self-describing Meta layer. Reads as why, measured, done, recorded."
+                    caption="The lay of the land — every node type grouped by the role it plays, read top to bottom as why → measured → done → recorded."
+                    maxW="980px"
+                />
                 <Para>Three framing ideas recur everywhere:</Para>
                 <List spacing={2} pl={5} styleType="disc" fontSize="sm" color="gray.700">
                     <ListItem>
@@ -238,6 +246,12 @@ function OverviewTab() {
             </Card>
 
             <Card title="The annual rhythm">
+                <Figure
+                    src={annualRhythmDiagram}
+                    alt="A five-stage yearly cycle: Rollover, Prioritize, Work and Document, Review, Report — then back to Rollover. Runs once per academic year, per campus; each turn adds a new year's slice beside the last."
+                    caption="The yearly cycle, run once per academic year per campus — history is never overwritten."
+                    maxW="640px"
+                />
                 <Box fontSize="sm" color="gray.700">
                     <List spacing={1} pl={5} styleType="decimal">
                         <ListItem>

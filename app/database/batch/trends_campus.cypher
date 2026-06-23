@@ -69,6 +69,7 @@ WITH indicator,
 
 RETURN {
          indicator_number: indicator.number,
+         composite_key: indicator.composite_key,
          evidence_year_identifier: evidence_current.year_identifier,
          campus: campus_current.abbreviation,
          current_value: current_value,

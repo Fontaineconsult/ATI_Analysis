@@ -27,7 +27,14 @@ class IndicatorsAPI(MethodView):
             # Fetch success indicators using the service function
             indicators_data = fetch_success_indicators_for_working_group(academic_year)
 
-            return make_response(status='success', data=json.loads(indicators_data[0][0])), 200
+            # No rows is a legitimate empty selection (a year with no data) — return an empty
+            # payload rather than IndexError-ing on indicators_data[0][0] (which became a 500).
+            payload = (
+                json.loads(indicators_data[0][0])
+                if indicators_data and indicators_data[0] and indicators_data[0][0] is not None
+                else []
+            )
+            return make_response(status='success', data=payload), 200
 
 
         except NotFoundError as e:

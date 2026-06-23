@@ -284,10 +284,11 @@ class TrendsAPI(MethodView):
             # Use the new function to get connected status levels
             previous_year = request.args.get('previous_year')
             current_year = request.args.get('current_year')
+            # YSE is per-campus; the trend MUST be campus-scoped or the current<->past
+            # comparison becomes a cross-campus cartesian (see trends.cypher).
+            campus = request.args.get('campus')
 
-            print("SDFSDF", previous_year, current_year)
-
-            trends = get_evidence_trends(previous_year, current_year)
+            trends = get_evidence_trends(previous_year, current_year, campus_abbreviation=campus)
 
             # The data is already in the desired format
             return make_response(status='success', data=trends), 200

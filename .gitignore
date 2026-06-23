@@ -35,3 +35,9 @@ app.log
 app-*.log
 app-*.log.*
 wfastcgi.log
+
+# Windows reserved-name artifacts: stray `nul` files left by `>nul` / `2>nul` redirects
+# run under cmd/PowerShell. `nul` is a reserved device name, so a real file by that name
+# should never exist — ignore it at any depth (currently /nul, /app/database/nul,
+# /app/database/tools/report_export/nul).
+nul

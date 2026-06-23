@@ -113,7 +113,7 @@ def get_connected_status_levels() -> list:
         raise CrudError(f"Error retrieving connected status levels: {e}")
 
 
-def get_evidence_trends(past_year, current_year, working_group=None):
+def get_evidence_trends(past_year, current_year, working_group=None, campus_abbreviation=None):
     """
     Looks at previous year and current year and determines, per success indicator,
     if the current is lower, same or higher than the past.
@@ -121,6 +121,10 @@ def get_evidence_trends(past_year, current_year, working_group=None):
     :param past_year: The earlier academic year to compare (e.g., "2022-2023")
     :param current_year: The later academic year to compare (e.g., "2023-2024")
     :param working_group: Optional - specific working group name. If None, returns all three groups.
+    :param campus_abbreviation: Campus to scope the comparison to (e.g., "sfsu"). YSE is
+        per-campus, so this MUST be supplied for a correct per-campus trend; passing None
+        compares an indicator's current evidence against every campus's past evidence
+        (a cross-campus cartesian). See trends.cypher.
     :return: Dictionary with trends for each working group or list if single group specified
     """
 
@@ -140,7 +144,8 @@ def get_evidence_trends(past_year, current_year, working_group=None):
             params = {
                 'past_year': past_year,
                 'current_year': current_year,
-                'working_group': working_group
+                'working_group': working_group,
+                'campus_abbreviation': campus_abbreviation
             }
 
             results, meta = db.cypher_query(query, params)
@@ -155,7 +160,8 @@ def get_evidence_trends(past_year, current_year, working_group=None):
             params = {
                 'past_year': past_year,
                 'current_year': current_year,
-                'working_group': wg
+                'working_group': wg,
+                'campus_abbreviation': campus_abbreviation
             }
 
             results, meta = db.cypher_query(query, params)

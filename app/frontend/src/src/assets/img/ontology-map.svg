@@ -1,0 +1,170 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1120 850" font-family="Roboto, 'Segoe UI', Helvetica, Arial, sans-serif" role="img" aria-labelledby="title desc">
+  <title id="title">ATI Knowledge Graph — the lay of the land</title>
+  <desc id="desc">Node types of the ATI knowledge graph grouped into role bands: Governance, Indicators, Implementation, Evidence and Maturity, Assets and Interfaces, People and Org, Documentation, and the self-describing Meta layer.</desc>
+
+  <defs>
+    <style>
+      .band      { rx:12; ry:12; stroke-width:1; }
+      .chip      { rx:9; ry:9; }
+      .chipT     { fill:#ffffff; font-size:14px; font-weight:700; }
+      .chipS     { fill:#ffffff; font-size:10.5px; opacity:0.85; }
+      .pill      { fill:#ffffff; stroke-width:1.5; rx:8; ry:8; }
+      .pillT     { fill:#2D3748; font-size:12.5px; }
+      .h1        { fill:#202C4A; font-size:25px; font-weight:700; }
+      .sub       { fill:#4A5568; font-size:13px; }
+      .scopeT    { fill:#354A7A; font-size:11.5px; font-weight:600; }
+      .scopeB    { fill:#4A5568; font-size:11px; }
+      .foot      { fill:#718096; font-size:11.5px; }
+    </style>
+  </defs>
+
+  <rect x="0" y="0" width="1120" height="850" fill="#ffffff"/>
+
+  <!-- header -->
+  <text class="h1" x="28" y="46">ATI Knowledge Graph — the lay of the land</text>
+  <rect x="28" y="58" width="80" height="4" rx="2" fill="#4966A4"/>
+  <rect x="108" y="58" width="40" height="4" rx="2" fill="#635098"/>
+  <rect x="148" y="58" width="40" height="4" rx="2" fill="#DB5850"/>
+  <text class="sub" x="28" y="84">Every box is a node type. Bands group them by role — top to bottom: why the work exists, how it&#8217;s measured,</text>
+  <text class="sub" x="28" y="101">what gets done, what gets recorded, and the ICT, people, and records behind it all.</text>
+
+  <!-- scope callout -->
+  <rect x="792" y="20" width="300" height="68" rx="10" fill="#F4F6FB" stroke="#C9D3E8"/>
+  <text class="scopeT" x="808" y="42">Scopes everything</text>
+  <text class="scopeB" x="808" y="60">Evidence, Plans &amp; Assets are scoped by</text>
+  <text class="scopeB" x="808" y="76"><tspan font-weight="700" fill="#354A7A">Academic Year &#215; Campus</tspan>, owned by a Working Group.</text>
+
+  <!-- ============ BAND 0  GOVERNANCE ============ -->
+  <g>
+    <rect class="band" x="16" y="116" width="1088" height="76" fill="#F4F6FB" stroke="#C9D3E8"/>
+    <rect class="chip" x="28" y="128" width="176" height="52" fill="#4966A4"/>
+    <text class="chipT" x="44" y="150">GOVERNANCE</text>
+    <text class="chipS" x="44" y="168">the mandate &#183; why</text>
+    <g class="pillT">
+      <rect class="pill" x="216" y="140" width="58" height="28" stroke="#4966A4"/><text x="245" y="158" text-anchor="middle">Law</text>
+      <rect class="pill" x="285" y="140" width="60" height="28" stroke="#4966A4"/><text x="315" y="158" text-anchor="middle">Case</text>
+      <rect class="pill" x="356" y="140" width="92" height="28" stroke="#4966A4"/><text x="402" y="158" text-anchor="middle">Directive</text>
+      <rect class="pill" x="459" y="140" width="124" height="28" stroke="#4966A4"/><text x="521" y="158" text-anchor="middle">External Policy</text>
+      <rect class="pill" x="594" y="140" width="66" height="28" stroke="#4966A4"/><text x="627" y="158" text-anchor="middle">Memo</text>
+      <rect class="pill" x="671" y="140" width="92" height="28" stroke="#4966A4"/><text x="717" y="158" text-anchor="middle">Guideline</text>
+    </g>
+  </g>
+
+  <!-- ============ BAND 1  INDICATORS ============ -->
+  <g>
+    <rect class="band" x="16" y="202" width="1088" height="76" fill="#F6F4FA" stroke="#D3CCE6"/>
+    <rect class="chip" x="28" y="214" width="176" height="52" fill="#635098"/>
+    <text class="chipT" x="44" y="236">INDICATORS</text>
+    <text class="chipS" x="44" y="254">measurable targets</text>
+    <g class="pillT">
+      <rect class="pill" x="216" y="226" width="64" height="28" stroke="#635098"/><text x="248" y="244" text-anchor="middle">Goal</text>
+      <rect class="pill" x="291" y="226" width="156" height="28" stroke="#635098"/><text x="369" y="244" text-anchor="middle">Success Indicator</text>
+    </g>
+    <text x="470" y="245" font-size="11.5px" fill="#8F7DB9" font-style="italic">numbered benchmarks the Chancellor&#8217;s Office measures</text>
+  </g>
+
+  <!-- ============ BAND 2  IMPLEMENTATION ============ -->
+  <g>
+    <rect class="band" x="16" y="288" width="1088" height="76" fill="#FCF1F0" stroke="#F2BDB9"/>
+    <rect class="chip" x="28" y="300" width="176" height="52" fill="#DB5850"/>
+    <text class="chipT" x="44" y="322">IMPLEMENTATION</text>
+    <text class="chipS" x="44" y="340">the work done</text>
+    <g class="pillT">
+      <rect class="pill" x="216" y="312" width="84" height="28" stroke="#DB5850"/><text x="258" y="330" text-anchor="middle">Process</text>
+      <rect class="pill" x="311" y="312" width="78" height="28" stroke="#DB5850"/><text x="350" y="330" text-anchor="middle">Project</text>
+      <rect class="pill" x="400" y="312" width="98" height="28" stroke="#DB5850"/><text x="449" y="330" text-anchor="middle">Procedure</text>
+      <rect class="pill" x="509" y="312" width="80" height="28" stroke="#DB5850"/><text x="549" y="330" text-anchor="middle">Service</text>
+      <rect class="pill" x="600" y="312" width="118" height="28" stroke="#DB5850"/><text x="659" y="330" text-anchor="middle">Internal Policy</text>
+      <rect class="pill" x="729" y="312" width="90" height="28" stroke="#DB5850"/><text x="774" y="330" text-anchor="middle">Guidance</text>
+      <rect class="pill" x="830" y="312" width="82" height="28" stroke="#DB5850"/><text x="871" y="330" text-anchor="middle">Tracking</text>
+      <rect class="pill" x="923" y="312" width="60" height="28" stroke="#DB5850"/><text x="953" y="330" text-anchor="middle">Plan</text>
+      <rect class="pill" x="994" y="312" width="66" height="28" stroke="#DB5850"/><text x="1027" y="330" text-anchor="middle">TAAP</text>
+    </g>
+  </g>
+
+  <!-- ============ BAND 3  EVIDENCE & MATURITY ============ -->
+  <g>
+    <rect class="band" x="16" y="374" width="1088" height="76" fill="#EAF6EE" stroke="#B7E0C2"/>
+    <rect class="chip" x="28" y="386" width="176" height="52" fill="#2F855A"/>
+    <text class="chipT" x="44" y="408">EVIDENCE</text>
+    <text class="chipS" x="44" y="426">recorded progress &#183; maturity</text>
+    <g class="pillT">
+      <rect class="pill" x="216" y="398" width="186" height="28" stroke="#2F855A" fill="#F0FAF3"/><text x="309" y="416" text-anchor="middle" font-weight="700" fill="#22543D">YearSuccessEvidence</text>
+      <rect class="pill" x="413" y="398" width="106" height="28" stroke="#2F855A"/><text x="466" y="416" text-anchor="middle">Status Level</text>
+      <rect class="pill" x="530" y="398" width="130" height="28" stroke="#2F855A"/><text x="595" y="416" text-anchor="middle">Accomplishment</text>
+    </g>
+    <text x="672" y="416" font-size="11.5px" fill="#48916A" font-style="italic">the heart: one per indicator &#215; year &#215; campus</text>
+  </g>
+
+  <!-- ============ BAND 4  ASSETS & INTERFACES ============ -->
+  <g>
+    <rect class="band" x="16" y="460" width="1088" height="76" fill="#EEF1F6" stroke="#C9D3E8"/>
+    <rect class="chip" x="28" y="472" width="176" height="52" fill="#2A3A62"/>
+    <text class="chipT" x="44" y="494">ASSETS &amp; INTERFACES</text>
+    <text class="chipS" x="44" y="512">the ICT inventory</text>
+    <g class="pillT">
+      <rect class="pill" x="216" y="484" width="64" height="28" stroke="#2A3A62"/><text x="248" y="502" text-anchor="middle">Asset</text>
+      <rect class="pill" x="291" y="484" width="88" height="28" stroke="#2A3A62"/><text x="335" y="502" text-anchor="middle">Interface</text>
+      <rect class="pill" x="390" y="484" width="104" height="28" stroke="#2A3A62"/><text x="442" y="502" text-anchor="middle">Component</text>
+      <rect class="pill" x="505" y="484" width="60" height="28" stroke="#2A3A62"/><text x="535" y="502" text-anchor="middle">Tool</text>
+      <rect class="pill" x="576" y="484" width="74" height="28" stroke="#2A3A62"/><text x="613" y="502" text-anchor="middle">Vendor</text>
+    </g>
+    <text x="662" y="502" font-size="11.5px" fill="#5A6B8C" font-style="italic">three grains: Asset &#8594; Interface &#8594; Component</text>
+  </g>
+
+  <!-- ============ BAND 5  PEOPLE & ORG ============ -->
+  <g>
+    <rect class="band" x="16" y="546" width="1088" height="76" fill="#F2F2F3" stroke="#D7D7DA"/>
+    <rect class="chip" x="28" y="558" width="176" height="52" fill="#4A5568"/>
+    <text class="chipT" x="44" y="580">PEOPLE &amp; ORG</text>
+    <text class="chipS" x="44" y="598">who acts &#183; accountability</text>
+    <g class="pillT">
+      <rect class="pill" x="216" y="570" width="72" height="28" stroke="#4A5568"/><text x="252" y="588" text-anchor="middle">Person</text>
+      <rect class="pill" x="299" y="570" width="150" height="28" stroke="#4A5568"/><text x="374" y="588" text-anchor="middle">ATI Working Group</text>
+      <rect class="pill" x="460" y="570" width="106" height="28" stroke="#4A5568"/><text x="513" y="588" text-anchor="middle">Department</text>
+      <rect class="pill" x="577" y="570" width="76" height="28" stroke="#4A5568"/><text x="615" y="588" text-anchor="middle">College</text>
+      <rect class="pill" x="664" y="570" width="74" height="28" stroke="#4A5568"/><text x="701" y="588" text-anchor="middle">Campus</text>
+      <rect class="pill" x="749" y="570" width="64" height="28" stroke="#4A5568"/><text x="781" y="588" text-anchor="middle">Role</text>
+      <rect class="pill" x="824" y="570" width="90" height="28" stroke="#4A5568"/><text x="869" y="588" text-anchor="middle">Dimension</text>
+    </g>
+  </g>
+
+  <!-- ============ BAND 6  DOCUMENTATION ============ -->
+  <g>
+    <rect class="band" x="16" y="632" width="1088" height="76" fill="#F7FAFC" stroke="#E2E8F0"/>
+    <rect class="chip" x="28" y="644" width="176" height="52" fill="#718096"/>
+    <text class="chipT" x="44" y="666">DOCUMENTATION</text>
+    <text class="chipS" x="44" y="684">the records &#183; evidence files</text>
+    <g class="pillT">
+      <rect class="pill" x="216" y="656" width="92" height="28" stroke="#718096"/><text x="262" y="674" text-anchor="middle">Document</text>
+      <rect class="pill" x="319" y="656" width="84" height="28" stroke="#718096"/><text x="361" y="674" text-anchor="middle">Webpage</text>
+      <rect class="pill" x="414" y="656" width="60" height="28" stroke="#718096"/><text x="444" y="674" text-anchor="middle">Note</text>
+      <rect class="pill" x="485" y="656" width="84" height="28" stroke="#718096"/><text x="527" y="674" text-anchor="middle">Message</text>
+      <rect class="pill" x="580" y="656" width="70" height="28" stroke="#718096"/><text x="615" y="674" text-anchor="middle">Metric</text>
+    </g>
+  </g>
+
+  <!-- ============ BAND 7  META / SELF-DESCRIPTION ============ -->
+  <g>
+    <rect class="band" x="16" y="718" width="1088" height="76" fill="#F4F4F6" stroke="#231F20" stroke-dasharray="3 3" stroke-opacity="0.35"/>
+    <rect class="chip" x="28" y="730" width="176" height="52" fill="#231F20"/>
+    <text class="chipT" x="44" y="752">META</text>
+    <text class="chipS" x="44" y="770">the graph describes itself</text>
+    <g class="pillT">
+      <rect class="pill" x="216" y="742" width="84" height="28" stroke="#231F20"/><text x="258" y="760" text-anchor="middle">Principle</text>
+      <rect class="pill" x="311" y="742" width="148" height="28" stroke="#231F20"/><text x="385" y="760" text-anchor="middle">Intellectual Source</text>
+      <rect class="pill" x="470" y="742" width="160" height="28" stroke="#231F20"/><text x="550" y="760" text-anchor="middle">Universal Descriptor</text>
+    </g>
+    <text x="644" y="760" font-size="11.5px" fill="#6b6668" font-style="italic">principles ground the ontology; descriptors hold its help text</text>
+  </g>
+
+  <!-- progression arrow (left margin) -->
+  <g stroke="#A0AEC0" stroke-width="2" fill="none">
+    <path d="M 9 130 L 9 700" marker-end="url(#prog)"/>
+  </g>
+  <defs>
+    <marker id="prog" markerWidth="9" markerHeight="9" refX="4" refY="7" orient="auto"><path d="M1,1 L4,7 L7,1" fill="none" stroke="#A0AEC0" stroke-width="2"/></marker>
+  </defs>
+
+  <text class="foot" x="28" y="826">Read top&#8594;bottom as a flow: a <tspan fill="#4966A4" font-weight="700">mandate</tspan> informs a <tspan fill="#635098" font-weight="700">goal</tspan>, measured by an <tspan fill="#635098" font-weight="700">indicator</tspan>, met by <tspan fill="#DB5850" font-weight="700">work</tspan>, recorded as <tspan fill="#2F855A" font-weight="700">evidence</tspan> on the ICT the institution answers for.</text>
+</svg>
