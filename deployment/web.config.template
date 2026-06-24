@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ATI production web.config TEMPLATE (placeholders only — safe to commit).
+
+  In production this <appSettings> block is the SINGLE SOURCE OF TRUTH for app
+  configuration. The app reads it through app/config_gateway.py, which PARSES this
+  web.config directly (it does NOT depend on wfastcgi exposing appSettings as env
+  vars). No .env file is read in production (FLASK_ENV=production makes the gateway
+  skip dotenv entirely).
+
+  The real, deployed file lives at the IIS site root (e.g. C:\www\ati\web.config)
+  and holds REAL secret values; it is NOT in source control. Generate/maintain it
+  with Setup-AtiIis.ps1 (which writes these keys), or copy this template and replace
+  every REPLACE_WITH_* placeholder by hand. See iis-deploy.md (same folder).
+-->
+<configuration>
+  <system.webServer>
+    <handlers>
+      <!-- scriptProcessor MUST be "<venvPython>|<venv>\Lib\site-packages\wfastcgi.py"
+           and match the registered FastCGI application exactly (Setup-AtiIis.ps1 does this). -->
+      <add name="AtiHandler"
+           path="*"
+           verb="*"
+           modules="FastCgiModule"
+           scriptProcessor="REPLACE_WITH_VENV_PYTHON|REPLACE_WITH_VENV\Lib\site-packages\wfastcgi.py"
+           resourceType="Unspecified"
+           requireAccess="Script" />
+    </handlers>
+    <httpErrors errorMode="Detailed" />
+  </system.webServer>
+
+  <appSettings>
+    <!-- ===== wfastcgi (the FastCGI bridge itself reads these) ===== -->
+    <add key="PYTHONPATH" value="C:\www\ati" />
+    <add key="WSGI_HANDLER" value="wsgi.application" />
+    <add key="WSGI_LOG" value="C:\www\ati\wfastcgi.log" />
+    <!-- 0 in steady state; 1 only while diagnosing a bring-up failure (it logs every request). -->
+    <add key="WSGI_DEBUG" value="0" />
+
+    <!-- ===== Flask runtime ===== -->
+    <add key="FLASK_ENV" value="production" />
+    <!-- REQUIRED. 64 hex chars: python -c "import secrets; print(secrets.token_hex(32))".
+         The app FAILS TO BOOT in production if this is missing, a placeholder, or < 32 chars. -->
+    <add key="FLASK_SECRET_KEY" value="REPLACE_WITH_64_HEX_CHARS" />
+    <add key="DEBUG" value="False" />
+    <add key="TESTING" value="False" />
+
+    <!-- ===== Database (Neo4j over Bolt) ===== -->
+    <add key="DATABASE_URL" value="bolt://USER:PASSWORD@HOST:7687" />
+    <add key="NEO4J_DATABASE" value="neo4j" />
+
+    <!-- ===== CORS ===== -->
+    <!-- Comma-separated allowlist. Usually EMPTY for the same-origin IIS deployment;
+         set origins only if a separate front-end calls the API cross-origin. -->
+    <add key="CORS_ORIGINS" value="" />
+
+    <!-- ===== Auth ===== -->
+    <add key="AUTH_ENFORCED" value="1" />
+    <add key="AUTH_PROVIDER" value="local" />
+    <!-- Comma-separated usernames and/or employee_ids granted admin. -->
+    <add key="AUTH_ADMINS" value="REPLACE_WITH_ADMIN_IDS" />
+    <!-- Optional allowlist; empty = any active account may log in. -->
+    <add key="AUTH_ALLOWED_USERS" value="" />
+    <add key="AUTH_DB_PATH" value="C:\www\ati\data\auth_users.sqlite3" />
+    <add key="AUTH_SESSION_HOURS" value="12" />
+    <!-- Flip to 1 only once the site has an HTTPS binding. -->
+    <add key="SESSION_COOKIE_SECURE" value="0" />
+
+    <!-- ===== Logging (optional; sensible defaults apply if omitted) ===== -->
+    <!-- 1 = also write a bounded, rotating app-<pid>.log; default off (WSGI_LOG is primary). -->
+    <add key="ATI_ROTATING_LOG" value="0" />
+  </appSettings>
+
+  <system.web>
+    <customErrors mode="Off" />
+  </system.web>
+</configuration>

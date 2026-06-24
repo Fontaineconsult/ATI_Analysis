@@ -14,14 +14,11 @@ from app.data_config import (trajectory_choices, asset_classes, asset_scopes, ta
                              functions, component_kinds, coverage_domains, audiences, interface_provenances,
                              descriptor_kinds)
 
-# Load app/.env.<FLASK_ENV> at import so standalone use of this module has DB
-# config. FLASK_ENV-aware (matching web_config.py) so a production deploy loads
-# .env.production instead of being pinned to .env.development. load_dotenv uses
-# override=False, and this module is imported BEFORE web_config in create_app,
-# so the file picked here is the one that wins — it MUST honor FLASK_ENV.
-_env_name = os.environ.get('FLASK_ENV', 'development')
-dotenv_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), f'.env.{_env_name}')
-load_dotenv(dotenv_path)
+# Configuration enters through the single gateway (app/config_gateway.py). Importing
+# it hydrates os.environ from web.config (production) / .env.<FLASK_ENV> (development),
+# so this module has DB config whether it is imported by create_app or run as a
+# standalone script — and in production it reads web.config, never a .env file.
+from app.config_gateway import config  # noqa: F401  (imported for its hydration side-effect)
 
 
 
@@ -2247,19 +2244,18 @@ def update_remote():
 
 
 def set_connection():
+    """Configure neomodel's connection for standalone script use.
 
+    Sources DB config from the single gateway (web.config in production, .env in
+    dev), so a host script reads the same place the web app does. The Flask app
+    does NOT use this — create_app() sets the connection from app.config and the
+    per-request guard calls neomodel's db.set_connection().
+    """
     from neomodel import get_config
+    from app.config_gateway import config
 
-    env_name = os.environ.get('FLASK_ENV', 'development')
-    dotenv_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), f'.env.{env_name}')
-    load_dotenv(dotenv_path)
-
-
-    get_config().database_name = os.environ.get('NEO4J_DATABASE', 'ati')
-
-    get_config().database_url = os.environ.get('DATABASE_URL')
-    print(get_config().database_name)
-    print(f"NEO4J_DATABASE: {get_config().database_url}")
+    get_config().database_name = config.get('NEO4J_DATABASE', 'ati')
+    get_config().database_url = config.get('DATABASE_URL')
 
 
 # set_connection()

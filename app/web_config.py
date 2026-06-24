@@ -1,29 +1,26 @@
 # web_config.py
-import os
-from dotenv import load_dotenv
+#
+# Flask's view of the configuration. All values are sourced from the single
+# config gateway (app/config_gateway.py), which resolves them from os.environ /
+# web.config / .env in priority order. This module no longer reads the
+# environment or loads .env files directly — importing the gateway is what
+# hydrates os.environ, and the Config attributes below are just typed reads.
 from neomodel import get_config
 
-# Determine the base directory
-base_dir = os.path.dirname(__file__)
-print(base_dir)
-# Get the environment name (default to 'development')
-env_name = os.environ.get('FLASK_ENV', 'development')
+from app.config_gateway import config
 
-# Construct the path to the .env file
-dotenv_path = os.path.join(base_dir, f'.env.{env_name}')
+# neomodel's default database name comes from the same single source.
+get_config().database_name = config.get('NEO4J_DATABASE', 'neo4j')
 
-# Load the .env file
-load_dotenv(dotenv_path)
-print(os.environ.get('DATABASE_URL'))
-
-get_config().database_name = os.environ.get('NEO4J_DATABASE', 'neo4j')
 
 class Config:
-    FLASK_APP = os.environ.get('FLASK_APP', 'application.py')
-    FLASK_ENV = env_name
-    DEBUG = os.environ.get('DEBUG', 'True') == 'True'
-    TESTING = os.environ.get('TESTING', 'True') == 'True'
-    FLASK_RUN_PORT = int(os.environ.get('FLASK_RUN_PORT', 5000))
+    FLASK_APP = config.get('FLASK_APP', 'application.py')
+    FLASK_ENV = config.env_name
+    # DEBUG/TESTING default to False: a production worker with no DEBUG key in
+    # web.config must NOT silently run in debug. Dev opts in via .env.development.
+    DEBUG = config.get_bool('DEBUG', False)
+    TESTING = config.get_bool('TESTING', False)
+    FLASK_RUN_PORT = config.get_int('FLASK_RUN_PORT', 5000)
     THREADED = True
-    DATABASE_URL = os.environ.get('DATABASE_URL')
-    NEO4J_DATABASE = os.environ.get('NEO4J_DATABASE')
+    DATABASE_URL = config.get('DATABASE_URL')
+    NEO4J_DATABASE = config.get('NEO4J_DATABASE')

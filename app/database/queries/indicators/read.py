@@ -8,7 +8,6 @@ from app.database.graph_schema import *
 from app.database.graph_schema import *
 from app.endpoints.data_api.errors.custom_exceptions import NotFoundError
 
-set_connection()
 from neomodel import db
 
 # Define the function that executes the query and returns a dictionary of results

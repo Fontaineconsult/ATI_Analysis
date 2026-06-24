@@ -2,7 +2,6 @@ from app.database.class_factory import working_groups
 from app.database.graph_schema import *
 from app.endpoints.data_api.errors.custom_exceptions import NotFoundError, CrudError, ValidationError
 
-set_connection()
 from neomodel import db
 
 

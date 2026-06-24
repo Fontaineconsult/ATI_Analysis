@@ -11,7 +11,7 @@ ATI Analysis is a full-stack web application for tracking and managing Accessibl
 ### Backend (Python Flask)
 
 - **Flask Application**: Entry point is `app/__init__.py` with `create_app()` factory pattern
-- **WSGI Server**: Production deployment via Waitress (`run.py`) or IIS with wfastcgi (see `app/iis-deploy.md`)
+- **WSGI Server**: Production deployment via Waitress (`run.py`) or IIS with wfastcgi (see `deployment/iis-deploy.md`)
 - **Database**: Neo4j graph database accessed through neomodel ORM
 - **API**: RESTful API organized as Flask Blueprints under `app/endpoints/data_api/`
 
@@ -149,7 +149,7 @@ API modules in `app/endpoints/data_api/`:
 - CORS enabled for React development
 
 **IIS Deployment**:
-- Follow `app/iis-deploy.md` for Windows Server deployment
+- Follow `deployment/iis-deploy.md` for Windows Server deployment
 - Uses wfastcgi as WSGI bridge
 - Deployment root: `C:\www\ati\`
 - Requires proper permissions for IIS_IUSRS and app pool identity

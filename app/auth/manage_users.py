@@ -41,21 +41,15 @@ from app.auth import store  # noqa: E402
 
 
 def _load_app_env() -> None:
-    """Resolve env (especially AUTH_DB_PATH) the SAME way the running app does,
-    by loading app/.env.<FLASK_ENV>. Without this the CLI falls back to the
-    store's DEFAULT path and edits a DIFFERENT sqlite file than the app reads —
-    e.g. prod sets AUTH_DB_PATH=C:\\www\\ati\\data\\... in .env.production, but the
-    bare tool would write C:\\www\\ati\\app\\auth_users.sqlite3. A var already set
-    in the shell wins (override=False), matching the app's own resolution order.
-    """
+    """Resolve env (especially AUTH_DB_PATH) the SAME way the running app does —
+    through the config gateway. Importing it parses web.config (production) /
+    .env.<FLASK_ENV> (development) and hydrates os.environ, so this CLI edits the
+    SAME sqlite file the app reads instead of falling back to the store's default
+    path. A var already set in the shell still wins (gateway precedence)."""
     try:
-        from dotenv import load_dotenv
+        import app.config_gateway  # noqa: F401 — constructing the gateway hydrates os.environ
     except ImportError:
         return
-    env_name = os.environ.get('FLASK_ENV', 'development')
-    env_file = Path(_SITE_ROOT) / 'app' / f'.env.{env_name}'
-    if env_file.exists():
-        load_dotenv(env_file)
 
 
 def _prompt_password() -> str:

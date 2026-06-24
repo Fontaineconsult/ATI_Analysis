@@ -1,7 +1,7 @@
 @echo off
 setlocal
 
-cd /d "%~dp0app\frontend\src"
+cd /d "%~dp0..\app\frontend\src"
 call npm run build
 if errorlevel 1 (
     echo.
@@ -16,8 +16,9 @@ echo About to deploy to \\DPRC-SERVER\ati
 echo Press Ctrl+C to cancel, or any key to continue...
 pause >nul
 
-:: Step 1: Copy the full app folder (excluding node_modules and wsgi.py)
-robocopy "%~dp0app" "\\DPRC-SERVER\ati\app" /E /Z /R:2 /W:5 /XD node_modules /XF wsgi.py
+:: Step 1: Copy the full app folder (excluding node_modules). wsgi.py is not in
+:: app\ anymore — it lives in this deployment\ folder and is copied in Step 2.
+robocopy "%~dp0..\app" "\\DPRC-SERVER\ati\app" /E /Z /R:2 /W:5 /XD node_modules
 set rc=%errorlevel%
 if %rc% geq 8 (
     echo.
@@ -25,8 +26,8 @@ if %rc% geq 8 (
     exit /b %rc%
 )
 
-:: Step 2: Copy wsgi.py separately to the destination root
-robocopy "%~dp0app" "\\DPRC-SERVER\ati" wsgi.py /Z /R:2 /W:5
+:: Step 2: Copy wsgi.py (it lives here in deployment\) to the destination site root
+robocopy "%~dp0." "\\DPRC-SERVER\ati" wsgi.py /Z /R:2 /W:5
 set rc=%errorlevel%
 if %rc% geq 8 (
     echo.

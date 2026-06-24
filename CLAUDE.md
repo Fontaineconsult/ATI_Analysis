@@ -64,6 +64,12 @@ app/
 tests/
   conftest.py             # Fixtures: neo4j_connection, sentinel_academic_year, cleanup_*, flask_client
   test_*.py
+deployment/               # IIS deploy tooling + docs (see deployment/README.md)
+  iis-deploy.md           # The deployment guide
+  Setup-AtiIis.ps1        # Idempotent IIS provisioning; writes the full web.config
+  web.config.template     # Placeholder reference for prod web.config appSettings (the config source)
+  wsgi.py                 # WSGI entry point (deployed to the site root C:\www\ati)
+  deploy_to_dprc_server.cmd  # Build frontend + robocopy app\ + wsgi.py to the host
 ```
 
 ## Patterns to follow

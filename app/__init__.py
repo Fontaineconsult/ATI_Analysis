@@ -13,8 +13,11 @@ def create_app():
     # would in turn import graph_schema via the Flask blueprints — and
     # if graph_schema is being run as __main__ at the same time, neomodel
     # raises NodeClassAlreadyDefined.
-    import os
-    # Install the 10 MB rotating file log and funnel stdout/stderr into it FIRST, before
+    # Bootstrap configuration FIRST: importing the gateway resolves settings from
+    # web.config (production) / .env (development) and hydrates os.environ, so
+    # everything below — logging, the secret check, auth — reads one source.
+    from app.config_gateway import config
+    # Install the 10 MB rotating file log and funnel stdout/stderr into it before
     # anything starts printing — otherwise the app's print()/traceback.print_exc() output
     # floods the unbounded wfastcgi stdout capture (see app/logging_config.py).
     from app.logging_config import configure_logging
@@ -39,9 +42,9 @@ def create_app():
     # illegal once credentials are allowed, so the origins are an explicit
     # allowlist. (The primary dev path is the CRA proxy, which is same-origin
     # and doesn't need CORS at all — this is the fallback.)
-    cors_origins = os.environ.get(
-        'CORS_ORIGINS', 'http://localhost:3000,http://127.0.0.1:3000'
-    ).split(',')
+    cors_origins = config.get_list(
+        'CORS_ORIGINS', ['http://localhost:3000', 'http://127.0.0.1:3000']
+    )
     CORS(app, supports_credentials=True, origins=cors_origins)
 
     # Load configuration from object
@@ -50,7 +53,7 @@ def create_app():
     # Set up database connection
     get_config().database_url = app.config['DATABASE_URL']
 
-    is_production = os.environ.get('FLASK_ENV', 'development') == 'production'
+    is_production = config.is_production
 
     # Sessions are signed cookies, so the secret MUST be identical across the
     # IIS FastCGI worker processes — a per-process random key would log users
@@ -58,7 +61,7 @@ def create_app():
     # (FLASK_ENV=production) therefore requires a real, high-entropy
     # FLASK_SECRET_KEY; dev falls back to a fixed constant so sessions survive
     # reloader restarts.
-    secret = os.environ.get('FLASK_SECRET_KEY')
+    secret = config.get('FLASK_SECRET_KEY')
     # A signed-cookie secret that anyone can guess defeats AUTH_ENFORCED
     # entirely: an attacker can forge an admin session cookie. Reject empty,
     # known-placeholder, and low-entropy values in production and fail closed at
@@ -89,24 +92,24 @@ def create_app():
     app.config['SESSION_COOKIE_NAME'] = 'ati_session'
     app.config['SESSION_COOKIE_HTTPONLY'] = True
     app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
-    app.config['SESSION_COOKIE_SECURE'] = os.environ.get('SESSION_COOKIE_SECURE', '0') == '1'
+    app.config['SESSION_COOKIE_SECURE'] = config.get_bool('SESSION_COOKIE_SECURE', False)
     app.config['SESSION_COOKIE_PATH'] = '/ati'
     app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(
-        hours=int(os.environ.get('AUTH_SESSION_HOURS', '12'))
+        hours=config.get_int('AUTH_SESSION_HOURS', 12)
     )
 
     # Auth behavior. AUTH_ENFORCED is the global kill-switch: off (default,
     # for dev and staged rollout) makes the route guard a no-op and the
     # frontend gate transparent; deployment flips it on in web.config.
-    app.config['AUTH_ENFORCED'] = os.environ.get('AUTH_ENFORCED', '0') == '1'
-    app.config['AUTH_PROVIDER'] = os.environ.get('AUTH_PROVIDER', 'local')
-    app.config['AUTH_ADMINS'] = parse_admins(os.environ.get('AUTH_ADMINS'))
-    app.config['AUTH_ALLOWED_USERS'] = parse_admins(os.environ.get('AUTH_ALLOWED_USERS'))
+    app.config['AUTH_ENFORCED'] = config.get_bool('AUTH_ENFORCED', False)
+    app.config['AUTH_PROVIDER'] = config.get('AUTH_PROVIDER', 'local')
+    app.config['AUTH_ADMINS'] = parse_admins(config.get('AUTH_ADMINS'))
+    app.config['AUTH_ALLOWED_USERS'] = parse_admins(config.get('AUTH_ALLOWED_USERS'))
 
     # Debug surfaces are gated on environment. In production (FLASK_ENV=production)
     # Flask debug, the debug-toolbar profiler, and exception propagation are all
     # OFF, so tracebacks and the interactive debugger never reach a browser and the
-    # Exception handler registered in app/wsgi.py returns a clean 500. Dev keeps
+    # Exception handler registered in deployment/wsgi.py returns a clean 500. Dev keeps
     # them on. (Pair this with httpErrors errorMode="DetailedLocalOnly" in web.config
     # so IIS doesn't leak its own detailed error pages to remote clients either.)
     app.config['DEBUG_TB_INTERCEPT_REDIRECTS'] = False
