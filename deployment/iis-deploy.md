@@ -5,10 +5,15 @@ wfastcgi.
 
 > ## How configuration is loaded (read this first)
 > Production configuration lives **entirely in the site `web.config` `<appSettings>`** —
-> it is the single source of truth. The app reads it through **`app/config_gateway.py`**,
-> which **parses `web.config` directly** from the site root. It does **not** depend on
-> wfastcgi exposing appSettings as environment variables (that behavior is unreliable and
-> previously caused outages) — the gateway opens the file itself.
+> it is the single source of truth. The app reads it through **`app/config_gateway.py`**.
+>
+> In this deployment, wfastcgi **does** inject `<appSettings>` into the worker's
+> `os.environ` (confirmed June 2026: keys added only to web.config were read by code that
+> only looks at `os.environ`). An earlier version of this doc claimed the opposite — that
+> was wrong for this setup. Even so, the gateway does **not** rely on the injection alone:
+> it **also parses `web.config` directly** from the site root, so config resolves whether
+> or not wfastcgi injects it — and so host scripts run *outside* wfastcgi get the same
+> config. Belt and suspenders.
 >
 > Consequences:
 > - **No `.env.production` on the host. No `setx` machine variables.** Put every value in

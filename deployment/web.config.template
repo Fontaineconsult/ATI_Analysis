@@ -66,6 +66,17 @@
     <!-- Flip to 1 only once the site has an HTTPS binding. -->
     <add key="SESSION_COOKIE_SECURE" value="0" />
 
+    <!-- ===== Asana connector (the /asana push/reconcile endpoint) ===== -->
+    <!-- Required for live pushes: a Personal Access Token + target workspace gid.
+         ASANA_TEAM_GID is required only when the workspace is an organization.
+         Leave them empty if the Asana endpoint is unused (it raises a clear error
+         only when actually invoked without config). -->
+    <add key="ASANA_ACCESS_TOKEN" value="REPLACE_WITH_ASANA_PAT" />
+    <add key="ASANA_WORKSPACE_GID" value="REPLACE_WITH_WORKSPACE_GID" />
+    <add key="ASANA_TEAM_GID" value="" />
+    <!-- Optional API base override; default https://app.asana.com/api/1.0 -->
+    <add key="ASANA_BASE_URL" value="" />
+
     <!-- ===== Logging (optional; sensible defaults apply if omitted) ===== -->
     <!-- 1 = also write a bounded, rotating app-<pid>.log; default off (WSGI_LOG is primary). -->
     <add key="ATI_ROTATING_LOG" value="0" />

@@ -6,7 +6,32 @@ def merge_query_params(*dict1):
     return urlencode(dict1)
 
 
-def create_app():
+def _finalize_secret(app, is_production):
+    """Resolve the signing secret: production fails closed on a missing/placeholder/
+    short key; development falls back to a fixed constant so sessions survive reloads.
+    This is factory logic (not a config-class value) because it raises and mutates.
+    The secret MUST be identical across IIS FastCGI workers — a per-process random key
+    would log users out whenever a different worker served the request."""
+    secret = app.config.get('SECRET_KEY')
+    insecure_secrets = {
+        'PASTE-GENERATED-SECRET',
+        'ati-dev-only-secret-not-for-production',
+        'changeme',
+        'secret',
+    }
+    if is_production:
+        if not secret or secret.strip() in insecure_secrets or len(secret.strip()) < 32:
+            raise RuntimeError(
+                'FLASK_SECRET_KEY is missing, a known placeholder, or too short for '
+                'production. Generate one with '
+                '`python -c "import secrets; print(secrets.token_hex(32))"` and set it '
+                'in the deployed web.config appSettings.'
+            )
+    elif not secret:
+        app.config['SECRET_KEY'] = 'ati-dev-only-secret-not-for-production'
+
+
+def create_app(config_object=None):
     # All project-internal imports are deferred to here.
     # Hoisting them to module scope causes a circular load: any module
     # that does `from app.X import Y` triggers app/__init__.py, which
@@ -22,7 +47,6 @@ def create_app():
     # floods the unbounded wfastcgi stdout capture (see app/logging_config.py).
     from app.logging_config import configure_logging
     configure_logging()
-    from datetime import timedelta
     from flask import Flask
     from flask_cors import CORS
     from neomodel import get_config, db
@@ -31,91 +55,36 @@ def create_app():
     from app.auth import auth_endpoints
     from app.auth.authz import parse_admins
     from app.auth.guard import require_login
-    from app.web_config import Config
+    from app.web_config import select_config
 
     app = Flask(__name__,
                 static_folder='frontend/src/build/static',
                 template_folder='frontend/src/build',
                 )
 
-    # CORS with credentials for the React dev server. A wildcard origin is
-    # illegal once credentials are allowed, so the origins are an explicit
-    # allowlist. (The primary dev path is the CRA proxy, which is same-origin
-    # and doesn't need CORS at all — this is the fallback.)
-    cors_origins = config.get_list(
-        'CORS_ORIGINS', ['http://localhost:3000', 'http://127.0.0.1:3000']
-    )
-    CORS(app, supports_credentials=True, origins=cors_origins)
+    # Load configuration: pick this environment's config class (Production/Development)
+    # and let Flask load its UPPERCASE attributes. Every value is declared in
+    # web_config.py; the gateway is their source. Loaded FIRST so extensions (CORS)
+    # read from app.config. Pass config_object to override (e.g. TestingConfig) in tests.
+    app.config.from_object(config_object or select_config())
 
-    # Load configuration from object
-    app.config.from_object(Config)
+    # Finalize the two things that are logic, not declarative values:
+    #  - the signing secret (dev fallback + production fail-closed validation), and
+    #  - the auth lists (raw comma string -> frozenset). Parsed here, not in
+    #    web_config.py, to avoid importing app.auth there (circular-import trap).
+    _finalize_secret(app, config.is_production)
+    app.config['AUTH_ADMINS'] = parse_admins(app.config['AUTH_ADMINS'])
+    app.config['AUTH_ALLOWED_USERS'] = parse_admins(app.config['AUTH_ALLOWED_USERS'])
 
-    # Set up database connection
+    # neomodel connection config, driven by app.config (set once per worker; the
+    # @before_request guard below opens the actual connection).
+    get_config().database_name = app.config['NEO4J_DATABASE']
     get_config().database_url = app.config['DATABASE_URL']
 
-    is_production = config.is_production
-
-    # Sessions are signed cookies, so the secret MUST be identical across the
-    # IIS FastCGI worker processes — a per-process random key would log users
-    # out whenever a different worker handled the request. Production
-    # (FLASK_ENV=production) therefore requires a real, high-entropy
-    # FLASK_SECRET_KEY; dev falls back to a fixed constant so sessions survive
-    # reloader restarts.
-    secret = config.get('FLASK_SECRET_KEY')
-    # A signed-cookie secret that anyone can guess defeats AUTH_ENFORCED
-    # entirely: an attacker can forge an admin session cookie. Reject empty,
-    # known-placeholder, and low-entropy values in production and fail closed at
-    # boot, rather than running silently compromised. The web.config placeholder
-    # is checked into source control, so it MUST be on this denylist.
-    insecure_secrets = {
-        'PASTE-GENERATED-SECRET',
-        'ati-dev-only-secret-not-for-production',
-        'changeme',
-        'secret',
-    }
-    if is_production:
-        if not secret or secret.strip() in insecure_secrets or len(secret.strip()) < 32:
-            raise RuntimeError(
-                'FLASK_SECRET_KEY is missing, a known placeholder, or too short '
-                'for production. Generate one with '
-                '`python -c "import secrets; print(secrets.token_hex(32))"` and set '
-                'it in the deployed web.config appSettings (and app/.env.production '
-                'for local prod runs).'
-            )
-    elif not secret:
-        secret = 'ati-dev-only-secret-not-for-production'
-    app.config['SECRET_KEY'] = secret
-
-    # Session cookie hardening. SESSION_COOKIE_SECURE stays 0 until the IIS
-    # site has an HTTPS binding — flipping it on over plain HTTP would make
-    # the browser drop the cookie entirely.
-    app.config['SESSION_COOKIE_NAME'] = 'ati_session'
-    app.config['SESSION_COOKIE_HTTPONLY'] = True
-    app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
-    app.config['SESSION_COOKIE_SECURE'] = config.get_bool('SESSION_COOKIE_SECURE', False)
-    app.config['SESSION_COOKIE_PATH'] = '/ati'
-    app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(
-        hours=config.get_int('AUTH_SESSION_HOURS', 12)
-    )
-
-    # Auth behavior. AUTH_ENFORCED is the global kill-switch: off (default,
-    # for dev and staged rollout) makes the route guard a no-op and the
-    # frontend gate transparent; deployment flips it on in web.config.
-    app.config['AUTH_ENFORCED'] = config.get_bool('AUTH_ENFORCED', False)
-    app.config['AUTH_PROVIDER'] = config.get('AUTH_PROVIDER', 'local')
-    app.config['AUTH_ADMINS'] = parse_admins(config.get('AUTH_ADMINS'))
-    app.config['AUTH_ALLOWED_USERS'] = parse_admins(config.get('AUTH_ALLOWED_USERS'))
-
-    # Debug surfaces are gated on environment. In production (FLASK_ENV=production)
-    # Flask debug, the debug-toolbar profiler, and exception propagation are all
-    # OFF, so tracebacks and the interactive debugger never reach a browser and the
-    # Exception handler registered in deployment/wsgi.py returns a clean 500. Dev keeps
-    # them on. (Pair this with httpErrors errorMode="DetailedLocalOnly" in web.config
-    # so IIS doesn't leak its own detailed error pages to remote clients either.)
-    app.config['DEBUG_TB_INTERCEPT_REDIRECTS'] = False
-    app.config['DEBUG_TB_PROFILER_ENABLED'] = not is_production
-    app.config["DEBUG"] = not is_production
-    app.config["PROPAGATE_EXCEPTIONS"] = not is_production
+    # CORS with credentials for the React dev server. A wildcard origin is illegal
+    # once credentials are allowed, so origins are an explicit allowlist (resolved in
+    # config). The primary dev path is the same-origin CRA proxy; this is the fallback.
+    CORS(app, supports_credentials=True, origins=app.config['CORS_ORIGINS'])
 
     # Logging (10 MB rotating file + stdout/stderr funnel) is configured at the top of
     # create_app() via app.logging_config.configure_logging().

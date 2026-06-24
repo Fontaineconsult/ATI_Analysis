@@ -57,7 +57,13 @@ param(
     [string] $SessionCookieSecure = '0',                    # 1 only once the site has HTTPS
     [string] $CorsOrigins         = '',                     # usually empty for same-origin IIS
     [string] $Debug               = 'False',
-    [string] $Testing             = 'False'
+    [string] $Testing             = 'False',
+
+    # Asana connector (the /asana endpoint). Empty unless the connector is used.
+    [string] $AsanaAccessToken    = '',                     # Personal Access Token
+    [string] $AsanaWorkspaceGid   = '',
+    [string] $AsanaTeamGid        = '',                     # only for organization workspaces
+    [string] $AsanaBaseUrl        = ''                      # blank = default API base
 )
 
 $ErrorActionPreference = 'Stop'
@@ -206,6 +212,10 @@ if (-not $SkipWebConfig) {
     $cors   = Resolve-AppSetting 'CORS_ORIGINS'          $CorsOrigins         $b.ContainsKey('CorsOrigins')         $existing ''
     $dbg    = Resolve-AppSetting 'DEBUG'                 $Debug               $b.ContainsKey('Debug')               $existing 'False'
     $tst    = Resolve-AppSetting 'TESTING'               $Testing             $b.ContainsKey('Testing')             $existing 'False'
+    $asTok  = Resolve-AppSetting 'ASANA_ACCESS_TOKEN'    $AsanaAccessToken    $b.ContainsKey('AsanaAccessToken')    $existing ''
+    $asWs   = Resolve-AppSetting 'ASANA_WORKSPACE_GID'   $AsanaWorkspaceGid   $b.ContainsKey('AsanaWorkspaceGid')   $existing ''
+    $asTeam = Resolve-AppSetting 'ASANA_TEAM_GID'        $AsanaTeamGid        $b.ContainsKey('AsanaTeamGid')        $existing ''
+    $asUrl  = Resolve-AppSetting 'ASANA_BASE_URL'        $AsanaBaseUrl        $b.ContainsKey('AsanaBaseUrl')        $existing ''
 
     # Required, with the same fail-fast the app enforces at boot (app/__init__.py).
     if ([string]::IsNullOrWhiteSpace($secret)) {
@@ -256,6 +266,11 @@ if (-not $SkipWebConfig) {
     <add key="AUTH_DB_PATH" value="$(Xml-Esc $adbp)" />
     <add key="AUTH_SESSION_HOURS" value="$(Xml-Esc $asess)" />
     <add key="SESSION_COOKIE_SECURE" value="$(Xml-Esc $scook)" />
+    <!-- Asana connector (empty unless the /asana endpoint is used) -->
+    <add key="ASANA_ACCESS_TOKEN" value="$(Xml-Esc $asTok)" />
+    <add key="ASANA_WORKSPACE_GID" value="$(Xml-Esc $asWs)" />
+    <add key="ASANA_TEAM_GID" value="$(Xml-Esc $asTeam)" />
+    <add key="ASANA_BASE_URL" value="$(Xml-Esc $asUrl)" />
   </appSettings>
   <system.web>
     <customErrors mode="Off" />

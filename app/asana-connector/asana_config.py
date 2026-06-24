@@ -1,10 +1,11 @@
 """
 Asana connector configuration.
 
-Reads credentials/targets from environment variables, loading the same
-``app/.env.<FLASK_ENV>`` file the rest of the app uses (defaults to
-``.env.development``). Nothing here imports the graph or Flask, so it is safe
-to import from anywhere — including a Flask request handler.
+Reads credentials/targets through the app's single config gateway
+(``app/config_gateway.py``) — so they resolve from web.config in production and
+``.env.<FLASK_ENV>`` in development, exactly like the rest of the app. Imports
+only the gateway (stdlib + dotenv; no graph or Flask), so it stays safe to
+import from anywhere — including a Flask request handler.
 
 Environment variables
 ----------------------
@@ -18,18 +19,16 @@ import os
 
 DEFAULT_BASE_URL = "https://app.asana.com/api/1.0"
 
-# app/  (the directory that holds .env.development and this connector's parent)
-_APP_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-
-
-def _load_dotenv():
-    """Best-effort load of app/.env.<FLASK_ENV>; never raises if unavailable."""
+def _resolver():
+    """Return a ``get(key, default=None)`` callable backed by the app's config
+    gateway (web.config in prod, .env in dev). Falls back to plain os.environ if the
+    gateway can't be imported (e.g. the connector run with the app package off
+    sys.path)."""
     try:
-        from dotenv import load_dotenv
+        from app.config_gateway import config
+        return config.get
     except Exception:
-        return
-    env_name = os.environ.get("FLASK_ENV", "development")
-    load_dotenv(os.path.join(_APP_DIR, f".env.{env_name}"))
+        return lambda key, default=None: os.environ.get(key, default)
 
 
 class AsanaConfig:
@@ -64,11 +63,11 @@ class AsanaConfig:
 
 
 def load_config():
-    """Build an :class:`AsanaConfig` from the environment (loading .env first)."""
-    _load_dotenv()
+    """Build an :class:`AsanaConfig` from the config gateway (web.config / .env)."""
+    get = _resolver()
     return AsanaConfig(
-        access_token=os.environ.get("ASANA_ACCESS_TOKEN"),
-        workspace_gid=os.environ.get("ASANA_WORKSPACE_GID"),
-        team_gid=os.environ.get("ASANA_TEAM_GID"),
-        base_url=os.environ.get("ASANA_BASE_URL", DEFAULT_BASE_URL),
+        access_token=get("ASANA_ACCESS_TOKEN"),
+        workspace_gid=get("ASANA_WORKSPACE_GID"),
+        team_gid=get("ASANA_TEAM_GID"),
+        base_url=get("ASANA_BASE_URL", DEFAULT_BASE_URL),
     )
