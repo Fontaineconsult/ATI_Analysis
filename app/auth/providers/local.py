@@ -1,14 +1,14 @@
-"""Local-account provider: verifies against the SQLite sidecar store."""
+"""Local-account provider: verifies against the SQLite sidecar store by email."""
 from ..identity import Identity
 from .. import store
 
 
-def authenticate(username: str, password: str) -> Identity | None:
-    row = store.verify_user(username, password)
+def authenticate(email: str, password: str) -> Identity | None:
+    row = store.verify_user(email, password)
     if row is None:
         return None
     return Identity(
-        username=row['username'],
+        email=row['email'],
         display_name=row['display_name'],
         employee_id=row['employee_id'],
         provider='local',

@@ -257,7 +257,7 @@ def authed_client(auth_app):
     with auth_app.test_client() as client:
         with client.session_transaction() as sess:
             sess["user"] = {
-                "username": "testuser",
+                "email": "testuser@example.edu",
                 "display_name": "Test User",
                 "employee_id": "0000000",
                 "provider": "local",

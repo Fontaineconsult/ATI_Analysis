@@ -21,7 +21,7 @@ import sfbrnLogoLight from '../assets/img/sfbrn-logo-light.svg';
 // "Sign in with SSO" button alongside (see app/auth/providers/).
 function Login() {
     const { login } = useAuth();
-    const [username, setUsername] = useState('');
+    const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState(null);
     const [submitting, setSubmitting] = useState(false);
@@ -31,13 +31,13 @@ function Login() {
         setError(null);
         setSubmitting(true);
         try {
-            await login(username.trim(), password);
+            await login(email.trim(), password);
             // AuthGate re-renders into the app on authUser change.
         } catch (err) {
             const code = err?.response?.data?.error;
             setError(
                 code === 'invalid_credentials'
-                    ? 'Invalid username or password.'
+                    ? 'Invalid email or password.'
                     : 'Unable to sign in. Please try again or contact the ATI coordinator.'
             );
             setSubmitting(false);
@@ -94,13 +94,14 @@ function Login() {
                         <VStack spacing={4} align="stretch">
                             <FormControl isRequired>
                                 <FormLabel fontSize="sm" color="gray.700" fontWeight="semibold">
-                                    Username
+                                    Email
                                 </FormLabel>
                                 <Input
                                     size="sm"
-                                    value={username}
-                                    onChange={(e) => setUsername(e.target.value)}
-                                    autoComplete="username"
+                                    type="email"
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                    autoComplete="email"
                                     autoFocus
                                 />
                             </FormControl>

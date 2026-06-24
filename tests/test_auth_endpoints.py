@@ -1,8 +1,8 @@
 """Auth endpoint + guard contract tests.
 
 These exercise Flask routes via the test client but need NO Neo4j data: the
-/me person lookup degrades to null for employee_ids that don't exist (or when
-the graph is unreachable), which is itself part of the contract under test.
+/me person lookup degrades to null for emails that have no Person (or when the
+graph is unreachable), which is itself part of the contract under test.
 """
 import pytest
 
@@ -12,7 +12,7 @@ pytestmark = pytest.mark.api
 
 
 def _seed():
-    store.create_user("jdoe", "hunter22", "Jane Doe", employee_id="0000000")
+    store.create_user("jane@sfsu.edu", "hunter22", "Jane Doe", employee_id="0000000")
 
 
 # ---------------------------------------------------------------- login
@@ -20,12 +20,12 @@ def _seed():
 def test_login_success_sets_cookie_and_returns_user(auth_app, auth_db):
     _seed()
     client = auth_app.test_client()
-    resp = client.post("/ati/auth/v1/login", json={"username": "jdoe", "password": "hunter22"})
+    resp = client.post("/ati/auth/v1/login", json={"email": "jane@sfsu.edu", "password": "hunter22"})
     assert resp.status_code == 200
     body = resp.get_json()
     assert body["status"] == "success"
     user = body["data"]["user"]
-    assert user["username"] == "jdoe"
+    assert user["email"] == "jane@sfsu.edu"
     assert user["provider"] == "local"
     assert user["display_name"] == "Jane Doe"
     assert user["is_admin"] is False
@@ -37,8 +37,8 @@ def test_login_bad_password_401_single_message(auth_app, auth_db):
     _seed()
     client = auth_app.test_client()
     for creds in [
-        {"username": "jdoe", "password": "wrong"},
-        {"username": "ghost", "password": "whatever"},
+        {"email": "jane@sfsu.edu", "password": "wrong"},
+        {"email": "ghost@sfsu.edu", "password": "whatever"},
     ]:
         resp = client.post("/ati/auth/v1/login", json=creds)
         assert resp.status_code == 401
@@ -47,31 +47,31 @@ def test_login_bad_password_401_single_message(auth_app, auth_db):
 
 def test_login_inactive_user_401(auth_app, auth_db):
     _seed()
-    store.set_active("jdoe", False)
+    store.set_active("jane@sfsu.edu", False)
     resp = auth_app.test_client().post(
-        "/ati/auth/v1/login", json={"username": "jdoe", "password": "hunter22"})
+        "/ati/auth/v1/login", json={"email": "jane@sfsu.edu", "password": "hunter22"})
     assert resp.status_code == 401
     assert resp.get_json()["error"] == "invalid_credentials"
 
 
 def test_login_missing_fields_400(auth_app, auth_db):
-    resp = auth_app.test_client().post("/ati/auth/v1/login", json={"username": "jdoe"})
+    resp = auth_app.test_client().post("/ati/auth/v1/login", json={"email": "jane@sfsu.edu"})
     assert resp.status_code == 400
 
 
 def test_login_respects_allowlist(auth_app, auth_db):
     _seed()
-    auth_app.config["AUTH_ALLOWED_USERS"] = frozenset({"someoneelse"})
+    auth_app.config["AUTH_ALLOWED_USERS"] = frozenset({"someoneelse@sfsu.edu"})
     resp = auth_app.test_client().post(
-        "/ati/auth/v1/login", json={"username": "jdoe", "password": "hunter22"})
+        "/ati/auth/v1/login", json={"email": "jane@sfsu.edu", "password": "hunter22"})
     assert resp.status_code == 401
 
 
 def test_login_admin_flag_from_config(auth_app, auth_db):
     _seed()
-    auth_app.config["AUTH_ADMINS"] = frozenset({"jdoe"})
+    auth_app.config["AUTH_ADMINS"] = frozenset({"jane@sfsu.edu"})
     resp = auth_app.test_client().post(
-        "/ati/auth/v1/login", json={"username": "jdoe", "password": "hunter22"})
+        "/ati/auth/v1/login", json={"email": "jane@sfsu.edu", "password": "hunter22"})
     assert resp.get_json()["data"]["user"]["is_admin"] is True
 
 
@@ -95,15 +95,15 @@ def test_me_with_session(authed_client):
     assert resp.status_code == 200
     data = resp.get_json()["data"]
     assert data["enforced"] is True
-    assert data["user"]["username"] == "testuser"
-    # employee_id 0000000 has no Person in the graph — lookup degrades to null
+    assert data["user"]["email"] == "testuser@example.edu"
+    # This email has no Person in the graph — lookup degrades to null
     assert data["user"]["person"] is None
 
 
 def test_logout_clears_session(auth_app, auth_db):
     _seed()
     client = auth_app.test_client()
-    client.post("/ati/auth/v1/login", json={"username": "jdoe", "password": "hunter22"})
+    client.post("/ati/auth/v1/login", json={"email": "jane@sfsu.edu", "password": "hunter22"})
     assert client.get("/ati/auth/v1/me").status_code == 200
     resp = client.post("/ati/auth/v1/logout")
     assert resp.status_code == 200

@@ -23,14 +23,15 @@ def _envelope(data=None, error=None, message=None, status_code=200):
     }), status_code
 
 
-def _linked_person(employee_id):
-    """Resolve the graph Person for attribution display. Lazy + guarded:
-    auth must keep working when Neo4j is down or the person is missing."""
-    if not employee_id:
+def _linked_person(email):
+    """Resolve the graph Person linked by email for attribution display. Lazy +
+    guarded: auth must keep working when Neo4j is down or the person is missing
+    (e.g. a bypass/system account that intentionally has no linked Person)."""
+    if not email:
         return None
     try:
-        from app.database.queries.individuals.read import get_person_by_employee_id
-        person = get_person_by_employee_id(employee_id)
+        from app.database.queries.individuals.read import get_person_by_email
+        person = get_person_by_email(email)
         return person.serialize() if person is not None else None
     except Exception:
         return None
@@ -38,24 +39,24 @@ def _linked_person(employee_id):
 
 def _user_payload(identity: Identity) -> dict:
     return {
-        'username': identity.username,
+        'email': identity.email,
         'provider': identity.provider,
         'display_name': identity.display_name,
         'employee_id': identity.employee_id,
         'is_admin': is_admin(identity, current_app.config.get('AUTH_ADMINS', frozenset())),
-        'person': _linked_person(identity.employee_id),
+        'person': _linked_person(identity.email),
     }
 
 
 @auth_endpoints.route('/login', methods=['POST'])
 def login():
     payload = request.get_json(silent=True) or {}
-    username = (payload.get('username') or '').strip()
+    email = (payload.get('email') or '').strip()
     password = payload.get('password') or ''
-    if not username or not password:
-        return _envelope(error='username and password are required', status_code=400)
+    if not email or not password:
+        return _envelope(error='email and password are required', status_code=400)
 
-    identity = get_provider().authenticate(username, password)
+    identity = get_provider().authenticate(email, password)
     if identity is None or not is_allowed(identity, current_app.config.get('AUTH_ALLOWED_USERS', frozenset())):
         # One message for unknown user / bad password / inactive / not allowlisted.
         return _envelope(error='invalid_credentials', status_code=401)

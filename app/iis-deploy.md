@@ -1,182 +1,164 @@
-# Deploying the ATI Python WSGI App on Windows Server IIS Using wfastcgi
+# Deploying the ATI WSGI App on Windows Server / IIS (wfastcgi)
 
-This guide is tailored to deploying your ATI Flask-based WSGI application on Windows Server IIS using Python 3.12 and wfastcgi. Follow these steps to install Python, set up wfastcgi, deploy your app files, configure IIS, set permissions, and troubleshoot common issues.
+Python **3.14** with a project venv at `C:\www\ati\venv314`, served by IIS via
+wfastcgi.
+
+> ## The one gotcha that governs everything below
+> IIS web.config `<appSettings>` are **NOT** exposed to the Python process as
+> environment variables. wfastcgi reads only its own keys (`WSGI_HANDLER`,
+> `PYTHONPATH`, `WSGI_LOG`, `WSGI_DEBUG`). Anything the app reads from
+> `os.environ` — `FLASK_ENV`, `FLASK_SECRET_KEY`, `AUTH_*`, `DATABASE_URL`,
+> `AUTH_DB_PATH` — must come from **machine environment variables**
+> (`setx … /M`) or the **`app/.env.<FLASK_ENV>`** file the app loads at boot.
+> Putting them in web.config does nothing. (An earlier version of this doc
+> claimed otherwise; that was wrong and caused real outages.)
 
 ---
 
-## 1. Install Python 3.12 System-Wide
+## 1. Prerequisites
 
-1. **Download** the 64-bit Python installer from [python.org/downloads/windows](https://www.python.org/downloads/windows/).
-2. **Run the installer as Administrator** with the following options:
-    - **Install for all users**
-    - **Add Python to PATH**
-    - **Include pip**
+- **Python 3.14** installed on the server (per-user or all-users).
+- A **Neo4j** the app will use. `.env.production` points `DATABASE_URL` at
+  `bolt://…@localhost:7687`, so a local Neo4j — **with the APOC plugin
+  installed** (several read queries use `apoc.coll.toSet` / `apoc.convert.toJson`;
+  a stock Neo4j has no APOC). Confirm with `RETURN apoc.version();`.
 
 ---
 
-## 2. Install wfastcgi and Register It
+## 2. Provision IIS + the venv (scripted)
 
-Open a **Command Prompt as Administrator** and run:
+From the deployed `C:\www\ati`, in an elevated PowerShell:
 
-```cmd
-python -m pip install --upgrade pip
-python -m pip install wfastcgi --break-system-packages
-python -m wfastcgi install
+```powershell
+.\Setup-AtiIis.ps1 -AppPoolName "AtiApp"
 ```
 
+This creates `venv314`, installs `requirements.txt`, registers the FastCGI
+application, sets the app pool to **No Managed Code**, writes the **site**
+`web.config`, grants IIS permissions, and verifies the import. It is idempotent.
 
-## 3. Project Structure
-C:\www\ati\
-├── wsgi.py             # WSGI entry point
-├── app\                # Your Python package (contains __init__.py, endpoints, etc.)
-│   ├── __init__.py     # Defines create_app()
-│   ├── endpoints\
-│   └── web_config.py
-└── logs\               # For log files (wfastcgi.log, app.log)
+The generated `C:\www\ati\web.config` contains only the wfastcgi keys:
 
-
-```cmd
-:: Copy the app folder excluding node_modules and wsgi.py
-robocopy "C:\Users\913678186\IdeaProjects\ATI_Analysis\app" "C:\www\ati\app" /E /Z /R:2 /W:5 ^
-    /XD "C:\Users\913678186\IdeaProjects\ATI_Analysis\app\frontend\src\node_modules" ^
-    /XF "C:\Users\913678186\IdeaProjects\ATI_Analysis\app\wsgi.py"
-
-:: Copy wsgi.py to the root deployment folder
-copy "C:\Users\913678186\IdeaProjects\ATI_Analysis\app\wsgi.py" "C:\www\ati\wsgi.py"
-
+```xml
+<add key="PYTHONPATH"    value="C:\www\ati" />
+<add key="WSGI_HANDLER"  value="wsgi.application" />
+<add key="WSGI_LOG"      value="C:\www\ati\wfastcgi.log" />
+<add key="WSGI_DEBUG"    value="0" />
 ```
 
+with `scriptProcessor` = `C:\www\ati\venv314\Scripts\python.exe|C:\www\ati\venv314\Lib\site-packages\wfastcgi.py`.
+
+> There is no `app/web.config` in the repo anymore — the deploy script is the
+> single source of truth for the site config. Never copy a web.config out of the
+> source tree onto the site root.
+
+---
+
+## 3. Deploy the code
+
+From your dev machine:
 
 ```cmd
-
-import sys
-import os
-
-# Add the deployment root (C:\www\ati) to sys.path so that the "app" package is importable.
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-
-from app import create_app
-
-application = create_app()
-
+deploy_to_dprc_server.cmd
 ```
 
-```web.config
+It rebuilds the frontend, copies `app\` → `\\DPRC-SERVER\ati\app`, copies
+`wsgi.py` → the site root, and touches the site web.config to recycle the pool.
+The environment variables in step 4 **survive deploys** (the deploy only touches
+code + recycles).
 
-<configuration>
-  <system.webServer>
-    <handlers>
-      <add name="PythonHandler"
-           path="*"
-           verb="*"
-           modules="FastCgiModule"
-           scriptProcessor="C:\Program Files\Python312\python.exe|C:\Program Files\Python312\Lib\site-packages\wfastcgi.py"
-           resourceType="Unspecified"
-           requireAccess="Script" />
-    </handlers>
-  </system.webServer>
-  <appSettings>
-    <!-- PYTHONPATH includes the deployment root and Python's site-packages -->
-    <add key="PYTHONPATH" value="C:\www\ati;C:\Program Files\Python312\Lib\site-packages" />
-    <!-- WSGI_HANDLER instructs wfastcgi to load the WSGI application from wsgi.py -->
-    <add key="WSGI_HANDLER" value="wsgi.application" />
-    <!-- Log file for wfastcgi -->
-    <add key="WSGI_LOG" value="C:\www\ati\logs\wfastcgi.log" />
-    <!-- 0 in steady state: WSGI_DEBUG=1 logs every request AND every
-         print()/traceback, which ballooned this file to ~800 MB. Only set 1
-         temporarily while diagnosing a bring-up failure. -->
-    <add key="WSGI_DEBUG" value="0" />
+---
 
-    <!-- ===== Authentication (wfastcgi exposes appSettings as env vars) ===== -->
-    <!-- REQUIRED: cookie-signing secret, identical across all FastCGI workers.
-         Generate once: python -c "import secrets; print(secrets.token_hex(32))"
-         The app now FAILS TO BOOT in production if this is empty, a known
-         placeholder (including this REPLACE-WITH-... text), or under 32 chars —
-         a guessable signing key lets anyone forge an admin session cookie. -->
-    <add key="FLASK_SECRET_KEY" value="REPLACE-WITH-GENERATED-SECRET" />
-    <add key="FLASK_ENV" value="production" />
-    <!-- Global kill-switch: 0 = login disabled app-wide, 1 = enforced.
-         Deploy with 0 first, seed users, then flip to 1 (edits recycle the pool). -->
-    <add key="AUTH_ENFORCED" value="1" />
-    <add key="AUTH_PROVIDER" value="local" />
-    <!-- Comma-separated usernames and/or employee_ids granted admin -->
-    <add key="AUTH_ADMINS" value="913678186" />
-    <!-- Optional allowlist; empty = any active account may log in -->
-    <add key="AUTH_ALLOWED_USERS" value="" />
-    <add key="AUTH_DB_PATH" value="C:\www\ati\data\auth_users.sqlite3" />
-    <add key="AUTH_SESSION_HOURS" value="12" />
-    <!-- Flip to 1 only after the site has an HTTPS binding -->
-    <add key="SESSION_COOKIE_SECURE" value="0" />
-  </appSettings>
-</configuration>
+## 4. App configuration — environment variables (NOT web.config)
 
-```
-
-### 5b. Auth store setup (one-time)
+On the server, elevated shell:
 
 ```cmd
-:: SQLite needs WRITE on the directory (WAL/journal side files), not just the file
+setx FLASK_ENV production /M
+setx FLASK_SECRET_KEY "<paste output of: python -c "import secrets; print(secrets.token_hex(32))">" /M
+iisreset
+```
+
+- `FLASK_ENV=production` turns Flask DEBUG off **and** makes the app load
+  **`app\.env.production`**, which holds the rest of the config: `DATABASE_URL`
+  (localhost), `NEO4J_DATABASE`, `AUTH_ENFORCED`, `AUTH_PROVIDER`, `AUTH_ADMINS`,
+  `AUTH_ALLOWED_USERS`, `AUTH_DB_PATH`, `AUTH_SESSION_HOURS`, `SESSION_COOKIE_SECURE`.
+- `FLASK_SECRET_KEY` is **mandatory in production** — the app refuses to boot
+  without a real (≥32-char, non-placeholder) value. A guessable signing key lets
+  anyone forge an admin session cookie.
+
+`AUTH_ADMINS` matches by **email or employee_id** (comma-separated). An empty
+`AUTH_ALLOWED_USERS` means any active account may log in.
+
+Verify after `iisreset`: `GET http://<host>/ati/auth/v1/me` → `{"enforced":true,…}`.
+
+---
+
+## 5. Auth account store (SQLite)
+
+Accounts are keyed by **email**, which is also the **link to a graph `Person`
+node**. `AUTH_DB_PATH` (in `.env.production`) points at
+`C:\www\ati\data\auth_users.sqlite3`.
+
+One-time directory + permissions — the app opens the DB in WAL mode and must
+create `-wal`/`-shm` side files, so it needs **Modify**, not just Read:
+
+```cmd
 mkdir C:\www\ati\data
-icacls C:\www\ati\data /grant "IIS AppPool\AtiApp:(OI)(CI)M"
-
-:: Seed accounts (prompts for password; AUTH_DB_PATH targets the prod store)
-cd C:\www\ati
-set AUTH_DB_PATH=C:\www\ati\data\auth_users.sqlite3
-set PYTHONPATH=C:\www\ati
-python -m app.database.tools.manage_auth_users create-user jdoe --display-name "Jane Doe" --employee-id 913678186
-python -m app.database.tools.manage_auth_users list
+icacls C:\www\ati\data /grant "IIS AppPool\AtiApp:(OI)(CI)M" /T
 ```
 
-**Rollout that never hard-breaks:** deploy backend with `AUTH_ENFORCED=0` →
-verify `POST /ati/auth/v1/login` and `GET /ati/auth/v1/me` with curl → deploy
-the frontend build (login screen appears) → flip `AUTH_ENFORCED` to `1`.
+Manage accounts with the interactive tool. Run it in a shell where
+`FLASK_ENV=production` so it resolves the **same** `AUTH_DB_PATH` the app uses —
+it prints the path it's editing, so confirm that matches `.env.production`:
 
-**Protect web.config** (it now holds the secret key):
-`icacls C:\www\ati\web.config /inheritance:r /grant "Administrators:F" "IIS AppPool\AtiApp:R" "IIS_IUSRS:R"`
+```cmd
+cd C:\www\ati
+app\manage_users.cmd
+```
 
-**HTTPS:** until the site gets an HTTPS binding, the session cookie travels
-over plain HTTP on the campus LAN. Add the binding (campus cert) and set
-`SESSION_COOKIE_SECURE=1` as soon as practical.
+- **[1] Add account** — by email; verifies a matching graph `Person` exists
+  (looked up by email), then prompts for the password (hidden input).
+- **[6] Add SYSTEM account** — a person-less account (e.g. a sysadmin); bypasses
+  the Person check.
+- The underlying CLI (`venv314\Scripts\python.exe app\auth\manage_users.py`) also
+  has `reset` (wipe + recreate the table after a schema change), `list`,
+  `passwd`, `activate`, `deactivate`.
 
-## 6  Set Folder and File Permissions
-6.1 For the Deployment Root (C:\www\ati) and Its Subfolders:
-Accounts to Grant Permissions:
+> Every normal account must link to a `Person` whose `email` matches — populate
+> Person emails in the graph first, or use the SYSTEM-account option for service
+> accounts.
 
-IIS_IUSRS
+---
 
-Your application pool identity (e.g., IIS APPPOOL\YourAppPoolName)
+## 6. Rollout / hardening
 
-Permissions:
+- **Stage auth:** set `AUTH_ENFORCED=0` in `.env.production` first → verify
+  `POST /ati/auth/v1/login` + `GET /ati/auth/v1/me` with curl → deploy the
+  frontend (login screen appears) → flip `AUTH_ENFORCED=1` → recycle.
+- **Protect the config files** (they reference secrets / DB creds):
+  `icacls C:\www\ati\web.config /inheritance:r /grant "Administrators:F" "IIS AppPool\AtiApp:R"`
+  and the same for `app\.env.production`.
+- **HTTPS:** until the site has an HTTPS binding the session cookie travels over
+  plain HTTP. Add the binding (campus cert), then set `SESSION_COOKIE_SECURE=1`
+  in `.env.production`.
 
-Read & Execute
+---
 
-List folder contents
+## 7. Troubleshooting
 
-Read
-
-6.2 For the Logs Folder (C:\www\ati\logs):
-Grant the above accounts Modify (or Write) permissions so that log files can be created and updated.
-
-Tip: Set permissions on the logs folder and allow inheritance to all subfolders and files.
-
-
-
-
-## 7. Configure the IIS Website
-Open IIS Manager.
-
-Add a New Website:
-
-Site Name: AtiApp
-
-Physical Path: C:\www\ati
-
-Port: 80 (or a custom port)
-
-Application Pool Settings:
-
-Ensure the app pool is set to No Managed Code (or the appropriate setting for WSGI).
-
-Verify that the app pool identity has the necessary permissions as set above.
-
-
+- **Instant 500, blank `wfastcgi.log`** → IIS can't launch Python at all: the
+  `scriptProcessor` isn't the venv, or the web.config XML is malformed. The real
+  error is on the browser's 500 page (browse from the server itself for
+  `DetailedLocalOnly`) and Event Viewer — not the log. Recovery: re-run
+  `Setup-AtiIis.ps1`.
+- **A setting "doesn't take" (e.g. `enforced:false` after you set it)** → it was
+  placed in web.config `<appSettings>`, which don't propagate. Move it to a
+  machine env var (`setx … /M`) or `.env.production`.
+- **"I added a user but login still fails"** → the tool edited a different file
+  than the app reads. Run it with `FLASK_ENV=production` and confirm the printed
+  `auth DB:` path equals `.env.production`'s `AUTH_DB_PATH`.
+- **500 on data endpoints** → APOC missing on the target Neo4j
+  (`RETURN apoc.version();`), or `DATABASE_URL` / `NEO4J_DATABASE` pointing at an
+  empty database. The app now logs the real cause (chained traceback) to
+  `wfastcgi.log`.

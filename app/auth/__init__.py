@@ -1,7 +1,7 @@
 """
 Authentication package — identity lives OUTSIDE the graph database.
 
-Local username/password accounts (SQLite sidecar) today; the provider
+Local email/password accounts (SQLite sidecar) today; the provider
 abstraction in auth/providers/ is the seam where campus SSO (OIDC/Shibboleth)
 slots in later without touching session handling, route protection, or the
 /me contract.

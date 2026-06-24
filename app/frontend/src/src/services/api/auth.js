@@ -6,8 +6,8 @@ import axios from 'axios';
 const AUTH_BASE = process.env.REACT_APP_AUTH_API_URL || '/ati/auth/v1';
 
 // POST /login — resolves to the user payload; throws with error 'invalid_credentials' on 401.
-export const login = async (username, password) => {
-    const response = await axios.post(`${AUTH_BASE}/login`, { username, password });
+export const login = async (email, password) => {
+    const response = await axios.post(`${AUTH_BASE}/login`, { email, password });
     return response.data.data.user;
 };
 
