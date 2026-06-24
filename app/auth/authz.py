@@ -1,8 +1,8 @@
 """Authorization from config/env — never from the graph, never from the cookie.
 
 AUTH_ADMINS / AUTH_ALLOWED_USERS are comma-separated lists that may mix
-usernames and employee_ids: matching either grants the role. Keying by
-employee_id lets entries survive the local→SSO username change.
+emails and employee_ids: matching either grants the role. Keying by
+employee_id lets entries survive the local->SSO login-id change.
 """
 from .identity import Identity
 
@@ -14,7 +14,7 @@ def parse_admins(raw: str | None) -> frozenset[str]:
 
 
 def _identity_keys(identity: Identity) -> set[str]:
-    keys = {identity.username.casefold()}
+    keys = {identity.email.casefold()}
     if identity.employee_id:
         keys.add(str(identity.employee_id).casefold())
     return keys

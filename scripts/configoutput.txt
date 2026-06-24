@@ -1,26 +1,27 @@
-<configuration>
-  <system.webServer>
-    <handlers>
-      <add name="AtiHandler"
-           path="*"
-           verb="*"
-           modules="FastCgiModule"
-           scriptProcessor="C:\Program Files\Python314\python.exe|C:\Program Files\Python314\Lib\site-packages\wfastcgi.py"
-           resourceType="Unspecified"
-           requireAccess="Script" />
-    </handlers>
-    <httpErrors errorMode="Detailed" />
-    <asp scriptErrorSentToBrowser="true"/>
-  </system.webServer>
-  <appSettings>
-    <add key="PYTHONPATH" value="C:\www\ati;C:\Program Files\Python314\Lib\site-packages" />
-    <add key="WSGI_HANDLER" value="wsgi.application" />
-    <add key="WSGI_LOG" value="C:\www\ati\wfastcgi.log" />
-    <add key="WSGI_DEBUG" value="1" />
-    <add key="FLASK_ENV" value="production" />
-    <add key="FLASK_SECRET_KEY" value="<64-hex secret>" />
-  </appSettings>
-  <system.web>
-    <customErrors mode="Off"/>
-  </system.web>
-</configuration>
+auth DB: C:\www\ati\app\auth_users.sqlite3
+
+Traceback (most recent call last):
+  File "C:\www\ati\app\auth\manage_users.py", line 218, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "C:\www\ati\app\auth\manage_users.py", line 207, in main
+    return {
+           ~
+    ...<5 lines>...
+        'reset': lambda: cmd_reset(args),
+        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    }[args.command]()
+    ~~~~~~~~~~~~~~~^^
+  File "C:\www\ati\app\auth\manage_users.py", line 209, in <lambda>
+    'list': lambda: cmd_list(args),
+                    ~~~~~~~~^^^^^^
+  File "C:\www\ati\app\auth\manage_users.py", line 126, in cmd_list
+    users = store.list_users()
+  File "C:\www\ati\app\auth\store.py", line 133, in list_users
+    rows = conn.execute(
+           ~~~~~~~~~~~~^
+        'SELECT email, display_name, employee_id, active, created_at, updated_at FROM users ORDER BY email'
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ).fetchall()
+    ^
+sqlite3.OperationalError: no such column: email

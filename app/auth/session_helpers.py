@@ -29,7 +29,7 @@ def current_identity() -> Identity | None:
         return None
     try:
         return Identity(
-            username=data['username'],
+            email=data['email'],
             display_name=data['display_name'],
             employee_id=data.get('employee_id'),
             provider=data.get('provider', 'local'),

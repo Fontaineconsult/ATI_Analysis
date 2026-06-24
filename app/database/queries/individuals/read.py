@@ -47,6 +47,24 @@ def get_person_by_employee_id(employee_id: str) -> Person:
     return person
 
 
+def get_person_by_email(email: str) -> Person:
+    """
+    Get a person node by email — the link key between a local auth account and
+    its Person. Email is NOT unique-indexed on Person, so a duplicate-email match
+    is treated as a failed link (NotFoundError) rather than guessing which Person
+    owns the account.
+    :param email: Email of the person
+    :return: Person node
+    """
+    try:
+        person = Person.nodes.get_or_none(email=email)
+    except Person.MultipleNodesReturned:
+        raise NotFoundError(f"Multiple Person nodes share email {email}; cannot link unambiguously.")
+    if not person:
+        raise NotFoundError(f"Person with email {email} does not exist.")
+    return person
+
+
 def get_person_implementation_details(employee_id: str) -> dict:
     """
     Detail view for the People Explorer: person + their YSEs enriched with
