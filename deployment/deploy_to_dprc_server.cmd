@@ -16,9 +16,10 @@ echo About to deploy to \\DPRC-SERVER\ati
 echo Press Ctrl+C to cancel, or any key to continue...
 pause >nul
 
-:: Step 1: Copy the full app folder (excluding node_modules). wsgi.py is not in
-:: app\ anymore — it lives in this deployment\ folder and is copied in Step 2.
-robocopy "%~dp0..\app" "\\DPRC-SERVER\ati\app" /E /Z /R:2 /W:5 /XD node_modules
+:: Step 1: Copy the full app folder. Exclude node_modules and the local .env.* files —
+:: production config is the host's web.config, never a shipped .env (see deployment\iis-deploy.md).
+:: wsgi.py is not in app\ anymore — it lives in this deployment\ folder and is copied in Step 2.
+robocopy "%~dp0..\app" "\\DPRC-SERVER\ati\app" /E /Z /R:2 /W:5 /XD node_modules /XF .env.production .env.development .env.remote
 set rc=%errorlevel%
 if %rc% geq 8 (
     echo.
