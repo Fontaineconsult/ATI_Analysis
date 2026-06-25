@@ -1,6 +1,6 @@
 import React, { useState, useContext } from 'react';
 import { Box, Collapse, Flex, Text, VStack, useToast } from '@chakra-ui/react';
-import { addImplementationNote } from '../../../services/api/post';
+import { addImplementationNote, unlinkDocumentationFromImplementation } from '../../../services/api/post';
 import { updateNoteForImplementation } from '../../../services/api/put';
 import { DataContext } from '../../../context/DataContext';
 import { useSettings } from '../../../context/SettingsContext';
@@ -111,6 +111,17 @@ export default function NotesViewer({ notes = [], implementation_id, implementat
         }
     };
 
+    const handleUnlink = async (note) => {
+        if (!window.confirm(`Unlink "${note.name || 'this note'}" from this implementation? It won't be deleted.`)) return;
+        try {
+            await unlinkDocumentationFromImplementation(implementation_id, implementation_type, 'note', note.unique_id);
+            toast({ title: 'Note unlinked', status: 'success', duration: 3000, isClosable: true });
+            await refreshImplementations();
+        } catch (error) {
+            toast({ title: 'Error unlinking note', description: error.message, status: 'error', duration: 3000, isClosable: true });
+        }
+    };
+
     const isIncludedInCurrentYear = (note) => {
         if (!note.relationship) return note.include_in_report !== false;
         const { included_in_years = [], excluded_from_years = [] } = note.relationship;
@@ -142,6 +153,8 @@ export default function NotesViewer({ notes = [], implementation_id, implementat
                                     titleNode={<Text fontSize="sm" fontWeight="semibold" color="gray.800" noOfLines={1}>{note.name || 'Untitled Note'}</Text>}
                                     onEdit={() => { setEditingIndex(index); setIsAddingNew(false); }}
                                     canEdit={canManage}
+                                    onUnlink={() => handleUnlink(note)}
+                                    canUnlink={canManage}
                                 >
                                     {note.content && (
                                         <Text fontSize="xs" color="gray.700" whiteSpace="pre-wrap" noOfLines={6}>

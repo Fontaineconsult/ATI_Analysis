@@ -13,7 +13,7 @@ const YEAR = '2025-2026';
 const ind = (composite_key, opts = {}) => {
     const {
         status = null, value = null, persons = 0, approved = false,
-        ready = false, override = false, evidence = true, docs = null,
+        ready = false, override = false, evidence = true, docs = null, webs = null,
     } = opts;
     const wrapper = {
         indicator: {
@@ -40,11 +40,13 @@ const ind = (composite_key, opts = {}) => {
         statusLevel: status ? { properties: { status_level: status, status_value: value } } : null,
         persons: Array.from({ length: persons }, () => ({ properties: {} })),
         adminReviewers: [],
-        // docs === null → no implementations (implCount 0). docs is an array of
-        // depreciated-flags → one implementation carrying those documents.
-        evidenceTypes: docs === null ? [] : [{
+        // docs === null && webs === null → no implementations (implCount 0). Otherwise one
+        // implementation carrying the given documents (array of depreciated flags) and
+        // webpages (array of prop objects, e.g. { no_longer_exists: true } / { depreciated: true }).
+        evidenceTypes: (docs === null && webs === null) ? [] : [{
             type: 'Process',
-            docs: docs.map((dep) => ({ document: { properties: { depreciated: dep } } })),
+            docs: (docs || []).map((dep) => ({ document: { properties: { depreciated: dep } } })),
+            webs: (webs || []).map((props) => ({ webpage: { properties: props } })),
         }],
         has_notes: [], has_messages: [], has_metrics: [], plans: [],
     }];
@@ -139,6 +141,26 @@ describe('computeReportMetrics', () => {
             expect(m.byWorkingGroup.find((w) => w.key === 'procurement').totalIndicators).toBe(0);
             expect(m.byWorkingGroup.find((w) => w.key === 'instructionalMaterials').totalIndicators).toBe(0);
         });
+    });
+});
+
+describe('no-active-docs folds in webpages (depreciated / no_longer_exists)', () => {
+    const data = {
+        web: wgTree([
+            // only documentation item is a dead webpage (link rot) → flagged
+            ind('2.1-web', { status: 'Initiated', value: 1, webs: [{ no_longer_exists: true }] }),
+            // a live webpage → not flagged
+            ind('2.2-web', { status: 'Defined', value: 2, webs: [{ no_longer_exists: false }] }),
+            // an active doc rescues an otherwise-dead page → not flagged
+            ind('2.3-web', { status: 'Defined', value: 2, docs: [false], webs: [{ no_longer_exists: true }] }),
+            // a deprecated webpage (no docs) → flagged, same as a deprecated doc
+            ind('2.4-web', { status: 'Initiated', value: 1, webs: [{ depreciated: true }] }),
+        ]),
+    };
+    const c = computeReportMetrics(data).campus;
+
+    test('a no_longer_exists or depreciated page with no live documentation flags noActiveDocs', () => {
+        expect(c.noActiveDocsCount).toBe(2); // 2.1-web (gone) and 2.4-web (deprecated)
     });
 });
 

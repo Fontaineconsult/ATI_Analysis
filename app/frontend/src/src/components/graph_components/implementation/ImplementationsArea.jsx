@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
     Box,
@@ -25,7 +25,7 @@ import ImplementationStatStrip from './ImplementationStatStrip';
 import ImplementationList from './ImplementationList';
 import ImplementationDetailPanel from './ImplementationDetailPanel';
 import CreateImplementationModal from './CreateImplementation';
-import { IMPLEMENTATION_TYPES, TYPE_KEYS, isValidType, typeLabel, allDocumentsDepreciated } from './implementationConfig';
+import { IMPLEMENTATION_TYPES, TYPE_KEYS, isValidType, typeLabel, allDocumentsDepreciated, implementationInCampus } from './implementationConfig';
 
 const ALL = 'All';
 
@@ -54,6 +54,9 @@ function ImplementationsArea() {
         implementationType && isValidType(implementationType) ? implementationType : ALL,
     );
     const [selectedId, setSelectedId] = useState(null);
+    // Owned here (not in the list) so the category counts + stat strip below scope to
+    // the same campus the list shows. Default off: active campus only.
+    const [showAllCampuses, setShowAllCampuses] = useState(false);
 
     // Apply the URL deep-link ONCE (on arrival), then let interaction drive state —
     // otherwise our own navigate() on each click would re-collapse the view.
@@ -79,18 +82,32 @@ function ImplementationsArea() {
         ? allImplementations.find((i) => i.unique_id === selectedId) || null
         : null;
 
-    // Area-wide diagnostic counts (across every type, all campuses).
+    // Campus-scoped views for the category counts + stat strip. Default scopes to the
+    // active campus (plus unassigned orphans, matching the list); "Show all Campuses"
+    // widens to every campus. Keeps the counts in agreement with the list below.
+    const inScope = useCallback(
+        (impl) => showAllCampuses || implementationInCampus(impl, campus),
+        [showAllCampuses, campus],
+    );
+    const scopedByType = useMemo(() => {
+        const out = {};
+        for (const t of TYPE_KEYS) out[t] = (byType[t] || []).filter(inScope);
+        return out;
+    }, [byType, inScope]);
+    const scopedAll = useMemo(() => TYPE_KEYS.flatMap((t) => scopedByType[t]), [scopedByType]);
+
+    // Diagnostic counts over the campus-scoped set (so they match the category buttons).
     const stats = useMemo(() => {
         let noEvidence = 0;
         let noOwner = 0;
         let noActiveDocs = 0;
-        allImplementations.forEach((impl) => {
+        scopedAll.forEach((impl) => {
             if (!(impl.is_evidence_for?.length)) noEvidence += 1;
             if (!(impl.owned_by?.length)) noOwner += 1;
             if (allDocumentsDepreciated(impl)) noActiveDocs += 1;
         });
-        return { total: allImplementations.length, noEvidence, noOwner, noActiveDocs };
-    }, [allImplementations]);
+        return { total: scopedAll.length, noEvidence, noOwner, noActiveDocs };
+    }, [scopedAll]);
 
     const definition = !isAll && getNodeTypeDefinition ? getNodeTypeDefinition(selectedType) : null;
 
@@ -156,11 +173,11 @@ function ImplementationsArea() {
                         colorScheme={isAll ? 'teal' : 'gray'}
                         onClick={() => handleTypeSelect(ALL)}
                     >
-                        All ({allImplementations.length})
+                        All ({scopedAll.length})
                     </Button>
                 </WrapItem>
                 {IMPLEMENTATION_TYPES.map(({ key, label }) => {
-                    const count = (byType[key] || []).length;
+                    const count = (scopedByType[key] || []).length;
                     const isSel = selectedType === key;
                     return (
                         <WrapItem key={key}>
@@ -196,6 +213,8 @@ function ImplementationsArea() {
                         items={listItems}
                         groupByType={isAll}
                         activeCampus={campus}
+                        showAllCampuses={showAllCampuses}
+                        setShowAllCampuses={setShowAllCampuses}
                         typeName={isAll ? 'implementation' : typeLabel(selectedType)}
                         selectedId={selectedId}
                         onSelect={handleSelect}

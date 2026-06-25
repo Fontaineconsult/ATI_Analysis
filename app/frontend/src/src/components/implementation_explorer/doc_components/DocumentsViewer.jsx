@@ -1,6 +1,6 @@
 import React, { useState, useContext } from 'react';
 import { Badge, Box, Collapse, Flex, Text, VStack, WrapItem, useToast } from '@chakra-ui/react';
-import { addDocumentToImplementation } from '../../../services/api/post';
+import { addDocumentToImplementation, unlinkDocumentationFromImplementation } from '../../../services/api/post';
 import { updateDocument } from '../../../services/api/put';
 import { DataContext } from '../../../context/DataContext';
 import { useSettings } from '../../../context/SettingsContext';
@@ -134,6 +134,17 @@ export default function DocumentsViewer({ documents = [], implementation_id, imp
         }
     };
 
+    const handleUnlink = async (doc) => {
+        if (!window.confirm(`Unlink "${doc.name || 'this document'}" from this implementation? It won't be deleted.`)) return;
+        try {
+            await unlinkDocumentationFromImplementation(implementation_id, implementation_type, 'document', doc.unique_id);
+            toast({ title: 'Document unlinked', status: 'success', duration: 3000, isClosable: true });
+            await refreshImplementations();
+        } catch (error) {
+            toast({ title: 'Error unlinking document', description: error.message, status: 'error', duration: 3000, isClosable: true });
+        }
+    };
+
     const isIncludedInCurrentYear = (doc) => {
         if (!doc.relationship) return doc.include_in_report !== false;
         const { included_in_years = [], excluded_from_years = [] } = doc.relationship;
@@ -165,6 +176,8 @@ export default function DocumentsViewer({ documents = [], implementation_id, imp
                                     titleNode={<Text fontSize="sm" fontWeight="semibold" color="gray.800" noOfLines={1}>{doc.name}</Text>}
                                     onEdit={() => { setEditingIndex(index); setIsAddingNew(false); }}
                                     canEdit={canManage}
+                                    onUnlink={() => handleUnlink(doc)}
+                                    canUnlink={canManage}
                                 >
                                     {doc.description && <Text fontSize="xs" color="gray.600" noOfLines={2}>{doc.description}</Text>}
                                     {doc.maintained_by && <MetaLine>Maintained by {doc.maintained_by.name || 'Unknown'}</MetaLine>}

@@ -1,7 +1,7 @@
 import React, { useState, useContext } from 'react';
 import { Badge, Box, Collapse, HStack, Heading, Link, Text, VStack, WrapItem, useToast } from '@chakra-ui/react';
 import { ExternalLinkIcon } from '@chakra-ui/icons';
-import { addWebpageToImplementation } from '../../../services/api/post';
+import { addWebpageToImplementation, unlinkDocumentationFromImplementation } from '../../../services/api/post';
 import { updateWebpage } from '../../../services/api/put';
 import { DataContext } from '../../../context/DataContext';
 import { useSettings } from '../../../context/SettingsContext';
@@ -126,6 +126,17 @@ export default function WebpagesViewer({ webpages = [], implementation_id, imple
         }
     };
 
+    const handleUnlink = async (wp) => {
+        if (!window.confirm(`Unlink "${wp.name || wp.url || 'this webpage'}" from this implementation? It won't be deleted.`)) return;
+        try {
+            await unlinkDocumentationFromImplementation(implementation_id, implementation_type, 'webpage', wp.unique_id);
+            toast({ title: 'Webpage unlinked', status: 'success', duration: 3000, isClosable: true });
+            await refreshImplementations();
+        } catch (error) {
+            toast({ title: 'Error unlinking webpage', description: error.message, status: 'error', duration: 3000, isClosable: true });
+        }
+    };
+
     const isIncludedInCurrentYear = (wp) => {
         if (!wp.relationship) return wp.include_in_report !== false;
         const { included_in_years = [], excluded_from_years = [] } = wp.relationship;
@@ -166,6 +177,8 @@ export default function WebpagesViewer({ webpages = [], implementation_id, imple
                                     }
                                     onEdit={() => { setEditingIndex(index); setIsAddingNew(false); }}
                                     canEdit={canManage}
+                                    onUnlink={() => handleUnlink(wp)}
+                                    canUnlink={canManage}
                                 >
                                     {wp.description && <Text fontSize="xs" color="gray.600" noOfLines={2}>{wp.description}</Text>}
                                     {wp.maintained_by && <MetaLine>Maintained by {wp.maintained_by.name || 'Unknown'}</MetaLine>}

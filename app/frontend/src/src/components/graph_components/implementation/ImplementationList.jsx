@@ -15,7 +15,7 @@ import {
     VStack,
 } from '@chakra-ui/react';
 import { AddIcon, SearchIcon } from '@chakra-ui/icons';
-import { IMPLEMENTATION_TYPES, typeLabel, allDocumentsDepreciated } from './implementationConfig';
+import { IMPLEMENTATION_TYPES, typeLabel, allDocumentsDepreciated, implementationInCampus } from './implementationConfig';
 
 /**
  * Selectable list for the 1/3 column. Mirrors PlansList: a filter bar
@@ -39,6 +39,8 @@ function ImplementationList({
     items = [],
     groupByType = false,
     activeCampus,
+    showAllCampuses = false,
+    setShowAllCampuses = () => {},
     selectedId,
     onSelect,
     onAdd,
@@ -46,9 +48,9 @@ function ImplementationList({
     emptyMessage,
 }) {
     const [search, setSearch] = useState('');
-    // Default off: only show implementations wired to the active campus (plus
-    // not-yet-assigned ones, so orphans don't disappear). Toggle on for all.
-    const [showAllCampuses, setShowAllCampuses] = useState(false);
+    // The campus scope (Show all Campuses) is owned by the parent so the category
+    // counts + stat strip agree with what this list shows. Default off: active
+    // campus only (plus not-yet-assigned orphans, so they don't disappear).
 
     const lower = typeName.toLowerCase();
 
@@ -57,8 +59,7 @@ function ImplementationList({
         return items.filter((impl) => {
             if (q && !(impl.title || '').toLowerCase().includes(q)) return false;
             if (showAllCampuses) return true;
-            const cs = Array.isArray(impl.campuses) ? impl.campuses : [];
-            return cs.length === 0 || (activeCampus && cs.includes(activeCampus));
+            return implementationInCampus(impl, activeCampus);
         });
     }, [items, search, showAllCampuses, activeCampus]);
 

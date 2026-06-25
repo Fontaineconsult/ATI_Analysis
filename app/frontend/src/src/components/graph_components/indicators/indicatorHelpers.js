@@ -37,15 +37,18 @@ export function getIndicatorSummary(wrapper) {
         (ev.plans?.length || 0);
 
     // Documentation health across the indicator's implementations (evidenceTypes).
-    // A document is "active" unless flagged depreciated (stored boolean, or the
-    // legacy string "True"). We flag when ANY implementation has documents but every
-    // one is depreciated — the same per-implementation rule the implementations view
-    // uses (allDocumentsDepreciated), so a report agrees with that view.
+    // The documentation pool is documents AND webpages. A document is "active" unless
+    // flagged depreciated (stored boolean, or the legacy string "True"); a webpage is
+    // "active" unless flagged depreciated OR no_longer_exists (link rot — the page is
+    // gone). We flag when ANY implementation has documentation but every item is dead —
+    // the same per-implementation rule the implementations view uses
+    // (allDocumentsDepreciated), so a report agrees with that view.
     //
-    // Two compound-query artifacts are filtered out:
+    // Compound-query artifacts are filtered out:
     //   - phantom evidenceTypes ({type: null}) left when an SI has zero implementations,
-    //   - phantom docs ({document: null}) left when an implementation has zero documents
-    //     (otherwise that null counts as a spurious "active" doc and suppresses the flag).
+    //   - phantom docs ({document: null}) / webs ({webpage: null}) left when an
+    //     implementation has zero of that kind (otherwise the null counts as a spurious
+    //     "active" item and suppresses the flag).
     const evidenceTypes = (ev.evidenceTypes || []).filter((et) => et && et.type);
     const isDeprecated = (v) => v === true || v === 'True';
     let totalDocCount = 0;
@@ -53,12 +56,21 @@ export function getIndicatorSummary(wrapper) {
     let anyImplAllDepreciated = false;
     for (const et of evidenceTypes) {
         const etDocs = (et.docs || []).filter((d) => d && d.document);
+        const etWebs = (et.webs || []).filter((w) => w && w.webpage);
         let etActive = 0;
+        let etTotal = 0;
         for (const d of etDocs) {
-            totalDocCount += 1;
-            if (!isDeprecated(d.document.properties?.depreciated)) { activeDocCount += 1; etActive += 1; }
+            etTotal += 1;
+            if (!isDeprecated(d.document.properties?.depreciated)) { etActive += 1; }
         }
-        if (etDocs.length > 0 && etActive === 0) anyImplAllDepreciated = true;
+        for (const w of etWebs) {
+            etTotal += 1;
+            const wp = w.webpage.properties || {};
+            if (!isDeprecated(wp.depreciated) && !isDeprecated(wp.no_longer_exists)) { etActive += 1; }
+        }
+        totalDocCount += etTotal;
+        activeDocCount += etActive;
+        if (etTotal > 0 && etActive === 0) anyImplAllDepreciated = true;
     }
     const implCount = evidenceTypes.length;
 

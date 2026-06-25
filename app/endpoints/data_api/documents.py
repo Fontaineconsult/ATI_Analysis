@@ -7,6 +7,7 @@ from . import data_api_endpoints
 from app.database.queries.documentation.create import add_note, add_message, add_document, add_webpage, add_metric
 from app.database.queries.documentation.update import update_note, update_message, update_metric, update_document, \
     update_webpage
+from app.database.queries.implementation.update import detach_documentation_from_implementation
 from app.database.queries.documentation.read import get_all_notes, get_all_messages, get_all_metrics, get_all_documents, get_all_webpages
 from app.endpoints.data_api.util.response import make_response
 from .errors.custom_exceptions import NotFoundError, CrudError, ValidationError
@@ -218,6 +219,21 @@ class DocumentsAPI(MethodView):
                         implementation_type=implementation_type
                 ):
                     return make_response({"status": "success", "message": "Metric created successfully."}), 201
+
+            elif action == 'unlink_documentation':
+                documentation_type = data.get('documentation_type')
+                implementation_id = data.get('implementation_id')
+                implementation_type = data.get('implementation_type')
+                unique_id = data.get('unique_id')
+                if not all([documentation_type, implementation_id, implementation_type, unique_id]):
+                    return make_response({"status": "error", "error": "documentation_type, implementation_id, implementation_type, and unique_id are required."}), 400
+                detach_documentation_from_implementation(
+                    implementation_id=implementation_id,
+                    implementation_type=implementation_type,
+                    documentation_type=documentation_type,
+                    documentation_id=unique_id,
+                )
+                return make_response({"status": "success", "message": f"{documentation_type} unlinked from implementation."}), 200
 
             else:
                 return make_response({"status": "error", "error": f"Unknown action: {action}"}), 400

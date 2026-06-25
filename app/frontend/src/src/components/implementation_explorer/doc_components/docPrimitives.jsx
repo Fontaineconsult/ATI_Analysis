@@ -17,7 +17,7 @@ import {
     Wrap,
     WrapItem,
 } from '@chakra-ui/react';
-import { AddIcon, EditIcon, ExternalLinkIcon } from '@chakra-ui/icons';
+import { AddIcon, EditIcon, ExternalLinkIcon, SmallCloseIcon } from '@chakra-ui/icons';
 
 /**
  * Shared canon primitives for the Supporting Documentation viewers
@@ -106,7 +106,10 @@ export function AddRow({ onAdd, label, canAdd, isAdding }) {
 
 // Compact display row: title (+ optional badge) with an Edit affordance, then
 // dense meta/children below.
-export function ItemShell({ titleNode, badge, onEdit, canEdit, children }) {
+export function ItemShell({
+    titleNode, badge, onEdit, canEdit, onUnlink, canUnlink,
+    unlinkTitle = 'Unlink from this implementation (does not delete it)', children,
+}) {
     return (
         <Box px={3} py={2} borderWidth="1px" borderColor="gray.200" borderRadius="md" bg="white" _hover={{ boxShadow: 'sm' }}>
             <HStack justify="space-between" align="start" spacing={2}>
@@ -114,9 +117,14 @@ export function ItemShell({ titleNode, badge, onEdit, canEdit, children }) {
                     {titleNode}
                     {badge}
                 </HStack>
-                {canEdit && onEdit && (
-                    <IconButton aria-label="Edit" icon={<EditIcon />} size="xs" variant="ghost" colorScheme="teal" onClick={onEdit} flexShrink={0} />
-                )}
+                <HStack spacing={0.5} flexShrink={0}>
+                    {canEdit && onEdit && (
+                        <IconButton aria-label="Edit" icon={<EditIcon />} size="xs" variant="ghost" colorScheme="teal" onClick={onEdit} />
+                    )}
+                    {canUnlink && onUnlink && (
+                        <IconButton aria-label="Unlink" title={unlinkTitle} icon={<SmallCloseIcon />} size="xs" variant="ghost" colorScheme="red" onClick={onUnlink} />
+                    )}
+                </HStack>
             </HStack>
             {children != null && <Box mt={1}>{children}</Box>}
         </Box>

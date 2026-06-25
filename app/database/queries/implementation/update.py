@@ -278,6 +278,38 @@ def unassign_person_as_owner(implementation_unique_id, implementation_type, pers
     return True
 
 
+def detach_documentation_from_implementation(
+        implementation_id: str,
+        implementation_type: str,
+        documentation_type: str,
+        documentation_id: str,
+) -> bool:
+    """Unlink a supporting Document/Webpage/Note/Message from an implementation by
+    disconnecting the is_documented_by edge. The node itself is left intact — it may
+    be linked to other implementations or YSEs — so this is a detach, not a delete.
+    Mirrors assign_documentation_to_implementation via the same registries."""
+    if implementation_type not in implementation_classes:
+        raise ValidationError(f"Invalid implementation_type: {implementation_type}")
+    if documentation_type not in documentation_classes:
+        raise ValidationError(f"Invalid documentation_type: {documentation_type}")
+
+    try:
+        implementation_class = implementation_classes[implementation_type]
+        implementation_node = implementation_class.nodes.get(unique_id=implementation_id)
+    except implementation_class.DoesNotExist:
+        raise NotFoundError(f"No implementation node found with id: {implementation_id}")
+
+    try:
+        documentation_class = documentation_classes[documentation_type]
+        documentation_node = documentation_class.nodes.get(unique_id=documentation_id)
+    except documentation_class.DoesNotExist:
+        raise NotFoundError(f"No {documentation_type} found with id: {documentation_id}")
+
+    relationship = getattr(implementation_node, documentation_relationships[documentation_type])
+    relationship.disconnect(documentation_node)
+    return True
+
+
 def _resolve_accountable_implementation(implementation_unique_id, implementation_type):
     """Resolve an implementation that can carry accountable_working_group (the four doing
     types). Raises ValidationError on a non-accountable type."""

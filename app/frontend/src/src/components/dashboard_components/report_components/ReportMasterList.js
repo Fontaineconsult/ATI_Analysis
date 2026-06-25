@@ -20,6 +20,7 @@ import { DataContext } from '../../../context/DataContext';
 import Card from '../../graph_components/common/Card';
 import { computeReportMetrics } from './reportMetrics';
 import ReportMetricsOverview from './ReportMetricsOverview';
+import CopyStatusReportButton from './CopyStatusReportButton';
 import ReportReferenceRow from './ReportReferenceRow';
 import SuccessIndicatorReportTables from './SuccessIndicatorReportTables';
 import ApprovalMasterContainer from '../../ati_explorer_containers/ApprovalMasterContainer';
@@ -89,6 +90,11 @@ const ReportMasterList = () => {
                 </Box>
             ) : (
                 <>
+                    {/* Copy a compact, email-ready (Outlook-safe) status report for the active campus */}
+                    <Box display="flex" justifyContent="flex-end" mb={3}>
+                        <CopyStatusReportButton />
+                    </Box>
+
                     {/* TOP — campus-wide metrics overview. The "no Year Success Evidence"
                         empty state is handled globally by <YseAvailabilityBanner/> (App.js). */}
                     <ReportMetricsOverview metrics={metrics} loading={loading} />

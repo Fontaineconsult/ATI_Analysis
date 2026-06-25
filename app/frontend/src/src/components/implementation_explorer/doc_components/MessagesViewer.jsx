@@ -1,6 +1,6 @@
 import React, { useState, useContext } from 'react';
 import { Badge, Box, Collapse, Flex, Text, VStack, useToast } from '@chakra-ui/react';
-import { addMessageToImplementation } from '../../../services/api/post';
+import { addMessageToImplementation, unlinkDocumentationFromImplementation } from '../../../services/api/post';
 import { updateMessageForImplementation } from '../../../services/api/put';
 import { DataContext } from '../../../context/DataContext';
 import { useSettings } from '../../../context/SettingsContext';
@@ -122,6 +122,17 @@ export default function MessagesViewer({ messages = [], implementation_id, imple
         }
     };
 
+    const handleUnlink = async (msg) => {
+        if (!window.confirm(`Unlink "${msg.name || 'this message'}" from this implementation? It won't be deleted.`)) return;
+        try {
+            await unlinkDocumentationFromImplementation(implementation_id, implementation_type, 'message', msg.unique_id);
+            toast({ title: 'Message unlinked', status: 'success', duration: 3000, isClosable: true });
+            await refreshImplementations();
+        } catch (error) {
+            toast({ title: 'Error unlinking message', description: error.message, status: 'error', duration: 3000, isClosable: true });
+        }
+    };
+
     const isIncludedInCurrentYear = (msg) => {
         if (!msg.relationship) return msg.include_in_report !== false;
         const { included_in_years = [], excluded_from_years = [] } = msg.relationship;
@@ -154,6 +165,8 @@ export default function MessagesViewer({ messages = [], implementation_id, imple
                                     badge={msg.type && <Badge colorScheme="purple" fontSize="2xs">{msg.type}</Badge>}
                                     onEdit={() => { setEditingIndex(index); setIsAddingNew(false); }}
                                     canEdit={canManage}
+                                    onUnlink={() => handleUnlink(msg)}
+                                    canUnlink={canManage}
                                 >
                                     {msg.content && <Text fontSize="xs" color="gray.700" noOfLines={3}>{msg.content}</Text>}
                                     <PathLinks filePath={msg.file_path} uriPath={msg.uri_path} />

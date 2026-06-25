@@ -72,6 +72,29 @@ export const addDocumentToImplementation = async (implementation_id, implementat
 }
 
 
+// Unlink (detach) a supporting document / webpage / note / message from an
+// implementation. The node itself is NOT deleted — it may be linked elsewhere.
+// documentation_type: 'document' | 'webpage' | 'note' | 'message'.
+export const unlinkDocumentationFromImplementation = async (implementation_id, implementation_type, documentation_type, unique_id) => {
+    try {
+        const response = await axios.post(
+            `${process.env.REACT_APP_API_URL}/documents`,
+            {
+                action: 'unlink_documentation',
+                documentation_type,
+                implementation_id,
+                implementation_type,
+                unique_id,
+            }
+        );
+        return response.data;
+    } catch (error) {
+        console.error('Error unlinking documentation:', error);
+        throw error;
+    }
+}
+
+
 export const addWebpageToImplementation = async (implementation_id, implementation_type, webpage_dict, created_by, academic_year, include_in_year) => {
 
     try {

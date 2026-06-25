@@ -254,8 +254,11 @@ function ImplementationDetailPanel({ implementation, onAfterChange }) {
         (implementation.supporting_messages?.length || 0) +
         (implementation.supporting_metrics?.length || 0);
 
-    // Documents exist but every one is depreciated → no active documentation.
-    const documentCount = implementation.supporting_documents?.length || 0;
+    // Documentation (documents + webpages) exists but every item is dead — a doc
+    // depreciated, or a page depreciated / no_longer_exists → no active documentation.
+    const documentationCount =
+        (implementation.supporting_documents?.length || 0) +
+        (implementation.supporting_webpages?.length || 0);
     const docsAllDeprecated = allDocumentsDepreciated(implementation);
 
     const dimensionLabel = describeField?.('Implementation', 'dimensions')?.title || 'AMM Dimensions';
@@ -306,11 +309,11 @@ function ImplementationDetailPanel({ implementation, onAfterChange }) {
                 </Wrap>
             </Card>
 
-            {/* Warning: every attached document is depreciated — no live documentation */}
+            {/* Warning: every attached document/webpage is dead — no live documentation */}
             {docsAllDeprecated && (
                 <Alert status="warning" borderRadius="lg" fontSize="sm">
                     <AlertIcon />
-                    All {documentCount} attached document{documentCount === 1 ? ' is' : 's are'} marked depreciated — this implementation has no active documentation.
+                    All {documentationCount} attached documentation item{documentationCount === 1 ? ' is' : 's are'} deprecated or no longer available — this implementation has no active documentation.
                 </Alert>
             )}
 
