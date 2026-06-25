@@ -115,12 +115,21 @@ function collectSections(data, { campus, year, origin }, wgList) {
                 author: n.created_by?.properties?.name || null,
                 date: n.note.properties.date_created || null,
             }));
+        // YSE-level assignments — Person -[:implements]-> YearSuccessEvidence.
+        const people = (ev?.persons || [])
+            .filter((p) => p?.properties?.name)
+            .map((p) => ({
+                name: p.properties.name,
+                title: p.properties.title || null,
+                email: p.properties.email || null,
+            }));
         return {
             ck,
             description: ind.success_indicator || '',
             yseLink: yseLink(ck, segment),
             year: yse.year_identifier || year || null,
             status: ev?.statusLevel?.properties?.status_level || null,
+            people,
             impls,
             notes,
         };
@@ -160,6 +169,22 @@ function renderRowHtml(r, cell) {
     if (r.status) bits.push(statusBadgeHtml(r.status));
     if (r.year) bits.push(`<span style="color:${MUTED};font-size:11px;">${esc(r.year)}</span>`);
     if (bits.length) indCell += `<div style="margin-top:5px;">${bits.join('&nbsp;&nbsp;')}</div>`;
+
+    // YSE-level assignments — who owns this indicator's evidence. One bullet per person.
+    indCell += `<div style="font-size:11px;color:${TEXT};margin-top:4px;">`
+        + `<span style="color:${NAVY};font-weight:bold;">Assigned:</span>`;
+    if (r.people.length) {
+        for (const p of r.people) {
+            const nm = p.email
+                ? `<a href="mailto:${esc(p.email)}" style="color:${LINK};text-decoration:none;">${esc(p.name)}</a>`
+                : esc(p.name);
+            indCell += `<div style="margin-left:12px;color:${TEXT};">&bull;&nbsp;${nm}`
+                + `${p.title ? ` <span style="color:${MUTED};">(${esc(p.title)})</span>` : ''}</div>`;
+        }
+    } else {
+        indCell += ` <span style="color:${MUTED};font-style:italic;">Unassigned</span>`;
+    }
+    indCell += `</div>`;
 
     const implCell = r.impls.length
         ? r.impls.map((im) => {
@@ -254,6 +279,14 @@ function renderPlainText(sections, { campusLabel, year, heading }) {
                 const meta = [r.status ? `Status: ${r.status}` : null, r.year || null].filter(Boolean).join(' · ');
                 t += `\n${r.ck} — ${r.description}${meta ? `  [${meta}]` : ''}\n`;
                 if (r.yseLink) t += `  YSE: ${r.yseLink}\n`;
+                if (r.people.length) {
+                    t += `  Assigned:\n`;
+                    for (const p of r.people) {
+                        t += `        • ${p.name}${p.title ? ` (${p.title})` : ''}${p.email ? ` <${p.email}>` : ''}\n`;
+                    }
+                } else {
+                    t += `  Assigned: (unassigned)\n`;
+                }
                 t += `  Implementations:\n`;
                 if (r.impls.length) {
                     for (const im of r.impls) {
