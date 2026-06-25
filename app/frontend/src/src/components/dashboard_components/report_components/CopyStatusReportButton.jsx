@@ -7,32 +7,36 @@ import { buildWorkingGroupStatusReport } from '../../../services/utils/workingGr
 import { copyRichContent } from '../../../services/utils/copyToClipboard';
 
 /**
- * Copies a compact, Outlook-safe HTML status report for the active campus + year —
- * every working group's success indicators with their implementations and notes,
- * each deep-linked into the ATI database — onto the clipboard, ready to paste into
- * an email asking a third party to confirm/update the info. Plain-text fallback
- * included for clients that strip HTML. Reads DataContext + SettingsContext, so it
- * drops in anywhere on a loaded reports/dashboard view. Extra props pass through to
- * the Button (size, variant, etc.).
+ * Copies a compact, Outlook-safe HTML status report for a SINGLE working group of the
+ * active campus + year — its success indicators with their implementations and notes,
+ * each deep-linked into the ATI database — onto the clipboard, ready to paste into an
+ * email asking a third party to confirm/update the info. Plain-text fallback included.
+ *
+ * Props:
+ *   workingGroup  'web' | 'instructionalMaterials' | 'procurement' (omit for all three)
+ *   label         button text + toast subject (e.g. 'Web')
+ *   ...props      pass through to the Chakra Button.
  */
-export default function CopyStatusReportButton(props) {
+export default function CopyStatusReportButton({ workingGroup, label, ...props }) {
     const { data } = useContext(DataContext);
     const { currentAcademicYear, currentCampus } = useSettings();
     const toast = useToast();
     const [busy, setBusy] = useState(false);
+    const subject = label || 'Status report';
 
     const handleCopy = async () => {
         setBusy(true);
         try {
-            const { html, plainText, rowCount, sectionCount } = buildWorkingGroupStatusReport(data, {
+            const { html, plainText, rowCount } = buildWorkingGroupStatusReport(data, {
                 campus: currentCampus,
                 year: currentAcademicYear,
                 origin: window.location.origin,
+                workingGroup,
             });
             if (!rowCount) {
                 toast({
                     title: 'Nothing to copy',
-                    description: 'No working-group evidence is loaded for this campus and year.',
+                    description: `No evidence for ${subject} in this campus and year.`,
                     status: 'info', duration: 2500, isClosable: true,
                 });
                 return;
@@ -40,8 +44,8 @@ export default function CopyStatusReportButton(props) {
             const fmt = await copyRichContent({ html, plainText });
             const plain = fmt.startsWith('text');
             toast({
-                title: 'Status report copied',
-                description: `${rowCount} indicator${rowCount === 1 ? '' : 's'} across ${sectionCount} group${sectionCount === 1 ? '' : 's'} — paste into an email${plain ? ' (plain text only)' : ''}.`,
+                title: `${subject} report copied`,
+                description: `${rowCount} indicator${rowCount === 1 ? '' : 's'} — paste into an email${plain ? ' (plain text only)' : ''}.`,
                 status: 'success', duration: 3500, isClosable: true,
             });
         } catch (e) {
@@ -64,10 +68,10 @@ export default function CopyStatusReportButton(props) {
             isLoading={busy}
             loadingText="Copying…"
             onClick={handleCopy}
-            title="Copy a compact status report (implementations + notes per indicator, with database links) to paste into an email"
+            title={`Copy the ${subject} status report (implementations + notes per indicator, with database links) for email`}
             {...props}
         >
-            Copy status report for email
+            {label || 'Copy status report'}
         </Button>
     );
 }

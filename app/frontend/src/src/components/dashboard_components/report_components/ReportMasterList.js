@@ -2,6 +2,8 @@ import React, { useContext, useState, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
     Box,
+    ButtonGroup,
+    Flex,
     Heading,
     Spinner,
     Text,
@@ -21,6 +23,7 @@ import Card from '../../graph_components/common/Card';
 import { computeReportMetrics } from './reportMetrics';
 import ReportMetricsOverview from './ReportMetricsOverview';
 import CopyStatusReportButton from './CopyStatusReportButton';
+import { STATUS_REPORT_WORKING_GROUPS } from '../../../services/utils/workingGroupStatusReport';
 import ReportReferenceRow from './ReportReferenceRow';
 import SuccessIndicatorReportTables from './SuccessIndicatorReportTables';
 import ApprovalMasterContainer from '../../ati_explorer_containers/ApprovalMasterContainer';
@@ -90,10 +93,16 @@ const ReportMasterList = () => {
                 </Box>
             ) : (
                 <>
-                    {/* Copy a compact, email-ready (Outlook-safe) status report for the active campus */}
-                    <Box display="flex" justifyContent="flex-end" mb={3}>
-                        <CopyStatusReportButton />
-                    </Box>
+                    {/* Copy a compact, email-ready (Outlook-safe) status report — one
+                        working group at a time — for the active campus */}
+                    <Flex justify="flex-end" align="center" gap={3} mb={3} wrap="wrap">
+                        <Text fontSize="xs" color="gray.500" fontWeight="medium">Copy status report for email:</Text>
+                        <ButtonGroup size="sm" spacing={2}>
+                            {STATUS_REPORT_WORKING_GROUPS.map((wg) => (
+                                <CopyStatusReportButton key={wg.key} workingGroup={wg.key} label={wg.name} />
+                            ))}
+                        </ButtonGroup>
+                    </Flex>
 
                     {/* TOP — campus-wide metrics overview. The "no Year Success Evidence"
                         empty state is handled globally by <YseAvailabilityBanner/> (App.js). */}
