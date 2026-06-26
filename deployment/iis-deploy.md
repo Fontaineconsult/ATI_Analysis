@@ -105,9 +105,20 @@ Everything the app reads lives in `<appSettings>` of `C:\www\ati\web.config`. Ke
 | `AUTH_DB_PATH` | `C:\www\ati\data\auth_users.sqlite3`. |
 | `AUTH_SESSION_HOURS` | e.g. `12`. |
 | `SESSION_COOKIE_SECURE` | `1` only once the site has an HTTPS binding. |
+| `FS_PROVIDER` | File-storage backend; `local` (the only one today). |
+| `FS_LOCAL_ROOT` | Where uploaded files live: `C:\www\ati\data\files`. Created automatically (inherits Modify from `data\`). |
+| `FS_MAX_UPLOAD_MB` | Upload cap (Flask returns 413 over this). **Keep the IIS `requestLimits/maxAllowedContentLength` ≥ this** (see below). |
 | `ATI_ROTATING_LOG` | Optional; `1` to also write a bounded rotating `app-<pid>.log`. |
 
 Plus the wfastcgi keys `PYTHONPATH`, `WSGI_HANDLER`, `WSGI_LOG`, `WSGI_DEBUG`.
+
+**File uploads:** IIS request filtering rejects bodies over ~30 MB by default, *before* they
+reach the app — so `Setup-AtiIis.ps1` writes a
+`<system.webServer><security><requestFiltering><requestLimits maxAllowedContentLength="…"/>`
+sized from `FS_MAX_UPLOAD_MB`. If you raise `FS_MAX_UPLOAD_MB` by hand, raise
+`maxAllowedContentLength` (in **bytes**) to match. Files are served only through the
+auth-guarded `/ati/data-api/v1/files/<key>` endpoint — `data\files` is not an IIS virtual dir,
+so blobs are never reachable raw.
 
 After any edit, recycle: `iisreset` (or restart the app pool). Verify:
 `GET http://<host>/ati/auth/v1/me` → `{"enforced":true,…}`.

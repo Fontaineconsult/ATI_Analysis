@@ -32,6 +32,10 @@ class BaseConfig:
     NEO4J_DATABASE = config.get('NEO4J_DATABASE', 'neo4j')
     FLASK_RUN_PORT = config.get_int('FLASK_RUN_PORT', 5000)
 
+    # File uploads (app/fs): cap request bodies so oversize uploads get a 413.
+    # IIS also needs requestLimits/maxAllowedContentLength >= this (see deployment).
+    MAX_CONTENT_LENGTH = config.get_int('FS_MAX_UPLOAD_MB', 50) * 1024 * 1024
+
     CORS_ORIGINS = config.get_list('CORS_ORIGINS', ['http://localhost:3000', 'http://127.0.0.1:3000'])
 
     AUTH_ENFORCED = config.get_bool('AUTH_ENFORCED', False)
