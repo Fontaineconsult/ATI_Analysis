@@ -33,14 +33,20 @@ python -m app.database.cypher_runner.mcp
 **Claude Code:**
 
 ```bash
-claude mcp add ati-graph -- \
-  "C:\Users\Fonta\PycharmProjects\ATI_Analysis\.venv\Scripts\python.exe" \
+claude mcp add ati-graph -s local -e ATI_MCP_ALLOW_WRITE=true -- \
+  "C:\Users\Fonta\PycharmProjects\ATI_Analysis\.venv314\Scripts\python.exe" \
   -m app.database.cypher_runner.mcp
 ```
 
-Run it from the repo root (or set `cwd`) so the module path resolves. Point
-`command` at this project's venv interpreter (the one that has `mcp`, `neo4j`,
-and `pyyaml` installed) — adjust the path if your checkout lives elsewhere.
+Run it from the repo root (or set `cwd`) so the module path resolves.
+
+> **Interpreter — use `.venv314`, not `.venv`.** The read-only Cypher path works under
+> any interpreter with `mcp`/`neo4j`/`pyyaml`, but the **write** tools (`annotate_*`,
+> `set_yse_status`, ontology writes) call the queries layer, which configures neomodel via
+> `get_config()` — **neomodel ≥ 6** (Python 3.14 `.venv314`). The older `.venv`
+> (neomodel 5.3.2) lacks `get_config`, so reads succeed but every write fails with
+> `cannot import name 'get_config' from 'neomodel'`. This is the same env the Flask app
+> and pytest use. Drop `-e ATI_MCP_ALLOW_WRITE=true` if you want read-only.
 
 **Claude Desktop** (`%APPDATA%\Claude\claude_desktop_config.json`):
 
@@ -48,9 +54,10 @@ and `pyyaml` installed) — adjust the path if your checkout lives elsewhere.
 {
   "mcpServers": {
     "ati-graph": {
-      "command": "C:\\Users\\Fonta\\PycharmProjects\\ATI_Analysis\\.venv\\Scripts\\python.exe",
+      "command": "C:\\Users\\Fonta\\PycharmProjects\\ATI_Analysis\\.venv314\\Scripts\\python.exe",
       "args": ["-m", "app.database.cypher_runner.mcp"],
-      "cwd": "C:\\Users\\Fonta\\PycharmProjects\\ATI_Analysis"
+      "cwd": "C:\\Users\\Fonta\\PycharmProjects\\ATI_Analysis",
+      "env": { "ATI_MCP_ALLOW_WRITE": "true" }
     }
   }
 }
@@ -104,6 +111,16 @@ re-running a transcript is idempotent:
 Typical flow: `yse_catalog_for_year(year)` + `search_implementations(text)` /
 `search_success_indicators(text)` to resolve mentions → optionally
 `notes_for_yse` / `notes_for_implementation` to avoid duplicates → `annotate_*`.
+
+**Assignment rule — YSE is the default; implementations are strict.** Attach a note to an
+**implementation** only when the transcript contains a **direct or near-direct reference to that
+implementation's name** *and* the note is genuinely about that node. A passing name-drop in a list
+does not qualify (e.g. listing "the DSS content remediation" while describing a different team's
+opt-out program is not grounds for a note on the *Accessible Content Remediation (DSS)* node). For
+everything else — process descriptions, staffing/capacity, tool changes, governance/plan status —
+**default to `annotate_yse`** on the most specific matching success indicator. When in doubt, pick
+the YSE. Also prefer capturing the *delta* over what existing notes already say (check
+`notes_for_yse` / `notes_for_implementation` first) rather than restating prior-year evidence.
 
 ## Adding capability
 

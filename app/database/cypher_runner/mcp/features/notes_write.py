@@ -10,6 +10,14 @@ these tools to record a note against it.
   annotate_implementation(impl_id, impl_type, content,   -> Note -[:is_documented_by]-> attached to
                           academic_year, ...)                the implementation, year-scoped
 
+ASSIGNMENT RULE (which target to pick):
+  The YSE is the DEFAULT home for a transcript note. Only attach to an implementation when the
+  transcript contains a DIRECT or near-direct reference to that implementation's NAME *and* the
+  note's subject matter is actually about that node. A passing name-drop in a list is not enough
+  (e.g. someone listing "the DSS content remediation" while describing a different team's opt-out
+  program does NOT license a note on the "Accessible Content Remediation (DSS)" implementation).
+  When in doubt, route to annotate_yse on the most specific matching success indicator.
+
 Independence (same rule as ontology_write): each tool only CALLS the sanctioned queries function
 ``add_note`` (the very one the Flask ``POST /documents`` endpoint and the React NotesViewer use). No
 CRUD logic lives here, and the queries layer never imports this package. ``add_note`` is imported
@@ -81,8 +89,10 @@ def register(mcp, ctx) -> None:
         date_created: Optional[str] = None,
         name: Optional[str] = None,
     ) -> dict:
-        """Attach a note to a YearSuccessEvidence (via has_note). `year_identifier` is the YSE key
-        from yse_catalog_for_year (e.g. '2025-2026-1.1-web-sfsu'). Idempotent for identical content."""
+        """Attach a note to a YearSuccessEvidence (via has_note). THIS IS THE DEFAULT target for a
+        transcript note — use it unless the transcript directly names a specific implementation (see
+        annotate_implementation). `year_identifier` is the YSE key from yse_catalog_for_year
+        (e.g. '2025-2026-1.1-web-sfsu'). Idempotent for identical content."""
         ensure_app()
         from app.database.queries.documentation.create import add_note
         note_dict = _build_note_dict(content, title, f"yse:{year_identifier}", date_created, name)
@@ -98,9 +108,12 @@ def register(mcp, ctx) -> None:
         include_in_year: bool = True,
         name: Optional[str] = None,
     ) -> dict:
-        """Attach a note to an implementation (via is_documented_by, year-scoped). `implementation_id`
-        and `implementation_type` come from search_implementations (type is e.g. 'Process'/'Project').
-        `academic_year` (e.g. '2025-2026') sets the DocumentedByRel year inclusion."""
+        """Attach a note to an implementation (via is_documented_by, year-scoped). USE SPARINGLY:
+        only when the transcript DIRECTLY (or near-directly) names this implementation and the note
+        is actually about this node — a passing name-drop is not enough. Otherwise default to
+        annotate_yse. `implementation_id` and `implementation_type` come from search_implementations
+        (type is e.g. 'Process'/'Project'). `academic_year` (e.g. '2025-2026') sets the
+        DocumentedByRel year inclusion."""
         ensure_app()
         from app.database.queries.documentation.create import add_note
         note_dict = _build_note_dict(
@@ -126,9 +139,12 @@ def register(mcp, ctx) -> None:
 
     tools = [
         (annotate_yse, "annotate_yse",
-         "Attach a note (annotation) to a YearSuccessEvidence by its year_identifier."),
+         "Attach a note to a YearSuccessEvidence by its year_identifier. DEFAULT target for "
+         "transcript notes — prefer this unless the transcript directly names an implementation."),
         (annotate_implementation, "annotate_implementation",
-         "Attach a year-scoped note (annotation) to an implementation by its unique_id + type."),
+         "Attach a year-scoped note to an implementation by its unique_id + type. Use ONLY when the "
+         "transcript directly names this implementation and the note is about this node; otherwise "
+         "use annotate_yse."),
     ]
     for fn, tool_name, desc in tools:
         mcp.add_tool(fn, name=tool_name, description="[WRITE] " + desc)
