@@ -12,7 +12,7 @@ import os
 
 from app.data_config import (trajectory_choices, asset_classes, asset_scopes, taap_outcomes,
                              functions, component_kinds, coverage_domains, audiences, interface_provenances,
-                             descriptor_kinds)
+                             descriptor_kinds, query_categories, query_statuses)
 
 # Configuration enters through the single gateway (app/config_gateway.py). Importing
 # it hydrates os.environ from web.config (production) / .env.<FLASK_ENV> (development),
@@ -778,6 +778,8 @@ class WorkingGroupPlan(StructuredNode):
     yse_progress_notes = RelationshipTo("YearSuccessEvidence", "yse_progress_notated_by", model=YseProgressRel)
     progress_updates = RelationshipTo("ProgressUpdate", "has_progress_update")
 
+    # Pending questions raised under this plan (see Query). Reverse of Query.working_group_plan.
+    queries = RelationshipFrom("Query", "raised_under_plan")
 
     def serialize(self):
         return {
@@ -1296,6 +1298,9 @@ class YearSuccessEvidence(StructuredNode):
     # Relationships from person nodes
     persons_that_implement = RelationshipFrom("Person", "implements")
 
+    # Pending questions that address this evidence (see Query). Reverse of Query.addresses_evidence.
+    addressed_by_queries = RelationshipFrom("Query", "addresses_evidence")
+
     #serialize
     def serialize(self):
         return {
@@ -1304,6 +1309,51 @@ class YearSuccessEvidence(StructuredNode):
             'resources_status': self.resources_status,
             'implementation_plan_status': self.implementation_plan_status,
             "unique_id": self.unique_id
+        }
+
+
+class Query(StructuredNode):
+    """
+    A pending question raised under a WorkingGroupPlan — a decision a working group needs
+    to make that drives campus plans and Year Success Evidence. Holds its own answer once
+    settled.
+
+    The WorkingGroupPlan anchor (raised_under_plan) encodes campus + academic year +
+    working group, so a Query is naturally year-scoped and those coordinates are derivable
+    from the one required edge — there are no separate Campus / AcademicYear /
+    ATIWorkingGroup edges. Identity is the auto unique_id: multiple distinct open questions
+    per plan are valid, so the entity has no composite identifier.
+    """
+    unique_id = UniqueIdProperty()
+
+    question = StringProperty(required=True)             # the question itself
+    detail = StringProperty()                            # background / context
+    category = StringProperty(choices=query_categories)  # framed by question type
+    status = StringProperty(choices=query_statuses, default="open")
+    answer = StringProperty()                            # the settled answer
+    date_raised = DateProperty()                         # set in create_query
+    date_settled = DateProperty()                        # set in settle_query
+
+    # Required anchor — encodes campus + academic year + working group. Enforced in
+    # queries/query/create.py (neomodel can't require edges at save time).
+    working_group_plan = RelationshipTo("WorkingGroupPlan", "raised_under_plan")
+
+    # Optional links.
+    addresses_evidence = RelationshipTo("YearSuccessEvidence", "addresses_evidence")
+    query_raised_by = RelationshipTo("Person", "query_raised_by")
+    query_settled_by = RelationshipTo("Person", "query_settled_by")
+    notes = RelationshipTo("Note", "has_note")
+
+    def serialize(self):
+        return {
+            "unique_id": self.unique_id,
+            "question": self.question,
+            "detail": self.detail,
+            "category": self.category,
+            "status": self.status,
+            "answer": self.answer,
+            "date_raised": self.date_raised.isoformat() if self.date_raised else None,
+            "date_settled": self.date_settled.isoformat() if self.date_settled else None,
         }
 
 

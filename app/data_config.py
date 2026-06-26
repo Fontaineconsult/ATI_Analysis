@@ -232,6 +232,26 @@ descriptor_kinds = {
 }
 
 
+# Query category: the KIND of decision a pending question needs — framed by question
+# TYPE, not subject. A Query is raised under a WorkingGroupPlan and drives campus plans
+# and YSE. Stored values are dict keys; values are display labels.
+query_categories = {
+    "policy_decision":         "Policy Decision",
+    "resource_request":        "Resource Request",
+    "technical_clarification": "Technical Clarification",
+    "risk_compliance":         "Risk / Compliance",
+    "information_gap":          "Information Gap",
+}
+
+# Query status: lifecycle of a pending question from raised to answered. Settling is
+# independent of any meeting. Stored values are dict keys; values are display labels.
+query_statuses = {
+    "open":        "Open",
+    "in_progress": "In Progress",
+    "settled":     "Settled",
+}
+
+
 # ---------------------------------------------------------------------------
 # Public vocabularies surfaced to the frontend (read-only).
 #
@@ -269,6 +289,9 @@ PUBLIC_VOCABULARIES = {
     "academic_years":        academic_years,
     # ontology descriptions
     "descriptor_kinds":      descriptor_kinds,
+    # queries (pending questions)
+    "query_categories":      query_categories,
+    "query_statuses":        query_statuses,
 }
 
 yse_priority_level = {

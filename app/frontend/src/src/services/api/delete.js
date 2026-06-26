@@ -305,3 +305,21 @@ export const deletePrinciple = async (handle) => {
         throw error;
     }
 };
+
+// --- Queries (pending questions) ---
+export const deleteQuery = async (uniqueId) => {
+    try {
+        const response = await fetch(`${API_URL}/queries/${uniqueId}`, {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+        });
+        const data = await response.json();
+        if (!response.ok) {
+            throw new Error(data?.error || 'Failed to delete query');
+        }
+        return data;
+    } catch (error) {
+        console.error('Error deleting query:', error);
+        throw error;
+    }
+};

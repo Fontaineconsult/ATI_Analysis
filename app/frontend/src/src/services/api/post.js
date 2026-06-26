@@ -640,3 +640,19 @@ export const refreshAsanaPlans = async (campusAbbrev, yearName) => {
         throw error;
     }
 };
+
+// --- Queries (pending questions) ---
+// payload: { question, working_group_plan_identifier? | (campus_abbrev, year_name,
+// working_group), category?, detail?, raised_by_unique_id? }
+export const createQuery = async (payload) => {
+    try {
+        const response = await axios.post(`${process.env.REACT_APP_API_URL}/queries`, {
+            action: 'create_query',
+            ...payload,
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error creating query:', error);
+        throw error;
+    }
+};

@@ -831,3 +831,44 @@ export const fetchPlanYses = async (planUid) => {
         throw error;
     }
 };
+
+// --- Queries (pending questions) ------------------------------------------------
+// A Query anchors to a WorkingGroupPlan, so the panel payload (queries + candidate
+// YSE to attach) is fetched either by that plan's identifier (campus-plan card) or by
+// (campus, year, working group) (working-group dashboard). Both return the wrapped
+// {status, data} envelope; the caller reads `.data`.
+export const fetchQueryPanelForPlan = async (workingGroupPlanIdentifier) => {
+    try {
+        const response = await axios.get(
+            `${process.env.REACT_APP_API_URL}/queries/plan/${encodeURIComponent(workingGroupPlanIdentifier)}`
+        );
+        return response.data;
+    } catch (error) {
+        console.error('Error fetching queries for plan:', error.message);
+        throw error;
+    }
+};
+
+export const fetchQueryPanelForWorkingGroup = async (campusAbbrev, academicYear, workingGroup) => {
+    try {
+        const response = await axios.get(
+            `${process.env.REACT_APP_API_URL}/queries/working-group/${campusAbbrev}/${academicYear}/${workingGroup}`
+        );
+        return response.data;
+    } catch (error) {
+        console.error('Error fetching queries for working group:', error.message);
+        throw error;
+    }
+};
+
+export const fetchQuery = async (uniqueId) => {
+    try {
+        const response = await axios.get(
+            `${process.env.REACT_APP_API_URL}/queries/item/${uniqueId}`
+        );
+        return response.data;
+    } catch (error) {
+        console.error('Error fetching query:', error.message);
+        throw error;
+    }
+};

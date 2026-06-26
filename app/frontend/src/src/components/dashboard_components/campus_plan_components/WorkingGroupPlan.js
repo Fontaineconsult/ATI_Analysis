@@ -37,6 +37,7 @@ import ProgressUpdateModal from './ProgressUpdateModal';
 import StatusProgression from './StatusProgression';
 import Card from '../../graph_components/common/Card';
 import Section from '../../graph_components/common/Section';
+import QueriesPanel from '../query_components/QueriesPanel';
 import { getPlanStatusColorScheme } from '../../../styles/planStatusColors';
 import {
     PLAN_STATUS_ORDER,
@@ -502,6 +503,7 @@ function WorkingGroupPlan({
                         </>
                     )}
                 </Section>
+                <QueriesPanel workingGroupPlanIdentifier={wgp.plan_identifier} />
             </VStack>
 
             <IndicatorSelectorModal

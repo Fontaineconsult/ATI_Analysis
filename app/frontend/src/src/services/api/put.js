@@ -1121,3 +1121,52 @@ export const attachPlanToYse = async (planUid, yseUniqueId) => {
     });
     return response.data;
 };
+
+// --- Queries (pending questions) ---
+// Each returns the wrapped {status, data} envelope; data is the refreshed query.
+export const updateQuery = async (uniqueId, fields) => {
+    const response = await axios.put(`${process.env.REACT_APP_API_URL}/queries`, {
+        action: 'update_query',
+        unique_id: uniqueId,
+        ...fields,
+    });
+    return response.data;
+};
+
+export const settleQuery = async (uniqueId, answer, settledByUniqueId = null) => {
+    const response = await axios.put(`${process.env.REACT_APP_API_URL}/queries`, {
+        action: 'settle_query',
+        unique_id: uniqueId,
+        answer,
+        settled_by_unique_id: settledByUniqueId,
+    });
+    return response.data;
+};
+
+export const attachEvidenceToQuery = async (uniqueId, yseIdentifier) => {
+    const response = await axios.put(`${process.env.REACT_APP_API_URL}/queries`, {
+        action: 'attach_evidence',
+        unique_id: uniqueId,
+        yse_identifier: yseIdentifier,
+    });
+    return response.data;
+};
+
+export const detachEvidenceFromQuery = async (uniqueId, yseIdentifier) => {
+    const response = await axios.put(`${process.env.REACT_APP_API_URL}/queries`, {
+        action: 'detach_evidence',
+        unique_id: uniqueId,
+        yse_identifier: yseIdentifier,
+    });
+    return response.data;
+};
+
+export const addQueryNote = async (uniqueId, content, createdByUniqueId = null) => {
+    const response = await axios.put(`${process.env.REACT_APP_API_URL}/queries`, {
+        action: 'add_query_note',
+        unique_id: uniqueId,
+        content,
+        created_by_unique_id: createdByUniqueId,
+    });
+    return response.data;
+};
