@@ -333,6 +333,98 @@
     ORDER BY campus
 
 # ---------------------------------------------------------------------------
+# TRANSCRIPT ANNOTATION — DISCOVERY
+# ---------------------------------------------------------------------------
+# Discovery helpers for the annotation workflow: an agent dissecting a meeting
+# transcript uses these to resolve fuzzy text -> the exact YSE year_identifier
+# and implementation (unique_id, type) it then annotates with the write tools
+# (annotate_yse / annotate_implementation, gated by ATI_MCP_ALLOW_WRITE).
+# Read-only; the searches are case-insensitive CONTAINS matches.
+- name: yse_catalog_for_year
+  category: evidence
+  description: >-
+    The YSE match table for a year — one flat row per YearSuccessEvidence with its
+    year_identifier, indicator, campus, working group, and current status. Use this to
+    resolve a transcript mention to a YSE year_identifier for annotation.
+  mode: read
+  params: [academic_year]   # e.g. "2025-2026"
+  cypher: |
+    MATCH (yse:YearSuccessEvidence)-[:evidence_in_year]->(:AcademicYear {name: $academic_year})
+    MATCH (yse)-[:tracks]->(si:SuccessIndicator)
+    WHERE coalesce(si.removed, false) = false
+    OPTIONAL MATCH (yse)-[:evidence_at_campus]->(c:Campus)
+    OPTIONAL MATCH (yse)-[:status_is]->(sl:StatusLevel)
+    OPTIONAL MATCH (wg:ATIWorkingGroup)-[:responsible_for]->(:Goal)-[:supported_by]->(si)
+    RETURN yse.year_identifier AS year_identifier,
+           si.composite_key AS composite_key,
+           si.success_indicator AS indicator_text,
+           coalesce(c.abbreviation, 'NO CAMPUS') AS campus,
+           coalesce(wg.name, 'UNKNOWN') AS working_group,
+           coalesce(sl.status_level, 'Unset') AS status
+    ORDER BY campus, composite_key
+
+- name: search_implementations
+  category: implementation
+  description: >-
+    Case-insensitive search of implementation nodes (Process/Project/Procedure/Service/
+    Guidance/Tracking/InternalPolicy/TAAP) by title or description. Returns each match's
+    type and unique_id (the two params annotate_implementation needs) plus the YSEs it
+    already evidences. Use to map a transcript mention to an implementation.
+  mode: read
+  params: [search_text]
+  cypher: |
+    MATCH (n)
+    WHERE any(l IN labels(n) WHERE l IN
+      ['Process','Project','Procedure','Service','Guidance','Tracking','InternalPolicy','TAAP'])
+      AND (toLower(coalesce(n.title, n.name, '')) CONTAINS toLower($search_text)
+           OR toLower(coalesce(n.description, '')) CONTAINS toLower($search_text))
+    OPTIONAL MATCH (n)-[:is_evidence_for]->(yse:YearSuccessEvidence)
+    RETURN labels(n)[0] AS type,
+           coalesce(n.title, n.name) AS title,
+           n.unique_id AS id,
+           collect(DISTINCT yse.year_identifier) AS evidences_yses
+    ORDER BY type, title
+
+- name: search_success_indicators
+  category: indicators
+  description: >-
+    Case-insensitive search of success indicators by their text or composite_key.
+    Resolves fuzzy transcript language to a composite_key; pair with yse_catalog_for_year
+    to pick the campus-specific YSE.
+  mode: read
+  params: [search_text]
+  cypher: |
+    MATCH (si:SuccessIndicator)
+    WHERE coalesce(si.removed, false) = false
+      AND (toLower(coalesce(si.success_indicator, '')) CONTAINS toLower($search_text)
+           OR toLower(coalesce(si.composite_key, '')) CONTAINS toLower($search_text))
+    RETURN si.composite_key AS composite_key,
+           si.number AS number,
+           si.success_indicator AS text
+    ORDER BY composite_key
+
+- name: notes_for_yse
+  category: documentation
+  description: Existing notes attached to a YSE (has_note) — check before annotating to avoid duplicates.
+  mode: read
+  params: [year_identifier]
+  cypher: |
+    MATCH (:YearSuccessEvidence {year_identifier: $year_identifier})-[:has_note]->(note:Note)
+    RETURN note.name AS name, note.content AS content, note.unique_id AS unique_id
+    ORDER BY name
+
+- name: notes_for_implementation
+  category: documentation
+  description: Existing notes attached to an implementation (is_documented_by) — check before annotating.
+  mode: read
+  params: [implementation_id]
+  cypher: |
+    MATCH (n)-[:is_documented_by]->(note:Note)
+    WHERE n.unique_id = $implementation_id
+    RETURN note.name AS name, note.content AS content, note.unique_id AS unique_id
+    ORDER BY name
+
+# ---------------------------------------------------------------------------
 # WRITE EXAMPLES  (require --allow-write; included as templates, use with care)
 # ---------------------------------------------------------------------------
 - name: set_yse_status

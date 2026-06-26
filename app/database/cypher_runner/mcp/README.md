@@ -77,6 +77,34 @@ Read-only is the default and the safe choice. Turn on writes only deliberately.
   `describe_query` for discovery.
 - **Resource** — `ati-graph://schema`, the relationship map of the graph.
 
+## Transcript annotation
+
+An agent can dissect a meeting transcript and record notes against the right
+`YearSuccessEvidence` (YSE) and implementation nodes. Two halves:
+
+**Discovery (read, always on)** — resolve fuzzy transcript text to exact node keys:
+
+| Tool | Param | Returns |
+|---|---|---|
+| `yse_catalog_for_year` | `academic_year` | every YSE for the year: `year_identifier`, indicator, campus, working group, status — the YSE match table |
+| `search_implementations` | `search_text` | implementation matches with `type` + `id` (and which YSEs they evidence) |
+| `search_success_indicators` | `search_text` | indicators by text/`composite_key` |
+| `notes_for_yse` | `year_identifier` | notes already on a YSE (dedup check) |
+| `notes_for_implementation` | `implementation_id` | notes already on an implementation |
+
+**Write (gated by `ATI_MCP_ALLOW_WRITE`)** — thin wrappers over the sanctioned
+`add_note()`; they auto-generate a unique note name from `(content, target)` so
+re-running a transcript is idempotent:
+
+- `annotate_yse(year_identifier, content, title?, date_created?, name?)` —
+  attaches via `has_note` (not year-scoped).
+- `annotate_implementation(implementation_id, implementation_type, content, academic_year, title?, include_in_year?, name?)` —
+  attaches via `is_documented_by`, scoped to `academic_year` (`DocumentedByRel`).
+
+Typical flow: `yse_catalog_for_year(year)` + `search_implementations(text)` /
+`search_success_indicators(text)` to resolve mentions → optionally
+`notes_for_yse` / `notes_for_implementation` to avoid duplicates → `annotate_*`.
+
 ## Adding capability
 
 This package is built around a small provider pattern so growth is cheap.
