@@ -656,3 +656,19 @@ export const createQuery = async (payload) => {
         throw error;
     }
 };
+
+// --- Meeting minutes ---
+// payload: { title, content?, working_group_plan_identifier? | (campus_abbrev, year_name,
+// working_group), meeting_date?, recorded_by_unique_id? }
+export const createMeetingMinutes = async (payload) => {
+    try {
+        const response = await axios.post(`${process.env.REACT_APP_API_URL}/meeting-minutes`, {
+            action: 'create_meeting_minutes',
+            ...payload,
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error creating meeting minutes:', error);
+        throw error;
+    }
+};

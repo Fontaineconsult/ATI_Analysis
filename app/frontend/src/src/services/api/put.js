@@ -1170,3 +1170,62 @@ export const addQueryNote = async (uniqueId, content, createdByUniqueId = null) 
     });
     return response.data;
 };
+
+// --- Meeting minutes ---
+export const updateMeetingMinutes = async (uniqueId, fields) => {
+    const response = await axios.put(`${process.env.REACT_APP_API_URL}/meeting-minutes`, {
+        action: 'update_meeting_minutes',
+        unique_id: uniqueId,
+        ...fields,
+    });
+    return response.data;
+};
+
+export const attachDocumentToMinutes = async (uniqueId, { name, uri_path = null, file_path = null }) => {
+    const response = await axios.put(`${process.env.REACT_APP_API_URL}/meeting-minutes`, {
+        action: 'attach_document',
+        unique_id: uniqueId,
+        name,
+        uri_path,
+        file_path,
+    });
+    return response.data;
+};
+
+export const attachWebpageToMinutes = async (uniqueId, { name = null, url }) => {
+    const response = await axios.put(`${process.env.REACT_APP_API_URL}/meeting-minutes`, {
+        action: 'attach_webpage',
+        unique_id: uniqueId,
+        name,
+        url,
+    });
+    return response.data;
+};
+
+export const detachDocumentFromMinutes = async (uniqueId, documentUniqueId) => {
+    const response = await axios.put(`${process.env.REACT_APP_API_URL}/meeting-minutes`, {
+        action: 'detach_document',
+        unique_id: uniqueId,
+        document_unique_id: documentUniqueId,
+    });
+    return response.data;
+};
+
+export const detachWebpageFromMinutes = async (uniqueId, webpageUniqueId) => {
+    const response = await axios.put(`${process.env.REACT_APP_API_URL}/meeting-minutes`, {
+        action: 'detach_webpage',
+        unique_id: uniqueId,
+        webpage_unique_id: webpageUniqueId,
+    });
+    return response.data;
+};
+
+export const addMinutesNote = async (uniqueId, content, createdByUniqueId = null) => {
+    const response = await axios.put(`${process.env.REACT_APP_API_URL}/meeting-minutes`, {
+        action: 'add_minutes_note',
+        unique_id: uniqueId,
+        content,
+        created_by_unique_id: createdByUniqueId,
+    });
+    return response.data;
+};

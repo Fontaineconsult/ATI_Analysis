@@ -872,3 +872,28 @@ export const fetchQuery = async (uniqueId) => {
         throw error;
     }
 };
+
+// --- Meeting minutes ------------------------------------------------------------
+export const fetchMinutesPanelForPlan = async (workingGroupPlanIdentifier) => {
+    try {
+        const response = await axios.get(
+            `${process.env.REACT_APP_API_URL}/meeting-minutes/plan/${encodeURIComponent(workingGroupPlanIdentifier)}`
+        );
+        return response.data;
+    } catch (error) {
+        console.error('Error fetching meeting minutes for plan:', error.message);
+        throw error;
+    }
+};
+
+export const fetchMeetingMinutes = async (uniqueId) => {
+    try {
+        const response = await axios.get(
+            `${process.env.REACT_APP_API_URL}/meeting-minutes/item/${uniqueId}`
+        );
+        return response.data;
+    } catch (error) {
+        console.error('Error fetching meeting minutes:', error.message);
+        throw error;
+    }
+};

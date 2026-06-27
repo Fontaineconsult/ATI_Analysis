@@ -781,6 +781,10 @@ class WorkingGroupPlan(StructuredNode):
     # Pending questions raised under this plan (see Query). Reverse of Query.working_group_plan.
     queries = RelationshipFrom("Query", "raised_under_plan")
 
+    # Meeting minutes recorded under this plan (see MeetingMinutes). Reverse of
+    # MeetingMinutes.working_group_plan.
+    meeting_minutes = RelationshipFrom("MeetingMinutes", "minutes_under_plan")
+
     def serialize(self):
         return {
             "plan_identifier": self.plan_identifier,
@@ -1354,6 +1358,42 @@ class Query(StructuredNode):
             "answer": self.answer,
             "date_raised": self.date_raised.isoformat() if self.date_raised else None,
             "date_settled": self.date_settled.isoformat() if self.date_settled else None,
+        }
+
+
+class MeetingMinutes(StructuredNode):
+    """
+    A working-group meeting record: pasted (often auto-generated) minutes kept for the
+    record, assigned to a WorkingGroupPlan. The plan anchor (minutes_under_plan) encodes
+    campus + academic year + working group, so a meeting record is naturally year-organized
+    and those coordinates are derivable from the one required edge. `content` holds the
+    minutes body as Markdown (Neo4j has no rich-text type; it's a plain string rendered on
+    the frontend). May link to supporting Documents/Webpages via the shared is_documented_by
+    / DocumentedByRel edge model. Identity is the auto unique_id (many meetings per plan).
+    """
+    unique_id    = UniqueIdProperty()
+    title        = StringProperty(required=True)
+    meeting_date = DateProperty()
+    content      = StringProperty()          # the minutes body, as Markdown
+    date_created = DateProperty()            # set in create_meeting_minutes
+
+    # Required anchor — encodes campus + academic year + working group. Enforced in
+    # queries/meeting_minutes/create.py (neomodel can't require edges at save time).
+    working_group_plan = RelationshipTo("WorkingGroupPlan", "minutes_under_plan")
+
+    # Optional links.
+    recorded_by          = RelationshipTo("Person", "minutes_recorded_by")
+    supporting_documents = RelationshipTo("Document", "is_documented_by", model=DocumentedByRel)
+    supporting_webpages  = RelationshipTo("Webpage", "is_documented_by", model=DocumentedByRel)
+    notes                = RelationshipTo("Note", "has_note")
+
+    def serialize(self):
+        return {
+            "unique_id": self.unique_id,
+            "title": self.title,
+            "meeting_date": self.meeting_date.isoformat() if self.meeting_date else None,
+            "content": self.content,
+            "date_created": self.date_created.isoformat() if self.date_created else None,
         }
 
 

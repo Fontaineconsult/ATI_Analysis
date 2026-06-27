@@ -323,3 +323,21 @@ export const deleteQuery = async (uniqueId) => {
         throw error;
     }
 };
+
+// --- Meeting minutes ---
+export const deleteMeetingMinutes = async (uniqueId) => {
+    try {
+        const response = await fetch(`${API_URL}/meeting-minutes/${uniqueId}`, {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+        });
+        const data = await response.json();
+        if (!response.ok) {
+            throw new Error(data?.error || 'Failed to delete meeting minutes');
+        }
+        return data;
+    } catch (error) {
+        console.error('Error deleting meeting minutes:', error);
+        throw error;
+    }
+};
