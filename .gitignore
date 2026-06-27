@@ -22,6 +22,9 @@ app/auth_users.sqlite3
 app/auth_users.sqlite3-wal
 app/auth_users.sqlite3-shm
 
+# Local file storage (app/fs dev default root — uploaded blobs, never commit)
+/app/data/
+
 # Jupyter scratch notebooks (contain connection strings and query output data)
 app/database/jupyter/
 .ipynb_checkpoints/

@@ -63,7 +63,12 @@ param(
     [string] $AsanaAccessToken    = '',                     # Personal Access Token
     [string] $AsanaWorkspaceGid   = '',
     [string] $AsanaTeamGid        = '',                     # only for organization workspaces
-    [string] $AsanaBaseUrl        = ''                      # blank = default API base
+    [string] $AsanaBaseUrl        = '',                     # blank = default API base
+
+    # File storage (app/fs — the /files upload/download endpoints).
+    [string] $FsProvider          = 'local',
+    [string] $FsLocalRoot         = 'C:\www\ati\data\files',
+    [string] $FsMaxUploadMb       = '50'                    # IIS requestLimits is sized from this
 )
 
 $ErrorActionPreference = 'Stop'
@@ -216,6 +221,10 @@ if (-not $SkipWebConfig) {
     $asWs   = Resolve-AppSetting 'ASANA_WORKSPACE_GID'   $AsanaWorkspaceGid   $b.ContainsKey('AsanaWorkspaceGid')   $existing ''
     $asTeam = Resolve-AppSetting 'ASANA_TEAM_GID'        $AsanaTeamGid        $b.ContainsKey('AsanaTeamGid')        $existing ''
     $asUrl  = Resolve-AppSetting 'ASANA_BASE_URL'        $AsanaBaseUrl        $b.ContainsKey('AsanaBaseUrl')        $existing ''
+    $fsProv = Resolve-AppSetting 'FS_PROVIDER'           $FsProvider          $b.ContainsKey('FsProvider')          $existing 'local'
+    $fsRoot = Resolve-AppSetting 'FS_LOCAL_ROOT'         $FsLocalRoot         $b.ContainsKey('FsLocalRoot')         $existing 'C:\www\ati\data\files'
+    $fsMb   = Resolve-AppSetting 'FS_MAX_UPLOAD_MB'      $FsMaxUploadMb       $b.ContainsKey('FsMaxUploadMb')       $existing '50'
+    $fsBytes = ([int]$fsMb) * 1024 * 1024
 
     # Required, with the same fail-fast the app enforces at boot (app/__init__.py).
     if ([string]::IsNullOrWhiteSpace($secret)) {
@@ -241,6 +250,11 @@ if (-not $SkipWebConfig) {
            requireAccess="Script" />
     </handlers>
     <httpErrors errorMode="Detailed" />
+    <security>
+      <requestFiltering>
+        <requestLimits maxAllowedContentLength="$fsBytes" />
+      </requestFiltering>
+    </security>
   </system.webServer>
   <appSettings>
     <!-- wfastcgi -->
@@ -271,6 +285,10 @@ if (-not $SkipWebConfig) {
     <add key="ASANA_WORKSPACE_GID" value="$(Xml-Esc $asWs)" />
     <add key="ASANA_TEAM_GID" value="$(Xml-Esc $asTeam)" />
     <add key="ASANA_BASE_URL" value="$(Xml-Esc $asUrl)" />
+    <!-- File storage (app/fs) -->
+    <add key="FS_PROVIDER" value="$(Xml-Esc $fsProv)" />
+    <add key="FS_LOCAL_ROOT" value="$(Xml-Esc $fsRoot)" />
+    <add key="FS_MAX_UPLOAD_MB" value="$(Xml-Esc $fsMb)" />
   </appSettings>
   <system.web>
     <customErrors mode="Off" />

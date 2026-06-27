@@ -27,6 +27,13 @@
            requireAccess="Script" />
     </handlers>
     <httpErrors errorMode="Detailed" />
+    <!-- Max upload size in BYTES — keep this >= FS_MAX_UPLOAD_MB (below). 52428800 = 50 MB.
+         IIS request filtering rejects larger bodies (default ~30 MB) before they reach the app. -->
+    <security>
+      <requestFiltering>
+        <requestLimits maxAllowedContentLength="52428800" />
+      </requestFiltering>
+    </security>
   </system.webServer>
 
   <appSettings>
@@ -65,6 +72,12 @@
     <add key="AUTH_SESSION_HOURS" value="12" />
     <!-- Flip to 1 only once the site has an HTTPS binding. -->
     <add key="SESSION_COOKIE_SECURE" value="0" />
+
+    <!-- ===== File storage (app/fs — the /files upload/download endpoints) ===== -->
+    <add key="FS_PROVIDER" value="local" />
+    <add key="FS_LOCAL_ROOT" value="C:\www\ati\data\files" />
+    <!-- Max upload in MB. Keep the IIS requestLimits/maxAllowedContentLength (above) >= this. -->
+    <add key="FS_MAX_UPLOAD_MB" value="50" />
 
     <!-- ===== Asana connector (the /asana push/reconcile endpoint) ===== -->
     <!-- Required for live pushes: a Personal Access Token + target workspace gid.
