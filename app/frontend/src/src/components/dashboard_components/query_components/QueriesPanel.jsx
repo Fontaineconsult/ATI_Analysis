@@ -5,6 +5,7 @@ import {
 } from '@chakra-ui/react';
 import { AddIcon, ChevronDownIcon, ChevronUpIcon, DeleteIcon, EditIcon } from '@chakra-ui/icons';
 import Section from '../../graph_components/common/Section';
+import { splitCardOuter, splitCardTop, splitCardBottom } from '../../graph_components/common/splitCardStyles';
 import { useSettings } from '../../../context/SettingsContext';
 import { fetchQueryPanelForPlan, fetchQueryPanelForWorkingGroup } from '../../../services/api/get';
 import { deleteQuery } from '../../../services/api/delete';
@@ -46,47 +47,51 @@ function QueryRow({ query, vocab, candidateEvidence, onChanged, onEdit }) {
 
     return (
         <Box
-            borderWidth="1px"
-            borderColor="gray.200"
-            borderRadius="md"
+            {...splitCardOuter}
             borderLeftWidth="3px"
             borderLeftColor={query.status === 'settled' ? 'green.400' : 'teal.400'}
-            bg="white"
+            transition="box-shadow 0.15s"
+            _hover={{ boxShadow: 'md' }}
         >
-            <Flex
-                align="center"
-                gap={2}
-                p={2}
+            <Box
                 cursor="pointer"
                 onClick={onToggle}
-                _hover={{ bg: 'gray.50' }}
                 role="button"
                 aria-expanded={isOpen}
+                _focusVisible={{ outline: '2px solid', outlineColor: 'teal.500' }}
             >
-                <VStack align="stretch" spacing={1} flex={1} minW={0}>
-                    <Text fontSize="sm" color="gray.800" noOfLines={isOpen ? undefined : 1}>{query.question}</Text>
-                    <HStack spacing={2} flexWrap="wrap">
-                        <CategoryBadge category={query.category} vocab={vocab} />
-                        <StatusBadge status={query.status} vocab={vocab} />
-                        {query.raised_by && <Text fontSize="2xs" color="gray.500">{query.raised_by.name}</Text>}
-                        {query.date_raised && <Text fontSize="2xs" color="gray.400" fontFamily="mono">{query.date_raised}</Text>}
-                        {(query.addresses_evidence || []).length > 0 && (
-                            <Text fontSize="2xs" color="teal.600">{query.addresses_evidence.length} YSE</Text>
-                        )}
-                    </HStack>
-                </VStack>
-                <Tooltip label="Edit" openDelay={400}>
-                    <IconButton aria-label="Edit question" icon={<EditIcon />} size="xs" variant="ghost"
-                                onClick={(e) => { e.stopPropagation(); onEdit(query); }} />
-                </Tooltip>
-                <Tooltip label="Delete" openDelay={400}>
-                    <IconButton aria-label="Delete question" icon={<DeleteIcon />} size="xs" variant="ghost"
-                                colorScheme="red" isLoading={deleting} onClick={handleDelete} />
-                </Tooltip>
-                {isOpen ? <ChevronUpIcon color="gray.500" /> : <ChevronDownIcon color="gray.500" />}
-            </Flex>
+                {/* Top band: category · status · raised-by · date · actions. */}
+                <Box {...splitCardTop}>
+                    <Flex align="center" gap={2}>
+                        <HStack spacing={2} flexWrap="wrap" flex="1" minW="0">
+                            <CategoryBadge category={query.category} vocab={vocab} />
+                            <StatusBadge status={query.status} vocab={vocab} />
+                            {query.raised_by && <Text fontSize="2xs" color="gray.500">{query.raised_by.name}</Text>}
+                            {query.date_raised && <Text fontSize="2xs" color="gray.400" fontFamily="mono">{query.date_raised}</Text>}
+                            {(query.addresses_evidence || []).length > 0 && (
+                                <Text fontSize="2xs" color="teal.600">{query.addresses_evidence.length} YSE</Text>
+                            )}
+                        </HStack>
+                        <HStack spacing={1} flexShrink={0}>
+                            <Tooltip label="Edit" openDelay={400}>
+                                <IconButton aria-label="Edit question" icon={<EditIcon />} size="xs" variant="ghost"
+                                            onClick={(e) => { e.stopPropagation(); onEdit(query); }} />
+                            </Tooltip>
+                            <Tooltip label="Delete" openDelay={400}>
+                                <IconButton aria-label="Delete question" icon={<DeleteIcon />} size="xs" variant="ghost"
+                                            colorScheme="red" isLoading={deleting} onClick={handleDelete} />
+                            </Tooltip>
+                            {isOpen ? <ChevronUpIcon color="gray.500" /> : <ChevronDownIcon color="gray.500" />}
+                        </HStack>
+                    </Flex>
+                </Box>
+                {/* Bottom: the question (name). */}
+                <Box {...splitCardBottom}>
+                    <Text fontSize="sm" color="gray.800" noOfLines={isOpen ? undefined : 2}>{query.question}</Text>
+                </Box>
+            </Box>
             <Collapse in={isOpen} animateOpacity unmountOnExit>
-                <Box px={3} pb={3}>
+                <Box px={3} pb={3} pt={3} borderTopWidth="1px" borderTopColor="gray.100">
                     <QueryDetail query={query} candidateEvidence={candidateEvidence} onChanged={onChanged} />
                 </Box>
             </Collapse>

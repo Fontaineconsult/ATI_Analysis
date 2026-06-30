@@ -4,10 +4,30 @@ import userEvent from '@testing-library/user-event';
 import { ChakraProvider } from '@chakra-ui/react';
 import { MemoryRouter } from 'react-router-dom';
 
-// Service mocks for the add-prioritized-indicator and progress-update flows.
+// axios v1 is ESM and CRA's Jest doesn't transform node_modules; neutralize it with the
+// inline factory (see CLAUDE.md) so WorkingGroupPlan's transitive UserContext → services/api
+// imports load under jsdom.
+jest.mock('axios', () => ({
+    __esModule: true,
+    default: {
+        get: jest.fn(), post: jest.fn(), put: jest.fn(), delete: jest.fn(),
+        defaults: { withCredentials: false, headers: { common: {} } },
+        interceptors: { request: { use: jest.fn() }, response: { use: jest.fn() } },
+    },
+}));
+
+// The embedded Queries / Meeting-Minutes panels each fetch on mount and have their own
+// suites; stub them out so this suite stays focused on the WGP layout + indicators.
+jest.mock('../query_components/QueriesPanel', () => ({ __esModule: true, default: () => null }));
+jest.mock('../meeting_minutes_components/MeetingMinutesPanel', () => ({ __esModule: true, default: () => null }));
+
+// Service mocks for the prioritized-indicator, progress-update, and group-lead flows.
 jest.mock('../../../services/api/post', () => ({
     addPrioritizedIndicator: jest.fn(),
+    removePrioritizedIndicator: jest.fn(),
     addProgressUpdate: jest.fn(),
+    assignGroupLead: jest.fn(),
+    unassignGroupLead: jest.fn(),
 }));
 
 import { addPrioritizedIndicator, addProgressUpdate } from '../../../services/api/post';
@@ -51,7 +71,7 @@ describe('WorkingGroupPlan', () => {
         expect(screen.getByText(/no campus-plan plans yet/i)).toBeInTheDocument();
     });
 
-    it('wraps each plan card in a link to /<campus>/dashboard/plans/<unique_id>', () => {
+    it('wraps each plan card in a link to /<campus>/ati-explorer/plans/<unique_id>', () => {
         const wgp = {
             ...baseWgp,
             plans: [
@@ -70,7 +90,7 @@ describe('WorkingGroupPlan', () => {
         renderWithChakra(<WorkingGroupPlan wgp={wgp} campusAbbrev="sfsu" />);
 
         const link = screen.getByRole('link', { name: /captioning rollout/i });
-        expect(link).toHaveAttribute('href', '/sfsu/dashboard/plans/plan-uuid-abc');
+        expect(link).toHaveAttribute('href', '/sfsu/ati-explorer/plans/plan-uuid-abc');
     });
 
     it('collapses and re-expands the plans list when its header is clicked', async () => {
@@ -92,7 +112,7 @@ describe('WorkingGroupPlan', () => {
         renderWithChakra(<WorkingGroupPlan wgp={wgp} campusAbbrev="sfsu" />);
 
         // Default: expanded — aria-label says "Collapse" and aria-expanded=true.
-        const expandedHeader = screen.getByRole('button', { name: /collapse plans list/i });
+        const expandedHeader = screen.getByRole('button', { name: /collapse plan details/i });
         expect(expandedHeader).toHaveAttribute('aria-expanded', 'true');
 
         // Click → header relabels to "Expand" and aria-expanded=false.
@@ -100,13 +120,13 @@ describe('WorkingGroupPlan', () => {
         // doesn't fire, so we assert the user-facing state via aria, not by
         // querying for child visibility.)
         await userEvent.click(expandedHeader);
-        const collapsedHeader = screen.getByRole('button', { name: /expand plans list/i });
+        const collapsedHeader = screen.getByRole('button', { name: /expand plan details/i });
         expect(collapsedHeader).toHaveAttribute('aria-expanded', 'false');
 
         // Click again → back to expanded.
         await userEvent.click(collapsedHeader);
         expect(
-            screen.getByRole('button', { name: /collapse plans list/i })
+            screen.getByRole('button', { name: /collapse plan details/i })
         ).toHaveAttribute('aria-expanded', 'true');
     });
 
@@ -335,7 +355,7 @@ describe('WorkingGroupPlan', () => {
         await waitFor(() => expect(onProgressAdded).toHaveBeenCalledTimes(1));
     });
 
-    it('shows a companion-plan count badge per prioritized indicator', () => {
+    it('no longer renders the companion-plan count on indicator rows (it lives in the Plans panel)', () => {
         const wgp = {
             ...baseWgp,
             prioritized_success_indicators: [
@@ -365,9 +385,13 @@ describe('WorkingGroupPlan', () => {
             ],
         };
         renderWithChakra(<WorkingGroupPlan wgp={wgp} />);
-        expect(screen.getByText('1 plan')).toBeInTheDocument();
-        expect(screen.getByText('2 plans')).toBeInTheDocument();
-        expect(screen.getByText(/no plan yet/i)).toBeInTheDocument();
+        // Indicators still render…
+        expect(screen.getByText('Captioning')).toBeInTheDocument();
+        expect(screen.getByText('Training')).toBeInTheDocument();
+        // …but the per-row companion-plan count was removed (redundant with the Plans panel).
+        expect(screen.queryByText('1 plan')).toBeNull();
+        expect(screen.queryByText('2 plans')).toBeNull();
+        expect(screen.queryByText(/no plan yet/i)).toBeNull();
     });
 
     it('renders group leads with name + optional title', () => {
@@ -408,13 +432,13 @@ describe('WorkingGroupPlan', () => {
         };
         renderWithChakra(<WorkingGroupPlan wgp={wgp} />);
 
-        // First plan: shows name + status
+        // First plan: name + its status badge ("In Progress", not the old "Status: …" row).
         expect(screen.getByText('Captioning rollout')).toBeInTheDocument();
-        expect(screen.getByText(/Status: In Progress/)).toBeInTheDocument();
+        expect(screen.getByText('In Progress')).toBeInTheDocument();
 
-        // Second plan: name null → falls back to description; no status row
+        // Second plan: name null → falls back to description; null status → "Not Started" badge.
         expect(screen.getByText('Procurement training overhaul')).toBeInTheDocument();
-        expect(screen.queryByText(/Status:/i)).not.toBeNull();  // sanity: only the first one's row
+        expect(screen.getByText('Not Started')).toBeInTheDocument();
     });
 
     it('renders the + Add Indicator button next to the Prioritized Indicators heading', () => {

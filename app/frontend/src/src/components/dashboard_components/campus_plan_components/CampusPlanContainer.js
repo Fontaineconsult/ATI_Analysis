@@ -26,6 +26,7 @@ import {
     Text,
     Textarea,
     useDisclosure,
+    useToast,
     VStack,
     Wrap,
     WrapItem,
@@ -81,6 +82,7 @@ function CampusPlanContainer() {
     const { plan, loading, error, notFound, creating } = primaryState;
 
     const sponsorsModal = useDisclosure();
+    const toast = useToast();
 
     // Inline executive-summary editor state.
     const [editingSummary, setEditingSummary] = useState(false);
@@ -100,8 +102,21 @@ function CampusPlanContainer() {
             await updateCampusPlanSummary(plan.plan_identifier, summaryDraft);
             setEditingSummary(false);
             await handleReloadPrimary();
+            toast({
+                title: 'Executive summary saved',
+                status: 'success',
+                duration: 2000,
+                isClosable: true,
+            });
         } catch (err) {
             console.error('Failed to save executive summary', err);
+            toast({
+                title: 'Could not save executive summary',
+                description: 'Your changes were not saved. Please try again.',
+                status: 'error',
+                duration: 4000,
+                isClosable: true,
+            });
         } finally {
             setSavingSummary(false);
         }
@@ -187,7 +202,7 @@ function CampusPlanContainer() {
     if (!plan) return null;
 
     return (
-        <Box maxW="container.xl" mx="auto" px={6} py={6}>
+        <Box maxW="container.xl" mx="auto" px={6} py={6} textAlign="left">
             <Heading as="h2" size="lg" color="gray.800" mb={4}>
                 Campus Plan
             </Heading>
@@ -217,6 +232,7 @@ function CampusPlanContainer() {
                                 onChange={(e) => setSummaryDraft(e.target.value)}
                                 size="sm"
                                 rows={4}
+                                aria-label="Executive summary"
                                 placeholder="Plan-level narrative for this campus and year…"
                             />
                             <HStack justify="flex-end" spacing={2}>

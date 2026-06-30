@@ -5,6 +5,7 @@ import {
 } from '@chakra-ui/react';
 import { AddIcon, ChevronDownIcon, ChevronUpIcon, DeleteIcon, EditIcon } from '@chakra-ui/icons';
 import Section from '../../graph_components/common/Section';
+import { splitCardOuter, splitCardTop, splitCardBottom } from '../../graph_components/common/splitCardStyles';
 import { fetchMinutesPanelForPlan } from '../../../services/api/get';
 import { deleteMeetingMinutes } from '../../../services/api/delete';
 import MeetingMinutesForm from './MeetingMinutesForm';
@@ -32,26 +33,46 @@ function MinutesRow({ minutes, onChanged, onEdit }) {
     const attachedCount = (minutes.documents || []).length + (minutes.webpages || []).length;
 
     return (
-        <Box borderWidth="1px" borderColor="gray.200" borderRadius="md" borderLeftWidth="3px" borderLeftColor="teal.400" bg="white">
-            <Flex align="center" gap={2} p={2} cursor="pointer" onClick={onToggle} _hover={{ bg: 'gray.50' }} role="button" aria-expanded={isOpen}>
-                <VStack align="stretch" spacing={0} flex={1} minW={0}>
-                    <Text fontSize="sm" fontWeight="medium" color="gray.800" noOfLines={1}>{minutes.title}</Text>
-                    <HStack spacing={2}>
-                        {minutes.meeting_date && <Text fontSize="2xs" color="gray.500" fontFamily="mono">{minutes.meeting_date}</Text>}
-                        {minutes.recorded_by && <Text fontSize="2xs" color="gray.500">{minutes.recorded_by.name}</Text>}
-                        {attachedCount > 0 && <Text fontSize="2xs" color="teal.600">{attachedCount} attached</Text>}
-                    </HStack>
-                </VStack>
-                <Tooltip label="Edit" openDelay={400}>
-                    <IconButton aria-label="Edit minutes" icon={<EditIcon />} size="xs" variant="ghost" onClick={(e) => { e.stopPropagation(); onEdit(minutes); }} />
-                </Tooltip>
-                <Tooltip label="Delete" openDelay={400}>
-                    <IconButton aria-label="Delete minutes" icon={<DeleteIcon />} size="xs" variant="ghost" colorScheme="red" isLoading={deleting} onClick={handleDelete} />
-                </Tooltip>
-                {isOpen ? <ChevronUpIcon color="gray.500" /> : <ChevronDownIcon color="gray.500" />}
-            </Flex>
+        <Box
+            {...splitCardOuter}
+            borderLeftWidth="3px"
+            borderLeftColor="teal.400"
+            transition="box-shadow 0.15s"
+            _hover={{ boxShadow: 'md' }}
+        >
+            <Box
+                cursor="pointer"
+                onClick={onToggle}
+                role="button"
+                aria-expanded={isOpen}
+                _focusVisible={{ outline: '2px solid', outlineColor: 'teal.500' }}
+            >
+                {/* Top band: date · recorded-by · attachments · actions. */}
+                <Box {...splitCardTop}>
+                    <Flex align="center" gap={2}>
+                        <HStack spacing={2} flexWrap="wrap" flex="1" minW="0">
+                            {minutes.meeting_date && <Text fontSize="2xs" color="gray.500" fontFamily="mono">{minutes.meeting_date}</Text>}
+                            {minutes.recorded_by && <Text fontSize="2xs" color="gray.500">{minutes.recorded_by.name}</Text>}
+                            {attachedCount > 0 && <Text fontSize="2xs" color="teal.600">{attachedCount} attached</Text>}
+                        </HStack>
+                        <HStack spacing={1} flexShrink={0}>
+                            <Tooltip label="Edit" openDelay={400}>
+                                <IconButton aria-label="Edit minutes" icon={<EditIcon />} size="xs" variant="ghost" onClick={(e) => { e.stopPropagation(); onEdit(minutes); }} />
+                            </Tooltip>
+                            <Tooltip label="Delete" openDelay={400}>
+                                <IconButton aria-label="Delete minutes" icon={<DeleteIcon />} size="xs" variant="ghost" colorScheme="red" isLoading={deleting} onClick={handleDelete} />
+                            </Tooltip>
+                            {isOpen ? <ChevronUpIcon color="gray.500" /> : <ChevronDownIcon color="gray.500" />}
+                        </HStack>
+                    </Flex>
+                </Box>
+                {/* Bottom: the minutes title (name). */}
+                <Box {...splitCardBottom}>
+                    <Text fontSize="sm" fontWeight="medium" color="gray.800" noOfLines={isOpen ? undefined : 2}>{minutes.title}</Text>
+                </Box>
+            </Box>
             <Collapse in={isOpen} animateOpacity unmountOnExit>
-                <Box px={3} pb={3}>
+                <Box px={3} pb={3} pt={3} borderTopWidth="1px" borderTopColor="gray.100">
                     <MeetingMinutesDetail minutes={minutes} onChanged={onChanged} />
                 </Box>
             </Collapse>
