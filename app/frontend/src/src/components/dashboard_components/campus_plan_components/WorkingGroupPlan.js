@@ -38,6 +38,7 @@ import StatusProgression from './StatusProgression';
 import Card from '../../graph_components/common/Card';
 import Section from '../../graph_components/common/Section';
 import QueriesPanel from '../query_components/QueriesPanel';
+import MeetingMinutesPanel from '../meeting_minutes_components/MeetingMinutesPanel';
 import { getPlanStatusColorScheme } from '../../../styles/planStatusColors';
 import {
     PLAN_STATUS_ORDER,
@@ -504,6 +505,8 @@ function WorkingGroupPlan({
                     )}
                 </Section>
                 <QueriesPanel workingGroupPlanIdentifier={wgp.plan_identifier} />
+
+                <MeetingMinutesPanel workingGroupPlanIdentifier={wgp.plan_identifier} />
             </VStack>
 
             <IndicatorSelectorModal
