@@ -4,6 +4,14 @@ A study of the campus-plan area as it stands, the problems that make it hard to
 navigate / read as less-than-professional, and the directions to fix it. The
 companion mockup is `../mockups/campus-plan.html` (open in a browser).
 
+> **Status: shipped (Tabbed Shell).** Implemented in
+> `CampusPlanContainer.js` (outer working-group tabs) + `WorkingGroupPlan.js`
+> (accent card + identity strip + leads bar + inner Indicators/Plans/Queries/
+> Minutes sub-tabs), driven by the shared `styles/workingGroupIdentity.js`.
+> Tests updated; `WorkingGroupPlan.test.js` + `CampusPlanContainer.test.js` green
+> (25/25). Deferred: the compact 2-up overview header; migrating SubNavbar /
+> GoalNavigator onto the shared identity module.
+
 ## What's there today
 
 **Route:** `/:campus/dashboard/campus-plan` → `CampusPlanContainer.js` (a single
@@ -120,3 +128,30 @@ The point of this exploration (per the ask) is to harvest patterns:
 
 These would land in `../components/` (shell + identity) and `design-sense.md`
 once a direction is chosen.
+
+## Alignment pass (decided: Tabbed Shell)
+
+Re-read the app to make the tabbed shell wear conventions we already use rather
+than an invented tab style. Findings:
+
+- **Tab mechanics — copy `AssetsMasterContainer.js`.** The canon for sibling
+  sub-domains is `<Tabs variant="enclosed" colorScheme="teal" isLazy>` with
+  `<Tab fontSize="sm">` / `<TabPanel px={0}>`. **`isLazy` is the lazy-fetch fix
+  for free** — only the active working group's panels mount, so the 6 eager
+  `QueriesPanel`/`MeetingMinutesPanel` fetches drop to the active group's.
+  Secondary tab rows use `variant="line"` (`PlansAccomplishmentsManager.js`).
+- **Working-group identity — copy `SubNavbar.js` / `GoalNavigator.js`.** A dot in
+  the accent (7–9px) before the label + an accent underline/bar. The
+  `WORKING_GROUPS` map (Web `teal.500` · IM `purple.500` · Procurement
+  `coral.500`) is duplicated in both files.
+- **Consolidation:** that duplicated map is now a single shared module —
+  `app/frontend/src/src/styles/workingGroupIdentity.js`
+  (`getWorkingGroupIdentity(slug | name)`), resolving by slug *or* display name so
+  the slug-keyed routes and the name-keyed campus-plan data share one identity.
+  This closes design-sense §8.4. SubNavbar/GoalNavigator can migrate onto it next.
+
+**Aligned design = Chakra `Tabs` mechanics (enclosed + `isLazy`) wearing the
+SubNavbar identity (dot + accent underline), driven by the shared config.** The
+mockup's tabbed mode is updated to this chrome: working-group tabs as
+accent-underline line tabs with the identity dot, panel as a card with a
+working-group accent top edge, sub-panels as compact line tabs.

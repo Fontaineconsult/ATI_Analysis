@@ -64,14 +64,17 @@ describe('WorkingGroupPlan', () => {
         expect(screen.getByText('2025-2026-sfsu-web')).toBeInTheDocument();
     });
 
-    it('shows empty-state copy for indicators, leads, and plans when none are attached', () => {
+    it('shows empty-state copy for indicators, leads, and plans when none are attached', async () => {
         renderWithChakra(<WorkingGroupPlan wgp={baseWgp} />);
+        // Indicators is the default sub-tab; the Group Leads bar is always visible.
         expect(screen.getByText(/none selected/i)).toBeInTheDocument();
         expect(screen.getByText(/no leads assigned/i)).toBeInTheDocument();
-        expect(screen.getByText(/no campus-plan plans yet/i)).toBeInTheDocument();
+        // Plans live behind their (lazy) sub-tab — open it to see the empty state.
+        await userEvent.click(screen.getByRole('tab', { name: /Plans/i }));
+        expect(await screen.findByText(/no campus-plan plans yet/i)).toBeInTheDocument();
     });
 
-    it('wraps each plan card in a link to /<campus>/ati-explorer/plans/<unique_id>', () => {
+    it('wraps each plan card in a link to /<campus>/ati-explorer/plans/<unique_id>', async () => {
         const wgp = {
             ...baseWgp,
             plans: [
@@ -89,48 +92,13 @@ describe('WorkingGroupPlan', () => {
         };
         renderWithChakra(<WorkingGroupPlan wgp={wgp} campusAbbrev="sfsu" />);
 
-        const link = screen.getByRole('link', { name: /captioning rollout/i });
+        // Plans live behind their sub-tab now.
+        await userEvent.click(screen.getByRole('tab', { name: /Plans/i }));
+        const link = await screen.findByRole('link', { name: /captioning rollout/i });
         expect(link).toHaveAttribute('href', '/sfsu/ati-explorer/plans/plan-uuid-abc');
     });
 
-    it('collapses and re-expands the plans list when its header is clicked', async () => {
-        const wgp = {
-            ...baseWgp,
-            plans: [
-                {
-                    unique_id: 'p1',
-                    name: 'Captioning rollout',
-                    description: 'desc',
-                    plan_status: 'In Progress',
-                    abandoned: false,
-                    is_campus_plan: true,
-                    academic_year: '2025-2026',
-                    completed_year: null,
-                },
-            ],
-        };
-        renderWithChakra(<WorkingGroupPlan wgp={wgp} campusAbbrev="sfsu" />);
-
-        // Default: expanded — aria-label says "Collapse" and aria-expanded=true.
-        const expandedHeader = screen.getByRole('button', { name: /collapse plan details/i });
-        expect(expandedHeader).toHaveAttribute('aria-expanded', 'true');
-
-        // Click → header relabels to "Expand" and aria-expanded=false.
-        // (Chakra's Collapse uses framer-motion; under jsdom the exit animation
-        // doesn't fire, so we assert the user-facing state via aria, not by
-        // querying for child visibility.)
-        await userEvent.click(expandedHeader);
-        const collapsedHeader = screen.getByRole('button', { name: /expand plan details/i });
-        expect(collapsedHeader).toHaveAttribute('aria-expanded', 'false');
-
-        // Click again → back to expanded.
-        await userEvent.click(collapsedHeader);
-        expect(
-            screen.getByRole('button', { name: /collapse plan details/i })
-        ).toHaveAttribute('aria-expanded', 'true');
-    });
-
-    it('renders the plan card without a link when campusAbbrev is missing', () => {
+    it('renders the plan card without a link when campusAbbrev is missing', async () => {
         const wgp = {
             ...baseWgp,
             plans: [
@@ -147,12 +115,13 @@ describe('WorkingGroupPlan', () => {
             ],
         };
         renderWithChakra(<WorkingGroupPlan wgp={wgp} />);
+        await userEvent.click(screen.getByRole('tab', { name: /Plans/i }));
         // Plan content still renders, but no link wraps it.
-        expect(screen.getByText('Captioning rollout')).toBeInTheDocument();
+        expect(await screen.findByText('Captioning rollout')).toBeInTheDocument();
         expect(screen.queryByRole('link')).toBeNull();
     });
 
-    it('renders the academic_year and completed_year on a plan card', () => {
+    it('renders the academic_year and completed_year on a plan card', async () => {
         const wgp = {
             ...baseWgp,
             plans: [
@@ -180,8 +149,9 @@ describe('WorkingGroupPlan', () => {
         };
         renderWithChakra(<WorkingGroupPlan wgp={wgp} />);
 
+        await userEvent.click(screen.getByRole('tab', { name: /Plans/i }));
         // Active plan: just the year, no "completed" suffix.
-        expect(screen.getByText('2024-2025')).toBeInTheDocument();
+        expect(await screen.findByText('2024-2025')).toBeInTheDocument();
         // Closed plan: year + completed-year suffix on the same line.
         expect(screen.getByText(/2023-2024 · completed 2024-2025/)).toBeInTheDocument();
     });
@@ -408,7 +378,7 @@ describe('WorkingGroupPlan', () => {
         expect(screen.getByText('Casey Member')).toBeInTheDocument();
     });
 
-    it('renders each attached plan with its name and status', () => {
+    it('renders each attached plan with its name and status', async () => {
         const wgp = {
             ...baseWgp,
             plans: [
@@ -432,8 +402,9 @@ describe('WorkingGroupPlan', () => {
         };
         renderWithChakra(<WorkingGroupPlan wgp={wgp} />);
 
+        await userEvent.click(screen.getByRole('tab', { name: /Plans/i }));
         // First plan: name + its status badge ("In Progress", not the old "Status: …" row).
-        expect(screen.getByText('Captioning rollout')).toBeInTheDocument();
+        expect(await screen.findByText('Captioning rollout')).toBeInTheDocument();
         expect(screen.getByText('In Progress')).toBeInTheDocument();
 
         // Second plan: name null → falls back to description; null status → "Not Started" badge.

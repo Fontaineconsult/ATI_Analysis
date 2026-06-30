@@ -11,6 +11,23 @@ import userEvent from '@testing-library/user-event';
 import { ChakraProvider } from '@chakra-ui/react';
 import { MemoryRouter } from 'react-router-dom';
 
+// axios v1 is ESM and CRA's Jest doesn't transform node_modules; the inline
+// factory (see CLAUDE.md) neutralizes it so the WorkingGroupPlan children's
+// transitive auth/services imports load under jsdom.
+jest.mock('axios', () => ({
+    __esModule: true,
+    default: {
+        get: jest.fn(), post: jest.fn(), put: jest.fn(), delete: jest.fn(),
+        defaults: { withCredentials: false, headers: { common: {} } },
+        interceptors: { request: { use: jest.fn() }, response: { use: jest.fn() } },
+    },
+}));
+
+// The embedded Queries / Meeting-Minutes panels each fetch on mount and have
+// their own suites; stub them so this suite stays focused on the container.
+jest.mock('../query_components/QueriesPanel', () => ({ __esModule: true, default: () => null }));
+jest.mock('../meeting_minutes_components/MeetingMinutesPanel', () => ({ __esModule: true, default: () => null }));
+
 jest.mock('../../../services/api/get', () => ({
     fetchCampusPlan: jest.fn(),
 }));
@@ -91,7 +108,7 @@ describe('CampusPlanContainer', () => {
         expect(screen.getByText(/loading campus plan/i)).toBeInTheDocument();
     });
 
-    it('renders the parent plan, sponsors, presidents-report state, and three working group children', async () => {
+    it('renders the parent plan, sponsors, presidents-report state, and the working group tabs', async () => {
         fetchCampusPlan.mockResolvedValueOnce({ status: 'success', data: PLAN_FIXTURE });
         renderWithChakra(<CampusPlanContainer />);
 
@@ -107,13 +124,17 @@ describe('CampusPlanContainer', () => {
         // President's Report empty-state copy
         expect(screen.getByText(/no president's report yet/i)).toBeInTheDocument();
 
-        // All three working groups render
-        expect(screen.getByRole('heading', { name: 'Web' })).toBeInTheDocument();
-        expect(screen.getByRole('heading', { name: 'Procurement' })).toBeInTheDocument();
-        expect(screen.getByRole('heading', { name: 'Instructional Materials' })).toBeInTheDocument();
+        // All three working groups render as tabs.
+        expect(screen.getByRole('tab', { name: /Web/ })).toBeInTheDocument();
+        expect(screen.getByRole('tab', { name: /Procurement/ })).toBeInTheDocument();
+        expect(screen.getByRole('tab', { name: /Instructional Materials/ })).toBeInTheDocument();
 
-        // Procurement's actual indicators render via the WorkingGroupPlan child
-        expect(screen.getByText('ICT procurement processes')).toBeInTheDocument();
+        // Web is the first (default) tab — its panel and heading render.
+        expect(screen.getByRole('heading', { name: 'Web' })).toBeInTheDocument();
+
+        // Switching to Procurement lazily mounts its panel: indicators + lead.
+        await userEvent.click(screen.getByRole('tab', { name: /Procurement/ }));
+        expect(await screen.findByText('ICT procurement processes')).toBeInTheDocument();
         expect(screen.getByText('Lee Lead')).toBeInTheDocument();
     });
 

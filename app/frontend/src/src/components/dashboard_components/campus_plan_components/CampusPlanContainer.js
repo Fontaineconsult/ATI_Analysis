@@ -20,6 +20,11 @@ import {
     ModalHeader,
     ModalOverlay,
     Spinner,
+    Tab,
+    TabList,
+    TabPanel,
+    TabPanels,
+    Tabs,
     Tag,
     TagCloseButton,
     TagLabel,
@@ -46,6 +51,7 @@ import Card from '../../graph_components/common/Card';
 import Section from '../../graph_components/common/Section';
 import WorkingGroupPlan from './WorkingGroupPlan';
 import CampusPlanStatStrip from './CampusPlanStatStrip';
+import { getWorkingGroupIdentity } from '../../../styles/workingGroupIdentity';
 
 /**
  * Pick the WGP that matches `wgName` out of a campus plan's
@@ -352,11 +358,51 @@ function CampusPlanContainer() {
                     )}
                 </Card>
 
-                <Box>
-                    <Heading as="h2" size="md" color="gray.800" mb={3}>
-                        Working Group Plans
-                    </Heading>
-                    <VStack align="stretch" spacing={3}>
+                {/* Working groups as identity-accented tabs (Web=blue, IM=purple,
+                    Procurement=coral). isLazy so only the active group's panels —
+                    including its self-fetching Queries / Minutes sub-tabs — mount. */}
+                <Tabs isLazy variant="unstyled">
+                    <TabList borderBottomWidth="2px" borderColor="gray.200" overflowX="auto">
+                        {plan.working_group_plans.map((wgp) => {
+                            const id = getWorkingGroupIdentity(wgp.working_group);
+                            const indicatorCount = wgp.prioritized_success_indicators?.length || 0;
+                            return (
+                                <Tab
+                                    key={wgp.plan_identifier}
+                                    fontSize="sm"
+                                    fontWeight="normal"
+                                    color="gray.600"
+                                    px={4}
+                                    py={3}
+                                    mb="-2px"
+                                    borderBottomWidth="2px"
+                                    borderBottomColor="transparent"
+                                    whiteSpace="nowrap"
+                                    _hover={{ color: 'gray.800' }}
+                                    _selected={{ color: 'teal.700', fontWeight: 'semibold', borderBottomColor: id.accent }}
+                                    _focusVisible={{ outline: '2px solid', outlineColor: 'teal.500', borderRadius: 'sm' }}
+                                >
+                                    <Box
+                                        as="span"
+                                        display="inline-block"
+                                        w="8px"
+                                        h="8px"
+                                        borderRadius="full"
+                                        bg={id.accent}
+                                        mr={2}
+                                        aria-hidden="true"
+                                    />
+                                    {wgp.working_group}
+                                    {indicatorCount > 0 && (
+                                        <Box as="span" ml={2} fontSize="xs" color="gray.500">
+                                            {indicatorCount}
+                                        </Box>
+                                    )}
+                                </Tab>
+                            );
+                        })}
+                    </TabList>
+                    <TabPanels>
                         {plan.working_group_plans.map((wgp) => {
                             // For each peer campus, find the matching WGP for THIS working group
                             // (matched by working_group name, since composite identifiers differ
@@ -370,22 +416,23 @@ function CampusPlanContainer() {
                                 .filter(Boolean);
 
                             return (
-                                <WorkingGroupPlan
-                                    key={wgp.plan_identifier}
-                                    wgp={wgp}
-                                    campusAbbrev={currentCampus}
-                                    campusName={plan.campus?.name || currentCampus}
-                                    onIndicatorAdded={handleReloadPrimary}
-                                    onProgressAdded={handleReloadPrimary}
-                                    onLeadsChanged={handleReloadPrimary}
-                                    currentUserUniqueId={currentUserUniqueId}
-                                    peerWorkingGroupPlans={peerWorkingGroupPlans}
-                                    onPeerIndicatorChanged={refreshOne}
-                                />
+                                <TabPanel key={wgp.plan_identifier} px={0} pt={4}>
+                                    <WorkingGroupPlan
+                                        wgp={wgp}
+                                        campusAbbrev={currentCampus}
+                                        campusName={plan.campus?.name || currentCampus}
+                                        onIndicatorAdded={handleReloadPrimary}
+                                        onProgressAdded={handleReloadPrimary}
+                                        onLeadsChanged={handleReloadPrimary}
+                                        currentUserUniqueId={currentUserUniqueId}
+                                        peerWorkingGroupPlans={peerWorkingGroupPlans}
+                                        onPeerIndicatorChanged={refreshOne}
+                                    />
+                                </TabPanel>
                             );
                         })}
-                    </VStack>
-                </Box>
+                    </TabPanels>
+                </Tabs>
             </VStack>
 
             <Modal isOpen={sponsorsModal.isOpen} onClose={sponsorsModal.onClose} size="2xl" scrollBehavior="inside">

@@ -310,10 +310,16 @@ Tracked here so choices are deliberate, not accidental:
    the alias itself — `teal.*` reads oddly for a blue. A future mechanical rename to a
    `brand.*` scale would finish the job.
 3. **Two visual languages** still coexist (canon vs legacy) — converge over time.
-4. ~~Working groups have no visual identity.~~ **Partially addressed** — the brand accent
-   trio now marks them (Web=blue, IM=purple, Pro=coral) in the SubNavbar dots and the
-   `GoalNavigator` header (see §2). Remaining: the accents live in two configs (SubNavbar
-   items + `WORKING_GROUPS`) and aren't yet threaded into goal/indicator cards or icons.
+4. ~~Working groups have no visual identity.~~ **Mostly addressed** — the brand accent
+   trio marks them (Web=blue, IM=purple, Pro=coral) in the SubNavbar dots, the
+   `GoalNavigator` header (see §2), **and the Campus Plan working-group tabs** (accent dot +
+   underline on each tab, accent top-border on each card). The map is now a **single shared
+   module — `styles/workingGroupIdentity.js`** (`getWorkingGroupIdentity(slug | name)`,
+   resolving by URL slug *or* display name) which Campus Plan consumes. Remaining: migrate
+   `SubNavbar.js` + `GoalNavigator.js` off their local `WORKING_GROUPS` copies onto the shared
+   module to fully de-duplicate. **Rule:** accent marks *identity chrome* (dot/underline/
+   border) only — action buttons stay brand teal (per GoalNavigator); never color a button
+   with the accent (coral especially — §2).
 5. ~~Maturity shown as a single pill, not a ladder.~~ **Addressed** — `StatusLevelLadder`
    (`functional_components/StatusLevelLadder.js`) renders the six-rung ladder with the current
    level emphasized (compact bar in indicator rows; labeled stepper in the detail header). See

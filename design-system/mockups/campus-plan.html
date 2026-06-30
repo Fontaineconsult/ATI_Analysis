@@ -57,18 +57,21 @@
   .ghostbtn{font:inherit;font-size:12px;cursor:pointer;border:1px solid var(--border);background:#fff;border-radius:7px;padding:4px 10px;color:var(--ink-600)}
   .row-between{display:flex;align-items:center;justify-content:space-between;gap:8px}
 
-  /* ---- working-group TABS ---- */
-  .wgtabs{display:flex;gap:4px;border-bottom:1px solid var(--border);margin:22px 0 0}
-  .wgtab{position:relative;cursor:pointer;border:1px solid transparent;border-bottom:none;background:transparent;font:inherit;
-         padding:11px 18px 12px;border-radius:10px 10px 0 0;color:var(--ink-600);display:flex;align-items:center;gap:9px}
-  .wgtab .dot{width:9px;height:9px;border-radius:999px;background:var(--c)}
-  .wgtab .cnt{font-size:11px;background:var(--page);border-radius:999px;padding:1px 8px;color:var(--ink-600)}
+  /* ---- working-group TABS — Chakra "line" mechanics + SubNavbar identity ---- */
+  .wgtabs{display:flex;gap:2px;border-bottom:2px solid var(--border);margin:24px 0 0}
+  .wgtab{cursor:pointer;background:transparent;border:none;font:inherit;font-size:14px;
+         padding:11px 16px;color:var(--ink-600);display:flex;align-items:center;gap:9px;
+         border-bottom:2px solid transparent;margin-bottom:-2px;transition:color .15s}
+  .wgtab .dot{width:8px;height:8px;border-radius:999px;background:var(--c)}            /* SubNavbar dot */
+  .wgtab .cnt{font-size:11px;background:var(--page);border-radius:999px;padding:1px 8px;color:var(--ink-500)}
   .wgtab .warn{font-size:11px;color:#c24a43;font-weight:700}
-  .wgtab.on{background:#fff;border-color:var(--border);color:var(--ink-900);font-weight:500}
-  .wgtab.on::after{content:"";position:absolute;left:0;right:0;top:-1px;height:3px;background:var(--c);border-radius:3px 3px 0 0}
-  .wgtab.on .cnt{background:var(--c-50)}
+  .wgtab:hover{color:var(--ink-900)}
+  .wgtab.on{color:var(--c);font-weight:600;border-bottom-color:var(--c)}              /* accent underline */
+  .wgtab.on .cnt{background:var(--c-50);color:var(--c)}
 
-  .wgpanel{background:#fff;border:1px solid var(--border);border-top:none;border-radius:0 0 12px 12px;padding:18px;box-shadow:0 1px 2px rgba(0,0,0,.05)}
+  /* panel = white card with a working-group accent top edge (stat-card / GoalNavigator idiom) */
+  .wgpanel{background:#fff;border:1px solid var(--border);border-top:3px solid var(--c);
+           border-radius:12px;padding:18px;box-shadow:0 1px 2px rgba(0,0,0,.05);margin-top:0}
   .wgpanel.accent{border-top:3px solid var(--c)}
 
   .leadsbar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 12px;background:var(--c-50);border:1px solid var(--border);border-radius:10px;margin-bottom:16px}
@@ -77,12 +80,14 @@
   .leadsbar .role{color:var(--ink-500)}
   .leadsbar .lbl{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--c);font-weight:700;margin-right:4px}
 
-  /* sub-tabs */
-  .subtabs{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap}
-  .subtab{cursor:pointer;border:1px solid var(--border);background:#fff;font:inherit;font-size:13px;padding:6px 13px;border-radius:999px;color:var(--ink-600);display:flex;align-items:center;gap:7px}
+  /* sub-tabs — Chakra "line" variant (PlansAccomplishments idiom), compact */
+  .subtabs{display:flex;gap:20px;margin-bottom:16px;border-bottom:1px solid var(--border)}
+  .subtab{cursor:pointer;border:none;background:none;font:inherit;font-size:13px;padding:8px 1px;color:var(--ink-600);
+          display:flex;align-items:center;gap:7px;border-bottom:2px solid transparent;margin-bottom:-1px;transition:color .15s}
   .subtab .c{font-size:11px;color:var(--ink-400)}
-  .subtab.on{background:var(--c);border-color:var(--c);color:#fff}
-  .subtab.on .c{color:rgba(255,255,255,.85)}
+  .subtab:hover{color:var(--ink-900)}
+  .subtab.on{color:var(--c);font-weight:600;border-bottom-color:var(--c)}
+  .subtab.on .c{color:var(--c)}
 
   /* split cards (indicator / plan / query / minutes) */
   .split{border:1px solid var(--border);border-radius:9px;overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.04);margin-bottom:10px;background:#fff;border-left:3px solid var(--lc,transparent)}
