@@ -155,6 +155,25 @@ export function PathLinks({ filePath, uriPath }) {
     );
 }
 
+// Compact managed-file download link (display counterpart to FileUploadField).
+// `file` is the serialized has_file block: { download_url, original_filename, size }.
+// `download_url` is already a complete root-relative path (/ati/data-api/v1/files/…),
+// served same-origin in prod and via the CRA proxy in dev — use it as-is.
+export function FileDownload({ file }) {
+    if (!file?.download_url) return null;
+    return (
+        <HStack spacing={2} mt={1}>
+            <Link href={file.download_url} isExternal fontSize="2xs" color="teal.600" display="flex" alignItems="center" noOfLines={1}>
+                <Text as="span" noOfLines={1}>📎 {file.original_filename || 'Download file'}</Text>
+                <ExternalLinkIcon ml={1} boxSize={2.5} />
+            </Link>
+            {file.size != null && (
+                <Text fontSize="2xs" color="gray.500">({Math.max(1, Math.round(file.size / 1024))} KB)</Text>
+            )}
+        </HStack>
+    );
+}
+
 // Standard report-status badge row. `extra` slots type-specific badges first.
 export function ReportBadges({ inYear, year, global, depreciated, extra }) {
     return (

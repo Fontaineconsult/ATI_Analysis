@@ -22,11 +22,6 @@ import {
     ModalHeader,
     ModalOverlay,
     Spinner,
-    Tab,
-    TabList,
-    TabPanel,
-    TabPanels,
-    Tabs,
     Text,
     Textarea,
     Tooltip,
@@ -64,11 +59,7 @@ import PersonAssignmentSelector from '../../functional_components/PersonAssignme
 import YseAssignmentSelector from '../../functional_components/YseAssignmentSelector';
 import ImplementationRemediationManager from './ImplementationRemediationManager';
 import ParticipantsEditor from '../../implementation_explorer/ParticipantsEditor';
-import DocumentsViewer from '../../implementation_explorer/doc_components/DocumentsViewer';
-import WebpagesViewer from '../../implementation_explorer/doc_components/WebpagesViewer';
-import NotesViewer from '../../implementation_explorer/doc_components/NotesViewer';
-import MessagesViewer from '../../implementation_explorer/doc_components/MessagesViewer';
-import MetricsViewer from '../../implementation_explorer/doc_components/MetricsSection';
+import SupportingDocumentationTabs from '../../implementation_explorer/doc_components/SupportingDocumentationTabs';
 
 const formatDate = (dateString) => (dateString ? new Date(dateString).toLocaleDateString() : null);
 
@@ -416,56 +407,16 @@ function ImplementationDetailPanel({ implementation, onAfterChange }) {
                         Copy links for email
                     </Button>
                 </HStack>
-                <Tabs colorScheme="teal" size="sm" variant="line" isLazy>
-                    <TabList flexWrap="wrap">
-                        <Tab fontSize="sm">Documents ({implementation.supporting_documents?.length || 0})</Tab>
-                        <Tab fontSize="sm">Webpages ({implementation.supporting_webpages?.length || 0})</Tab>
-                        <Tab fontSize="sm">Notes ({implementation.supporting_notes?.length || 0})</Tab>
-                        <Tab fontSize="sm">Messages ({implementation.supporting_messages?.length || 0})</Tab>
-                        <Tab fontSize="sm">Metrics ({implementation.supporting_metrics?.length || 0})</Tab>
-                    </TabList>
-                    <TabPanels>
-                        <TabPanel px={0} pt={4}>
-                            <DocumentsViewer
-                                documents={implementation.supporting_documents || []}
-                                implementation_id={implementation.unique_id}
-                                implementation_type={type}
-                                formatDate={formatDate}
-                            />
-                        </TabPanel>
-                        <TabPanel px={0} pt={4}>
-                            <WebpagesViewer
-                                webpages={implementation.supporting_webpages || []}
-                                implementation_id={implementation.unique_id}
-                                implementation_type={type}
-                                formatDate={formatDate}
-                            />
-                        </TabPanel>
-                        <TabPanel px={0} pt={4}>
-                            <NotesViewer
-                                notes={implementation.supporting_notes || []}
-                                implementation_id={implementation.unique_id}
-                                implementation_type={type}
-                                formatDate={formatDate}
-                            />
-                        </TabPanel>
-                        <TabPanel px={0} pt={4}>
-                            <MessagesViewer
-                                messages={implementation.supporting_messages || []}
-                                implementation_id={implementation.unique_id}
-                                implementation_type={type}
-                                formatDate={formatDate}
-                            />
-                        </TabPanel>
-                        <TabPanel px={0} pt={4}>
-                            <MetricsViewer
-                                metrics={implementation.supporting_metrics || []}
-                                implementation_id={implementation.unique_id}
-                                implementation_type={type}
-                            />
-                        </TabPanel>
-                    </TabPanels>
-                </Tabs>
+                <SupportingDocumentationTabs
+                    documents={implementation.supporting_documents || []}
+                    webpages={implementation.supporting_webpages || []}
+                    notes={implementation.supporting_notes || []}
+                    messages={implementation.supporting_messages || []}
+                    metrics={implementation.supporting_metrics || []}
+                    implementation_id={implementation.unique_id}
+                    implementation_type={type}
+                    formatDate={formatDate}
+                />
             </Card>
 
             {/* Evidence For — current year's links at this campus (compact rows,

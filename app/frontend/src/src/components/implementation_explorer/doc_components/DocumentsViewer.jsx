@@ -6,9 +6,10 @@ import { DataContext } from '../../../context/DataContext';
 import { useSettings } from '../../../context/SettingsContext';
 import { UserContext } from '../../../context/UserContext';
 import {
-    AddRow, EmptyText, Field, FieldLabel, FormActions, FormShell,
+    AddRow, EmptyText, Field, FieldLabel, FileDownload, FormActions, FormShell,
     ItemShell, MetaLine, PathLinks, ReportBadges, SwitchRow,
 } from './docPrimitives';
+import FileUploadField from './FileUploadField';
 
 const truthy = (v) => v === true || v === 'True';
 
@@ -37,6 +38,10 @@ function DocumentForm({ document, onSubmit, onCancel, isNewDocument }) {
         depreciated_date: document?.depreciated_date || '',
         date_created: document?.date_created || new Date().toISOString().split('T')[0],
         maintainer_id: document?.maintained_by?.unique_id || '',
+        storage_key: document?.file?.storage_key || '',
+        original_filename: document?.file?.original_filename || '',
+        content_type: document?.file?.content_type || '',
+        size: document?.file?.size ?? null,
     });
     const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -82,6 +87,11 @@ function DocumentForm({ document, onSubmit, onCancel, isNewDocument }) {
                 <Field label="File Path" name="file_path" value={documentData.file_path} onChange={handleChange} />
             </Flex>
             <Field label="URI Path" name="uri_path" value={documentData.uri_path} onChange={handleChange} />
+            <FileUploadField
+                value={documentData}
+                onUploaded={(f) => setDocumentData({ ...documentData, ...f })}
+                onClear={() => setDocumentData({ ...documentData, storage_key: '', original_filename: '', content_type: '', size: null })}
+            />
             <Box>
                 <FieldLabel mb={2}>Flags</FieldLabel>
                 <VStack align="stretch" spacing={1.5}>
@@ -182,6 +192,7 @@ export default function DocumentsViewer({ documents = [], implementation_id, imp
                                     {doc.description && <Text fontSize="xs" color="gray.600" noOfLines={2}>{doc.description}</Text>}
                                     {doc.maintained_by && <MetaLine>Maintained by {doc.maintained_by.name || 'Unknown'}</MetaLine>}
                                     <PathLinks filePath={doc.file_path} uriPath={doc.uri_path} />
+                                    <FileDownload file={doc.file} />
                                     <ReportBadges
                                         inYear={isIncludedInCurrentYear(doc)}
                                         year={currentAcademicYear}

@@ -25,6 +25,7 @@ import { addNewMessage } from '../../../services/api/post';
 import { DataContext } from '../../../context/DataContext';
 import { useSettings } from '../../../context/SettingsContext';
 import { UserContext } from '../../../context/UserContext';
+import FileUploadField from '../../implementation_explorer/doc_components/FileUploadField';
 
 const messageTypes = [
     'e-mail',
@@ -179,6 +180,17 @@ function MessageViewer({ messages, onSubmit, yearSuccessEvidence, createdBy, imp
                                                     Link <ExternalLinkIcon ml={1} />
                                                 </Link>
                                             )}
+                                            {message.properties?.file?.download_url && (
+                                                <Link
+                                                    href={message.properties.file.download_url}
+                                                    isExternal
+                                                    color="teal.600"
+                                                    display="flex"
+                                                    alignItems="center"
+                                                >
+                                                    {message.properties.file.original_filename || 'Download'} <ExternalLinkIcon ml={1} />
+                                                </Link>
+                                            )}
                                         </HStack>
 
                                         <HStack spacing={3} fontSize="xs" color="gray.500">
@@ -230,6 +242,10 @@ function MessageForm({ message, onSubmit, createdBy, onCancel }) {
         content: message?.properties?.content || '',
         file_path: message?.properties?.file_path || '',
         uri_path: message?.properties?.uri_path || '',
+        storage_key: message?.properties?.file?.storage_key || '',
+        original_filename: message?.properties?.file?.original_filename || '',
+        content_type: message?.properties?.file?.content_type || '',
+        size: message?.properties?.file?.size ?? null,
         message_type: message?.properties?.message_type || messageTypes[0],
         depreciated: message?.properties?.depreciated || false,
         depreciated_date: message?.properties?.depreciated_date || '',
@@ -267,6 +283,17 @@ function MessageForm({ message, onSubmit, createdBy, onCancel }) {
                         <FormLabel fontSize="xs">Message Name</FormLabel>
                         <Input size="sm" name="name" value={messageData.name} onChange={handleChange} required />
                     </FormControl>
+                </GridItem>
+
+                <GridItem colSpan={2}>
+                    <FileUploadField
+                        value={messageData}
+                        onUploaded={(f) => setMessageData({ ...messageData, ...f })}
+                        onClear={() => setMessageData({
+                            ...messageData,
+                            storage_key: '', original_filename: '', content_type: '', size: null,
+                        })}
+                    />
                 </GridItem>
 
                 <FormControl>

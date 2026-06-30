@@ -165,6 +165,17 @@ function DocumentViewer({ documents, implementation_id, implementation_type }) {
                                                     URI <ExternalLinkIcon ml={1} />
                                                 </Link>
                                             )}
+                                            {document.properties.file?.download_url && (
+                                                <Link
+                                                    href={document.properties.file.download_url}
+                                                    isExternal
+                                                    color="teal.600"
+                                                    display="flex"
+                                                    alignItems="center"
+                                                >
+                                                    {document.properties.file.original_filename || 'Download'} <ExternalLinkIcon ml={1} />
+                                                </Link>
+                                            )}
                                             <Text color="gray.500">
                                                 Created: {document.properties.date_created || 'N/A'}
                                             </Text>

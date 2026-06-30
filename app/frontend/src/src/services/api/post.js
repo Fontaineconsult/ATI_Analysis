@@ -71,6 +71,21 @@ export const addDocumentToImplementation = async (implementation_id, implementat
     }
 }
 
+// Upload a file's bytes to the content-addressed store (POST /files, multipart).
+// Returns { key, size, content_type, filename }. The caller then includes `key`
+// (as storage_key) on the document/message/metric it registers.
+export const uploadFile = async (file) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    try {
+        const response = await axios.post(`${process.env.REACT_APP_API_URL}/files`, formData);
+        return response.data?.data;
+    } catch (error) {
+        console.error('Error uploading file:', error);
+        throw error;
+    }
+}
+
 
 // Unlink (detach) a supporting document / webpage / note / message from an
 // implementation. The node itself is NOT deleted — it may be linked elsewhere.

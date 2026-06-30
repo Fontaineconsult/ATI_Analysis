@@ -6,9 +6,10 @@ import { DataContext } from '../../../context/DataContext';
 import { useSettings } from '../../../context/SettingsContext';
 import { UserContext } from '../../../context/UserContext';
 import {
-    AddRow, EmptyText, Field, FieldLabel, FormActions, FormShell,
+    AddRow, EmptyText, Field, FieldLabel, FileDownload, FormActions, FormShell,
     ItemShell, MetaLine, PathLinks, ReportBadges, SwitchRow,
 } from './docPrimitives';
+import FileUploadField from './FileUploadField';
 
 const messageTypes = [
     'e-mail', 'voice mail', 'text message', 'letter',
@@ -39,6 +40,10 @@ function MessageForm({ message, onSubmit, onCancel, isNewMessage }) {
         include_in_report: message?.include_in_report ?? false,
         include_in_current_year: isIncludedInCurrentYear(),
         created_by: user || {},
+        storage_key: message?.file?.storage_key || '',
+        original_filename: message?.file?.original_filename || '',
+        content_type: message?.file?.content_type || '',
+        size: message?.file?.size ?? null,
     });
     const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -71,6 +76,11 @@ function MessageForm({ message, onSubmit, onCancel, isNewMessage }) {
                 <Field label="File Path" name="file_path" value={messageData.file_path} onChange={handleChange} />
                 <Field label="URI Path" name="uri_path" value={messageData.uri_path} onChange={handleChange} />
             </Flex>
+            <FileUploadField
+                value={messageData}
+                onUploaded={(f) => setMessageData({ ...messageData, ...f })}
+                onClear={() => setMessageData({ ...messageData, storage_key: '', original_filename: '', content_type: '', size: null })}
+            />
             <Box>
                 <FieldLabel mb={2}>Flags</FieldLabel>
                 <VStack align="stretch" spacing={1.5}>
@@ -170,6 +180,7 @@ export default function MessagesViewer({ messages = [], implementation_id, imple
                                 >
                                     {msg.content && <Text fontSize="xs" color="gray.700" noOfLines={3}>{msg.content}</Text>}
                                     <PathLinks filePath={msg.file_path} uriPath={msg.uri_path} />
+                                    <FileDownload file={msg.file} />
                                     {msg.date_created && (
                                         <MetaLine>Created {formatDate ? formatDate(msg.date_created) : msg.date_created}</MetaLine>
                                     )}

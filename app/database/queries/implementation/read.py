@@ -198,6 +198,12 @@ _IMPL_PROJECTION = """
         is_milestone_and_measures_documentation: d.is_milestone_and_measures_documentation,
         maintained_by: head([ (d)-[:maintained_by]->(m:Person) |
           { unique_id: m.unique_id, name: m.name, email: m.email, employee_id: m.employee_id, title: m.title } ]),
+        file: head([ (d)-[:has_file]->(sf:StoredFile) | {
+          storage_key: sf.storage_key, original_filename: sf.original_filename,
+          content_type: sf.content_type, size: sf.size,
+          download_url: '/ati/data-api/v1/files/' + sf.storage_key +
+            CASE WHEN sf.original_filename IS NULL THEN '' ELSE '?name=' + apoc.text.urlencode(sf.original_filename) END
+        } ]),
         relationship: {
           included_in_years: coalesce(r.included_in_years, []),
           excluded_from_years: coalesce(r.excluded_from_years, []),
@@ -233,6 +239,12 @@ _IMPL_PROJECTION = """
         depreciated_date: msg.depreciated_date, include_in_report: coalesce(msg.include_in_report, true),
         created_by: head([ (msg)-[:created_by]->(c:Person) |
           { unique_id: c.unique_id, name: c.name, email: c.email, employee_id: c.employee_id, title: c.title } ]),
+        file: head([ (msg)-[:has_file]->(sf:StoredFile) | {
+          storage_key: sf.storage_key, original_filename: sf.original_filename,
+          content_type: sf.content_type, size: sf.size,
+          download_url: '/ati/data-api/v1/files/' + sf.storage_key +
+            CASE WHEN sf.original_filename IS NULL THEN '' ELSE '?name=' + apoc.text.urlencode(sf.original_filename) END
+        } ]),
         relationship: {
           included_in_years: coalesce(r.included_in_years, []),
           excluded_from_years: coalesce(r.excluded_from_years, []),
@@ -244,7 +256,13 @@ _IMPL_PROJECTION = """
         file_path: mt.file_path, uri_path: mt.uri_path, description: mt.description, single_value: mt.single_value,
         comment: mt.comment, include_in_report: coalesce(mt.include_in_report, true),
         created_by: head([ (mt)-[:created_by]->(c:Person) |
-          { unique_id: c.unique_id, name: c.name, email: c.email, employee_id: c.employee_id, title: c.title } ])
+          { unique_id: c.unique_id, name: c.name, email: c.email, employee_id: c.employee_id, title: c.title } ]),
+        file: head([ (mt)-[:has_file]->(sf:StoredFile) | {
+          storage_key: sf.storage_key, original_filename: sf.original_filename,
+          content_type: sf.content_type, size: sf.size,
+          download_url: '/ati/data-api/v1/files/' + sf.storage_key +
+            CASE WHEN sf.original_filename IS NULL THEN '' ELSE '?name=' + apoc.text.urlencode(sf.original_filename) END
+        } ])
       } ],
       is_evidence_for: [ (impl)-[:is_evidence_for]->(yse:YearSuccessEvidence) | {
         year_identifier: yse.year_identifier, unique_id: yse.unique_id,

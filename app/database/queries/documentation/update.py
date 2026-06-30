@@ -7,6 +7,7 @@ from datetime import date
 from app.database.queries.implementation.update import assign_documentation_to_implementation, \
     update_documentation_year_inclusion
 from app.endpoints.data_api.errors.custom_exceptions import NotFoundError, CrudError, ValidationError
+from app.database.queries.files.create import register_stored_file, link_file_to_node
 
 
 def unassign_note_from_yse(note_name, year_success_evidence):
@@ -237,6 +238,17 @@ def update_message(
         if updated_fields:
             message.save()
 
+        # Register + link a managed (uploaded) file if one was attached/changed.
+        if message_dict.get('storage_key'):
+            current = message.has_file.single()
+            if not current or current.storage_key != message_dict['storage_key']:
+                link_file_to_node(message, register_stored_file(
+                    message_dict['storage_key'],
+                    original_filename=message_dict.get('original_filename'),
+                    content_type=message_dict.get('content_type'),
+                    size=message_dict.get('size'),
+                ))
+
         # Handle YearSuccessEvidence association
         if year_success_evidence:
             try:
@@ -365,6 +377,17 @@ def update_document(
 
         if updated_fields:
             document.save()
+
+        # Register + link a managed (uploaded) file if one was attached/changed.
+        if document_dict.get('storage_key'):
+            current = document.has_file.single()
+            if not current or current.storage_key != document_dict['storage_key']:
+                link_file_to_node(document, register_stored_file(
+                    document_dict['storage_key'],
+                    original_filename=document_dict.get('original_filename'),
+                    content_type=document_dict.get('content_type'),
+                    size=document_dict.get('size'),
+                ))
 
         # Handle year-specific inclusion in relationship
         if implementation_id and implementation_type and academic_year is not None and include_in_year is not None:
@@ -580,6 +603,17 @@ def update_metric(
         # Save the metric if any fields were updated
         if updated_fields:
             metric.save()
+
+        # Register + link a managed (uploaded) file if one was attached/changed.
+        if metric_dict.get('storage_key'):
+            current = metric.has_file.single()
+            if not current or current.storage_key != metric_dict['storage_key']:
+                link_file_to_node(metric, register_stored_file(
+                    metric_dict['storage_key'],
+                    original_filename=metric_dict.get('original_filename'),
+                    content_type=metric_dict.get('content_type'),
+                    size=metric_dict.get('size'),
+                ))
 
         # Handle YearSuccessEvidence association
         if year_success_evidence:

@@ -15,12 +15,16 @@ import {
 import { fetchAllDocumentation } from '../../services/api/get';
 import DocumentDetailPanel from './DocumentDetailPanel';
 
+// Scoped to Documents + Webpages for now (the two fetch-all endpoints that exist).
+// This "browse all documents & websites" Explorer is built but NOT yet exposed in
+// the nav. To make it visible later, add to WorkingGroupMasterContainer.js:
+//   <Route path="documents" element={<DocumentsMasterContainer />} />
+//   <Route path="documents/:documentType" element={<DocumentsMasterContainer />} />
+//   <Route path="documents/:documentType/:documentId" element={<DocumentsMasterContainer />} />
+// (mounts at /:campus/ati-explorer/documents/:documentType/:documentId).
 const DOCUMENT_TYPES = [
     { key: 'documents', label: 'Documents' },
     { key: 'webpages', label: 'Webpages' },
-    { key: 'notes', label: 'Notes' },
-    { key: 'messages', label: 'Messages' },
-    { key: 'metrics', label: 'Metrics' },
 ];
 
 function DocumentsMasterContainer() {
@@ -201,6 +205,11 @@ function DocumentsMasterContainer() {
                                             >
                                                 {refCount} implementation{refCount !== 1 ? 's' : ''}
                                             </Badge>
+                                            {item.file && (
+                                                <Badge colorScheme="purple" fontSize="xs" px={2} py={1} borderRadius="md">
+                                                    📎 File
+                                                </Badge>
+                                            )}
                                         </VStack>
                                     </Button>
                                 );

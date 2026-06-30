@@ -1687,6 +1687,7 @@ class Document(StructuredNode):
     include_in_report = BooleanProperty(default=True)
     maintained_by = RelationshipTo("Person", "maintained_by")
     notes = RelationshipTo("Note", "has_note")
+    has_file = RelationshipTo("StoredFile", "has_file", cardinality=ZeroOrOne)  # managed (uploaded) blob; alternative to file_path/uri_path
 
 
 
@@ -1706,6 +1707,7 @@ class Document(StructuredNode):
             "is_administrative_review_documentation": self.is_administrative_review_documentation,
             "is_milestone_and_measures_documentation": self.is_milestone_and_measures_documentation,
             "maintained_by": [{"unique_id": p.unique_id, "name": p.name} for p in self.maintained_by.all()],
+            "file": serialize_has_file(self),
             "unique_id": self.unique_id
 
         }
@@ -1819,6 +1821,7 @@ class Message(StructuredNode):
     depreciated_date = DateProperty()
     created_by = RelationshipTo("Person", "created_by")
     include_in_report = BooleanProperty(default=True)
+    has_file = RelationshipTo("StoredFile", "has_file", cardinality=ZeroOrOne)  # managed (uploaded) blob
 
 
     def serialize(self):
@@ -1836,6 +1839,7 @@ class Message(StructuredNode):
                 "type": self.type,
                 "depreciated": self.depreciated,
                 "include_in_report": self.include_in_report,
+                "file": serialize_has_file(self),
                 "unique_id": self.unique_id
 
         }
@@ -1872,6 +1876,7 @@ class Metric(StructuredNode):
     notes = RelationshipTo("Note", "has_note")
     academic_year = RelationshipTo("AcademicYear", "measured_in_year")
     include_in_report = BooleanProperty(default=True)
+    has_file = RelationshipTo("StoredFile", "has_file", cardinality=ZeroOrOne)  # managed (uploaded) blob
 
 
     @staticmethod
@@ -1899,8 +1904,57 @@ class Metric(StructuredNode):
             "data": self.get_data() if self.value_dict else None,
             "include_in_report": self.include_in_report,
             "unique_id": self.unique_id,
+            "file": serialize_has_file(self),
             "academic_year": [{"unique_id": ay.unique_id, "name": ay.name} for ay in self.academic_year.all()]
 
+        }
+
+
+def serialize_has_file(node):
+    """The node's managed StoredFile (via has_file) -> dict, or None when it has no
+    uploaded file (it may instead carry an external file_path/uri_path/url)."""
+    sf = node.has_file.single()
+    return sf.serialize() if sf else None
+
+
+class StoredFile(StructuredNode):
+    """A managed file whose bytes live in the app/fs blob store.
+
+    Content-addressed: ``storage_key`` is the SHA-256 the bytes are stored under (the
+    app/fs key), so there is one StoredFile per unique content — registering the same
+    bytes again MERGEs onto the existing node. Records that have an uploaded file point
+    at it via ``has_file`` (Document / Message / Metric). The blob itself is NOT deleted
+    when a node is removed (blobs can be shared); orphans are reclaimed by
+    app/database/tools/gc_orphan_files.py.
+    """
+    unique_id = UniqueIdProperty()
+
+    storage_key = StringProperty(unique_index=True, required=True)   # the app/fs key (sha256 hex)
+    original_filename = StringProperty()
+    content_type = StringProperty()
+    size = IntegerProperty()
+    uploaded_date = DateProperty()
+
+    uploaded_by = RelationshipTo("Person", "uploaded_by")
+
+    # Reverse refs — who registered this file.
+    documents = RelationshipFrom("Document", "has_file")
+    messages = RelationshipFrom("Message", "has_file")
+    metrics = RelationshipFrom("Metric", "has_file")
+
+    def serialize(self):
+        from urllib.parse import quote
+        url = f"/ati/data-api/v1/files/{self.storage_key}"
+        if self.original_filename:
+            url += f"?name={quote(self.original_filename)}"
+        return {
+            "unique_id": self.unique_id,
+            "storage_key": self.storage_key,
+            "original_filename": self.original_filename,
+            "content_type": self.content_type,
+            "size": self.size,
+            "uploaded_date": str(self.uploaded_date) if self.uploaded_date else None,
+            "download_url": url,
         }
 
 

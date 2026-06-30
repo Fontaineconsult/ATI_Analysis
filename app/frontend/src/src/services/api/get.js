@@ -257,6 +257,31 @@ export const fetchAllWebpages = async () => {
     }
 };
 
+/**
+ * Aggregate feed for the Document Explorer (browse-all view). Composes the two
+ * fetch-all endpoints that exist today — documents + webpages — into the
+ * `{ documents, webpages, notes, messages, metrics }` shape DocumentsMasterContainer
+ * consumes (notes/messages/metrics are intentionally empty: the Explorer is scoped
+ * to documents + websites for now). Returned axios-style as `{ data: {...} }`.
+ */
+export const fetchAllDocumentation = async () => {
+    try {
+        const [docsBody, websBody] = await Promise.all([fetchAllDocuments(), fetchAllWebpages()]);
+        return {
+            data: {
+                documents: docsBody?.data || [],
+                webpages: websBody?.data || [],
+                notes: [],
+                messages: [],
+                metrics: [],
+            },
+        };
+    } catch (error) {
+        console.error('Error fetching all documentation:', error.message);
+        throw error;
+    }
+};
+
 export const fetchAllGovernance = async () => {
     try {
         const response = await axios.get(`${process.env.REACT_APP_API_URL}/governance`);

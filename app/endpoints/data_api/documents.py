@@ -145,6 +145,13 @@ class DocumentsAPI(MethodView):
                 include_in_report = document_dict.get('include_in_report', True)
                 created_by = data.get('created_by')
 
+                # Managed (uploaded) file fields — present when the document is an upload
+                # (the bytes already went through POST /files in the prior call).
+                storage_key = document_dict.get('storage_key')
+                original_filename = document_dict.get('original_filename')
+                content_type = document_dict.get('content_type')
+                size = document_dict.get('size')
+
                 # Now call add_document with the year parameters
                 if add_document(
                         name=name,
@@ -156,8 +163,13 @@ class DocumentsAPI(MethodView):
                         is_milestone_and_measures_documentation=is_milestone_and_measures_documentation,
                         implementation_id=implementation_id,
                         implementation_type=implementation_type,
-                        academic_year=academic_year,  # Add this
-                        include_in_year=include_in_year  # Add this
+                        academic_year=academic_year,
+                        include_in_year=include_in_year,
+                        storage_key=storage_key,
+                        original_filename=original_filename,
+                        content_type=content_type,
+                        size=size,
+                        uploaded_by=created_by
                 ):
                     return make_response({"status": "success", "message": "Document created successfully."}), 201
 

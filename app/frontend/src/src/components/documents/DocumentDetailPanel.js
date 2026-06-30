@@ -259,6 +259,19 @@ function DocumentDetailPanel({ item, documentType }) {
                 <Heading size="sm" color="teal.700" mb={4}>Details</Heading>
                 <Divider borderColor="gray.200" mb={4} />
                 {renderDocumentFields()}
+                {item.file?.download_url && (
+                    <Box mt={4}>
+                        <Text fontSize="xs" color="gray.500" fontWeight="semibold" textTransform="uppercase" mb={1}>Attached File</Text>
+                        <Link href={item.file.download_url} isExternal fontSize="sm" color="teal.600">
+                            {item.file.original_filename || 'Download'} <ExternalLinkIcon mx="2px" />
+                        </Link>
+                        {item.file.size != null && (
+                            <Text fontSize="xs" color="gray.500" mt={1}>
+                                {Math.max(1, Math.round(item.file.size / 1024))} KB
+                            </Text>
+                        )}
+                    </Box>
+                )}
             </Box>
 
             {/* Referenced By */}

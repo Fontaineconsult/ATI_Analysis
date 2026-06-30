@@ -2,6 +2,7 @@ from neomodel import db
 from datetime import date, datetime
 
 from app.database.queries.implementation.update import assign_documentation_to_implementation
+from app.database.queries.files.create import register_stored_file, link_file_to_node
 from app.database.tools.support_functions import get_file_hash
 from app.endpoints.data_api.errors.custom_exceptions import NotFoundError, ValidationError, CrudError
 from app.database.graph_schema import (Note,
@@ -164,6 +165,17 @@ def add_message(
         )
         message.save()
 
+        # Register + link a managed (uploaded) file, if one was provided.
+        if message_dict.get('storage_key'):
+            stored_file = register_stored_file(
+                message_dict['storage_key'],
+                original_filename=message_dict.get('original_filename'),
+                content_type=message_dict.get('content_type'),
+                size=message_dict.get('size'),
+                uploaded_by=(message_dict.get('created_by') or {}).get('employee_id'),
+            )
+            link_file_to_node(message, stored_file)
+
         # Handle the created_by relationship
         if 'created_by' in message_dict:
             created_by_data = message_dict['created_by']
@@ -221,34 +233,33 @@ def add_document(
         is_milestone_and_measures_documentation=False,
         implementation_id=None,
         implementation_type=None,
-        academic_year=None,  # Add this parameter
-        include_in_year=True  # Add this parameter
+        academic_year=None,
+        include_in_year=True,
+        storage_key=None,          # app/fs key (sha256) for an uploaded, managed file
+        original_filename=None,
+        content_type=None,
+        size=None,
+        uploaded_by=None           # Person employee_id / unique_id who uploaded it
 ) -> bool:
     """
-    Adds a document node to the graph. Optionally assigns the document to an implementation
-    with year-specific inclusion if implementation_id is provided.
+    Adds a document node to the graph. A document references its bytes one of three ways:
+    an uploaded managed file (storage_key), an external file_path, or a uri_path.
+    Optionally assigns the document to an implementation with year-specific inclusion.
     """
     try:
-        if not file_path and not uri_path:
-            raise ValidationError("Either file path or URI path must be provided.")
+        if not file_path and not uri_path and not storage_key:
+            raise ValidationError("A file path, URI path, or uploaded file is required.")
 
-        # Calculate hash if file_path is provided
-        hash = get_file_hash(file_path) if file_path else None
-        hash = None  # Todo implement when get_file_hash is implemented
-
-        # Check if a document with the same hash already exists
-        if hash:
-            existing_document = Document.nodes.get_or_none(hash=hash)
-            if existing_document:
-                raise ValidationError(f"A document with hash {hash} already exists.")
-        else:
+        # Dedup external documents by uri_path. Managed-file documents are NOT deduped
+        # this way (their uri_path is None, which would false-match other path-less docs);
+        # the blob itself is content-addressed in the storage layer.
+        if not storage_key and uri_path:
             existing_document = Document.nodes.get_or_none(uri_path=uri_path)
             if existing_document:
                 raise ValidationError(f"A document with URI path {uri_path} already exists.")
 
         # Create and save the document
         new_document = Document(
-            hash=hash,
             name=name,
             file_path=file_path,
             uri_path=uri_path,
@@ -258,6 +269,17 @@ def add_document(
             is_milestone_and_measures_documentation=is_milestone_and_measures_documentation
         )
         new_document.save()
+
+        # Register + link the managed (uploaded) file, if any.
+        if storage_key:
+            stored_file = register_stored_file(
+                storage_key,
+                original_filename=original_filename,
+                content_type=content_type,
+                size=size,
+                uploaded_by=uploaded_by,
+            )
+            link_file_to_node(new_document, stored_file)
 
         # Assign to implementation with year-specific inclusion
         if implementation_id and implementation_type:
@@ -420,6 +442,17 @@ def add_metric(
             include_in_report=metric_dict.get('include_in_report', True)
         )
         metric.save()
+
+        # Register + link a managed (uploaded) file, if one was provided.
+        if metric_dict.get('storage_key'):
+            stored_file = register_stored_file(
+                metric_dict['storage_key'],
+                original_filename=metric_dict.get('original_filename'),
+                content_type=metric_dict.get('content_type'),
+                size=metric_dict.get('size'),
+                uploaded_by=(metric_dict.get('created_by') or {}).get('employee_id'),
+            )
+            link_file_to_node(metric, stored_file)
 
         # Handle the created_by relationship
         if 'created_by' in metric_dict:

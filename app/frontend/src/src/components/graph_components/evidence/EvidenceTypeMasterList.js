@@ -34,7 +34,8 @@ import {
     WrapItem
 } from '@chakra-ui/react';
 import { DeleteIcon, ViewIcon } from '@chakra-ui/icons';
-import DocumentationMasterViewer from "../documentation/DocumentationMasterContainer";
+import SupportingDocumentationTabs from "../../implementation_explorer/doc_components/SupportingDocumentationTabs";
+import normalizeWrappedDocs from "../../implementation_explorer/doc_components/normalizeWrappedDocs";
 import { unassignImplementationFromYSE } from '../../../services/api/delete';
 
 function EvidenceTypeMasterList({ evidence, yearIdentifier, onRefresh }) {
@@ -360,8 +361,8 @@ function EvidenceTypeMasterList({ evidence, yearIdentifier, onRefresh }) {
                     <ModalHeader>Documentation Viewer</ModalHeader>
                     <ModalCloseButton />
                     <ModalBody>
-                        {/* Pass the selected evidence to the DocumentationMasterViewer */}
-                        <DocumentationMasterViewer documentation={selectedEvidence} />
+                        {/* Canonical doc viewers (doc_components), fed the flattened evidence bundle */}
+                        {selectedEvidence && <SupportingDocumentationTabs {...normalizeWrappedDocs(selectedEvidence)} />}
                     </ModalBody>
                 </ModalContent>
             </Modal>

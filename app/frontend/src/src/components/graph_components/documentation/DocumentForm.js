@@ -10,6 +10,7 @@ import {
     Input,
     Switch,
 } from '@chakra-ui/react';
+import FileUploadField from '../../implementation_explorer/doc_components/FileUploadField';
 
 /**
  * Document field editor. Originally lived inside DocumentViewer.js — extracted
@@ -31,6 +32,10 @@ function DocumentForm({ document, onSubmit, createdBy, isNewDocument, onCancel }
         name: document?.properties?.name || '',
         file_path: document?.properties?.file_path || '',
         uri_path: document?.properties?.uri_path || '',
+        storage_key: document?.properties?.file?.storage_key || '',
+        original_filename: document?.properties?.file?.original_filename || '',
+        content_type: document?.properties?.file?.content_type || '',
+        size: document?.properties?.file?.size ?? null,
         is_administrative_review_documentation:
             document?.properties?.is_administrative_review_documentation || false,
         is_milestone_and_measures_documentation:
@@ -74,6 +79,17 @@ function DocumentForm({ document, onSubmit, createdBy, isNewDocument, onCancel }
                         <FormLabel fontSize="xs">Document Name</FormLabel>
                         <Input size="sm" name="name" value={documentData.name} onChange={handleChange} required />
                     </FormControl>
+                </GridItem>
+
+                <GridItem colSpan={2}>
+                    <FileUploadField
+                        value={documentData}
+                        onUploaded={(f) => setDocumentData({ ...documentData, ...f })}
+                        onClear={() => setDocumentData({
+                            ...documentData,
+                            storage_key: '', original_filename: '', content_type: '', size: null,
+                        })}
+                    />
                 </GridItem>
 
                 <GridItem>

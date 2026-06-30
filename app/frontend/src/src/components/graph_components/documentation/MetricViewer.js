@@ -16,9 +16,11 @@ import {
     Badge,
     IconButton,
     Grid,
-    GridItem
+    GridItem,
+    Link
 } from '@chakra-ui/react';
 import { EditIcon, ExternalLinkIcon } from '@chakra-ui/icons';
+import FileUploadField from '../../implementation_explorer/doc_components/FileUploadField';
 
 const metricTypes = ["tabular", "graphical", "descriptive"];
 
@@ -99,6 +101,17 @@ function MetricViewer({ metrics, onSubmit }) {
                                                     <ExternalLinkIcon w={3} h={3} color="teal.600" />
                                                 </HStack>
                                             )}
+                                            {metric.properties?.file?.download_url && (
+                                                <Link
+                                                    href={metric.properties.file.download_url}
+                                                    isExternal
+                                                    color="teal.600"
+                                                    display="flex"
+                                                    alignItems="center"
+                                                >
+                                                    {metric.properties.file.original_filename || 'Download'} <ExternalLinkIcon ml={1} w={3} h={3} />
+                                                </Link>
+                                            )}
                                         </HStack>
 
                                         {/* Description preview */}
@@ -149,6 +162,10 @@ function MetricForm({ metric, onSubmit, onCancel }) {
         metric_type: metric.properties?.metric_type || metricTypes[0],
         file_path: metric.properties?.file_path || '',
         uri_path: metric.properties?.uri_path || '',
+        storage_key: metric.properties?.file?.storage_key || '',
+        original_filename: metric.properties?.file?.original_filename || '',
+        content_type: metric.properties?.file?.content_type || '',
+        size: metric.properties?.file?.size ?? null,
         description: metric.properties?.description || '',
         single_value: metric.properties?.single_value || '',
         value_dict: JSON.stringify(metric.properties?.value_dict || {}),
@@ -216,6 +233,17 @@ function MetricForm({ metric, onSubmit, onCancel }) {
                     <FormLabel fontSize="xs">URI Path</FormLabel>
                     <Input size="sm" name="uri_path" value={metricData.uri_path} onChange={handleChange} />
                 </FormControl>
+
+                <GridItem colSpan={2}>
+                    <FileUploadField
+                        value={metricData}
+                        onUploaded={(f) => setMetricData({ ...metricData, ...f })}
+                        onClear={() => setMetricData({
+                            ...metricData,
+                            storage_key: '', original_filename: '', content_type: '', size: null,
+                        })}
+                    />
+                </GridItem>
 
                 <GridItem colSpan={2}>
                     <FormControl>
