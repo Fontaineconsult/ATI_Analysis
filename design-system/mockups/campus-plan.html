@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Campus Plan — navigation study</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --page:#eceef2; --card:#fff; --border:#e2e8f0; --hair:#edf0f4;
+    --ink-900:#1a202c; --ink-700:#2d3748; --ink-600:#4a5568; --ink-500:#718096; --ink-400:#a0aec0;
+    --teal-50:#f4f6fb; --teal-500:#4966a4; --teal-700:#354a7a; --teal-800:#2a3a62;
+    /* working-group identity (design-sense §2) */
+    --web:#4966a4;  --web-50:#f4f6fb;
+    --ins:#635098;  --ins-50:#f6f4fa;
+    --pro:#db5850;  --pro-50:#fcf1f0;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--page);color:var(--ink-900);font-family:'Roboto',system-ui,sans-serif;line-height:1.5;font-size:14px}
+
+  /* slim brand band */
+  header.brand{background:var(--teal-800);color:#fff;padding:14px 24px;display:flex;align-items:center;gap:14px}
+  header.brand .logo{font-weight:700;letter-spacing:.5px}
+  header.brand .rule{height:3px;width:56px;border-radius:999px;background:linear-gradient(to right,#7e93bf,#8f7db9,#e27970)}
+  header.brand .eyebrow{font-size:11px;text-transform:uppercase;letter-spacing:.16em;color:rgba(255,255,255,.8)}
+
+  main{max-width:1180px;margin:0 auto;padding:20px 24px 80px}
+
+  /* approach toggle */
+  .toggle{display:flex;gap:8px;align-items:center;justify-content:flex-end;margin-bottom:14px;font-size:13px;color:var(--ink-600)}
+  .toggle button{font:inherit;cursor:pointer;border:1px solid var(--border);background:#fff;border-radius:8px;padding:7px 14px;color:var(--ink-600)}
+  .toggle button.on{background:var(--teal-700);border-color:var(--teal-700);color:#fff;font-weight:500}
+
+  /* ---- overview header ---- */
+  .ovh-title{display:flex;align-items:baseline;justify-content:space-between;gap:16px;margin:4px 0 16px}
+  .ovh-title h1{font-size:20px;margin:0;color:var(--ink-900)}
+  .ovh-title .meta{font-size:13px;color:var(--ink-600)}
+  .ovh-title .meta .id{font-family:ui-monospace,monospace;color:var(--ink-400)}
+
+  .strip{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:16px}
+  .stat{background:#fff;border:1px solid var(--border);border-top:3px solid var(--accent,#7e93bf);border-radius:12px;box-shadow:0 1px 2px rgba(0,0,0,.05);padding:14px 16px}
+  .stat .l{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-500)}
+  .stat .n{font-size:26px;font-weight:500;line-height:1.2;color:var(--ink-900)}
+  .stat .h{font-size:11px;color:var(--ink-500)}
+
+  .ovh-2up{display:grid;grid-template-columns:2fr 1fr;gap:14px;margin-bottom:8px}
+  .card{background:#fff;border:1px solid var(--border);border-radius:12px;box-shadow:0 1px 2px rgba(0,0,0,.05);padding:16px}
+  .card h3{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--teal-700);margin:0 0 8px;font-weight:700}
+  .card .body{font-size:13px;color:var(--ink-700)}
+  .muted{color:var(--ink-500);font-style:italic}
+  .metaItem{font-size:13px;margin-bottom:10px}
+  .metaItem .who{font-weight:500}
+  .metaItem .role{color:var(--ink-500)}
+  .linklike{color:#40598f;text-decoration:none;font-size:13px}
+  .linklike:hover{text-decoration:underline}
+  .ghostbtn{font:inherit;font-size:12px;cursor:pointer;border:1px solid var(--border);background:#fff;border-radius:7px;padding:4px 10px;color:var(--ink-600)}
+  .row-between{display:flex;align-items:center;justify-content:space-between;gap:8px}
+
+  /* ---- working-group TABS ---- */
+  .wgtabs{display:flex;gap:4px;border-bottom:1px solid var(--border);margin:22px 0 0}
+  .wgtab{position:relative;cursor:pointer;border:1px solid transparent;border-bottom:none;background:transparent;font:inherit;
+         padding:11px 18px 12px;border-radius:10px 10px 0 0;color:var(--ink-600);display:flex;align-items:center;gap:9px}
+  .wgtab .dot{width:9px;height:9px;border-radius:999px;background:var(--c)}
+  .wgtab .cnt{font-size:11px;background:var(--page);border-radius:999px;padding:1px 8px;color:var(--ink-600)}
+  .wgtab .warn{font-size:11px;color:#c24a43;font-weight:700}
+  .wgtab.on{background:#fff;border-color:var(--border);color:var(--ink-900);font-weight:500}
+  .wgtab.on::after{content:"";position:absolute;left:0;right:0;top:-1px;height:3px;background:var(--c);border-radius:3px 3px 0 0}
+  .wgtab.on .cnt{background:var(--c-50)}
+
+  .wgpanel{background:#fff;border:1px solid var(--border);border-top:none;border-radius:0 0 12px 12px;padding:18px;box-shadow:0 1px 2px rgba(0,0,0,.05)}
+  .wgpanel.accent{border-top:3px solid var(--c)}
+
+  .leadsbar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 12px;background:var(--c-50);border:1px solid var(--border);border-radius:10px;margin-bottom:16px}
+  .leadsbar .leads{display:flex;flex-wrap:wrap;gap:14px;font-size:13px}
+  .leadsbar .who{font-weight:500}
+  .leadsbar .role{color:var(--ink-500)}
+  .leadsbar .lbl{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--c);font-weight:700;margin-right:4px}
+
+  /* sub-tabs */
+  .subtabs{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap}
+  .subtab{cursor:pointer;border:1px solid var(--border);background:#fff;font:inherit;font-size:13px;padding:6px 13px;border-radius:999px;color:var(--ink-600);display:flex;align-items:center;gap:7px}
+  .subtab .c{font-size:11px;color:var(--ink-400)}
+  .subtab.on{background:var(--c);border-color:var(--c);color:#fff}
+  .subtab.on .c{color:rgba(255,255,255,.85)}
+
+  /* split cards (indicator / plan / query / minutes) */
+  .split{border:1px solid var(--border);border-radius:9px;overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.04);margin-bottom:10px;background:#fff;border-left:3px solid var(--lc,transparent)}
+  .split .top{background:#f7f8fa;border-bottom:1px solid var(--border);padding:8px 12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .split .bot{padding:9px 12px}
+  .split .name{font-size:13px;font-weight:500;color:var(--ink-900)}
+  .key{font-family:ui-monospace,monospace;font-size:12px;font-weight:600;color:var(--teal-700)}
+  .spacer{flex:1}
+  .actions{display:flex;gap:4px}
+  .actions .a{font-size:12px;color:#40598f;cursor:pointer;padding:1px 6px;border-radius:6px}
+  .actions .a:hover{background:var(--teal-50)}
+  .actions .x{color:#c24a43}
+
+  /* pills & badges */
+  .pill{display:inline-flex;align-items:center;padding:1px 9px;border-radius:999px;font-size:11px;font-weight:600}
+  .statusprog{display:inline-flex;align-items:center;gap:5px}
+  .arrow{color:var(--ink-400)}
+  .spill{display:inline-block;padding:1px 7px;border-radius:4px;font-size:11px;font-weight:500;border-left:2px solid}
+  .badge{display:inline-block;padding:1px 8px;border-radius:6px;font-size:11px;font-weight:600}
+  .grid2{display:grid;grid-template-columns:1.2fr 1fr;gap:16px;align-items:start}
+  @media(max-width:860px){.grid2{grid-template-columns:1fr}.ovh-2up{grid-template-columns:1fr}.strip{grid-template-columns:repeat(2,1fr)}}
+  .sechead{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-500);font-weight:700;margin:0 0 8px;display:flex;justify-content:space-between;align-items:center}
+  .timeline{margin-top:8px;padding-top:8px;border-top:1px solid var(--hair);font-size:12px;color:var(--ink-600)}
+  .timeline .t{display:flex;gap:8px;align-items:baseline;margin-bottom:3px;flex-wrap:wrap}
+  .timeline .date{font-family:ui-monospace,monospace;color:var(--ink-500)}
+  .quote{font-style:italic;color:var(--ink-600)}
+
+  /* ---- one-page + rail ---- */
+  .r-layout{display:grid;grid-template-columns:180px 1fr;gap:24px;margin-top:22px;align-items:start}
+  .rail{position:sticky;top:14px;display:flex;flex-direction:column;gap:2px}
+  .rail a{text-decoration:none;font-size:13px;color:var(--ink-600);padding:8px 12px;border-radius:8px;border-left:3px solid transparent}
+  .rail a:hover{background:#fff}
+  .rail a.on{background:#fff;font-weight:500;color:var(--ink-900);border-left-color:var(--rc,#7e93bf)}
+  .rail a .dot{display:inline-block;width:8px;height:8px;border-radius:999px;margin-right:8px;vertical-align:middle}
+  .wgsection{scroll-margin-top:14px;margin-bottom:18px}
+  .wgsection .hd{display:flex;align-items:center;gap:10px;padding:12px 16px;border-radius:11px 11px 0 0;color:#fff;background:var(--c)}
+  .wgsection .hd h2{font-size:16px;margin:0}
+  .wgsection .hd .id{font-family:ui-monospace,monospace;font-size:12px;color:rgba(255,255,255,.85);margin-left:auto}
+  .wgsection .bd{background:#fff;border:1px solid var(--border);border-top:none;border-radius:0 0 11px 11px;padding:16px}
+  .hide{display:none}
+  .note{font-size:12px;color:var(--ink-500);margin-top:26px;border-top:1px dashed var(--border);padding-top:14px}
+  .note b{color:var(--ink-700)}
+  .backlink{display:inline-block;margin-bottom:8px;font-size:13px;color:#40598f;text-decoration:none}
+</style>
+</head>
+<body>
+<header class="brand">
+  <span class="logo">SFBRN</span>
+  <span class="rule" aria-hidden="true"></span>
+  <span class="eyebrow">Accessible Technology Initiative · Campus Plan — navigation study</span>
+</header>
+
+<main>
+  <a class="backlink" href="../index.html">← design system</a>
+  <div class="toggle">
+    <span>Approach:</span>
+    <button id="btnTabs" class="on" onclick="setMode('tabs')">Tabbed shell <small>(recommended)</small></button>
+    <button id="btnPage" onclick="setMode('page')">One page + rail</button>
+  </div>
+
+  <!-- ============ OVERVIEW HEADER (shared) ============ -->
+  <div class="ovh-title">
+    <h1>Campus Plan</h1>
+    <div class="meta">San Francisco State University · 2025–2026 · <span class="id">2025-2026_sfsu</span></div>
+  </div>
+
+  <div class="strip">
+    <div class="stat" style="--accent:#7e93bf"><div class="l">Working Groups</div><div class="n">3</div><div class="h">planning on this campus</div></div>
+    <div class="stat" style="--accent:#8f7db9"><div class="l">Prioritized Indicators</div><div class="n">12</div><div class="h">across all groups</div></div>
+    <div class="stat" style="--accent:#7e93bf"><div class="l">Plans</div><div class="n">8</div><div class="h">campus-plan plans</div></div>
+    <div class="stat" style="--accent:#e27970"><div class="l">⚠ At-Risk</div><div class="n">2</div><div class="h">at-risk / failing trajectory</div></div>
+  </div>
+
+  <div class="ovh-2up">
+    <div class="card">
+      <div class="row-between"><h3>Executive Summary</h3><button class="ghostbtn">Edit</button></div>
+      <div class="body">Year two of the campus ATA plan focuses on closing remediation gaps in the LMS and
+        standardizing accessible-procurement intake. Web and Instructional Materials are trending up;
+        Procurement carries the two at-risk indicators pending a vendor VPAT backlog.</div>
+    </div>
+    <div class="card">
+      <h3>Plan Leadership</h3>
+      <div class="metaItem"><span class="who">Dr. Lynn Mahoney</span> <span class="role">— President's designee</span></div>
+      <div class="metaItem"><span class="who">Nancy Ganner</span> <span class="role">— ATI Executive Sponsor</span></div>
+      <div class="row-between" style="margin:12px 0 4px"><span style="font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-500);font-weight:700">President's Report</span></div>
+      <a class="linklike" href="#">2024–2025 President's ATI Report ↗</a>
+      <div class="row-between" style="margin-top:14px">
+        <button class="ghostbtn">+ Compare with campus…</button>
+        <button class="ghostbtn">Manage sponsors</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ MODE: TABBED ============ -->
+  <div id="modeTabs">
+    <div class="wgtabs" id="wgtabs"></div>
+    <div class="wgpanel accent" id="wgpanel"></div>
+  </div>
+
+  <!-- ============ MODE: ONE PAGE + RAIL ============ -->
+  <div id="modePage" class="hide">
+    <div class="r-layout">
+      <nav class="rail" id="rail"></nav>
+      <div id="railBody"></div>
+    </div>
+  </div>
+
+  <div class="note">
+    <b>What you're looking at.</b> Same data, two navigation models. <b>Tabbed shell</b> shows the
+    compact overview header, then one working group at a time — each tab carries its identity color
+    (Web = blue, Instructional Materials = purple, Procurement = coral) and a count, and within a group
+    the panels become sub-tabs so you stop scrolling a wall. <b>One page + rail</b> keeps everything on
+    a single scroll (good for exec read-through / print) but adds a sticky rail and identity-colored
+    section headers as landmarks. Both apply the working-group identity color that the live page omits.
+  </div>
+</main>
+
+<script>
+const RAMP = { // maturity ramp — statusColors.js
+  'Not Started':'#E53E3E','Initiated':'#ED8936','Defined':'#ECC94B',
+  'Established':'#41b441','Managed':'#246f24','Optimizing':'#157744'
+};
+const RAMP_BG = {'Not Started':'#FFF5F5','Initiated':'#FFFAF0','Defined':'#FFFFF0','Established':'#F0FFF4','Managed':'#E6FFEC','Optimizing':'#DFF5E6'};
+const TRAJ = { improving:['Improving','#276749','#F0FFF4'], on_track:['On Track','#2B6CB0','#EBF8FF'],
+  stagnant:['Stagnant','#975A16','#FFFFF0'], at_risk:['At Risk','#9C4221','#FFFAF0'], failing:['Failing','#9B2C2C','#FFF5F5'] };
+const PLAN_STATUS = { 'In Progress':['#2B6CB0','#EBF8FF'], 'Completed':['#276749','#F0FFF4'],
+  'Not Started':['#4B5563','#F3F4F6'], 'On Hold':['#9C4221','#FFFAF0'], 'Abandoned':['#9B2C2C','#FFF5F5'] };
+
+const GROUPS = [
+  { key:'web', name:'Web', c:'#4966a4', c50:'#f4f6fb', id:'2025-2026_sfsu_web',
+    leads:[['Amanda Cruz','Web Accessibility Lead'],['Devon Park','Sr. Front-end Dev']],
+    indicators:[
+      {key:'1_web', name:'Public web pages conform to WCAG 2.1 AA', prev:'Defined', cur:'Established', traj:'improving',
+        updates:[['2026-03-11','improving','Automated scans down to 0.4 issues/page after template fix.','A. Cruz']]},
+      {key:'2_web', name:'Accessibility statement published and current', prev:'Established', cur:'Managed', traj:'on_track',
+        updates:[['2026-02-02','on_track','Statement reviewed, contact path verified.','D. Park']]},
+    ],
+    plans:[ {name:'LMS template remediation rollout', status:'In Progress', year:'2025–2026'},
+            {name:'Quarterly automated scan pipeline', status:'Completed', year:'2024–2025', done:'2025'} ],
+    queries:[ {q:'Do third-party embeds count toward the AA conformance target?', status:'open', by:'A. Cruz', date:'2026-03-01', sc:['#9C4221','#FFFAF0'], slabel:'open'} ],
+    minutes:[ {title:'Web WG — March standup', date:'2026-03-04', by:'D. Park'} ],
+  },
+  { key:'ins', name:'Instructional Materials', c:'#635098', c50:'#f6f4fa', id:'2025-2026_sfsu_ins',
+    leads:[['Priya Nair','Instructional Designer'],['Tom Beckett','Faculty Liaison']],
+    indicators:[
+      {key:'1_ins', name:'Faculty trained on accessible course design', prev:'Initiated', cur:'Defined', traj:'on_track',
+        updates:[['2026-01-20','on_track','Spring cohort enrolled; 38 faculty.','P. Nair']]},
+      {key:'3_ins', name:'Course materials captioned within SLA', prev:'Defined', cur:'Defined', traj:'stagnant',
+        updates:[['2026-02-15','stagnant','Caption vendor backlog growing; SLA at 71%.','T. Beckett']]},
+    ],
+    plans:[ {name:'Accessible syllabus template adoption', status:'In Progress', year:'2025–2026'},
+            {name:'Captioning vendor SLA renegotiation', status:'On Hold', year:'2025–2026'} ],
+    queries:[ {q:'Which DAM stores the master caption files?', status:'in_progress', by:'P. Nair', date:'2026-02-10', sc:['#2B6CB0','#EBF8FF'], slabel:'in progress'} ],
+    minutes:[ {title:'IM WG — captioning review', date:'2026-02-15', by:'P. Nair'} ],
+  },
+  { key:'pro', name:'Procurement', c:'#db5850', c50:'#fcf1f0', id:'2025-2026_sfsu_pro', atRisk:2,
+    leads:[['Marcus Hill','Procurement Analyst']],
+    indicators:[
+      {key:'1_pro', name:'VPATs collected for new IT purchases', prev:'Defined', cur:'Defined', traj:'at_risk',
+        updates:[['2026-03-09','at_risk','Backlog of 14 purchases awaiting VPAT review.','M. Hill']]},
+      {key:'2_pro', name:'Accessibility clause in standard contracts', prev:'Initiated', cur:'Initiated', traj:'failing',
+        updates:[['2026-02-28','failing','Clause stalled in legal review since Q4.','M. Hill']]},
+    ],
+    plans:[ {name:'VPAT intake workflow in procurement system', status:'In Progress', year:'2025–2026'},
+            {name:'Buyer accessibility training', status:'Not Started', year:'2025–2026'} ],
+    queries:[ {q:'Can legal pre-approve the standard accessibility clause?', status:'open', by:'M. Hill', date:'2026-03-05', sc:['#9C4221','#FFFAF0'], slabel:'open'} ],
+    minutes:[ {title:'Procurement WG — VPAT backlog', date:'2026-03-09', by:'M. Hill'} ],
+  },
+];
+
+const SUBTABS = [['indicators','Indicators'],['plans','Plans'],['queries','Queries'],['minutes','Minutes']];
+const state = { wg:'web', sub:{web:'indicators',ins:'indicators',pro:'indicators'} };
+
+function statusProg(prev,cur){
+  const pill = (lvl)=>`<span class="spill" style="color:${RAMP[lvl]};background:${RAMP_BG[lvl]};border-color:${RAMP[lvl]}">${lvl}</span>`;
+  return `<span class="statusprog">${pill(prev)}<span class="arrow">→</span>${pill(cur)}</span>`;
+}
+function trajBadge(t){ const [l,fg,bg]=TRAJ[t]; return `<span class="badge" style="color:${fg};background:${bg}">${l}</span>`; }
+
+function renderIndicators(g){
+  return g.indicators.map(i=>`
+    <div class="split" style="--lc:${g.c}">
+      <div class="top">
+        <span class="key">${i.key}</span>
+        ${statusProg(i.prev,i.cur)} ${trajBadge(i.traj)}
+        <span class="spacer"></span>
+        <span class="actions"><span class="a">View</span><span class="a">Log</span><span class="a x">✕</span></span>
+      </div>
+      <div class="bot">
+        <div class="name">${i.name}</div>
+        <div class="timeline">${i.updates.map(u=>`<div class="t"><span class="date">${u[0]}</span>${trajBadge(u[1])}<span class="quote">"${u[2]}"</span><span style="color:var(--ink-500)">— ${u[3]}</span></div>`).join('')}</div>
+      </div>
+    </div>`).join('');
+}
+function renderPlans(g){
+  return g.plans.map(p=>{ const [fg,bg]=PLAN_STATUS[p.status];
+    return `<div class="split" style="--lc:${p.status==='Abandoned'?'#e2a3a0':g.c}">
+      <div class="top"><span class="badge" style="color:${fg};background:${bg}">${p.status}</span>
+        <span style="font-family:ui-monospace,monospace;font-size:12px;color:var(--ink-500)">${p.year}${p.done?` · completed ${p.done}`:''}</span></div>
+      <div class="bot"><div class="name">${p.name}</div></div></div>`;}).join('');
+}
+function renderQueries(g){
+  return g.queries.map(q=>`<div class="split" style="--lc:${g.c}">
+    <div class="top"><span class="badge" style="color:${q.sc[0]};background:${q.sc[1]}">${q.slabel}</span>
+      <span style="font-size:12px;color:var(--ink-500)">${q.by}</span>
+      <span style="font-family:ui-monospace,monospace;font-size:12px;color:var(--ink-400)">${q.date}</span></div>
+    <div class="bot"><div class="name" style="font-weight:400">${q.q}</div></div></div>`).join('');
+}
+function renderMinutes(g){
+  return g.minutes.map(m=>`<div class="split" style="--lc:${g.c}">
+    <div class="top"><span style="font-family:ui-monospace,monospace;font-size:12px;color:var(--ink-500)">${m.date}</span>
+      <span style="font-size:12px;color:var(--ink-500)">${m.by}</span></div>
+    <div class="bot"><div class="name">${m.title}</div></div></div>`).join('');
+}
+const PANEL = { indicators:renderIndicators, plans:renderPlans, queries:renderQueries, minutes:renderMinutes };
+
+function leadsBar(g){
+  return `<div class="leadsbar" style="--c:${g.c};--c-50:${g.c50}">
+    <div class="leads"><span class="lbl">Group Leads</span>
+      ${g.leads.map(l=>`<span><span class="who">${l[0]}</span> <span class="role">— ${l[1]}</span></span>`).join('')}</div>
+    <button class="ghostbtn">Manage</button></div>`;
+}
+function counts(g){ return {indicators:g.indicators.length, plans:g.plans.length, queries:g.queries.length, minutes:g.minutes.length}; }
+
+/* ---------- TABBED MODE ---------- */
+function renderTabs(){
+  document.getElementById('wgtabs').innerHTML = GROUPS.map(g=>{
+    const cn = counts(g); const on = g.key===state.wg;
+    return `<button class="wgtab ${on?'on':''}" style="--c:${g.c};--c-50:${g.c50}" onclick="selWg('${g.key}')">
+      <span class="dot"></span><span>${g.name}</span><span class="cnt">${cn.indicators}</span>${g.atRisk?`<span class="warn">⚠${g.atRisk}</span>`:''}</button>`;
+  }).join('');
+  const g = GROUPS.find(x=>x.key===state.wg);
+  const cn = counts(g); const sub = state.sub[g.key];
+  document.getElementById('wgpanel').style.setProperty('--c', g.c);
+  document.getElementById('wgpanel').innerHTML = `
+    ${leadsBar(g)}
+    <div class="subtabs" style="--c:${g.c}">
+      ${SUBTABS.map(([k,l])=>`<button class="subtab ${sub===k?'on':''}" style="--c:${g.c}" onclick="selSub('${g.key}','${k}')">${l}<span class="c">${cn[k]}</span></button>`).join('')}
+    </div>
+    <div>${PANEL[sub](g)}</div>`;
+}
+function selWg(k){ state.wg=k; renderTabs(); }
+function selSub(wg,k){ state.sub[wg]=k; renderTabs(); }
+
+/* ---------- ONE PAGE + RAIL ---------- */
+function renderPage(){
+  document.getElementById('rail').innerHTML =
+    `<a href="#top" class="on" style="--rc:#7e93bf" onclick="railClick(event,'top')"><span class="dot" style="background:#7e93bf"></span>Overview</a>` +
+    GROUPS.map(g=>`<a href="#sec-${g.key}" style="--rc:${g.c}" onclick="railClick(event,'sec-${g.key}')"><span class="dot" style="background:${g.c}"></span>${g.name}</a>`).join('');
+  document.getElementById('railBody').innerHTML = GROUPS.map(g=>{
+    const cn = counts(g);
+    return `<section class="wgsection" id="sec-${g.key}" style="--c:${g.c}">
+      <div class="hd"><h2>${g.name}</h2>${g.atRisk?`<span class="badge" style="background:rgba(255,255,255,.2);color:#fff">⚠ ${g.atRisk} at-risk</span>`:''}<span class="id">${g.id}</span></div>
+      <div class="bd">
+        ${leadsBar(g)}
+        <div class="grid2">
+          <div><div class="sechead">Prioritized Indicators <span>${cn.indicators}</span></div>${renderIndicators(g)}</div>
+          <div>
+            <div class="sechead">Plans <span>${cn.plans}</span></div>${renderPlans(g)}
+            <div class="sechead" style="margin-top:14px">Queries <span>${cn.queries}</span></div>${renderQueries(g)}
+            <div class="sechead" style="margin-top:14px">Meeting Minutes <span>${cn.minutes}</span></div>${renderMinutes(g)}
+          </div>
+        </div>
+      </div></section>`;
+  }).join('');
+}
+function railClick(e,id){
+  e.preventDefault();
+  document.querySelectorAll('.rail a').forEach(a=>a.classList.remove('on'));
+  e.currentTarget.classList.add('on');
+  if(id==='top'){ window.scrollTo({top:0,behavior:'smooth'}); }
+  else { document.getElementById(id).scrollIntoView({behavior:'smooth'}); }
+}
+
+function setMode(m){
+  document.getElementById('btnTabs').classList.toggle('on', m==='tabs');
+  document.getElementById('btnPage').classList.toggle('on', m==='page');
+  document.getElementById('modeTabs').classList.toggle('hide', m!=='tabs');
+  document.getElementById('modePage').classList.toggle('hide', m!=='page');
+}
+
+renderTabs();
+renderPage();
+</script>
+</body>
+</html>

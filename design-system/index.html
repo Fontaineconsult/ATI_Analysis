@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>ATI Analysis — Design System</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    /* Mirror of theme.js / palette.js / statusColors.js — see foundations/*.md */
+    --page: #eceef2;
+    --card: #ffffff;
+    --border: #e2e8f0;
+    --ink-800: #1a202c;
+    --ink-700: #2d3748;
+    --ink-600: #4a5568;
+    --ink-500: #718096;
+    --ink-400: #a0aec0;
+    --teal-50: #f4f6fb;  --teal-700: #354a7a;  --teal-800: #2a3a62;  --teal-900: #202c4a;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--page); color: var(--ink-800);
+    font-family: 'Roboto', system-ui, sans-serif; line-height: 1.5;
+  }
+  /* Brand band — mirrors the app header / login (foundations/color.md §1) */
+  header {
+    background: var(--teal-800); color: #fff; padding: 28px 32px 20px;
+  }
+  header .logo { font-size: 22px; font-weight: 700; letter-spacing: .5px; }
+  header .rule {
+    height: 3px; width: 72px; margin: 8px 0 6px; border-radius: 999px;
+    background: linear-gradient(to right, #7e93bf, #8f7db9, #e27970);
+  }
+  header .eyebrow {
+    font-size: 11px; text-transform: uppercase; letter-spacing: .18em;
+    color: rgba(255,255,255,.8);
+  }
+  main { max-width: 1100px; margin: 0 auto; padding: 28px 24px 64px; }
+  .lead { color: var(--ink-600); font-size: 14px; max-width: 70ch; margin: 8px 0 28px; }
+  .lead code { background:#fff; border:1px solid var(--border); border-radius:4px; padding:1px 5px; font-size:12px; }
+
+  section.card {
+    background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+    box-shadow: 0 1px 2px rgba(0,0,0,.06); padding: 24px; margin-bottom: 20px;
+  }
+  h2.area { font-size: 18px; margin: 8px 0 20px; color: var(--ink-800); }
+  h3.sec {
+    font-size: 12px; text-transform: uppercase; letter-spacing: .08em;
+    color: var(--teal-700); margin: 0 0 14px; font-weight: 700;
+  }
+  .note { font-size: 12px; color: var(--ink-500); margin-top: 12px; }
+  .warn { color: #9b2c2c; }
+
+  /* Swatch grid */
+  .ramp { display: grid; grid-template-columns: repeat(10, 1fr); gap: 0; border-radius: 8px; overflow: hidden; border:1px solid var(--border); }
+  .ramp.short { grid-template-columns: repeat(7, 1fr); }
+  .stop { height: 64px; display: flex; flex-direction: column; justify-content: flex-end; padding: 6px; }
+  .stop .k { font-size: 10px; font-weight: 700; }
+  .stop .h { font-size: 9px; font-family: ui-monospace, monospace; opacity: .85; }
+
+  .chips { display: flex; flex-wrap: wrap; gap: 12px; }
+  .chip { display:flex; align-items:center; gap:10px; background:#fff; border:1px solid var(--border); border-radius:8px; padding:8px 12px; }
+  .dot { width: 16px; height: 16px; border-radius: 999px; flex:none; }
+  .chip .lbl { font-size: 13px; font-weight: 500; }
+  .chip .meta { font-size: 11px; font-family: ui-monospace, monospace; color: var(--ink-500); }
+
+  /* Semantic status table */
+  table { border-collapse: collapse; width: 100%; font-size: 13px; }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--border); }
+  th { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-500); }
+  .pill { display:inline-block; padding:2px 10px; border-radius:999px; font-size:12px; font-weight:600; }
+  .sw { display:inline-block; width:14px; height:14px; border-radius:3px; vertical-align:middle; margin-right:6px; border:1px solid rgba(0,0,0,.1); }
+  .mono { font-family: ui-monospace, monospace; font-size: 12px; color: var(--ink-600); }
+
+  /* Type specimens */
+  .spec { display:flex; align-items:baseline; gap:16px; padding:6px 0; border-bottom:1px dashed var(--border); }
+  .spec .tag { width: 120px; flex:none; font-size:11px; font-family: ui-monospace, monospace; color: var(--ink-500); }
+
+  /* Shape demo */
+  .shapes { display:flex; gap:20px; flex-wrap:wrap; align-items:flex-end; }
+  .shape { background:#fff; border:1px solid var(--border); padding:14px; font-size:11px; color:var(--ink-500); text-align:center; }
+
+  .links { display:flex; flex-wrap:wrap; gap:10px; }
+  .links a { font-size:13px; text-decoration:none; color: var(--teal-700); background:#fff; border:1px solid var(--border); border-radius:8px; padding:8px 12px; }
+  .links a:hover { background: var(--teal-50); }
+  .soon { display:inline-block; font-size:11px; background:#fff5f5; color:#9b2c2c; border:1px solid #fed7d7; border-radius:999px; padding:2px 8px; margin-left:6px; }
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">SFBRN</div>
+  <div class="rule" aria-hidden="true"></div>
+  <div class="eyebrow">Accessible Technology Initiative · Design System</div>
+</header>
+
+<main>
+  <p class="lead">
+    Live swatches of every token the app consumes. Values mirror
+    <code>theme.js</code>, <code>styles/palette.js</code>, and
+    <code>services/utils/statusColors.js</code>. <strong>Code wins on conflict</strong> —
+    if a swatch here disagrees with <code>theme.js</code>, the swatch is stale. See
+    <code>foundations/*.md</code> for the sanctioned <em>use</em> of each token.
+  </p>
+
+  <!-- BRAND SCALES -->
+  <section class="card">
+    <h2 class="area">Brand scales · chrome &amp; accent</h2>
+
+    <h3 class="sec">teal — SFBRN brand blue (primary accent)</h3>
+    <div class="ramp" id="teal"></div>
+    <p class="note"><code>teal.*</code> <em>means</em> "brand accent" — the SFBRN blue is published under Chakra's <code>teal</code> key. Headings use <code>teal.700</code>; header surface <code>teal.800</code>.</p>
+
+    <h3 class="sec" style="margin-top:22px">purple — SFBRN accent purple</h3>
+    <div class="ramp" id="purple"></div>
+
+    <h3 class="sec" style="margin-top:22px">coral — SFBRN accent coral <span class="warn">(identity only — never status)</span></h3>
+    <div class="ramp" id="coral"></div>
+    <p class="note warn">Coral sits next to the danger reds — it must never signal status/severity. If it could read as an error, use purple.</p>
+  </section>
+
+  <!-- WORKING GROUP IDENTITY -->
+  <section class="card">
+    <h2 class="area">Working-group identity</h2>
+    <div class="chips" id="wg"></div>
+    <p class="note">The accent trio's main job. Rendered as a 7px dot (SubNavbar) and dot + 2px underline (GoalNavigator). Lives in two configs that must stay in sync.</p>
+  </section>
+
+  <!-- NEUTRALS -->
+  <section class="card">
+    <h2 class="area">Neutrals · structure</h2>
+    <div class="chips" id="neutral"></div>
+  </section>
+
+  <!-- PLAN STATUS -->
+  <section class="card">
+    <h2 class="area">Semantic · plan status <span class="mono">styles/palette.js</span></h2>
+    <table>
+      <thead><tr><th>Status</th><th>solid</th><th>bg</th><th>fg</th><th>filled pill</th></tr></thead>
+      <tbody id="planstatus"></tbody>
+    </table>
+    <p class="note">Access via <code>getPlanStatusColor()</code> / <code>getPlanStatusColorScheme()</code> — never re-derive inline.</p>
+  </section>
+
+  <!-- MATURITY RAMP -->
+  <section class="card">
+    <h2 class="area">Semantic · maturity ramp <span class="mono">services/utils/statusColors.js</span></h2>
+    <div class="ramp short" id="maturity"></div>
+    <p class="note">The six-rung CMM ladder as a strict red → green heat ramp. <code>teal.*</code> is never used here — status must read as maturity, not brand chrome.</p>
+  </section>
+
+  <!-- TYPE -->
+  <section class="card">
+    <h2 class="area">Type scale <span class="mono">theme.js fontSizes · Roboto</span></h2>
+    <div id="type"></div>
+    <p class="note">Body default is <code>sm</code> (14px). The signature section heading is <code>h4 size="xs"</code> uppercase + wide tracking + <code>teal.700</code>.</p>
+  </section>
+
+  <!-- SHAPE -->
+  <section class="card">
+    <h2 class="area">Shape · radius, shadow, border</h2>
+    <div class="shapes">
+      <div class="shape" style="border-radius:12px; box-shadow:0 1px 2px rgba(0,0,0,.06)">Card<br>radius lg · shadow sm</div>
+      <div class="shape" style="border-radius:999px; padding:6px 14px">Status pill · full</div>
+      <div class="shape" style="border-radius:6px">Type badge · md</div>
+      <div class="shape" style="border-left:3px solid #4966a4; background:#f4f6fb">Selected row<br>left 3px teal.500 · bg teal.50</div>
+      <div class="shape" style="border-top:3px solid #4966a4">Stat card<br>top 3px accent</div>
+    </div>
+    <p class="note">Spacing rhythm: 3–4 between cards, 2 inside. Page container 1400px. See <code>foundations/spacing-shape.md</code>.</p>
+  </section>
+
+  <!-- NAV -->
+  <section class="card">
+    <h2 class="area">Read more</h2>
+    <div class="links">
+      <a href="foundations/color.md">foundations/color.md</a>
+      <a href="foundations/typography.md">foundations/typography.md</a>
+      <a href="foundations/spacing-shape.md">foundations/spacing-shape.md</a>
+      <a href="components/cards-sections.md">components/cards-sections.md</a>
+      <a href="components/badges-forms.md">components/badges-forms.md</a>
+      <a href="mockups/campus-plan.html">mockups/campus-plan.html</a>
+      <a href="explorations/campus-plan.md">explorations/campus-plan.md</a>
+      <a href="mockups/README.md">mockups/ <span class="soon">login next</span></a>
+    </div>
+  </section>
+</main>
+
+<script>
+  const SCALES = {
+    teal:   ["#F4F6FB","#E4E9F4","#C9D3E8","#A7B7D7","#7E93BF","#4966A4","#40598F","#354A7A","#2A3A62","#202C4A"],
+    purple: ["#F6F4FA","#E9E5F3","#D3CCE6","#B6AAD4","#8F7DB9","#635098","#574686","#483A70","#3A2F5A","#2B2343"],
+    coral:  ["#FCF1F0","#F9DEDC","#F2BDB9","#EA9A94","#E27970","#DB5850","#C24A43","#A03C36","#7E2F2A","#5C221F"],
+  };
+  const KEYS = ["50","100","200","300","400","500","600","700","800","900"];
+  const light = hex => parseInt(hex.slice(1),16) > 0x999999;
+  for (const [name, stops] of Object.entries(SCALES)) {
+    document.getElementById(name).innerHTML = stops.map((h,i) =>
+      `<div class="stop" style="background:${h}; color:${light(h)?'#1a202c':'#fff'}">
+         <span class="k">${name}.${KEYS[i]}</span><span class="h">${h}</span></div>`).join("");
+  }
+
+  const WG = [["Web","teal.500","#4966A4"],["Instructional Materials","purple.500","#635098"],["Procurement","coral.500","#DB5850"]];
+  document.getElementById("wg").innerHTML = WG.map(([l,t,h]) =>
+    `<div class="chip"><span class="dot" style="background:${h}"></span><span class="lbl">${l}</span><span class="meta">${t} · ${h}</span></div>`).join("");
+
+  const NEU = [["page bg","#eceef2"],["header chrome","#e0e7ec"],["card","#ffffff"],["border gray.200","#e2e8f0"],["text gray.800","#1a202c"],["text gray.600","#4a5568"],["mono id gray.400","#a0aec0"],["muted gray.500","#718096"]];
+  document.getElementById("neutral").innerHTML = NEU.map(([l,h]) =>
+    `<div class="chip"><span class="dot" style="background:${h}; border:1px solid rgba(0,0,0,.1)"></span><span class="lbl">${l}</span><span class="meta">${h}</span></div>`).join("");
+
+  const PS = [
+    ["Not Started","#6B7280","#F3F4F6","#4B5563"],
+    ["In Progress","#3182CE","#EBF8FF","#2B6CB0"],
+    ["Completed","#38A169","#F0FFF4","#276749"],
+    ["On Hold","#DD6B20","#FFFAF0","#9C4221"],
+    ["Abandoned","#E53E3E","#FFF5F5","#9B2C2C"],
+  ];
+  document.getElementById("planstatus").innerHTML = PS.map(([l,s,bg,fg]) =>
+    `<tr><td><strong>${l}</strong></td>
+      <td><span class="sw" style="background:${s}"></span><span class="mono">${s}</span></td>
+      <td><span class="sw" style="background:${bg}"></span><span class="mono">${bg}</span></td>
+      <td><span class="sw" style="background:${fg}"></span><span class="mono">${fg}</span></td>
+      <td><span class="pill" style="background:${bg}; color:${fg}">${l}</span></td></tr>`).join("");
+
+  const MAT = [["Not Started","#E53E3E"],["Initiated","#ED8936"],["Defined","#ECC94B"],["Established","#41b441"],["Managed","#246f24"],["Optimizing","#157744"],["(none)","#718096"]];
+  document.getElementById("maturity").innerHTML = MAT.map(([l,h]) =>
+    `<div class="stop" style="background:${h}; color:${light(h)?'#1a202c':'#fff'}">
+       <span class="k">${l}</span><span class="h">${h}</span></div>`).join("");
+
+  const TYPE = [
+    ["4xl · 36px","2.25rem","Optimizing across campuses"],
+    ["2xl · 24px","1.5rem","Optimizing across campuses"],
+    ["lg · 18px (area title)","1.125rem","Assets master view"],
+    ["md · 16px (card heading)","1rem","Stewardship & remediation"],
+    ["sm · 14px (body)","0.875rem","The default body size for nearly all text in the app."],
+    ["xs · 12px (meta)","0.75rem","secondary / meta text"],
+    ["2xs · 10px (micro)","0.625rem","DENSE LIST META · MICRO BADGES"],
+  ];
+  document.getElementById("type").innerHTML = TYPE.map(([tag,size,txt]) =>
+    `<div class="spec"><span class="tag">${tag}</span><span style="font-size:${size}">${txt}</span></div>`).join("");
+</script>
+</body>
+</html>
