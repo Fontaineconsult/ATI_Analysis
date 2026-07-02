@@ -25,6 +25,7 @@ import { getStatusColor, navigateToIndicator } from '../../../services/utils/too
 import { getIndicatorSummary } from '../../graph_components/indicators/indicatorHelpers';
 import ViewReportButton from '../../functional_components/ViewReportButton';
 import { findTrendForIndicator } from './reportMetrics';
+import { WORKING_GROUP_LIST } from '../../../styles/workingGroupIdentity';
 
 /*
  * The "ATI Success Indicators Report" tables — the per-working-group goal tables that make
@@ -432,15 +433,17 @@ const SuccessIndicatorReportTables = ({ data, campus, navigate, openApprovalModa
 
     if (!data) return null;
 
+    // One section per working group that has data, in registry order, with a divider
+    // between rendered sections. Derived so a new working group appears automatically.
+    const groupsWithData = WORKING_GROUP_LIST.filter((wg) => data[wg.dataKey]);
     return (
         <Box>
-            {data.web && renderWorkingGroup(data.web, 'Web')}
-            {data.web && data.procurement && <Divider my={6} borderColor="gray.200" />}
-
-            {data.procurement && renderWorkingGroup(data.procurement, 'Procurement')}
-            {data.procurement && data.instructionalMaterials && <Divider my={6} borderColor="gray.200" />}
-
-            {data.instructionalMaterials && renderWorkingGroup(data.instructionalMaterials, 'Instructional Materials')}
+            {groupsWithData.map((wg, i) => (
+                <React.Fragment key={wg.dataKey}>
+                    {i > 0 && <Divider my={6} borderColor="gray.200" />}
+                    {renderWorkingGroup(data[wg.dataKey], wg.name)}
+                </React.Fragment>
+            ))}
         </Box>
     );
 };

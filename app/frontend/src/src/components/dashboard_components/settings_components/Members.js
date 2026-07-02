@@ -1,4 +1,5 @@
 import React, { useContext, useEffect, useState, useCallback } from 'react';
+import { WORKING_GROUP_LIST, CODE_TO_NAME } from '../../../styles/workingGroupIdentity';
 import {
     Box,
     Heading,
@@ -132,10 +133,9 @@ function Members() {
                 );
 
                 updatedIndividual = { ...individual, [key]: newValue };
-            } else if (key === 'web' || key === 'ins' || key === 'pro') {
-                // For working groups
-                const workingGroupName =
-                    key === 'web' ? 'Web' : key === 'ins' ? 'Instructional Materials' : 'Procurement';
+            } else if (CODE_TO_NAME[key]) {
+                // For working groups (key is the 3-letter code, e.g. 'web'/'ins'/'pro'/'ste')
+                const workingGroupName = CODE_TO_NAME[key];
                 const isMember = individual.workingGroups?.some((wg) => wg.name === workingGroupName);
 
                 let updatedWorkingGroups;
@@ -258,46 +258,21 @@ function Members() {
                     />
                 ),
             },
-            {
-                Header: 'Web',
-                accessor: (row) => row.workingGroups?.some((wg) => wg.name === 'Web'),
-                id: 'web',
+            // One membership column per working group, derived from the single registry.
+            // Header is the 3-letter code title-cased (Web / Ins / Pro / Ste).
+            ...WORKING_GROUP_LIST.map((wg) => ({
+                Header: wg.code.charAt(0).toUpperCase() + wg.code.slice(1),
+                accessor: (row) => row.workingGroups?.some((g) => g.name === wg.name),
+                id: wg.code,
                 Cell: ({ row: { original } }) => (
                     <Checkbox
                         size="sm"
                         colorScheme="teal"
-                        isChecked={original.workingGroups?.some((wg) => wg.name === 'Web')}
-                        onChange={() => handleCheckboxChange(original, 'web')}
+                        isChecked={original.workingGroups?.some((g) => g.name === wg.name)}
+                        onChange={() => handleCheckboxChange(original, wg.code)}
                     />
                 ),
-            },
-            {
-                Header: 'Ins',
-                accessor: (row) =>
-                    row.workingGroups?.some((wg) => wg.name === 'Instructional Materials'),
-                id: 'ins',
-                Cell: ({ row: { original } }) => (
-                    <Checkbox
-                        size="sm"
-                        colorScheme="teal"
-                        isChecked={original.workingGroups?.some((wg) => wg.name === 'Instructional Materials')}
-                        onChange={() => handleCheckboxChange(original, 'ins')}
-                    />
-                ),
-            },
-            {
-                Header: 'Pro',
-                accessor: (row) => row.workingGroups?.some((wg) => wg.name === 'Procurement'),
-                id: 'pro',
-                Cell: ({ row: { original } }) => (
-                    <Checkbox
-                        size="sm"
-                        colorScheme="teal"
-                        isChecked={original.workingGroups?.some((wg) => wg.name === 'Procurement')}
-                        onChange={() => handleCheckboxChange(original, 'pro')}
-                    />
-                ),
-            },
+            })),
             {
                 Header: 'Approver',
                 accessor: 'can_approve_yse',

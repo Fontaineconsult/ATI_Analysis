@@ -3,6 +3,7 @@ import { Box, Spinner } from '@chakra-ui/react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import WorkingGroupMasterContainer from './ati_explorer_containers/WorkingGroupMasterContainer';
 import { useData } from '../hooks/useData';
+import { WORKING_GROUP_LIST } from '../styles/workingGroupIdentity';
 import '../styles/App.css';
 
 function AtiExplorer() {
@@ -20,8 +21,8 @@ function AtiExplorer() {
         }
     }, [location.pathname, navigate, campus]);
 
-    // Check if all data fields are null, indicating an empty state
-    const isDataEmpty = !data.web && !data.instructionalMaterials && !data.procurement;
+    // Check if all working-group data fields are null, indicating an empty state
+    const isDataEmpty = WORKING_GROUP_LIST.every((wg) => !data[wg.dataKey]);
 
     if (loading) {
         return (

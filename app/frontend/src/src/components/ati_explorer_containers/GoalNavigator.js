@@ -3,17 +3,12 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Box, Heading, Divider, Button, HStack } from '@chakra-ui/react';
 import Goal from '../graph_components/indicators/Goal';
 import { HelpTip } from '../functional_components/DescriptorHelp';
+import { WORKING_GROUP_IDENTITY } from '../../styles/workingGroupIdentity';
 
-// URL slug -> display name + the key of `data` that holds this group's goals. The three
-// working groups render the SAME goal display, so one config replaces the old per-group
-// WebData / InstructionalMaterialsData / ProcurementData wrappers and the switch statements.
-// `accent` is each group's identity mark from the brand trio (blue/purple/coral) —
-// keep in sync with the SubNavbar working-group dots (design-sense §2).
-const WORKING_GROUPS = {
-    'web': { name: 'Web', dataKey: 'web', accent: 'teal.500' },
-    'instructional-materials': { name: 'Instructional Materials', dataKey: 'instructionalMaterials', accent: 'purple.500' },
-    'procurement': { name: 'Procurement', dataKey: 'procurement', accent: 'coral.500' },
-};
+// URL slug -> identity (name, dataKey, accent). Sourced from the single working-group
+// registry so every group renders the SAME goal display from one config (accent = the
+// group's brand identity mark; keep in sync with the SubNavbar dots, design-sense §2).
+const WORKING_GROUPS = WORKING_GROUP_IDENTITY;
 
 function GoalNavigator({ data }) {
     const { workingGroup, goalId, indicatorNumber, campus } = useParams();

@@ -59,7 +59,7 @@ const wgTree = (indicators) => ({
 });
 
 describe('computeReportMetrics', () => {
-    test('null / empty data yields zeroed campus + three working groups', () => {
+    test('null / empty data yields zeroed campus + all working groups', () => {
         for (const input of [null, undefined, {}]) {
             const m = computeReportMetrics(input);
             expect(m.campus.totalIndicators).toBe(0);
@@ -68,7 +68,9 @@ describe('computeReportMetrics', () => {
             // six maturity rungs + the trailing "No evidence" bucket
             expect(m.campus.statusDistribution).toHaveLength(STATUS_LEVELS_ORDER.length + 1);
             expect(m.campus.statusDistribution.every((d) => d.count === 0 && d.pct === 0)).toBe(true);
-            expect(m.byWorkingGroup).toHaveLength(3);
+            // Working-group set is data-driven (registry), so assert against WG_DEFS
+            // rather than a hardcoded count.
+            expect(m.byWorkingGroup).toHaveLength(WG_DEFS.length);
             expect(m.byWorkingGroup.map((w) => w.key)).toEqual(WG_DEFS.map((d) => d.key));
         }
     });

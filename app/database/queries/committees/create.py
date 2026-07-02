@@ -6,7 +6,7 @@ from app.database.identifiers import (
     make_campus_plan_identifier,
     make_working_group_plan_identifier,
 )
-from app.data_config import working_group_names
+from app.data_config import working_group_names, working_group_abbrevs
 from app.endpoints.data_api.errors.custom_exceptions import (
     CrudError,
     NotFoundError,
@@ -16,8 +16,9 @@ from app.endpoints.data_api.errors.custom_exceptions import (
 
 # Working-group abbreviations that are valid in plan identifiers and accepted
 # by create_working_group_plan / create_campus_plan below. Mirrors the suffix
-# used in SuccessIndicator.composite_key.
-WORKING_GROUP_ABBREVS = ("web", "pro", "ins")
+# used in SuccessIndicator.composite_key. Derived from the single source of
+# truth (data_config.WORKING_GROUP_DEFS) so a new working group flows through.
+WORKING_GROUP_ABBREVS = tuple(working_group_abbrevs)
 
 
 def create_working_group_plan(campus_abbrev: str, year_name: str, working_group_abbrev: str) -> WorkingGroupPlan:

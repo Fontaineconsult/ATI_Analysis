@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { WORKING_GROUP_LIST } from '../../../styles/workingGroupIdentity';
 import {
     Button,
     Modal,
@@ -293,30 +294,17 @@ const EditIndividual = ({ isOpen, onClose, individualData, onSave }) => {
                                 Working Groups
                             </FormLabel>
                             <VStack align="start" spacing={2}>
-                                <Checkbox
-                                    size="sm"
-                                    colorScheme="teal"
-                                    isChecked={formData.workingGroups?.some((wg) => wg.name === 'Web')}
-                                    onChange={(e) => handleWorkingGroupChange('Web', e.target.checked)}
-                                >
-                                    Web
-                                </Checkbox>
-                                <Checkbox
-                                    size="sm"
-                                    colorScheme="teal"
-                                    isChecked={formData.workingGroups?.some((wg) => wg.name === 'Instructional Materials')}
-                                    onChange={(e) => handleWorkingGroupChange('Instructional Materials', e.target.checked)}
-                                >
-                                    Instructional Materials
-                                </Checkbox>
-                                <Checkbox
-                                    size="sm"
-                                    colorScheme="teal"
-                                    isChecked={formData.workingGroups?.some((wg) => wg.name === 'Procurement')}
-                                    onChange={(e) => handleWorkingGroupChange('Procurement', e.target.checked)}
-                                >
-                                    Procurement
-                                </Checkbox>
+                                {WORKING_GROUP_LIST.map((wg) => (
+                                    <Checkbox
+                                        key={wg.slug}
+                                        size="sm"
+                                        colorScheme="teal"
+                                        isChecked={formData.workingGroups?.some((g) => g.name === wg.name)}
+                                        onChange={(e) => handleWorkingGroupChange(wg.name, e.target.checked)}
+                                    >
+                                        {wg.name}
+                                    </Checkbox>
+                                ))}
                             </VStack>
                         </CheckboxGroup>
                     </VStack>

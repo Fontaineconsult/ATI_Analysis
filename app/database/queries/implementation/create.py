@@ -287,14 +287,20 @@ def add_plan(plan_data: dict) -> bool:
         furthered_goal_number = plan_data.get('furthered_goal_number', None)
         furthered_working_group = plan_data.get('furthered_working_group', None)
         furthered_yse_identifier = plan_data.get('furthered_yse_identifier', None)
+        # Optional direct anchor to a WorkingGroupPlan (indicator-independent path).
+        working_group_plan_identifier = plan_data.get('working_group_plan_identifier', None)
+        # A plan attached directly to a WorkingGroupPlan is a campus-plan plan.
+        if working_group_plan_identifier:
+            is_campus_plan = True
 
         # Validate plan_status if provided
         if plan_status is not None and plan_status not in VALID_PLAN_STATUSES:
             raise ValidationError(f"Invalid plan_status: '{plan_status}'. Must be one of: {', '.join(VALID_PLAN_STATUSES)}")
 
-        # Validate that at least one of the furthering fields is provided
-        if not (furthered_goal_number or furthered_working_group or furthered_yse_identifier):
-            raise ValidationError("At least one of 'furthered_goal_number', 'furthered_working_group', or 'furthered_yse_identifier' must be specified.")
+        # Validate that at least one anchor is provided (a furthering field, or a direct
+        # WorkingGroupPlan attachment for indicator-independent plans).
+        if not (furthered_goal_number or furthered_working_group or furthered_yse_identifier or working_group_plan_identifier):
+            raise ValidationError("At least one of 'furthered_goal_number', 'furthered_working_group', 'furthered_yse_identifier', or 'working_group_plan_identifier' must be specified.")
 
         # Get or create the academic year node
         academic_year = AcademicYear.nodes.get(name=academic_year_name)
@@ -323,6 +329,13 @@ def add_plan(plan_data: dict) -> bool:
 
         # Connect the plan to the academic year
         plan.academic_year.connect(academic_year)
+
+        # Attach the plan directly to a WorkingGroupPlan (indicator-independent path via the
+        # includes_plan edge) when a WGP anchor is given — e.g. an oversight group's
+        # campus-plan plan that furthers no success indicator.
+        if working_group_plan_identifier:
+            wgp = WorkingGroupPlan.nodes.get(plan_identifier=working_group_plan_identifier)
+            wgp.included_plans.connect(plan)
 
         # If a goal is specified, connect the plan to the furthered goal
         if furthered_goal:

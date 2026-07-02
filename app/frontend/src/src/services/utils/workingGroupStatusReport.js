@@ -14,14 +14,15 @@
 // All interpolated content is HTML-escaped.
 
 import { typeLabel } from '../../components/graph_components/implementation/implementationConfig';
+import { WORKING_GROUP_LIST } from '../../styles/workingGroupIdentity';
 
 // Render order + the dashboard URL segment for each working group. Exported so the
-// UI can render one copy button per working group.
-export const STATUS_REPORT_WORKING_GROUPS = [
-    { key: 'web', name: 'Web', segment: 'web' },
-    { key: 'instructionalMaterials', name: 'Instructional Materials', segment: 'instructional-materials' },
-    { key: 'procurement', name: 'Procurement', segment: 'procurement' },
-];
+// UI can render one copy button per working group. Derived from the single registry.
+export const STATUS_REPORT_WORKING_GROUPS = WORKING_GROUP_LIST.map((wg) => ({
+    key: wg.dataKey,
+    name: wg.name,
+    segment: wg.slug,
+}));
 
 // Outlook-safe palette (SFBRN navy brand + calm grays).
 const NAVY = '#354A7A';

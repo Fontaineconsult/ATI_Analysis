@@ -160,6 +160,55 @@ def _fetch_plans_for_working_group(wg_name: str, campus_abbrev: str, year_name: 
     return plans
 
 
+# Plans attached DIRECTLY to a WorkingGroupPlan via the includes_plan edge — the
+# indicator-independent path (an oversight group like Steering has no success
+# indicators, so its plans hang off the WGP itself, not off a furthered YSE). No
+# indicator gating and no carry-over visibility filter: an explicitly-attached plan
+# always shows on its group's card.
+_INCLUDED_PLANS_FOR_WGP_QUERY = """
+    MATCH (wgp:WorkingGroupPlan {plan_identifier: $wgp_identifier})-[:includes_plan]->(p:Plan)
+    OPTIONAL MATCH (p)-[:in_academic_year]->(planYear:AcademicYear)
+    OPTIONAL MATCH (p)-[:completed_in_year]->(completedYear:AcademicYear)
+    OPTIONAL MATCH (p)-[:abandoned_in_year]->(abandonedYear:AcademicYear)
+    RETURN DISTINCT p,
+                    planYear.name      AS plan_year,
+                    completedYear.name AS completed_year,
+                    abandonedYear.name AS abandoned_year
+"""
+
+
+def _fetch_included_plans_for_wgp(wgp_identifier: str) -> list:
+    if not wgp_identifier:
+        return []
+    results, _ = db.cypher_query(
+        _INCLUDED_PLANS_FOR_WGP_QUERY,
+        {"wgp_identifier": wgp_identifier},
+    )
+    plans = []
+    for plan_node, plan_year, completed_year, abandoned_year in results:
+        data = Plan.inflate(plan_node).serialize()
+        data["academic_year"] = plan_year
+        data["completed_year"] = completed_year
+        data["abandoned_year"] = abandoned_year
+        plans.append(data)
+    return plans
+
+
+def _merge_plans_by_id(*plan_lists) -> list:
+    """Concatenate plan-dict lists, de-duped by unique_id (first occurrence wins) so a
+    plan that is both indicator-linked and directly attached shows only once."""
+    seen = set()
+    merged = []
+    for plans in plan_lists:
+        for p in plans:
+            uid = p.get("unique_id")
+            if uid in seen:
+                continue
+            seen.add(uid)
+            merged.append(p)
+    return merged
+
+
 # Cypher for the per-WGP companion-plans-per-indicator query. Walks
 #   WGP -[:prioritises_success_indicator]-> SI
 #   <-[:tracks]- YSE -[:evidence_at_campus]-> Campus (must match)
@@ -395,5 +444,10 @@ def _serialize_working_group_plan(wgp, campus_abbrev: str, year_name: str) -> di
         "prioritized_success_indicators": prioritized_serialized,
         "available_indicators": _fetch_available_indicators_for_wg(wg_name, campus_abbrev, year_name),
         "group_leads": [p.serialize() for p in wgp.group_leads.all()],
-        "plans": _fetch_plans_for_working_group(wg_name, campus_abbrev, year_name),
+        # Indicator-linked plans (via furthered YSEs) unioned with plans attached
+        # directly to this WGP (includes_plan) — deduped so each appears once.
+        "plans": _merge_plans_by_id(
+            _fetch_plans_for_working_group(wg_name, campus_abbrev, year_name),
+            _fetch_included_plans_for_wgp(wgp.plan_identifier),
+        ),
     }

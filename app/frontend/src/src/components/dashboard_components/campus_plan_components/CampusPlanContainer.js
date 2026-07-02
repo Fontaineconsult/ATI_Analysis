@@ -359,9 +359,11 @@ function CampusPlanContainer() {
                                     wgp={wgp}
                                     campusAbbrev={currentCampus}
                                     campusName={plan.campus?.name || currentCampus}
+                                    academicYear={currentAcademicYear}
                                     onIndicatorAdded={handleReloadPrimary}
                                     onProgressAdded={handleReloadPrimary}
                                     onLeadsChanged={handleReloadPrimary}
+                                    onPlanAdded={handleReloadPrimary}
                                     currentUserUniqueId={currentUserUniqueId}
                                     peerWorkingGroupPlans={peerWorkingGroupPlans}
                                     onPeerIndicatorChanged={refreshOne}

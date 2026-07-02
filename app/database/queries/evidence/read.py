@@ -1,5 +1,6 @@
 from app.database.graph_schema import *
 from app.database.class_factory import implementation_classes
+from app.data_config import working_groups as WORKING_GROUPS
 from app.endpoints.data_api.errors.custom_exceptions import CrudError
 from neomodel import db
 
@@ -152,8 +153,8 @@ def get_evidence_trends(past_year, current_year, working_group=None, campus_abbr
             trends = [record[0] for record in results]
             return trends
 
-        # Otherwise, get trends for all three ATI working groups
-        working_groups = ['Web', 'Instructional Materials', 'Procurement']
+        # Otherwise, get trends for all ATI working groups (single source of truth)
+        working_groups = WORKING_GROUPS
         combined_trends = {}
 
         for wg in working_groups:

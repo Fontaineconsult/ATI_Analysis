@@ -7,22 +7,49 @@ imports from here). Class registries that map strings to neomodel classes live
 in app/database/class_factory.py.
 """
 
+# ---------------------------------------------------------------------------
+# Working groups — the single source of truth.
+# Each entry: `code` (3-letter composite-key/identifier suffix), `name`
+# (the ATIWorkingGroup.name graph property), `slug` (frontend/URL segment).
+# EVERY other working-group map below is DERIVED from this list — to add a
+# working group, append one entry here (and mirror it in the frontend registry
+# styles/workingGroupIdentity.js); never edit the derived maps directly.
+# ---------------------------------------------------------------------------
+WORKING_GROUP_DEFS = [
+    {"code": "web", "name": "Web", "slug": "web"},
+    {"code": "pro", "name": "Procurement", "slug": "procurement"},
+    {"code": "ins", "name": "Instructional Materials", "slug": "instructional-materials"},
+    {"code": "ste", "name": "Steering", "slug": "steering"},
+]
+
+# Ordered full names (public vocabulary; preserves the historical order).
+working_groups = [d["name"] for d in WORKING_GROUP_DEFS]
+
+# Ordered 3-letter codes — drives per-campus WorkingGroupPlan creation + the
+# semester-migration loop (see queries/committees/create.py).
+working_group_abbrevs = [d["code"] for d in WORKING_GROUP_DEFS]
+
+# code-or-name -> full name (idempotent: accepts either form, returns the name).
 working_group_names = {
-    'pro': 'Procurement',
-    'web': 'Web',
-    'ins': 'Instructional Materials',
-    'Procurement': 'Procurement',
-    'Web': 'Web',
-    'Instructional Materials': 'Instructional Materials'
+    **{d["code"]: d["name"] for d in WORKING_GROUP_DEFS},
+    **{d["name"]: d["name"] for d in WORKING_GROUP_DEFS},
 }
 
+# code-or-name -> 3-letter composite-key code (the '-web'/'-pro'/'-ins' suffix).
 compsite_key_wg_names = {
-    'pro': 'pro',
-    'web': 'web',
-    'ins': 'ins',
-    'Procurement': 'pro',
-    'Web': 'web',
-    'Instructional Materials': 'ins'
+    **{d["code"]: d["code"] for d in WORKING_GROUP_DEFS},
+    **{d["name"]: d["code"] for d in WORKING_GROUP_DEFS},
+}
+
+# frontend/URL slug -> full name.
+working_group_names_web_query = {d["slug"]: d["name"] for d in WORKING_GROUP_DEFS}
+
+# any token (code, full name, OR frontend slug) -> 3-letter code. Used by the
+# query / meeting-minutes CRUD to normalize whatever form the caller passes.
+working_group_code_by_token = {
+    **{d["code"]: d["code"] for d in WORKING_GROUP_DEFS},
+    **{d["name"]: d["code"] for d in WORKING_GROUP_DEFS},
+    **{d["slug"]: d["code"] for d in WORKING_GROUP_DEFS},
 }
 
 academic_years = [
@@ -97,13 +124,8 @@ metric_types = [
     "descriptive",
 ]
 
-working_group_names_web_query = {
-    "web": "Web",
-    "instructional-materials": "Instructional Materials",
-    "procurement": "Procurement",
-}
-
-working_groups = ["Web", "Procurement", "Instructional Materials"]
+# working_group_names_web_query and working_groups are derived at the top of this
+# file from WORKING_GROUP_DEFS (the single source of truth for working groups).
 
 plan_statuses = [
     "Not Started",

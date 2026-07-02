@@ -22,6 +22,7 @@ import os
 import sys
 
 from app.database.graph_schema import set_connection
+from app.data_config import working_groups as WORKING_GROUPS
 from neomodel import db
 
 
@@ -57,7 +58,8 @@ _ROSTER_QUERY = """
     ORDER BY campus, name
 """
 
-_WG_ORDER = {"Web": 0, "Instructional Materials": 1, "Procurement": 2}
+# Sort index per working group, derived from the single source of truth.
+_WG_ORDER = {name: i for i, name in enumerate(WORKING_GROUPS)}
 
 
 def latest_academic_year():

@@ -38,6 +38,10 @@ import PlansSplitView from './PlansSplitView';
 import AccomplishmentsTable from './AccomplishmentsTable';
 import { createPlan, refreshAsanaPlans } from '../../services/api/post';
 import { workingGroupWebSafe } from "../../services/utils/tools";
+import { WORKING_GROUP_LIST } from "../../styles/workingGroupIdentity";
+
+// DataContext keys (camelCase) for every working group, derived from the registry.
+const WG_DATA_KEYS = WORKING_GROUP_LIST.map((wg) => wg.dataKey);
 
 function PlansAccomplishmentsManager() {
     const { data, loading, loadSingleWorkingGroupData } = useContext(DataContext);
@@ -109,7 +113,7 @@ function PlansAccomplishmentsManager() {
     // Get available YSE identifiers for dropdown
     const getAvailableYSEs = () => {
         const yses = [];
-        ['web', 'instructionalMaterials', 'procurement'].forEach(wg => {
+        WG_DATA_KEYS.forEach(wg => {
             if (data[wg]?.goals) {
                 data[wg].goals.forEach(goal => {
                     if (goal.indicators) {
@@ -221,7 +225,7 @@ function PlansAccomplishmentsManager() {
 
     const getAllPlans = () => {
         const plans = [];
-        ['web', 'instructionalMaterials', 'procurement'].forEach(wg => {
+        WG_DATA_KEYS.forEach(wg => {
             if (data[wg]?.goals) {
                 data[wg].goals.forEach(goal => {
                     // Goal-level plans with progress notes
@@ -326,7 +330,7 @@ function PlansAccomplishmentsManager() {
     // Extract all accomplishments from data
     const getAllAccomplishments = () => {
         const accomplishments = [];
-        ['web', 'instructionalMaterials', 'procurement'].forEach(wg => {
+        WG_DATA_KEYS.forEach(wg => {
             if (data[wg]?.goals) {
                 data[wg].goals.forEach(goal => {
                     // Goal-level accomplishments

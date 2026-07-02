@@ -2,6 +2,7 @@ import React from 'react';
 import { Box, Spinner } from '@chakra-ui/react';
 import { useData } from '../../hooks/useData';
 import GoalNavigator from '../ati_explorer_containers/GoalNavigator';
+import { WORKING_GROUP_LIST } from '../../styles/workingGroupIdentity';
 import '../../styles/App.css';
 
 /**
@@ -13,7 +14,7 @@ import '../../styles/App.css';
 function WorkingGroupGoalsView() {
     const { data, loading, updating, error, selectedYear } = useData();
 
-    const isDataEmpty = !data.web && !data.instructionalMaterials && !data.procurement;
+    const isDataEmpty = WORKING_GROUP_LIST.every((wg) => !data[wg.dataKey]);
 
     if (loading) {
         return (

@@ -9,6 +9,7 @@ from datetime import date, datetime
 
 from app.database.graph_schema import *
 from app.database.identifiers import make_working_group_plan_identifier
+from app.data_config import working_group_code_by_token
 from app.endpoints.data_api.errors.custom_exceptions import (
     CrudError,
     NotFoundError,
@@ -17,13 +18,9 @@ from app.endpoints.data_api.errors.custom_exceptions import (
 
 
 # Accepts working-group abbrevs, full names, AND the frontend route segments, all normalized
-# to the 3-letter code used in WorkingGroupPlan.plan_identifier. (Kept local so this feature
-# stays isolated from the Query CRUD.)
-WORKING_GROUP_ABBREV = {
-    "web": "web", "pro": "pro", "ins": "ins",
-    "Web": "web", "Procurement": "pro", "Instructional Materials": "ins",
-    "procurement": "pro", "instructional-materials": "ins",
-}
+# to the 3-letter code used in WorkingGroupPlan.plan_identifier. Derived from the single
+# source of truth (data_config.WORKING_GROUP_DEFS).
+WORKING_GROUP_ABBREV = working_group_code_by_token
 
 
 def _resolve_working_group_plan(working_group_plan_identifier=None, campus_abbrev=None,

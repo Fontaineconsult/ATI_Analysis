@@ -3,15 +3,9 @@ import {fetchPrimaryData, fetchCurrentYearIndicator, fetchTrends, fetchAllImplem
 import { useToast } from '@chakra-ui/react';
 import {year_difference} from "../services/utils/tools";
 import { useSettings } from './SettingsContext';
+import { WORKING_GROUP_LIST, SLUG_TO_DATAKEY } from '../styles/workingGroupIdentity';
 
-const transformWorkingGroup = (workingGroup) => {
-    const mapping = {
-        'instructional-materials': 'instructionalMaterials',
-        'web': 'web',
-        'procurement': 'procurement'
-    };
-    return mapping[workingGroup] || workingGroup;
-};
+const transformWorkingGroup = (workingGroup) => SLUG_TO_DATAKEY[workingGroup] || workingGroup;
 
 // Create a context
 export const DataContext = createContext();
@@ -21,9 +15,8 @@ export const DataProvider = ({ children }) => {
     const { currentCampus } = useSettings();
 
     const [data, setData] = useState({
-        web: null,
-        instructionalMaterials: null,
-        procurement: null,
+        // one null slot per working group (keyed by dataKey), derived from the registry
+        ...Object.fromEntries(WORKING_GROUP_LIST.map((wg) => [wg.dataKey, null])),
         indicators: null,
         implementations: {}
     });
@@ -88,19 +81,19 @@ export const DataProvider = ({ children }) => {
     const loadData = async () => {
         try {
             setLoading(true);
-            const [webData, instructionalMaterialsData, procurementData, indicatorsData, yoyTrends, implementationsData] = await Promise.all([
-                fetchPrimaryData("web", selectedYear, currentCampus),
-                fetchPrimaryData("instructional-materials", selectedYear, currentCampus),
-                fetchPrimaryData("procurement", selectedYear, currentCampus),
+            const [wgResults, indicatorsData, yoyTrends, implementationsData] = await Promise.all([
+                Promise.all(WORKING_GROUP_LIST.map((wg) => fetchPrimaryData(wg.slug, selectedYear, currentCampus))),
                 fetchCurrentYearIndicator(selectedYear),
                 fetchTrends(year_difference(selectedYear), selectedYear, currentCampus),
                 fetchAllImplementations()
             ]);
 
+            const wgData = Object.fromEntries(
+                WORKING_GROUP_LIST.map((wg, i) => [wg.dataKey, wgResults[i].data])
+            );
+
             setData({
-                web: webData.data,
-                instructionalMaterials: instructionalMaterialsData.data,
-                procurement: procurementData.data,
+                ...wgData,
                 indicators: indicatorsData.data,
                 yoyTrends: yoyTrends.data,
                 implementations: implementationsData.status?.data || implementationsData.data || {}
@@ -191,18 +184,18 @@ export const DataProvider = ({ children }) => {
     const refreshImplementations = async () => {
         try {
             setUpdating(true);
-            const [webData, instructionalMaterialsData, procurementData, implementationsData] = await Promise.all([
-                fetchPrimaryData("web", selectedYear, currentCampus),
-                fetchPrimaryData("instructional-materials", selectedYear, currentCampus),
-                fetchPrimaryData("procurement", selectedYear, currentCampus),
+            const [wgResults, implementationsData] = await Promise.all([
+                Promise.all(WORKING_GROUP_LIST.map((wg) => fetchPrimaryData(wg.slug, selectedYear, currentCampus))),
                 fetchAllImplementations()
             ]);
 
+            const wgData = Object.fromEntries(
+                WORKING_GROUP_LIST.map((wg, i) => [wg.dataKey, wgResults[i].data])
+            );
+
             setData((prevData) => ({
                 ...prevData,
-                web: webData.data,
-                instructionalMaterials: instructionalMaterialsData.data,
-                procurement: procurementData.data,
+                ...wgData,
                 implementations: implementationsData.status?.data || implementationsData.data || {}
             }));
 

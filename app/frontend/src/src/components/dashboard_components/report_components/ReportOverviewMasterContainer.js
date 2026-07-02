@@ -2,13 +2,12 @@
 import React, { useState } from 'react';
 import { Box, Heading, Spinner, Text, Button, ButtonGroup, VStack } from '@chakra-ui/react';
 import { useData } from "../../../hooks/useData";
-import ProcurementReportContainer from "./ProcurementReportContainer";
-import WebReportContainer from "./WebReportContainer";
-import InstructionalMaterialsReportContainer from "./InstructionalMaterialsReportContainer";
+import WorkingGroupReportContainer from "./WorkingGroupReportContainer";
+import { WORKING_GROUP_LIST } from "../../../styles/workingGroupIdentity";
 
 function ReportOverviewMasterContainer() {
     const { data, loading, error } = useData();
-    const [selectedReport, setSelectedReport] = useState('web');
+    const [selectedReport, setSelectedReport] = useState(WORKING_GROUP_LIST[0]?.dataKey || 'web');
 
     if (loading) {
         return (
@@ -36,34 +35,23 @@ function ReportOverviewMasterContainer() {
                     </Heading>
 
                     <ButtonGroup size="sm" mb={6}>
-                        <Button
-                            variant={selectedReport === 'web' ? 'solid' : 'outline'}
-                            colorScheme="teal"
-                            onClick={() => setSelectedReport('web')}
-                        >
-                            Web
-                        </Button>
-                        <Button
-                            variant={selectedReport === 'instructionalMaterials' ? 'solid' : 'outline'}
-                            colorScheme="teal"
-                            onClick={() => setSelectedReport('instructionalMaterials')}
-                        >
-                            Instructional Materials
-                        </Button>
-                        <Button
-                            variant={selectedReport === 'procurement' ? 'solid' : 'outline'}
-                            colorScheme="teal"
-                            onClick={() => setSelectedReport('procurement')}
-                        >
-                            Procurement
-                        </Button>
+                        {WORKING_GROUP_LIST.map((wg) => (
+                            <Button
+                                key={wg.dataKey}
+                                variant={selectedReport === wg.dataKey ? 'solid' : 'outline'}
+                                colorScheme="teal"
+                                onClick={() => setSelectedReport(wg.dataKey)}
+                            >
+                                {wg.name}
+                            </Button>
+                        ))}
                     </ButtonGroup>
 
-                    {selectedReport === 'web' && <WebReportContainer webData={data.web} />}
-                    {selectedReport === 'instructionalMaterials' &&
-                        <InstructionalMaterialsReportContainer instructionalMaterialsData={data.instructionalMaterials}/>
-                    }
-                    {selectedReport === 'procurement' && <ProcurementReportContainer procurementData={data.procurement} />}
+                    {WORKING_GROUP_LIST.map((wg) => (
+                        selectedReport === wg.dataKey && (
+                            <WorkingGroupReportContainer key={wg.dataKey} data={data[wg.dataKey]} name={wg.name} />
+                        )
+                    ))}
                 </Box>
             </VStack>
         </Box>

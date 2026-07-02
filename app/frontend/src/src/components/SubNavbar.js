@@ -3,6 +3,7 @@ import { Flex, Button, Box } from '@chakra-ui/react';
 import React, { useEffect, useContext } from 'react';
 import { useLocation, Link, useParams } from 'react-router-dom';
 import { useSettings } from "../context/SettingsContext";
+import { WORKING_GROUP_LIST, WORKING_GROUPS_ORDER } from "../styles/workingGroupIdentity";
 
 import {UserContext} from "../context/UserContext";
 
@@ -19,7 +20,7 @@ function SubNavbar() {
             const pathSegments = location.pathname.split('/');
             const dashIndex = pathSegments.indexOf('dashboard');
             const segment = dashIndex !== -1 ? pathSegments[dashIndex + 1] : null;
-            if (['web', 'instructional-materials', 'procurement'].includes(segment)) {
+            if (WORKING_GROUPS_ORDER.includes(segment)) {
                 updateCurrentWorkingGroup(segment);
             }
         }
@@ -37,12 +38,14 @@ function SubNavbar() {
             { label: 'Assets', path: `${campusPrefix}/ati-explorer/assets` },
         ];
     } else if (location.pathname.includes('/dashboard')) {
-        // The three working groups carry the brand accent trio as their
-        // identity marks (blue/purple/coral — see design-sense §2).
+        // The working groups carry the brand accent trio as their identity marks
+        // (blue/purple/coral — see design-sense §2); derived from the registry.
         subNavItems = [
-            { label: 'Web', path: `${campusPrefix}/dashboard/web/goal/1`, accent: 'teal.500' },
-            { label: 'Instructional Materials', path: `${campusPrefix}/dashboard/instructional-materials/goal/1`, accent: 'purple.500' },
-            { label: 'Procurement', path: `${campusPrefix}/dashboard/procurement/goal/1`, accent: 'coral.500' },
+            ...WORKING_GROUP_LIST.map((wg) => ({
+                label: wg.name,
+                path: `${campusPrefix}/dashboard/${wg.slug}/goal/1`,
+                accent: wg.accent,
+            })),
             { label: 'View Reports', path: `${campusPrefix}/dashboard/reports` },
             { label: 'Copy Report', path: `${campusPrefix}/dashboard/report-overview` },
             { label: 'Campus Plan', path: `${campusPrefix}/dashboard/campus-plan` },

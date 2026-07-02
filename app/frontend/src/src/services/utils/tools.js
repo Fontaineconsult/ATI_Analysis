@@ -1,4 +1,5 @@
 import {useNavigate} from "react-router-dom";
+import { CODE_TO_SLUG, SLUG_TO_CODE, DATAKEY_TO_SLUG } from "../../styles/workingGroupIdentity";
 
 
 function getUrlFromCompositeKey(compositeKey, campus) {
@@ -6,14 +7,8 @@ function getUrlFromCompositeKey(compositeKey, campus) {
     const [numbers, suffix] = compositeKey.split('-');
     const [goalNumber, indicatorNumber] = numbers.split('.');
 
-    // Map suffix to working group URL segment
-    const workingGroupMap = {
-        'web': 'web',
-        'pro': 'procurement',
-        'ins': 'instructional-materials'
-    };
-
-    const workingGroupSegment = workingGroupMap[suffix] || suffix;
+    // Map composite-key suffix (code) to working-group URL segment (slug).
+    const workingGroupSegment = CODE_TO_SLUG[suffix] || suffix;
 
     if (campus) {
         return `/${campus}/${workingGroupSegment}/${goalNumber}/${indicatorNumber}`;
@@ -24,24 +19,13 @@ function getUrlFromCompositeKey(compositeKey, campus) {
 
 
 function workingGroupCodeFromName(workingGroupName) {
-    const workingGroupMap = {
-        'web': 'web',
-        'procurement': 'pro',
-        'instructional-materials': 'ins'
-    }
-
-    return workingGroupMap[workingGroupName] || workingGroupName;
+    // Slug ('procurement') -> 3-letter code ('pro'). Name kept for BC.
+    return SLUG_TO_CODE[workingGroupName] || workingGroupName;
 }
 
 function workingGroupWebSafe(workingGroupName) {
-    const workingGroupMap = {
-        'web': 'web',
-        'procurement': 'procurement',
-        'instructionalMaterials': 'instructional-materials',
-
-    }
-
-    return workingGroupMap[workingGroupName] || workingGroupName;
+    // DataContext camelCase key ('instructionalMaterials') -> URL slug.
+    return DATAKEY_TO_SLUG[workingGroupName] || workingGroupName;
 }
 
 
@@ -97,13 +81,7 @@ const getGoalViewUrlFromCompositeKey = (compositeKey, campus) => {
     const [numbers, suffix] = compositeKey.split('-');
     const [goalNumber, indicatorNumber] = numbers.split('.');
 
-    const workingGroupMap = {
-        'web': 'web',
-        'pro': 'procurement',
-        'ins': 'instructional-materials'
-    };
-
-    const workingGroupSegment = workingGroupMap[suffix] || suffix;
+    const workingGroupSegment = CODE_TO_SLUG[suffix] || suffix;
     const campusPrefix = campus ? `/${campus}` : '';
     return `${campusPrefix}/dashboard/${workingGroupSegment}/goal/${goalNumber}/${indicatorNumber}`;
 };
@@ -135,13 +113,7 @@ const getReportUrlFromCompositeKey = (compositeKey, campus) => {
     const [numbers, suffix] = compositeKey.split('-');
     const [goalNumber, indicatorNumber] = numbers.split('.');
 
-    const workingGroupMap = {
-        'web': 'web',
-        'pro': 'procurement',
-        'ins': 'instructional-materials'
-    };
-
-    const workingGroupSegment = workingGroupMap[suffix] || suffix;
+    const workingGroupSegment = CODE_TO_SLUG[suffix] || suffix;
     const campusPrefix = campus ? `/${campus}` : '';
     return `${campusPrefix}/dashboard/reports/${workingGroupSegment}/${goalNumber}/${indicatorNumber}`;
 };

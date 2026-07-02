@@ -9,7 +9,16 @@ Each task's notes embed ``[graph Plan.unique_id: <uid>]`` so a task can always
 be traced back to its source Plan node.
 """
 
-SECTION_ORDER = ["Web", "Instructional Materials", "Procurement", "Unassigned"]
+# Section order for the Asana push, derived from the single source of truth
+# (data_config.WORKING_GROUP_DEFS) so a new working group is never silently
+# dropped; "Unassigned" always sorts last. Defensive fallback keeps the
+# standalone connector working even if the app package isn't importable.
+try:
+    from app.data_config import working_groups as _WORKING_GROUPS
+except Exception:
+    _WORKING_GROUPS = ["Web", "Procurement", "Instructional Materials"]
+
+SECTION_ORDER = [*_WORKING_GROUPS, "Unassigned"]
 
 
 def wg_of(plan):

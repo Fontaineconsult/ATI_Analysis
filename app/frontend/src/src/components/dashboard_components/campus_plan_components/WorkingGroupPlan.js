@@ -4,9 +4,12 @@ import {
     Box,
     Button,
     Collapse,
+    FormControl,
+    FormLabel,
     Heading,
     HStack,
     IconButton,
+    Input,
     Link,
     Modal,
     ModalBody,
@@ -15,7 +18,9 @@ import {
     ModalFooter,
     ModalHeader,
     ModalOverlay,
+    Select,
     Text,
+    Textarea,
     Tooltip,
     useDisclosure,
     VStack,
@@ -30,6 +35,7 @@ import {
     removePrioritizedIndicator,
     assignGroupLead,
     unassignGroupLead,
+    createPlan,
 } from '../../../services/api/post';
 import IndicatorSelectorModal from './IndicatorSelectorModal';
 import PersonAssignmentSelector from '../../functional_components/PersonAssignmentSelector';
@@ -78,20 +84,53 @@ function WorkingGroupPlan({
     wgp,
     campusAbbrev,
     campusName,
+    academicYear,
     onIndicatorAdded,
     onProgressAdded,
     onLeadsChanged,
+    onPlanAdded,
     currentUserUniqueId,
     peerWorkingGroupPlans = [],
     onPeerIndicatorChanged,
 }) {
     const { isOpen, onOpen, onClose } = useDisclosure();
     const leadsModal = useDisclosure();
+    const addPlanModal = useDisclosure();
     const plansSection = useDisclosure({ defaultIsOpen: false });
     const [activeProgressSi, setActiveProgressSi] = useState(null);
     const [togglingKey, setTogglingKey] = useState(null); // `${campusAbbrev}|${compositeKey}` while adding
+    const [planForm, setPlanForm] = useState({ name: '', description: '', plan_status: 'Not Started' });
+    const [savingPlan, setSavingPlan] = useState(false);
+    const [planError, setPlanError] = useState(null);
     const userCtx = useContext(UserContext);
     const individuals = userCtx?.individuals || [];
+
+    // Create a Plan attached directly to THIS working-group plan (via includes_plan),
+    // independent of success indicators — the campus-plan plan-tracking path for any group.
+    const handleAddPlan = async () => {
+        if (!planForm.name.trim() || !planForm.description.trim()) {
+            setPlanError('Name and description are both required.');
+            return;
+        }
+        setSavingPlan(true);
+        setPlanError(null);
+        try {
+            await createPlan({
+                name: planForm.name.trim(),
+                description: planForm.description.trim(),
+                plan_status: planForm.plan_status,
+                academic_year_name: academicYear,
+                working_group_plan_identifier: wgp.plan_identifier,
+            });
+            addPlanModal.onClose();
+            setPlanForm({ name: '', description: '', plan_status: 'Not Started' });
+            if (onPlanAdded) await onPlanAdded();
+        } catch (err) {
+            setPlanError(err?.response?.data?.error || 'Failed to add plan — the description must be unique.');
+        } finally {
+            setSavingPlan(false);
+        }
+    };
 
     if (!wgp) return null;
 
@@ -406,7 +445,14 @@ function WorkingGroupPlan({
                     )}
                 </Section>
 
-                <Section title={`Plans${wgp.plans.length > 0 ? ` (${wgp.plans.length})` : ''}`}>
+                <Section
+                    title={`Plans${wgp.plans.length > 0 ? ` (${wgp.plans.length})` : ''}`}
+                    action={(
+                        <Button size="xs" variant="outline" colorScheme="teal" onClick={addPlanModal.onOpen}>
+                            + Add Plan
+                        </Button>
+                    )}
+                >
                     {wgp.plans.length === 0 ? (
                         <EmptyText>No campus-plan plans yet.</EmptyText>
                     ) : (
@@ -532,6 +578,63 @@ function WorkingGroupPlan({
                     }}
                 />
             )}
+
+            <Modal isOpen={addPlanModal.isOpen} onClose={addPlanModal.onClose} size="lg" scrollBehavior="inside">
+                <ModalOverlay />
+                <ModalContent>
+                    <ModalHeader fontSize="md" color="teal.700">
+                        Add Plan — {wgp.working_group}
+                    </ModalHeader>
+                    <ModalCloseButton />
+                    <ModalBody pb={4}>
+                        <VStack align="stretch" spacing={3}>
+                            <FormControl isRequired>
+                                <FormLabel fontSize="sm">Name</FormLabel>
+                                <Input
+                                    size="sm"
+                                    value={planForm.name}
+                                    onChange={(e) => setPlanForm({ ...planForm, name: e.target.value })}
+                                    placeholder="Short plan title"
+                                />
+                            </FormControl>
+                            <FormControl isRequired>
+                                <FormLabel fontSize="sm">Description</FormLabel>
+                                <Textarea
+                                    size="sm"
+                                    rows={4}
+                                    value={planForm.description}
+                                    onChange={(e) => setPlanForm({ ...planForm, description: e.target.value })}
+                                    placeholder="What this plan covers (must be unique across all plans)"
+                                />
+                            </FormControl>
+                            <FormControl>
+                                <FormLabel fontSize="sm">Status</FormLabel>
+                                <Select
+                                    size="sm"
+                                    value={planForm.plan_status}
+                                    onChange={(e) => setPlanForm({ ...planForm, plan_status: e.target.value })}
+                                >
+                                    <option value="Not Started">Not Started</option>
+                                    <option value="In Progress">In Progress</option>
+                                    <option value="On Hold">On Hold</option>
+                                    <option value="Completed">Completed</option>
+                                </Select>
+                            </FormControl>
+                            {planError && (
+                                <Text fontSize="sm" color="red.500">{planError}</Text>
+                            )}
+                        </VStack>
+                    </ModalBody>
+                    <ModalFooter>
+                        <Button size="sm" variant="ghost" mr={2} onClick={addPlanModal.onClose} isDisabled={savingPlan}>
+                            Cancel
+                        </Button>
+                        <Button size="sm" colorScheme="teal" onClick={handleAddPlan} isLoading={savingPlan} loadingText="Adding…">
+                            Add Plan
+                        </Button>
+                    </ModalFooter>
+                </ModalContent>
+            </Modal>
 
             <Modal isOpen={leadsModal.isOpen} onClose={leadsModal.onClose} size="2xl" scrollBehavior="inside">
                 <ModalOverlay />
