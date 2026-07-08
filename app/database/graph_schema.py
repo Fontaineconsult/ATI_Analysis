@@ -448,6 +448,17 @@ class SuccessIndicator(StructuredNode):
     # — not every SI is met through traditional implementation work, so the dashboard
     # suppresses its missing-implementation flag. Set via the SI settings area.
     override_implementation_requirement = BooleanProperty(default=False)
+
+    # Companion-guide reference content authored on the SI itself (shared reference data,
+    # year-agnostic — nothing here lives on StatusLevel).
+    #   examples_of_evidence: bullet list of artifact types that would demonstrate the SI.
+    #   level_examples: maturity-level example text as a JSON map keyed by status-level
+    #     LABEL ("Established"/"Managed"/"Optimizing") — labels only, NOT edges to
+    #     StatusLevel. JSONProperty stores this as a JSON string; the Cypher seed builds it
+    #     with apoc.convert.toJson(...). See app/database/ontology/new-success-indicators.md.
+    examples_of_evidence = ArrayProperty(StringProperty(), default=list)
+    level_examples = JSONProperty(default=dict)
+
     notes = RelationshipTo("Note", "has_note")
     date_added = DateProperty()
     tracked_by = RelationshipFrom("SuccessIndicator", "tracks")
@@ -465,6 +476,8 @@ class SuccessIndicator(StructuredNode):
             'composite_key': self.composite_key,
             'removed': self.removed,
             'override_implementation_requirement': self.override_implementation_requirement,
+            'examples_of_evidence': self.examples_of_evidence,
+            'level_examples': self.level_examples,
             'date_added': self.date_added,
             "unique_id": self.unique_id
         }
