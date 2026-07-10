@@ -218,10 +218,10 @@ export const addStatusLevelSubNode = async (statusLevelId, category, text) => {
     }
 }
 
-export const createSuccessIndicator = async (indicator_number, goal_number, sub_committee, success_indicator_text, date_added, removed) => {
+export const createSuccessIndicator = async (indicator_number, goal_number, sub_committee, success_indicator_text, date_added, removed, examples_of_evidence = [], established_example = null, managed_example = null, optimizing_example = null) => {
     try {
         const response = await axios.post(`${process.env.REACT_APP_API_URL}/indicators`,
-            createSuccessIndicatorPayload(indicator_number, goal_number, sub_committee, success_indicator_text, date_added, removed));
+            createSuccessIndicatorPayload(indicator_number, goal_number, sub_committee, success_indicator_text, date_added, removed, examples_of_evidence, established_example, managed_example, optimizing_example));
         return response.data;
     } catch (error) {
         console.error('Error creating success indicator:', error);

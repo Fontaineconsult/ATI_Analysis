@@ -18,7 +18,11 @@ def create_success_indicator(number,
                              sub_committee,
                              success_indicator_text,
                              date_added=None,
-                             removed=False):
+                             removed=False,
+                             examples_of_evidence=None,
+                             established_example=None,
+                             managed_example=None,
+                             optimizing_example=None):
     if date_added is None:
         date_added = dt.now().strftime('%Y-%m-%d')
     elif isinstance(date_added, str):
@@ -62,7 +66,11 @@ def create_success_indicator(number,
             success_indicator=success_indicator_text,
             composite_key=composite_key,
             date_added=date_added,
-            removed=removed
+            removed=removed,
+            examples_of_evidence=examples_of_evidence or [],
+            established_example=established_example,
+            managed_example=managed_example,
+            optimizing_example=optimizing_example
         )
         indicator.save()
         goal_node.supporting_success_indicators.connect(indicator)

@@ -109,6 +109,13 @@ function SuccessIndicatorDetailPanel({ wrapper }) {
     ) || [];
     const candidatePersons = individuals?.filter((i) => i.active || i.non_committee_member_active) || [];
 
+    // Companion-guide reference content lives on the SI node itself (raw node → .properties here).
+    const props = wrapper?.indicator?.properties || {};
+    const examplesOfEvidence = props.examples_of_evidence || [];
+    const { established_example: establishedExample, managed_example: managedExample, optimizing_example: optimizingExample } = props;
+    const hasCompanion =
+        examplesOfEvidence.length > 0 || establishedExample || managedExample || optimizingExample;
+
     return (
         <VStack as="section" aria-label={`Success indicator ${s.compositeKey}`} align="stretch" spacing={3}>
             {/* Header card — SI description is the headline; controls + badges below it */}
@@ -161,6 +168,44 @@ function SuccessIndicatorDetailPanel({ wrapper }) {
                     <StatusLevelLadder level={localStatus} variant="full" />
                 </Box>
             </Box>
+
+            {hasCompanion && (
+                <Section title="Companion Guide">
+                    <VStack align="stretch" spacing={3}>
+                        {examplesOfEvidence.length > 0 && (
+                            <Box>
+                                <Text fontSize="xs" fontWeight="semibold" color="gray.600" mb={1}>Examples of Evidence</Text>
+                                <VStack align="stretch" spacing={1}>
+                                    {examplesOfEvidence.map((ex, i) => (
+                                        <HStack key={i} align="start" spacing={2}>
+                                            <Text fontSize="sm" color="gray.400" lineHeight="short">•</Text>
+                                            <Text fontSize="sm" color="gray.700">{ex}</Text>
+                                        </HStack>
+                                    ))}
+                                </VStack>
+                            </Box>
+                        )}
+                        {establishedExample && (
+                            <Box>
+                                <Text fontSize="xs" fontWeight="semibold" color="gray.600" mb={1}>Example of Established Level</Text>
+                                <Text fontSize="sm" color="gray.700" whiteSpace="pre-wrap">{establishedExample}</Text>
+                            </Box>
+                        )}
+                        {managedExample && (
+                            <Box>
+                                <Text fontSize="xs" fontWeight="semibold" color="gray.600" mb={1}>Example of Managed Level</Text>
+                                <Text fontSize="sm" color="gray.700" whiteSpace="pre-wrap">{managedExample}</Text>
+                            </Box>
+                        )}
+                        {optimizingExample && (
+                            <Box>
+                                <Text fontSize="xs" fontWeight="semibold" color="gray.600" mb={1}>Example of Optimizing Level</Text>
+                                <Text fontSize="sm" color="gray.700" whiteSpace="pre-wrap">{optimizingExample}</Text>
+                            </Box>
+                        )}
+                    </VStack>
+                </Section>
+            )}
 
             <Section title={<>Responsible Persons <HelpTip field={['YearSuccessEvidence', 'responsible_persons']} /></>}>
                 <PersonAssignmentSelector

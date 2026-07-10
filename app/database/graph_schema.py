@@ -452,12 +452,13 @@ class SuccessIndicator(StructuredNode):
     # Companion-guide reference content authored on the SI itself (shared reference data,
     # year-agnostic — nothing here lives on StatusLevel).
     #   examples_of_evidence: bullet list of artifact types that would demonstrate the SI.
-    #   level_examples: maturity-level example text as a JSON map keyed by status-level
-    #     LABEL ("Established"/"Managed"/"Optimizing") — labels only, NOT edges to
-    #     StatusLevel. JSONProperty stores this as a JSON string; the Cypher seed builds it
-    #     with apoc.convert.toJson(...). See app/database/ontology/new-success-indicators.md.
+    #   *_example: maturity-level example text (markdown). Flat per-level fields rather than
+    #     a map — in practice only the Established example is authored; Managed/Optimizing
+    #     appear on a few Procurement SIs. See app/database/ontology/new-success-indicators.md.
     examples_of_evidence = ArrayProperty(StringProperty(), default=list)
-    level_examples = JSONProperty(default=dict)
+    established_example = StringProperty()
+    managed_example = StringProperty()
+    optimizing_example = StringProperty()
 
     notes = RelationshipTo("Note", "has_note")
     date_added = DateProperty()
@@ -477,7 +478,9 @@ class SuccessIndicator(StructuredNode):
             'removed': self.removed,
             'override_implementation_requirement': self.override_implementation_requirement,
             'examples_of_evidence': self.examples_of_evidence,
-            'level_examples': self.level_examples,
+            'established_example': self.established_example,
+            'managed_example': self.managed_example,
+            'optimizing_example': self.optimizing_example,
             'date_added': self.date_added,
             "unique_id": self.unique_id
         }

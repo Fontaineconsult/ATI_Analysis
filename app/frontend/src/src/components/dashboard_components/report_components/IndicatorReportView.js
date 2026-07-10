@@ -326,6 +326,44 @@ const IndicatorReportView = ({ report }) => {
                             </Box>
                         </Card>
 
+                        {/* Companion guide — SI-owned reference content (examples of evidence + level examples) */}
+                        {(indicator.examples_of_evidence?.length > 0 ||
+                          indicator.established_example ||
+                          indicator.managed_example ||
+                          indicator.optimizing_example) && (
+                            <Card title="Companion Guide">
+                                <VStack align="stretch" spacing={3}>
+                                    {indicator.examples_of_evidence?.length > 0 && (
+                                        <Section title="Examples of Evidence" count={indicator.examples_of_evidence.length}>
+                                            <VStack align="stretch" spacing={1}>
+                                                {indicator.examples_of_evidence.map((ex, i) => (
+                                                    <HStack key={i} align="start" spacing={2}>
+                                                        <Text fontSize="sm" color="gray.400">•</Text>
+                                                        <Text fontSize="sm" color="gray.700">{ex}</Text>
+                                                    </HStack>
+                                                ))}
+                                            </VStack>
+                                        </Section>
+                                    )}
+                                    {indicator.established_example && (
+                                        <Section title="Example of Established Level">
+                                            <Text fontSize="sm" color="gray.700" whiteSpace="pre-wrap">{indicator.established_example}</Text>
+                                        </Section>
+                                    )}
+                                    {indicator.managed_example && (
+                                        <Section title="Example of Managed Level">
+                                            <Text fontSize="sm" color="gray.700" whiteSpace="pre-wrap">{indicator.managed_example}</Text>
+                                        </Section>
+                                    )}
+                                    {indicator.optimizing_example && (
+                                        <Section title="Example of Optimizing Level">
+                                            <Text fontSize="sm" color="gray.700" whiteSpace="pre-wrap">{indicator.optimizing_example}</Text>
+                                        </Section>
+                                    )}
+                                </VStack>
+                            </Card>
+                        )}
+
                         {/* People */}
                         <Card title="People">
                             <VStack align="stretch" spacing={3}>

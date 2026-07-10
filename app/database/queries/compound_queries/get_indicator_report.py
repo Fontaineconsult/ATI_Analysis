@@ -293,6 +293,10 @@ def get_indicator_report(composite_key, academic_year, campus_abbreviation=None)
             "goal_number": identity["goal_number"],
             "goal_name": identity["goal_name"],
             "working_group": identity["working_group"],
+            "examples_of_evidence": indicator.examples_of_evidence,
+            "established_example": indicator.established_example,
+            "managed_example": indicator.managed_example,
+            "optimizing_example": indicator.optimizing_example,
         },
         "year": academic_year,
         "campus": {

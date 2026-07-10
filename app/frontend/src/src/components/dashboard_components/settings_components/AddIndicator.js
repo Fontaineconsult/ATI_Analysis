@@ -14,6 +14,7 @@ import {
     Select,
     Checkbox,
     Textarea,
+    FormHelperText,
     useToast,
 } from '@chakra-ui/react';
 import { createSuccessIndicator } from '../../../services/api/post';
@@ -26,6 +27,11 @@ const AddIndicator = ({ indicators = { goals: [] }, wg, isOpen, onClose, onSubmi
     const [successIndicatorText, setSuccessIndicatorText] = useState('');
     const [dateAdded, setDateAdded] = useState('');
     const [removed, setRemoved] = useState(false);
+    // Optional companion-guide fields (empty → sent as [] / null by the service layer).
+    const [examplesOfEvidenceText, setExamplesOfEvidenceText] = useState('');
+    const [establishedExample, setEstablishedExample] = useState('');
+    const [managedExample, setManagedExample] = useState('');
+    const [optimizingExample, setOptimizingExample] = useState('');
     const { refreshIndicators } = useContext(DataContext);
 
     const toast = useToast();
@@ -48,6 +54,12 @@ const AddIndicator = ({ indicators = { goals: [] }, wg, isOpen, onClose, onSubmi
             return;
         }
 
+        // Examples of evidence: one bullet per non-empty line.
+        const examplesOfEvidence = examplesOfEvidenceText
+            .split('\n')
+            .map((line) => line.trim())
+            .filter(Boolean);
+
         const indicatorData = {
             indicator_number: number,
             goal_number: goalNumber,
@@ -55,6 +67,10 @@ const AddIndicator = ({ indicators = { goals: [] }, wg, isOpen, onClose, onSubmi
             success_indicator_text: successIndicatorText,
             date_added: dateAdded,
             removed,
+            examples_of_evidence: examplesOfEvidence,
+            established_example: establishedExample || null,
+            managed_example: managedExample || null,
+            optimizing_example: optimizingExample || null,
         };
 
         try {
@@ -64,7 +80,11 @@ const AddIndicator = ({ indicators = { goals: [] }, wg, isOpen, onClose, onSubmi
                 indicatorData.sub_committee,
                 indicatorData.success_indicator_text,
                 indicatorData.date_added,
-                indicatorData.removed
+                indicatorData.removed,
+                indicatorData.examples_of_evidence,
+                indicatorData.established_example,
+                indicatorData.managed_example,
+                indicatorData.optimizing_example
             );
 
             toast({
@@ -91,7 +111,7 @@ const AddIndicator = ({ indicators = { goals: [] }, wg, isOpen, onClose, onSubmi
     };
 
     return (
-        <Modal isOpen={isOpen} onClose={onClose} isCentered>
+        <Modal isOpen={isOpen} onClose={onClose} isCentered scrollBehavior="inside">
             <ModalOverlay />
             <ModalContent>
                 <ModalHeader>Add New Indicator for {indicators.name}</ModalHeader>
@@ -132,6 +152,44 @@ const AddIndicator = ({ indicators = { goals: [] }, wg, isOpen, onClose, onSubmi
                         <Textarea
                             value={successIndicatorText}
                             onChange={(e) => setSuccessIndicatorText(e.target.value)}
+                        />
+                    </FormControl>
+                    <FormControl mb={3}>
+                        <FormLabel>Examples of Evidence</FormLabel>
+                        <Textarea
+                            value={examplesOfEvidenceText}
+                            onChange={(e) => setExamplesOfEvidenceText(e.target.value)}
+                            placeholder="One example per line"
+                            rows={4}
+                        />
+                        <FormHelperText>One bullet per line. Optional.</FormHelperText>
+                    </FormControl>
+                    <FormControl mb={3}>
+                        <FormLabel>Example of Established Level</FormLabel>
+                        <Textarea
+                            value={establishedExample}
+                            onChange={(e) => setEstablishedExample(e.target.value)}
+                            placeholder="Markdown supported"
+                            rows={4}
+                        />
+                        <FormHelperText>The common case. Optional; Markdown supported.</FormHelperText>
+                    </FormControl>
+                    <FormControl mb={3}>
+                        <FormLabel>Example of Managed Level</FormLabel>
+                        <Textarea
+                            value={managedExample}
+                            onChange={(e) => setManagedExample(e.target.value)}
+                            placeholder="Optional — rarely used"
+                            rows={2}
+                        />
+                    </FormControl>
+                    <FormControl mb={3}>
+                        <FormLabel>Example of Optimizing Level</FormLabel>
+                        <Textarea
+                            value={optimizingExample}
+                            onChange={(e) => setOptimizingExample(e.target.value)}
+                            placeholder="Optional — rarely used"
+                            rows={2}
                         />
                     </FormControl>
                     <FormControl mb={3} isRequired>

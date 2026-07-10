@@ -252,7 +252,7 @@ export function updateIndicatorOverrideImplementationRequirement(composite_key, 
     };
 }
 
-export function createSuccessIndicatorPayload(number, goalNumber, subCommittee, successIndicatorText, dateAdded, removed) {
+export function createSuccessIndicatorPayload(number, goalNumber, subCommittee, successIndicatorText, dateAdded, removed, examplesOfEvidence = [], establishedExample = null, managedExample = null, optimizingExample = null) {
     return {
         action: "create_success_indicator",
         number: number,
@@ -260,7 +260,11 @@ export function createSuccessIndicatorPayload(number, goalNumber, subCommittee, 
         sub_committee: subCommittee,
         success_indicator_text: successIndicatorText,
         date_added: dateAdded,
-        removed: removed
+        removed: removed,
+        examples_of_evidence: examplesOfEvidence,   // array of bullet strings
+        established_example: establishedExample,     // markdown (the common case)
+        managed_example: managedExample,             // markdown (rare — a few Procurement SIs)
+        optimizing_example: optimizingExample        // markdown (rare)
     };
 }
 

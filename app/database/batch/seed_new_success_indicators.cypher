@@ -11,7 +11,7 @@
 //    Section 2  Create / attach the Goals the new SIs hang off (all 5 areas).
 //    Section 3  Create the 31 SuccessIndicators with the new fields:
 //                 - examples_of_evidence  (native list<string>)
-//                 - level_examples        (JSON STRING — see note below)
+//                 - established_example / managed_example / optimizing_example  (string)
 //                 - introduced_in_year    = '2026-2027'   (the year gate)
 //    Section 4  [GUARDED] Create 2026-2027 YearSuccessEvidence across campuses.
 //
@@ -20,12 +20,10 @@
 //    (or paste into Neo4j Browser). Requires APOC.
 //
 //  IMPORTANT NOTES / THINGS WE'RE WORKSHOPPING
-//    * level_examples is stored as a JSON STRING to match neomodel's JSONProperty
-//      (which json.dumps() the dict into a string column). We build it with
-//      apoc.convert.toJson({...}) so the Cypher stays readable and the stored
-//      value is valid JSON the app can json.loads(). Keys are status-level LABELS
-//      only ("Established"/"Managed"/"Optimizing") — NOT edges to StatusLevel.
-//    * Keys use the data_config spelling "Optimizing" (not "Optimized").
+//    * Maturity-level examples are three flat string properties on the SI:
+//      established_example (the common case), managed_example, optimizing_example —
+//      plain markdown strings, no JSON/map. Only Established is usually authored;
+//      Managed/Optimizing appear on a few Procurement SIs.
 //    * WG composite-key abbrevs below are PROVISIONAL: com = Communication &
 //      Training, gov = Governance. These must also be registered in
 //      app/data_config.py (working_group_names + compsite_key_wg_names) and the
@@ -34,7 +32,7 @@
 //      ON CREATE SET protects unique_id, date_added, and EXISTING goals' text.
 //      Content fields are re-SET every run so we can workshop the text and re-apply.
 //    * Six SIs have NO authored companion content yet (IM 7.12; Comm&Training
-//      2.1–2.5): seeded with empty examples_of_evidence / level_examples.
+//      2.1–2.5): seeded with empty examples_of_evidence and null examples.
 //    * Rich text below is FULLY populated for one exemplar per area (Web 1.20,
 //      IM 5.17, Procurement 1.12, C&T 1.1, Gov 1.1) to lock the pattern; the
 //      remaining SIs carry identity + `// TODO paste from new-success-indicators.md`.
@@ -169,9 +167,7 @@ MERGE (si:SuccessIndicator {composite_key: '1.20-web'})
         "Documentation of outreach to account owners with accessibility recommendations.",
         "Workflows or checklists built into posting processes (e.g., reminders for alt text and captions)."
       ],
-      si.level_examples = apoc.convert.toJson({
-        Established: "At the Established level, the university has moved beyond ad hoc awareness and has a documented, consistent practice.\n\n- Position Descriptions: A central communications or accessibility office is tasked with maintaining the account inventory. Trained staff are tasked with manual reviews of social media accounts.\n- Budget: Resources exist for training, accessibility tools (e.g., captioning services, image description support), and audit support.\n- Process: Documented procedures outline how accounts are identified, registered, and periodically assessed for content accessibility. Account owners are expected to comply with accessibility posting guidelines.\n- Output: A current, centralized list of social media accounts exists, and reports from periodic content accessibility reviews are logged."
-      })
+      si.established_example = "At the Established level, the university has moved beyond ad hoc awareness and has a documented, consistent practice.\n\n- Position Descriptions: A central communications or accessibility office is tasked with maintaining the account inventory. Trained staff are tasked with manual reviews of social media accounts.\n- Budget: Resources exist for training, accessibility tools (e.g., captioning services, image description support), and audit support.\n- Process: Documented procedures outline how accounts are identified, registered, and periodically assessed for content accessibility. Account owners are expected to comply with accessibility posting guidelines.\n- Output: A current, centralized list of social media accounts exists, and reports from periodic content accessibility reviews are logged."
 MERGE (g)-[:supported_by]->(si);
 
 // 1.21 — accessibility statements aligned to CSU CO guidance
@@ -184,7 +180,7 @@ MERGE (si:SuccessIndicator {composite_key: '1.21-web'})
       si.override_implementation_requirement = false,
       si.introduced_in_year = '2026-2027',
       si.examples_of_evidence = [],   // TODO paste from new-success-indicators.md
-      si.level_examples = apoc.convert.toJson({})  // TODO Established example
+      si.established_example = null  // TODO Established example
 MERGE (g)-[:supported_by]->(si);
 
 // 2.10 — pre-publication accessibility review request
@@ -197,7 +193,7 @@ MERGE (si:SuccessIndicator {composite_key: '2.10-web'})
       si.override_implementation_requirement = false,
       si.introduced_in_year = '2026-2027',
       si.examples_of_evidence = [],   // TODO
-      si.level_examples = apoc.convert.toJson({})  // TODO
+      si.established_example = null  // TODO
 MERGE (g)-[:supported_by]->(si);
 
 // 3.7 — automated + manual testing combined
@@ -210,7 +206,7 @@ MERGE (si:SuccessIndicator {composite_key: '3.7-web'})
       si.override_implementation_requirement = false,
       si.introduced_in_year = '2026-2027',
       si.examples_of_evidence = [],   // TODO
-      si.level_examples = apoc.convert.toJson({})  // TODO
+      si.established_example = null  // TODO
 MERGE (g)-[:supported_by]->(si);
 
 // ---------------------------------------------------------------------------
@@ -234,9 +230,7 @@ MERGE (si:SuccessIndicator {composite_key: '5.17-ins'})
         "Monitoring or spot checks of syllabus accessibility",
         "Support resources for faculty remediation"
       ],
-      si.level_examples = apoc.convert.toJson({
-        Established: "At the Established level, the campus has a consistent process for accessible syllabi delivery.\n\n- Accessible syllabi are available at the beginning of each term\n- Faculty use standardized templates or guidance\n- Syllabi are posted within the university-approved LMS\n- Accessibility expectations are clearly communicated\n- The process supports early access and student success"
-      })
+      si.established_example = "At the Established level, the campus has a consistent process for accessible syllabi delivery.\n\n- Accessible syllabi are available at the beginning of each term\n- Faculty use standardized templates or guidance\n- Syllabi are posted within the university-approved LMS\n- Accessibility expectations are clearly communicated\n- The process supports early access and student success"
 MERGE (g)-[:supported_by]->(si);
 
 // 6.10 — accessibility of LTIs / external LMS tools
@@ -249,7 +243,7 @@ MERGE (si:SuccessIndicator {composite_key: '6.10-ins'})
       si.override_implementation_requirement = false,
       si.introduced_in_year = '2026-2027',
       si.examples_of_evidence = [],   // TODO
-      si.level_examples = apoc.convert.toJson({})  // TODO
+      si.established_example = null  // TODO
 MERGE (g)-[:supported_by]->(si);
 
 // 7.12 — faculty development centers training  (NO COMPANION CONTENT YET)
@@ -262,7 +256,7 @@ MERGE (si:SuccessIndicator {composite_key: '7.12-ins'})
       si.override_implementation_requirement = false,
       si.introduced_in_year = '2026-2027',
       si.examples_of_evidence = [],   // content not yet authored
-      si.level_examples = apoc.convert.toJson({})  // content not yet authored
+      si.established_example = null  // content not yet authored
 MERGE (g)-[:supported_by]->(si);
 
 // ---------------------------------------------------------------------------
@@ -288,11 +282,9 @@ MERGE (si:SuccessIndicator {composite_key: '1.12-pro'})
         "Documentation showing accessibility review incorporated into purchase requisition or approval workflows.",
         "Reports summarizing Section 508 compliance rates across procurement methods."
       ],
-      si.level_examples = apoc.convert.toJson({
-        Established: "- Position: Procurement (both state-side and auxiliary) and ATI accessibility staff have defined responsibilities for reviewing ICT purchases, regardless of funding source or cost.\n- Budget: Allocations exist for accessibility review staffing, tools, and training for decentralized buyers.\n- Procedures: Documented procedures integrate accessibility checks into all procurement workflows across all university affiliates.\n- Output: Comprehensive records show that accessibility review occurred for all ICT acquisitions.",
-        Managed: "Metrics: Monitor acquisitions and determine if reviews are proceduralized for those other entities or free software.",
-        Optimizing: "Administrative Review: Leadership reviews audit results to ensure equitable application of Section 508 review across all procurement pathways."
-      })
+      si.established_example = "- Position: Procurement (both state-side and auxiliary) and ATI accessibility staff have defined responsibilities for reviewing ICT purchases, regardless of funding source or cost.\n- Budget: Allocations exist for accessibility review staffing, tools, and training for decentralized buyers.\n- Procedures: Documented procedures integrate accessibility checks into all procurement workflows across all university affiliates.\n- Output: Comprehensive records show that accessibility review occurred for all ICT acquisitions.",
+      si.managed_example = "Metrics: Monitor acquisitions and determine if reviews are proceduralized for those other entities or free software.",
+      si.optimizing_example = "Administrative Review: Leadership reviews audit results to ensure equitable application of Section 508 review across all procurement pathways."
 MERGE (g)-[:supported_by]->(si);
 
 // 8.11 — close gaps across all procurement channels
@@ -305,7 +297,7 @@ MERGE (si:SuccessIndicator {composite_key: '8.11-pro'})
       si.override_implementation_requirement = false,
       si.introduced_in_year = '2026-2027',
       si.examples_of_evidence = [],   // TODO
-      si.level_examples = apoc.convert.toJson({})  // TODO (Established/Managed/Optimizing)
+      si.established_example = null  // TODO (Established/Managed/Optimizing)
 MERGE (g)-[:supported_by]->(si);
 
 // 8.12 — platform-agnostic systemwide review
@@ -318,7 +310,7 @@ MERGE (si:SuccessIndicator {composite_key: '8.12-pro'})
       si.override_implementation_requirement = false,
       si.introduced_in_year = '2026-2027',
       si.examples_of_evidence = [],   // TODO
-      si.level_examples = apoc.convert.toJson({})  // TODO (Established/Managed/Optimizing)
+      si.established_example = null  // TODO (Established/Managed/Optimizing)
 MERGE (g)-[:supported_by]->(si);
 
 // ---------------------------------------------------------------------------
@@ -343,9 +335,7 @@ MERGE (si:SuccessIndicator {composite_key: '1.1-com'})
         "Centralized accessibility website or hub with resources, guidance, and support information",
         "Metrics or analytics tracking engagement with communication efforts (e.g., email open rates, event participation)"
       ],
-      si.level_examples = apoc.convert.toJson({
-        Established: "- Position: A designated individual or team is formally responsible for developing and managing campus-wide accessibility communication efforts\n- Budget: Resources are allocated to support communication activities, including campaign development, tools, and outreach efforts\n- Procedures: A documented communication strategy defines messaging, audiences, channels, and a recurring schedule for outreach, supported by executive endorsement\n- Output: Accessibility communication campaigns are consistently delivered across campus, with clear messaging and broad awareness of responsibilities and available resources"
-      })
+      si.established_example = "- Position: A designated individual or team is formally responsible for developing and managing campus-wide accessibility communication efforts\n- Budget: Resources are allocated to support communication activities, including campaign development, tools, and outreach efforts\n- Procedures: A documented communication strategy defines messaging, audiences, channels, and a recurring schedule for outreach, supported by executive endorsement\n- Output: Accessibility communication campaigns are consistently delivered across campus, with clear messaging and broad awareness of responsibilities and available resources"
 MERGE (g)-[:supported_by]->(si);
 
 // 1.2 — accessibility in onboarding/orientation
@@ -358,7 +348,7 @@ MERGE (si:SuccessIndicator {composite_key: '1.2-com'})
       si.override_implementation_requirement = false,
       si.introduced_in_year = '2026-2027',
       si.examples_of_evidence = [],   // TODO
-      si.level_examples = apoc.convert.toJson({})  // TODO
+      si.established_example = null  // TODO
 MERGE (g)-[:supported_by]->(si);
 
 // 1.3 — content creators know where to get help
@@ -371,7 +361,7 @@ MERGE (si:SuccessIndicator {composite_key: '1.3-com'})
       si.override_implementation_requirement = false,
       si.introduced_in_year = '2026-2027',
       si.examples_of_evidence = [],   // TODO
-      si.level_examples = apoc.convert.toJson({})  // TODO
+      si.established_example = null  // TODO
 MERGE (g)-[:supported_by]->(si);
 
 // 1.4 — procurement stakeholders know who to contact
@@ -384,7 +374,7 @@ MERGE (si:SuccessIndicator {composite_key: '1.4-com'})
       si.override_implementation_requirement = false,
       si.introduced_in_year = '2026-2027',
       si.examples_of_evidence = [],   // TODO
-      si.level_examples = apoc.convert.toJson({})  // TODO
+      si.established_example = null  // TODO
 MERGE (g)-[:supported_by]->(si);
 
 // 2.1 — training for developers/designers/communicators  (NO COMPANION CONTENT YET)
@@ -397,7 +387,7 @@ MERGE (si:SuccessIndicator {composite_key: '2.1-com'})
       si.override_implementation_requirement = false,
       si.introduced_in_year = '2026-2027',
       si.examples_of_evidence = [],   // content not yet authored
-      si.level_examples = apoc.convert.toJson({})  // content not yet authored
+      si.established_example = null  // content not yet authored
 MERGE (g)-[:supported_by]->(si);
 
 // 2.2 — faculty IM training  (NO COMPANION CONTENT YET)
@@ -410,7 +400,7 @@ MERGE (si:SuccessIndicator {composite_key: '2.2-com'})
       si.override_implementation_requirement = false,
       si.introduced_in_year = '2026-2027',
       si.examples_of_evidence = [],   // content not yet authored
-      si.level_examples = apoc.convert.toJson({})  // content not yet authored
+      si.established_example = null  // content not yet authored
 MERGE (g)-[:supported_by]->(si);
 
 // 2.3 — accessibility in academic tech training  (NO COMPANION CONTENT YET)
@@ -423,7 +413,7 @@ MERGE (si:SuccessIndicator {composite_key: '2.3-com'})
       si.override_implementation_requirement = false,
       si.introduced_in_year = '2026-2027',
       si.examples_of_evidence = [],   // content not yet authored
-      si.level_examples = apoc.convert.toJson({})  // content not yet authored
+      si.established_example = null  // content not yet authored
 MERGE (g)-[:supported_by]->(si);
 
 // 2.4 — training for purchasers  (NO COMPANION CONTENT YET)
@@ -436,7 +426,7 @@ MERGE (si:SuccessIndicator {composite_key: '2.4-com'})
       si.override_implementation_requirement = false,
       si.introduced_in_year = '2026-2027',
       si.examples_of_evidence = [],   // content not yet authored
-      si.level_examples = apoc.convert.toJson({})  // content not yet authored
+      si.established_example = null  // content not yet authored
 MERGE (g)-[:supported_by]->(si);
 
 // 2.5 — role-specific professional development  (NO COMPANION CONTENT YET)
@@ -449,7 +439,7 @@ MERGE (si:SuccessIndicator {composite_key: '2.5-com'})
       si.override_implementation_requirement = false,
       si.introduced_in_year = '2026-2027',
       si.examples_of_evidence = [],   // content not yet authored
-      si.level_examples = apoc.convert.toJson({})  // content not yet authored
+      si.established_example = null  // content not yet authored
 MERGE (g)-[:supported_by]->(si);
 
 // ---------------------------------------------------------------------------
@@ -473,9 +463,7 @@ MERGE (si:SuccessIndicator {composite_key: '1.1-gov'})
         "Documentation aligning accessibility responsibilities with specific ATI priority areas or success indicators",
         "HR or governance policies requiring inclusion of accessibility in relevant roles"
       ],
-      si.level_examples = apoc.convert.toJson({
-        Established: "- Position: Accessibility responsibilities are clearly defined and formally included in relevant position descriptions across key roles (e.g., web, instructional materials, procurement, IT, communications)\n- Budget: Funding supports roles with explicit accessibility responsibilities, including allocated time or dedicated positions\n- Procedures: A standardized process ensures accessibility responsibilities are consistently incorporated into new and updated position descriptions through HR and governance workflows\n- Output: Position descriptions across the institution consistently reflect assigned accessibility responsibilities, establishing clear accountability for implementation"
-      })
+      si.established_example = "- Position: Accessibility responsibilities are clearly defined and formally included in relevant position descriptions across key roles (e.g., web, instructional materials, procurement, IT, communications)\n- Budget: Funding supports roles with explicit accessibility responsibilities, including allocated time or dedicated positions\n- Procedures: A standardized process ensures accessibility responsibilities are consistently incorporated into new and updated position descriptions through HR and governance workflows\n- Output: Position descriptions across the institution consistently reflect assigned accessibility responsibilities, establishing clear accountability for implementation"
 MERGE (g)-[:supported_by]->(si);
 
 // 1.2 — authority for web evaluation + monitoring
@@ -488,7 +476,7 @@ MERGE (si:SuccessIndicator {composite_key: '1.2-gov'})
       si.override_implementation_requirement = false,
       si.introduced_in_year = '2026-2027',
       si.examples_of_evidence = [],   // TODO
-      si.level_examples = apoc.convert.toJson({})  // TODO
+      si.established_example = null  // TODO
 MERGE (g)-[:supported_by]->(si);
 
 // 1.3 — authority for new web/mobile development
@@ -501,7 +489,7 @@ MERGE (si:SuccessIndicator {composite_key: '1.3-gov'})
       si.override_implementation_requirement = false,
       si.introduced_in_year = '2026-2027',
       si.examples_of_evidence = [],   // TODO
-      si.level_examples = apoc.convert.toJson({})  // TODO
+      si.established_example = null  // TODO
 MERGE (g)-[:supported_by]->(si);
 
 // 1.4 — authority for accessible ICT procurement
@@ -514,7 +502,7 @@ MERGE (si:SuccessIndicator {composite_key: '1.4-gov'})
       si.override_implementation_requirement = false,
       si.introduced_in_year = '2026-2027',
       si.examples_of_evidence = [],   // TODO
-      si.level_examples = apoc.convert.toJson({})  // TODO
+      si.established_example = null  // TODO
 MERGE (g)-[:supported_by]->(si);
 
 // 1.5 — authority for timely adoption metrics
@@ -527,7 +515,7 @@ MERGE (si:SuccessIndicator {composite_key: '1.5-gov'})
       si.override_implementation_requirement = false,
       si.introduced_in_year = '2026-2027',
       si.examples_of_evidence = [],   // TODO
-      si.level_examples = apoc.convert.toJson({})  // TODO
+      si.established_example = null  // TODO
 MERGE (g)-[:supported_by]->(si);
 
 // 1.6 — authority for LMS accessibility monitoring
@@ -540,7 +528,7 @@ MERGE (si:SuccessIndicator {composite_key: '1.6-gov'})
       si.override_implementation_requirement = false,
       si.introduced_in_year = '2026-2027',
       si.examples_of_evidence = [],   // TODO
-      si.level_examples = apoc.convert.toJson({})  // TODO
+      si.established_example = null  // TODO
 MERGE (g)-[:supported_by]->(si);
 
 // 1.7 — authority for accessibility training programs
@@ -553,7 +541,7 @@ MERGE (si:SuccessIndicator {composite_key: '1.7-gov'})
       si.override_implementation_requirement = false,
       si.introduced_in_year = '2026-2027',
       si.examples_of_evidence = [],   // TODO
-      si.level_examples = apoc.convert.toJson({})  // TODO
+      si.established_example = null  // TODO
 MERGE (g)-[:supported_by]->(si);
 
 // 2.1 — documented timely-adoption process
@@ -566,7 +554,7 @@ MERGE (si:SuccessIndicator {composite_key: '2.1-gov'})
       si.override_implementation_requirement = false,
       si.introduced_in_year = '2026-2027',
       si.examples_of_evidence = [],   // TODO
-      si.level_examples = apoc.convert.toJson({})  // TODO
+      si.established_example = null  // TODO
 MERGE (g)-[:supported_by]->(si);
 
 // 2.2 — documented faculty responsibility for accessible IM
@@ -579,7 +567,7 @@ MERGE (si:SuccessIndicator {composite_key: '2.2-gov'})
       si.override_implementation_requirement = false,
       si.introduced_in_year = '2026-2027',
       si.examples_of_evidence = [],   // TODO
-      si.level_examples = apoc.convert.toJson({})  // TODO
+      si.established_example = null  // TODO
 MERGE (g)-[:supported_by]->(si);
 
 // 2.3 — documented responsibility for accessible web/digital comms
@@ -592,7 +580,7 @@ MERGE (si:SuccessIndicator {composite_key: '2.3-gov'})
       si.override_implementation_requirement = false,
       si.introduced_in_year = '2026-2027',
       si.examples_of_evidence = [],   // TODO
-      si.level_examples = apoc.convert.toJson({})  // TODO
+      si.established_example = null  // TODO
 MERGE (g)-[:supported_by]->(si);
 
 // 2.4 — documented responsibility for procuring accessible ICT
@@ -605,7 +593,7 @@ MERGE (si:SuccessIndicator {composite_key: '2.4-gov'})
       si.override_implementation_requirement = false,
       si.introduced_in_year = '2026-2027',
       si.examples_of_evidence = [],   // TODO
-      si.level_examples = apoc.convert.toJson({})  // TODO
+      si.established_example = null  // TODO
 MERGE (g)-[:supported_by]->(si);
 
 // 3.1 — ATI Steering annual plan review/approval
@@ -618,7 +606,7 @@ MERGE (si:SuccessIndicator {composite_key: '3.1-gov'})
       si.override_implementation_requirement = false,
       si.introduced_in_year = '2026-2027',
       si.examples_of_evidence = [],   // TODO
-      si.level_examples = apoc.convert.toJson({})  // TODO
+      si.established_example = null  // TODO
 MERGE (g)-[:supported_by]->(si);
 
 
