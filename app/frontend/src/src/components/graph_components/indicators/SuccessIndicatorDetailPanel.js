@@ -7,6 +7,11 @@ import {
     Text,
     Badge,
     Button,
+    Accordion,
+    AccordionItem,
+    AccordionButton,
+    AccordionPanel,
+    AccordionIcon,
     Modal,
     ModalOverlay,
     ModalContent,
@@ -170,41 +175,53 @@ function SuccessIndicatorDetailPanel({ wrapper }) {
             </Box>
 
             {hasCompanion && (
-                <Section title="Companion Guide">
-                    <VStack align="stretch" spacing={3}>
-                        {examplesOfEvidence.length > 0 && (
-                            <Box>
-                                <Text fontSize="xs" fontWeight="semibold" color="gray.600" mb={1}>Examples of Evidence</Text>
-                                <VStack align="stretch" spacing={1}>
-                                    {examplesOfEvidence.map((ex, i) => (
-                                        <HStack key={i} align="start" spacing={2}>
-                                            <Text fontSize="sm" color="gray.400" lineHeight="short">•</Text>
-                                            <Text fontSize="sm" color="gray.700">{ex}</Text>
-                                        </HStack>
-                                    ))}
-                                </VStack>
-                            </Box>
-                        )}
-                        {establishedExample && (
-                            <Box>
-                                <Text fontSize="xs" fontWeight="semibold" color="gray.600" mb={1}>Example of Established Level</Text>
-                                <Text fontSize="sm" color="gray.700" whiteSpace="pre-wrap">{establishedExample}</Text>
-                            </Box>
-                        )}
-                        {managedExample && (
-                            <Box>
-                                <Text fontSize="xs" fontWeight="semibold" color="gray.600" mb={1}>Example of Managed Level</Text>
-                                <Text fontSize="sm" color="gray.700" whiteSpace="pre-wrap">{managedExample}</Text>
-                            </Box>
-                        )}
-                        {optimizingExample && (
-                            <Box>
-                                <Text fontSize="xs" fontWeight="semibold" color="gray.600" mb={1}>Example of Optimizing Level</Text>
-                                <Text fontSize="sm" color="gray.700" whiteSpace="pre-wrap">{optimizingExample}</Text>
-                            </Box>
-                        )}
-                    </VStack>
-                </Section>
+                <Accordion allowToggle>
+                    <AccordionItem bg="white" borderWidth="1px" borderColor="gray.200" borderRadius="lg" boxShadow="sm" overflow="hidden">
+                        <Heading as="h6" size="xs" m={0}>
+                            <AccordionButton px={3} py={2} _hover={{ bg: 'gray.50' }}>
+                                <Box as="span" flex="1" textAlign="left" fontSize="xs" fontWeight="semibold" textTransform="uppercase" letterSpacing="wide" color="teal.700">
+                                    Companion Guide
+                                </Box>
+                                <AccordionIcon color="teal.600" />
+                            </AccordionButton>
+                        </Heading>
+                        <AccordionPanel px={3} pb={3} pt={1}>
+                            <VStack align="stretch" spacing={3}>
+                                {examplesOfEvidence.length > 0 && (
+                                    <Box>
+                                        <Text fontSize="xs" fontWeight="semibold" color="gray.600" mb={1}>Examples of Evidence</Text>
+                                        <VStack align="stretch" spacing={1}>
+                                            {examplesOfEvidence.map((ex, i) => (
+                                                <HStack key={i} align="start" spacing={2}>
+                                                    <Text fontSize="sm" color="gray.400" lineHeight="short">•</Text>
+                                                    <Text fontSize="sm" color="gray.700">{ex}</Text>
+                                                </HStack>
+                                            ))}
+                                        </VStack>
+                                    </Box>
+                                )}
+                                {establishedExample && (
+                                    <Box>
+                                        <Text fontSize="xs" fontWeight="semibold" color="gray.600" mb={1}>Example of Established Level</Text>
+                                        <Text fontSize="sm" color="gray.700" whiteSpace="pre-wrap">{establishedExample}</Text>
+                                    </Box>
+                                )}
+                                {managedExample && (
+                                    <Box>
+                                        <Text fontSize="xs" fontWeight="semibold" color="gray.600" mb={1}>Example of Managed Level</Text>
+                                        <Text fontSize="sm" color="gray.700" whiteSpace="pre-wrap">{managedExample}</Text>
+                                    </Box>
+                                )}
+                                {optimizingExample && (
+                                    <Box>
+                                        <Text fontSize="xs" fontWeight="semibold" color="gray.600" mb={1}>Example of Optimizing Level</Text>
+                                        <Text fontSize="sm" color="gray.700" whiteSpace="pre-wrap">{optimizingExample}</Text>
+                                    </Box>
+                                )}
+                            </VStack>
+                        </AccordionPanel>
+                    </AccordionItem>
+                </Accordion>
             )}
 
             <Section title={<>Responsible Persons <HelpTip field={['YearSuccessEvidence', 'responsible_persons']} /></>}>
