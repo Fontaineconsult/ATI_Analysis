@@ -7,6 +7,7 @@ import {
     Input,
     Link,
     Select,
+    SimpleGrid,
     Text,
     VStack,
 } from '@chakra-ui/react';
@@ -30,8 +31,8 @@ import { getPlanStatusColorScheme, getPlanStatusLabel } from '../../../styles/pl
 export const INDICATOR_GRID_COLUMNS =
     '56px minmax(240px,2fr) minmax(120px,205px) 76px 56px 40px 72px';
 
-// Companion-plans mini-table: Plan | Status | Year | View
-const COMPANION_GRID = 'minmax(0,1fr) 110px 90px 56px';
+// Companion-plans mini-table: Plan (name links to the plan) | Status
+const COMPANION_GRID = 'minmax(0,1fr) 110px';
 const COMPANION_MICRO = {
     fontSize: '10px', fontWeight: 'bold', textTransform: 'uppercase',
     color: 'gray.500', letterSpacing: 'wide', whiteSpace: 'nowrap',
@@ -93,7 +94,7 @@ function InlineComposer({ workingGroupPlanIdentifier, yseIdentifier, authorUniqu
     };
 
     return (
-        <HStack mt={2} spacing={2} maxW="640px" align="stretch">
+        <HStack mt={2} spacing={2} align="stretch">
             <Input
                 size="sm"
                 flex="1"
@@ -156,6 +157,7 @@ function IndicatorRow({
 }) {
     const compositeKey = si.composite_key;
     const updates = si?.progress?.updates || [];
+    const latestNote = updates.length > 0 ? updates[0].note : null;
     const trajectory = latestTrajectory(si);
     const companionPlans = si?.companion_plans || [];
     const companionCount = companionPlans.length;
@@ -189,11 +191,13 @@ function IndicatorRow({
                     {compositeKey}
                 </Text>
 
-                <Box minW={0}>
+                <Box minW={0} textAlign="left">
                     <Link
                         as={RouterLink}
                         to={getGoalViewUrlFromCompositeKey(compositeKey, campusAbbrev)}
                         onClick={stop}
+                        display="block"
+                        textAlign="left"
                         fontSize="sm"
                         fontWeight="medium"
                         color="teal.700"
@@ -209,6 +213,11 @@ function IndicatorRow({
                                 <PeerChip key={p.abbrev} abbrev={p.abbrev} statusLevel={p.status_level} />
                             ))}
                         </HStack>
+                    )}
+                    {latestNote && (
+                        <Text fontSize="xs" color="gray.600" fontStyle="italic" mt={1.5} lineHeight="1.4">
+                            "{latestNote}"
+                        </Text>
                     )}
                 </Box>
 
@@ -275,53 +284,57 @@ function IndicatorRow({
                     borderBottomWidth="1px"
                     borderColor="gray.100"
                 >
-                    <Text fontSize="xs" fontWeight="bold" textTransform="uppercase" color="gray.500" letterSpacing="wide" mb={2}>
-                        Progress updates ({updates.length})
-                    </Text>
-                    {updates.length === 0 ? (
-                        <Text fontSize="sm" color="gray.500" fontStyle="italic">No updates logged yet.</Text>
-                    ) : (
-                        <VStack align="stretch" spacing={0}>
-                            {updates.map((u, idx) => (
-                                <HStack
-                                    key={idx}
-                                    align="baseline"
-                                    spacing={2.5}
-                                    py={1.5}
-                                    borderBottomWidth={idx === updates.length - 1 ? '0' : '1px'}
-                                    borderColor="gray.100"
-                                >
-                                    {u.update_date && (
-                                        <Text fontFamily="mono" fontSize="xs" color="gray.500" minW="80px" whiteSpace="nowrap">
-                                            {u.update_date}
-                                        </Text>
-                                    )}
-                                    {u.trajectory && (
-                                        <Badge colorScheme={getTrajectoryColorScheme(u.trajectory)} fontSize="2xs" textTransform="none">
-                                            {getTrajectoryLabel(u.trajectory)}
-                                        </Badge>
-                                    )}
-                                    <Text fontSize="sm" color="gray.700" flex="1" lineHeight="1.5">"{u.note}"</Text>
-                                    {u.author_name && (
-                                        <Text fontSize="xs" color="gray.500" whiteSpace="nowrap">— {u.author_name}</Text>
-                                    )}
-                                </HStack>
-                            ))}
-                        </VStack>
-                    )}
+                    <SimpleGrid columns={{ base: 1, lg: 2 }} spacing={8} alignItems="start">
+                        {/* Progress updates column */}
+                        <Box minW={0}>
+                            <Text fontSize="xs" fontWeight="bold" textTransform="uppercase" color="gray.500" letterSpacing="wide" mb={2}>
+                                Progress updates ({updates.length})
+                            </Text>
+                            {updates.length === 0 ? (
+                                <Text fontSize="sm" color="gray.500" fontStyle="italic">No updates logged yet.</Text>
+                            ) : (
+                                <VStack align="stretch" spacing={0}>
+                                    {updates.map((u, idx) => (
+                                        <HStack
+                                            key={idx}
+                                            align="baseline"
+                                            spacing={2.5}
+                                            py={1.5}
+                                            borderBottomWidth={idx === updates.length - 1 ? '0' : '1px'}
+                                            borderColor="gray.100"
+                                        >
+                                            {u.update_date && (
+                                                <Text fontFamily="mono" fontSize="xs" color="gray.500" minW="80px" whiteSpace="nowrap">
+                                                    {u.update_date}
+                                                </Text>
+                                            )}
+                                            {u.trajectory && (
+                                                <Badge colorScheme={getTrajectoryColorScheme(u.trajectory)} fontSize="2xs" textTransform="none">
+                                                    {getTrajectoryLabel(u.trajectory)}
+                                                </Badge>
+                                            )}
+                                            <Text fontSize="sm" color="gray.700" flex="1" lineHeight="1.5">"{u.note}"</Text>
+                                            {u.author_name && (
+                                                <Text fontSize="xs" color="gray.500" whiteSpace="nowrap">— {u.author_name}</Text>
+                                            )}
+                                        </HStack>
+                                    ))}
+                                </VStack>
+                            )}
 
-                    <InlineComposer
-                        workingGroupPlanIdentifier={workingGroupPlanIdentifier}
-                        yseIdentifier={yseIdentifier}
-                        authorUniqueId={currentUserUniqueId}
-                        onProgressAdded={onProgressAdded}
-                    />
+                            <InlineComposer
+                                workingGroupPlanIdentifier={workingGroupPlanIdentifier}
+                                yseIdentifier={yseIdentifier}
+                                authorUniqueId={currentUserUniqueId}
+                                onProgressAdded={onProgressAdded}
+                            />
+                        </Box>
 
-                    {companionCount > 0 ? (
-                        <Box mt={4} maxW="720px">
+                        {/* Companion plans column */}
+                        <Box minW={0}>
                             <HStack justify="space-between" align="center" mb={2}>
                                 <Text fontSize="xs" fontWeight="bold" textTransform="uppercase" color="gray.500" letterSpacing="wide">
-                                    Companion plans
+                                    Companion plans{companionCount > 0 ? ` (${companionCount})` : ''}
                                 </Text>
                                 {campusAbbrev && (
                                     <Button
@@ -335,89 +348,67 @@ function IndicatorRow({
                                     </Button>
                                 )}
                             </HStack>
-                            <Box borderWidth="1px" borderColor="gray.200" borderRadius="md" overflow="hidden" bg="white">
-                                <Box
-                                    display="grid"
-                                    gridTemplateColumns={COMPANION_GRID}
-                                    gap="10px"
-                                    px={3}
-                                    py={1.5}
-                                    bg="gray.50"
-                                    borderBottomWidth="1px"
-                                    borderColor="gray.100"
-                                >
-                                    <Text {...COMPANION_MICRO}>Plan</Text>
-                                    <Text {...COMPANION_MICRO}>Status</Text>
-                                    <Text {...COMPANION_MICRO}>Year</Text>
-                                    <Box />
-                                </Box>
-                                {companionPlans.map((p, idx) => (
+                            {companionCount > 0 ? (
+                                <Box borderWidth="1px" borderColor="gray.200" borderRadius="md" overflow="hidden" bg="white">
                                     <Box
-                                        key={p.unique_id || idx}
                                         display="grid"
                                         gridTemplateColumns={COMPANION_GRID}
                                         gap="10px"
-                                        alignItems="center"
                                         px={3}
-                                        py={2}
-                                        borderBottomWidth={idx === companionPlans.length - 1 ? '0' : '1px'}
+                                        py={1.5}
+                                        bg="gray.50"
+                                        borderBottomWidth="1px"
                                         borderColor="gray.100"
                                     >
-                                        <Text fontSize="sm" fontWeight="medium" color="gray.800" lineHeight="1.4">
-                                            {p.name || p.description}
-                                        </Text>
-                                        <Box>
-                                            <Badge colorScheme={getPlanStatusColorScheme(p)} fontSize="2xs">
-                                                {getPlanStatusLabel(p)}
-                                            </Badge>
-                                        </Box>
-                                        <Text fontFamily="mono" fontSize="xs" color="gray.500" whiteSpace="nowrap" title={p.completed_year ? `Completed ${p.completed_year}` : undefined}>
-                                            {p.academic_year || '—'}
-                                        </Text>
-                                        {campusAbbrev && p.unique_id ? (
-                                            <Button
-                                                as={RouterLink}
-                                                to={`/${campusAbbrev}/dashboard/plans/${p.unique_id}`}
-                                                size="xs"
-                                                variant="ghost"
-                                                colorScheme="teal"
-                                            >
-                                                View
-                                            </Button>
-                                        ) : <Box />}
+                                        <Text {...COMPANION_MICRO}>Plan</Text>
+                                        <Text {...COMPANION_MICRO}>Status</Text>
                                     </Box>
-                                ))}
-                            </Box>
-                        </Box>
-                    ) : (
-                        <Box
-                            mt={3}
-                            maxW="640px"
-                            bg="red.50"
-                            borderWidth="1px"
-                            borderColor="red.200"
-                            borderRadius="md"
-                            px={3}
-                            py={2}
-                        >
-                            <Text fontSize="sm" color="red.600">
-                                No plans attached yet — this indicator has no active work behind it.
-                                {campusAbbrev && (
-                                    <>
-                                        {' '}
-                                        <Link
-                                            as={RouterLink}
-                                            to={`/${campusAbbrev}/dashboard/reports/${getUrlFromCompositeKey(compositeKey)}`}
-                                            fontWeight="bold"
-                                            textDecoration="underline"
+                                    {companionPlans.map((p, idx) => (
+                                        <Box
+                                            key={p.unique_id || idx}
+                                            display="grid"
+                                            gridTemplateColumns={COMPANION_GRID}
+                                            gap="10px"
+                                            alignItems="center"
+                                            px={3}
+                                            py={2}
+                                            borderBottomWidth={idx === companionPlans.length - 1 ? '0' : '1px'}
+                                            borderColor="gray.100"
                                         >
-                                            Attach a plan
-                                        </Link>
-                                    </>
-                                )}
-                            </Text>
+                                            {campusAbbrev && p.unique_id ? (
+                                                <Link
+                                                    as={RouterLink}
+                                                    to={`/${campusAbbrev}/dashboard/plans/${p.unique_id}`}
+                                                    fontSize="sm"
+                                                    fontWeight="medium"
+                                                    color="teal.700"
+                                                    lineHeight="1.4"
+                                                    _hover={{ textDecoration: 'underline' }}
+                                                >
+                                                    {p.name || p.description}
+                                                </Link>
+                                            ) : (
+                                                <Text fontSize="sm" fontWeight="medium" color="gray.800" lineHeight="1.4">
+                                                    {p.name || p.description}
+                                                </Text>
+                                            )}
+                                            <Box>
+                                                <Badge colorScheme={getPlanStatusColorScheme(p)} fontSize="2xs">
+                                                    {getPlanStatusLabel(p)}
+                                                </Badge>
+                                            </Box>
+                                        </Box>
+                                    ))}
+                                </Box>
+                            ) : (
+                                <Box bg="red.50" borderWidth="1px" borderColor="red.200" borderRadius="md" px={3} py={2}>
+                                    <Text fontSize="sm" color="red.600">
+                                        No plans attached yet — this indicator has no active work behind it.
+                                    </Text>
+                                </Box>
+                            )}
                         </Box>
-                    )}
+                    </SimpleGrid>
                 </Box>
             )}
         </>

@@ -199,3 +199,20 @@ All paths under `app/frontend/src/src/`.
   name** in the name column (which already wraps), so the grid stays intact. Alt: surface them
   in the expanded row's "Across campuses" mini-section. Proceeding with the beneath-name default
   unless changed.
+
+---
+
+## Build status (branch `campus-plan-refactor-2`)
+- **Phase 1 — DONE** (commit `db020ff`): full single-page rebuild; peer badges ported as
+  read-only chips beneath the name (D2b default). `npm run build` clean.
+- **Phase 2 — DONE** (commit `27a0003`), except G2 which was **deferred by decision**:
+  - G1 companion Status+Year — done (read + IndicatorRow table). ✅
+  - G3 query note authors — done (serialize + QueryDetail). ✅
+  - Steering in code — done: `ste`/Steering added to `WORKING_GROUP_ABBREVS` +
+    `working_group_names` only; `working_groups` list left untouched (audited). ✅
+  - G2 structured minutes — **DEFERRED**: the Markdown `content` already renders the full
+    minutes body, so structured agenda/decisions/action-items is left as its own future effort.
+- **Phase 3 — TODO**: `CampusPlanContainer.test.js` is stale (asserts the old layout) and
+  `WorkingGroupPlan.test.js` was removed with its component. New tests needed (stat-strip
+  filter, row expand, name-link, modal open, Steering empty card; a create_campus_plan test
+  now producing 4 WGPs incl. Steering). Nothing pushed to origin yet.
