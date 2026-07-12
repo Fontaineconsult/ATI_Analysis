@@ -15,9 +15,12 @@ from app.endpoints.data_api.errors.custom_exceptions import (
 
 
 # Working-group abbreviations that are valid in plan identifiers and accepted
-# by create_working_group_plan / create_campus_plan below. Mirrors the suffix
-# used in SuccessIndicator.composite_key.
-WORKING_GROUP_ABBREVS = ("web", "pro", "ins")
+# by create_working_group_plan / create_campus_plan below. web/pro/ins mirror the
+# suffix used in SuccessIndicator.composite_key; `ste` (Steering) is the
+# coordination group — it carries no indicators but gets a WorkingGroupPlan per
+# campus plan so oversight leads/queries/minutes have an anchor. Kept out of the
+# `working_groups` evidence/report vocabulary (see data_config).
+WORKING_GROUP_ABBREVS = ("web", "pro", "ins", "ste")
 
 
 def create_working_group_plan(campus_abbrev: str, year_name: str, working_group_abbrev: str) -> WorkingGroupPlan:

@@ -42,6 +42,15 @@ def _person_min(person):
     }
 
 
+def _serialize_note_with_author(note):
+    """Note.serialize() plus the note's author (created_by), so the query
+    discussion thread can show who said what."""
+    data = note.serialize()
+    author = note.created_by.single()
+    data["author"] = _person_min(author) if author else None
+    return data
+
+
 def _serialize_addressed_yse(yse):
     si = yse.tracks_success_indicator.single()
     sl = yse.status_level.single()
@@ -74,7 +83,7 @@ def _serialize_query(query) -> dict:
     ]
     data["raised_by"] = _person_min(query.query_raised_by.single())
     data["settled_by"] = _person_min(query.query_settled_by.single())
-    data["notes"] = [n.serialize() for n in query.notes.all()]
+    data["notes"] = [_serialize_note_with_author(n) for n in query.notes.all()]
     return data
 
 

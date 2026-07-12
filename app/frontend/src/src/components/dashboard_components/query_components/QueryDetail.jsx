@@ -118,7 +118,13 @@ export default function QueryDetail({ query, candidateEvidence = [], onChanged }
                         {query.notes.map((n) => (
                             <Box key={n.unique_id} bg="gray.50" borderRadius="sm" p={2}>
                                 <Text fontSize="sm" color="gray.700" whiteSpace="pre-wrap">{n.content}</Text>
-                                {n.dateCreated && <Text fontSize="2xs" color="gray.500" mt={1}>{n.dateCreated}</Text>}
+                                {(n.author?.name || n.dateCreated) && (
+                                    <Text fontSize="2xs" color="gray.500" mt={1}>
+                                        {n.author?.name ? `— ${n.author.name}` : ''}
+                                        {n.author?.name && n.dateCreated ? ' · ' : ''}
+                                        {n.dateCreated || ''}
+                                    </Text>
+                                )}
                             </Box>
                         ))}
                     </VStack>
