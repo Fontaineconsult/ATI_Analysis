@@ -51,10 +51,10 @@ def get_all_governance_items() -> list:
           legislative_authority: n.legislative_authority,
           ruling: n.ruling,
           source_institution: n.source_institution,
-          documents: [(n)-[:is_documented_by]->(d:Document) |
+          documents: [(n)-[:is_sourced_from]->(d:Document) |
             {unique_id: d.unique_id, name: d.name, uri_path: d.uri_path, file_path: d.file_path}
           ],
-          webpages: [(n)-[:is_documented_by]->(w:Webpage) |
+          webpages: [(n)-[:is_sourced_from]->(w:Webpage) |
             {unique_id: w.unique_id, name: w.name, url: w.url}
           ]
         })) AS jsonResult
