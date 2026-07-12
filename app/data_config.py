@@ -7,13 +7,20 @@ imports from here). Class registries that map strings to neomodel classes live
 in app/database/class_factory.py.
 """
 
+# Abbrev/name → canonical ATIWorkingGroup.name lookup. `ste`/Steering is the
+# coordination/oversight group: it IS a real working group for plan creation
+# (create_campus_plan builds a Steering WorkingGroupPlan), but it is deliberately
+# absent from the `working_groups` list below, which drives evidence/report/export
+# code where Steering has no indicators and should not appear.
 working_group_names = {
     'pro': 'Procurement',
     'web': 'Web',
     'ins': 'Instructional Materials',
+    'ste': 'Steering',
     'Procurement': 'Procurement',
     'Web': 'Web',
-    'Instructional Materials': 'Instructional Materials'
+    'Instructional Materials': 'Instructional Materials',
+    'Steering': 'Steering',
 }
 
 compsite_key_wg_names = {

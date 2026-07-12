@@ -23,11 +23,19 @@ import {
 } from './campusPlanConfig';
 import { addProgressUpdate } from '../../../services/api/post';
 import { getGoalViewUrlFromCompositeKey, getUrlFromCompositeKey } from '../../../services/utils/tools';
+import { getPlanStatusColorScheme, getPlanStatusLabel } from '../../../styles/planStatusColors';
 
 // Grid template shared by the header row and every data row (design handoff v2 §5):
 // Key | Success indicator | Maturity | Trajectory | Plans | Upd | Actions
 export const INDICATOR_GRID_COLUMNS =
     '56px minmax(240px,2fr) minmax(120px,205px) 76px 56px 40px 72px';
+
+// Companion-plans mini-table: Plan | Status | Year | View
+const COMPANION_GRID = 'minmax(0,1fr) 110px 90px 56px';
+const COMPANION_MICRO = {
+    fontSize: '10px', fontWeight: 'bold', textTransform: 'uppercase',
+    color: 'gray.500', letterSpacing: 'wide', whiteSpace: 'nowrap',
+};
 
 const TRAJECTORY_OPTION_ENTRIES = Object.entries(TRAJECTORY_CONFIG); // [[value,{label}], ...]
 
@@ -328,10 +336,28 @@ function IndicatorRow({
                                 )}
                             </HStack>
                             <Box borderWidth="1px" borderColor="gray.200" borderRadius="md" overflow="hidden" bg="white">
+                                <Box
+                                    display="grid"
+                                    gridTemplateColumns={COMPANION_GRID}
+                                    gap="10px"
+                                    px={3}
+                                    py={1.5}
+                                    bg="gray.50"
+                                    borderBottomWidth="1px"
+                                    borderColor="gray.100"
+                                >
+                                    <Text {...COMPANION_MICRO}>Plan</Text>
+                                    <Text {...COMPANION_MICRO}>Status</Text>
+                                    <Text {...COMPANION_MICRO}>Year</Text>
+                                    <Box />
+                                </Box>
                                 {companionPlans.map((p, idx) => (
-                                    <HStack
+                                    <Box
                                         key={p.unique_id || idx}
-                                        justify="space-between"
+                                        display="grid"
+                                        gridTemplateColumns={COMPANION_GRID}
+                                        gap="10px"
+                                        alignItems="center"
                                         px={3}
                                         py={2}
                                         borderBottomWidth={idx === companionPlans.length - 1 ? '0' : '1px'}
@@ -340,7 +366,15 @@ function IndicatorRow({
                                         <Text fontSize="sm" fontWeight="medium" color="gray.800" lineHeight="1.4">
                                             {p.name || p.description}
                                         </Text>
-                                        {campusAbbrev && p.unique_id && (
+                                        <Box>
+                                            <Badge colorScheme={getPlanStatusColorScheme(p)} fontSize="2xs">
+                                                {getPlanStatusLabel(p)}
+                                            </Badge>
+                                        </Box>
+                                        <Text fontFamily="mono" fontSize="xs" color="gray.500" whiteSpace="nowrap" title={p.completed_year ? `Completed ${p.completed_year}` : undefined}>
+                                            {p.academic_year || '—'}
+                                        </Text>
+                                        {campusAbbrev && p.unique_id ? (
                                             <Button
                                                 as={RouterLink}
                                                 to={`/${campusAbbrev}/dashboard/plans/${p.unique_id}`}
@@ -350,11 +384,10 @@ function IndicatorRow({
                                             >
                                                 View
                                             </Button>
-                                        )}
-                                    </HStack>
+                                        ) : <Box />}
+                                    </Box>
                                 ))}
                             </Box>
-                            {/* Status + Year columns deferred to Phase 2 (companion-plan read gap G1). */}
                         </Box>
                     ) : (
                         <Box
