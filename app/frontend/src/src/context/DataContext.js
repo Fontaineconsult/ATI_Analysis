@@ -76,6 +76,36 @@ export const DataProvider = ({ children }) => {
         return pending;
     }, []);
 
+    // Campus-plan cache. Same route-surviving, dedupe-on-inflight pattern as the report
+    // cache above, keyed by `${abbrev}|${year}`. Lets useCampusPlans render a once-loaded
+    // plan instantly on route revisit instead of refetching. Mutations go through the
+    // hook's refreshOne, which invalidates the key so the next load refetches.
+    const campusPlanCacheRef = useRef({});
+    const campusPlanInflightRef = useRef({});
+
+    const getCachedCampusPlan = useCallback((key) => campusPlanCacheRef.current[key], []);
+    const invalidateCampusPlan = useCallback((key) => {
+        delete campusPlanCacheRef.current[key];
+        delete campusPlanInflightRef.current[key];
+    }, []);
+    const getOrFetchCampusPlan = useCallback((key, fetcher) => {
+        if (campusPlanCacheRef.current[key]) return Promise.resolve(campusPlanCacheRef.current[key]);
+        if (campusPlanInflightRef.current[key]) return campusPlanInflightRef.current[key];
+        const pending = Promise.resolve()
+            .then(fetcher)
+            .then((data) => {
+                if (data) campusPlanCacheRef.current[key] = data;
+                delete campusPlanInflightRef.current[key];
+                return data;
+            })
+            .catch((err) => {
+                delete campusPlanInflightRef.current[key];
+                throw err;
+            });
+        campusPlanInflightRef.current[key] = pending;
+        return pending;
+    }, []);
+
     const toast = useToast();
 
     useEffect(() => {
@@ -240,7 +270,10 @@ export const DataProvider = ({ children }) => {
             setCachedReport,
             invalidateReport,
             clearReportCache,
-            getOrFetchReport
+            getOrFetchReport,
+            getCachedCampusPlan,
+            invalidateCampusPlan,
+            getOrFetchCampusPlan
         }}>
             {children}
         </DataContext.Provider>
