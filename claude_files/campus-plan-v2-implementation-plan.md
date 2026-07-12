@@ -212,7 +212,22 @@ All paths under `app/frontend/src/src/`.
     `working_group_names` only; `working_groups` list left untouched (audited). ✅
   - G2 structured minutes — **DEFERRED**: the Markdown `content` already renders the full
     minutes body, so structured agenda/decisions/action-items is left as its own future effort.
-- **Phase 3 — TODO**: `CampusPlanContainer.test.js` is stale (asserts the old layout) and
-  `WorkingGroupPlan.test.js` was removed with its component. New tests needed (stat-strip
-  filter, row expand, name-link, modal open, Steering empty card; a create_campus_plan test
-  now producing 4 WGPs incl. Steering). Nothing pushed to origin yet.
+- **Phase 3 — DONE** (test rewrite): frontend 45 passing / backend 28 passing.
+  - `campusPlanConfig.test.js` (NEW) — pure-function unit tests: `updateAgeDays` (incl.
+    future-clamp + boundary), `isStale` (boundary via real-clock relative dates),
+    `isAtRisk`, `latestTrajectory`, `summarizeCampusPlan`, `orderWorkingGroupPlans`
+    (canonical order, unknown-last, non-mutating), `getWgAccent`, trajectory labels.
+  - `CampusPlanContainer.test.js` (REWRITTEN) — v2 single-page shell: header +
+    plan_identifier, Executive Sponsors, president's-report "Not uploaded for {year}."
+    empty state, four WG cards incl. **empty Steering**, Steering-first card order,
+    IndicatorRow rendering, 404 → create flow. Footer sections stubbed; axios inline-mocked;
+    no DataProvider (exercises the new no-cache fallback).
+  - `CampusPlanStatStrip.test.jsx` (NEW) — five tiles + At-Risk/Stale toggle-filter behavior,
+    neutral-tile clear, `aria-pressed` on the active tile.
+  - `test_campus_plans_api.py` (UPDATED) — the two `== 3`-children assertions bumped to 4
+    incl. Steering; `available_indicators > 0` check skips Steering; added
+    `test_get_campus_plan_includes_empty_steering_group` (asserts `-ste` id + empty lists).
+  - **Support fix**: `useCampusPlans` now degrades to a stable no-op cache when rendered
+    outside a `DataProvider` (was a hard `useContext(DataContext)` destructure crash) —
+    real robustness fix that also unblocks isolation testing.
+  - G2 structured minutes still deferred. Nothing pushed to origin yet.

@@ -3,6 +3,16 @@ import { fetchCampusPlan } from '../services/api/get';
 import { createCampusPlan } from '../services/api/post';
 import { DataContext } from '../context/DataContext';
 
+// No-cache fallback for when the hook is rendered outside a DataProvider (e.g.
+// in isolation tests). There's no cross-route cache in that case — every load
+// fetches directly — but nothing crashes. Defined at module scope so the
+// identities are stable across renders, keeping `load`'s useCallback stable.
+const NO_CACHE = {
+    getCachedCampusPlan: () => undefined,
+    getOrFetchCampusPlan: (_key, fetcher) => Promise.resolve().then(fetcher),
+    invalidateCampusPlan: () => {},
+};
+
 /**
  * Multi-campus data hook for the campus-plan dashboard's cross-campus
  * comparison. Manages a pool of campus plans keyed by abbreviation.
@@ -28,7 +38,13 @@ import { DataContext } from '../context/DataContext';
  * year no longer matches the current selection.
  */
 export function useCampusPlans(campusAbbrevs, academicYear) {
-    const { getCachedCampusPlan, getOrFetchCampusPlan, invalidateCampusPlan } = useContext(DataContext);
+    // DataContext supplies the route-surviving cache in the app; fall back to a
+    // stable no-op cache when rendered without a provider so the hook never
+    // hard-crashes on `useContext(DataContext)` returning undefined.
+    const ctx = useContext(DataContext) || NO_CACHE;
+    const getCachedCampusPlan = ctx.getCachedCampusPlan || NO_CACHE.getCachedCampusPlan;
+    const getOrFetchCampusPlan = ctx.getOrFetchCampusPlan || NO_CACHE.getOrFetchCampusPlan;
+    const invalidateCampusPlan = ctx.invalidateCampusPlan || NO_CACHE.invalidateCampusPlan;
 
     const cacheKey = useCallback((abbrev) => `${abbrev}|${academicYear}`, [academicYear]);
 

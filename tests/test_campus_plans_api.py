@@ -126,11 +126,12 @@ def test_get_campus_plan_returns_200_with_full_shape(
     # A fresh plan has no president's report attached yet
     assert data["presidents_report"] is None
 
-    # Three child WorkingGroupPlans, one per group
+    # Four child WorkingGroupPlans: the three indicator-bearing groups plus the
+    # Steering coordination group (added to WORKING_GROUP_ABBREVS in create.py).
     wgps = data["working_group_plans"]
-    assert len(wgps) == 3
+    assert len(wgps) == 4
     wg_names = {wgp["working_group"] for wgp in wgps}
-    assert wg_names == {"Web", "Procurement", "Instructional Materials"}
+    assert wg_names == {"Web", "Procurement", "Instructional Materials", "Steering"}
 
     # Each child has the expected identifier shape and starts empty.
     for wgp in wgps:
@@ -138,10 +139,13 @@ def test_get_campus_plan_returns_200_with_full_shape(
         assert wgp["prioritized_success_indicators"] == []
         assert wgp["group_leads"] == []
         assert wgp["plans"] == []  # No campus-plan plans attached yet
-        # Available indicators are populated from real reference data — at least
-        # one active indicator should exist for each working group.
         assert isinstance(wgp["available_indicators"], list)
-        assert len(wgp["available_indicators"]) > 0
+        # The three indicator-bearing groups expose real reference indicators;
+        # Steering has no Goals/SuccessIndicators, so its picker list is empty.
+        if wgp["working_group"] == "Steering":
+            assert wgp["available_indicators"] == []
+        else:
+            assert len(wgp["available_indicators"]) > 0
 
 
 @pytest.mark.integration
@@ -315,10 +319,11 @@ def test_post_create_campus_plan_returns_201(
 
 @pytest.mark.integration
 @pytest.mark.api
-def test_post_create_campus_plan_persists_three_children(
+def test_post_create_campus_plan_persists_all_children(
     flask_client, sentinel_academic_year, cleanup_plan_family
 ):
-    """After POST, a follow-up GET returns the parent + 3 WorkingGroupPlans."""
+    """After POST, a follow-up GET returns the parent + 4 WorkingGroupPlans
+    (Web, Procurement, Instructional Materials, Steering)."""
     payload = {
         "action": "create_campus_plan",
         "campus_abbrev": CAMPUS_ABBREV,
@@ -328,7 +333,35 @@ def test_post_create_campus_plan_persists_three_children(
 
     resp = flask_client.get(f"{URL_PREFIX}/campus-plans/{CAMPUS_ABBREV}/{TEST_ACADEMIC_YEAR_NAME}")
     assert resp.status_code == 200
-    assert len(resp.get_json()["data"]["working_group_plans"]) == 3
+    wgps = resp.get_json()["data"]["working_group_plans"]
+    assert len(wgps) == 4
+    assert {w["working_group"] for w in wgps} == {
+        "Web", "Procurement", "Instructional Materials", "Steering",
+    }
+
+
+@pytest.mark.integration
+@pytest.mark.api
+def test_get_campus_plan_includes_empty_steering_group(
+    flask_client, sentinel_academic_year, cleanup_plan_family
+):
+    """The Steering coordination group is created as a `-ste` WorkingGroupPlan
+    with no indicators of its own — it exists purely as an anchor for oversight
+    leads / queries / minutes."""
+    create_campus_plan(CAMPUS_ABBREV, TEST_ACADEMIC_YEAR_NAME)
+
+    resp = flask_client.get(f"{URL_PREFIX}/campus-plans/{CAMPUS_ABBREV}/{TEST_ACADEMIC_YEAR_NAME}")
+    assert resp.status_code == 200
+
+    steering = next(
+        w for w in resp.get_json()["data"]["working_group_plans"]
+        if w["working_group"] == "Steering"
+    )
+    assert steering["plan_identifier"] == f"{TEST_ACADEMIC_YEAR_NAME}-{CAMPUS_ABBREV}-ste"
+    assert steering["prioritized_success_indicators"] == []
+    assert steering["available_indicators"] == []
+    assert steering["group_leads"] == []
+    assert steering["plans"] == []
 
 
 @pytest.mark.integration
