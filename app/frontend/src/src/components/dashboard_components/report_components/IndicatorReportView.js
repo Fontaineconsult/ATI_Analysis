@@ -55,13 +55,29 @@ const Empty = ({ children }) => (
 );
 
 // ── Leaf renderers ──────────────────────────────────────────────────────────
+// Canonical artifact link resolution: uploaded (managed) files carry their link at
+// file.download_url — the flat file_path/uri_path are null for them, which is why the old
+// `file_path || uri_path` produced dead links for uploads. Mirrors FileDownload in
+// implementation_explorer/doc_components/docPrimitives.jsx. Webpages link via their own `url`.
+const resolveArtifactHref = (node) =>
+    node?.file?.download_url || node?.uri_path || node?.file_path || null;
+
+// One artifact name: an external link when a target resolves, otherwise unlinked text.
+// `struck` (a no-longer-existing page) renders struck-through and never as an anchor.
+const DocLink = ({ label, href, struck }) => {
+    if (!href) {
+        return <Text as={struck ? 's' : undefined} color="gray.600" fontSize="xs">• {label}</Text>;
+    }
+    return <Link href={href} isExternal color="teal.600" fontSize="xs">• {label}</Link>;
+};
+
 const DocLinks = ({ documents = [], webpages = [] }) => {
     if (!documents.length && !webpages.length) return null;
     return (
         <VStack align="stretch" spacing={1} pl={1}>
             {documents.map((d) => (
                 <HStack key={d.unique_id} spacing={2} align="baseline" flexWrap="wrap">
-                    <Link href={d.file_path || d.uri_path} isExternal color="teal.600" fontSize="xs">• {d.name || 'Document'}</Link>
+                    <DocLink label={d.name || 'Document'} href={resolveArtifactHref(d)} />
                     {(d.is_administrative_review_documentation === 'True' || d.is_administrative_review_documentation === true) &&
                         <Badge colorScheme="purple" fontSize="10px">Admin Review</Badge>}
                     {(d.is_milestone_and_measures_documentation === 'True' || d.is_milestone_and_measures_documentation === true) &&
@@ -71,7 +87,8 @@ const DocLinks = ({ documents = [], webpages = [] }) => {
             ))}
             {webpages.map((w) => (
                 <HStack key={w.unique_id} spacing={2} align="baseline" flexWrap="wrap">
-                    <Link href={w.url} isExternal color="teal.600" fontSize="xs">• {w.name || w.url}</Link>
+                    {/* A page flagged no_longer_exists must never be an anchor. */}
+                    <DocLink label={w.name || w.url} href={w.no_longer_exists ? null : w.url} struck={w.no_longer_exists} />
                     {w.no_longer_exists && <Badge colorScheme="red" fontSize="10px">Gone</Badge>}
                     {w.depreciated && <Badge colorScheme="orange" fontSize="10px">Deprecated</Badge>}
                 </HStack>
@@ -108,6 +125,44 @@ const MetricList = ({ items = [] }) => {
         </VStack>
     );
 };
+
+// Messages carry a resolvable file link (file.download_url) that the old NoteList treatment
+// dropped — render the body, its date, and the attachment when present.
+const MessageList = ({ items = [] }) => {
+    if (!items.length) return null;
+    return (
+        <VStack align="stretch" spacing={1} pl={1}>
+            {items.map((m) => {
+                const href = resolveArtifactHref(m);
+                return (
+                    <Text key={m.unique_id} fontSize="xs" color="gray.700">
+                        {m.date_created && <Text as="span" color="gray.500">{m.date_created}: </Text>}
+                        {m.content || m.name}
+                        {href && <> · <Link href={href} isExternal color="teal.600">attachment</Link></>}
+                    </Text>
+                );
+            })}
+        </VStack>
+    );
+};
+
+// Admin-review notes carry an author (created_by) the plain NoteList doesn't show.
+const AdminNoteList = ({ items = [] }) => (
+    <VStack align="stretch" spacing={2} mt={2}>
+        {items.map((n) => (
+            <Box key={n.unique_id} p={2} bg="gray.50" borderRadius="md">
+                <Text fontSize="xs" color="gray.700" whiteSpace="pre-wrap">{n.content}</Text>
+                {(n.created_by?.name || n.dateCreated) && (
+                    <Text fontSize="2xs" color="gray.500" mt={1}>
+                        {n.created_by?.name ? `— ${n.created_by.name}` : ''}
+                        {n.created_by?.name && n.dateCreated ? ' · ' : ''}
+                        {n.dateCreated || ''}
+                    </Text>
+                )}
+            </Box>
+        ))}
+    </VStack>
+);
 
 // ── Implementation card ─────────────────────────────────────────────────────
 const REACHED_VIA_SCHEME = { remediated: 'green', interface: 'blue', tool: 'purple' };
@@ -167,6 +222,15 @@ const ImplementationCard = ({ impl, campus, navigate }) => {
                             </WrapItem>
                         ))}
                     </Wrap>
+                    {impl.participants.some((p) => p.note) && (
+                        <VStack align="stretch" spacing={0.5} mt={1}>
+                            {impl.participants.filter((p) => p.note).map((p, i) => (
+                                <Text key={i} fontSize="2xs" color="gray.600" fontStyle="italic">
+                                    {p.person?.name}: “{p.note}”
+                                </Text>
+                            ))}
+                        </VStack>
+                    )}
                 </Box>
             )}
 
@@ -186,6 +250,7 @@ const ImplementationCard = ({ impl, campus, navigate }) => {
 
             <DocLinks documents={impl.documents} webpages={impl.webpages} />
             <NoteList items={impl.notes} />
+            <MessageList items={impl.messages} />
             <MetricList items={impl.metrics} />
         </Box>
     );
@@ -286,10 +351,13 @@ const TaapCard = ({ taap }) => (
         {taap.description && <Text fontSize="xs" color="gray.700" mb={2}>{taap.description}</Text>}
         <Wrap spacing={2} mb={2}>
             {taap.owner && <WrapItem><Tag size="sm" colorScheme="teal" variant="subtle">Owner: {taap.owner.name}</Tag></WrapItem>}
+            {(taap.signed_by || []).map((s) => <WrapItem key={s.unique_id}><Tag size="sm" colorScheme="green" variant="subtle">Signed: {s.name}</Tag></WrapItem>)}
             {(taap.covers_assets || []).map((a) => <WrapItem key={a.unique_id}><Tag size="sm" colorScheme="gray" variant="subtle">Covers: {a.title}</Tag></WrapItem>)}
             {taap.review_due && <WrapItem><Tag size="sm" colorScheme="yellow" variant="subtle">Review due {taap.review_due}</Tag></WrapItem>}
         </Wrap>
         <DocLinks documents={taap.documents} webpages={taap.webpages} />
+        <NoteList items={taap.notes} />
+        <MessageList items={taap.messages} />
     </Box>
 );
 
@@ -299,7 +367,7 @@ const IndicatorReportView = ({ report }) => {
     const { campus } = useParams();
 
     if (!report) return null;
-    const { indicator, status, yse, people, plans = [], accomplishments = [], notes = [], messages = [], metrics = [] } = report;
+    const { indicator, status, yse, people, plans = [], accomplishments = [], notes = [], messages = [], metrics = [], admin_review_notes: adminReviewNotes = [] } = report;
 
     const openEdit = () => {
         navigateToIndicator(navigate, indicator.composite_key, campus);
@@ -344,14 +412,18 @@ const IndicatorReportView = ({ report }) => {
                                         </VStack>
                                     ) : <Empty>No people assigned.</Empty>}
                                 </Section>
-                                {(people?.admin_reviewers?.length > 0 || yse?.administrative_review_complete != null) && (
+                                {(people?.admin_reviewers?.length > 0 || yse?.administrative_review_complete != null || adminReviewNotes.length > 0) && (
                                     <Section title="Administrative Review">
                                         <HStack spacing={2} flexWrap="wrap">
                                             <Badge colorScheme={yse?.administrative_review_complete ? 'green' : 'yellow'}>
                                                 {yse?.administrative_review_complete ? 'Complete' : 'Pending'}
                                             </Badge>
-                                            {yse?.administrative_review_completed_date &&
-                                                <Text fontSize="xs" color="gray.500">{yse.administrative_review_completed_date}</Text>}
+                                            {(yse?.administrative_review_completed_date || people?.admin_review_completed_by) && (
+                                                <Text fontSize="xs" color="gray.500">
+                                                    {yse?.administrative_review_completed_date ? `Completed ${yse.administrative_review_completed_date}` : 'Completed'}
+                                                    {people?.admin_review_completed_by ? ` by ${people.admin_review_completed_by.name}` : ''}
+                                                </Text>
+                                            )}
                                             {people?.admin_reviewers?.map((r) => (
                                                 <Tag key={r.unique_id} size="sm" variant="subtle" colorScheme="gray">{r.name}</Tag>
                                             ))}
@@ -361,6 +433,7 @@ const IndicatorReportView = ({ report }) => {
                                                 <Text fontSize="xs" color="gray.700">{yse.admin_review_description}</Text>
                                             </Box>
                                         )}
+                                        {adminReviewNotes.length > 0 && <AdminNoteList items={adminReviewNotes} />}
                                     </Section>
                                 )}
                             </VStack>
@@ -431,7 +504,7 @@ const IndicatorReportView = ({ report }) => {
                             <Card title="Notes, Messages & Metrics">
                                 <VStack align="stretch" spacing={3}>
                                     {notes.length > 0 && <Section title="Notes" count={notes.length}><NoteList items={notes} /></Section>}
-                                    {messages.length > 0 && <Section title="Messages" count={messages.length}><NoteList items={messages} /></Section>}
+                                    {messages.length > 0 && <Section title="Messages" count={messages.length}><MessageList items={messages} /></Section>}
                                     {metrics.length > 0 && <Section title="Metrics" count={metrics.length}><MetricList items={metrics} /></Section>}
                                 </VStack>
                             </Card>
