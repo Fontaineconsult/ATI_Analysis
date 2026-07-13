@@ -113,6 +113,34 @@ signatories appear.
 
 ## PR 2 — Redesign (flatten + backend fields + polish + tests)
 
+**Status: DONE** (uncommitted on `report-view-updates`). Backend: 3 new `tests/test_indicator_report.py`
+passing + 28 campus-plan tests still green. Frontend: `IndicatorReportView.test.js` at 13 passing.
+Notes on how it landed vs. the plan below:
+- `_previous_academic_year` relocated to `identifiers.py` as `previous_academic_year`; `committees/read.py`
+  now imports it (kept a module alias for its call sites).
+- prev-year status folded into `_resolve_identity`'s existing query (no extra round-trip).
+- Frontend fully rewritten to a single column with a purpose-built `ReportSection` (`<section>` +
+  `<h2>` + count) **instead of** the shared `Card` — the shared Card renders an `<h3>` title, which
+  breaks the one-h1/h2-section/h3-implementation heading hierarchy the a11y spec needs. Reused
+  `StatusProgression` (pills), `planStatusColors`, and a typed `ArtifactList` (FILE/URL/WEB/GONE/
+  NOTE/MSG/METRIC) behind `resolveArtifactHref`. Inline maturity rubric reads `StatusLevelContext`
+  and degrades to nothing when absent. Print = a `window.print()` button + a scoped `@media print`
+  rule hiding `.report-no-print` (global app-chrome hiding is left as a separate concern).
+- Page width set to `maxW="1400px"` to match `ReportMasterList` / `WorkingGroupGoalsView`.
+- Maturity display: restored the full `StatusLevelLadder` gradation (Not Started → … → Optimizing,
+  current rung emphasized) as the primary maturity view, with the prev→current `StatusProgression`
+  pills kept as a compact "Year over year" line shown only when a previous-year status exists.
+
+### Addition — "Copy report" (SI-scoped, mirrors the working-group copy button)
+- `services/utils/indicatorReportExport.js` — `buildIndicatorReport(report, {origin})` renders the
+  whole payload as Outlook-safe HTML tables (overview kv-table + People / Implementations / ICT /
+  TAAPs / Plans / YSE-artifact tables, links absolutised, mailto, typed FILE/WEB/GONE/NOTE/MSG/
+  METRIC prefixes) with a plain-text fallback. Same conventions as `workingGroupStatusReport.js`.
+- `report_components/CopyIndicatorReportButton.jsx` — button in the report header (before Print)
+  that builds the export and copies via the shared `copyRichContent` (three-tier clipboard).
+- Tests: `indicatorReportExport.test.js` (8, pure) + `CopyIndicatorReportButton.test.jsx` (1) — the
+  report suites total **22 passing**.
+
 ### Backend — `get_indicator_report.py`
 - `indicator` dict += `override_implementation_requirement`.
 - `yse` dict += `priority_level`, `documentation_status`, `resources_status`,

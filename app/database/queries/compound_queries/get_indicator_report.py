@@ -27,6 +27,7 @@ from app.database.graph_schema import (
     serialize_participants,
     serialize_role_holdings,
 )
+from app.database.identifiers import previous_academic_year
 from app.endpoints.data_api.errors.custom_exceptions import NotFoundError
 from neomodel import db
 
@@ -180,17 +181,30 @@ def _resolve_identity(composite_key, academic_year, campus_abbreviation):
         OPTIONAL MATCH (yse)-[:evidence_at_campus]->(c:Campus)
         WITH si, g, wg, yse, c
         WHERE $campus IS NULL OR c.abbreviation = $campus
+        // Previous-year YSE + status for the same indicator/campus, so the report can show
+        // year-over-year maturity progression (previous -> current). Mirrors the campus-plan
+        // status read. Folded into this query so there's no extra round-trip.
+        OPTIONAL MATCH (si)<-[:tracks]-(prevYse:YearSuccessEvidence)-[:evidence_in_year]->(:AcademicYear {name: $previous_year})
+        WHERE $campus IS NULL OR (prevYse)-[:evidence_at_campus]->(:Campus {abbreviation: $campus})
+        OPTIONAL MATCH (prevYse)-[:status_is]->(prevSl:StatusLevel)
         RETURN yse.year_identifier   AS year_identifier,
                g.goal_number         AS goal_number,
                g.name                AS goal_name,
                wg.name               AS working_group,
                c.abbreviation        AS campus_abbreviation,
-               c.name                AS campus_name
+               c.name                AS campus_name,
+               prevSl.status_level   AS previous_status_level,
+               prevSl.status_value   AS previous_status_value
         LIMIT 1
     """
     rows, _meta = db.cypher_query(
         query,
-        {"composite_key": composite_key, "academic_year": academic_year, "campus": campus_abbreviation},
+        {
+            "composite_key": composite_key,
+            "academic_year": academic_year,
+            "campus": campus_abbreviation,
+            "previous_year": previous_academic_year(academic_year),
+        },
         resolve_objects=False,
     )
     if not rows:
@@ -198,7 +212,10 @@ def _resolve_identity(composite_key, academic_year, campus_abbreviation):
             f"No evidence for indicator '{composite_key}' in {academic_year}"
             + (f" at campus '{campus_abbreviation}'" if campus_abbreviation else "")
         )
-    keys = ["year_identifier", "goal_number", "goal_name", "working_group", "campus_abbreviation", "campus_name"]
+    keys = [
+        "year_identifier", "goal_number", "goal_name", "working_group",
+        "campus_abbreviation", "campus_name", "previous_status_level", "previous_status_value",
+    ]
     return dict(zip(keys, rows[0]))
 
 
@@ -293,15 +310,23 @@ def get_indicator_report(composite_key, academic_year, campus_abbreviation=None)
             "goal_number": identity["goal_number"],
             "goal_name": identity["goal_name"],
             "working_group": identity["working_group"],
+            "override_implementation_requirement": getattr(indicator, "override_implementation_requirement", False),
         },
         "year": academic_year,
         "campus": {
             "abbreviation": identity["campus_abbreviation"],
             "name": identity["campus_name"],
         },
+        # Always a dict when EITHER year has a status, so the report's prev -> current pills
+        # can show a previous level even when the current year has none yet.
         "status": (
-            {"status_level": status.status_level, "status_value": getattr(status, "status_value", None)}
-            if status else None
+            {
+                "status_level": status.status_level if status else None,
+                "status_value": getattr(status, "status_value", None) if status else None,
+                "previous_status_level": identity.get("previous_status_level"),
+                "previous_status_value": identity.get("previous_status_value"),
+            }
+            if (status or identity.get("previous_status_level")) else None
         ),
         "yse": {
             "year_identifier": yse.year_identifier,
@@ -309,6 +334,13 @@ def get_indicator_report(composite_key, academic_year, campus_abbreviation=None)
             "administrative_review_complete": getattr(yse, "administrative_review_complete", None),
             "administrative_review_completed_date": getattr(yse, "administrative_review_completed_date", None),
             "admin_review_description": getattr(yse, "admin_review_description", None),
+            "priority_level": getattr(yse, "priority_level", None),
+            "documentation_status": getattr(yse, "documentation_status", None),
+            "resources_status": getattr(yse, "resources_status", None),
+            "implementation_plan_status": getattr(yse, "implementation_plan_status", None),
+            "ready_for_admin_review": getattr(yse, "ready_for_admin_review", None),
+            "worked_on_in_current_year": getattr(yse, "worked_on_in_current_year", None),
+            "will_work_on_next_year": getattr(yse, "will_work_on_next_year", None),
         },
         "people": {
             "implementers": [
