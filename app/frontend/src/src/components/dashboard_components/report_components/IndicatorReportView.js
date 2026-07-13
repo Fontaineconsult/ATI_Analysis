@@ -6,8 +6,14 @@ import {
     Heading,
     HStack,
     Link,
-    Tag,
+    Table,
+    Tbody,
+    Td,
     Text,
+    Th,
+    Thead,
+    Tr,
+    Tag,
     VStack,
     Wrap,
     WrapItem,
@@ -25,8 +31,9 @@ import CopyIndicatorReportButton from './CopyIndicatorReportButton';
  * The single-indicator "View" report — a flat, single-column, single-page rendering of ALL
  * evidence for one YearSuccessEvidence (indicator × year × campus). Every section always
  * renders (with an explicit empty state) so the report reads as a complete checklist; the
- * only interactions are links and the Print/Edit actions. Print = the report.
+ * only interactions are links and the Copy/Print/Edit actions. Print = the report.
  *
+ * All record lists render as subtle tables (thin row rules, muted headers, no heavy chrome).
  * Semantic document: one <h1> (the indicator), <h2> per section, <h3> per implementation entry.
  */
 
@@ -41,18 +48,37 @@ const Empty = ({ children }) => (
     <Text fontSize="sm" color="gray.500" fontStyle="italic">{children}</Text>
 );
 
+const Dash = () => <Text as="span" color="gray.400">—</Text>;
+
+/** Subtle data table — muted uppercase headers, thin horizontal row rules, no vertical lines. */
+const TH_SX = {
+    fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.03em', color: 'gray.500',
+    fontWeight: 'bold', px: 2, py: 1.5, borderBottomWidth: '1px', borderColor: 'gray.200',
+    textAlign: 'left', whiteSpace: 'nowrap',
+};
+const TD_SX = { fontSize: 'xs', color: 'gray.700', px: 2, py: 2, borderBottomWidth: '1px', borderColor: 'gray.100', verticalAlign: 'top' };
+
+const DataTable = ({ columns, rows }) => {
+    if (!rows.length) return null;
+    return (
+        <Box overflowX="auto">
+            <Table size="sm" variant="unstyled" sx={{ tableLayout: 'auto' }}>
+                <Thead>
+                    <Tr>{columns.map((c, i) => <Th key={i} sx={TH_SX}>{c}</Th>)}</Tr>
+                </Thead>
+                <Tbody>
+                    {rows.map((cells, ri) => (
+                        <Tr key={ri}>{cells.map((cell, ci) => <Td key={ci} sx={TD_SX}>{cell}</Td>)}</Tr>
+                    ))}
+                </Tbody>
+            </Table>
+        </Box>
+    );
+};
+
 /** A titled white section with an <h2> heading and `aria-labelledby` for landmark nav. */
 const ReportSection = ({ id, title, count, action, children }) => (
-    <Box
-        as="section"
-        aria-labelledby={id}
-        bg="white"
-        borderWidth="1px"
-        borderColor="gray.200"
-        borderRadius="lg"
-        boxShadow="sm"
-        p={5}
-    >
+    <Box as="section" aria-labelledby={id} bg="white" borderWidth="1px" borderColor="gray.200" borderRadius="lg" boxShadow="sm" p={5}>
         <HStack justify="space-between" align="baseline" mb={3}>
             <Heading as="h2" id={id} size="sm" color="teal.700">
                 {title}{typeof count === 'number' ? ` (${count})` : ''}
@@ -63,7 +89,6 @@ const ReportSection = ({ id, title, count, action, children }) => (
     </Box>
 );
 
-// Working-group identity dot (matches the campus-plan accents).
 const WG_DOT = { Web: '#4966A4', 'Instructional Materials': '#635098', Procurement: '#DB5850' };
 
 // ── Artifact rows (typed leading tag + resolved link) ───────────────────────
@@ -83,133 +108,87 @@ const ARTIFACT_TAG = {
     METRIC: { scheme: 'green',  variant: 'subtle' },
 };
 
+const TagBadge = ({ tag }) => {
+    const cfg = ARTIFACT_TAG[tag] || { scheme: 'gray', variant: 'subtle' };
+    return <Badge colorScheme={cfg.scheme} variant={cfg.variant} fontSize="2xs">{tag}</Badge>;
+};
+
 const fileMeta = (file) => {
     if (!file) return null;
     const kb = file.size != null ? `${Math.max(1, Math.round(file.size / 1024))} KB` : null;
     return [file.uploaded_date, kb].filter(Boolean).join(' · ') || null;
 };
 
-/**
- * One artifact row: a typed tag, then either the name-as-link (FILE/URL/WEB) or descriptive
- * text (GONE struck / NOTE / MSG / METRIC) with an optional secondary attachment link and meta.
- */
-const ArtifactRow = ({ tag, label, href, attachmentHref, struck, meta, badges, ariaLabel }) => {
-    const cfg = ARTIFACT_TAG[tag] || { scheme: 'gray', variant: 'subtle' };
-    return (
-        <HStack align="baseline" spacing={2} flexWrap="wrap">
-            <Badge colorScheme={cfg.scheme} variant={cfg.variant} fontSize="2xs" minW="44px" textAlign="center" flexShrink={0}>
-                {tag}
-            </Badge>
-            {href ? (
-                <Link href={href} isExternal color="teal.600" fontSize="xs">{label}</Link>
-            ) : (
-                <Text as={struck ? 's' : undefined} fontSize="xs" color="gray.700" aria-label={ariaLabel}>{label}</Text>
-            )}
-            {attachmentHref && (
-                <Link href={attachmentHref} isExternal color="teal.600" fontSize="2xs">📎 attachment</Link>
-            )}
-            {meta && <Text fontSize="2xs" color="gray.500">{meta}</Text>}
-            {badges}
-        </HStack>
-    );
-};
+const isTrue = (v) => v === true || v === 'True';
 
-/** Flat artifact list for an implementation / TAAP / the YSE level. Renders in a fixed order. */
-const ArtifactList = ({ documents = [], webpages = [], notes = [], messages = [], metrics = [] }) => {
+/** Build [Kind, Item, Details] rows for a set of documents/webpages/notes/messages/metrics. */
+function artifactRows({ documents = [], webpages = [], notes = [], messages = [], metrics = [] }) {
     const rows = [];
 
     documents.forEach((d) => {
-        rows.push(
-            <ArtifactRow
-                key={`doc-${d.unique_id}`}
-                tag={d.file?.download_url ? 'FILE' : 'URL'}
-                label={d.name || 'Document'}
-                href={resolveArtifactHref(d)}
-                meta={fileMeta(d.file)}
-                badges={(
-                    <>
-                        {(d.is_administrative_review_documentation === 'True' || d.is_administrative_review_documentation === true) &&
-                            <Badge colorScheme="purple" fontSize="2xs">Admin Review</Badge>}
-                        {(d.is_milestone_and_measures_documentation === 'True' || d.is_milestone_and_measures_documentation === true) &&
-                            <Badge colorScheme="blue" fontSize="2xs">Milestones</Badge>}
-                        {d.depreciated && <Badge colorScheme="orange" fontSize="2xs">Deprecated</Badge>}
-                    </>
-                )}
-            />
+        const href = resolveArtifactHref(d);
+        const flags = (
+            <Wrap spacing={1}>
+                {fileMeta(d.file) && <WrapItem><Text fontSize="2xs" color="gray.500">{fileMeta(d.file)}</Text></WrapItem>}
+                {isTrue(d.is_administrative_review_documentation) && <WrapItem><Badge colorScheme="purple" fontSize="2xs">Admin Review</Badge></WrapItem>}
+                {isTrue(d.is_milestone_and_measures_documentation) && <WrapItem><Badge colorScheme="blue" fontSize="2xs">Milestones</Badge></WrapItem>}
+                {isTrue(d.depreciated) && <WrapItem><Badge colorScheme="orange" fontSize="2xs">Deprecated</Badge></WrapItem>}
+            </Wrap>
         );
+        rows.push([
+            <TagBadge tag={d.file?.download_url ? 'FILE' : 'URL'} />,
+            href ? <Link href={href} isExternal color="teal.600">{d.name || 'Document'}</Link> : <Text>{d.name || 'Document'}</Text>,
+            flags,
+        ]);
     });
 
     webpages.forEach((w) => {
-        const gone = !!w.no_longer_exists;
-        rows.push(
-            <ArtifactRow
-                key={`web-${w.unique_id}`}
-                tag={gone ? 'GONE' : 'WEB'}
-                label={w.name || w.url}
-                href={gone ? null : w.url}
-                struck={gone}
-                ariaLabel={gone ? `${w.name || w.url} (no longer available)` : undefined}
-                badges={w.depreciated ? <Badge colorScheme="orange" fontSize="2xs">Deprecated</Badge> : null}
-            />
-        );
+        const gone = isTrue(w.no_longer_exists);
+        rows.push([
+            <TagBadge tag={gone ? 'GONE' : 'WEB'} />,
+            gone
+                ? <Text as="s" aria-label={`${w.name || w.url} (no longer available)`}>{w.name || w.url}</Text>
+                : <Link href={w.url} isExternal color="teal.600">{w.name || w.url}</Link>,
+            isTrue(w.depreciated) ? <Badge colorScheme="orange" fontSize="2xs">Deprecated</Badge> : <Dash />,
+        ]);
     });
 
-    notes.forEach((n) => {
-        rows.push(
-            <ArtifactRow key={`note-${n.unique_id}`} tag="NOTE" label={n.content} meta={n.dateCreated || n.date_created || null} />
-        );
-    });
+    notes.forEach((n) => rows.push([
+        <TagBadge tag="NOTE" />, <Text>{n.content}</Text>,
+        (n.dateCreated || n.date_created) ? <Text fontSize="2xs" color="gray.500">{n.dateCreated || n.date_created}</Text> : <Dash />,
+    ]));
 
     messages.forEach((m) => {
-        rows.push(
-            <ArtifactRow
-                key={`msg-${m.unique_id}`}
-                tag="MSG"
-                label={m.content || m.name}
-                attachmentHref={resolveArtifactHref(m)}
-                meta={m.date_created || null}
-            />
-        );
+        const href = resolveArtifactHref(m);
+        rows.push([
+            <TagBadge tag="MSG" />, <Text>{m.content || m.name}</Text>,
+            <HStack spacing={2}>
+                {href && <Link href={href} isExternal color="teal.600" fontSize="2xs">attachment</Link>}
+                {m.date_created && <Text fontSize="2xs" color="gray.500">{m.date_created}</Text>}
+                {!href && !m.date_created && <Dash />}
+            </HStack>,
+        ]);
     });
 
     metrics.forEach((m) => {
-        const extra = [m.comment, m.academic_year].filter(Boolean).join(' · ') || null;
-        rows.push(
-            <ArtifactRow
-                key={`met-${m.unique_id || m.composite_key}`}
-                tag="METRIC"
-                label={`${m.name}: ${m.single_value ?? '—'}`}
-                attachmentHref={resolveArtifactHref(m)}
-                meta={extra}
-            />
-        );
+        const extra = [m.comment, m.academic_year].filter(Boolean).join(' · ');
+        rows.push([
+            <TagBadge tag="METRIC" />,
+            <Text><Text as="span" fontWeight="semibold">{m.name}:</Text> {m.single_value ?? '—'}</Text>,
+            extra ? <Text fontSize="2xs" color="gray.500">{extra}</Text> : <Dash />,
+        ]);
     });
 
-    if (!rows.length) return null;
-    return <VStack align="stretch" spacing={1.5} pl={1} mt={2}>{rows}</VStack>;
+    return rows;
+}
+
+const ArtifactTable = ({ emptyText = 'None recorded.', ...lists }) => {
+    const rows = artifactRows(lists);
+    if (!rows.length) return <Empty>{emptyText}</Empty>;
+    return <DataTable columns={['Kind', 'Item', 'Details']} rows={rows} />;
 };
 
-// Admin-review notes carry an author (created_by) the artifact rows don't show.
-const AdminNoteList = ({ items = [] }) => (
-    <VStack align="stretch" spacing={2} mt={2}>
-        {items.map((n) => (
-            <Box key={n.unique_id} p={2} bg="gray.50" borderRadius="md">
-                <Text fontSize="xs" color="gray.700" whiteSpace="pre-wrap">{n.content}</Text>
-                {(n.created_by?.name || n.dateCreated) && (
-                    <Text fontSize="2xs" color="gray.500" mt={1}>
-                        {n.created_by?.name ? `— ${n.created_by.name}` : ''}
-                        {n.created_by?.name && n.dateCreated ? ' · ' : ''}
-                        {n.dateCreated || ''}
-                    </Text>
-                )}
-            </Box>
-        ))}
-    </VStack>
-);
-
 // ── Inline maturity rubric (the retired right-rail panel, folded in flat) ────
-// Mirrors EvidenceQualityPanel's category config; rendered as a flat block under Status
-// instead of a sticky side rail. Degrades to nothing when StatusLevelContext is absent.
 const RUBRIC_CATEGORIES = [
     { name: 'Procedures', descKey: 'procedure_descriptions', reqKey: 'procedure_requirements' },
     { name: 'Resources', descKey: 'resource_descriptions', reqKey: 'resource_requirements' },
@@ -252,29 +231,15 @@ const MaturityCriteria = ({ currentStatusLevelName }) => {
 
 // ── Implementation entry ────────────────────────────────────────────────────
 const ImplementationEntry = ({ impl, campus, navigate }) => {
-    // Server-computed over ALL of the implementation's documents, so it agrees with the
-    // implementations view even when the report's year filter hides the deprecated docs.
     const noActiveDocs = Boolean(impl.no_active_documents);
+    const participants = impl.participants || [];
+    const remediates = (impl.remediates_interfaces || []).map((i) => i.title).filter(Boolean).join(', ');
     return (
-        <Box
-            borderWidth="1px"
-            borderColor="gray.200"
-            borderRadius="lg"
-            bg="gray.50"
-            p={4}
-            borderLeftWidth="3px"
-            borderLeftColor={noActiveDocs ? 'orange.400' : 'teal.400'}
-        >
+        <Box borderWidth="1px" borderColor="gray.200" borderRadius="lg" bg="gray.50" p={4} borderLeftWidth="3px" borderLeftColor={noActiveDocs ? 'orange.400' : 'teal.400'}>
             <HStack spacing={2} mb={1} flexWrap="wrap">
                 <Badge colorScheme="teal" textTransform="uppercase" fontSize="2xs">{impl.type}</Badge>
-                <Heading
-                    as="h3"
-                    size="xs"
-                    color="gray.800"
-                    cursor="pointer"
-                    _hover={{ color: 'teal.600', textDecoration: 'underline' }}
-                    onClick={() => impl.unique_id && navigate(getImplementationURL(impl.type, impl.unique_id, campus))}
-                >
+                <Heading as="h3" size="xs" color="gray.800" cursor="pointer" _hover={{ color: 'teal.600', textDecoration: 'underline' }}
+                    onClick={() => impl.unique_id && navigate(getImplementationURL(impl.type, impl.unique_id, campus))}>
                     {impl.title}
                 </Heading>
                 {noActiveDocs && (
@@ -285,132 +250,45 @@ const ImplementationEntry = ({ impl, campus, navigate }) => {
             </HStack>
             {impl.description && <Text fontSize="xs" color="gray.700" mb={2}>{impl.description}</Text>}
 
-            {/* Accountability + classification */}
             <Wrap spacing={2} mb={2}>
                 {impl.owner && <WrapItem><Tag size="sm" colorScheme="teal" variant="subtle">Owner: {impl.owner.name}</Tag></WrapItem>}
-                {impl.accountable_working_group && (
-                    <WrapItem><Tag size="sm" colorScheme="cyan" variant="subtle">Accountable: {impl.accountable_working_group}</Tag></WrapItem>
-                )}
-                {(impl.dimensions || []).map((d) => (
-                    <WrapItem key={d.handle}><Tag size="sm" colorScheme="orange" variant="subtle">{d.name}</Tag></WrapItem>
-                ))}
+                {impl.accountable_working_group && <WrapItem><Tag size="sm" colorScheme="cyan" variant="subtle">Accountable: {impl.accountable_working_group}</Tag></WrapItem>}
+                {(impl.dimensions || []).map((d) => <WrapItem key={d.handle}><Tag size="sm" colorScheme="orange" variant="subtle">{d.name}</Tag></WrapItem>)}
+                {remediates && <WrapItem><Tag size="sm" colorScheme="blue" variant="outline">Remediates: {remediates}</Tag></WrapItem>}
             </Wrap>
 
-            {/* Participant team + notes */}
-            {impl.participants?.length > 0 && (
-                <Box mb={2}>
+            {participants.length > 0 && (
+                <Box mb={3}>
                     <SubLabel>Worked on by</SubLabel>
-                    <Wrap spacing={1} mt={1}>
-                        {impl.participants.map((p, i) => (
-                            <WrapItem key={`${p.person?.unique_id}-${i}`}>
-                                <Tag size="sm" colorScheme="purple" variant="subtle">
-                                    {p.person?.name}{p.role_handle ? ` · ${p.role_handle.replace(/^role:/, '')}` : ''}
-                                </Tag>
-                            </WrapItem>
-                        ))}
-                    </Wrap>
-                    {impl.participants.some((p) => p.note) && (
-                        <VStack align="stretch" spacing={0.5} mt={1}>
-                            {impl.participants.filter((p) => p.note).map((p, i) => (
-                                <Text key={i} fontSize="2xs" color="gray.600" fontStyle="italic">{p.person?.name}: “{p.note}”</Text>
-                            ))}
-                        </VStack>
-                    )}
+                    <Box mt={1}>
+                        <DataTable
+                            columns={['Person', 'Role', 'Note']}
+                            rows={participants.map((p) => [
+                                <Text color="gray.800">{p.person?.name}</Text>,
+                                p.role_handle ? <Text>{p.role_handle.replace(/^role:/, '')}</Text> : <Dash />,
+                                p.note ? <Text fontStyle="italic" color="gray.600">{p.note}</Text> : <Dash />,
+                            ])}
+                        />
+                    </Box>
                 </Box>
             )}
 
-            {/* Remediated interfaces */}
-            {impl.remediates_interfaces?.length > 0 && (
-                <Box mb={2}>
-                    <SubLabel>Remediates</SubLabel>
-                    <Wrap spacing={1} mt={1}>
-                        {impl.remediates_interfaces.map((iface) => (
-                            <WrapItem key={iface.unique_id}><Tag size="sm" colorScheme="blue" variant="outline">{iface.title}</Tag></WrapItem>
-                        ))}
-                    </Wrap>
+            <Box>
+                <SubLabel>Evidence</SubLabel>
+                <Box mt={1}>
+                    <ArtifactTable
+                        emptyText="No evidence recorded."
+                        documents={impl.documents}
+                        webpages={impl.webpages}
+                        notes={impl.notes}
+                        messages={impl.messages}
+                        metrics={impl.metrics}
+                    />
                 </Box>
-            )}
-
-            <ArtifactList
-                documents={impl.documents}
-                webpages={impl.webpages}
-                notes={impl.notes}
-                messages={impl.messages}
-                metrics={impl.metrics}
-            />
+            </Box>
         </Box>
     );
 };
-
-// ── ICT footprint rows ──────────────────────────────────────────────────────
-const REACHED_VIA_SCHEME = { remediated: 'green', interface: 'blue', tool: 'purple' };
-
-const AssetRow = ({ asset }) => (
-    <Box borderWidth="1px" borderColor="gray.200" borderRadius="md" bg="white" p={3}>
-        <HStack spacing={2} flexWrap="wrap" mb={1}>
-            <Text fontSize="sm" fontWeight="semibold" color="gray.800">{asset.title}</Text>
-            {asset.scope && <Badge colorScheme="gray" fontSize="2xs">{asset.scope}</Badge>}
-            {asset.asset_class && <Badge colorScheme="teal" fontSize="2xs">{asset.asset_class.replace(/_/g, ' ')}</Badge>}
-            {(asset.reached_via || []).map((v) => (
-                <Badge key={v} colorScheme={REACHED_VIA_SCHEME[v] || 'gray'} variant="subtle" fontSize="2xs">via {v}</Badge>
-            ))}
-        </HStack>
-        <Text fontSize="2xs" color="gray.400" fontFamily="mono">{asset.asset_identifier}</Text>
-        {asset.description && <Text fontSize="xs" color="gray.600" mt={1}>{asset.description}</Text>}
-    </Box>
-);
-
-const InterfaceRow = ({ iface }) => (
-    <Box borderWidth="1px" borderColor="gray.200" borderRadius="md" bg="white" p={3}>
-        <HStack spacing={2} flexWrap="wrap" mb={1}>
-            <Text fontSize="sm" fontWeight="semibold" color="gray.800">{iface.title}</Text>
-            {iface.function && <Badge colorScheme="blue" fontSize="2xs">{iface.function}</Badge>}
-            {iface.provenance && <Badge colorScheme="gray" fontSize="2xs">{iface.provenance}</Badge>}
-        </HStack>
-        <Text fontSize="2xs" color="gray.400" fontFamily="mono">{iface.interface_identifier}</Text>
-        {iface.description && <Text fontSize="xs" color="gray.600" mt={1}>{iface.description}</Text>}
-        {(iface.audience?.length > 0 || iface.coverage_domains?.length > 0) && (
-            <Wrap spacing={1} mt={2}>
-                {(iface.coverage_domains || []).map((c) => <WrapItem key={c}><Tag size="sm" variant="subtle" colorScheme="cyan">{c}</Tag></WrapItem>)}
-                {(iface.audience || []).map((a) => <WrapItem key={a}><Tag size="sm" variant="subtle" colorScheme="gray">{a}</Tag></WrapItem>)}
-            </Wrap>
-        )}
-    </Box>
-);
-
-const ToolRow = ({ tool }) => (
-    <Box borderWidth="1px" borderColor="gray.200" borderRadius="md" bg="white" p={3}>
-        <HStack spacing={2} flexWrap="wrap">
-            <Text fontSize="sm" fontWeight="semibold" color="gray.800">{tool.title}</Text>
-            {tool.tool_identifier && <Text fontSize="2xs" color="gray.400" fontFamily="mono">{tool.tool_identifier}</Text>}
-        </HStack>
-        {tool.description && <Text fontSize="xs" color="gray.600" mt={1}>{tool.description}</Text>}
-    </Box>
-);
-
-const VendorRow = ({ vendor }) => (
-    <Box borderWidth="1px" borderColor="gray.200" borderRadius="md" bg="white" p={3}>
-        <Text fontSize="sm" fontWeight="semibold" color="gray.800">{vendor.name}</Text>
-        {vendor.location && <Text fontSize="xs" color="gray.600">{vendor.location}</Text>}
-        {(vendor.sales_contact_email || vendor.technical_contact_email) && (
-            <HStack spacing={3} mt={1} flexWrap="wrap">
-                {vendor.sales_contact_email && (
-                    <Link href={`mailto:${vendor.sales_contact_email}`} fontSize="2xs" color="teal.600">Sales: {vendor.sales_contact_email}</Link>
-                )}
-                {vendor.technical_contact_email && (
-                    <Link href={`mailto:${vendor.technical_contact_email}`} fontSize="2xs" color="teal.600">Tech: {vendor.technical_contact_email}</Link>
-                )}
-            </HStack>
-        )}
-    </Box>
-);
-
-const IctSubList = ({ title, count, children }) => (
-    <Box>
-        <SubLabel>{title} ({count})</SubLabel>
-        <VStack align="stretch" spacing={2} mt={2}>{children}</VStack>
-    </Box>
-);
 
 // ── TAAP entry ──────────────────────────────────────────────────────────────
 const TaapEntry = ({ taap }) => (
@@ -422,13 +300,16 @@ const TaapEntry = ({ taap }) => (
             {taap.active === false && <Badge colorScheme="red" fontSize="2xs">Inactive</Badge>}
         </HStack>
         {taap.description && <Text fontSize="xs" color="gray.700" mb={2}>{taap.description}</Text>}
-        <Wrap spacing={2} mb={2}>
+        <Wrap spacing={2} mb={3}>
             {taap.owner && <WrapItem><Tag size="sm" colorScheme="teal" variant="subtle">Owner: {taap.owner.name}</Tag></WrapItem>}
             {(taap.signed_by || []).map((s) => <WrapItem key={s.unique_id}><Tag size="sm" colorScheme="green" variant="subtle">Signed: {s.name}</Tag></WrapItem>)}
             {(taap.covers_assets || []).map((a) => <WrapItem key={a.unique_id}><Tag size="sm" colorScheme="gray" variant="subtle">Covers: {a.title}</Tag></WrapItem>)}
             {taap.review_due && <WrapItem><Tag size="sm" colorScheme="yellow" variant="subtle">Review due {taap.review_due}</Tag></WrapItem>}
         </Wrap>
-        <ArtifactList documents={taap.documents} webpages={taap.webpages} notes={taap.notes} messages={taap.messages} />
+        <SubLabel>Evidence</SubLabel>
+        <Box mt={1}>
+            <ArtifactTable emptyText="No evidence recorded." documents={taap.documents} webpages={taap.webpages} notes={taap.notes} messages={taap.messages} />
+        </Box>
     </Box>
 );
 
@@ -452,6 +333,7 @@ const IndicatorReportView = ({ report }) => {
     const campusName = report.campus?.name || campus;
     const reviewComplete = yse?.administrative_review_complete;
     const completedBy = people?.admin_review_completed_by;
+    const implementers = people?.implementers || [];
     const ictEmpty = !assets.length && !interfaces.length && !tools.length && !vendors.length;
 
     return (
@@ -525,29 +407,37 @@ const IndicatorReportView = ({ report }) => {
                                 <Text fontSize="xs" color="gray.700">{yse.admin_review_description}</Text>
                             </Box>
                         )}
-                        {adminReviewNotes.length > 0 && <AdminNoteList items={adminReviewNotes} />}
+                        {adminReviewNotes.length > 0 && (
+                            <Box mt={2}>
+                                <DataTable
+                                    columns={['Review note', 'Author', 'Date']}
+                                    rows={adminReviewNotes.map((n) => [
+                                        <Text whiteSpace="pre-wrap">{n.content}</Text>,
+                                        n.created_by?.name ? <Text>{n.created_by.name}</Text> : <Dash />,
+                                        n.dateCreated ? <Text fontSize="2xs" color="gray.500">{n.dateCreated}</Text> : <Dash />,
+                                    ])}
+                                />
+                            </Box>
+                        )}
                     </Box>
 
                     <MaturityCriteria currentStatusLevelName={status?.status_level} />
                 </ReportSection>
 
                 {/* People */}
-                <ReportSection id="sec-people" title="People">
-                    {people?.implementers?.length ? (
-                        <VStack align="stretch" spacing={2}>
-                            {people.implementers.map((p) => (
-                                <HStack key={p.unique_id} spacing={2} flexWrap="wrap">
-                                    <Text fontSize="sm" color="gray.800" fontWeight="medium">{p.name}</Text>
-                                    {p.title && <Text fontSize="xs" color="gray.500">{p.title}</Text>}
-                                    {(p.roles || []).map((r) => (
-                                        <Badge key={r.handle} colorScheme="purple" variant="subtle" fontSize="2xs">{r.name}</Badge>
-                                    ))}
-                                    {p.email && (
-                                        <Link href={`mailto:${p.email}`} fontSize="xs" color="teal.600">{p.email}</Link>
-                                    )}
-                                </HStack>
-                            ))}
-                        </VStack>
+                <ReportSection id="sec-people" title="People" count={implementers.length}>
+                    {implementers.length ? (
+                        <DataTable
+                            columns={['Name', 'Title', 'Roles', 'Email']}
+                            rows={implementers.map((p) => [
+                                <Text fontWeight="medium" color="gray.800">{p.name}</Text>,
+                                p.title ? <Text>{p.title}</Text> : <Dash />,
+                                (p.roles || []).length
+                                    ? <Wrap spacing={1}>{p.roles.map((r) => <WrapItem key={r.handle}><Badge colorScheme="purple" variant="subtle" fontSize="2xs">{r.name}</Badge></WrapItem>)}</Wrap>
+                                    : <Dash />,
+                                p.email ? <Link href={`mailto:${p.email}`} color="teal.600">{p.email}</Link> : <Dash />,
+                            ])}
+                        />
                     ) : <Empty>No people assigned.</Empty>}
                 </ReportSection>
 
@@ -573,24 +463,72 @@ const IndicatorReportView = ({ report }) => {
                     ) : (
                         <VStack align="stretch" spacing={4}>
                             {assets.length > 0 && (
-                                <IctSubList title="Assets" count={assets.length}>
-                                    {assets.map((a) => <AssetRow key={a.unique_id} asset={a} />)}
-                                </IctSubList>
+                                <Box>
+                                    <SubLabel>Assets ({assets.length})</SubLabel>
+                                    <Box mt={1}>
+                                        <DataTable
+                                            columns={['Asset', 'Class', 'Scope', 'Reached via', 'Description']}
+                                            rows={assets.map((a) => [
+                                                <Box><Text fontWeight="semibold" color="gray.800">{a.title}</Text><Text fontSize="2xs" color="gray.400" fontFamily="mono">{a.asset_identifier}</Text></Box>,
+                                                a.asset_class ? <Text>{a.asset_class.replace(/_/g, ' ')}</Text> : <Dash />,
+                                                a.scope ? <Text>{a.scope}</Text> : <Dash />,
+                                                (a.reached_via || []).length ? <Text>{a.reached_via.join(', ')}</Text> : <Dash />,
+                                                a.description ? <Text color="gray.600">{a.description}</Text> : <Dash />,
+                                            ])}
+                                        />
+                                    </Box>
+                                </Box>
                             )}
                             {interfaces.length > 0 && (
-                                <IctSubList title="Interfaces" count={interfaces.length}>
-                                    {interfaces.map((i) => <InterfaceRow key={i.unique_id} iface={i} />)}
-                                </IctSubList>
+                                <Box>
+                                    <SubLabel>Interfaces ({interfaces.length})</SubLabel>
+                                    <Box mt={1}>
+                                        <DataTable
+                                            columns={['Interface', 'Function', 'Coverage / Audience', 'Description']}
+                                            rows={interfaces.map((i) => [
+                                                <Box><Text fontWeight="semibold" color="gray.800">{i.title}</Text><Text fontSize="2xs" color="gray.400" fontFamily="mono">{i.interface_identifier}</Text></Box>,
+                                                i.function ? <Text>{i.function}</Text> : <Dash />,
+                                                [...(i.coverage_domains || []), ...(i.audience || [])].length ? <Text>{[...(i.coverage_domains || []), ...(i.audience || [])].join(', ')}</Text> : <Dash />,
+                                                i.description ? <Text color="gray.600">{i.description}</Text> : <Dash />,
+                                            ])}
+                                        />
+                                    </Box>
+                                </Box>
                             )}
                             {tools.length > 0 && (
-                                <IctSubList title="Tools" count={tools.length}>
-                                    {tools.map((t) => <ToolRow key={t.unique_id} tool={t} />)}
-                                </IctSubList>
+                                <Box>
+                                    <SubLabel>Tools ({tools.length})</SubLabel>
+                                    <Box mt={1}>
+                                        <DataTable
+                                            columns={['Tool', 'Identifier', 'Description']}
+                                            rows={tools.map((t) => [
+                                                <Text fontWeight="semibold" color="gray.800">{t.title}</Text>,
+                                                t.tool_identifier ? <Text fontFamily="mono" color="gray.500">{t.tool_identifier}</Text> : <Dash />,
+                                                t.description ? <Text color="gray.600">{t.description}</Text> : <Dash />,
+                                            ])}
+                                        />
+                                    </Box>
+                                </Box>
                             )}
                             {vendors.length > 0 && (
-                                <IctSubList title="Vendors" count={vendors.length}>
-                                    {vendors.map((v) => <VendorRow key={v.unique_id} vendor={v} />)}
-                                </IctSubList>
+                                <Box>
+                                    <SubLabel>Vendors ({vendors.length})</SubLabel>
+                                    <Box mt={1}>
+                                        <DataTable
+                                            columns={['Vendor', 'Location', 'Contacts']}
+                                            rows={vendors.map((v) => [
+                                                <Text fontWeight="semibold" color="gray.800">{v.name}</Text>,
+                                                v.location ? <Text>{v.location}</Text> : <Dash />,
+                                                (v.sales_contact_email || v.technical_contact_email) ? (
+                                                    <VStack align="stretch" spacing={0.5}>
+                                                        {v.sales_contact_email && <Link href={`mailto:${v.sales_contact_email}`} color="teal.600" fontSize="2xs">Sales: {v.sales_contact_email}</Link>}
+                                                        {v.technical_contact_email && <Link href={`mailto:${v.technical_contact_email}`} color="teal.600" fontSize="2xs">Tech: {v.technical_contact_email}</Link>}
+                                                    </VStack>
+                                                ) : <Dash />,
+                                            ])}
+                                        />
+                                    </Box>
+                                </Box>
                             )}
                         </VStack>
                     )}
@@ -608,36 +546,38 @@ const IndicatorReportView = ({ report }) => {
                 {/* Plans & Accomplishments */}
                 <ReportSection id="sec-plans" title="Plans & Accomplishments">
                     {(plans.length > 0 || accomplishments.length > 0) ? (
-                        <VStack align="stretch" spacing={3}>
+                        <VStack align="stretch" spacing={4}>
                             {plans.length > 0 && (
                                 <Box>
                                     <SubLabel>Plans ({plans.length})</SubLabel>
-                                    <VStack align="stretch" spacing={2} mt={2}>
-                                        {plans.map((p) => (
-                                            <Box key={p.unique_id} p={3} bg="gray.50" borderRadius="md" borderLeftWidth="3px" borderLeftColor="teal.300">
-                                                <HStack spacing={2} mb={1} flexWrap="wrap">
-                                                    <Text fontSize="sm" fontWeight="semibold" color="gray.800">{p.name}</Text>
-                                                    {p.plan_status && <Badge colorScheme={getPlanStatusColorScheme(p)} fontSize="2xs">{getPlanStatusLabel(p)}</Badge>}
+                                    <Box mt={1}>
+                                        <DataTable
+                                            columns={['Plan', 'Status', 'Description']}
+                                            rows={plans.map((p) => [
+                                                <HStack spacing={1.5} flexWrap="wrap">
+                                                    <Text fontWeight="semibold" color="gray.800">{p.name}</Text>
                                                     {p.is_key_plan && <Badge colorScheme="purple" fontSize="2xs">Key</Badge>}
                                                     {p.is_campus_plan && <Badge colorScheme="green" fontSize="2xs">Campus plan</Badge>}
-                                                </HStack>
-                                                {p.description && <Text fontSize="xs" color="gray.700">{p.description}</Text>}
-                                            </Box>
-                                        ))}
-                                    </VStack>
+                                                </HStack>,
+                                                p.plan_status ? <Badge colorScheme={getPlanStatusColorScheme(p)} fontSize="2xs">{getPlanStatusLabel(p)}</Badge> : <Dash />,
+                                                p.description ? <Text color="gray.600">{p.description}</Text> : <Dash />,
+                                            ])}
+                                        />
+                                    </Box>
                                 </Box>
                             )}
                             {accomplishments.length > 0 && (
                                 <Box>
                                     <SubLabel>Accomplishments ({accomplishments.length})</SubLabel>
-                                    <VStack align="stretch" spacing={2} mt={2}>
-                                        {accomplishments.map((a) => (
-                                            <Box key={a.unique_id} p={3} bg="gray.50" borderRadius="md" borderLeftWidth="3px" borderLeftColor="blue.300">
-                                                <Text fontSize="sm" fontWeight="semibold" color="gray.800">{a.name}</Text>
-                                                {a.description && <Text fontSize="xs" color="gray.700">{a.description}</Text>}
-                                            </Box>
-                                        ))}
-                                    </VStack>
+                                    <Box mt={1}>
+                                        <DataTable
+                                            columns={['Accomplishment', 'Description']}
+                                            rows={accomplishments.map((a) => [
+                                                <Text fontWeight="semibold" color="gray.800">{a.name}</Text>,
+                                                a.description ? <Text color="gray.600">{a.description}</Text> : <Dash />,
+                                            ])}
+                                        />
+                                    </Box>
                                 </Box>
                             )}
                         </VStack>
@@ -646,9 +586,7 @@ const IndicatorReportView = ({ report }) => {
 
                 {/* YSE-level notes, messages & metrics */}
                 <ReportSection id="sec-notes" title="Notes, Messages & Metrics">
-                    {(notes.length > 0 || messages.length > 0 || metrics.length > 0) ? (
-                        <ArtifactList notes={notes} messages={messages} metrics={metrics} />
-                    ) : <Empty>None recorded for this year.</Empty>}
+                    <ArtifactTable emptyText="None recorded for this year." notes={notes} messages={messages} metrics={metrics} />
                 </ReportSection>
             </VStack>
         </Box>

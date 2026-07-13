@@ -12,8 +12,10 @@
 # Design notes:
 #   - Bulk traversal is neomodel + each node's own serialize(), so the shape stays in
 #     lockstep with the schema and we reuse serialize_participants / serialize_role_holdings.
-#   - Filtering is done HERE (server-side): include_in_report and the DocumentedByRel
-#     year gate (included_in_years / excluded_from_years). The frontend renders what it gets.
+#   - Filtering is done HERE (server-side), year-curation-wins: an item explicitly curated
+#     into the viewed year via the DocumentedByRel gate (included_in_years / excluded_from_years)
+#     shows regardless of its global include_in_report flag; items with no year curation fall
+#     back to include_in_report (see _supporting). The frontend renders what it gets.
 #   - The asset/interface/tool/vendor rollup and plan/accomplishment edges have no forward
 #     neomodel manager on the implementation side (they live as reverse edges on Asset/Tool),
 #     so they come from a single apoc.convert.toJson Cypher — the same pattern the compound
@@ -81,24 +83,36 @@ def _no_active_documents(impl):
 
 
 def _supporting(manager, academic_year):
-    """Serialize a supporting_documents/webpages/notes/messages manager, dropping nodes
-    that opt out of the report and (when the edge carries a DocumentedByRel) those whose
-    year gate excludes the selected academic year."""
+    """Serialize a supporting_documents/webpages/notes/messages manager for one year.
+
+    Inclusion rule — *year curation wins*: when the edge explicitly curates the node into
+    specific years (included_in_years / excluded_from_years is set on the DocumentedByRel),
+    that per-year membership alone decides visibility. A node curated into the selected year
+    shows even if its global ``include_in_report`` flag is False — because adding evidence to
+    a year is how users actually say "this belongs in the report", and the global flag was
+    almost never flipped in step with it (see the report redesign notes). Only nodes with NO
+    year curation fall back to the global ``include_in_report`` opt-out. This keeps the report
+    in step with the implementations view, which gates on the year edge alone."""
     out = []
     for node in manager.all():
-        if not _included(node):
-            continue
         try:
             rel = manager.relationship(node)
         except Exception:
             rel = None
-        if rel is not None:
-            included_years = getattr(rel, "included_in_years", None)
-            excluded_years = getattr(rel, "excluded_from_years", None)
+
+        included_years = getattr(rel, "included_in_years", None) if rel is not None else None
+        excluded_years = getattr(rel, "excluded_from_years", None) if rel is not None else None
+
+        if included_years or excluded_years:
+            # Explicit per-year membership decides — the global flag does not veto it.
             if included_years and academic_year not in included_years:
                 continue
             if excluded_years and academic_year in excluded_years:
                 continue
+        elif not _included(node):
+            # No year curation → respect the global include_in_report opt-out.
+            continue
+
         out.append(node.serialize())
     return out
 
