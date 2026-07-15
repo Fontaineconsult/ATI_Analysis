@@ -268,6 +268,17 @@ export function createSuccessIndicatorPayload(number, goalNumber, subCommittee, 
     };
 }
 
+export function updateSuccessIndicatorExamplesPayload(compositeKey, examplesOfEvidence = [], establishedExample = null, managedExample = null, optimizingExample = null) {
+    return {
+        action: "update_success_indicator",
+        composite_key: compositeKey,               // indicator identifier (immutable)
+        examples_of_evidence: examplesOfEvidence,   // array of bullet strings (full replace)
+        established_example: establishedExample,     // markdown
+        managed_example: managedExample,             // markdown
+        optimizing_example: optimizingExample        // markdown
+    };
+}
+
 export function create_year_success_evidence_node(academic_year,
                                              success_indicator_composite_key,
                                              campus_abbreviation,

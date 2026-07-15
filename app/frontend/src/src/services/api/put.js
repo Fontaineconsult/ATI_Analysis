@@ -3,6 +3,7 @@ import {
     assignApproverPayload,
     updateIndicatorRemovedStatus,
     updateIndicatorOverrideImplementationRequirement,
+    updateSuccessIndicatorExamplesPayload,
     generateUpdateStatusLevelPayload,
     updateIndividualPayload,
     updatePlanPayload,
@@ -231,6 +232,19 @@ export const updateOverrideImplementationRequirement = async (composite_key, ove
         );
     } catch (error) {
         console.error('Error updating implementation-requirement override:', error);
+        throw error;
+    }
+}
+
+// Edit the companion-guide fields (examples of evidence + level examples) on an
+// existing indicator. Full-replace semantics — pass the complete intended set.
+export const updateSuccessIndicatorExamples = async (compositeKey, examplesOfEvidence, establishedExample, managedExample, optimizingExample) => {
+    try {
+        await axios.put(`${process.env.REACT_APP_API_URL}/indicators`,
+            updateSuccessIndicatorExamplesPayload(compositeKey, examplesOfEvidence, establishedExample, managedExample, optimizingExample)
+        );
+    } catch (error) {
+        console.error('Error updating success indicator examples:', error);
         throw error;
     }
 }

@@ -26,6 +26,7 @@ import { updateRemovedStatus, updateOverrideImplementationRequirement } from '..
 import { createYearSuccessEvidence } from '../../../services/api/post';
 import { sortGoals, sortSuccessIndicators } from "../../../services/utils/sorters";
 import AddIndicator from './AddIndicator';
+import EditIndicator from './EditIndicator';
 import { SettingsContext } from "../../../context/SettingsContext";
 
 const SuccessIndicators = () => {
@@ -37,6 +38,7 @@ const SuccessIndicators = () => {
     const [selectedIndicator, setSelectedIndicator] = useState(null);
     const [actionType, setActionType] = useState('');
     const [isLoading, setIsLoading] = useState(false);
+    const [editingIndicator, setEditingIndicator] = useState(null);
 
     const onAddOpen = (categoryName) => {
         setOpenModals((prev) => ({ ...prev, [categoryName]: true }));
@@ -45,6 +47,9 @@ const SuccessIndicators = () => {
     const onAddClose = (categoryName) => {
         setOpenModals((prev) => ({ ...prev, [categoryName]: false }));
     };
+
+    const onEditOpen = (indicator) => setEditingIndicator(indicator);
+    const onEditClose = () => setEditingIndicator(null);
 
     const handleStatusChange = async (indicator, newStatus) => {
         const originalRemovedStatus = indicator.removed;
@@ -203,6 +208,7 @@ const SuccessIndicators = () => {
                                                             <Th color="gray.600" fontSize="xs" fontWeight="semibold" w="120px">Key</Th>
                                                             <Th color="gray.600" fontSize="xs" fontWeight="semibold" w="130px">Status</Th>
                                                             <Th color="gray.600" fontSize="xs" fontWeight="semibold" w="150px">Implementations</Th>
+                                                            <Th color="gray.600" fontSize="xs" fontWeight="semibold" w="130px">Evidence</Th>
                                                             <Th color="gray.600" fontSize="xs" fontWeight="semibold" w="130px">Actions</Th>
                                                         </Tr>
                                                     </Thead>
@@ -212,6 +218,11 @@ const SuccessIndicators = () => {
                                                             .map((indicator) => {
                                                                 const isRemoved = indicator.removed;
                                                                 const hasYse = indicator.yearSuccessIndicators?.length > 0;
+                                                                const evidenceCount = indicator.examples_of_evidence?.length || 0;
+                                                                const hasCompanion = evidenceCount > 0
+                                                                    || Boolean(indicator.established_example)
+                                                                    || Boolean(indicator.managed_example)
+                                                                    || Boolean(indicator.optimizing_example);
 
                                                                 return (
                                                                     <Tr
@@ -267,6 +278,25 @@ const SuccessIndicators = () => {
                                                                             </Tooltip>
                                                                         </Td>
                                                                         <Td>
+                                                                            <HStack spacing={2}>
+                                                                                <Button
+                                                                                    size="xs"
+                                                                                    colorScheme="teal"
+                                                                                    variant={hasCompanion ? 'solid' : 'outline'}
+                                                                                    onClick={() => onEditOpen(indicator)}
+                                                                                >
+                                                                                    Edit
+                                                                                </Button>
+                                                                                {evidenceCount > 0 && (
+                                                                                    <Tooltip label={`${evidenceCount} example(s) of evidence`} openDelay={400} hasArrow>
+                                                                                        <Badge fontSize="2xs" colorScheme="green" variant="subtle">
+                                                                                            {evidenceCount}
+                                                                                        </Badge>
+                                                                                    </Tooltip>
+                                                                                )}
+                                                                            </HStack>
+                                                                        </Td>
+                                                                        <Td>
                                                                             <Button
                                                                                 size="xs"
                                                                                 colorScheme={hasYse ? 'red' : 'green'}
@@ -307,6 +337,12 @@ const SuccessIndicators = () => {
                         )}
                     </Box>
                 ))}
+
+            <EditIndicator
+                indicator={editingIndicator}
+                isOpen={editingIndicator !== null}
+                onClose={onEditClose}
+            />
         </Box>
     );
 };

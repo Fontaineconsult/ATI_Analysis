@@ -7,7 +7,7 @@ from datetime import datetime as dt  # Added import
 from app.database.queries.evidence.delete import delete_year_success_evidence
 from app.database.queries.indicators.create import create_success_indicator, add_goal
 from app.database.queries.indicators.read import fetch_success_indicators_for_working_group
-from app.database.queries.indicators.update import set_removed_status_for_success_indicator, set_override_implementation_requirement
+from app.database.queries.indicators.update import set_removed_status_for_success_indicator, set_override_implementation_requirement, update_success_indicator_examples
 
 from app.endpoints.data_api.errors.custom_exceptions import NotFoundError, ValidationError, CrudError
 
@@ -119,6 +119,22 @@ class IndicatorsAPI(MethodView):
                     return make_response(status="error", error="Missing required fields for updating implementation-requirement override."), 400
 
                 if set_override_implementation_requirement(data['composite_key'], data['override_implementation_requirement']):
+                    return make_response(status="success", data=f"SuccessIndicator {data['composite_key']} updated successfully."), 200
+
+            elif action == 'update_success_indicator':
+                # Edit the companion-guide fields (examples of evidence + level examples)
+                # on an existing indicator. Only composite_key is required; the four
+                # companion fields default to cleared when absent.
+                if 'composite_key' not in data:
+                    return make_response(status="error", error="Missing required field: composite_key."), 400
+
+                if update_success_indicator_examples(
+                    data['composite_key'],
+                    examples_of_evidence=data.get('examples_of_evidence'),
+                    established_example=data.get('established_example'),
+                    managed_example=data.get('managed_example'),
+                    optimizing_example=data.get('optimizing_example'),
+                ):
                     return make_response(status="success", data=f"SuccessIndicator {data['composite_key']} updated successfully."), 200
 
             else:
