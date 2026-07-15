@@ -29,8 +29,8 @@ def _serialize_governance_node(governance_type, node):
         return d.isoformat() if d is not None else None
 
     documents = []
-    if hasattr(node, "supporting_documents"):
-        for d in node.supporting_documents.all():
+    if hasattr(node, "source_documents"):
+        for d in node.source_documents.all():
             documents.append({
                 "unique_id": d.unique_id,
                 "name": getattr(d, "name", None),
@@ -39,8 +39,8 @@ def _serialize_governance_node(governance_type, node):
             })
 
     webpages = []
-    if hasattr(node, "supporting_websites"):
-        for w in node.supporting_websites.all():
+    if hasattr(node, "source_webpages"):
+        for w in node.source_webpages.all():
             webpages.append({
                 "unique_id": w.unique_id,
                 "name": getattr(w, "name", None),

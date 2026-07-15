@@ -61,7 +61,7 @@ def update_governance_item(governance_type: str, unique_id: str, data: dict):
 
 
 def attach_document_to_governance(governance_type: str, governance_unique_id: str, document_unique_id: str):
-    """Connect an existing Document to a governance node via supporting_documents."""
+    """Connect an existing Document to a governance node as a source (is_sourced_from)."""
     if not document_unique_id:
         raise ValidationError("document_unique_id is required.")
     node = _resolve_governance_node(governance_type, governance_unique_id)
@@ -69,7 +69,7 @@ def attach_document_to_governance(governance_type: str, governance_unique_id: st
     if doc is None:
         raise NotFoundError(f"Document with unique_id '{document_unique_id}' not found.")
     try:
-        node.supporting_documents.connect(doc)
+        node.source_documents.connect(doc)
         return node
     except Exception as e:
         raise CrudError(f"Failed to attach document: {e}")
@@ -84,14 +84,14 @@ def detach_document_from_governance(governance_type: str, governance_unique_id: 
     if doc is None:
         raise NotFoundError(f"Document with unique_id '{document_unique_id}' not found.")
     try:
-        node.supporting_documents.disconnect(doc)
+        node.source_documents.disconnect(doc)
         return node
     except Exception as e:
         raise CrudError(f"Failed to detach document: {e}")
 
 
 def attach_webpage_to_governance(governance_type: str, governance_unique_id: str, webpage_unique_id: str):
-    """Connect an existing Webpage to a governance node via supporting_websites."""
+    """Connect an existing Webpage to a governance node as a source (is_sourced_from)."""
     if not webpage_unique_id:
         raise ValidationError("webpage_unique_id is required.")
     node = _resolve_governance_node(governance_type, governance_unique_id)
@@ -99,8 +99,9 @@ def attach_webpage_to_governance(governance_type: str, governance_unique_id: str
     if page is None:
         raise NotFoundError(f"Webpage with unique_id '{webpage_unique_id}' not found.")
     try:
-        # Governance types use `supporting_websites` (not `supporting_webpages` like impl nodes).
-        node.supporting_websites.connect(page)
+        # Governance sources use the `is_sourced_from` edge (source_webpages), distinct
+        # from the evidence-flavored `is_documented_by` used by implementation nodes.
+        node.source_webpages.connect(page)
         return node
     except Exception as e:
         raise CrudError(f"Failed to attach webpage: {e}")
@@ -115,7 +116,7 @@ def detach_webpage_from_governance(governance_type: str, governance_unique_id: s
     if page is None:
         raise NotFoundError(f"Webpage with unique_id '{webpage_unique_id}' not found.")
     try:
-        node.supporting_websites.disconnect(page)
+        node.source_webpages.disconnect(page)
         return node
     except Exception as e:
         raise CrudError(f"Failed to detach webpage: {e}")

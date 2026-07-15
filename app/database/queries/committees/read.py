@@ -177,11 +177,18 @@ _COMPANION_PLANS_FOR_WGP_QUERY = """
     WHERE p.is_campus_plan = true
       AND (yse)-[:evidence_at_campus]->(:Campus {abbreviation: $campus_abbrev})
       AND (yse)-[:evidence_in_year]->(:AcademicYear {name: $year_name})
+    OPTIONAL MATCH (p)-[:in_academic_year]->(planYear:AcademicYear)
+    OPTIONAL MATCH (p)-[:completed_in_year]->(completedYear:AcademicYear)
+    WITH si, p, planYear, completedYear
     RETURN si.unique_id AS si_id,
            [pp IN collect(DISTINCT {
                unique_id: p.unique_id,
                name: p.name,
-               description: p.description
+               description: p.description,
+               plan_status: p.plan_status,
+               abandoned: coalesce(p.abandoned, false),
+               academic_year: planYear.name,
+               completed_year: completedYear.name
            }) WHERE pp.unique_id IS NOT NULL] AS companion_plans
 """
 
