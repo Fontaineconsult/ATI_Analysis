@@ -69,12 +69,12 @@ def create_working_group_plan(campus_abbrev: str, year_name: str, working_group_
 
 def create_campus_plan(campus_abbrev: str, year_name: str) -> CampusPlan:
     """
-    Create a CampusPlan and its three child WorkingGroupPlans (web/pro/ins).
+    Create a CampusPlan and its four child WorkingGroupPlans (web/pro/ins/ste).
 
     Connects the required edges:
       - campus -> Campus
       - academic_year -> AcademicYear
-      - working_group_plans -> WorkingGroupPlan (x3, one per group)
+      - working_group_plans -> WorkingGroupPlan (one per group in WORKING_GROUP_ABBREVS)
 
     Raises ValidationError if a plan already exists for (campus, year),
     NotFoundError if the campus or year node is missing, CrudError on save failure.

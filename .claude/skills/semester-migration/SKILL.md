@@ -12,15 +12,16 @@ Roll the ATI Analysis app to a new academic year. This procedure is idempotent �
 1. Ask the user for `OLD_YEAR` and `NEW_YEAR` (format `YYYY-YYYY`, e.g. `2024-2025` → `2025-2026`) if not supplied.
 2. Confirm Neo4j is reachable — `.env.development` must define `DATABASE_URL` and `NEO4J_DATABASE`. The script loads them via `set_connection()` in `app/database/graph_schema.py`.
 3. APOC must be installed on the Neo4j server — the Cypher uses `apoc.create.relationship` to copy edges.
-4. Read `app/database/tools/create_new_ay_campus.py:17` and surface the current `ALL_CAMPUSES` list to the user. If a campus has been added in Neo4j since the last migration but is not in this list, stop and prompt the user to add it before proceeding.
+4. Read the `ALL_CAMPUSES` constant near the top of `app/database/tools/create_new_ay_campus.py` and surface it to the user. If a campus has been added in Neo4j since the last migration but is not in this list, stop and prompt the user to add it before proceeding.
 
 ## Steps
 
 ### 1. Configure the migration script
 
-Edit `app/database/tools/create_new_ay_campus.py`:
-- Line 238: `OLD_YEAR = "<OLD_YEAR>"`
-- Line 239: `NEW_YEAR = "<NEW_YEAR>"`
+In the `if __name__ == "__main__":` block at the bottom of
+`app/database/tools/create_new_ay_campus.py`, set:
+- `OLD_YEAR = "<OLD_YEAR>"`
+- `NEW_YEAR = "<NEW_YEAR>"`
 
 Do not modify any other line.
 
@@ -36,9 +37,9 @@ python -m app.database.tools.create_new_ay_campus
 1. `ensure_academic_year(new_year)` — creates the `AcademicYear` node if absent (idempotent).
 2. `duplicate_year_success_evidence(old_year, new_year)` — for every YSE in the old year: creates a new node with `year_identifier = <NEW_YEAR> + substring(old_identifier, 9)`, copies all non-`evidence_in_year` relationships (both directions) via APOC, connects the new node to the new `AcademicYear`.
 3. `create_stub_yse_for_missing_campuses(new_year)` — for each campus in `ALL_CAMPUSES` that has fewer YSEs than the active `SuccessIndicator` count, creates `Not Started` stubs.
-4. `reset_admin_review_for_year(new_year)` — sets `administrative_review_complete = false`, removes `administrative_review_completed_date`, and deletes all `admin_review_completed_by` edges for the new year's YSEs.
+4. `reset_year_workflow_fields(new_year)` — applies fresh-year defaults to the new year's YSEs: sets the booleans `administrative_review_complete`, `ready_for_admin_review`, `worked_on_in_current_year`, `will_work_on_next_year` to `false`; clears the scalars `administrative_review_completed_date`, `priority_level`, `documentation_status`, `resources_status`, `implementation_plan_status`, `admin_review_description`; and deletes all `admin_review_completed_by` edges. (The duplication step deliberately copies no scalar workflow fields — this makes the fresh-year reset explicit.)
 5. `propagate_documentation_years_for(new_year)` — for every implementation that has YSE evidence in `new_year`, finds its `is_documented_by` rels whose `included_in_years` is a non-empty whitelist missing `new_year`, and appends `new_year`. Empty `included_in_years` lists (the default — "applies to all years") are left alone. Without this step, documentation tagged for the old year silently disappears from the master query for the new year. Idempotent.
-6. `create_campus_plans_for_year(new_year)` — creates the `CampusPlan` + three `WorkingGroupPlan` nodes per campus for the new year. Idempotent.
+6. `create_campus_plans_for_year(new_year)` — creates the `CampusPlan` + four `WorkingGroupPlan` nodes (web/pro/ins/ste) per campus for the new year. Idempotent.
 7. `verify(new_year)` — prints YSE counts per campus.
 
 Capture the full stdout. Surface the verification table to the user verbatim.
@@ -53,18 +54,19 @@ If either check fails, stop and report to the user. Do not touch the frontend.
 
 ### 4. Update the frontend year references
 
-Apply all three edits — all three or none:
+Apply all four edits — all four or none:
 
-1. `app/frontend/src/src/context/SettingsContext.js:19`
-   Change the `useState` default from the old year to `<NEW_YEAR>`.
+1. `app/frontend/src/src/context/SettingsContext.js`
+   Change the `currentAcademicYear` `useState(...)` default to `<NEW_YEAR>`.
 
-2. `app/frontend/src/src/context/DataContext.js:33`
-   Change the `useState` default from the old year to `<NEW_YEAR>`.
+2. `app/frontend/src/src/context/DataContext.js`
+   Change the `selectedYear` `useState(...)` default to `<NEW_YEAR>`.
 
-3. `app/frontend/src/src/App.js:88-94`
+3. `app/frontend/src/src/App.js`
    Append `'<NEW_YEAR>'` to the `yearOptions` array. Do **not** remove any existing entries — historical years must remain selectable.
 
-Do not touch `services/report_constructor.js`. It consumes `currentAcademicYear` from context and holds no year literals.
+4. `app/frontend/src/src/services/report_constructor.js`
+   Update the fallback literal `const academicYear = evidenceItem.currentAcademicYear || "<OLD_YEAR>";` to use `<NEW_YEAR>`. This is a defensive fallback for evidence items that carry no `currentAcademicYear`; leaving it stale silently pins those to the prior year.
 
 ### 5. Smoke test
 
@@ -76,7 +78,7 @@ Do not touch `services/report_constructor.js`. It consumes `currentAcademicYear`
 
 ## Rollback
 
-- Partial failure: re-run step 2. The Cypher at `app/database/tools/create_new_ay_campus.py:57` skips any `year_identifier` that already exists, so duplicates are not created.
+- Partial failure: re-run step 2. The duplication Cypher skips any `year_identifier` that already exists (the `WHERE existing IS NULL` guard), so duplicates are not created.
 - Full unwind: in Neo4j Browser, detach-delete every YSE connected to the new `AcademicYear` and delete the `AcademicYear` node:
   ```cypher
   MATCH (y:AcademicYear {name: $new_year})<-[:evidence_in_year]-(e:YearSuccessEvidence)
@@ -88,11 +90,11 @@ Do not touch `services/report_constructor.js`. It consumes `currentAcademicYear`
 ## Files touched by this skill
 
 Modified:
-- `app/database/tools/create_new_ay_campus.py` (lines 238, 239)
-- `app/frontend/src/src/context/SettingsContext.js` (line 19)
-- `app/frontend/src/src/context/DataContext.js` (line 33)
-- `app/frontend/src/src/App.js` (lines 88-94, append-only)
+- `app/database/tools/create_new_ay_campus.py` (`OLD_YEAR` / `NEW_YEAR` in the `__main__` block)
+- `app/frontend/src/src/context/SettingsContext.js` (`currentAcademicYear` default)
+- `app/frontend/src/src/context/DataContext.js` (`selectedYear` default)
+- `app/frontend/src/src/App.js` (`yearOptions` array, append-only)
+- `app/frontend/src/src/services/report_constructor.js` (`academicYear` fallback literal)
 
 Referenced (read-only):
 - `app/database/graph_schema.py` — `AcademicYear`, `YearSuccessEvidence`, `Campus`, `SuccessIndicator`, `StatusLevel`, `set_connection`
-- `app/database/batch/new_ay_query.cypher` — standalone version of the duplication Cypher (not used by the orchestrator, kept for manual/ad-hoc use)
