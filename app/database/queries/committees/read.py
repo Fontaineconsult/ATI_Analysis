@@ -4,19 +4,13 @@
 from neomodel import db
 
 from app.database.graph_schema import *
-from app.database.identifiers import make_campus_plan_identifier
+from app.database.identifiers import make_campus_plan_identifier, previous_academic_year
 from app.endpoints.data_api.errors.custom_exceptions import NotFoundError
 
 
-def _previous_academic_year(year_name):
-    """'2025-2026' -> '2024-2025'. Returns None if year_name doesn't parse."""
-    if not year_name:
-        return None
-    try:
-        start, end = year_name.split("-")
-        return f"{int(start) - 1}-{int(end) - 1}"
-    except (ValueError, AttributeError):
-        return None
+# The shared implementation now lives in identifiers.py so the single-indicator
+# report can reuse it. Kept as a module alias for the call sites below.
+_previous_academic_year = previous_academic_year
 
 
 def get_all_committees() -> list:

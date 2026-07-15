@@ -26,6 +26,21 @@ IDENTIFIER_SEPARATOR = "-"
 SEGMENT_SEPARATOR = "--"
 
 
+def previous_academic_year(year_name: str):
+    """'2025-2026' -> '2024-2025'. Returns None if year_name doesn't parse.
+
+    Shared by the campus-plan status read and the single-indicator evidence report,
+    which both surface year-over-year status progression (previous -> current).
+    """
+    if not year_name:
+        return None
+    try:
+        start, end = year_name.split("-")
+        return f"{int(start) - 1}-{int(end) - 1}"
+    except (ValueError, AttributeError):
+        return None
+
+
 def make_yse_identifier(academic_year: str, indicator_composite_key: str, campus_abbrev: str) -> str:
     """
     Build a YearSuccessEvidence.year_identifier.
