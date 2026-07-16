@@ -28,13 +28,22 @@ import {
 function StatusLevelLadder({ level, variant = 'compact' }) {
     const total = STATUS_LEVELS_ORDER.length;
     const currentIndex = level ? STATUS_LEVELS_ORDER.indexOf(level) : -1;
-    const ariaLabel = currentIndex >= 0
-        ? `Maturity: ${level} (level ${currentIndex + 1} of ${total})`
-        : 'Maturity: no evidence';
+    // APG Meter pattern: a read-only value on a known scale. valuenow is the
+    // 1-based rung (0 = no evidence); valuetext carries the human reading.
+    const meterProps = {
+        role: 'meter',
+        'aria-label': 'Maturity',
+        'aria-valuemin': 0,
+        'aria-valuemax': total,
+        'aria-valuenow': currentIndex + 1,
+        'aria-valuetext': currentIndex >= 0
+            ? `${level}, level ${currentIndex + 1} of ${total}`
+            : 'no evidence',
+    };
 
     if (variant === 'full') {
         return (
-            <HStack spacing={1} align="center" flexWrap="wrap" role="img" aria-label={ariaLabel}>
+            <HStack spacing={1} align="center" flexWrap="wrap" {...meterProps}>
                 {STATUS_LEVELS_ORDER.map((lvl, i) => {
                     const achieved = currentIndex >= 0 && i <= currentIndex;
                     const isCurrent = i === currentIndex;
@@ -71,7 +80,7 @@ function StatusLevelLadder({ level, variant = 'compact' }) {
 
     // compact: a thin segmented heat-ramp bar; the current rung is taller.
     return (
-        <HStack spacing={1} align="center" w="100%" role="img" aria-label={ariaLabel}>
+        <HStack spacing={1} align="center" w="100%" {...meterProps}>
             {STATUS_LEVELS_ORDER.map((lvl, i) => {
                 const achieved = currentIndex >= 0 && i <= currentIndex;
                 const isCurrent = i === currentIndex;

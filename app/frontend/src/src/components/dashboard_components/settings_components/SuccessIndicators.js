@@ -227,11 +227,16 @@ const SuccessIndicators = () => {
                                                                 return (
                                                                     <Tr
                                                                         key={indicator.composite_key}
-                                                                        opacity={isRemoved ? 0.5 : 1}
                                                                         bg={isRemoved ? 'gray.50' : 'white'}
                                                                         _hover={{ bg: isRemoved ? 'gray.100' : 'gray.50' }}
                                                                     >
-                                                                        <Td fontSize="xs" color="gray.700" whiteSpace="normal" wordBreak="break-word">
+                                                                        <Td
+                                                                            fontSize="xs"
+                                                                            color={isRemoved ? 'gray.600' : 'gray.700'}
+                                                                            fontStyle={isRemoved ? 'italic' : 'normal'}
+                                                                            whiteSpace="normal"
+                                                                            wordBreak="break-word"
+                                                                        >
                                                                             {indicator.success_indicator}
                                                                         </Td>
                                                                         <Td>
@@ -247,6 +252,7 @@ const SuccessIndicators = () => {
                                                                             <Select
                                                                                 value={isRemoved ? 'Removed' : 'Active'}
                                                                                 onChange={(e) => handleStatusChange(indicator, e.target.value)}
+                                                                                aria-label={`Status — ${indicator.composite_key}`}
                                                                                 size="xs"
                                                                                 w="110px"
                                                                                 borderColor="gray.300"
@@ -270,6 +276,7 @@ const SuccessIndicators = () => {
                                                                                         colorScheme="orange"
                                                                                         isChecked={Boolean(indicator.override_implementation_requirement)}
                                                                                         onChange={(e) => handleOverrideChange(indicator, e.target.checked)}
+                                                                                        aria-label={`Implementations not required — ${indicator.composite_key}`}
                                                                                     />
                                                                                     <Text fontSize="2xs" color="gray.600">
                                                                                         {indicator.override_implementation_requirement ? 'Not required' : 'Required'}

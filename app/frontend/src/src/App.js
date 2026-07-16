@@ -12,11 +12,13 @@ import {
     MenuItem,
     HStack,
     Divider,
-    Image
+    Image,
+    VisuallyHidden
 } from '@chakra-ui/react';
 import { ChevronDownIcon } from '@chakra-ui/icons';
-import { Routes, Route, Link as RouterLink, Navigate, useParams, useNavigate, useLocation } from 'react-router-dom';
+import { Routes, Route, NavLink as RouterNavLink, Navigate, useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useData } from './hooks/useData';
+import useRouteAnnouncer from './hooks/useRouteAnnouncer';
 import { UserContext } from './context/UserContext';
 import { useAuth } from './context/AuthContext';
 import AtiExplorer from './components/AtiExplorer';
@@ -84,9 +86,39 @@ function AppContent() {
     };
 
     const campusDisplayName = getCampusName(campus);
+    const routeAnnouncement = useRouteAnnouncer();
 
     return (
         <>
+            {/* Skip link — first focusable element on the page (APG: Landmarks).
+                Visually hidden until keyboard focus reaches it. */}
+            <Box
+                as="a"
+                href="#main-content"
+                position="absolute"
+                top="-48px"
+                left={4}
+                zIndex={100}
+                bg="white"
+                color="teal.700"
+                fontWeight="semibold"
+                fontSize="sm"
+                px={4}
+                py={2}
+                borderRadius="md"
+                boxShadow="lg"
+                transition="top 0.15s"
+                _focus={{ top: 3, outline: '2px solid', outlineColor: 'teal.500' }}
+            >
+                Skip to main content
+            </Box>
+
+            {/* Announces page-level navigation to screen readers — React Router
+                swaps content silently otherwise. */}
+            <VisuallyHidden aria-live="polite" role="status">
+                {routeAnnouncement}
+            </VisuallyHidden>
+
             {/* Header Section */}
             <Box
                 bg="teal.800"
@@ -146,7 +178,7 @@ function AppContent() {
 
                         <HStack spacing={2}>
                             <Button
-                                as={RouterLink}
+                                as={RouterNavLink}
                                 to={`/${campus}/ati-explorer`}
                                 size="sm"
                                 variant="ghost"
@@ -166,7 +198,7 @@ function AppContent() {
                                 ATI Explorer
                             </Button>
                             <Button
-                                as={RouterLink}
+                                as={RouterNavLink}
                                 to={`/${campus}/dashboard`}
                                 size="sm"
                                 variant="ghost"
@@ -186,7 +218,7 @@ function AppContent() {
                                 Dashboard
                             </Button>
                             <Button
-                                as={RouterLink}
+                                as={RouterNavLink}
                                 to={`/${campus}/about`}
                                 size="sm"
                                 variant="ghost"
@@ -438,8 +470,9 @@ function AppContent() {
                 <SubNavbar />
             </Box>
 
-            {/* Main Content Container */}
-            <Box as="main" pt={6}>
+            {/* Main Content Container. id + tabIndex make it the skip-link target
+                and the focus landing spot after page-level navigation. */}
+            <Box as="main" id="main-content" tabIndex={-1} outline="none" pt={6}>
                 <Container
                     maxW="container.xl"
                     px={6}

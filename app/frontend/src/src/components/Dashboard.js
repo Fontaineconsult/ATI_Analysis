@@ -61,6 +61,7 @@ function Dashboard() {
                 <Route path="campus-plan" element={<CampusPlanContainer />} />
 
                 <Route path="settings" element={<SettingsMasterContainer />} />
+                <Route path="settings/:section" element={<SettingsMasterContainer />} />
                 <Route path="/" element={<ReportMasterList />} />
 
             </Routes>

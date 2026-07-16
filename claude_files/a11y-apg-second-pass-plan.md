@@ -1,5 +1,21 @@
 # A11y second pass — APG keyboard contracts + site-wide navigation consistency
 
+> **Status (2026-07-16):** Packages **A, B, D**, the flat-list core of **C**, and the
+> `role="meter"` item of **E** are implemented and spec-enforced
+> (`e2e/tests/navigation.spec.js`, `e2e/tests/keyboard-listbox.spec.js`).
+> Flat lists on the shared hook: SuccessIndicatorList (refactored), PeopleList,
+> PrincipleList, TaapList, VendorList. Listbox roles are conditional — an empty
+> listbox violates `aria-required-children`, so lists drop the role when no options render.
+>
+> Remaining:
+> - §C grouped lists (GovernanceList, AssetList, ImplementationList sections) need a
+>   grouped variant of `useListboxNavigation` (flattened cross-section index).
+> - §D `window.confirm` → `AlertDialog` (18 files — build a shared ConfirmDialog first).
+>   Note window.confirm IS keyboard/SR accessible; this is design consistency, not a defect.
+> - §E rest: `th scope` on the Members react-table, `initialFocusRef` audit on form modals,
+>   HelpTip NVDA reading check.
+> - Manual NVDA spot-check of one page per area.
+
 The axe sweep (first pass, 2026-07) catches what a scanner can see: names, roles, contrast,
 focusability. This plan is the **second pass**: implementing the full W3C ARIA Authoring
 Practices Guide (APG) interaction contracts — <https://www.w3.org/WAI/ARIA/apg/patterns/> —

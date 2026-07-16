@@ -1,8 +1,9 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React from 'react';
 import { Box, VStack, HStack, Text, Badge, Icon, Tooltip } from '@chakra-ui/react';
 import { FaUser, FaListUl, FaRegComment, FaCheckCircle } from 'react-icons/fa';
 import { getIndicatorSummary, getStatusColor } from './indicatorHelpers';
 import StatusLevelLadder from '../../functional_components/StatusLevelLadder';
+import useListboxNavigation from '../../../hooks/useListboxNavigation';
 
 // Compact count chip (icon + number) used in each row. aria-hidden because the
 // row's own aria-label carries the screen-reader summary; the chips are a sighted
@@ -28,20 +29,13 @@ const CountChip = ({ icon, count, label, zeroColor = 'gray.300' }) => (
  * Props: indicators (sorted wrappers), selectedKey, onSelect(compositeKey)
  */
 function SuccessIndicatorList({ indicators = [], selectedKey, onSelect }) {
-    const itemRefs = useRef([]);
-    const selectedIndex = Math.max(
-        0,
-        indicators.findIndex((w) => getIndicatorSummary(w).compositeKey === selectedKey),
-    );
-    const [focusedIndex, setFocusedIndex] = useState(selectedIndex);
-
-    // Keep the roving tab stop on the selected row when selection changes elsewhere
-    // (e.g. a deep link), and clamp if the list shrinks. Does not move actual focus,
-    // so it never steals focus on load.
-    useEffect(() => {
-        setFocusedIndex(selectedIndex);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [selectedKey, indicators.length]);
+    // Keyboard contract lives in the shared hook (APG Listbox — this component
+    // was the reference implementation it was extracted from).
+    const { getItemProps } = useListboxNavigation({
+        itemCount: indicators.length,
+        selectedIndex: indicators.findIndex((w) => getIndicatorSummary(w).compositeKey === selectedKey),
+        onActivate: (i) => onSelect && onSelect(getIndicatorSummary(indicators[i]).compositeKey),
+    });
 
     if (indicators.length === 0) {
         return (
@@ -51,27 +45,6 @@ function SuccessIndicatorList({ indicators = [], selectedKey, onSelect }) {
         );
     }
 
-    const focusItem = (i) => {
-        const clamped = Math.max(0, Math.min(i, indicators.length - 1));
-        setFocusedIndex(clamped);
-        itemRefs.current[clamped]?.focus();
-    };
-
-    const handleKeyDown = (e, index, compositeKey) => {
-        switch (e.key) {
-            case 'ArrowDown': e.preventDefault(); focusItem(index + 1); break;
-            case 'ArrowUp': e.preventDefault(); focusItem(index - 1); break;
-            case 'Home': e.preventDefault(); focusItem(0); break;
-            case 'End': e.preventDefault(); focusItem(indicators.length - 1); break;
-            case 'Enter':
-            case ' ':
-                e.preventDefault();
-                if (onSelect) onSelect(compositeKey);
-                break;
-            default: break;
-        }
-    };
-
     return (
         <VStack role="listbox" aria-label="Success indicators" align="stretch" spacing={1.5}>
             {indicators.map((wrapper, index) => {
@@ -80,14 +53,11 @@ function SuccessIndicatorList({ indicators = [], selectedKey, onSelect }) {
                 return (
                     <Box
                         key={s.compositeKey}
-                        ref={(el) => { itemRefs.current[index] = el; }}
+                        {...getItemProps(index)}
                         role="option"
                         aria-selected={isSelected}
                         aria-label={`Indicator ${s.compositeKey}, ${s.statusLevel || 'no evidence'}${s.description ? `: ${s.description}` : ''}`}
-                        tabIndex={index === focusedIndex ? 0 : -1}
-                        onClick={() => { setFocusedIndex(index); if (onSelect) onSelect(s.compositeKey); }}
-                        onFocus={() => setFocusedIndex(index)}
-                        onKeyDown={(e) => handleKeyDown(e, index, s.compositeKey)}
+                        onClick={() => { if (onSelect) onSelect(s.compositeKey); }}
                         cursor="pointer"
                         bg="white"
                         borderWidth="1px"

@@ -132,8 +132,14 @@ export default function WgMinutesSection({ workingGroupPlanIdentifier, workingGr
                                 spacing={2.5}
                                 cursor="pointer"
                                 _hover={{ bg: 'gray.50' }}
+                                _focusVisible={{ outline: '2px solid', outlineColor: 'teal.500', outlineOffset: '1px' }}
                                 onClick={() => setOpenId(m.unique_id)}
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setOpenId(m.unique_id); }
+                                }}
                                 role="button"
+                                tabIndex={0}
+                                aria-label={`Open meeting minutes: ${m.title}`}
                             >
                                 <Text fontSize="sm" fontWeight="medium" color="gray.800" flex="1" minW={0} noOfLines={1}>
                                     {m.title}

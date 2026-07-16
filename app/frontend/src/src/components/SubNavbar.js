@@ -27,26 +27,28 @@ function SubNavbar() {
 
     const campusPrefix = campus ? `/${campus}` : '';
 
+    // `base` widens active detection to the whole subsection (any goal number,
+    // deep report/settings routes) — the item is current for every path under it.
     let subNavItems;
     if (location.pathname.includes('/ati-explorer')) {
         subNavItems = [
-            { label: 'Implementations', path: `${campusPrefix}/ati-explorer/implementations` },
-            { label: 'Plans', path: `${campusPrefix}/ati-explorer/plans` },
+            { label: 'Implementations', path: `${campusPrefix}/ati-explorer/implementations`, base: `${campusPrefix}/ati-explorer/implementations` },
+            { label: 'Plans', path: `${campusPrefix}/ati-explorer/plans`, base: `${campusPrefix}/ati-explorer/plans` },
             { label: 'People', path: `${campusPrefix}/ati-explorer/people` },
-            { label: 'Governance', path: `${campusPrefix}/ati-explorer/governance` },
-            { label: 'Assets', path: `${campusPrefix}/ati-explorer/assets` },
+            { label: 'Governance', path: `${campusPrefix}/ati-explorer/governance`, base: `${campusPrefix}/ati-explorer/governance` },
+            { label: 'Assets', path: `${campusPrefix}/ati-explorer/assets`, base: `${campusPrefix}/ati-explorer/assets` },
         ];
     } else if (location.pathname.includes('/dashboard')) {
         // The three working groups carry the brand accent trio as their
         // identity marks (blue/purple/coral — see design-sense §2).
         subNavItems = [
-            { label: 'Web', path: `${campusPrefix}/dashboard/web/goal/1`, accent: 'teal.500' },
-            { label: 'Instructional Materials', path: `${campusPrefix}/dashboard/instructional-materials/goal/1`, accent: 'purple.500' },
-            { label: 'Procurement', path: `${campusPrefix}/dashboard/procurement/goal/1`, accent: 'coral.500' },
-            { label: 'View Reports', path: `${campusPrefix}/dashboard/reports` },
+            { label: 'Web', path: `${campusPrefix}/dashboard/web/goal/1`, base: `${campusPrefix}/dashboard/web`, accent: 'teal.500' },
+            { label: 'Instructional Materials', path: `${campusPrefix}/dashboard/instructional-materials/goal/1`, base: `${campusPrefix}/dashboard/instructional-materials`, accent: 'purple.500' },
+            { label: 'Procurement', path: `${campusPrefix}/dashboard/procurement/goal/1`, base: `${campusPrefix}/dashboard/procurement`, accent: 'coral.500' },
+            { label: 'View Reports', path: `${campusPrefix}/dashboard/reports`, base: `${campusPrefix}/dashboard/reports` },
             { label: 'Copy Report', path: `${campusPrefix}/dashboard/report-overview` },
             { label: 'Campus Plan', path: `${campusPrefix}/dashboard/campus-plan` },
-            { label: 'Settings', path: `${campusPrefix}/dashboard/settings` },
+            { label: 'Settings', path: `${campusPrefix}/dashboard/settings`, base: `${campusPrefix}/dashboard/settings` },
         ];
     } else if (location.pathname.includes('/about')) {
         subNavItems = [
@@ -81,7 +83,8 @@ function SubNavbar() {
                 px={6}
             >
                 {subNavItems.map((item, index) => {
-                    const isActive = location.pathname === item.path;
+                    const isActive = location.pathname === item.path
+                        || (item.base && location.pathname.startsWith(item.base));
                     const isDisabled = item.requiresAdmin && !isUserAdmin();
 
                     return (
@@ -89,6 +92,7 @@ function SubNavbar() {
                             <Button
                                 as={isDisabled ? undefined : Link}
                                 to={isDisabled ? undefined : item.path}
+                                aria-current={isActive && !isDisabled ? 'page' : undefined}
                                 size="sm"
                                 variant="ghost"
                                 position="relative"

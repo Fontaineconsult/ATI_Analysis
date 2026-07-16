@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import {
     Alert,
     AlertIcon,
@@ -64,9 +64,19 @@ import { toISODate } from '../graph_components/assets/assetConfig';
 function AssetsMasterContainer() {
     // Deep-link: /{campus}/ati-explorer/assets/:assetTab/:itemId arrives with a tab
     // and item to open (e.g. from a success indicator's Assets/Interfaces/Tools panel).
-    const { assetTab, itemId } = useParams();
+    const { campus, assetTab, itemId } = useParams();
+    const navigate = useNavigate();
 
     const [tabIndex, setTabIndex] = useState(0);
+
+    // Tab order must match the <Tab> order below. Tab changes push the slug into
+    // the URL so the address bar always names the visible tab (deep-linkable,
+    // back/forward switches tabs via the assetTab effect below).
+    const TAB_SLUGS = ['assets', 'taaps', 'vendors', 'interfaces', 'tools', 'components'];
+    const handleTabChange = (index) => {
+        setTabIndex(index);
+        navigate(`/${campus}/ati-explorer/assets/${TAB_SLUGS[index]}`);
+    };
 
     // Assets
     const [assets, setAssets] = useState([]);
@@ -421,7 +431,7 @@ function AssetsMasterContainer() {
                 loading={assetsLoading}
             />
 
-            <Tabs index={tabIndex} onChange={setTabIndex} colorScheme="teal" variant="enclosed" isLazy>
+            <Tabs index={tabIndex} onChange={handleTabChange} colorScheme="teal" variant="enclosed" isLazy>
                 <TabList>
                     <Tab fontSize="sm">Assets</Tab>
                     <Tab fontSize="sm">TAAPs</Tab>

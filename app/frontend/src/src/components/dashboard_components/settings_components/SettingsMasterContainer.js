@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
     Box,
     Flex,
@@ -8,13 +8,18 @@ import {
     Text,
     useBreakpointValue
 } from '@chakra-ui/react';
+import { Link as RouterLink, useParams } from 'react-router-dom';
 import Members from "./Members";
 import SuccessIndicators from "./SuccessIndicators";
 import StatusLevels from "./StatusLevelsControls";
 import OntologyBrowser from "./OntologyBrowser";
 
 function SettingsMasterContainer() {
-    const [activeSetting, setActiveSetting] = useState('members');
+    // Section comes from the URL (dashboard/settings/:section) so settings pages
+    // are deep-linkable and the sidebar is real navigation, matching every other
+    // area's switcher idiom (a11y-apg-second-pass-plan, package B).
+    const { campus, section } = useParams();
+    const activeSetting = section || 'members';
     const isSmallScreen = useBreakpointValue({ base: true, lg: false });
 
     const renderContent = () => {
@@ -64,8 +69,11 @@ function SettingsMasterContainer() {
             bg="gray.50"
             direction={isSmallScreen ? "column" : "row"}
         >
-            {/* Sidebar */}
+            {/* Sidebar — real navigation: each section is a route, links carry
+                aria-current so location is programmatically determinable. */}
             <Box
+                as="nav"
+                aria-label="Settings sections"
                 w={isSmallScreen ? "100%" : "240px"}
                 bg="white"
                 borderRightWidth={isSmallScreen ? "0" : "1px"}
@@ -105,7 +113,9 @@ function SettingsMasterContainer() {
                                     {section.items.map((item) => (
                                         <Button
                                             key={item.id}
-                                            onClick={() => setActiveSetting(item.id)}
+                                            as={RouterLink}
+                                            to={`/${campus}/dashboard/settings/${item.id}`}
+                                            aria-current={activeSetting === item.id ? 'page' : undefined}
                                             variant="ghost"
                                             justifyContent="flex-start"
                                             size="sm"
@@ -116,6 +126,7 @@ function SettingsMasterContainer() {
                                             borderLeftColor={activeSetting === item.id ? "teal.500" : "transparent"}
                                             borderRadius="0"
                                             _hover={{
+                                                textDecoration: 'none',
                                                 bg: activeSetting === item.id ? "teal.50" : "gray.50",
                                                 color: activeSetting === item.id ? "teal.700" : "gray.700"
                                             }}

@@ -139,8 +139,14 @@ export default function WgQueriesSection({ workingGroupPlanIdentifier, workingGr
                             py={2}
                             cursor="pointer"
                             _hover={{ bg: 'gray.50' }}
+                            _focusVisible={{ outline: '2px solid', outlineColor: 'teal.500', outlineOffset: '1px' }}
                             onClick={() => setOpenId(q.unique_id)}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setOpenId(q.unique_id); }
+                            }}
                             role="button"
+                            tabIndex={0}
+                            aria-label={`Open query: ${q.question}`}
                         >
                             <Text fontSize="sm" color="gray.800" lineHeight="1.45" noOfLines={2}>{q.question}</Text>
                             <HStack spacing={2} mt={1.5} flexWrap="wrap">

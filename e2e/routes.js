@@ -20,6 +20,9 @@ const ROUTES = [
     { name: 'dashboard: plans', path: p('/dashboard/plans') },
     { name: 'dashboard: campus plan', path: p('/dashboard/campus-plan') },
     { name: 'dashboard: settings', path: p('/dashboard/settings') },
+    { name: 'dashboard: settings status levels', path: p('/dashboard/settings/status-levels') },
+    { name: 'dashboard: settings success indicators', path: p('/dashboard/settings/success-indicators') },
+    { name: 'dashboard: settings ontology browser', path: p('/dashboard/settings/ontology-browser') },
 
     // ATI Explorer area
     { name: 'explorer: implementations', path: p('/ati-explorer/implementations') },
@@ -28,6 +31,11 @@ const ROUTES = [
     { name: 'explorer: governance', path: p('/ati-explorer/governance') },
     { name: 'explorer: principles', path: p('/ati-explorer/principles') },
     { name: 'explorer: assets', path: p('/ati-explorer/assets') },
+    { name: 'explorer: assets taaps tab', path: p('/ati-explorer/assets/taaps') },
+    { name: 'explorer: assets vendors tab', path: p('/ati-explorer/assets/vendors') },
+    { name: 'explorer: assets interfaces tab', path: p('/ati-explorer/assets/interfaces') },
+    { name: 'explorer: assets tools tab', path: p('/ati-explorer/assets/tools') },
+    { name: 'explorer: assets components tab', path: p('/ati-explorer/assets/components') },
 
     // About area (static content — no graph data required)
     { name: 'about: overview', path: p('/about/overview') },

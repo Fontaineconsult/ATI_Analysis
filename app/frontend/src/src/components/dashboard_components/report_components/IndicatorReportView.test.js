@@ -131,8 +131,10 @@ describe('IndicatorReportView — link resolution & dropped data (PR1)', () => {
 describe('IndicatorReportView — flat redesign (PR2)', () => {
     it('shows the maturity gradation ladder at the current level, plus year-over-year pills', () => {
         renderReport();
-        // Full ladder (Not Started → … → Optimizing) with the current rung in its aria-label.
-        expect(screen.getByRole('img', { name: /Maturity: Defined \(level \d of \d\)/i })).toBeInTheDocument();
+        // Full ladder (Not Started → … → Optimizing) — an APG meter whose
+        // valuetext names the current rung.
+        const ladder = screen.getByRole('meter', { name: 'Maturity' });
+        expect(ladder).toHaveAttribute('aria-valuetext', expect.stringMatching(/Defined, level \d of \d/));
         // Every rung label renders; the previous level appears (ladder rung + YoY pill).
         expect(screen.getByText('Not Started')).toBeInTheDocument();
         expect(screen.getByText('Optimizing')).toBeInTheDocument();
