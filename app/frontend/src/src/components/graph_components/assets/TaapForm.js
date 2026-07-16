@@ -131,7 +131,7 @@ function TaapForm({ isOpen, onClose, existingTaap, assets = [], presetAssetIdent
                         <FormControl isRequired={!isEdit}>
                             <FormLabel fontSize="sm" fontWeight="semibold" color="gray.700">Covered Asset</FormLabel>
                             {isEdit ? (
-                                <Input size="sm" value={coveredAssetDisplay()} isReadOnly bg="gray.50" color="gray.500" />
+                                <Input size="sm" value={coveredAssetDisplay()} isReadOnly bg="gray.50" color="gray.600" />
                             ) : (
                                 <Select
                                     size="sm"

@@ -46,7 +46,7 @@ function SuccessIndicatorList({ indicators = [], selectedKey, onSelect }) {
     if (indicators.length === 0) {
         return (
             <Box p={4} borderWidth="1px" borderColor="gray.200" borderRadius="lg" bg="white">
-                <Text fontSize="sm" color="gray.500" fontStyle="italic">No success indicators for this goal.</Text>
+                <Text fontSize="sm" color="gray.600" fontStyle="italic">No success indicators for this goal.</Text>
             </Box>
         );
     }

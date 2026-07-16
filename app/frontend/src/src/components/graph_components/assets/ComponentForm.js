@@ -127,7 +127,7 @@ function ComponentForm({ isOpen, onClose, interfaces = [], presetInterfaceIdenti
                                     value={form.interface_identifier || 'standalone'}
                                     isReadOnly
                                     bg="gray.50"
-                                    color="gray.500"
+                                    color="gray.600"
                                 />
                             ) : (
                                 <Select size="sm" placeholder="None (standalone)" value={form.interface_identifier} onChange={set('interface_identifier')}>
@@ -138,7 +138,7 @@ function ComponentForm({ isOpen, onClose, interfaces = [], presetInterfaceIdenti
                                     ))}
                                 </Select>
                             )}
-                            <Text fontSize="2xs" color="gray.400" mt={1}>
+                            <Text fontSize="2xs" color="gray.600" mt={1}>
                                 The interface this component is part of. Part of identity, so immutable after create.
                             </Text>
                         </FormControl>
@@ -146,7 +146,7 @@ function ComponentForm({ isOpen, onClose, interfaces = [], presetInterfaceIdenti
                         {isEdit && (
                             <FormControl>
                                 <FormLabel fontSize="sm" color="gray.700" fontWeight="semibold">Identifier</FormLabel>
-                                <Input size="sm" value={existingComponent.component_identifier} isReadOnly bg="gray.50" color="gray.500" />
+                                <Input size="sm" value={existingComponent.component_identifier} isReadOnly bg="gray.50" color="gray.600" />
                             </FormControl>
                         )}
 
@@ -155,7 +155,7 @@ function ComponentForm({ isOpen, onClose, interfaces = [], presetInterfaceIdenti
                             <Select size="sm" placeholder="Select kind…" value={form.component_kind} onChange={set('component_kind')}>
                                 {getComponentKindOptions(vocab).map((o) => <option key={o.key} value={o.key}>{o.label}</option>)}
                             </Select>
-                            <Text fontSize="2xs" color="gray.400" mt={1}>
+                            <Text fontSize="2xs" color="gray.600" mt={1}>
                                 The WCAG-grain functional role (where the standard's criteria attach).
                             </Text>
                         </FormControl>

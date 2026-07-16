@@ -82,8 +82,14 @@ desaturated and saturated color carries *meaning* (status) or *identity* (workin
 | Borders, dividers | `gray.200` |
 | Primary text | `gray.800` |
 | Secondary text | `gray.600` |
-| Tertiary / mono identifiers | `gray.400` |
-| Muted / empty-state text | `gray.500` (often `fontStyle="italic"`) |
+| Tertiary / mono identifiers | `gray.600` + `fontFamily="mono"` (differentiate by face, not lightness) |
+| Muted / empty-state text | `gray.600` (often `fontStyle="italic"`) |
+
+> **AA floor (2026-07): `gray.600` is the lightest allowed text gray.** `gray.500`
+> (4.01:1) and `gray.400` (2.25:1) fail WCAG AA for the small sizes this app runs on —
+> the axe sweep enforces this. Express muted-ness through size, weight, casing, or
+> italics, never by dropping below `gray.600`. (`gray.400`/`gray.500` remain fine for
+> borders and decorative glyphs.)
 
 **Semantic — meaning only.** Two palettes, both centralized — **do not hardcode hex**:
 
@@ -95,6 +101,10 @@ desaturated and saturated color carries *meaning* (status) or *identity* (workin
   `getStatusColor(level)` — a red→green heat ramp across the six `status_levels`:
   Not Started=`#E53E3E` (red) · Initiated=`#ED8936` (orange) · Defined=`#ECC94B` (yellow) ·
   Established=`#41b441` · Managed=`#246f24` · Optimizing=`#157744` (greens) · none=gray.
+  **The ramp is for non-text fills only** (ladder segments, left-borders, dots). Status
+  *text* — pill labels, badge text — uses `getStatusTextColor(level)` (an AA-darkened
+  ramp, ≥4.5:1 on white and on the `.50` tints), over `getStatusBackgroundColor(level)`
+  tints. Never put white text on the raw ramp: yellow/orange/`#41b441` fail badly.
 
 > ✔ Resolved (2026-06): brand and status are now disjoint. The `teal` key is the brand-blue
 > alias and appears only as chrome; the maturity ramp is strictly red→green (the former
@@ -211,6 +221,11 @@ a footer of **count chips** (icon + number, **red when 0**) and state flags
 `variant` `subtle`/`outline`/`solid`. Centralize per domain in a config + a tiny badge
 component (`AssetBadges.js`: `ScopeBadge`/`ClassBadge`/`ElevationBadge`;
 `governanceTypes.js` color map). Status pills use `borderRadius="full"`; category badges `"md"`.
+
+Contrast: `theme.js` re-shades `solid` (bg) and `outline` (text) per colorScheme so
+white-on-`.500` / `.500`-on-white combinations meet AA — stick to `colorScheme`, don't
+hand-set badge bg/text hexes. Status-level badges are the exception with their own rule:
+tint bg + `getStatusTextColor` (see §2 Semantic).
 
 ### 4.3 Forms (create / edit)
 

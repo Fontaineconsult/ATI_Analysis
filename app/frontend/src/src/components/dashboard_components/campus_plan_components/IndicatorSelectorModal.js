@@ -84,7 +84,7 @@ function IndicatorSelectorModal({
                 <ModalCloseButton />
                 <ModalBody>
                     {availableIndicators.length === 0 ? (
-                        <Text fontSize="sm" color="gray.500" fontStyle="italic">
+                        <Text fontSize="sm" color="gray.600" fontStyle="italic">
                             No indicators are available for this working group.
                         </Text>
                     ) : (
@@ -105,7 +105,7 @@ function IndicatorSelectorModal({
                                         <HStack justify="space-between" align="center" spacing={3}>
                                             <Box flex={1}>
                                                 <HStack align="baseline" spacing={2}>
-                                                    <Text fontFamily="mono" fontSize="xs" color="gray.500" minW="60px">
+                                                    <Text fontFamily="mono" fontSize="xs" color="gray.600" minW="60px">
                                                         {indicator.composite_key}
                                                     </Text>
                                                     <Text fontSize="sm" color="gray.800">

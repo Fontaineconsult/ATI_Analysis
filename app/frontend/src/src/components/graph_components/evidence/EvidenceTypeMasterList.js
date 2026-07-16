@@ -70,7 +70,7 @@ function EvidenceTypeMasterList({ evidence, yearIdentifier, onRefresh }) {
         const counts = getDocumentationCounts(evidenceItem);
 
         if (counts.total === 0) {
-            return <Text fontSize="xs" color="gray.400">No documentation</Text>;
+            return <Text fontSize="xs" color="gray.600">No documentation</Text>;
         }
 
         const badges = [];
@@ -198,7 +198,7 @@ function EvidenceTypeMasterList({ evidence, yearIdentifier, onRefresh }) {
     }, [evidenceCount]);
 
     if (evidenceCount === 0) {
-        return <Text color="gray.500" fontSize="sm">No evidence available for this type.</Text>;
+        return <Text color="gray.600" fontSize="sm">No evidence available for this type.</Text>;
     }
 
     return (

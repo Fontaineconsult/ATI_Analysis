@@ -73,7 +73,7 @@ export default function QueryDetail({ query, candidateEvidence = [], onChanged }
                     <Text fontSize="xs" fontWeight="bold" color="green.700" textTransform="uppercase">Answer</Text>
                     <Text fontSize="sm" color="gray.800" whiteSpace="pre-wrap" mt={1}>{query.answer}</Text>
                     {query.settled_by && (
-                        <Text fontSize="xs" color="gray.500" mt={1}>
+                        <Text fontSize="xs" color="gray.600" mt={1}>
                             — {query.settled_by.name}{query.date_settled ? ` · ${query.date_settled}` : ''}
                         </Text>
                     )}
@@ -112,14 +112,14 @@ export default function QueryDetail({ query, candidateEvidence = [], onChanged }
             <Box>
                 <Text fontSize="xs" fontWeight="bold" color="teal.700" textTransform="uppercase" mb={2}>Notes</Text>
                 {(query.notes || []).length === 0 ? (
-                    <Text fontSize="sm" color="gray.500" fontStyle="italic">No notes yet.</Text>
+                    <Text fontSize="sm" color="gray.600" fontStyle="italic">No notes yet.</Text>
                 ) : (
                     <VStack align="stretch" spacing={1} mb={2}>
                         {query.notes.map((n) => (
                             <Box key={n.unique_id} bg="gray.50" borderRadius="sm" p={2}>
                                 <Text fontSize="sm" color="gray.700" whiteSpace="pre-wrap">{n.content}</Text>
                                 {(n.author?.name || n.dateCreated) && (
-                                    <Text fontSize="2xs" color="gray.500" mt={1}>
+                                    <Text fontSize="2xs" color="gray.600" mt={1}>
                                         {n.author?.name ? `— ${n.author.name}` : ''}
                                         {n.author?.name && n.dateCreated ? ' · ' : ''}
                                         {n.dateCreated || ''}

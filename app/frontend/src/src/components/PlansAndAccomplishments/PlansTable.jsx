@@ -113,7 +113,7 @@ function PlansTable({ plans, onUpdate, initialPlanId }) {
                                         ))}
                                     </HStack>
                                 ) : (
-                                    <Box as="span" color="gray.400" fontSize="xs">—</Box>
+                                    <Box as="span" color="gray.600" fontSize="xs">—</Box>
                                 )}
                             </Td>
                             <Td color="gray.700" fontSize="xs">

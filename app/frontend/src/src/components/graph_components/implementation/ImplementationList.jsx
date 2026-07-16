@@ -131,7 +131,7 @@ function ImplementationList({
             <HStack spacing={2}>
                 <InputGroup size="sm">
                     <InputLeftElement pointerEvents="none">
-                        <SearchIcon color="gray.400" boxSize={3} />
+                        <SearchIcon color="gray.600" boxSize={3} />
                     </InputLeftElement>
                     <Input
                         placeholder={`Search ${lower}s…`}
@@ -157,7 +157,7 @@ function ImplementationList({
                     Show all Campuses
                 </Button>
                 <Spacer />
-                <Text fontSize="2xs" color="gray.500">
+                <Text fontSize="2xs" color="gray.600">
                     {showAllCampuses
                         ? 'all campuses'
                         : `${(activeCampus || '').toUpperCase() || 'active'} only`}
@@ -166,11 +166,11 @@ function ImplementationList({
             </HStack>
 
             {items.length === 0 ? (
-                <Box p={4} color="gray.500" fontSize="sm" fontStyle="italic">
+                <Box p={4} color="gray.600" fontSize="sm" fontStyle="italic">
                     {emptyMessage || `No ${lower}s yet.`}
                 </Box>
             ) : filtered.length === 0 ? (
-                <Box p={4} color="gray.500" fontSize="sm" fontStyle="italic">
+                <Box p={4} color="gray.600" fontSize="sm" fontStyle="italic">
                     No {lower}s match the current filters.
                 </Box>
             ) : (
@@ -192,7 +192,7 @@ function ImplementationList({
                                     <Heading as="h3" size="xs" textTransform="uppercase" letterSpacing="wide" color="teal.700">
                                         {section.label}
                                     </Heading>
-                                    <Text fontSize="2xs" fontWeight="semibold" color="gray.500">
+                                    <Text fontSize="2xs" fontWeight="semibold" color="gray.600">
                                         {section.items.length}
                                     </Text>
                                 </HStack>

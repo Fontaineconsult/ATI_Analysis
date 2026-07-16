@@ -37,7 +37,7 @@ function PrincipleList({ items = [], selectedHandle, onSelect, onAdd, emptyMessa
 
             <InputGroup size="sm">
                 <InputLeftElement pointerEvents="none">
-                    <SearchIcon color="gray.400" />
+                    <SearchIcon color="gray.600" />
                 </InputLeftElement>
                 <Input
                     placeholder="Search name, handle, statement…"
@@ -48,11 +48,13 @@ function PrincipleList({ items = [], selectedHandle, onSelect, onAdd, emptyMessa
                 />
             </InputGroup>
 
-            <Box borderWidth="1px" borderColor="gray.200" borderRadius="md" bg="white" overflowY="auto" flex="1" maxH="65vh">
+            <Box borderWidth="1px" borderColor="gray.200" borderRadius="md" bg="white" overflowY="auto" flex="1" maxH="65vh"
+                 tabIndex={0} role="region" aria-label="Principles list"
+                 _focusVisible={{ outline: '2px solid', outlineColor: 'teal.500' }}>
                 {items.length === 0 ? (
-                    <Box p={4} color="gray.500" fontSize="sm" fontStyle="italic">{emptyMessage}</Box>
+                    <Box p={4} color="gray.600" fontSize="sm" fontStyle="italic">{emptyMessage}</Box>
                 ) : filtered.length === 0 ? (
-                    <Box p={4} color="gray.500" fontSize="sm" fontStyle="italic">No principles match “{query}”.</Box>
+                    <Box p={4} color="gray.600" fontSize="sm" fontStyle="italic">No principles match “{query}”.</Box>
                 ) : (
                     filtered.map((item) => {
                         const isSelected = item.handle === selectedHandle;
@@ -76,7 +78,7 @@ function PrincipleList({ items = [], selectedHandle, onSelect, onAdd, emptyMessa
                                     </Text>
                                     <PrincipleSourceBadge principle={item} size="sm" />
                                 </HStack>
-                                <Text fontSize="2xs" color="gray.400" fontFamily="mono" noOfLines={1}>{item.handle}</Text>
+                                <Text fontSize="2xs" color="gray.600" fontFamily="mono" noOfLines={1}>{item.handle}</Text>
                                 <Box mt={1}>
                                     <PrincipleGroundingTags principle={item} size="sm" />
                                 </Box>

@@ -32,7 +32,7 @@ function VendorList({ items = [], selectedName, onSelect, onAdd, emptyMessage = 
 
             <InputGroup size="sm">
                 <InputLeftElement pointerEvents="none">
-                    <SearchIcon color="gray.400" />
+                    <SearchIcon color="gray.600" />
                 </InputLeftElement>
                 <Input
                     placeholder="Search name, location…"
@@ -45,9 +45,9 @@ function VendorList({ items = [], selectedName, onSelect, onAdd, emptyMessage = 
 
             <Box borderWidth="1px" borderColor="gray.200" borderRadius="md" bg="white" overflowY="auto" flex="1" maxH="65vh">
                 {items.length === 0 ? (
-                    <Box p={4} color="gray.500" fontSize="sm" fontStyle="italic">{emptyMessage}</Box>
+                    <Box p={4} color="gray.600" fontSize="sm" fontStyle="italic">{emptyMessage}</Box>
                 ) : filtered.length === 0 ? (
-                    <Box p={4} color="gray.500" fontSize="sm" fontStyle="italic">No vendors match “{query}”.</Box>
+                    <Box p={4} color="gray.600" fontSize="sm" fontStyle="italic">No vendors match “{query}”.</Box>
                 ) : (
                     filtered.map((v) => {
                         const isSelected = v.name === selectedName;
@@ -68,7 +68,7 @@ function VendorList({ items = [], selectedName, onSelect, onAdd, emptyMessage = 
                                 <Text fontSize="sm" fontWeight={isSelected ? 'semibold' : 'medium'} color="gray.800" noOfLines={1}>
                                     {v.name || '(unnamed)'}
                                 </Text>
-                                {v.location && <Text fontSize="xs" color="gray.500" noOfLines={1}>{v.location}</Text>}
+                                {v.location && <Text fontSize="xs" color="gray.600" noOfLines={1}>{v.location}</Text>}
                             </Box>
                         );
                     })

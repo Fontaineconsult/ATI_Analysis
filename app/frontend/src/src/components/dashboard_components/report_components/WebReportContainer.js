@@ -7,7 +7,7 @@ function WebReportContainer({ webData }) {
     if (!webData || !webData.goals) {
         return (
             <Box p={4}>
-                <Text color="gray.500" fontSize="sm">No data available for Web Working Group</Text>
+                <Text color="gray.600" fontSize="sm">No data available for Web Working Group</Text>
             </Box>
         );
     }

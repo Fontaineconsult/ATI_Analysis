@@ -83,7 +83,7 @@ function GovernanceList({ items = [], selectedId, onSelect, onAdd, emptyMessage 
 
             <InputGroup size="sm">
                 <InputLeftElement pointerEvents="none">
-                    <SearchIcon color="gray.400" />
+                    <SearchIcon color="gray.600" />
                 </InputLeftElement>
                 <Input
                     placeholder="Search title, description, authority…"
@@ -104,11 +104,11 @@ function GovernanceList({ items = [], selectedId, onSelect, onAdd, emptyMessage 
                 maxH="65vh"
             >
                 {items.length === 0 ? (
-                    <Box p={4} color="gray.500" fontSize="sm" fontStyle="italic">
+                    <Box p={4} color="gray.600" fontSize="sm" fontStyle="italic">
                         {emptyMessage}
                     </Box>
                 ) : q && totalMatches === 0 ? (
-                    <Box p={4} color="gray.500" fontSize="sm" fontStyle="italic">
+                    <Box p={4} color="gray.600" fontSize="sm" fontStyle="italic">
                         No items match “{query}”.
                     </Box>
                 ) : (
@@ -124,7 +124,7 @@ function GovernanceList({ items = [], selectedId, onSelect, onAdd, emptyMessage 
                                             <Text fontSize="sm" fontWeight="semibold" color="gray.700">
                                                 {config?.plural || config?.label || typeKey}
                                             </Text>
-                                            <Text fontSize="xs" color="gray.500">
+                                            <Text fontSize="xs" color="gray.600">
                                                 {list.length}
                                             </Text>
                                         </HStack>
@@ -132,7 +132,7 @@ function GovernanceList({ items = [], selectedId, onSelect, onAdd, emptyMessage 
                                     </AccordionButton>
                                     <AccordionPanel p={0} bg="gray.50">
                                         {list.length === 0 ? (
-                                            <Box px={3} py={2} fontSize="xs" color="gray.500" fontStyle="italic">
+                                            <Box px={3} py={2} fontSize="xs" color="gray.600" fontStyle="italic">
                                                 None yet.
                                             </Box>
                                         ) : (

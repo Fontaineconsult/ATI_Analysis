@@ -133,6 +133,7 @@ function EntityAttachmentSelector({
                 <Select
                     size="sm"
                     placeholder={placeholder}
+                    aria-label={placeholder || 'Select an item'}
                     value={selectedId}
                     onChange={(e) => setSelectedId(e.target.value)}
                     fontSize="sm"
@@ -171,13 +172,13 @@ function EntityAttachmentSelector({
             </Flex>
 
             {availableCandidates.length === 0 && candidates.length > 0 && (
-                <Text fontSize="xs" color="gray.500" fontStyle="italic" mb={2}>
+                <Text fontSize="xs" color="gray.600" fontStyle="italic" mb={2}>
                     {noCandidates}
                 </Text>
             )}
 
             {attached.length === 0 ? (
-                <Text fontSize="sm" color="gray.500" fontStyle="italic">
+                <Text fontSize="sm" color="gray.600" fontStyle="italic">
                     {emptyLabel}
                 </Text>
             ) : (

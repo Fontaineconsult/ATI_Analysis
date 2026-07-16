@@ -302,7 +302,7 @@ function YseAssignmentSelector({
                                                     </Text>
                                                     {peerCampuses.length > 0 && (
                                                         <HStack spacing={1} align="baseline">
-                                                            <Text as="span" fontSize="2xs" color="gray.500">
+                                                            <Text as="span" fontSize="2xs" color="gray.600">
                                                                 also at
                                                             </Text>
                                                             {peerCampuses.map((abbr) => (

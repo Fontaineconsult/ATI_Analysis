@@ -165,7 +165,7 @@ export default function MetricsViewer({ metrics = [], implementation_id, impleme
                                         <Text fontSize="xs" color="gray.800" fontWeight="semibold">Value: {metric.single_value}</Text>
                                     )}
                                     {metric.description && <Text fontSize="xs" color="gray.600" noOfLines={2}>{metric.description}</Text>}
-                                    {metric.comment && <Text fontSize="2xs" color="gray.500" fontStyle="italic" mt={1}>{metric.comment}</Text>}
+                                    {metric.comment && <Text fontSize="2xs" color="gray.600" fontStyle="italic" mt={1}>{metric.comment}</Text>}
                                     <PathLinks filePath={metric.file_path} uriPath={metric.uri_path} />
                                     <FileDownload file={metric.file} />
                                     {metric.composite_key && (

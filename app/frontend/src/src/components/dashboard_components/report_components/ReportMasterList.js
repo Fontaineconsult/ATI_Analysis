@@ -96,7 +96,7 @@ const ReportMasterList = () => {
                     {/* Copy a compact, email-ready (Outlook-safe) status report — one
                         working group at a time — for the active campus */}
                     <Flex justify="flex-end" align="center" gap={3} mb={3} wrap="wrap">
-                        <Text fontSize="xs" color="gray.500" fontWeight="medium">Copy status report for email:</Text>
+                        <Text fontSize="xs" color="gray.600" fontWeight="medium">Copy status report for email:</Text>
                         <ButtonGroup size="sm" spacing={2}>
                             {STATUS_REPORT_WORKING_GROUPS.map((wg) => (
                                 <CopyStatusReportButton key={wg.key} workingGroup={wg.key} label={wg.name} />

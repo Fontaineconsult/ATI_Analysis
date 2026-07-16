@@ -61,7 +61,7 @@ function PrincipleMasterContainer() {
         <Box>
             <HStack justify="space-between" align="baseline" mb={4}>
                 <Heading as="h2" size="lg" color="gray.800">Principles</Heading>
-                <Text fontSize="sm" color="gray.500">
+                <Text fontSize="sm" color="gray.600">
                     {principles.length} item{principles.length === 1 ? '' : 's'}
                 </Text>
             </HStack>

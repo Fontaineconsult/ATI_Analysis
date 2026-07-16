@@ -92,7 +92,7 @@ function SettingsMasterContainer() {
                                     <Heading
                                         size="xs"
                                         mb={2}
-                                        color="gray.500"
+                                        color="gray.600"
                                         textTransform="uppercase"
                                         fontSize="2xs"
                                         fontWeight="bold"

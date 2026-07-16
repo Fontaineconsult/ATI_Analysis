@@ -21,7 +21,8 @@ import {
     useToast,
 } from '@chakra-ui/react';
 import { TrendingUp, TrendingDown, Minus, HelpCircle, Copy } from 'lucide-react';
-import { getStatusColor, navigateToIndicator } from '../../../services/utils/tools';
+import { navigateToIndicator } from '../../../services/utils/tools';
+import { getStatusColor, getStatusBackgroundColor, getStatusTextColor } from '../../../services/utils/statusColors';
 import { getIndicatorSummary } from '../../graph_components/indicators/indicatorHelpers';
 import ViewReportButton from '../../functional_components/ViewReportButton';
 import { findTrendForIndicator } from './reportMetrics';
@@ -72,7 +73,7 @@ const SuccessIndicatorReportTables = ({ data, campus, navigate, openApprovalModa
             return (
                 <Tooltip label="No trend data available" placement="top">
                     <Box display="inline-flex" alignItems="center" justifyContent="center">
-                        <Icon as={HelpCircle} color="gray.400" boxSize={3} />
+                        <Icon as={HelpCircle} color="gray.600" boxSize={3} />
                     </Box>
                 </Tooltip>
             );
@@ -216,7 +217,7 @@ const SuccessIndicatorReportTables = ({ data, campus, navigate, openApprovalModa
                     <Heading size="sm" color="teal.700" mb={2}>
                         Goal {goal.goal?.properties?.goal_number}: {goal.goal?.properties?.name}
                     </Heading>
-                    <Text color="gray.500" fontSize="sm">No indicators available for this goal.</Text>
+                    <Text color="gray.600" fontSize="sm">No indicators available for this goal.</Text>
                 </Box>
             );
         }
@@ -323,15 +324,17 @@ const SuccessIndicatorReportTables = ({ data, campus, navigate, openApprovalModa
                                                     </Badge>
                                                 )}
                                                 {diag.flagMissingImplementation && (
-                                                    <Text mt={1} fontSize="2xs" color="gray.400" fontStyle="italic">
+                                                    <Text mt={1} fontSize="2xs" color="gray.600" fontStyle="italic">
                                                         No implementations assigned
                                                     </Text>
                                                 )}
                                             </Td>
                                             <Td>
                                                 <Badge
-                                                    bg={getStatusColor(statusLevel)}
-                                                    color="white"
+                                                    bg={getStatusBackgroundColor(statusLevel)}
+                                                    color={getStatusTextColor(statusLevel)}
+                                                    borderLeftWidth="3px"
+                                                    borderLeftColor={getStatusColor(statusLevel)}
                                                     fontSize="xs"
                                                     px={2}
                                                     py={1}
@@ -411,7 +414,7 @@ const SuccessIndicatorReportTables = ({ data, campus, navigate, openApprovalModa
                     <Heading as="h3" size="md" color="teal.700" mb={4}>
                         {workingGroupData?.workingGroup || workingGroupName}
                     </Heading>
-                    <Text color="gray.500" fontSize="sm">No goals available for this working group.</Text>
+                    <Text color="gray.600" fontSize="sm">No goals available for this working group.</Text>
                 </Box>
             );
         }

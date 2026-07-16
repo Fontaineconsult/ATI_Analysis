@@ -102,7 +102,7 @@ function GovernanceMasterContainer() {
                 <Heading as="h2" size="lg" color="gray.800">
                     Governance
                 </Heading>
-                <Text fontSize="sm" color="gray.500">
+                <Text fontSize="sm" color="gray.600">
                     {items.length} item{items.length === 1 ? '' : 's'}
                 </Text>
             </HStack>

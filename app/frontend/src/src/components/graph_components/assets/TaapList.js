@@ -42,7 +42,7 @@ function TaapList({ items = [], selectedTitle, onSelect, onAdd, emptyMessage = '
 
             <InputGroup size="sm">
                 <InputLeftElement pointerEvents="none">
-                    <SearchIcon color="gray.400" />
+                    <SearchIcon color="gray.600" />
                 </InputLeftElement>
                 <Input
                     placeholder="Search title, outcome…"
@@ -55,9 +55,9 @@ function TaapList({ items = [], selectedTitle, onSelect, onAdd, emptyMessage = '
 
             <Box borderWidth="1px" borderColor="gray.200" borderRadius="md" bg="white" overflowY="auto" flex="1" maxH="65vh">
                 {items.length === 0 ? (
-                    <Box p={4} color="gray.500" fontSize="sm" fontStyle="italic">{emptyMessage}</Box>
+                    <Box p={4} color="gray.600" fontSize="sm" fontStyle="italic">{emptyMessage}</Box>
                 ) : filtered.length === 0 ? (
-                    <Box p={4} color="gray.500" fontSize="sm" fontStyle="italic">No TAAPs match “{query}”.</Box>
+                    <Box p={4} color="gray.600" fontSize="sm" fontStyle="italic">No TAAPs match “{query}”.</Box>
                 ) : (
                     filtered.map((t) => {
                         const isSelected = t.title === selectedTitle;
@@ -82,7 +82,7 @@ function TaapList({ items = [], selectedTitle, onSelect, onAdd, emptyMessage = '
                                 <HStack mt={1} spacing={1}>
                                     {t.outcome && <Tag size="sm" colorScheme={getOutcomeColor(t.outcome)} variant="subtle">{getOutcomeLabel(t.outcome)}</Tag>}
                                     <Tag size="sm" colorScheme={t.active ? 'green' : 'gray'} variant="subtle">{t.active ? 'Active' : 'Inactive'}</Tag>
-                                    {due && <Text fontSize="2xs" color="gray.400">due {due}</Text>}
+                                    {due && <Text fontSize="2xs" color="gray.600">due {due}</Text>}
                                 </HStack>
                             </Box>
                         );

@@ -220,7 +220,7 @@ function PlanProgressNotes({ planUniqueId, planName, progressNotesData }) {
 
                 {progressNotes.length === 0 ? (
                     <Box py={4} textAlign="center">
-                        <Text fontSize="sm" color="gray.500">
+                        <Text fontSize="sm" color="gray.600">
                             No progress notes yet. Add your first update!
                         </Text>
                     </Box>
@@ -253,7 +253,7 @@ function PlanProgressNotes({ planUniqueId, planName, progressNotesData }) {
                                         {note.content}
                                     </Text>
                                     {note.created_by && (
-                                        <Text color="gray.500" fontSize="xs" fontStyle="italic">
+                                        <Text color="gray.600" fontSize="xs" fontStyle="italic">
                                             by {note.created_by.name}
                                         </Text>
                                     )}

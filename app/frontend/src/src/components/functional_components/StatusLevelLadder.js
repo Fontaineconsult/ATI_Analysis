@@ -3,6 +3,7 @@ import { Box, HStack, Text, Tooltip } from '@chakra-ui/react';
 import {
     getStatusColor,
     getStatusBackgroundColor,
+    getStatusTextColor,
     STATUS_LEVELS_ORDER,
 } from '../../services/utils/statusColors';
 
@@ -56,7 +57,7 @@ function StatusLevelLadder({ level, variant = 'compact' }) {
                                     fontSize="2xs"
                                     whiteSpace="nowrap"
                                     fontWeight={isCurrent ? 'bold' : (achieved ? 'semibold' : 'normal')}
-                                    color={achieved ? color : 'gray.400'}
+                                    color={achieved ? getStatusTextColor(lvl) : 'gray.600'}
                                 >
                                     {lvl}
                                 </Text>

@@ -104,7 +104,7 @@ export default function MeetingMinutesForm({
                                         <Box borderWidth="1px" borderColor="gray.200" borderRadius="md" p={3} minH="200px">
                                             {content
                                                 ? <Markdown>{content}</Markdown>
-                                                : <Box color="gray.400" fontSize="sm">Nothing to preview yet.</Box>}
+                                                : <Box color="gray.600" fontSize="sm">Nothing to preview yet.</Box>}
                                         </Box>
                                     </TabPanel>
                                 </TabPanels>

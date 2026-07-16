@@ -176,11 +176,11 @@ function DocumentViewer({ documents, implementation_id, implementation_type }) {
                                                     {document.properties.file.original_filename || 'Download'} <ExternalLinkIcon ml={1} />
                                                 </Link>
                                             )}
-                                            <Text color="gray.500">
+                                            <Text color="gray.600">
                                                 Created: {document.properties.date_created || 'N/A'}
                                             </Text>
                                             {createdByPerson && (
-                                                <Text color="gray.500">
+                                                <Text color="gray.600">
                                                     By: {createdByPerson.name}
                                                 </Text>
                                             )}
@@ -215,7 +215,7 @@ function DocumentViewer({ documents, implementation_id, implementation_type }) {
                     })}
                 </VStack>
             ) : (
-                <Text color="gray.500" fontSize="sm">No documents available.</Text>
+                <Text color="gray.600" fontSize="sm">No documents available.</Text>
             )}
         </Box>
     );

@@ -130,7 +130,7 @@ export const Figure = ({ src, alt, caption, maxW = '720px' }) => (
             />
         </Box>
         {caption && (
-            <Text as="figcaption" fontSize="xs" color="gray.500" mt={1.5} textAlign="center">
+            <Text as="figcaption" fontSize="xs" color="gray.600" mt={1.5} textAlign="center">
                 {caption}
             </Text>
         )}
@@ -160,7 +160,7 @@ export const TermDef = ({ term, badge, children }) => (
 export const VocabTable = ({ vocab, keyHeader = 'Stored value', labelHeader = 'Label', notes, notesHeader = 'Meaning' }) => {
     if (!vocab) {
         return (
-            <Text fontSize="sm" color="gray.500" fontStyle="italic">
+            <Text fontSize="sm" color="gray.600" fontStyle="italic">
                 Vocabulary not loaded yet.
             </Text>
         );
@@ -170,7 +170,12 @@ export const VocabTable = ({ vocab, keyHeader = 'Stored value', labelHeader = 'L
         : Object.entries(vocab);
     const hasNotes = Boolean(notes);
     return (
-        <TableContainer>
+        <TableContainer
+            tabIndex={0}
+            role="region"
+            aria-label={`${keyHeader} table`}
+            _focusVisible={{ outline: '2px solid', outlineColor: 'teal.500' }}
+        >
             <Table variant="simple" size="sm">
                 <Thead bg="gray.50">
                     <Tr>

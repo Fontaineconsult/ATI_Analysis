@@ -148,7 +148,7 @@ function MetricViewer({ metrics, onSubmit }) {
                     })}
                 </VStack>
             ) : (
-                <Text color="gray.500" fontSize="sm">No metrics available.</Text>
+                <Text color="gray.600" fontSize="sm">No metrics available.</Text>
             )}
         </Box>
     );

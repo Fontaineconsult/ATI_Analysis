@@ -91,7 +91,7 @@ function Members() {
                             ))
                         ) : (
                             <Tr>
-                                <Td colSpan={3} textAlign="center" color="gray.500" fontSize="sm">
+                                <Td colSpan={3} textAlign="center" color="gray.600" fontSize="sm">
                                     No active members found
                                 </Td>
                             </Tr>
@@ -101,7 +101,7 @@ function Members() {
             </TableContainer>
 
             {activeMembers.length > 0 && (
-                <Text fontSize="xs" color="gray.500" mt={4}>
+                <Text fontSize="xs" color="gray.600" mt={4}>
                     Total Active Members: {activeMembers.length}
                 </Text>
             )}

@@ -37,7 +37,7 @@ function NodeTypeTerm({ label, describeNodeType }) {
     return (
         <TermDef term={term}>
             {text || (
-                <Text as="span" fontSize="sm" color="gray.500" fontStyle="italic">
+                <Text as="span" fontSize="sm" color="gray.600" fontStyle="italic">
                     No description in the ontology yet — add one in Settings → Ontology Browser.
                 </Text>
             )}

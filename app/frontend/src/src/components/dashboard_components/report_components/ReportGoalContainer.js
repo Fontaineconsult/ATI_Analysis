@@ -43,13 +43,13 @@ function ReportGoalContainer({ goalData }) {
                                         indicatorItem={indicator.indicator}
                                     />
                                 ) : (
-                                    <Text key={index} color="gray.500" fontSize="sm">
+                                    <Text key={index} color="gray.600" fontSize="sm">
                                         No indicator data available
                                     </Text>
                                 )
                             ))
                     ) : (
-                        <Text color="gray.500" fontSize="sm">
+                        <Text color="gray.600" fontSize="sm">
                             No indicators available for this goal
                         </Text>
                     )}

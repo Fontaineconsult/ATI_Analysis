@@ -40,13 +40,13 @@ function MinutesModal({ minutes, accentColor, workingGroupName, onChanged, onEdi
                     <Text fontSize="md" fontWeight="bold" color="gray.800" lineHeight="1.35">{minutes.title}</Text>
                     <HStack spacing={2.5} mt={2} flexWrap="wrap">
                         {minutes.meeting_date && (
-                            <Text fontFamily="mono" fontSize="xs" color="gray.500">{minutes.meeting_date}</Text>
+                            <Text fontFamily="mono" fontSize="xs" color="gray.600">{minutes.meeting_date}</Text>
                         )}
                         {minutes.recorded_by && (
-                            <Text fontSize="xs" color="gray.500">recorded by {minutes.recorded_by.name}</Text>
+                            <Text fontSize="xs" color="gray.600">recorded by {minutes.recorded_by.name}</Text>
                         )}
                         <Box w="9px" h="9px" borderRadius="full" bg={accentColor} />
-                        <Text fontSize="xs" color="gray.500">{workingGroupName}</Text>
+                        <Text fontSize="xs" color="gray.600">{workingGroupName}</Text>
                     </HStack>
                 </ModalHeader>
                 <ModalCloseButton />
@@ -111,11 +111,11 @@ export default function WgMinutesSection({ workingGroupPlanIdentifier, workingGr
             </HStack>
 
             {loading ? (
-                <HStack color="gray.500" fontSize="sm"><Spinner size="sm" /><Text>Loading…</Text></HStack>
+                <HStack color="gray.600" fontSize="sm"><Spinner size="sm" /><Text>Loading…</Text></HStack>
             ) : error ? (
                 <Text fontSize="sm" color="red.500">{error}</Text>
             ) : minutes.length === 0 ? (
-                <Text fontSize="sm" color="gray.500" fontStyle="italic">No meeting minutes yet.</Text>
+                <Text fontSize="sm" color="gray.600" fontStyle="italic">No meeting minutes yet.</Text>
             ) : (
                 <VStack align="stretch" spacing={2}>
                     {minutes.map((m) => {
@@ -139,10 +139,10 @@ export default function WgMinutesSection({ workingGroupPlanIdentifier, workingGr
                                     {m.title}
                                 </Text>
                                 {m.meeting_date && (
-                                    <Text fontFamily="mono" fontSize="2xs" color="gray.500" whiteSpace="nowrap">{m.meeting_date}</Text>
+                                    <Text fontFamily="mono" fontSize="2xs" color="gray.600" whiteSpace="nowrap">{m.meeting_date}</Text>
                                 )}
                                 {n > 0 && <Text fontSize="2xs" color="teal.600" whiteSpace="nowrap">{n} att</Text>}
-                                <Text fontSize="2xs" color="gray.400">▸</Text>
+                                <Text fontSize="2xs" color="gray.600">▸</Text>
                             </HStack>
                         );
                     })}

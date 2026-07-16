@@ -49,11 +49,11 @@ function QueryModal({ query, candidateEvidence, vocab, accentColor, workingGroup
                     <HStack spacing={2} mt={2} flexWrap="wrap">
                         <CategoryBadge category={query.category} vocab={vocab} />
                         <StatusBadge status={query.status} vocab={vocab} />
-                        <Text fontSize="xs" color="gray.500">
+                        <Text fontSize="xs" color="gray.600">
                             raised by {query.raised_by?.name || '—'}{query.date_raised ? ` · ${query.date_raised}` : ''}
                         </Text>
                         <Box w="9px" h="9px" borderRadius="full" bg={accentColor} />
-                        <Text fontSize="xs" color="gray.500">{workingGroupName}</Text>
+                        <Text fontSize="xs" color="gray.600">{workingGroupName}</Text>
                     </HStack>
                 </ModalHeader>
                 <ModalCloseButton />
@@ -119,11 +119,11 @@ export default function WgQueriesSection({ workingGroupPlanIdentifier, workingGr
             </HStack>
 
             {loading ? (
-                <HStack color="gray.500" fontSize="sm"><Spinner size="sm" /><Text>Loading…</Text></HStack>
+                <HStack color="gray.600" fontSize="sm"><Spinner size="sm" /><Text>Loading…</Text></HStack>
             ) : error ? (
                 <Text fontSize="sm" color="red.500">{error}</Text>
             ) : queries.length === 0 ? (
-                <Text fontSize="sm" color="gray.500" fontStyle="italic">No questions yet.</Text>
+                <Text fontSize="sm" color="gray.600" fontStyle="italic">No questions yet.</Text>
             ) : (
                 <VStack align="stretch" spacing={2}>
                     {queries.map((q) => (
@@ -146,7 +146,7 @@ export default function WgQueriesSection({ workingGroupPlanIdentifier, workingGr
                             <HStack spacing={2} mt={1.5} flexWrap="wrap">
                                 <CategoryBadge category={q.category} vocab={vocab} />
                                 <StatusBadge status={q.status} vocab={vocab} />
-                                <Text fontSize="2xs" color="gray.500">
+                                <Text fontSize="2xs" color="gray.600">
                                     {q.raised_by?.name || '—'}{q.date_raised ? ` · ${q.date_raised}` : ''}
                                 </Text>
                             </HStack>

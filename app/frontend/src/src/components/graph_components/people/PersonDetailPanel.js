@@ -52,7 +52,7 @@ function PersonDetailPanel({ person, onChange, placeholder }) {
                     bg="gray.50"
                     textAlign="center"
                 >
-                    <Text color="gray.500" fontSize="sm">
+                    <Text color="gray.600" fontSize="sm">
                         Select a person on the left to see their roles, working team, and YSEs.
                     </Text>
                 </Box>
@@ -75,7 +75,7 @@ function PersonDetailPanel({ person, onChange, placeholder }) {
         <VStack align="stretch" spacing={4}>
             <PersonHeader person={person} />
 
-            <Card title="Roles" action={<Text fontSize="2xs" color="gray.500">held + worked · PD coverage</Text>}>
+            <Card title="Roles" action={<Text fontSize="2xs" color="gray.600">held + worked · PD coverage</Text>}>
                 <RoleHoldingsEditor
                     employeeId={person.employee_id}
                     roles={Array.isArray(person.roles) ? person.roles : []}
@@ -111,7 +111,7 @@ function PersonDetailPanel({ person, onChange, placeholder }) {
 
             <Card
                 title="Year Success Evidence"
-                action={<Text fontSize="2xs" color="gray.500">{yses.length} assignment{yses.length === 1 ? '' : 's'}</Text>}
+                action={<Text fontSize="2xs" color="gray.600">{yses.length} assignment{yses.length === 1 ? '' : 's'}</Text>}
             >
                 <PersonYseList yses={yses} personEmployeeId={person.employee_id} onChange={onChange} />
             </Card>
@@ -150,7 +150,7 @@ function PersonDetailPanel({ person, onChange, placeholder }) {
                             onChange={onChange}
                         />
                     ) : (
-                        <Text fontSize="sm" color="gray.500" fontStyle="italic">No academic year selected.</Text>
+                        <Text fontSize="sm" color="gray.600" fontStyle="italic">No academic year selected.</Text>
                     )}
                 </Collapse>
             </Card>

@@ -21,7 +21,7 @@ function GoalPlanLinks({ plans = [] }) {
 
     if (!plans.length) {
         return (
-            <Text fontSize="sm" color="gray.500" textAlign="center" py={4}>
+            <Text fontSize="sm" color="gray.600" textAlign="center" py={4}>
                 No plans available for this goal.
             </Text>
         );

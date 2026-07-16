@@ -152,7 +152,7 @@ function WebsiteViewer({ websites, implementation_id, implementation_type }) {
                                                 {website.properties.url} <ExternalLinkIcon ml={1} />
                                             </Link>
                                             {createdByPerson && (
-                                                <Text color="gray.500">
+                                                <Text color="gray.600">
                                                     By: {createdByPerson.name}
                                                 </Text>
                                             )}
@@ -193,7 +193,7 @@ function WebsiteViewer({ websites, implementation_id, implementation_type }) {
                     })}
                 </VStack>
             ) : (
-                <Text color="gray.500" fontSize="sm">No websites available.</Text>
+                <Text color="gray.600" fontSize="sm">No websites available.</Text>
             )}
         </Box>
     );

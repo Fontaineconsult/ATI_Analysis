@@ -38,15 +38,15 @@ function YSEAnnotationMasterContainer({ hasNotes, hasMessages, plans, year_ident
                 </TabList>
                 <TabPanels>
                     <TabPanel px={0}>
-                        <Text fontSize="xs" color="gray.500" mb={2}>{HELP.Note}</Text>
+                        <Text fontSize="xs" color="gray.600" mb={2}>{HELP.Note}</Text>
                         <NoteViewer notes={notes} onSubmit={() => {}} yearSuccessEvidence={year_identifier} />
                     </TabPanel>
                     <TabPanel px={0}>
-                        <Text fontSize="xs" color="gray.500" mb={2}>{HELP.Message}</Text>
+                        <Text fontSize="xs" color="gray.600" mb={2}>{HELP.Message}</Text>
                         <MessageViewer messages={messages} onSubmit={() => {}} yearSuccessEvidence={year_identifier} />
                     </TabPanel>
                     <TabPanel px={0}>
-                        <Text fontSize="xs" color="gray.500" mb={2}>{HELP.Plan}</Text>
+                        <Text fontSize="xs" color="gray.600" mb={2}>{HELP.Plan}</Text>
                         <PlanViewer plans={planItems} onSubmit={() => {}} yearSuccessEvidence={year_identifier} />
                     </TabPanel>
                 </TabPanels>

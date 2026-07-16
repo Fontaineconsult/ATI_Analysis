@@ -35,7 +35,7 @@ export const INDICATOR_GRID_COLUMNS =
 const COMPANION_GRID = 'minmax(0,1fr) 110px';
 const COMPANION_MICRO = {
     fontSize: '10px', fontWeight: 'bold', textTransform: 'uppercase',
-    color: 'gray.500', letterSpacing: 'wide', whiteSpace: 'nowrap',
+    color: 'gray.600', letterSpacing: 'wide', whiteSpace: 'nowrap',
 };
 
 const TRAJECTORY_OPTION_ENTRIES = Object.entries(TRAJECTORY_CONFIG); // [[value,{label}], ...]
@@ -52,7 +52,7 @@ function PeerChip({ abbrev, statusLevel }) {
             borderColor="gray.200"
             borderRadius="md"
         >
-            <Text fontSize="2xs" fontWeight="bold" textTransform="uppercase" color="gray.500">
+            <Text fontSize="2xs" fontWeight="bold" textTransform="uppercase" color="gray.600">
                 {abbrev}
             </Text>
             <StatusPill level={statusLevel} />
@@ -68,7 +68,7 @@ function InlineComposer({ workingGroupPlanIdentifier, yseIdentifier, authorUniqu
 
     if (!yseIdentifier) {
         return (
-            <Text fontSize="xs" color="gray.500" fontStyle="italic" mt={2}>
+            <Text fontSize="xs" color="gray.600" fontStyle="italic" mt={2}>
                 No evidence for this year yet — nothing to log an update against.
             </Text>
         );
@@ -184,8 +184,6 @@ function IndicatorRow({
                 bg={expanded ? '#F0FBF9' : undefined}
                 _hover={{ bg: expanded ? '#F0FBF9' : 'gray.50' }}
                 onClick={onToggleExpand}
-                role="button"
-                aria-expanded={expanded}
             >
                 <Text fontFamily="mono" fontSize="xs" fontWeight="semibold" color="gray.600">
                     {compositeKey}
@@ -234,7 +232,7 @@ function IndicatorRow({
                             {getTrajectoryLabel(trajectory)}
                         </Badge>
                     ) : (
-                        <Text fontSize="xs" color="gray.400">—</Text>
+                        <Text fontSize="xs" color="gray.600">—</Text>
                     )}
                 </Box>
 
@@ -250,7 +248,7 @@ function IndicatorRow({
 
                 <Text
                     fontSize="xs"
-                    color={stale ? 'red.600' : 'gray.500'}
+                    color={stale ? 'red.600' : 'gray.600'}
                     fontWeight={stale ? 'bold' : 'normal'}
                     whiteSpace="nowrap"
                 >
@@ -268,7 +266,14 @@ function IndicatorRow({
                     >
                         Log
                     </Button>
-                    <Button size="xs" variant="ghost" colorScheme="teal" onClick={onToggleExpand} aria-label="Toggle details">
+                    <Button
+                        size="xs"
+                        variant="ghost"
+                        colorScheme="teal"
+                        onClick={onToggleExpand}
+                        aria-label={`Details for ${compositeKey}`}
+                        aria-expanded={expanded}
+                    >
                         {expanded ? '▴' : '▾'}
                     </Button>
                 </HStack>
@@ -287,11 +292,11 @@ function IndicatorRow({
                     <SimpleGrid columns={{ base: 1, lg: 2 }} spacing={8} alignItems="start">
                         {/* Progress updates column */}
                         <Box minW={0}>
-                            <Text fontSize="xs" fontWeight="bold" textTransform="uppercase" color="gray.500" letterSpacing="wide" mb={2}>
+                            <Text fontSize="xs" fontWeight="bold" textTransform="uppercase" color="gray.600" letterSpacing="wide" mb={2}>
                                 Progress updates ({updates.length})
                             </Text>
                             {updates.length === 0 ? (
-                                <Text fontSize="sm" color="gray.500" fontStyle="italic">No updates logged yet.</Text>
+                                <Text fontSize="sm" color="gray.600" fontStyle="italic">No updates logged yet.</Text>
                             ) : (
                                 <VStack align="stretch" spacing={0}>
                                     {updates.map((u, idx) => (
@@ -304,7 +309,7 @@ function IndicatorRow({
                                             borderColor="gray.100"
                                         >
                                             {u.update_date && (
-                                                <Text fontFamily="mono" fontSize="xs" color="gray.500" minW="80px" whiteSpace="nowrap">
+                                                <Text fontFamily="mono" fontSize="xs" color="gray.600" minW="80px" whiteSpace="nowrap">
                                                     {u.update_date}
                                                 </Text>
                                             )}
@@ -315,7 +320,7 @@ function IndicatorRow({
                                             )}
                                             <Text fontSize="sm" color="gray.700" flex="1" lineHeight="1.5">"{u.note}"</Text>
                                             {u.author_name && (
-                                                <Text fontSize="xs" color="gray.500" whiteSpace="nowrap">— {u.author_name}</Text>
+                                                <Text fontSize="xs" color="gray.600" whiteSpace="nowrap">— {u.author_name}</Text>
                                             )}
                                         </HStack>
                                     ))}
@@ -333,7 +338,7 @@ function IndicatorRow({
                         {/* Companion plans column */}
                         <Box minW={0}>
                             <HStack justify="space-between" align="center" mb={2}>
-                                <Text fontSize="xs" fontWeight="bold" textTransform="uppercase" color="gray.500" letterSpacing="wide">
+                                <Text fontSize="xs" fontWeight="bold" textTransform="uppercase" color="gray.600" letterSpacing="wide">
                                     Companion plans{companionCount > 0 ? ` (${companionCount})` : ''}
                                 </Text>
                                 {campusAbbrev && (

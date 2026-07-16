@@ -159,7 +159,7 @@ function NoteViewer({ notes, onSubmit, yearSuccessEvidence, implementation_id, i
                                             </Text>
                                         )}
 
-                                        <HStack spacing={3} fontSize="xs" color="gray.500">
+                                        <HStack spacing={3} fontSize="xs" color="gray.600">
                                             <Text>Created: {note.properties?.date_created || 'N/A'}</Text>
                                             {createdBy && (
                                                 <Text>By: {createdBy?.properties?.name || 'Unknown'}</Text>
@@ -194,7 +194,7 @@ function NoteViewer({ notes, onSubmit, yearSuccessEvidence, implementation_id, i
                     })}
                 </VStack>
             ) : (
-                <Text color="gray.500" fontSize="sm">No notes available.</Text>
+                <Text color="gray.600" fontSize="sm">No notes available.</Text>
             )}
         </Box>
     );

@@ -68,8 +68,8 @@ function QueryRow({ query, vocab, candidateEvidence, onChanged, onEdit }) {
                     <HStack spacing={2} flexWrap="wrap">
                         <CategoryBadge category={query.category} vocab={vocab} />
                         <StatusBadge status={query.status} vocab={vocab} />
-                        {query.raised_by && <Text fontSize="2xs" color="gray.500">{query.raised_by.name}</Text>}
-                        {query.date_raised && <Text fontSize="2xs" color="gray.400" fontFamily="mono">{query.date_raised}</Text>}
+                        {query.raised_by && <Text fontSize="2xs" color="gray.600">{query.raised_by.name}</Text>}
+                        {query.date_raised && <Text fontSize="2xs" color="gray.600" fontFamily="mono">{query.date_raised}</Text>}
                         {(query.addresses_evidence || []).length > 0 && (
                             <Text fontSize="2xs" color="teal.600">{query.addresses_evidence.length} YSE</Text>
                         )}
@@ -83,7 +83,7 @@ function QueryRow({ query, vocab, candidateEvidence, onChanged, onEdit }) {
                     <IconButton aria-label="Delete question" icon={<DeleteIcon />} size="xs" variant="ghost"
                                 colorScheme="red" isLoading={deleting} onClick={handleDelete} />
                 </Tooltip>
-                {isOpen ? <ChevronUpIcon color="gray.500" /> : <ChevronDownIcon color="gray.500" />}
+                {isOpen ? <ChevronUpIcon color="gray.600" /> : <ChevronDownIcon color="gray.600" />}
             </Flex>
             <Collapse in={isOpen} animateOpacity unmountOnExit>
                 <Box px={3} pb={3}>
@@ -149,11 +149,11 @@ export default function QueriesPanel({
     return (
         <Section title={`${title}${summary.total ? ` (${summary.total})` : ''}`} action={planExists ? headerAction : null}>
             {loading ? (
-                <HStack color="gray.500" fontSize="sm"><Spinner size="sm" /><Text>Loading…</Text></HStack>
+                <HStack color="gray.600" fontSize="sm"><Spinner size="sm" /><Text>Loading…</Text></HStack>
             ) : error ? (
                 <Text fontSize="sm" color="red.500">{error}</Text>
             ) : !planExists ? (
-                <Text fontSize="sm" color="gray.500" fontStyle="italic">
+                <Text fontSize="sm" color="gray.600" fontStyle="italic">
                     No campus plan for this year yet — create one to raise questions here.
                 </Text>
             ) : (
@@ -166,7 +166,7 @@ export default function QueriesPanel({
                         </HStack>
                     )}
                     {queries.length === 0 ? (
-                        <Text fontSize="sm" color="gray.500" fontStyle="italic">No questions yet.</Text>
+                        <Text fontSize="sm" color="gray.600" fontStyle="italic">No questions yet.</Text>
                     ) : (
                         queries.map((q) => (
                             <QueryRow

@@ -193,7 +193,7 @@ const SuccessIndicators = () => {
                                                 Goal {goal.goal_number}: {goal.goal}
                                             </Heading>
                                             {goal.name && (
-                                                <Text fontSize="xs" color="gray.500" mt={1}>
+                                                <Text fontSize="xs" color="gray.600" mt={1}>
                                                     {goal.name}
                                                 </Text>
                                             )}
@@ -271,7 +271,7 @@ const SuccessIndicators = () => {
                                                                                         isChecked={Boolean(indicator.override_implementation_requirement)}
                                                                                         onChange={(e) => handleOverrideChange(indicator, e.target.checked)}
                                                                                     />
-                                                                                    <Text fontSize="2xs" color="gray.500">
+                                                                                    <Text fontSize="2xs" color="gray.600">
                                                                                         {indicator.override_implementation_requirement ? 'Not required' : 'Required'}
                                                                                     </Text>
                                                                                 </HStack>
@@ -319,7 +319,7 @@ const SuccessIndicators = () => {
                                             </TableContainer>
                                         ) : (
                                             <Box p={4}>
-                                                <Text fontSize="sm" color="gray.500">No success indicators available.</Text>
+                                                <Text fontSize="sm" color="gray.600">No success indicators available.</Text>
                                             </Box>
                                         )}
                                     </Box>
@@ -332,7 +332,7 @@ const SuccessIndicators = () => {
                                 borderRadius="lg"
                                 bg="white"
                             >
-                                <Text fontSize="sm" color="gray.500">No goals available for {category.name}.</Text>
+                                <Text fontSize="sm" color="gray.600">No goals available for {category.name}.</Text>
                             </Box>
                         )}
                     </Box>

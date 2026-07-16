@@ -118,7 +118,7 @@ function ToolForm({ isOpen, onClose, assets = [], existingTool, onSaved }) {
                         {isEdit && (
                             <FormControl>
                                 <FormLabel fontSize="sm" color="gray.700" fontWeight="semibold">Identifier</FormLabel>
-                                <Input size="sm" value={existingTool.tool_identifier} isReadOnly bg="gray.50" color="gray.500" />
+                                <Input size="sm" value={existingTool.tool_identifier} isReadOnly bg="gray.50" color="gray.600" />
                             </FormControl>
                         )}
 
@@ -147,7 +147,7 @@ function ToolForm({ isOpen, onClose, assets = [], existingTool, onSaved }) {
                                             </option>
                                         ))}
                                     </Select>
-                                    <Text fontSize="2xs" color="gray.400" mt={1}>
+                                    <Text fontSize="2xs" color="gray.600" mt={1}>
                                         Set only when the tool is also a stewarded institutional asset.
                                     </Text>
                                 </FormControl>

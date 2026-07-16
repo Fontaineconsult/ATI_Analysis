@@ -7,7 +7,7 @@ function ProcurementReportContainer({ procurementData }) {
     if (!procurementData || !procurementData.goals) {
         return (
             <Box p={4}>
-                <Text color="gray.500" fontSize="sm">No data available for Procurement Working Group</Text>
+                <Text color="gray.600" fontSize="sm">No data available for Procurement Working Group</Text>
             </Box>
         );
     }

@@ -42,10 +42,10 @@ const Card = ({ title, children, ...rest }) => (
 function Field({ label, value }) {
     return (
         <Box>
-            <Text fontSize="xs" color="gray.500" textTransform="uppercase" fontWeight="bold">{label}</Text>
+            <Text fontSize="xs" color="gray.600" textTransform="uppercase" fontWeight="bold">{label}</Text>
             {value
                 ? <Text fontSize="sm" color="gray.800" whiteSpace="pre-wrap">{String(value)}</Text>
-                : <Text fontSize="sm" color="gray.400" fontStyle="italic">Not set</Text>}
+                : <Text fontSize="sm" color="gray.600" fontStyle="italic">Not set</Text>}
         </Box>
     );
 }
@@ -104,7 +104,7 @@ function TaapDetailPanel({ title, onAfterMutate, onGoToAsset }) {
     if (!title) {
         return (
             <Box p={8} borderWidth="1px" borderStyle="dashed" borderColor="gray.300" borderRadius="lg" bg="gray.50" textAlign="center">
-                <Text color="gray.500" fontSize="sm">
+                <Text color="gray.600" fontSize="sm">
                     Select a TAAP on the left, or click <strong>Add TAAP</strong> to create one.
                 </Text>
             </Box>
@@ -188,7 +188,7 @@ function TaapDetailPanel({ title, onAfterMutate, onGoToAsset }) {
 
                 <VStack align="stretch" spacing={3}>
                     <Box>
-                        <Text fontSize="xs" color="gray.500" textTransform="uppercase" fontWeight="bold">Covered Asset</Text>
+                        <Text fontSize="xs" color="gray.600" textTransform="uppercase" fontWeight="bold">Covered Asset</Text>
                         {coveredAsset ? (
                             <Text
                                 fontSize="sm"
@@ -248,7 +248,7 @@ function TaapDetailPanel({ title, onAfterMutate, onGoToAsset }) {
                     </Button>
                 </Flex>
                 {(taap.is_evidence_for || []).length === 0 ? (
-                    <Text fontSize="sm" color="gray.500" fontStyle="italic">Not linked to any evidence yet.</Text>
+                    <Text fontSize="sm" color="gray.600" fontStyle="italic">Not linked to any evidence yet.</Text>
                 ) : (
                     <VStack align="stretch" spacing={1}>
                         {taap.is_evidence_for.map((id) => (

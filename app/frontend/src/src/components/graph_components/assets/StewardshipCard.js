@@ -65,12 +65,12 @@ function CapacityRow({ assetIdentifier, capacity, holders, people, orgUnits, onC
 
     return (
         <Box>
-            <Text fontSize="xs" color="gray.500" textTransform="uppercase" fontWeight="bold" mb={1}>
+            <Text fontSize="xs" color="gray.600" textTransform="uppercase" fontWeight="bold" mb={1}>
                 {capacity.label}
             </Text>
 
             {(holders || []).length === 0 ? (
-                <Text fontSize="sm" color="gray.400" fontStyle="italic" mb={2}>None assigned.</Text>
+                <Text fontSize="sm" color="gray.600" fontStyle="italic" mb={2}>None assigned.</Text>
             ) : (
                 <Wrap spacing={2} mb={2}>
                     {holders.map((h) => (

@@ -32,8 +32,8 @@ function PersonHeader({ person }) {
                 </HStack>
 
                 {person.title && <Text fontSize="sm" color="gray.700">{person.title}</Text>}
-                {person.ati_role && <Text fontSize="xs" color="gray.500" fontStyle="italic">{person.ati_role}</Text>}
-                {person.email && <Text fontSize="xs" color="gray.500">{person.email}</Text>}
+                {person.ati_role && <Text fontSize="xs" color="gray.600" fontStyle="italic">{person.ati_role}</Text>}
+                {person.email && <Text fontSize="xs" color="gray.600">{person.email}</Text>}
 
                 {(workingGroups.length > 0 || person.non_committee_member_active) && (
                     <Wrap spacing={2} pt={1}>

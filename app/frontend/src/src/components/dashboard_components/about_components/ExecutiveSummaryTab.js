@@ -149,7 +149,7 @@ function ExecutiveSummaryTab() {
                 </Para>
             </Card>
 
-            <Box fontSize="xs" color="gray.500" px={1}>
+            <Box fontSize="xs" color="gray.600" px={1}>
                 For the operational view of what the application does day-to-day, see
                 the Overview tab; for the underlying data model, see Core Model.
             </Box>

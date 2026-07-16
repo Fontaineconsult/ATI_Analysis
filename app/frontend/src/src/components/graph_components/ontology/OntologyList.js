@@ -58,7 +58,7 @@ function OntologyList({ nodeTypes = [], selectedLabel, onSelect }) {
         <VStack align="stretch" spacing={2} h="100%">
             <InputGroup size="sm">
                 <InputLeftElement pointerEvents="none">
-                    <SearchIcon color="gray.400" />
+                    <SearchIcon color="gray.600" />
                 </InputLeftElement>
                 <Input
                     placeholder="Search node types…"
@@ -78,7 +78,7 @@ function OntologyList({ nodeTypes = [], selectedLabel, onSelect }) {
                 >
                     <Text fontSize="xs" color="gray.600">Only undescribed</Text>
                 </Checkbox>
-                <Text fontSize="xs" color="gray.500">{visible.length}</Text>
+                <Text fontSize="xs" color="gray.600">{visible.length}</Text>
             </HStack>
 
             <Box
@@ -93,7 +93,7 @@ function OntologyList({ nodeTypes = [], selectedLabel, onSelect }) {
                 maxH="65vh"
             >
                 {visible.length === 0 ? (
-                    <Box p={4} color="gray.500" fontSize="sm" fontStyle="italic">
+                    <Box p={4} color="gray.600" fontSize="sm" fontStyle="italic">
                         {undescribedOnly ? 'Every node type is described. 🎉' : 'No node types match.'}
                     </Box>
                 ) : (

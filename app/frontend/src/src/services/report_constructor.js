@@ -20,7 +20,8 @@ import {
     Td
 } from '@chakra-ui/react';
 import {useNavigate, useParams} from "react-router-dom";
-import {navigateToIndicator, getStatusColor} from "./utils/tools";
+import {navigateToIndicator} from "./utils/tools";
+import { getStatusBackgroundColor, getStatusTextColor } from "./utils/statusColors";
 import EvidenceQualityPanel from "../components/dashboard_components/report_components/EvidenceQualityPanel";
 
 let datas = {
@@ -606,8 +607,8 @@ function GenerateReportComponent({ evidenceItem }) {
                                         <HStack spacing={2}>
                                             <Text fontWeight="semibold">Status Level:</Text>
                                             <Badge
-                                                color="white"
-                                                bg={getStatusColor(evidenceItem.statusLevel.properties.status_level)}
+                                                color={getStatusTextColor(evidenceItem.statusLevel.properties.status_level)}
+                                                bg={getStatusBackgroundColor(evidenceItem.statusLevel.properties.status_level)}
                                             >
                                                 {evidenceItem.statusLevel.properties.status_level}
                                             </Badge>

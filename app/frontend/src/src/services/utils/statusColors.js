@@ -32,6 +32,30 @@ export function getStatusColor(statusLevel) {
     }
 }
 
+// Text-safe variant of the ramp: dark enough for WCAG AA (≥4.5:1) as text on
+// white and on the matching .50 tint from getStatusBackgroundColor(). Use this
+// for status text and for badge text over tints; use getStatusColor() only for
+// non-text fills (ladder segments, left-borders, dots).
+export function getStatusTextColor(statusLevel) {
+    const level = statusLevel ? statusLevel.toLowerCase() : null;
+    switch (level) {
+        case 'not started':
+            return '#C53030'; // red.600
+        case 'initiated':
+            return '#9C4221'; // orange.700
+        case 'defined':
+            return '#975A16'; // yellow.700
+        case 'established':
+            return '#2F7A2F'; // deepened green.400 family
+        case 'managed':
+            return '#246f24'; // green.600 (already AA)
+        case 'optimizing':
+            return '#157744'; // green.700 (already AA)
+        default:
+            return '#4A5568'; // gray.600
+    }
+}
+
 export function getStatusBackgroundColor(statusLevel) {
     const level = statusLevel ? statusLevel.toLowerCase() : null;
     switch (level) {

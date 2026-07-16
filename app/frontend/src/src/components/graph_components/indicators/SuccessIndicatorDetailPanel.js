@@ -86,7 +86,7 @@ function SuccessIndicatorDetailPanel({ wrapper }) {
     if (!wrapper || !s) {
         return (
             <Box p={8} borderWidth="1px" borderStyle="dashed" borderColor="gray.300" borderRadius="lg" bg="gray.50" textAlign="center">
-                <Text color="gray.500" fontSize="sm">Select a success indicator on the left to view and edit it.</Text>
+                <Text color="gray.600" fontSize="sm">Select a success indicator on the left to view and edit it.</Text>
             </Box>
         );
     }
@@ -96,7 +96,7 @@ function SuccessIndicatorDetailPanel({ wrapper }) {
         return (
             <Box bg="white" borderWidth="1px" borderColor="gray.200" borderRadius="lg" boxShadow="sm" p={5}>
                 <Heading as="h5" fontSize="md" fontWeight="semibold" color="gray.800" mb={1}>{s.description || '(no description)'}</Heading>
-                <Text fontSize="xs" color="gray.400" fontFamily="mono" mb={3}>Indicator {s.compositeKey}</Text>
+                <Text fontSize="xs" color="gray.600" fontFamily="mono" mb={3}>Indicator {s.compositeKey}</Text>
                 <Box p={3} bg="red.50" borderWidth="1px" borderColor="red.200" borderRadius="md">
                     <Text color="red.700" fontSize="sm" fontWeight="semibold">
                         No evidence is attached for this indicator in the selected year.
@@ -131,7 +131,7 @@ function SuccessIndicatorDetailPanel({ wrapper }) {
 
                 <HStack justify="space-between" align="center" flexWrap="wrap" gap={3}>
                     <HStack spacing={2} flexWrap="wrap">
-                        <Text fontSize="xs" color="gray.400" fontFamily="mono">Indicator {s.compositeKey}</Text>
+                        <Text fontSize="xs" color="gray.600" fontFamily="mono">Indicator {s.compositeKey}</Text>
                         <Badge colorScheme={getStatusColor(statusValueForColor)} borderRadius="full" px={2} fontSize="2xs">
                             {localStatus || 'No status'}
                         </Badge>
@@ -193,7 +193,7 @@ function SuccessIndicatorDetailPanel({ wrapper }) {
                                         <VStack align="stretch" spacing={1}>
                                             {examplesOfEvidence.map((ex, i) => (
                                                 <HStack key={i} align="start" spacing={2}>
-                                                    <Text fontSize="sm" color="gray.400" lineHeight="short">•</Text>
+                                                    <Text fontSize="sm" color="gray.600" lineHeight="short">•</Text>
                                                     <Text fontSize="sm" color="gray.700">{ex}</Text>
                                                 </HStack>
                                             ))}

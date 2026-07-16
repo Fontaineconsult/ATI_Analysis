@@ -65,7 +65,7 @@ function PlanDetailPanel({ plan, onAfterEdit, placeholder }) {
                     bg="gray.50"
                     textAlign="center"
                 >
-                    <Text color="gray.500" fontSize="sm">
+                    <Text color="gray.600" fontSize="sm">
                         Select a plan on the left to view and edit it.
                     </Text>
                 </Box>

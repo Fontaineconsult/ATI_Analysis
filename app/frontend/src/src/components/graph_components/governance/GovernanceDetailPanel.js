@@ -149,7 +149,7 @@ function GovernanceDetailPanel({ item, onAfterEdit, onAfterDelete, placeholder }
                     bg="gray.50"
                     textAlign="center"
                 >
-                    <Text color="gray.500" fontSize="sm">
+                    <Text color="gray.600" fontSize="sm">
                         Select a governance item on the left, or click <strong>Add Governance</strong> to create one.
                     </Text>
                 </Box>
@@ -217,10 +217,10 @@ function GovernanceDetailPanel({ item, onAfterEdit, onAfterDelete, placeholder }
                             if (value === null || value === undefined || value === '') {
                                 return (
                                     <Box key={field.name}>
-                                        <Text fontSize="xs" color="gray.500" textTransform="uppercase" fontWeight="bold">
+                                        <Text fontSize="xs" color="gray.600" textTransform="uppercase" fontWeight="bold">
                                             {field.label}
                                         </Text>
-                                        <Text fontSize="sm" color="gray.400" fontStyle="italic">
+                                        <Text fontSize="sm" color="gray.600" fontStyle="italic">
                                             Not set
                                         </Text>
                                     </Box>
@@ -228,7 +228,7 @@ function GovernanceDetailPanel({ item, onAfterEdit, onAfterDelete, placeholder }
                             }
                             return (
                                 <Box key={field.name}>
-                                    <Text fontSize="xs" color="gray.500" textTransform="uppercase" fontWeight="bold">
+                                    <Text fontSize="xs" color="gray.600" textTransform="uppercase" fontWeight="bold">
                                         {field.label}
                                     </Text>
                                     <Text fontSize="sm" color="gray.800" whiteSpace="pre-wrap">

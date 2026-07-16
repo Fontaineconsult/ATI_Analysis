@@ -40,10 +40,10 @@ const Card = ({ title, children, ...rest }) => (
 function Field({ label, value }) {
     return (
         <Box>
-            <Text fontSize="xs" color="gray.500" textTransform="uppercase" fontWeight="bold">{label}</Text>
+            <Text fontSize="xs" color="gray.600" textTransform="uppercase" fontWeight="bold">{label}</Text>
             {value
                 ? <Text fontSize="sm" color="gray.800" whiteSpace="pre-wrap">{String(value)}</Text>
-                : <Text fontSize="sm" color="gray.400" fontStyle="italic">Not set</Text>}
+                : <Text fontSize="sm" color="gray.600" fontStyle="italic">Not set</Text>}
         </Box>
     );
 }
@@ -115,7 +115,7 @@ function AssetDetailPanel({ assetIdentifier, onAfterMutate, onAddTaapForAsset, o
     if (!assetIdentifier) {
         return (
             <Box p={8} borderWidth="1px" borderStyle="dashed" borderColor="gray.300" borderRadius="lg" bg="gray.50" textAlign="center">
-                <Text color="gray.500" fontSize="sm">
+                <Text color="gray.600" fontSize="sm">
                     Select an asset on the left, or click <strong>Add Asset</strong> to create one.
                 </Text>
             </Box>
@@ -166,7 +166,7 @@ function AssetDetailPanel({ assetIdentifier, onAfterMutate, onAddTaapForAsset, o
                             {asset.elevation_signal && <ElevationBadge />}
                         </HStack>
                         <Heading as="h2" size="md" color="gray.800">{asset.title || '(untitled)'}</Heading>
-                        <Text fontSize="xs" color="gray.400">{asset.asset_identifier}</Text>
+                        <Text fontSize="xs" color="gray.600">{asset.asset_identifier}</Text>
                     </VStack>
                     <Spacer />
                     <HStack>
@@ -198,7 +198,7 @@ function AssetDetailPanel({ assetIdentifier, onAfterMutate, onAddTaapForAsset, o
             <Card title="Provenance">
                 <VStack align="stretch" spacing={4}>
                     <Box>
-                        <Text fontSize="xs" color="gray.500" textTransform="uppercase" fontWeight="bold" mb={2}>Vendor (supplier)</Text>
+                        <Text fontSize="xs" color="gray.600" textTransform="uppercase" fontWeight="bold" mb={2}>Vendor (supplier)</Text>
                         <EntityAttachmentSelector
                             entityLabel="Vendor"
                             placeholder="Select a vendor…"
@@ -211,7 +211,7 @@ function AssetDetailPanel({ assetIdentifier, onAfterMutate, onAddTaapForAsset, o
                         />
                     </Box>
                     <Box>
-                        <Text fontSize="xs" color="gray.500" textTransform="uppercase" fontWeight="bold" mb={2}>Campus anchor</Text>
+                        <Text fontSize="xs" color="gray.600" textTransform="uppercase" fontWeight="bold" mb={2}>Campus anchor</Text>
                         <EntityAttachmentSelector
                             entityLabel="Campus"
                             placeholder="Select a campus…"
@@ -229,7 +229,7 @@ function AssetDetailPanel({ assetIdentifier, onAfterMutate, onAddTaapForAsset, o
             {/* Remediation (read-only; flows from implementations) */}
             <Card title="Remediated by">
                 {(asset.remediated_by || []).length === 0 ? (
-                    <Text fontSize="sm" color="gray.500" fontStyle="italic">
+                    <Text fontSize="sm" color="gray.600" fontStyle="italic">
                         No remediating implementation — a stewarded asset in this state shows the elevation signal.
                     </Text>
                 ) : (
@@ -247,7 +247,7 @@ function AssetDetailPanel({ assetIdentifier, onAfterMutate, onAddTaapForAsset, o
             {/* TAAP coverage (read-only here; full CRUD lives in the TAAPs tab) */}
             <Card title="TAAP coverage">
                 <HStack justify="space-between" mb={2}>
-                    <Text fontSize="xs" color="gray.500">Temporary Alternate Access Plans covering this asset.</Text>
+                    <Text fontSize="xs" color="gray.600">Temporary Alternate Access Plans covering this asset.</Text>
                     {onAddTaapForAsset && (
                         <Button size="xs" variant="outline" colorScheme="teal" onClick={() => onAddTaapForAsset(asset.asset_identifier)}>
                             + Add TAAP
@@ -255,7 +255,7 @@ function AssetDetailPanel({ assetIdentifier, onAfterMutate, onAddTaapForAsset, o
                     )}
                 </HStack>
                 {(asset.covered_by_taap || []).length === 0 ? (
-                    <Text fontSize="sm" color="gray.500" fontStyle="italic">No TAAP covers this asset.</Text>
+                    <Text fontSize="sm" color="gray.600" fontStyle="italic">No TAAP covers this asset.</Text>
                 ) : (
                     <VStack align="stretch" spacing={2}>
                         {asset.covered_by_taap.map((t) => (

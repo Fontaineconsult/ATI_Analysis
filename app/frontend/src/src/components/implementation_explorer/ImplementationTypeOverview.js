@@ -302,7 +302,7 @@ function ImplementationTypeOverview({ implementationType, initialImplementationI
                         })}
                     </VStack>
                 ) : (
-                    <Text fontSize="sm" color="gray.500" fontStyle="italic">
+                    <Text fontSize="sm" color="gray.600" fontStyle="italic">
                         No {implementationType}s yet.
                     </Text>
                 )}
@@ -476,7 +476,7 @@ function ImplementationTypeOverview({ implementationType, initialImplementationI
                                                         </Wrap>
                                                     </CheckboxGroup>
                                                     {describeField?.('Implementation', 'dimensions')?.description_short && (
-                                                        <Text fontSize="2xs" color="gray.400" mt={1}>
+                                                        <Text fontSize="2xs" color="gray.600" mt={1}>
                                                             {describeField('Implementation', 'dimensions').description_short}
                                                         </Text>
                                                     )}
@@ -498,7 +498,7 @@ function ImplementationTypeOverview({ implementationType, initialImplementationI
                                                         ))}
                                                     </HStack>
                                                 ) : (
-                                                    <Text fontSize="xs" color="gray.500" fontStyle="italic">
+                                                    <Text fontSize="xs" color="gray.600" fontStyle="italic">
                                                         No AMM dimensions assigned.
                                                     </Text>
                                                 )
@@ -527,7 +527,7 @@ function ImplementationTypeOverview({ implementationType, initialImplementationI
                                                 ))}
                                             </HStack>
                                         ) : (
-                                            <Text fontSize="xs" color="gray.500" fontStyle="italic">
+                                            <Text fontSize="xs" color="gray.600" fontStyle="italic">
                                                 Not yet wired to any campus's evidence.
                                             </Text>
                                         )}
@@ -571,14 +571,14 @@ function ImplementationTypeOverview({ implementationType, initialImplementationI
                                                                     {r === 'direct' ? 'remediated' : 'via interface'}
                                                                 </Badge>
                                                             ))}
-                                                            <Text fontSize="2xs" color="gray.400" fontFamily="mono">
+                                                            <Text fontSize="2xs" color="gray.600" fontFamily="mono">
                                                                 {a.asset_identifier}
                                                             </Text>
                                                         </HStack>
                                                     ))}
                                                 </VStack>
                                             ) : (
-                                                <Text fontSize="xs" color="gray.500" fontStyle="italic">
+                                                <Text fontSize="xs" color="gray.600" fontStyle="italic">
                                                     Not linked to any remediated asset or interface.
                                                 </Text>
                                             )}
@@ -678,7 +678,7 @@ function ImplementationTypeOverview({ implementationType, initialImplementationI
                                             </Box>
                                         ))
                                     ) : (
-                                        <Text fontSize="xs" color="gray.500" fontStyle="italic">
+                                        <Text fontSize="xs" color="gray.600" fontStyle="italic">
                                             No success indicators linked to this {implementationType} at {(campus || '').toUpperCase()}.
                                             {(selectedImpl.is_evidence_for?.length || 0) > 0 && (
                                                 <> It is linked at other campuses — open “Manage Linked YSEs” to see and add.</>
@@ -786,7 +786,7 @@ function ImplementationTypeOverview({ implementationType, initialImplementationI
                     <ModalHeader fontSize="md" color="teal.700">
                         Manage Linked YSEs
                         {selectedImpl?.title && (
-                            <Text as="span" fontSize="sm" color="gray.500" fontWeight="normal" ml={2}>
+                            <Text as="span" fontSize="sm" color="gray.600" fontWeight="normal" ml={2}>
                                 — {selectedImpl.title}
                             </Text>
                         )}

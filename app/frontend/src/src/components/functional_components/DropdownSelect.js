@@ -1,14 +1,13 @@
-import React, { useState } from 'react';
-import {Select, Box, FormControl, FormLabel} from '@chakra-ui/react';
+import React from 'react';
+import { Select, FormControl } from '@chakra-ui/react';
 
-function DropdownSelect({ options, initialValue, onChange }) {
+function DropdownSelect({ options, initialValue, onChange, label = 'Select status level' }) {
     return (
         <FormControl>
             <Select
-                id="status-select"
+                aria-label={label}
                 value={initialValue}
                 onChange={(e) => onChange(e.target.value)}
-                title="Select Status Level"  // Adds a tooltip-like label
             >
                 {options.map((option, index) => (
                     <option key={index} value={option}>
@@ -16,7 +15,6 @@ function DropdownSelect({ options, initialValue, onChange }) {
                     </option>
                 ))}
             </Select>
-
         </FormControl>
     );
 }

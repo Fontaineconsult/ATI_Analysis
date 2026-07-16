@@ -40,7 +40,7 @@ function PeopleList({ people = [], selectedId, onSelect, emptyMessage = 'No peop
 
     if (!people || people.length === 0) {
         return (
-            <Box p={4} color="gray.500" fontSize="sm" fontStyle="italic">
+            <Box p={4} color="gray.600" fontSize="sm" fontStyle="italic">
                 {emptyMessage}
             </Box>
         );
@@ -51,7 +51,7 @@ function PeopleList({ people = [], selectedId, onSelect, emptyMessage = 'No peop
             {showSearch && (
                 <InputGroup size="sm">
                     <InputLeftElement pointerEvents="none">
-                        <SearchIcon color="gray.400" />
+                        <SearchIcon color="gray.600" />
                     </InputLeftElement>
                     <Input
                         placeholder="Search by name, title, campus…"
@@ -71,6 +71,10 @@ function PeopleList({ people = [], selectedId, onSelect, emptyMessage = 'No peop
                 overflowY="auto"
                 flex="1"
                 maxH="70vh"
+                tabIndex={0}
+                role="region"
+                aria-label="People list"
+                _focusVisible={{ outline: '2px solid', outlineColor: 'teal.500' }}
             >
                 <List spacing={0} role="listbox" aria-label="People">
                     {filtered.map((person) => {
@@ -108,7 +112,7 @@ function PeopleList({ people = [], selectedId, onSelect, emptyMessage = 'No peop
                         );
                     })}
                     {filtered.length === 0 && (
-                        <ListItem px={3} py={3} color="gray.500" fontSize="sm" fontStyle="italic">
+                        <ListItem px={3} py={3} color="gray.600" fontSize="sm" fontStyle="italic">
                             No matches.
                         </ListItem>
                     )}

@@ -62,7 +62,7 @@ function IndicatorAssetsPanel({ assets = [], interfaces = [], tools = [] }) {
                     </Text>
                 )}
                 {identifier && (
-                    <Text fontSize="2xs" color="gray.400" fontFamily="mono" noOfLines={1}>
+                    <Text fontSize="2xs" color="gray.600" fontFamily="mono" noOfLines={1}>
                         {identifier}
                     </Text>
                 )}
@@ -82,7 +82,7 @@ function IndicatorAssetsPanel({ assets = [], interfaces = [], tools = [] }) {
     );
 
     const Empty = ({ children }) => (
-        <Text fontSize="sm" color="gray.500" fontStyle="italic" py={3}>
+        <Text fontSize="sm" color="gray.600" fontStyle="italic" py={3}>
             {children}
         </Text>
     );

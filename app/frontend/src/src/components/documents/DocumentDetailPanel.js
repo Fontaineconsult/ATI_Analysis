@@ -40,14 +40,14 @@ function DocumentDetailPanel({ item, documentType }) {
         if (!person) return null;
         return (
             <Box>
-                <Text fontSize="xs" color="gray.500" fontWeight="semibold" textTransform="uppercase" mb={1}>
+                <Text fontSize="xs" color="gray.600" fontWeight="semibold" textTransform="uppercase" mb={1}>
                     {label}
                 </Text>
                 <Badge colorScheme="blue" fontSize="xs" px={2} py={1} borderRadius="md">
                     {person.name}
                 </Badge>
                 {person.email && (
-                    <Text fontSize="xs" color="gray.500" mt={1}>{person.email}</Text>
+                    <Text fontSize="xs" color="gray.600" mt={1}>{person.email}</Text>
                 )}
             </Box>
         );
@@ -59,18 +59,18 @@ function DocumentDetailPanel({ item, documentType }) {
                 return (
                     <VStack align="stretch" spacing={4}>
                         <Box>
-                            <Text fontSize="xs" color="gray.500" fontWeight="semibold" textTransform="uppercase" mb={1}>Name</Text>
+                            <Text fontSize="xs" color="gray.600" fontWeight="semibold" textTransform="uppercase" mb={1}>Name</Text>
                             <Text fontSize="sm" color="gray.700">{item.name || 'Untitled'}</Text>
                         </Box>
                         {item.description && (
                             <Box>
-                                <Text fontSize="xs" color="gray.500" fontWeight="semibold" textTransform="uppercase" mb={1}>Description</Text>
+                                <Text fontSize="xs" color="gray.600" fontWeight="semibold" textTransform="uppercase" mb={1}>Description</Text>
                                 <Text fontSize="sm" color="gray.700" whiteSpace="pre-wrap">{item.description}</Text>
                             </Box>
                         )}
                         {item.uri_path && (
                             <Box>
-                                <Text fontSize="xs" color="gray.500" fontWeight="semibold" textTransform="uppercase" mb={1}>URI</Text>
+                                <Text fontSize="xs" color="gray.600" fontWeight="semibold" textTransform="uppercase" mb={1}>URI</Text>
                                 <Link href={item.uri_path} isExternal fontSize="sm" color="teal.600">
                                     {item.uri_path} <ExternalLinkIcon mx="2px" />
                                 </Link>
@@ -78,7 +78,7 @@ function DocumentDetailPanel({ item, documentType }) {
                         )}
                         {item.file_path && (
                             <Box>
-                                <Text fontSize="xs" color="gray.500" fontWeight="semibold" textTransform="uppercase" mb={1}>File Path</Text>
+                                <Text fontSize="xs" color="gray.600" fontWeight="semibold" textTransform="uppercase" mb={1}>File Path</Text>
                                 <Text fontSize="sm" color="gray.600" fontFamily="mono">{item.file_path}</Text>
                             </Box>
                         )}
@@ -103,18 +103,18 @@ function DocumentDetailPanel({ item, documentType }) {
                 return (
                     <VStack align="stretch" spacing={4}>
                         <Box>
-                            <Text fontSize="xs" color="gray.500" fontWeight="semibold" textTransform="uppercase" mb={1}>Name</Text>
+                            <Text fontSize="xs" color="gray.600" fontWeight="semibold" textTransform="uppercase" mb={1}>Name</Text>
                             <Text fontSize="sm" color="gray.700">{item.name || 'Untitled'}</Text>
                         </Box>
                         {item.description && (
                             <Box>
-                                <Text fontSize="xs" color="gray.500" fontWeight="semibold" textTransform="uppercase" mb={1}>Description</Text>
+                                <Text fontSize="xs" color="gray.600" fontWeight="semibold" textTransform="uppercase" mb={1}>Description</Text>
                                 <Text fontSize="sm" color="gray.700" whiteSpace="pre-wrap">{item.description}</Text>
                             </Box>
                         )}
                         {item.url && (
                             <Box>
-                                <Text fontSize="xs" color="gray.500" fontWeight="semibold" textTransform="uppercase" mb={1}>URL</Text>
+                                <Text fontSize="xs" color="gray.600" fontWeight="semibold" textTransform="uppercase" mb={1}>URL</Text>
                                 <Link href={item.url} isExternal fontSize="sm" color="teal.600">
                                     {item.url} <ExternalLinkIcon mx="2px" />
                                 </Link>
@@ -136,18 +136,18 @@ function DocumentDetailPanel({ item, documentType }) {
                 return (
                     <VStack align="stretch" spacing={4}>
                         <Box>
-                            <Text fontSize="xs" color="gray.500" fontWeight="semibold" textTransform="uppercase" mb={1}>Name</Text>
+                            <Text fontSize="xs" color="gray.600" fontWeight="semibold" textTransform="uppercase" mb={1}>Name</Text>
                             <Text fontSize="sm" color="gray.700">{item.name || 'Untitled'}</Text>
                         </Box>
                         {item.content && (
                             <Box>
-                                <Text fontSize="xs" color="gray.500" fontWeight="semibold" textTransform="uppercase" mb={1}>Content</Text>
+                                <Text fontSize="xs" color="gray.600" fontWeight="semibold" textTransform="uppercase" mb={1}>Content</Text>
                                 <Text fontSize="sm" color="gray.700" whiteSpace="pre-wrap">{item.content}</Text>
                             </Box>
                         )}
                         {item.date_created && (
                             <Box>
-                                <Text fontSize="xs" color="gray.500" fontWeight="semibold" textTransform="uppercase" mb={1}>Date Created</Text>
+                                <Text fontSize="xs" color="gray.600" fontWeight="semibold" textTransform="uppercase" mb={1}>Date Created</Text>
                                 <Text fontSize="sm" color="gray.700">{formatDate(item.date_created)}</Text>
                             </Box>
                         )}
@@ -162,24 +162,24 @@ function DocumentDetailPanel({ item, documentType }) {
                 return (
                     <VStack align="stretch" spacing={4}>
                         <Box>
-                            <Text fontSize="xs" color="gray.500" fontWeight="semibold" textTransform="uppercase" mb={1}>Name</Text>
+                            <Text fontSize="xs" color="gray.600" fontWeight="semibold" textTransform="uppercase" mb={1}>Name</Text>
                             <Text fontSize="sm" color="gray.700">{item.name || 'Untitled'}</Text>
                         </Box>
                         {item.type && (
                             <Box>
-                                <Text fontSize="xs" color="gray.500" fontWeight="semibold" textTransform="uppercase" mb={1}>Type</Text>
+                                <Text fontSize="xs" color="gray.600" fontWeight="semibold" textTransform="uppercase" mb={1}>Type</Text>
                                 <Badge colorScheme="teal" fontSize="xs">{item.type}</Badge>
                             </Box>
                         )}
                         {item.content && (
                             <Box>
-                                <Text fontSize="xs" color="gray.500" fontWeight="semibold" textTransform="uppercase" mb={1}>Content</Text>
+                                <Text fontSize="xs" color="gray.600" fontWeight="semibold" textTransform="uppercase" mb={1}>Content</Text>
                                 <Text fontSize="sm" color="gray.700" whiteSpace="pre-wrap">{item.content}</Text>
                             </Box>
                         )}
                         {item.uri_path && (
                             <Box>
-                                <Text fontSize="xs" color="gray.500" fontWeight="semibold" textTransform="uppercase" mb={1}>URI</Text>
+                                <Text fontSize="xs" color="gray.600" fontWeight="semibold" textTransform="uppercase" mb={1}>URI</Text>
                                 <Link href={item.uri_path} isExternal fontSize="sm" color="teal.600">
                                     {item.uri_path} <ExternalLinkIcon mx="2px" />
                                 </Link>
@@ -187,7 +187,7 @@ function DocumentDetailPanel({ item, documentType }) {
                         )}
                         {item.date_created && (
                             <Box>
-                                <Text fontSize="xs" color="gray.500" fontWeight="semibold" textTransform="uppercase" mb={1}>Date Created</Text>
+                                <Text fontSize="xs" color="gray.600" fontWeight="semibold" textTransform="uppercase" mb={1}>Date Created</Text>
                                 <Text fontSize="sm" color="gray.700">{formatDate(item.date_created)}</Text>
                             </Box>
                         )}
@@ -202,42 +202,42 @@ function DocumentDetailPanel({ item, documentType }) {
                 return (
                     <VStack align="stretch" spacing={4}>
                         <Box>
-                            <Text fontSize="xs" color="gray.500" fontWeight="semibold" textTransform="uppercase" mb={1}>Name</Text>
+                            <Text fontSize="xs" color="gray.600" fontWeight="semibold" textTransform="uppercase" mb={1}>Name</Text>
                             <Text fontSize="sm" color="gray.700">{item.name || 'Untitled'}</Text>
                         </Box>
                         {item.metric_type && (
                             <Box>
-                                <Text fontSize="xs" color="gray.500" fontWeight="semibold" textTransform="uppercase" mb={1}>Metric Type</Text>
+                                <Text fontSize="xs" color="gray.600" fontWeight="semibold" textTransform="uppercase" mb={1}>Metric Type</Text>
                                 <Badge colorScheme="teal" fontSize="xs">{item.metric_type}</Badge>
                             </Box>
                         )}
                         {item.description && (
                             <Box>
-                                <Text fontSize="xs" color="gray.500" fontWeight="semibold" textTransform="uppercase" mb={1}>Description</Text>
+                                <Text fontSize="xs" color="gray.600" fontWeight="semibold" textTransform="uppercase" mb={1}>Description</Text>
                                 <Text fontSize="sm" color="gray.700" whiteSpace="pre-wrap">{item.description}</Text>
                             </Box>
                         )}
                         {item.single_value && (
                             <Box>
-                                <Text fontSize="xs" color="gray.500" fontWeight="semibold" textTransform="uppercase" mb={1}>Value</Text>
+                                <Text fontSize="xs" color="gray.600" fontWeight="semibold" textTransform="uppercase" mb={1}>Value</Text>
                                 <Text fontSize="sm" color="gray.700" fontWeight="bold">{item.single_value}</Text>
                             </Box>
                         )}
                         {item.comment && (
                             <Box>
-                                <Text fontSize="xs" color="gray.500" fontWeight="semibold" textTransform="uppercase" mb={1}>Comment</Text>
+                                <Text fontSize="xs" color="gray.600" fontWeight="semibold" textTransform="uppercase" mb={1}>Comment</Text>
                                 <Text fontSize="sm" color="gray.700" whiteSpace="pre-wrap">{item.comment}</Text>
                             </Box>
                         )}
                         {item.academic_year && (
                             <Box>
-                                <Text fontSize="xs" color="gray.500" fontWeight="semibold" textTransform="uppercase" mb={1}>Academic Year</Text>
+                                <Text fontSize="xs" color="gray.600" fontWeight="semibold" textTransform="uppercase" mb={1}>Academic Year</Text>
                                 <Badge colorScheme="blue" fontSize="xs">{item.academic_year}</Badge>
                             </Box>
                         )}
                         {item.uri_path && (
                             <Box>
-                                <Text fontSize="xs" color="gray.500" fontWeight="semibold" textTransform="uppercase" mb={1}>URI</Text>
+                                <Text fontSize="xs" color="gray.600" fontWeight="semibold" textTransform="uppercase" mb={1}>URI</Text>
                                 <Link href={item.uri_path} isExternal fontSize="sm" color="teal.600">
                                     {item.uri_path} <ExternalLinkIcon mx="2px" />
                                 </Link>
@@ -261,12 +261,12 @@ function DocumentDetailPanel({ item, documentType }) {
                 {renderDocumentFields()}
                 {item.file?.download_url && (
                     <Box mt={4}>
-                        <Text fontSize="xs" color="gray.500" fontWeight="semibold" textTransform="uppercase" mb={1}>Attached File</Text>
+                        <Text fontSize="xs" color="gray.600" fontWeight="semibold" textTransform="uppercase" mb={1}>Attached File</Text>
                         <Link href={item.file.download_url} isExternal fontSize="sm" color="teal.600">
                             {item.file.original_filename || 'Download'} <ExternalLinkIcon mx="2px" />
                         </Link>
                         {item.file.size != null && (
-                            <Text fontSize="xs" color="gray.500" mt={1}>
+                            <Text fontSize="xs" color="gray.600" mt={1}>
                                 {Math.max(1, Math.round(item.file.size / 1024))} KB
                             </Text>
                         )}
@@ -309,7 +309,7 @@ function DocumentDetailPanel({ item, documentType }) {
                         ))}
                     </VStack>
                 ) : (
-                    <Text fontSize="xs" color="gray.500" fontStyle="italic">
+                    <Text fontSize="xs" color="gray.600" fontStyle="italic">
                         No implementations reference this item
                     </Text>
                 )}

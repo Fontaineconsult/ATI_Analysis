@@ -77,7 +77,7 @@ function PrincipleDetailPanel({ item, onAfterEdit, onAfterDelete, placeholder })
         return (
             placeholder || (
                 <Box p={8} borderWidth="1px" borderStyle="dashed" borderColor="gray.300" borderRadius="lg" bg="gray.50" textAlign="center">
-                    <Text color="gray.500" fontSize="sm">
+                    <Text color="gray.600" fontSize="sm">
                         Select a principle on the left, or click <strong>Add Principle</strong> to create one.
                     </Text>
                 </Box>
@@ -111,7 +111,7 @@ function PrincipleDetailPanel({ item, onAfterEdit, onAfterDelete, placeholder })
                             <PrincipleGroundingTags principle={item} />
                         </HStack>
                         <Heading as="h2" size="md" color="gray.800">{item.name || item.handle}</Heading>
-                        <Text fontSize="xs" color="gray.400" fontFamily="mono">{item.handle}</Text>
+                        <Text fontSize="xs" color="gray.600" fontFamily="mono">{item.handle}</Text>
                     </VStack>
                     <Spacer />
                     <HStack>
@@ -125,7 +125,7 @@ function PrincipleDetailPanel({ item, onAfterEdit, onAfterDelete, placeholder })
                 {item.description_short ? (
                     <Text fontSize="sm" color="gray.800">{item.description_short}</Text>
                 ) : (
-                    <Text fontSize="sm" color="gray.400" fontStyle="italic">No short statement set.</Text>
+                    <Text fontSize="sm" color="gray.600" fontStyle="italic">No short statement set.</Text>
                 )}
 
                 {item.description_full && (

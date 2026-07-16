@@ -154,7 +154,7 @@ function AdminFeedbackForm({ yearIdentifier, adminReviewNotes = [], onUpdate }) 
                     ))}
                 </VStack>
             ) : (
-                <Text fontSize="sm" color="gray.500" mb={4}>
+                <Text fontSize="sm" color="gray.600" mb={4}>
                     No admin reviewer feedback provided yet
                 </Text>
             )}

@@ -46,7 +46,7 @@ const MICRO = {
     fontSize: '10px',
     fontWeight: 'bold',
     textTransform: 'uppercase',
-    color: 'gray.500',
+    color: 'gray.600',
     letterSpacing: 'wide',
     whiteSpace: 'nowrap',
 };
@@ -130,11 +130,11 @@ function WorkingGroupCard({
             <HStack px={5} py={4} spacing={3} borderBottomWidth="1px" borderColor="gray.100" flexWrap="wrap">
                 <Box w="9px" h="9px" borderRadius="full" bg={accent} flexShrink={0} />
                 <Text fontSize="17px" fontWeight="bold" color="gray.800">{wgp.working_group}</Text>
-                <Text fontFamily="mono" fontSize="11px" color="gray.400" whiteSpace="nowrap">{wgp.plan_identifier}</Text>
+                <Text fontFamily="mono" fontSize="11px" color="gray.600" whiteSpace="nowrap">{wgp.plan_identifier}</Text>
                 <Box flex="1" minW="12px" />
                 <Text {...MICRO}>Leads</Text>
                 {leads.length === 0 ? (
-                    <Text fontSize="13px" color="gray.400" fontStyle="italic">none</Text>
+                    <Text fontSize="13px" color="gray.600" fontStyle="italic">none</Text>
                 ) : (
                     leads.map((l) => (
                         <HStack key={l.unique_id} spacing={1}>
@@ -176,11 +176,11 @@ function WorkingGroupCard({
 
             {sis.length === 0 ? (
                 <Box px={5} py={4}>
-                    <Text fontSize="sm" color="gray.500" fontStyle="italic">No indicators prioritized yet.</Text>
+                    <Text fontSize="sm" color="gray.600" fontStyle="italic">No indicators prioritized yet.</Text>
                 </Box>
             ) : visibleSis.length === 0 ? (
                 <Box px={5} py={4}>
-                    <Text fontSize="sm" color="gray.500" fontStyle="italic">No indicators match this filter.</Text>
+                    <Text fontSize="sm" color="gray.600" fontStyle="italic">No indicators match this filter.</Text>
                 </Box>
             ) : (
                 visibleSis.map((si) => (

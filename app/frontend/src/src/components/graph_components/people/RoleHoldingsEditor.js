@@ -120,12 +120,12 @@ function RoleHoldingsEditor({ employeeId, roles = [], participatedRoleHandles = 
 
     return (
         <VStack align="stretch" spacing={3}>
-            <Text fontSize="2xs" color="gray.400">
+            <Text fontSize="2xs" color="gray.600">
                 Every role this person holds or has worked in. Flag whether each is in their position description — roles done but not in the PD are the invisible-labor signal.
             </Text>
 
             {rows.length === 0 ? (
-                <Text fontSize="sm" color="gray.500" fontStyle="italic">No roles held or worked in yet.</Text>
+                <Text fontSize="sm" color="gray.600" fontStyle="italic">No roles held or worked in yet.</Text>
             ) : (
                 <VStack align="stretch" spacing={2}>
                     {rows.map((r) => {

@@ -1,4 +1,7 @@
 import {useNavigate} from "react-router-dom";
+// Status colors live in services/utils/statusColors.js (single source of
+// truth). Re-exported at the bottom for the older callers that import from tools.
+import { getStatusColor } from './statusColors';
 
 
 function getUrlFromCompositeKey(compositeKey, campus) {
@@ -44,29 +47,6 @@ function workingGroupWebSafe(workingGroupName) {
     return workingGroupMap[workingGroupName] || workingGroupName;
 }
 
-
-
-// Helper function to get status color
-const getStatusColor = (statusLevel) => {
-    console.log("AAA", statusLevel, typeof statusLevel);
-    const level = String(statusLevel || '').toLowerCase();
-    switch(level) {
-        case 'not started':
-            return '#E53E3E'; // red.500
-        case 'initiated':
-            return '#ED8936'; // orange.500
-        case 'defined':
-            return '#ECC94B'; // yellow.500
-        case 'established':
-            return '#41b441'; // blue.500
-        case 'managed':
-            return '#246f24'; // blue.500
-        case 'optimized':
-            return '#157744'; // green.500
-        default:
-            return '#718096'; // gray.500
-    }
-};
 
 
 const year_difference = (current_year) => {

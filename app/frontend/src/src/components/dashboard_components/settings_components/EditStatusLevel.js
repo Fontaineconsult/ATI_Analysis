@@ -103,7 +103,7 @@ const SubNodeList = ({ items, textField, onRemove, onConnect, onCreate, category
             {/* Connected items list */}
             <VStack align="stretch" spacing={1} mb={3}>
                 {(items || []).length === 0 && (
-                    <Text fontSize="xs" color="gray.400" fontStyle="italic">None connected</Text>
+                    <Text fontSize="xs" color="gray.600" fontStyle="italic">None connected</Text>
                 )}
                 {(items || []).map((item) => (
                     <HStack

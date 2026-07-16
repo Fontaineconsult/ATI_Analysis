@@ -58,7 +58,7 @@ export default function FileUploadField({ value, onUploaded, onClear, label = 'A
                         <ExternalLinkIcon ml={1} />
                     </Link>
                     {value.size != null && (
-                        <Text fontSize="xs" color="gray.500">
+                        <Text fontSize="xs" color="gray.600">
                             ({Math.max(1, Math.round(value.size / 1024))} KB)
                         </Text>
                     )}
@@ -72,7 +72,7 @@ export default function FileUploadField({ value, onUploaded, onClear, label = 'A
                 <Input size="sm" type="file" onChange={handleFile} isDisabled={uploading} pt={1}
                        borderColor="gray.300" />
             )}
-            {uploading && <Text fontSize="xs" color="gray.500" mt={1}>Uploading…</Text>}
+            {uploading && <Text fontSize="xs" color="gray.600" mt={1}>Uploading…</Text>}
             {error && <Text fontSize="xs" color="red.500" mt={1}>{error}</Text>}
         </Box>
     );

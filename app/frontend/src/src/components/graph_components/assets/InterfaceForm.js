@@ -162,13 +162,13 @@ function InterfaceForm({ isOpen, onClose, assets = [], presetAssetIdentifier, ex
                         <FormControl isRequired={!isEdit}>
                             <FormLabel fontSize="sm" color="gray.700" fontWeight="semibold">Function</FormLabel>
                             {isEdit ? (
-                                <Input size="sm" value={form.function} isReadOnly bg="gray.50" color="gray.500" />
+                                <Input size="sm" value={form.function} isReadOnly bg="gray.50" color="gray.600" />
                             ) : (
                                 <Select size="sm" placeholder="Select function…" value={form.function} onChange={set('function')}>
                                     {getFunctionOptions(vocab).map((o) => <option key={o.key} value={o.key}>{o.label}</option>)}
                                 </Select>
                             )}
-                            <Text fontSize="2xs" color="gray.400" mt={1}>
+                            <Text fontSize="2xs" color="gray.600" mt={1}>
                                 The institutional purpose this interface serves — an identity coordinate.
                             </Text>
                         </FormControl>
@@ -181,7 +181,7 @@ function InterfaceForm({ isOpen, onClose, assets = [], presetAssetIdentifier, ex
                                     value={form.backingAsset || 'standalone'}
                                     isReadOnly
                                     bg="gray.50"
-                                    color="gray.500"
+                                    color="gray.600"
                                 />
                             ) : (
                                 <Select size="sm" placeholder="None (standalone)" value={form.backingAsset} onChange={set('backingAsset')}>
@@ -192,7 +192,7 @@ function InterfaceForm({ isOpen, onClose, assets = [], presetAssetIdentifier, ex
                                     ))}
                                 </Select>
                             )}
-                            <Text fontSize="2xs" color="gray.400" mt={1}>
+                            <Text fontSize="2xs" color="gray.600" mt={1}>
                                 Asset-backed interfaces derive their §508 steward upward from the asset. Standalone is a valid state.
                             </Text>
                         </FormControl>
@@ -208,7 +208,7 @@ function InterfaceForm({ isOpen, onClose, assets = [], presetAssetIdentifier, ex
                                 bg={isEdit ? 'gray.50' : undefined}
                                 color={isEdit ? 'gray.500' : undefined}
                             />
-                            <Text fontSize="2xs" color="gray.400" mt={1}>
+                            <Text fontSize="2xs" color="gray.600" mt={1}>
                                 The structural zone within the backing (free text). An identity coordinate.
                             </Text>
                         </FormControl>
@@ -216,7 +216,7 @@ function InterfaceForm({ isOpen, onClose, assets = [], presetAssetIdentifier, ex
                         {isEdit && (
                             <FormControl>
                                 <FormLabel fontSize="sm" color="gray.700" fontWeight="semibold">Identifier</FormLabel>
-                                <Input size="sm" value={existingInterface.interface_identifier} isReadOnly bg="gray.50" color="gray.500" />
+                                <Input size="sm" value={existingInterface.interface_identifier} isReadOnly bg="gray.50" color="gray.600" />
                             </FormControl>
                         )}
 

@@ -150,7 +150,7 @@ function ImplementationsArea() {
             <Flex justify="space-between" align="center" mb={4}>
                 <Heading as="h2" size="lg" color="gray.800">Implementations</Heading>
                 {updating && (
-                    <HStack spacing={2} color="gray.500">
+                    <HStack spacing={2} color="gray.600">
                         <Spinner size="sm" color="teal.500" />
                         <Text fontSize="xs">Updating…</Text>
                     </HStack>

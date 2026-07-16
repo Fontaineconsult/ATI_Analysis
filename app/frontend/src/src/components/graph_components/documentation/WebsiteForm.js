@@ -113,7 +113,7 @@ function WebsiteForm({ website, onSubmit, createdBy, isNewWebsite, onCancel }) {
                     {urlIsInvalid ? (
                         <FormErrorMessage fontSize="xs">{urlValidation.reason}</FormErrorMessage>
                     ) : (
-                        <FormHelperText fontSize="xs" color="gray.500">
+                        <FormHelperText fontSize="xs" color="gray.600">
                             Full URL. Missing https:// will be added on save.
                         </FormHelperText>
                     )}

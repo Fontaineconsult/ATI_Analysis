@@ -212,9 +212,9 @@ function CampusPlanContainer() {
             <HStack align="center" spacing={3} mb={4}>
                 <Heading as="h2" size="lg" color="gray.800">Campus Plan</Heading>
                 <Box flex="1" />
-                <Text fontSize="sm" color="gray.500">
+                <Text fontSize="sm" color="gray.600">
                     {plan.campus?.name || currentCampus} · {plan.academic_year} ·{' '}
-                    <Text as="span" fontFamily="mono" color="gray.400" whiteSpace="nowrap">{plan.plan_identifier}</Text>
+                    <Text as="span" fontFamily="mono" color="gray.600" whiteSpace="nowrap">{plan.plan_identifier}</Text>
                 </Text>
             </HStack>
 
@@ -248,7 +248,7 @@ function CampusPlanContainer() {
                     ) : plan.executive_summary ? (
                         <Text color="gray.700" whiteSpace="pre-wrap" lineHeight="1.55">{plan.executive_summary}</Text>
                     ) : (
-                        <Text fontSize="sm" color="gray.500" fontStyle="italic">No summary yet.</Text>
+                        <Text fontSize="sm" color="gray.600" fontStyle="italic">No summary yet.</Text>
                     )}
                 </Card>
 
@@ -260,7 +260,7 @@ function CampusPlanContainer() {
                     )}
                 >
                     {plan.executive_sponsors.length === 0 ? (
-                        <Text fontSize="sm" color="gray.500" fontStyle="italic">None assigned.</Text>
+                        <Text fontSize="sm" color="gray.600" fontStyle="italic">None assigned.</Text>
                     ) : (
                         <VStack align="stretch" spacing={3}>
                             {plan.executive_sponsors.map((person) => (
@@ -270,7 +270,7 @@ function CampusPlanContainer() {
                                         <Text fontSize="sm" fontWeight="medium" color="gray.800">{person.name}</Text>
                                     </HStack>
                                     {person.title && (
-                                        <Text fontSize="xs" color="gray.500" pl="36px">{person.title}</Text>
+                                        <Text fontSize="xs" color="gray.600" pl="36px">{person.title}</Text>
                                     )}
                                 </Box>
                             ))}
@@ -317,7 +317,7 @@ function CampusPlanContainer() {
                     <Text fontSize="xs" fontWeight="bold" textTransform="uppercase" color="teal.600" letterSpacing="wide" whiteSpace="nowrap">
                         Cross-campus comparison
                     </Text>
-                    <Text fontSize="xs" color="gray.500" flex="1" minW="180px">
+                    <Text fontSize="xs" color="gray.600" flex="1" minW="180px">
                         Add peer campuses to compare prioritized indicators in each working group below.
                     </Text>
                     {peerCampusPlans.map(({ campusAbbrev, campusName, state }) => {
