@@ -1,0 +1,17 @@
+{
+    "name": "ati-e2e",
+    "version": "0.1.0",
+    "private": true,
+    "description": "End-to-end + axe accessibility suite for the ATI Analysis app (Playwright)",
+    "scripts": {
+        "test": "playwright test",
+        "test:headed": "playwright test --headed",
+        "test:ui": "playwright test --ui",
+        "test:a11y": "playwright test tests/a11y-routes.spec.js tests/a11y-overlays.spec.js",
+        "report": "playwright show-report"
+    },
+    "devDependencies": {
+        "@axe-core/playwright": "^4.12.1",
+        "@playwright/test": "^1.61.1"
+    }
+}

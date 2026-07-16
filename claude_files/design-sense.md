@@ -278,6 +278,39 @@ Status is a six-rung CMM ladder (`Not Started → Initiated → Defined → Esta
   sections, `tabIndex={0}` on read-only headings meant to be reachable.
 - Color is never the only signal — pair status color with a text label/badge.
 
+### 6.1 Canonical widget semantics — the W3C ARIA Authoring Practices Guide (APG)
+
+The normative reference for every interactive widget's roles, states, and keyboard
+behavior is the **W3C APG patterns catalog**: <https://www.w3.org/WAI/ARIA/apg/patterns/>.
+When building or reviewing a widget, find its pattern there and implement the *full*
+keyboard interaction it specifies — not just the ARIA attributes.
+
+How this maps onto our stack: **Chakra v2 built-ins already implement their APG pattern**
+(`Menu` → Menu Button + Menu, `Modal`/`AlertDialog` → Dialog/Alert Dialog, `Tabs` → Tabs,
+`Accordion` → Accordion, `Tooltip` → Tooltip, `Checkbox`/`Radio`/`Switch`/`Slider` →
+their patterns). Don't fight or re-implement those. The APG discipline applies where **we
+hand-roll semantics** — anything built from `Box`/`Flex` with ARIA props is ours to get right.
+
+| App widget | APG pattern | Watch for |
+|---|---|---|
+| Selectable master lists (`SuccessIndicatorList`, `TaapList`, `VendorList`, …) | [Listbox](https://www.w3.org/WAI/ARIA/apg/patterns/listbox/) | Roving tabindex; `↑`/`↓`, `Home`/`End`; `aria-selected` on options; `aria-activedescendant` alternative is fine |
+| Accordion-grouped lists (`GovernanceList`, `AssetList`) | [Accordion](https://www.w3.org/WAI/ARIA/apg/patterns/accordion/) + Listbox inside | Header buttons with `aria-expanded`/`aria-controls`; group toggle must not steal arrow keys from the inner listbox |
+| Expand/collapse rows, "show more" sections | [Disclosure](https://www.w3.org/WAI/ARIA/apg/patterns/disclosure/) | Trigger is a `button` with `aria-expanded`; never a bare clickable `Box` |
+| Header campus/year/person selectors | [Menu Button](https://www.w3.org/WAI/ARIA/apg/patterns/menu-button/) | Chakra `Menu` handles it — keep items `MenuItem`, don't nest inputs |
+| Create/edit forms, action gates (Review) | [Dialog (Modal)](https://www.w3.org/WAI/ARIA/apg/patterns/dialog-modal/) | Focus trapped + returned to trigger on close; `initialFocusRef` on the first field |
+| Destructive confirms | [Alert Dialog](https://www.w3.org/WAI/ARIA/apg/patterns/alertdialog/) | Prefer Chakra `AlertDialog` over `window.confirm` in new code (§4.4) |
+| Area sub-domain tabs (Assets \| TAAPs \| Vendors) | [Tabs](https://www.w3.org/WAI/ARIA/apg/patterns/tabs/) | Use Chakra `Tabs`; if a "tab" navigates a route, it's *navigation* — use links in a `nav`, not `role="tab"` |
+| Top nav + SubNavbar + main content | [Landmarks](https://www.w3.org/WAI/ARIA/apg/patterns/landmarks/) | One `main`; `nav`s need distinct `aria-label`s (we have "Main Navigation" / "Section navigation" — keep them unique) |
+| Data tables (report tables, react-table) | [Table](https://www.w3.org/WAI/ARIA/apg/patterns/table/) | Real `table`/`th scope`; only reach for Grid semantics if cells are interactive |
+| Error/empty/critical boxes, toasts | [Alert](https://www.w3.org/WAI/ARIA/apg/patterns/alert/) | Chakra `Alert`/`useToast` provide `role="alert"`/`status` — don't build red `Box`es without it |
+| `StatusLevelLadder` (compact ramp bar) | [Meter](https://www.w3.org/WAI/ARIA/apg/patterns/meter/) | A read-only value on a known scale: `role="meter"` + `aria-valuenow/min/max` + accessible name, or a text equivalent |
+
+Two recurring failure modes to reject in review: (1) a clickable `Box`/`Flex` standing in
+for a `button` or `option` (no role, no keyboard path), and (2) ARIA roles added without
+the pattern's keyboard contract (a `role="listbox"` you can't arrow through is worse than
+a plain list). The e2e axe suite (`e2e/`) enforces the automated slice of this; the
+keyboard contracts above are what manual review and interaction specs must cover.
+
 ---
 
 ## 7. Canon vs legacy
