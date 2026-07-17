@@ -13,6 +13,12 @@ import {
 } from '@chakra-ui/react';
 import { DataContext } from '../../../context/DataContext';
 import {UserContext} from "../../../context/UserContext";
+import { getWorkingGroupIdentity } from '../../../styles/workingGroupIdentity';
+
+// Page-specific compact abbreviations for the roster's dense WG column, keyed by SSOT code.
+// These differ from the SSOT's shortLabel ('Ins'/'Pro'), so they stay local; identity
+// resolution (name/slug -> code) still comes from the SSOT.
+const ROSTER_WG_ABBREV = { web: 'Web', ins: 'Ins. M', pro: 'Proc' };
 
 function Members() {
     const { data, loading } = useContext(DataContext);
@@ -73,17 +79,10 @@ function Members() {
                                             ?.map((group) => {
                                                 // Handle both string and object formats
                                                 const groupName = typeof group === 'string' ? group : group.name;
-
-                                                // Map full names to abbreviations
-                                                if (groupName === 'Instructional Materials' || groupName === 'instructional-materials') {
-                                                    return 'Ins. M';
-                                                } else if (groupName === 'Procurement' || groupName === 'procurement') {
-                                                    return 'Proc';
-                                                } else if (groupName === 'Web' || groupName === 'web') {
-                                                    return 'Web';
-                                                } else {
-                                                    return groupName;
-                                                }
+                                                // Resolve identity (name OR slug) via the SSOT, then apply the
+                                                // roster's bespoke abbrev; unknown groups fall back to their name.
+                                                const { code } = getWorkingGroupIdentity(groupName);
+                                                return ROSTER_WG_ABBREV[code] || groupName;
                                             })
                                             .join(', ') || 'None assigned'}
                                     </Td>
