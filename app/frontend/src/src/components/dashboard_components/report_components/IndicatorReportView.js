@@ -25,6 +25,7 @@ import StatusLevelLadder from '../../functional_components/StatusLevelLadder';
 import StatusProgression from '../campus_plan_components/StatusProgression';
 import { StatusLevelContext } from '../../../context/StatusLevelContext';
 import { getPlanStatusColorScheme, getPlanStatusLabel } from '../../../styles/planStatusColors';
+import { getWgHex } from '../../../styles/workingGroupIdentity';
 import CopyIndicatorReportButton from './CopyIndicatorReportButton';
 
 /*
@@ -88,8 +89,6 @@ const ReportSection = ({ id, title, count, action, children }) => (
         {children}
     </Box>
 );
-
-const WG_DOT = { Web: '#4966A4', 'Instructional Materials': '#635098', Procurement: '#DB5850' };
 
 // ── Artifact rows (typed leading tag + resolved link) ───────────────────────
 // Canonical artifact link resolution: uploaded (managed) files carry their link at
@@ -369,7 +368,7 @@ const IndicatorReportView = ({ report }) => {
                         <Box minW={0}>
                             <HStack spacing={2} mb={1} flexWrap="wrap">
                                 <Text fontFamily="mono" fontSize="lg" fontWeight="bold" color="gray.700">{indicator.composite_key}</Text>
-                                <Box w="10px" h="10px" borderRadius="full" bg={WG_DOT[indicator.working_group] || 'gray.400'} />
+                                <Box w="10px" h="10px" borderRadius="full" bg={getWgHex(indicator.working_group)} />
                                 <Text fontSize="sm" color="gray.600">{indicator.working_group}</Text>
                                 <Text fontSize="sm" color="gray.600">· {campusName} · {report.year}</Text>
                             </HStack>

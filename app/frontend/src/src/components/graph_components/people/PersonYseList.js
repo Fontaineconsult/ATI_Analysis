@@ -15,6 +15,7 @@ import {
 import { CloseIcon } from '@chakra-ui/icons';
 import { unassignPersonAsImplementor } from '../../../services/api/put';
 import { getStatusColor, getStatusBackgroundColor } from '../../../services/utils/statusColors';
+import { CODE_TO_NAME, getWorkingGroupIdentity } from '../../../styles/workingGroupIdentity';
 
 /**
  * Read + unassign view of the YSEs a person implements, grouped by campus →
@@ -151,10 +152,12 @@ function PersonYseList({ yses = [], personEmployeeId, onChange }) {
 function inferWorkingGroupFromCompositeKey(compositeKey) {
     if (!compositeKey) return 'Other';
     const suffix = compositeKey.split('-').slice(1).join('-').trim().toLowerCase();
-    if (suffix === 'web') return 'Web';
-    if (suffix === 'ins' || suffix === 'instructional-materials' || suffix === 'instructional materials') return 'Instructional Materials';
-    if (suffix === 'pro' || suffix === 'procurement') return 'Procurement';
-    return suffix ? suffix.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()) : 'Other';
+    if (!suffix) return 'Other';
+    // suffix is a code ('web'/'ins'/'pro'), a slug, or a lowercase name — resolve via the SSOT;
+    // an unrecognized suffix falls back to a title-cased version of itself (as before).
+    const identity = getWorkingGroupIdentity(suffix);
+    return CODE_TO_NAME[suffix]
+        || (identity.slug ? identity.name : suffix.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()));
 }
 
 function groupByCampusWorkingGroup(yses) {
