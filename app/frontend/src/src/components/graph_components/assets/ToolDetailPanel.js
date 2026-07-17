@@ -37,10 +37,10 @@ const Card = ({ title, children, ...rest }) => (
 function Field({ label, value }) {
     return (
         <Box>
-            <Text fontSize="xs" color="gray.500" textTransform="uppercase" fontWeight="bold">{label}</Text>
+            <Text fontSize="xs" color="gray.600" textTransform="uppercase" fontWeight="bold">{label}</Text>
             {value
                 ? <Text fontSize="sm" color="gray.800" whiteSpace="pre-wrap">{String(value)}</Text>
-                : <Text fontSize="sm" color="gray.400" fontStyle="italic">Not set</Text>}
+                : <Text fontSize="sm" color="gray.600" fontStyle="italic">Not set</Text>}
         </Box>
     );
 }
@@ -114,7 +114,7 @@ function ToolDetailPanel({ toolIdentifier, assets = [], vendors = [], implementa
     if (!toolIdentifier) {
         return (
             <Box p={8} borderWidth="1px" borderStyle="dashed" borderColor="gray.300" borderRadius="lg" bg="gray.50" textAlign="center">
-                <Text color="gray.500" fontSize="sm">
+                <Text color="gray.600" fontSize="sm">
                     Select a tool on the left, or click <strong>Add Tool</strong> to create one.
                 </Text>
             </Box>
@@ -162,7 +162,7 @@ function ToolDetailPanel({ toolIdentifier, assets = [], vendors = [], implementa
                 <HStack align="start" mb={3}>
                     <VStack align="stretch" spacing={2} flex="1" minW="0">
                         <Heading as="h2" size="md" color="gray.800">{tool.title || '(untitled)'}</Heading>
-                        <Text fontSize="xs" color="gray.400">{tool.tool_identifier}</Text>
+                        <Text fontSize="xs" color="gray.600">{tool.tool_identifier}</Text>
                     </VStack>
                     <Spacer />
                     <HStack>
@@ -192,7 +192,7 @@ function ToolDetailPanel({ toolIdentifier, assets = [], vendors = [], implementa
 
             {/* Parent assets (multi-valued) — set when this tool is also a stewarded asset */}
             <Card title="Parent assets">
-                <Text fontSize="xs" color="gray.500" mb={2}>
+                <Text fontSize="xs" color="gray.600" mb={2}>
                     Set when this tool is also a stewarded institutional asset. A tool can map to
                     several assets (e.g. the same product tracked at different scopes).
                 </Text>
@@ -225,7 +225,7 @@ function ToolDetailPanel({ toolIdentifier, assets = [], vendors = [], implementa
 
             {/* Used by — the implementations that use this tool (editable) */}
             <Card title="Used by">
-                <Text fontSize="xs" color="gray.500" mb={2}>
+                <Text fontSize="xs" color="gray.600" mb={2}>
                     The Implementations (Process / Project / Procedure / Service) whose remediation work uses this tool.
                 </Text>
                 <EntityAttachmentSelector

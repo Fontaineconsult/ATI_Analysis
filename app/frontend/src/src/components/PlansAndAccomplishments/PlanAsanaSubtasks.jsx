@@ -45,7 +45,7 @@ function PlanAsanaSubtasks({ planUniqueId }) {
 
     if (loading) {
         return (
-            <HStack spacing={2} color="gray.500">
+            <HStack spacing={2} color="gray.600">
                 <Spinner size="xs" />
                 <Text fontSize="sm">Loading Asana subtasks…</Text>
             </HStack>
@@ -58,7 +58,7 @@ function PlanAsanaSubtasks({ planUniqueId }) {
 
     if (subtasks.length === 0) {
         return (
-            <Text fontSize="sm" color="gray.500" fontStyle="italic">
+            <Text fontSize="sm" color="gray.600" fontStyle="italic">
                 No subtasks synced from Asana yet. Add subtasks to this plan's task in
                 Asana, then use the "Asana Refresh" button above to mirror them here.
             </Text>
@@ -75,7 +75,7 @@ function PlanAsanaSubtasks({ planUniqueId }) {
                     {doneCount} / {subtasks.length} complete
                 </Badge>
                 {lastSynced && (
-                    <Text fontSize="2xs" color="gray.400">
+                    <Text fontSize="2xs" color="gray.600">
                         Synced {new Date(lastSynced).toLocaleString()}
                     </Text>
                 )}
@@ -108,10 +108,10 @@ function PlanAsanaSubtasks({ planUniqueId }) {
                                 </Text>
                                 <HStack spacing={2} mt={0.5}>
                                     {sub.assignee_name && (
-                                        <Text fontSize="2xs" color="gray.500">{sub.assignee_name}</Text>
+                                        <Text fontSize="2xs" color="gray.600">{sub.assignee_name}</Text>
                                     )}
                                     {sub.due_on && (
-                                        <Text fontSize="2xs" color="gray.500">due {sub.due_on}</Text>
+                                        <Text fontSize="2xs" color="gray.600">due {sub.due_on}</Text>
                                     )}
                                 </HStack>
                             </Box>

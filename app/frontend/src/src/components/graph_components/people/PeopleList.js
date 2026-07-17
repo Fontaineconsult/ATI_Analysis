@@ -10,6 +10,7 @@ import {
     VStack,
 } from '@chakra-ui/react';
 import { SearchIcon } from '@chakra-ui/icons';
+import useListboxNavigation from '../../../hooks/useListboxNavigation';
 
 /**
  * Generic selectable people list. Caller supplies the people array and a
@@ -38,9 +39,15 @@ function PeopleList({ people = [], selectedId, onSelect, emptyMessage = 'No peop
         );
     }, [people, query]);
 
+    const { getItemProps } = useListboxNavigation({
+        itemCount: filtered.length,
+        selectedIndex: filtered.findIndex((p) => p.unique_id === selectedId),
+        onActivate: (i) => onSelect && onSelect(filtered[i]),
+    });
+
     if (!people || people.length === 0) {
         return (
-            <Box p={4} color="gray.500" fontSize="sm" fontStyle="italic">
+            <Box p={4} color="gray.600" fontSize="sm" fontStyle="italic">
                 {emptyMessage}
             </Box>
         );
@@ -51,7 +58,7 @@ function PeopleList({ people = [], selectedId, onSelect, emptyMessage = 'No peop
             {showSearch && (
                 <InputGroup size="sm">
                     <InputLeftElement pointerEvents="none">
-                        <SearchIcon color="gray.400" />
+                        <SearchIcon color="gray.600" />
                     </InputLeftElement>
                     <Input
                         placeholder="Search by name, title, campus…"
@@ -63,6 +70,9 @@ function PeopleList({ people = [], selectedId, onSelect, emptyMessage = 'No peop
                 </InputGroup>
             )}
 
+            {/* Scroll container needs no tabIndex of its own — the listbox options
+                inside are focusable (roving tabindex), which satisfies keyboard
+                access to the scrollable region. */}
             <Box
                 borderWidth="1px"
                 borderColor="gray.200"
@@ -72,14 +82,18 @@ function PeopleList({ people = [], selectedId, onSelect, emptyMessage = 'No peop
                 flex="1"
                 maxH="70vh"
             >
-                <List spacing={0} role="listbox" aria-label="People">
-                    {filtered.map((person) => {
+                <List spacing={0}
+                      role={filtered.length > 0 ? 'listbox' : undefined}
+                      aria-label={filtered.length > 0 ? 'People' : undefined}>
+                    {filtered.map((person, index) => {
                         const isSelected = person.unique_id === selectedId;
                         return (
                             <ListItem
                                 key={person.unique_id}
+                                {...getItemProps(index)}
                                 role="option"
                                 aria-selected={isSelected}
+                                _focusVisible={{ outline: '2px solid', outlineColor: 'teal.500', outlineOffset: '-2px' }}
                                 px={3}
                                 py={2}
                                 cursor="pointer"
@@ -108,7 +122,7 @@ function PeopleList({ people = [], selectedId, onSelect, emptyMessage = 'No peop
                         );
                     })}
                     {filtered.length === 0 && (
-                        <ListItem px={3} py={3} color="gray.500" fontSize="sm" fontStyle="italic">
+                        <ListItem px={3} py={3} color="gray.600" fontSize="sm" fontStyle="italic">
                             No matches.
                         </ListItem>
                     )}

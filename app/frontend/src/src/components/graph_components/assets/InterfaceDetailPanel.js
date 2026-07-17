@@ -40,10 +40,10 @@ const Card = ({ title, children, ...rest }) => (
 function Field({ label, value }) {
     return (
         <Box>
-            <Text fontSize="xs" color="gray.500" textTransform="uppercase" fontWeight="bold">{label}</Text>
+            <Text fontSize="xs" color="gray.600" textTransform="uppercase" fontWeight="bold">{label}</Text>
             {value
                 ? <Text fontSize="sm" color="gray.800" whiteSpace="pre-wrap">{String(value)}</Text>
-                : <Text fontSize="sm" color="gray.400" fontStyle="italic">Not set</Text>}
+                : <Text fontSize="sm" color="gray.600" fontStyle="italic">Not set</Text>}
         </Box>
     );
 }
@@ -117,7 +117,7 @@ function InterfaceDetailPanel({ interfaceIdentifier, assets = [], implementation
     if (!interfaceIdentifier) {
         return (
             <Box p={8} borderWidth="1px" borderStyle="dashed" borderColor="gray.300" borderRadius="lg" bg="gray.50" textAlign="center">
-                <Text color="gray.500" fontSize="sm">
+                <Text color="gray.600" fontSize="sm">
                     Select an interface on the left, or click <strong>Add Interface</strong> to create one.
                 </Text>
             </Box>
@@ -173,7 +173,7 @@ function InterfaceDetailPanel({ interfaceIdentifier, assets = [], implementation
                             {iface.uncovered && <UncoveredBadge />}
                         </HStack>
                         <Heading as="h2" size="md" color="gray.800">{iface.title || '(untitled)'}</Heading>
-                        <Text fontSize="xs" color="gray.400">{iface.interface_identifier}</Text>
+                        <Text fontSize="xs" color="gray.600">{iface.interface_identifier}</Text>
                     </VStack>
                     <Spacer />
                     <HStack>
@@ -194,10 +194,10 @@ function InterfaceDetailPanel({ interfaceIdentifier, assets = [], implementation
                     <Field label="Function" value={iface.function ? getFunctionLabel(iface.function) : null} />
                     <Field label="Locus" value={iface.locus} />
                     <Box>
-                        <Text fontSize="xs" color="gray.500" textTransform="uppercase" fontWeight="bold" mb={1}>Audience</Text>
+                        <Text fontSize="xs" color="gray.600" textTransform="uppercase" fontWeight="bold" mb={1}>Audience</Text>
                         {(iface.audience || []).length
                             ? <AudienceBadges audience={iface.audience} />
-                            : <Text fontSize="sm" color="gray.400" fontStyle="italic">Not set</Text>}
+                            : <Text fontSize="sm" color="gray.600" fontStyle="italic">Not set</Text>}
                     </Box>
                     <Field label="Description" value={iface.description} />
                 </VStack>
@@ -205,7 +205,7 @@ function InterfaceDetailPanel({ interfaceIdentifier, assets = [], implementation
 
             {/* Backing asset (presented_by) — editable; stewardship derives upward from it */}
             <Card title="Backing asset">
-                <Text fontSize="xs" color="gray.500" mb={2}>
+                <Text fontSize="xs" color="gray.600" mb={2}>
                     The asset this interface is presented by. §508 stewardship is derived from the asset, not stored here.
                     A standalone interface (no backing asset) is a valid state.
                 </Text>
@@ -240,7 +240,7 @@ function InterfaceDetailPanel({ interfaceIdentifier, assets = [], implementation
                 Keeping function in the key but accountability here is what makes the
                 function-vs-accountability divergence queryable. */}
             <Card title="Accountable working groups">
-                <Text fontSize="xs" color="gray.500" mb={2}>
+                <Text fontSize="xs" color="gray.600" mb={2}>
                     The committee(s) accountable for this interface's accessibility — distinct from its
                     <strong> function</strong> (what it is for). Divergence between the two is diagnostic.
                 </Text>
@@ -259,7 +259,7 @@ function InterfaceDetailPanel({ interfaceIdentifier, assets = [], implementation
             {/* Remediation — the Implementations that remediate this interface (editable).
                 Attaching at least one clears the uncovered signal. */}
             <Card title="Remediated by">
-                <Text fontSize="xs" color="gray.500" mb={2}>
+                <Text fontSize="xs" color="gray.600" mb={2}>
                     The Implementations (Process / Project / Procedure / Service) whose work keeps this
                     interface accessible. An interface with no remediation is <strong>uncovered</strong>.
                 </Text>

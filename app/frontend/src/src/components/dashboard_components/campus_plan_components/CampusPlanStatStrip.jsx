@@ -17,15 +17,20 @@ function StatCard({ label, value, help, accent, numberColor, active, clickable, 
             borderTopColor={accent}
             cursor={clickable ? 'pointer' : 'default'}
             onClick={clickable ? onClick : undefined}
+            onKeyDown={clickable ? (e) => {
+                if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClick?.(); }
+            } : undefined}
             transition="box-shadow 0.15s, border-color 0.15s"
             _hover={clickable ? { borderColor: 'gray.300' } : undefined}
+            _focusVisible={clickable ? { outline: '2px solid', outlineColor: 'teal.500', outlineOffset: '1px' } : undefined}
             role={clickable ? 'button' : undefined}
+            tabIndex={clickable ? 0 : undefined}
             aria-pressed={clickable && active !== undefined ? active : undefined}
         >
             <Stat>
-                <StatLabel fontSize="xs" color="gray.500" textTransform="uppercase">{label}</StatLabel>
+                <StatLabel fontSize="xs" color="gray.600" textTransform="uppercase">{label}</StatLabel>
                 <StatNumber fontSize="2xl" color={numberColor || 'gray.800'}>{value}</StatNumber>
-                {help && <StatHelpText fontSize="xs" color="gray.500" mb={0}>{help}</StatHelpText>}
+                {help && <StatHelpText fontSize="xs" color="gray.600" mb={0}>{help}</StatHelpText>}
             </Stat>
         </Box>
     );

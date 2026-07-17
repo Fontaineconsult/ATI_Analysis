@@ -2,7 +2,7 @@ import React, { useContext } from 'react';
 import { Box, Text, Heading, VStack, HStack, Badge, UnorderedList, ListItem } from '@chakra-ui/react';
 import { UserContext } from "../../../context/UserContext";
 import { StatusLevelContext } from "../../../context/StatusLevelContext";
-import {getStatusColor} from "../../../services/utils/tools";
+import { getStatusBackgroundColor, getStatusTextColor } from "../../../services/utils/statusColors";
 
 function StatusLevelDetails({ statusDetails }) {
     const { statusLevels } = useContext(StatusLevelContext);
@@ -32,7 +32,6 @@ function StatusLevelDetails({ statusDetails }) {
     } = dataToDisplay;
 
     // Helper function to render descriptions and requirements
-    console.log("SDDSFSDF", getStatusColor(status_level))
     const renderSection = (title, descriptions, requirements) => {
         if ((!descriptions || descriptions.length === 0) && (!requirements || requirements.length === 0)) {
             return null;
@@ -53,12 +52,12 @@ function StatusLevelDetails({ statusDetails }) {
                     )}
                     {requirements && requirements.length > 0 && (
                         <Box mt={1}>
-                            <Text fontSize="xs" fontStyle="italic" color="gray.500">
+                            <Text fontSize="xs" fontStyle="italic" color="gray.600">
                                 Requirements:
                             </Text>
                             <UnorderedList spacing={0} styleType="circle" ml={4}>
                                 {requirements.map((req, index) => (
-                                    <ListItem key={index} fontSize="xs" color="gray.500" lineHeight="1.3">
+                                    <ListItem key={index} fontSize="xs" color="gray.600" lineHeight="1.3">
                                         {req.requirement_description}
                                     </ListItem>
                                 ))}
@@ -76,7 +75,7 @@ function StatusLevelDetails({ statusDetails }) {
                 <Text fontSize="sm" fontWeight="bold" color="gray.700">
                     Status Level:
                 </Text>
-                <Badge bg={getStatusColor(status_level)} fontSize="xs">
+                <Badge bg={getStatusBackgroundColor(status_level)} color={getStatusTextColor(status_level)} fontSize="xs">
                     {status_level}
                 </Badge>
             </HStack>

@@ -30,11 +30,11 @@ const SubNodeColumn = ({ label, descriptions, requirements, descField, reqField 
         <Box flex={1} minW="0">
             <Text fontSize="xs" fontWeight="bold" color="teal.700" mb={1}>{label}</Text>
             {!hasContent && (
-                <Text fontSize="xs" color="gray.400" fontStyle="italic">—</Text>
+                <Text fontSize="xs" color="gray.600" fontStyle="italic">—</Text>
             )}
             {descriptions?.length > 0 && (
                 <Box mb={requirements?.length > 0 ? 2 : 0}>
-                    <Text fontSize="2xs" fontWeight="semibold" color="gray.500" mb={1}>Descriptions</Text>
+                    <Text fontSize="2xs" fontWeight="semibold" color="gray.600" mb={1}>Descriptions</Text>
                     <VStack align="stretch" spacing={1}>
                         {descriptions.map((item) => (
                             <HStack key={item.unique_id} spacing={2} align="flex-start">
@@ -47,7 +47,7 @@ const SubNodeColumn = ({ label, descriptions, requirements, descField, reqField 
             )}
             {requirements?.length > 0 && (
                 <Box>
-                    <Text fontSize="2xs" fontWeight="semibold" color="gray.500" mb={1}>Requirements</Text>
+                    <Text fontSize="2xs" fontWeight="semibold" color="gray.600" mb={1}>Requirements</Text>
                     <VStack align="stretch" spacing={1}>
                         {requirements.map((item) => (
                             <HStack key={item.unique_id} spacing={2} align="flex-start">
@@ -155,7 +155,7 @@ function StatusLevels() {
 
             {levels.length === 0 && (
                 <Box p={4} textAlign="center">
-                    <Text fontSize="sm" color="gray.500">No status levels available.</Text>
+                    <Text fontSize="sm" color="gray.600">No status levels available.</Text>
                 </Box>
             )}
 

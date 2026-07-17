@@ -40,7 +40,7 @@ function ToolList({ items = [], selectedId, onSelect, onAdd, emptyMessage = 'No 
 
             <InputGroup size="sm">
                 <InputLeftElement pointerEvents="none">
-                    <SearchIcon color="gray.400" />
+                    <SearchIcon color="gray.600" />
                 </InputLeftElement>
                 <Input
                     placeholder="Search title, description…"
@@ -53,9 +53,9 @@ function ToolList({ items = [], selectedId, onSelect, onAdd, emptyMessage = 'No 
 
             <Box borderWidth="1px" borderColor="gray.200" borderRadius="md" bg="white" overflowY="auto" flex="1" maxH="65vh">
                 {items.length === 0 ? (
-                    <Box p={4} color="gray.500" fontSize="sm" fontStyle="italic">{emptyMessage}</Box>
+                    <Box p={4} color="gray.600" fontSize="sm" fontStyle="italic">{emptyMessage}</Box>
                 ) : filtered.length === 0 ? (
-                    <Box p={4} color="gray.500" fontSize="sm" fontStyle="italic">No tools match “{query}”.</Box>
+                    <Box p={4} color="gray.600" fontSize="sm" fontStyle="italic">No tools match “{query}”.</Box>
                 ) : (
                     filtered.map((t) => {
                         const isSelected = t.tool_identifier === selectedId;
@@ -76,7 +76,7 @@ function ToolList({ items = [], selectedId, onSelect, onAdd, emptyMessage = 'No 
                                 <Text fontSize="sm" fontWeight={isSelected ? 'semibold' : 'medium'} color="gray.800" noOfLines={1}>
                                     {t.title || '(untitled)'}
                                 </Text>
-                                <Text fontSize="2xs" color="gray.400" noOfLines={1}>{t.tool_identifier}</Text>
+                                <Text fontSize="2xs" color="gray.600" noOfLines={1}>{t.tool_identifier}</Text>
                             </Box>
                         );
                     })

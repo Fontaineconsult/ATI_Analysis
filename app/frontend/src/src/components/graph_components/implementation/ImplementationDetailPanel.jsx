@@ -130,7 +130,7 @@ function ImplementationDetailPanel({ implementation, onAfterChange }) {
                 bg="gray.50"
                 textAlign="center"
             >
-                <Text color="gray.500" fontSize="sm">
+                <Text color="gray.600" fontSize="sm">
                     Select an implementation on the left to view and edit it.
                 </Text>
             </Box>
@@ -352,7 +352,7 @@ function ImplementationDetailPanel({ implementation, onAfterChange }) {
                             />
                         ) : (
                             <Text fontSize="sm" color="gray.700" whiteSpace="pre-wrap">
-                                {implementation.description || <Box as="span" color="gray.400" fontStyle="italic">No description.</Box>}
+                                {implementation.description || <Box as="span" color="gray.600" fontStyle="italic">No description.</Box>}
                             </Text>
                         )}
                     </FormControl>
@@ -384,7 +384,7 @@ function ImplementationDetailPanel({ implementation, onAfterChange }) {
                                     ))}
                                 </HStack>
                             ) : (
-                                <Text fontSize="xs" color="gray.500" fontStyle="italic">No AMM dimensions assigned.</Text>
+                                <Text fontSize="xs" color="gray.600" fontStyle="italic">No AMM dimensions assigned.</Text>
                             )}
                         </FormControl>
                     )}
@@ -476,12 +476,12 @@ function ImplementationDetailPanel({ implementation, onAfterChange }) {
                         ))}
                     </VStack>
                 ) : (
-                    <Text fontSize="xs" color="gray.500" fontStyle="italic">
+                    <Text fontSize="xs" color="gray.600" fontStyle="italic">
                         No evidence links at {(campus || '').toUpperCase()} for {currentAcademicYear}.
                     </Text>
                 )}
                 {otherLinksCount > 0 && (
-                    <Text fontSize="2xs" color="gray.400" mt={2}>
+                    <Text fontSize="2xs" color="gray.600" mt={2}>
                         +{otherLinksCount} link{otherLinksCount === 1 ? '' : 's'} at other campuses or years — use Manage Linked YSEs.
                     </Text>
                 )}
@@ -521,7 +521,7 @@ function ImplementationDetailPanel({ implementation, onAfterChange }) {
                 <Card title="Assets It Applies To">
                     <Divider mb={4} borderColor="gray.200" />
                     <HStack justify="space-between" align="center" mb={3} spacing={3}>
-                        <Text fontSize="xs" color="gray.500">
+                        <Text fontSize="xs" color="gray.600">
                             Assets are derived from the interfaces this implementation remediates.
                         </Text>
                         <Button size="xs" colorScheme="teal" variant="outline" flexShrink={0} onClick={onManageRemediationOpen}>
@@ -540,12 +540,12 @@ function ImplementationDetailPanel({ implementation, onAfterChange }) {
                                             {r === 'direct' ? 'remediated' : 'via interface'}
                                         </Badge>
                                     ))}
-                                    <Text fontSize="2xs" color="gray.400" fontFamily="mono">{a.asset_identifier}</Text>
+                                    <Text fontSize="2xs" color="gray.600" fontFamily="mono">{a.asset_identifier}</Text>
                                 </HStack>
                             ))}
                         </VStack>
                     ) : (
-                        <Text fontSize="xs" color="gray.500" fontStyle="italic">Not linked to any remediated asset or interface.</Text>
+                        <Text fontSize="xs" color="gray.600" fontStyle="italic">Not linked to any remediated asset or interface.</Text>
                     )}
                 </Card>
             )}
@@ -557,7 +557,7 @@ function ImplementationDetailPanel({ implementation, onAfterChange }) {
                     <ModalHeader fontSize="md" color="teal.700">
                         Manage Linked YSEs
                         {implementation.title && (
-                            <Text as="span" fontSize="sm" color="gray.500" fontWeight="normal" ml={2}>— {implementation.title}</Text>
+                            <Text as="span" fontSize="sm" color="gray.600" fontWeight="normal" ml={2}>— {implementation.title}</Text>
                         )}
                     </ModalHeader>
                     <ModalCloseButton />
@@ -585,7 +585,7 @@ function ImplementationDetailPanel({ implementation, onAfterChange }) {
                     <ModalHeader fontSize="md" color="teal.700">
                         Manage Interfaces &amp; Tools
                         {implementation.title && (
-                            <Text as="span" fontSize="sm" color="gray.500" fontWeight="normal" ml={2}>— {implementation.title}</Text>
+                            <Text as="span" fontSize="sm" color="gray.600" fontWeight="normal" ml={2}>— {implementation.title}</Text>
                         )}
                     </ModalHeader>
                     <ModalCloseButton />

@@ -73,7 +73,7 @@ export default function MeetingMinutesDetail({ minutes, onChanged }) {
             <Box bg="white" borderWidth="1px" borderColor="gray.200" borderRadius="md" p={3}>
                 {minutes.content
                     ? <Markdown>{minutes.content}</Markdown>
-                    : <Text fontSize="sm" color="gray.400" fontStyle="italic">No minutes text.</Text>}
+                    : <Text fontSize="sm" color="gray.600" fontStyle="italic">No minutes text.</Text>}
             </Box>
 
             <Divider />
@@ -82,7 +82,7 @@ export default function MeetingMinutesDetail({ minutes, onChanged }) {
             <Box>
                 <Text fontSize="xs" fontWeight="bold" color="teal.700" textTransform="uppercase" mb={2}>Attachments</Text>
                 {(documents.length === 0 && webpages.length === 0) ? (
-                    <Text fontSize="sm" color="gray.500" fontStyle="italic" mb={2}>Nothing attached yet.</Text>
+                    <Text fontSize="sm" color="gray.600" fontStyle="italic" mb={2}>Nothing attached yet.</Text>
                 ) : (
                     <VStack align="stretch" spacing={1} mb={2}>
                         {documents.map((d) => {
@@ -123,13 +123,13 @@ export default function MeetingMinutesDetail({ minutes, onChanged }) {
             <Box>
                 <Text fontSize="xs" fontWeight="bold" color="teal.700" textTransform="uppercase" mb={2}>Notes</Text>
                 {(minutes.notes || []).length === 0 ? (
-                    <Text fontSize="sm" color="gray.500" fontStyle="italic">No notes yet.</Text>
+                    <Text fontSize="sm" color="gray.600" fontStyle="italic">No notes yet.</Text>
                 ) : (
                     <VStack align="stretch" spacing={1} mb={2}>
                         {minutes.notes.map((n) => (
                             <Box key={n.unique_id} bg="gray.50" borderRadius="sm" p={2}>
                                 <Text fontSize="sm" color="gray.700" whiteSpace="pre-wrap">{n.content}</Text>
-                                {n.dateCreated && <Text fontSize="2xs" color="gray.500" mt={1}>{n.dateCreated}</Text>}
+                                {n.dateCreated && <Text fontSize="2xs" color="gray.600" mt={1}>{n.dateCreated}</Text>}
                             </Box>
                         ))}
                     </VStack>

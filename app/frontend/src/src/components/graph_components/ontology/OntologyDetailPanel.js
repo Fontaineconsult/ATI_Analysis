@@ -31,7 +31,7 @@ const Section = ({ title, count, children }) => (
             <Heading as="h4" size="xs" color="teal.700" textTransform="uppercase" letterSpacing="wide">
                 {title}
             </Heading>
-            {count != null && <Text fontSize="xs" color="gray.500">{count}</Text>}
+            {count != null && <Text fontSize="xs" color="gray.600">{count}</Text>}
         </HStack>
         {children}
     </Box>
@@ -116,7 +116,7 @@ function RelationshipRow({ rel, onEditRel }) {
                 <HStack spacing={2} minW="0" flexWrap="wrap">
                     <Text fontSize="sm" fontFamily="mono" color="gray.800">{rel.name}</Text>
                     <Badge fontSize="2xs" colorScheme="orange" variant="subtle">{rel.rel_type}</Badge>
-                    <Text fontSize="xs" color="gray.500">{dir.symbol} {rel.target || '—'}</Text>
+                    <Text fontSize="xs" color="gray.600">{dir.symbol} {rel.target || '—'}</Text>
                     {rel.model && <Badge fontSize="2xs" colorScheme="purple" variant="outline">{rel.model}</Badge>}
                 </HStack>
                 <EditDot described={!!d} label={rel.rel_type} onClick={() => onEditRel(rel)} />
@@ -142,7 +142,7 @@ function OntologyDetailPanel({ nodeType, onChanged }) {
         return (
             <Box borderWidth="2px" borderStyle="dashed" borderColor="gray.300" borderRadius="lg"
                  bg="gray.50" p={10} textAlign="center">
-                <Text color="gray.500">Select a node type to view its fields, relationships, and descriptions.</Text>
+                <Text color="gray.600">Select a node type to view its fields, relationships, and descriptions.</Text>
             </Box>
         );
     }
@@ -167,7 +167,7 @@ function OntologyDetailPanel({ nodeType, onChanged }) {
                 <HStack justify="space-between" align="start">
                     <Box minW="0">
                         <Heading as="h3" size="md" color="gray.800">{nodeType.label}</Heading>
-                        <Text fontSize="xs" fontFamily="mono" color="gray.400">{nodeType.handle}</Text>
+                        <Text fontSize="xs" fontFamily="mono" color="gray.600">{nodeType.handle}</Text>
                     </Box>
                     <HStack spacing={2}>
                         {!d && <Badge colorScheme="red" variant="subtle">no description</Badge>}
@@ -197,7 +197,7 @@ function OntologyDetailPanel({ nodeType, onChanged }) {
 
             <Section title="Fields" count={nodeType.fields.length}>
                 {nodeType.fields.length === 0
-                    ? <Text fontSize="sm" color="gray.500" fontStyle="italic">No fields.</Text>
+                    ? <Text fontSize="sm" color="gray.600" fontStyle="italic">No fields.</Text>
                     : nodeType.fields.map((f) => (
                         <FieldRow key={f.name} field={f} onEditField={editField} onEditChoice={editChoice} />
                     ))}
@@ -205,7 +205,7 @@ function OntologyDetailPanel({ nodeType, onChanged }) {
 
             <Section title="Relationships" count={nodeType.relationships.length}>
                 {nodeType.relationships.length === 0
-                    ? <Text fontSize="sm" color="gray.500" fontStyle="italic">No relationships.</Text>
+                    ? <Text fontSize="sm" color="gray.600" fontStyle="italic">No relationships.</Text>
                     : nodeType.relationships.map((r) => (
                         <RelationshipRow key={r.name} rel={r} onEditRel={editRel} />
                     ))}

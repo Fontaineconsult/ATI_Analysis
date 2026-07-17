@@ -116,6 +116,7 @@ function PersonAssignmentSelector({
                 <Select
                     size="sm"
                     placeholder={placeholder}
+                    aria-label={placeholder || 'Select a person'}
                     value={selectedPerson}
                     onChange={(e) => setSelectedPerson(e.target.value)}
                     fontSize="sm"
@@ -143,7 +144,7 @@ function PersonAssignmentSelector({
             </Flex>
 
             {assignedPersons.length === 0 ? (
-                <Text fontSize="sm" color="gray.500" fontStyle="italic">
+                <Text fontSize="sm" color="gray.600" fontStyle="italic">
                     No one assigned yet.
                 </Text>
             ) : (

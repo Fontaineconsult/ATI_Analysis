@@ -214,7 +214,7 @@ function AssociatedYearSuccessEvidence({ plan, onChanged }) {
 
     if (loading) {
         return (
-            <HStack spacing={2} color="gray.500">
+            <HStack spacing={2} color="gray.600">
                 <Spinner size="xs" />
                 <Text fontSize="sm">Loading evidence…</Text>
             </HStack>
@@ -298,7 +298,7 @@ function AssociatedYearSuccessEvidence({ plan, onChanged }) {
                         {/* Evidence list: indicator link + status, year as context */}
                         <VStack align="stretch" spacing={1} p={2}>
                             {colEvidences.length === 0 ? (
-                                <Text fontSize="xs" color="gray.400" fontStyle="italic">
+                                <Text fontSize="xs" color="gray.600" fontStyle="italic">
                                     Not assigned
                                 </Text>
                             ) : (
@@ -381,7 +381,7 @@ function AssociatedYearSuccessEvidence({ plan, onChanged }) {
                 <ModalCloseButton />
                 <ModalBody>
                     {catalogLoading ? (
-                        <HStack spacing={2} color="gray.500">
+                        <HStack spacing={2} color="gray.600">
                             <Spinner size="xs" />
                             <Text fontSize="sm">Loading indicators…</Text>
                         </HStack>

@@ -108,7 +108,7 @@ const StatusLevels = () => {
                                                 <Text fontSize="sm" fontWeight="bold" color="gray.700">
                                                     {level.status_level}
                                                 </Text>
-                                                <Text fontSize="xs" color="gray.500">
+                                                <Text fontSize="xs" color="gray.600">
                                                     (Level {level.status_value})
                                                 </Text>
                                             </HStack>

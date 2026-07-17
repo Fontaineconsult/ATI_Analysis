@@ -46,9 +46,9 @@ function StatCard({ label, value, help, accent, warn = false, loading = false })
             borderTopColor={accent}
         >
             <Stat>
-                <StatLabel fontSize="xs" color="gray.500" textTransform="uppercase">{label}</StatLabel>
+                <StatLabel fontSize="xs" color="gray.600" textTransform="uppercase">{label}</StatLabel>
                 <StatNumber fontSize="2xl" color={numberColor}>{display}</StatNumber>
-                {help && <StatHelpText fontSize="xs" color="gray.500" mb={0}>{help}</StatHelpText>}
+                {help && <StatHelpText fontSize="xs" color="gray.600" mb={0}>{help}</StatHelpText>}
             </Stat>
         </Box>
     );
@@ -72,7 +72,7 @@ function DistributionRow({ level, count, pct }) {
                 <Box h="100%" w={`${pct}%`} bg={barColor} borderRadius="full" transition="width 0.2s" />
             </Box>
             <Text fontSize="xs" color="gray.700" w="74px" flexShrink={0}>
-                {count}<Text as="span" color="gray.400"> ({pct}%)</Text>
+                {count}<Text as="span" color="gray.600"> ({pct}%)</Text>
             </Text>
         </HStack>
     );
@@ -80,7 +80,7 @@ function DistributionRow({ level, count, pct }) {
 
 const TREND_META = {
     improving: { icon: TrendingUp, color: 'green.500', label: 'Improving' },
-    static: { icon: Minus, color: 'gray.500', label: 'Static' },
+    static: { icon: Minus, color: 'gray.600', label: 'Static' },
     declining: { icon: TrendingDown, color: 'red.500', label: 'Declining' },
 };
 
@@ -90,7 +90,7 @@ function TrendChip({ kind, value }) {
         <HStack spacing={1} align="center">
             <Icon as={m.icon} color={m.color} boxSize={4} />
             <Text fontSize="sm" fontWeight="semibold" color="gray.700">{value}</Text>
-            <Text fontSize="2xs" color="gray.500">{m.label}</Text>
+            <Text fontSize="2xs" color="gray.600">{m.label}</Text>
         </HStack>
     );
 }
@@ -126,7 +126,7 @@ function WorkingGroupCard({ wg }) {
             <Text fontSize="xs" color="gray.600" mb={3}>
                 <Text as="span" fontWeight="semibold" color="gray.800">{wg.withEvidence}</Text>
                 {' / '}{wg.totalIndicators} with evidence
-                <Text as="span" color="gray.400"> ({wg.coveragePct}%)</Text>
+                <Text as="span" color="gray.600"> ({wg.coveragePct}%)</Text>
             </Text>
 
             <HStack spacing={4} mb={3} flexWrap="wrap">
@@ -163,11 +163,11 @@ function ReportMetricsOverview({ metrics, loading = false }) {
             {/* Row B — campus status distribution */}
             <Card title="Campus Status Distribution">
                 <HStack justify="space-between" align="center" mb={4} flexWrap="wrap" gap={2}>
-                    <Text fontSize="xs" color="gray.500">
+                    <Text fontSize="xs" color="gray.600">
                         {campus.withEvidence} of {campus.totalIndicators} indicators have evidence this year
                     </Text>
                     <HStack spacing={2} align="center">
-                        <Text fontSize="2xs" color="gray.400" textTransform="uppercase" letterSpacing="wide">Avg maturity</Text>
+                        <Text fontSize="2xs" color="gray.600" textTransform="uppercase" letterSpacing="wide">Avg maturity</Text>
                         <StatusLevelLadder level={avgToLevel(campus.avgStatusValue)} variant="full" />
                     </HStack>
                 </HStack>

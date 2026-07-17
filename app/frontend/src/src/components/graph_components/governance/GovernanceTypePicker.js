@@ -29,7 +29,7 @@ function GovernanceTypePicker({ isOpen, onClose, onPick }) {
                     <Heading as="h3" size="md" color="gray.800">
                         What kind of governance item?
                     </Heading>
-                    <Text fontSize="sm" color="gray.500" mt={1} fontWeight="normal">
+                    <Text fontSize="sm" color="gray.600" mt={1} fontWeight="normal">
                         Pick the category that best fits. You can edit details next.
                     </Text>
                 </ModalHeader>

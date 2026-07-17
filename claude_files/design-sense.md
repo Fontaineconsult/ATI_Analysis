@@ -82,8 +82,14 @@ desaturated and saturated color carries *meaning* (status) or *identity* (workin
 | Borders, dividers | `gray.200` |
 | Primary text | `gray.800` |
 | Secondary text | `gray.600` |
-| Tertiary / mono identifiers | `gray.400` |
-| Muted / empty-state text | `gray.500` (often `fontStyle="italic"`) |
+| Tertiary / mono identifiers | `gray.600` + `fontFamily="mono"` (differentiate by face, not lightness) |
+| Muted / empty-state text | `gray.600` (often `fontStyle="italic"`) |
+
+> **AA floor (2026-07): `gray.600` is the lightest allowed text gray.** `gray.500`
+> (4.01:1) and `gray.400` (2.25:1) fail WCAG AA for the small sizes this app runs on —
+> the axe sweep enforces this. Express muted-ness through size, weight, casing, or
+> italics, never by dropping below `gray.600`. (`gray.400`/`gray.500` remain fine for
+> borders and decorative glyphs.)
 
 **Semantic — meaning only.** Two palettes, both centralized — **do not hardcode hex**:
 
@@ -95,6 +101,10 @@ desaturated and saturated color carries *meaning* (status) or *identity* (workin
   `getStatusColor(level)` — a red→green heat ramp across the six `status_levels`:
   Not Started=`#E53E3E` (red) · Initiated=`#ED8936` (orange) · Defined=`#ECC94B` (yellow) ·
   Established=`#41b441` · Managed=`#246f24` · Optimizing=`#157744` (greens) · none=gray.
+  **The ramp is for non-text fills only** (ladder segments, left-borders, dots). Status
+  *text* — pill labels, badge text — uses `getStatusTextColor(level)` (an AA-darkened
+  ramp, ≥4.5:1 on white and on the `.50` tints), over `getStatusBackgroundColor(level)`
+  tints. Never put white text on the raw ramp: yellow/orange/`#41b441` fail badly.
 
 > ✔ Resolved (2026-06): brand and status are now disjoint. The `teal` key is the brand-blue
 > alias and appears only as chrome; the maturity ramp is strictly red→green (the former
@@ -212,6 +222,11 @@ a footer of **count chips** (icon + number, **red when 0**) and state flags
 component (`AssetBadges.js`: `ScopeBadge`/`ClassBadge`/`ElevationBadge`;
 `governanceTypes.js` color map). Status pills use `borderRadius="full"`; category badges `"md"`.
 
+Contrast: `theme.js` re-shades `solid` (bg) and `outline` (text) per colorScheme so
+white-on-`.500` / `.500`-on-white combinations meet AA — stick to `colorScheme`, don't
+hand-set badge bg/text hexes. Status-level badges are the exception with their own rule:
+tint bg + `getStatusTextColor` (see §2 Semantic).
+
 ### 4.3 Forms (create / edit)
 
 Modal-based (`GovernanceForm.js`, `AssetForm.js`, `TaapForm.js`): `Modal size="lg"`,
@@ -277,6 +292,39 @@ Status is a six-rung CMM ladder (`Not Started → Initiated → Defined → Esta
 - Semantic heading levels (`h2` area → `h3` card → `h4`/`h6` section), `aria-label` on
   sections, `tabIndex={0}` on read-only headings meant to be reachable.
 - Color is never the only signal — pair status color with a text label/badge.
+
+### 6.1 Canonical widget semantics — the W3C ARIA Authoring Practices Guide (APG)
+
+The normative reference for every interactive widget's roles, states, and keyboard
+behavior is the **W3C APG patterns catalog**: <https://www.w3.org/WAI/ARIA/apg/patterns/>.
+When building or reviewing a widget, find its pattern there and implement the *full*
+keyboard interaction it specifies — not just the ARIA attributes.
+
+How this maps onto our stack: **Chakra v2 built-ins already implement their APG pattern**
+(`Menu` → Menu Button + Menu, `Modal`/`AlertDialog` → Dialog/Alert Dialog, `Tabs` → Tabs,
+`Accordion` → Accordion, `Tooltip` → Tooltip, `Checkbox`/`Radio`/`Switch`/`Slider` →
+their patterns). Don't fight or re-implement those. The APG discipline applies where **we
+hand-roll semantics** — anything built from `Box`/`Flex` with ARIA props is ours to get right.
+
+| App widget | APG pattern | Watch for |
+|---|---|---|
+| Selectable master lists (`SuccessIndicatorList`, `TaapList`, `VendorList`, …) | [Listbox](https://www.w3.org/WAI/ARIA/apg/patterns/listbox/) | Roving tabindex; `↑`/`↓`, `Home`/`End`; `aria-selected` on options; `aria-activedescendant` alternative is fine |
+| Accordion-grouped lists (`GovernanceList`, `AssetList`) | [Accordion](https://www.w3.org/WAI/ARIA/apg/patterns/accordion/) + Listbox inside | Header buttons with `aria-expanded`/`aria-controls`; group toggle must not steal arrow keys from the inner listbox |
+| Expand/collapse rows, "show more" sections | [Disclosure](https://www.w3.org/WAI/ARIA/apg/patterns/disclosure/) | Trigger is a `button` with `aria-expanded`; never a bare clickable `Box` |
+| Header campus/year/person selectors | [Menu Button](https://www.w3.org/WAI/ARIA/apg/patterns/menu-button/) | Chakra `Menu` handles it — keep items `MenuItem`, don't nest inputs |
+| Create/edit forms, action gates (Review) | [Dialog (Modal)](https://www.w3.org/WAI/ARIA/apg/patterns/dialog-modal/) | Focus trapped + returned to trigger on close; `initialFocusRef` on the first field |
+| Destructive confirms | [Alert Dialog](https://www.w3.org/WAI/ARIA/apg/patterns/alertdialog/) | Prefer Chakra `AlertDialog` over `window.confirm` in new code (§4.4) |
+| Area sub-domain tabs (Assets \| TAAPs \| Vendors) | [Tabs](https://www.w3.org/WAI/ARIA/apg/patterns/tabs/) | Use Chakra `Tabs`; if a "tab" navigates a route, it's *navigation* — use links in a `nav`, not `role="tab"` |
+| Top nav + SubNavbar + main content | [Landmarks](https://www.w3.org/WAI/ARIA/apg/patterns/landmarks/) | One `main`; `nav`s need distinct `aria-label`s (we have "Main Navigation" / "Section navigation" — keep them unique) |
+| Data tables (report tables, react-table) | [Table](https://www.w3.org/WAI/ARIA/apg/patterns/table/) | Real `table`/`th scope`; only reach for Grid semantics if cells are interactive |
+| Error/empty/critical boxes, toasts | [Alert](https://www.w3.org/WAI/ARIA/apg/patterns/alert/) | Chakra `Alert`/`useToast` provide `role="alert"`/`status` — don't build red `Box`es without it |
+| `StatusLevelLadder` (compact ramp bar) | [Meter](https://www.w3.org/WAI/ARIA/apg/patterns/meter/) | A read-only value on a known scale: `role="meter"` + `aria-valuenow/min/max` + accessible name, or a text equivalent |
+
+Two recurring failure modes to reject in review: (1) a clickable `Box`/`Flex` standing in
+for a `button` or `option` (no role, no keyboard path), and (2) ARIA roles added without
+the pattern's keyboard contract (a `role="listbox"` you can't arrow through is worse than
+a plain list). The e2e axe suite (`e2e/`) enforces the automated slice of this; the
+keyboard contracts above are what manual review and interaction specs must cover.
 
 ---
 

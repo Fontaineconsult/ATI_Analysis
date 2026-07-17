@@ -62,7 +62,7 @@ function OntologyBrowser() {
                     <HelpTip nodeType="UniversalDescriptor" />
                 </HStack>
                 {ontology && (
-                    <Text fontSize="sm" color="gray.500">
+                    <Text fontSize="sm" color="gray.600">
                         {ontology.counts.node_types} node types · {ontology.counts.relationship_types} relationships
                     </Text>
                 )}

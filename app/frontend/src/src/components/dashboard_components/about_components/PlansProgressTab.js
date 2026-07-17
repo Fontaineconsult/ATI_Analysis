@@ -75,7 +75,7 @@ function PlansProgressTab() {
                     &quot;Established&quot; and be <i>at risk</i>.
                 </Para>
                 <Section title="Trajectory values">
-                    <VocabTable vocab={vocab?.trajectory_choices} notes={TRAJECTORY_NOTES} />
+                    <VocabTable label="Trajectory choices" vocab={vocab?.trajectory_choices} notes={TRAJECTORY_NOTES} />
                 </Section>
             </Card>
 
@@ -87,7 +87,7 @@ function PlansProgressTab() {
                     carries a lifecycle status:
                 </Para>
                 <Section title="Plan statuses">
-                    <VocabTable vocab={vocab?.plan_statuses} notes={PLAN_STATUS_NOTES} keyHeader="Status" />
+                    <VocabTable label="Plan statuses" vocab={vocab?.plan_statuses} notes={PLAN_STATUS_NOTES} keyHeader="Status" />
                 </Section>
                 <Para mt={2}>
                     Completion and abandonment both record the year and explanatory notes, so the

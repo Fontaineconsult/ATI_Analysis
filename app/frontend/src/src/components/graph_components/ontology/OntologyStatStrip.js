@@ -17,9 +17,9 @@ function StatCard({ label, value, help, accent }) {
             borderTopColor={accent}
         >
             <Stat>
-                <StatLabel fontSize="xs" color="gray.500" textTransform="uppercase">{label}</StatLabel>
+                <StatLabel fontSize="xs" color="gray.600" textTransform="uppercase">{label}</StatLabel>
                 <StatNumber fontSize="2xl" color="gray.800">{value}</StatNumber>
-                {help && <StatHelpText fontSize="xs" color="gray.500" mb={0}>{help}</StatHelpText>}
+                {help && <StatHelpText fontSize="xs" color="gray.600" mb={0}>{help}</StatHelpText>}
             </Stat>
         </Box>
     );

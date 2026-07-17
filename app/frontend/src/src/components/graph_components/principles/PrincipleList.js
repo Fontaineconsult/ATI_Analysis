@@ -12,6 +12,7 @@ import {
 import { AddIcon, SearchIcon } from '@chakra-ui/icons';
 import PrincipleSourceBadge from './PrincipleSourceBadge';
 import PrincipleGroundingTags from './PrincipleGroundingTags';
+import useListboxNavigation from '../../../hooks/useListboxNavigation';
 
 /**
  * Flat, searchable list of Principles (single node type → no accordion). Each row shows the
@@ -29,6 +30,14 @@ function PrincipleList({ items = [], selectedHandle, onSelect, onAdd, emptyMessa
             `${it.handle || ''} ${it.name || ''} ${it.description_short || ''}`.toLowerCase().includes(q));
     }, [items, q]);
 
+    const { getItemProps } = useListboxNavigation({
+        itemCount: filtered.length,
+        selectedIndex: filtered.findIndex((it) => it.handle === selectedHandle),
+        onActivate: (i) => onSelect && onSelect(filtered[i]),
+    });
+
+    const hasRows = items.length > 0 && filtered.length > 0;
+
     return (
         <VStack align="stretch" spacing={2} h="100%">
             <Button size="sm" colorScheme="teal" leftIcon={<AddIcon boxSize={3} />} onClick={onAdd}>
@@ -37,7 +46,7 @@ function PrincipleList({ items = [], selectedHandle, onSelect, onAdd, emptyMessa
 
             <InputGroup size="sm">
                 <InputLeftElement pointerEvents="none">
-                    <SearchIcon color="gray.400" />
+                    <SearchIcon color="gray.600" />
                 </InputLeftElement>
                 <Input
                     placeholder="Search name, handle, statement…"
@@ -48,17 +57,24 @@ function PrincipleList({ items = [], selectedHandle, onSelect, onAdd, emptyMessa
                 />
             </InputGroup>
 
-            <Box borderWidth="1px" borderColor="gray.200" borderRadius="md" bg="white" overflowY="auto" flex="1" maxH="65vh">
+            {/* The listbox options are focusable (roving tabindex), which also
+                satisfies keyboard access to this scrollable region. */}
+            <Box borderWidth="1px" borderColor="gray.200" borderRadius="md" bg="white" overflowY="auto" flex="1" maxH="65vh"
+                 role={hasRows ? 'listbox' : undefined} aria-label={hasRows ? 'Principles' : undefined}>
                 {items.length === 0 ? (
-                    <Box p={4} color="gray.500" fontSize="sm" fontStyle="italic">{emptyMessage}</Box>
+                    <Box p={4} color="gray.600" fontSize="sm" fontStyle="italic">{emptyMessage}</Box>
                 ) : filtered.length === 0 ? (
-                    <Box p={4} color="gray.500" fontSize="sm" fontStyle="italic">No principles match “{query}”.</Box>
+                    <Box p={4} color="gray.600" fontSize="sm" fontStyle="italic">No principles match “{query}”.</Box>
                 ) : (
-                    filtered.map((item) => {
+                    filtered.map((item, index) => {
                         const isSelected = item.handle === selectedHandle;
                         return (
                             <Box
                                 key={item.handle}
+                                {...getItemProps(index)}
+                                role="option"
+                                aria-selected={isSelected}
+                                _focusVisible={{ outline: '2px solid', outlineColor: 'teal.500', outlineOffset: '-2px' }}
                                 px={3}
                                 py={2}
                                 cursor="pointer"
@@ -76,7 +92,7 @@ function PrincipleList({ items = [], selectedHandle, onSelect, onAdd, emptyMessa
                                     </Text>
                                     <PrincipleSourceBadge principle={item} size="sm" />
                                 </HStack>
-                                <Text fontSize="2xs" color="gray.400" fontFamily="mono" noOfLines={1}>{item.handle}</Text>
+                                <Text fontSize="2xs" color="gray.600" fontFamily="mono" noOfLines={1}>{item.handle}</Text>
                                 <Box mt={1}>
                                     <PrincipleGroundingTags principle={item} size="sm" />
                                 </Box>

@@ -113,7 +113,7 @@ function GoalDetails({ plans, indicators, goalNumber }) {
                     </HStack>
                 ) : (
                     !showNewPlan && (
-                        <Text fontSize="sm" color="gray.500">No plans for this goal.</Text>
+                        <Text fontSize="sm" color="gray.600">No plans for this goal.</Text>
                     )
                 )}
 

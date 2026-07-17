@@ -4,6 +4,43 @@
 // it resolves tokens without a provider in scope.
 import { extendTheme } from '@chakra-ui/react';
 
+// Darkest-necessary solid shade per colorScheme for ≥4.5:1 with white text.
+// Schemes absent here (teal = brand blue, purple = brand purple) pass at their
+// Chakra defaults.
+const SOLID_AA_SHADE = {
+    red: 600,
+    orange: 700,
+    yellow: 700,
+    green: 600,
+    blue: 600,
+    cyan: 800,
+    pink: 600,
+    gray: 600,
+    coral: 600,
+};
+
+// Outline/ghost text shade per colorScheme — the light schemes' default `.600`
+// text misses 4.5:1 on white.
+const TEXT_AA_SHADE = {
+    yellow: 700,
+    orange: 700,
+    cyan: 800,
+};
+
+// Badge outline text defaults to `${c}.500`, which fails AA at badge sizes for
+// most schemes.
+const BADGE_OUTLINE_AA_SHADE = {
+    red: 600,
+    orange: 700,
+    yellow: 700,
+    green: 600,
+    blue: 600,
+    cyan: 800,
+    pink: 600,
+    gray: 600,
+    coral: 600,
+};
+
 const theme = extendTheme({
     fontSizes: {
         xs: "0.75rem",
@@ -72,7 +109,57 @@ const theme = extendTheme({
             coral: "#DB5850",
             charcoal: "#231F20"
         }
-    }
+    },
+
+    components: {
+        // Chakra's default Stat label is gray.500 and its helpText renders at
+        // 0.8 opacity — both land under WCAG AA 4.5:1 at stat-strip sizes.
+        Stat: {
+            baseStyle: {
+                label: { color: 'gray.600' },
+                helpText: { color: 'gray.600', opacity: 1 },
+            },
+        },
+        // White text on Chakra's `.500` solids (and `.600` text in outline/ghost
+        // for the light schemes) misses AA at our button/badge sizes. Shift each
+        // failing colorScheme one or two stops darker; `teal` (brand blue) and
+        // `purple` already pass at their defaults and keep the brand look.
+        Badge: {
+            variants: {
+                solid: (props) => {
+                    const shade = SOLID_AA_SHADE[props.colorScheme];
+                    return shade ? { bg: `${props.colorScheme}.${shade}`, color: 'white' } : {};
+                },
+                outline: (props) => {
+                    const shade = BADGE_OUTLINE_AA_SHADE[props.colorScheme];
+                    return shade ? { color: `${props.colorScheme}.${shade}` } : {};
+                },
+            },
+        },
+        Button: {
+            variants: {
+                solid: (props) => {
+                    const c = props.colorScheme;
+                    const shade = SOLID_AA_SHADE[c];
+                    if (!shade) return {};
+                    return {
+                        bg: `${c}.${shade}`,
+                        color: 'white',
+                        _hover: { bg: `${c}.${Math.min(shade + 100, 900)}` },
+                        _active: { bg: `${c}.${Math.min(shade + 200, 900)}` },
+                    };
+                },
+                outline: (props) => {
+                    const shade = TEXT_AA_SHADE[props.colorScheme];
+                    return shade ? { color: `${props.colorScheme}.${shade}` } : {};
+                },
+                ghost: (props) => {
+                    const shade = TEXT_AA_SHADE[props.colorScheme];
+                    return shade ? { color: `${props.colorScheme}.${shade}` } : {};
+                },
+            },
+        },
+    },
 });
 
 export default theme;

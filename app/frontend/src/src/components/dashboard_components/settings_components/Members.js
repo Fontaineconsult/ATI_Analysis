@@ -242,6 +242,7 @@ function Members() {
                         colorScheme="teal"
                         isChecked={original.active}
                         onChange={() => handleCheckboxChange(original, 'active')}
+                        aria-label={`Active — ${original.name}`}
                     />
                 ),
             },
@@ -255,6 +256,7 @@ function Members() {
                         isChecked={original.non_committee_member_active}
                         onChange={() => handleCheckboxChange(original, 'non_committee_member_active')}
                         title="Active non-committee member"
+                        aria-label={`Active non-committee member — ${original.name}`}
                     />
                 ),
             },
@@ -268,6 +270,7 @@ function Members() {
                         colorScheme="teal"
                         isChecked={original.workingGroups?.some((wg) => wg.name === 'Web')}
                         onChange={() => handleCheckboxChange(original, 'web')}
+                        aria-label={`Web working group — ${original.name}`}
                     />
                 ),
             },
@@ -282,6 +285,7 @@ function Members() {
                         colorScheme="teal"
                         isChecked={original.workingGroups?.some((wg) => wg.name === 'Instructional Materials')}
                         onChange={() => handleCheckboxChange(original, 'ins')}
+                        aria-label={`Instructional Materials working group — ${original.name}`}
                     />
                 ),
             },
@@ -295,6 +299,7 @@ function Members() {
                         colorScheme="teal"
                         isChecked={original.workingGroups?.some((wg) => wg.name === 'Procurement')}
                         onChange={() => handleCheckboxChange(original, 'pro')}
+                        aria-label={`Procurement working group — ${original.name}`}
                     />
                 ),
             },
@@ -307,6 +312,7 @@ function Members() {
                         colorScheme="teal"
                         isChecked={original.can_approve_yse}
                         onChange={() => handleCheckboxChange(original, 'can_approve_yse')}
+                        aria-label={`Can approve evidence — ${original.name}`}
                     />
                 ),
             },

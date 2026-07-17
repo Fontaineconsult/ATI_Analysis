@@ -23,7 +23,7 @@ function ReportGoalContainer({ goalData }) {
             aria-label={`Goal ${goal.properties.goal_number}: ${goal.properties.name}`}
         >
             <VStack align="stretch" spacing={3}>
-                <Heading as="h4" size="sm" color="gray.700" tabIndex={0}>
+                <Heading as="h3" size="sm" color="gray.700" tabIndex={0}>
                     Goal {goal.properties.goal_number}: {goal.properties.name}
                 </Heading>
 
@@ -43,13 +43,13 @@ function ReportGoalContainer({ goalData }) {
                                         indicatorItem={indicator.indicator}
                                     />
                                 ) : (
-                                    <Text key={index} color="gray.500" fontSize="sm">
+                                    <Text key={index} color="gray.600" fontSize="sm">
                                         No indicator data available
                                     </Text>
                                 )
                             ))
                     ) : (
-                        <Text color="gray.500" fontSize="sm">
+                        <Text color="gray.600" fontSize="sm">
                             No indicators available for this goal
                         </Text>
                     )}

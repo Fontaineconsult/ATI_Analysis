@@ -37,8 +37,8 @@ function MinutesRow({ minutes, onChanged, onEdit }) {
                 <VStack align="stretch" spacing={0} flex={1} minW={0}>
                     <Text fontSize="sm" fontWeight="medium" color="gray.800" noOfLines={1}>{minutes.title}</Text>
                     <HStack spacing={2}>
-                        {minutes.meeting_date && <Text fontSize="2xs" color="gray.500" fontFamily="mono">{minutes.meeting_date}</Text>}
-                        {minutes.recorded_by && <Text fontSize="2xs" color="gray.500">{minutes.recorded_by.name}</Text>}
+                        {minutes.meeting_date && <Text fontSize="2xs" color="gray.600" fontFamily="mono">{minutes.meeting_date}</Text>}
+                        {minutes.recorded_by && <Text fontSize="2xs" color="gray.600">{minutes.recorded_by.name}</Text>}
                         {attachedCount > 0 && <Text fontSize="2xs" color="teal.600">{attachedCount} attached</Text>}
                     </HStack>
                 </VStack>
@@ -48,7 +48,7 @@ function MinutesRow({ minutes, onChanged, onEdit }) {
                 <Tooltip label="Delete" openDelay={400}>
                     <IconButton aria-label="Delete minutes" icon={<DeleteIcon />} size="xs" variant="ghost" colorScheme="red" isLoading={deleting} onClick={handleDelete} />
                 </Tooltip>
-                {isOpen ? <ChevronUpIcon color="gray.500" /> : <ChevronDownIcon color="gray.500" />}
+                {isOpen ? <ChevronUpIcon color="gray.600" /> : <ChevronDownIcon color="gray.600" />}
             </Flex>
             <Collapse in={isOpen} animateOpacity unmountOnExit>
                 <Box px={3} pb={3}>
@@ -100,13 +100,13 @@ export default function MeetingMinutesPanel({ workingGroupPlanIdentifier, title 
     return (
         <Section title={`${title}${minutes.length ? ` (${minutes.length})` : ''}`} action={planExists ? headerAction : null}>
             {loading ? (
-                <HStack color="gray.500" fontSize="sm"><Spinner size="sm" /><Text>Loading…</Text></HStack>
+                <HStack color="gray.600" fontSize="sm"><Spinner size="sm" /><Text>Loading…</Text></HStack>
             ) : error ? (
                 <Text fontSize="sm" color="red.500">{error}</Text>
             ) : !planExists ? (
-                <Text fontSize="sm" color="gray.500" fontStyle="italic">No campus plan for this year yet — create one to record minutes here.</Text>
+                <Text fontSize="sm" color="gray.600" fontStyle="italic">No campus plan for this year yet — create one to record minutes here.</Text>
             ) : minutes.length === 0 ? (
-                <Text fontSize="sm" color="gray.500" fontStyle="italic">No meeting minutes yet.</Text>
+                <Text fontSize="sm" color="gray.600" fontStyle="italic">No meeting minutes yet.</Text>
             ) : (
                 <VStack align="stretch" spacing={2}>
                     {minutes.map((m) => (

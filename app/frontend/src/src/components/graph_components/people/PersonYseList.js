@@ -53,7 +53,7 @@ function PersonYseList({ yses = [], personEmployeeId, onChange }) {
     };
 
     if (!yses || yses.length === 0) {
-        return <Text fontSize="xs" color="gray.500" fontStyle="italic">Not assigned to any YSEs.</Text>;
+        return <Text fontSize="xs" color="gray.600" fontStyle="italic">Not assigned to any YSEs.</Text>;
     }
 
     return (
@@ -64,7 +64,7 @@ function PersonYseList({ yses = [], personEmployeeId, onChange }) {
                         <Badge colorScheme="teal" variant="outline" textTransform="uppercase" fontSize="2xs">
                             {campusGroup.campusAbbrev || '—'}
                         </Badge>
-                        <Text fontSize="2xs" color="gray.500" textTransform="uppercase" letterSpacing="wide">
+                        <Text fontSize="2xs" color="gray.600" textTransform="uppercase" letterSpacing="wide">
                             {campusGroup.campusName || 'Unknown campus'}
                         </Text>
                     </HStack>

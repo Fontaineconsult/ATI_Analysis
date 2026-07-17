@@ -85,7 +85,7 @@ function ComponentList({ items = [], selectedId, onSelect, onAdd, emptyMessage =
 
             <InputGroup size="sm">
                 <InputLeftElement pointerEvents="none">
-                    <SearchIcon color="gray.400" />
+                    <SearchIcon color="gray.600" />
                 </InputLeftElement>
                 <Input
                     placeholder="Search title, description, kind…"
@@ -98,9 +98,9 @@ function ComponentList({ items = [], selectedId, onSelect, onAdd, emptyMessage =
 
             <Box borderWidth="1px" borderColor="gray.200" borderRadius="md" bg="white" overflowY="auto" flex="1" maxH="65vh">
                 {items.length === 0 ? (
-                    <Box p={4} color="gray.500" fontSize="sm" fontStyle="italic">{emptyMessage}</Box>
+                    <Box p={4} color="gray.600" fontSize="sm" fontStyle="italic">{emptyMessage}</Box>
                 ) : q && totalMatches === 0 ? (
-                    <Box p={4} color="gray.500" fontSize="sm" fontStyle="italic">No components match “{query}”.</Box>
+                    <Box p={4} color="gray.600" fontSize="sm" fontStyle="italic">No components match “{query}”.</Box>
                 ) : (
                     <Accordion key={defaultIndex.join(',')} defaultIndex={defaultIndex} allowMultiple>
                         {kindKeys.map((kindKey) => {
@@ -112,13 +112,13 @@ function ComponentList({ items = [], selectedId, onSelect, onAdd, emptyMessage =
                                     <AccordionButton px={3} py={2} _hover={{ bg: 'gray.50' }}>
                                         <HStack flex="1" justify="space-between" align="center">
                                             <Text fontSize="sm" fontWeight="semibold" color="gray.700">{label}</Text>
-                                            <Text fontSize="xs" color="gray.500">{list.length}</Text>
+                                            <Text fontSize="xs" color="gray.600">{list.length}</Text>
                                         </HStack>
                                         <AccordionIcon ml={2} />
                                     </AccordionButton>
                                     <AccordionPanel p={0} bg="gray.50">
                                         {list.length === 0 ? (
-                                            <Box px={3} py={2} fontSize="xs" color="gray.500" fontStyle="italic">None yet.</Box>
+                                            <Box px={3} py={2} fontSize="xs" color="gray.600" fontStyle="italic">None yet.</Box>
                                         ) : (
                                             list.map((item) => {
                                                 const isSelected = item.component_identifier === selectedId;
@@ -139,7 +139,7 @@ function ComponentList({ items = [], selectedId, onSelect, onAdd, emptyMessage =
                                                         <Text fontSize="sm" fontWeight={isSelected ? 'semibold' : 'medium'} color="gray.800" noOfLines={1}>
                                                             {item.title || '(untitled)'}
                                                         </Text>
-                                                        <Text fontSize="2xs" color="gray.400" noOfLines={1}>{item.component_identifier}</Text>
+                                                        <Text fontSize="2xs" color="gray.600" noOfLines={1}>{item.component_identifier}</Text>
                                                     </Box>
                                                 );
                                             })

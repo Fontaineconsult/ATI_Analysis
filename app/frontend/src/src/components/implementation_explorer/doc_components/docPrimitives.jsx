@@ -132,7 +132,7 @@ export function ItemShell({
 }
 
 export function MetaLine({ children }) {
-    return <Text fontSize="2xs" color="gray.500" mt={1}>{children}</Text>;
+    return <Text fontSize="2xs" color="gray.600" mt={1}>{children}</Text>;
 }
 
 // Compact monospace file path + external URI link.
@@ -141,7 +141,7 @@ export function PathLinks({ filePath, uriPath }) {
     return (
         <HStack spacing={3} mt={1} flexWrap="wrap">
             {filePath && (
-                <Text fontSize="2xs" fontFamily="mono" color="gray.500" noOfLines={1}>{filePath}</Text>
+                <Text fontSize="2xs" fontFamily="mono" color="gray.600" noOfLines={1}>{filePath}</Text>
             )}
             {uriPath && (
                 <Link href={uriPath} isExternal fontSize="2xs" fontFamily="mono" color="teal.600" noOfLines={1}>
@@ -168,7 +168,7 @@ export function FileDownload({ file }) {
                 <ExternalLinkIcon ml={1} boxSize={2.5} />
             </Link>
             {file.size != null && (
-                <Text fontSize="2xs" color="gray.500">({Math.max(1, Math.round(file.size / 1024))} KB)</Text>
+                <Text fontSize="2xs" color="gray.600">({Math.max(1, Math.round(file.size / 1024))} KB)</Text>
             )}
         </HStack>
     );
@@ -187,5 +187,5 @@ export function ReportBadges({ inYear, year, global, depreciated, extra }) {
 }
 
 export function EmptyText({ children }) {
-    return <Text fontSize="xs" color="gray.500" fontStyle="italic">{children}</Text>;
+    return <Text fontSize="xs" color="gray.600" fontStyle="italic">{children}</Text>;
 }

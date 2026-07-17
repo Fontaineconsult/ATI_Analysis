@@ -87,7 +87,7 @@ function ParticipantsEditor({ implementationType, implementationUniqueId, partic
 
     return (
         <VStack align="stretch" spacing={3}>
-            <Text fontSize="2xs" color="gray.400">
+            <Text fontSize="2xs" color="gray.600">
                 Who did the day-to-day work, in their roles — distinct from the Owner, who maintains the evidence record.
             </Text>
 
@@ -105,7 +105,7 @@ function ParticipantsEditor({ implementationType, implementationUniqueId, partic
             </Flex>
 
             {rows.length === 0 ? (
-                <Text fontSize="sm" color="gray.500" fontStyle="italic">No participants assigned.</Text>
+                <Text fontSize="sm" color="gray.600" fontStyle="italic">No participants assigned.</Text>
             ) : (
                 <VStack align="stretch" spacing={1}>
                     {rows.map((r, idx) => (
@@ -122,7 +122,7 @@ function ParticipantsEditor({ implementationType, implementationUniqueId, partic
                             <HStack spacing={2} flexWrap="wrap" minW="0">
                                 <Text fontSize="sm" color="gray.800" fontWeight="medium">{r.person_name}</Text>
                                 <Tag size="sm" colorScheme="purple" variant="subtle">{roleName(r.role_handle)}</Tag>
-                                {r.note && <Text fontSize="xs" color="gray.500" noOfLines={1}>{r.note}</Text>}
+                                {r.note && <Text fontSize="xs" color="gray.600" noOfLines={1}>{r.note}</Text>}
                             </HStack>
                             <Button size="xs" variant="ghost" colorScheme="red" onClick={() => removeRow(idx)}>Remove</Button>
                         </HStack>

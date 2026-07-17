@@ -108,7 +108,7 @@ function ImplementationMasterContainer({ evidenceData = {}, yearIdentifier }) {
                 />
             ) : (
                 <Box py={4} textAlign="center">
-                    <Text fontSize="sm" color="gray.500" mb={2}>No implementations yet for this indicator.</Text>
+                    <Text fontSize="sm" color="gray.600" mb={2}>No implementations yet for this indicator.</Text>
                     <Button size="xs" colorScheme="teal" leftIcon={<AddIcon />} onClick={handleOpenModal}>
                         Add the first implementation
                     </Button>

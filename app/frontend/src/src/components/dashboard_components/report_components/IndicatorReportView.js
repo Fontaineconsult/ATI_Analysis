@@ -39,20 +39,20 @@ import CopyIndicatorReportButton from './CopyIndicatorReportButton';
 
 // ── Primitives ──────────────────────────────────────────────────────────────
 const SubLabel = ({ children }) => (
-    <Text fontSize="2xs" fontWeight="bold" color="gray.500" textTransform="uppercase" letterSpacing="wide">
+    <Text fontSize="2xs" fontWeight="bold" color="gray.600" textTransform="uppercase" letterSpacing="wide">
         {children}
     </Text>
 );
 
 const Empty = ({ children }) => (
-    <Text fontSize="sm" color="gray.500" fontStyle="italic">{children}</Text>
+    <Text fontSize="sm" color="gray.600" fontStyle="italic">{children}</Text>
 );
 
-const Dash = () => <Text as="span" color="gray.400">—</Text>;
+const Dash = () => <Text as="span" color="gray.600">—</Text>;
 
 /** Subtle data table — muted uppercase headers, thin horizontal row rules, no vertical lines. */
 const TH_SX = {
-    fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.03em', color: 'gray.500',
+    fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.03em', color: 'gray.600',
     fontWeight: 'bold', px: 2, py: 1.5, borderBottomWidth: '1px', borderColor: 'gray.200',
     textAlign: 'left', whiteSpace: 'nowrap',
 };
@@ -129,7 +129,7 @@ function artifactRows({ documents = [], webpages = [], notes = [], messages = []
         const href = resolveArtifactHref(d);
         const flags = (
             <Wrap spacing={1}>
-                {fileMeta(d.file) && <WrapItem><Text fontSize="2xs" color="gray.500">{fileMeta(d.file)}</Text></WrapItem>}
+                {fileMeta(d.file) && <WrapItem><Text fontSize="2xs" color="gray.600">{fileMeta(d.file)}</Text></WrapItem>}
                 {isTrue(d.is_administrative_review_documentation) && <WrapItem><Badge colorScheme="purple" fontSize="2xs">Admin Review</Badge></WrapItem>}
                 {isTrue(d.is_milestone_and_measures_documentation) && <WrapItem><Badge colorScheme="blue" fontSize="2xs">Milestones</Badge></WrapItem>}
                 {isTrue(d.depreciated) && <WrapItem><Badge colorScheme="orange" fontSize="2xs">Deprecated</Badge></WrapItem>}
@@ -155,7 +155,7 @@ function artifactRows({ documents = [], webpages = [], notes = [], messages = []
 
     notes.forEach((n) => rows.push([
         <TagBadge tag="NOTE" />, <Text>{n.content}</Text>,
-        (n.dateCreated || n.date_created) ? <Text fontSize="2xs" color="gray.500">{n.dateCreated || n.date_created}</Text> : <Dash />,
+        (n.dateCreated || n.date_created) ? <Text fontSize="2xs" color="gray.600">{n.dateCreated || n.date_created}</Text> : <Dash />,
     ]));
 
     messages.forEach((m) => {
@@ -164,7 +164,7 @@ function artifactRows({ documents = [], webpages = [], notes = [], messages = []
             <TagBadge tag="MSG" />, <Text>{m.content || m.name}</Text>,
             <HStack spacing={2}>
                 {href && <Link href={href} isExternal color="teal.600" fontSize="2xs">attachment</Link>}
-                {m.date_created && <Text fontSize="2xs" color="gray.500">{m.date_created}</Text>}
+                {m.date_created && <Text fontSize="2xs" color="gray.600">{m.date_created}</Text>}
                 {!href && !m.date_created && <Dash />}
             </HStack>,
         ]);
@@ -175,7 +175,7 @@ function artifactRows({ documents = [], webpages = [], notes = [], messages = []
         rows.push([
             <TagBadge tag="METRIC" />,
             <Text><Text as="span" fontWeight="semibold">{m.name}:</Text> {m.single_value ?? '—'}</Text>,
-            extra ? <Text fontSize="2xs" color="gray.500">{extra}</Text> : <Dash />,
+            extra ? <Text fontSize="2xs" color="gray.600">{extra}</Text> : <Dash />,
         ]);
     });
 
@@ -371,10 +371,10 @@ const IndicatorReportView = ({ report }) => {
                                 <Text fontFamily="mono" fontSize="lg" fontWeight="bold" color="gray.700">{indicator.composite_key}</Text>
                                 <Box w="10px" h="10px" borderRadius="full" bg={WG_DOT[indicator.working_group] || 'gray.400'} />
                                 <Text fontSize="sm" color="gray.600">{indicator.working_group}</Text>
-                                <Text fontSize="sm" color="gray.400">· {campusName} · {report.year}</Text>
+                                <Text fontSize="sm" color="gray.600">· {campusName} · {report.year}</Text>
                             </HStack>
                             <Heading as="h1" size="md" color="gray.800" lineHeight="1.35">{indicator.success_indicator}</Heading>
-                            <Text fontSize="sm" color="gray.500" mt={1}>Goal {indicator.goal_number} — {indicator.goal_name}</Text>
+                            <Text fontSize="sm" color="gray.600" mt={1}>Goal {indicator.goal_number} — {indicator.goal_name}</Text>
                         </Box>
                         <HStack className="report-no-print" spacing={2} flexShrink={0}>
                             <CopyIndicatorReportButton report={report} />
@@ -395,7 +395,7 @@ const IndicatorReportView = ({ report }) => {
                             <HStack spacing={3} align="center" flexWrap="wrap">
                                 <SubLabel>Year over year</SubLabel>
                                 <StatusProgression previousStatusLevel={status.previous_status_level} currentStatusLevel={status?.status_level} />
-                                <Text fontSize="2xs" color="gray.400">(prev → current)</Text>
+                                <Text fontSize="2xs" color="gray.600">(prev → current)</Text>
                             </HStack>
                         )}
                     </Box>
@@ -415,7 +415,7 @@ const IndicatorReportView = ({ report }) => {
                         <HStack spacing={2} mt={1} flexWrap="wrap">
                             <Badge colorScheme={reviewComplete ? 'green' : 'yellow'}>{reviewComplete ? 'Complete' : 'Pending'}</Badge>
                             {(yse?.administrative_review_completed_date || completedBy) && (
-                                <Text fontSize="xs" color="gray.500">
+                                <Text fontSize="xs" color="gray.600">
                                     {yse?.administrative_review_completed_date ? `Completed ${yse.administrative_review_completed_date}` : 'Completed'}
                                     {completedBy ? ` by ${completedBy.name}` : ''}
                                 </Text>
@@ -436,7 +436,7 @@ const IndicatorReportView = ({ report }) => {
                                     rows={adminReviewNotes.map((n) => [
                                         <Text whiteSpace="pre-wrap">{n.content}</Text>,
                                         n.created_by?.name ? <Text>{n.created_by.name}</Text> : <Dash />,
-                                        n.dateCreated ? <Text fontSize="2xs" color="gray.500">{n.dateCreated}</Text> : <Dash />,
+                                        n.dateCreated ? <Text fontSize="2xs" color="gray.600">{n.dateCreated}</Text> : <Dash />,
                                     ])}
                                 />
                             </Box>
@@ -456,7 +456,7 @@ const IndicatorReportView = ({ report }) => {
                                     <VStack align="stretch" spacing={1} mt={1}>
                                         {indicator.examples_of_evidence.map((ex, i) => (
                                             <HStack key={i} align="start" spacing={2}>
-                                                <Text fontSize="sm" color="gray.400">•</Text>
+                                                <Text fontSize="sm" color="gray.600">•</Text>
                                                 <Text fontSize="sm" color="gray.700">{ex}</Text>
                                             </HStack>
                                         ))}
@@ -530,7 +530,7 @@ const IndicatorReportView = ({ report }) => {
                                         <DataTable
                                             columns={['Asset', 'Class', 'Scope', 'Reached via', 'Description']}
                                             rows={assets.map((a) => [
-                                                <Box><Text fontWeight="semibold" color="gray.800">{a.title}</Text><Text fontSize="2xs" color="gray.400" fontFamily="mono">{a.asset_identifier}</Text></Box>,
+                                                <Box><Text fontWeight="semibold" color="gray.800">{a.title}</Text><Text fontSize="2xs" color="gray.600" fontFamily="mono">{a.asset_identifier}</Text></Box>,
                                                 a.asset_class ? <Text>{a.asset_class.replace(/_/g, ' ')}</Text> : <Dash />,
                                                 a.scope ? <Text>{a.scope}</Text> : <Dash />,
                                                 (a.reached_via || []).length ? <Text>{a.reached_via.join(', ')}</Text> : <Dash />,
@@ -547,7 +547,7 @@ const IndicatorReportView = ({ report }) => {
                                         <DataTable
                                             columns={['Interface', 'Function', 'Coverage / Audience', 'Description']}
                                             rows={interfaces.map((i) => [
-                                                <Box><Text fontWeight="semibold" color="gray.800">{i.title}</Text><Text fontSize="2xs" color="gray.400" fontFamily="mono">{i.interface_identifier}</Text></Box>,
+                                                <Box><Text fontWeight="semibold" color="gray.800">{i.title}</Text><Text fontSize="2xs" color="gray.600" fontFamily="mono">{i.interface_identifier}</Text></Box>,
                                                 i.function ? <Text>{i.function}</Text> : <Dash />,
                                                 [...(i.coverage_domains || []), ...(i.audience || [])].length ? <Text>{[...(i.coverage_domains || []), ...(i.audience || [])].join(', ')}</Text> : <Dash />,
                                                 i.description ? <Text color="gray.600">{i.description}</Text> : <Dash />,
@@ -564,7 +564,7 @@ const IndicatorReportView = ({ report }) => {
                                             columns={['Tool', 'Identifier', 'Description']}
                                             rows={tools.map((t) => [
                                                 <Text fontWeight="semibold" color="gray.800">{t.title}</Text>,
-                                                t.tool_identifier ? <Text fontFamily="mono" color="gray.500">{t.tool_identifier}</Text> : <Dash />,
+                                                t.tool_identifier ? <Text fontFamily="mono" color="gray.600">{t.tool_identifier}</Text> : <Dash />,
                                                 t.description ? <Text color="gray.600">{t.description}</Text> : <Dash />,
                                             ])}
                                         />

@@ -36,10 +36,10 @@ const Card = ({ title, children, ...rest }) => (
 function Field({ label, value }) {
     return (
         <Box>
-            <Text fontSize="xs" color="gray.500" textTransform="uppercase" fontWeight="bold">{label}</Text>
+            <Text fontSize="xs" color="gray.600" textTransform="uppercase" fontWeight="bold">{label}</Text>
             {value
                 ? <Text fontSize="sm" color="gray.800" whiteSpace="pre-wrap">{String(value)}</Text>
-                : <Text fontSize="sm" color="gray.400" fontStyle="italic">Not set</Text>}
+                : <Text fontSize="sm" color="gray.600" fontStyle="italic">Not set</Text>}
         </Box>
     );
 }
@@ -88,7 +88,7 @@ function ComponentDetailPanel({ componentIdentifier, interfaces = [], guidelines
     if (!componentIdentifier) {
         return (
             <Box p={8} borderWidth="1px" borderStyle="dashed" borderColor="gray.300" borderRadius="lg" bg="gray.50" textAlign="center">
-                <Text color="gray.500" fontSize="sm">
+                <Text color="gray.600" fontSize="sm">
                     Select a component on the left, or click <strong>Add Component</strong> to create one.
                 </Text>
             </Box>
@@ -139,7 +139,7 @@ function ComponentDetailPanel({ componentIdentifier, interfaces = [], guidelines
                             {component.component_kind && <ComponentKindBadge kind={component.component_kind} />}
                         </HStack>
                         <Heading as="h2" size="md" color="gray.800">{component.title || '(untitled)'}</Heading>
-                        <Text fontSize="xs" color="gray.400">{component.component_identifier}</Text>
+                        <Text fontSize="xs" color="gray.600">{component.component_identifier}</Text>
                     </VStack>
                     <Spacer />
                     <HStack>
@@ -157,7 +157,7 @@ function ComponentDetailPanel({ componentIdentifier, interfaces = [], guidelines
 
             {/* Parent interface (part_of) — editable */}
             <Card title="Parent interface">
-                <Text fontSize="xs" color="gray.500" mb={2}>
+                <Text fontSize="xs" color="gray.600" mb={2}>
                     The interface this component is part of. Components are composition, not identity.
                 </Text>
                 <EntityAttachmentSelector
@@ -179,7 +179,7 @@ function ComponentDetailPanel({ componentIdentifier, interfaces = [], guidelines
 
             {/* WCAG guidelines this component must satisfy (must_satisfy) — editable */}
             <Card title="Must satisfy (WCAG)">
-                <Text fontSize="xs" color="gray.500" mb={2}>
+                <Text fontSize="xs" color="gray.600" mb={2}>
                     The WCAG guidelines this component must meet — the standard's criteria attach at this grain.
                 </Text>
                 <EntityAttachmentSelector

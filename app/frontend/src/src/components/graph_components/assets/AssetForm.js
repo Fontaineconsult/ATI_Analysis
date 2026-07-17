@@ -117,7 +117,7 @@ function AssetForm({ isOpen, onClose, existingAsset, onSaved }) {
 
     const renderLocus = () => {
         if (form.scope === 'systemwide' || form.scope === 'regional') {
-            return <Text fontSize="sm" color="gray.500" fontStyle="italic">Locus is set to “{form.scope}” automatically.</Text>;
+            return <Text fontSize="sm" color="gray.600" fontStyle="italic">Locus is set to “{form.scope}” automatically.</Text>;
         }
         if (form.scope === 'campus') {
             return (
@@ -136,11 +136,11 @@ function AssetForm({ isOpen, onClose, existingAsset, onSaved }) {
                             <option key={v.unique_id} value={v.name}>{v.name}</option>
                         ))}
                     </Select>
-                    <Text fontSize="2xs" color="gray.400" mt={1}>The vendor name is slugified into the identifier.</Text>
+                    <Text fontSize="2xs" color="gray.600" mt={1}>The vendor name is slugified into the identifier.</Text>
                 </>
             );
         }
-        return <Text fontSize="sm" color="gray.400" fontStyle="italic">Choose a scope first.</Text>;
+        return <Text fontSize="sm" color="gray.600" fontStyle="italic">Choose a scope first.</Text>;
     };
 
     return (
@@ -173,7 +173,7 @@ function AssetForm({ isOpen, onClose, existingAsset, onSaved }) {
                         {isEdit && (
                             <FormControl>
                                 <FormLabel fontSize="sm" color="gray.700" fontWeight="semibold">Identifier</FormLabel>
-                                <Input size="sm" value={existingAsset.asset_identifier} isReadOnly bg="gray.50" color="gray.500" />
+                                <Input size="sm" value={existingAsset.asset_identifier} isReadOnly bg="gray.50" color="gray.600" />
                             </FormControl>
                         )}
 

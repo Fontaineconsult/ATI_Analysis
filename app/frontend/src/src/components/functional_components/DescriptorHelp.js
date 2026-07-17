@@ -58,9 +58,9 @@ export function HelpTip({ showMissing = false, placement = 'top', ...target }) {
         <Tooltip label={label} hasArrow placement={placement} openDelay={200}
                  maxW="320px" fontSize="xs" borderRadius="md" p={2}>
             <Box as="span" display="inline-flex" alignItems="center" tabIndex={0} ml={1}
-                 cursor="help" aria-label={`Description: ${label}`}
+                 cursor="help" role="note" aria-label={`Description: ${label}`}
                  _focusVisible={{ outline: '2px solid', outlineColor: 'teal.500', borderRadius: 'sm' }}>
-                <Icon as={InfoOutlineIcon} boxSize={3} color="gray.400" />
+                <Icon as={InfoOutlineIcon} boxSize={3} color="gray.600" />
             </Box>
         </Tooltip>
     );

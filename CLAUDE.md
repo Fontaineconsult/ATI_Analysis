@@ -164,3 +164,5 @@ Established preferences from prior sessions live in `.claude/projects/<project>/
 ## Skills
 
 `/semester-migration` — rolls the app to a new academic year (creates new AcademicYear node, duplicates YSE across campuses, creates CampusPlan + WorkingGroupPlan stubs, resets admin review flags, updates frontend year defaults). Triggered by requests like "migrate to 2025-2026", "academic year rollover".
+
+`/accessibility-scan` — runs the axe sweep in `e2e/` over every page, aggregates violations into a per-component worklist, fixes them at the token/component level (fix cookbook included), and re-verifies to green. Triggered by "run an accessibility scan", "fix the axe/WAVE errors", or after UI changes.

@@ -1,0 +1,389 @@
+
+Running 27 tests using 4 workers
+
+[1/27] [chromium] › tests\a11y-overlays.spec.js:42:5 › header overlays › year selector menu
+[2/27] [chromium] › tests\a11y-routes.spec.js:11:9 › axe sweep › dashboard: report master list
+[3/27] [chromium] › tests\a11y-overlays.spec.js:55:5 › header overlays › person selector menu
+[4/27] [chromium] › tests\a11y-overlays.spec.js:27:5 › header overlays › campus selector menu
+[5/27] [chromium] › tests\a11y-routes.spec.js:11:9 › axe sweep › dashboard: web goal view
+[6/27] [chromium] › tests\a11y-routes.spec.js:11:9 › axe sweep › dashboard: instructional materials goal view
+[7/27] [chromium] › tests\a11y-routes.spec.js:11:9 › axe sweep › dashboard: procurement goal view
+[8/27] [chromium] › tests\a11y-routes.spec.js:11:9 › axe sweep › dashboard: reports
+  1) [chromium] › tests\a11y-routes.spec.js:11:9 › axe sweep › dashboard: web goal view ────────────
+
+    Error: 1 axe violation(s):
+      [critical] select-name: Select element must have an accessible name
+        https://dequeuniversity.com/rules/axe/4.12/select-name?application=playwright
+        1 node(s):
+          .css-1tcu6vp
+
+    expect(received).toEqual(expected) // deep equality
+
+    - Expected  -  1
+    + Received  + 87
+
+    - Array []
+    + Array [
+    +   Object {
+    +     "description": "Ensure select element has an accessible name",
+    +     "help": "Select element must have an accessible name",
+    +     "helpUrl": "https://dequeuniversity.com/rules/axe/4.12/select-name?application=playwright",
+    +     "id": "select-name",
+    +     "impact": "critical",
+    +     "nodes": Array [
+    +       Object {
+    +         "all": Array [],
+    +         "any": Array [
+    +           Object {
+    +             "data": null,
+    +             "id": "implicit-label",
+    +             "impact": "critical",
+    +             "message": "Element does not have an implicit (wrapped) <label>",
+    +             "relatedNodes": Array [],
+    +           },
+    +           Object {
+    +             "data": null,
+    +             "id": "explicit-label",
+    +             "impact": "critical",
+    +             "message": "Element does not have an explicit <label>",
+    +             "relatedNodes": Array [],
+    +           },
+    +           Object {
+    +             "data": null,
+    +             "id": "aria-label",
+    +             "impact": "critical",
+    +             "message": "aria-label attribute does not exist or is empty",
+    +             "relatedNodes": Array [],
+    +           },
+    +           Object {
+    +             "data": null,
+    +             "id": "aria-labelledby",
+    +             "impact": "critical",
+    +             "message": "aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty",
+    +             "relatedNodes": Array [],
+    +           },
+    +           Object {
+    +             "data": Object {
+    +               "messageKey": "noAttr",
+    +             },
+    +             "id": "non-empty-title",
+    +             "impact": "critical",
+    +             "message": "Element has no title attribute",
+    +             "relatedNodes": Array [],
+    +           },
+    +           Object {
+    +             "data": null,
+    +             "id": "presentational-role",
+    +             "impact": "critical",
+    +             "message": "Element's default semantics were not overridden with role=\"none\" or role=\"presentation\"",
+    +             "relatedNodes": Array [],
+    +           },
+    +         ],
+    +         "failureSummary": "Fix any of the following:
+    +   Element does not have an implicit (wrapped) <label>
+    +   Element does not have an explicit <label>
+    +   aria-label attribute does not exist or is empty
+    +   aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty
+    +   Element has no title attribute
+    +   Element's default semantics were not overridden with role=\"none\" or role=\"presentation\"",
+    +         "html": "<select class=\"chakra-select css-1tcu6vp\">",
+    +         "impact": "critical",
+    +         "none": Array [],
+    +         "target": Array [
+    +           ".css-1tcu6vp",
+    +         ],
+    +       },
+    +     ],
+    +     "tags": Array [
+    +       "cat.forms",
+    +       "wcag2a",
+    +       "wcag412",
+    +       "section508",
+    +       "section508.22.n",
+    +       "TTv5",
+    +       "TT5.c",
+    +       "EN-301-549",
+    +       "EN-9.4.1.2",
+    +       "ACT",
+    +       "RGAAv4",
+    +       "RGAA-11.1.1",
+    +     ],
+    +   },
+    + ]
+
+      15 |             await attachAxeResults(testInfo, results);
+      16 |
+    > 17 |             expect(results.violations, formatViolations(results.violations)).toEqual([]);
+         |                                                                              ^
+      18 |         });
+      19 |     }
+      20 | });
+        at C:\Users\Fonta\PycharmProjects\ATI_Analysis\e2e\tests\a11y-routes.spec.js:17:78
+
+    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\a11y-routes-axe-sweep-dashboard-web-goal-view-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\a11y-routes-axe-sweep-dashboard-web-goal-view-chromium\error-context.md
+
+
+  2) [chromium] › tests\a11y-routes.spec.js:11:9 › axe sweep › dashboard: instructional materials goal view 
+
+    Error: 1 axe violation(s):
+      [critical] select-name: Select element must have an accessible name
+        https://dequeuniversity.com/rules/axe/4.12/select-name?application=playwright
+        1 node(s):
+          .css-1tcu6vp
+
+    expect(received).toEqual(expected) // deep equality
+
+    - Expected  -  1
+    + Received  + 87
+
+    - Array []
+    + Array [
+    +   Object {
+    +     "description": "Ensure select element has an accessible name",
+    +     "help": "Select element must have an accessible name",
+    +     "helpUrl": "https://dequeuniversity.com/rules/axe/4.12/select-name?application=playwright",
+    +     "id": "select-name",
+    +     "impact": "critical",
+    +     "nodes": Array [
+    +       Object {
+    +         "all": Array [],
+    +         "any": Array [
+    +           Object {
+    +             "data": null,
+    +             "id": "implicit-label",
+    +             "impact": "critical",
+    +             "message": "Element does not have an implicit (wrapped) <label>",
+    +             "relatedNodes": Array [],
+    +           },
+    +           Object {
+    +             "data": null,
+    +             "id": "explicit-label",
+    +             "impact": "critical",
+    +             "message": "Element does not have an explicit <label>",
+    +             "relatedNodes": Array [],
+    +           },
+    +           Object {
+    +             "data": null,
+    +             "id": "aria-label",
+    +             "impact": "critical",
+    +             "message": "aria-label attribute does not exist or is empty",
+    +             "relatedNodes": Array [],
+    +           },
+    +           Object {
+    +             "data": null,
+    +             "id": "aria-labelledby",
+    +             "impact": "critical",
+    +             "message": "aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty",
+    +             "relatedNodes": Array [],
+    +           },
+    +           Object {
+    +             "data": Object {
+    +               "messageKey": "noAttr",
+    +             },
+    +             "id": "non-empty-title",
+    +             "impact": "critical",
+    +             "message": "Element has no title attribute",
+    +             "relatedNodes": Array [],
+    +           },
+    +           Object {
+    +             "data": null,
+    +             "id": "presentational-role",
+    +             "impact": "critical",
+    +             "message": "Element's default semantics were not overridden with role=\"none\" or role=\"presentation\"",
+    +             "relatedNodes": Array [],
+    +           },
+    +         ],
+    +         "failureSummary": "Fix any of the following:
+    +   Element does not have an implicit (wrapped) <label>
+    +   Element does not have an explicit <label>
+    +   aria-label attribute does not exist or is empty
+    +   aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty
+    +   Element has no title attribute
+    +   Element's default semantics were not overridden with role=\"none\" or role=\"presentation\"",
+    +         "html": "<select class=\"chakra-select css-1tcu6vp\">",
+    +         "impact": "critical",
+    +         "none": Array [],
+    +         "target": Array [
+    +           ".css-1tcu6vp",
+    +         ],
+    +       },
+    +     ],
+    +     "tags": Array [
+    +       "cat.forms",
+    +       "wcag2a",
+    +       "wcag412",
+    +       "section508",
+    +       "section508.22.n",
+    +       "TTv5",
+    +       "TT5.c",
+    +       "EN-301-549",
+    +       "EN-9.4.1.2",
+    +       "ACT",
+    +       "RGAAv4",
+    +       "RGAA-11.1.1",
+    +     ],
+    +   },
+    + ]
+
+      15 |             await attachAxeResults(testInfo, results);
+      16 |
+    > 17 |             expect(results.violations, formatViolations(results.violations)).toEqual([]);
+         |                                                                              ^
+      18 |         });
+      19 |     }
+      20 | });
+        at C:\Users\Fonta\PycharmProjects\ATI_Analysis\e2e\tests\a11y-routes.spec.js:17:78
+
+    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\a11y-routes-axe-sweep-dash-b5f42-ctional-materials-goal-view-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\a11y-routes-axe-sweep-dash-b5f42-ctional-materials-goal-view-chromium\error-context.md
+
+
+  3) [chromium] › tests\a11y-routes.spec.js:11:9 › axe sweep › dashboard: procurement goal view ────
+
+    Error: 1 axe violation(s):
+      [critical] select-name: Select element must have an accessible name
+        https://dequeuniversity.com/rules/axe/4.12/select-name?application=playwright
+        1 node(s):
+          .css-1tcu6vp
+
+    expect(received).toEqual(expected) // deep equality
+
+    - Expected  -  1
+    + Received  + 87
+
+    - Array []
+    + Array [
+    +   Object {
+    +     "description": "Ensure select element has an accessible name",
+    +     "help": "Select element must have an accessible name",
+    +     "helpUrl": "https://dequeuniversity.com/rules/axe/4.12/select-name?application=playwright",
+    +     "id": "select-name",
+    +     "impact": "critical",
+    +     "nodes": Array [
+    +       Object {
+    +         "all": Array [],
+    +         "any": Array [
+    +           Object {
+    +             "data": null,
+    +             "id": "implicit-label",
+    +             "impact": "critical",
+    +             "message": "Element does not have an implicit (wrapped) <label>",
+    +             "relatedNodes": Array [],
+    +           },
+    +           Object {
+    +             "data": null,
+    +             "id": "explicit-label",
+    +             "impact": "critical",
+    +             "message": "Element does not have an explicit <label>",
+    +             "relatedNodes": Array [],
+    +           },
+    +           Object {
+    +             "data": null,
+    +             "id": "aria-label",
+    +             "impact": "critical",
+    +             "message": "aria-label attribute does not exist or is empty",
+    +             "relatedNodes": Array [],
+    +           },
+    +           Object {
+    +             "data": null,
+    +             "id": "aria-labelledby",
+    +             "impact": "critical",
+    +             "message": "aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty",
+    +             "relatedNodes": Array [],
+    +           },
+    +           Object {
+    +             "data": Object {
+    +               "messageKey": "noAttr",
+    +             },
+    +             "id": "non-empty-title",
+    +             "impact": "critical",
+    +             "message": "Element has no title attribute",
+    +             "relatedNodes": Array [],
+    +           },
+    +           Object {
+    +             "data": null,
+    +             "id": "presentational-role",
+    +             "impact": "critical",
+    +             "message": "Element's default semantics were not overridden with role=\"none\" or role=\"presentation\"",
+    +             "relatedNodes": Array [],
+    +           },
+    +         ],
+    +         "failureSummary": "Fix any of the following:
+    +   Element does not have an implicit (wrapped) <label>
+    +   Element does not have an explicit <label>
+    +   aria-label attribute does not exist or is empty
+    +   aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty
+    +   Element has no title attribute
+    +   Element's default semantics were not overridden with role=\"none\" or role=\"presentation\"",
+    +         "html": "<select class=\"chakra-select css-1tcu6vp\">",
+    +         "impact": "critical",
+    +         "none": Array [],
+    +         "target": Array [
+    +           ".css-1tcu6vp",
+    +         ],
+    +       },
+    +     ],
+    +     "tags": Array [
+    +       "cat.forms",
+    +       "wcag2a",
+    +       "wcag412",
+    +       "section508",
+    +       "section508.22.n",
+    +       "TTv5",
+    +       "TT5.c",
+    +       "EN-301-549",
+    +       "EN-9.4.1.2",
+    +       "ACT",
+    +       "RGAAv4",
+    +       "RGAA-11.1.1",
+    +     ],
+    +   },
+    + ]
+
+      15 |             await attachAxeResults(testInfo, results);
+      16 |
+    > 17 |             expect(results.violations, formatViolations(results.violations)).toEqual([]);
+         |                                                                              ^
+      18 |         });
+      19 |     }
+      20 | });
+        at C:\Users\Fonta\PycharmProjects\ATI_Analysis\e2e\tests\a11y-routes.spec.js:17:78
+
+    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\a11y-routes-axe-sweep-dashboard-procurement-goal-view-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\a11y-routes-axe-sweep-dashboard-procurement-goal-view-chromium\error-context.md
+
+
+[9/27] [chromium] › tests\a11y-routes.spec.js:11:9 › axe sweep › dashboard: report overview (copy report)
+[10/27] [chromium] › tests\a11y-routes.spec.js:11:9 › axe sweep › dashboard: implementations
+[11/27] [chromium] › tests\a11y-routes.spec.js:11:9 › axe sweep › dashboard: plans
+[12/27] [chromium] › tests\a11y-routes.spec.js:11:9 › axe sweep › dashboard: campus plan
+[13/27] [chromium] › tests\a11y-routes.spec.js:11:9 › axe sweep › dashboard: settings
+[14/27] [chromium] › tests\a11y-routes.spec.js:11:9 › axe sweep › explorer: implementations
+[15/27] [chromium] › tests\a11y-routes.spec.js:11:9 › axe sweep › explorer: plans
+[16/27] [chromium] › tests\a11y-routes.spec.js:11:9 › axe sweep › explorer: people
+[17/27] [chromium] › tests\a11y-routes.spec.js:11:9 › axe sweep › explorer: governance
+[18/27] [chromium] › tests\a11y-routes.spec.js:11:9 › axe sweep › explorer: principles
+[19/27] [chromium] › tests\a11y-routes.spec.js:11:9 › axe sweep › explorer: assets
+[20/27] [chromium] › tests\a11y-routes.spec.js:11:9 › axe sweep › about: overview
+[21/27] [chromium] › tests\a11y-routes.spec.js:11:9 › axe sweep › about: executive summary
+[22/27] [chromium] › tests\a11y-routes.spec.js:11:9 › axe sweep › about: core model
+[23/27] [chromium] › tests\a11y-routes.spec.js:11:9 › axe sweep › about: evidence & implementations
+[24/27] [chromium] › tests\a11y-routes.spec.js:11:9 › axe sweep › about: plans & progress
+[25/27] [chromium] › tests\a11y-routes.spec.js:11:9 › axe sweep › about: assets & interfaces
+[26/27] [chromium] › tests\a11y-routes.spec.js:11:9 › axe sweep › about: adding data
+[27/27] [chromium] › tests\a11y-routes.spec.js:11:9 › axe sweep › about: glossary
+  3 failed
+    [chromium] › tests\a11y-routes.spec.js:11:9 › axe sweep › dashboard: web goal view ─────────────
+    [chromium] › tests\a11y-routes.spec.js:11:9 › axe sweep › dashboard: instructional materials goal view 
+    [chromium] › tests\a11y-routes.spec.js:11:9 › axe sweep › dashboard: procurement goal view ─────
+  24 passed (50.0s)

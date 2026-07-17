@@ -193,7 +193,7 @@ function MessageViewer({ messages, onSubmit, yearSuccessEvidence, createdBy, imp
                                             )}
                                         </HStack>
 
-                                        <HStack spacing={3} fontSize="xs" color="gray.500">
+                                        <HStack spacing={3} fontSize="xs" color="gray.600">
                                             <Text>Created: {message.properties?.date_created || 'N/A'}</Text>
                                             {createdBy?.properties?.name && (
                                                 <Text>By: {createdBy.properties.name}</Text>
@@ -228,7 +228,7 @@ function MessageViewer({ messages, onSubmit, yearSuccessEvidence, createdBy, imp
                     })}
                 </VStack>
             ) : (
-                <Text color="gray.500" fontSize="sm">No messages available.</Text>
+                <Text color="gray.600" fontSize="sm">No messages available.</Text>
             )}
         </Box>
     );
@@ -347,7 +347,7 @@ function MessageForm({ message, onSubmit, createdBy, onCancel }) {
             </Grid>
 
             {createdBy?.properties?.name && (
-                <Text fontSize="xs" color="gray.500" mt={2}>
+                <Text fontSize="xs" color="gray.600" mt={2}>
                     Created by: {createdBy.properties.name}
                 </Text>
             )}

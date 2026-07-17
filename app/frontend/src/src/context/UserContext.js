@@ -31,8 +31,29 @@ export const UserProvider = ({ children }) => {
         return !!authUser?.is_admin;
     };
 
-    // Set the current user
-    const setUser = (userData) => {
+    // The persisted "notating as" selection is tagged with the email of the
+    // account that made it (ownerEmail), so one account's manual choice never
+    // leaks into another account's session, and a stale pre-login selection can
+    // never override the logged-in person. Legacy flat entries (no ownerEmail)
+    // are treated as owner-unknown and superseded on first login.
+    const STORAGE_KEY = 'ati_current_user';
+
+    const readSavedSelection = () => {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return null;
+        try {
+            const parsed = JSON.parse(raw);
+            if (parsed && typeof parsed === 'object' && 'user' in parsed) return parsed;
+            return { ownerEmail: null, user: parsed };  // legacy flat shape
+        } catch (err) {
+            localStorage.removeItem(STORAGE_KEY);
+            return null;
+        }
+    };
+
+    // Apply a notating-as selection. `notify` shows the toast — used for explicit
+    // action from the switcher UI; the auto-default at login applies silently.
+    const applyUser = (userData, { notify = false } = {}) => {
         if (userData) {
             const userInfo = {
                 name: userData.name,
@@ -43,9 +64,12 @@ export const UserProvider = ({ children }) => {
                 active: userData.active
             };
             setCurrentUser(userInfo);
-            localStorage.setItem('ati_current_user', JSON.stringify(userInfo));
+            localStorage.setItem(
+                STORAGE_KEY,
+                JSON.stringify({ ownerEmail: authUser?.email ?? null, user: userInfo })
+            );
 
-            if (toast) {
+            if (notify && toast) {
                 toast({
                     title: "User selected",
                     description: `Now notating as ${userData.name}`,
@@ -56,9 +80,12 @@ export const UserProvider = ({ children }) => {
             }
         } else {
             setCurrentUser(null);
-            localStorage.removeItem('ati_current_user');
+            localStorage.removeItem(STORAGE_KEY);
         }
     };
+
+    // Public setter used by the "notating as" switcher UI — always notifies.
+    const setUser = (userData) => applyUser(userData, { notify: true });
 
     // Clear the current user
     const clearUser = () => {
@@ -142,51 +169,53 @@ export const UserProvider = ({ children }) => {
         }
     };
 
-    // Initial load effect
+    // Load the individuals roster once on mount (used by the switcher and by the
+    // "does the selected person still exist" reconciliation).
     useEffect(() => {
-        const initializeUser = async () => {
-            setLoading(true);
-
-            // Load individuals
-            await loadAllIndividuals();
-
-            // Try to load user from localStorage first
-            const savedUser = localStorage.getItem('ati_current_user');
-            if (savedUser) {
-                try {
-                    const userData = JSON.parse(savedUser);
-                    setCurrentUser(userData);
-                } catch (err) {
-                    console.error('Error loading saved user:', err);
-                    localStorage.removeItem('ati_current_user');
-                }
-            }
-
-            // No saved selection: default the notating user to the logged-in
-            // account's linked Person (from /me), falling back to the legacy
-            // ?employee_id= query parameter.
-            if (!savedUser) {
-                if (authUser?.person) {
-                    setUser(authUser.person);
-                } else {
-                    const employeeId = getEmployeeIdFromQuery();
-                    if (employeeId) {
-                        try {
-                            const person = await fetchUserByEmployeeId(employeeId);
-                            setUser(person.data.person);
-                        } catch (error) {
-                            setError('Failed to fetch user data');
-                        }
-                    }
-                }
-            }
-
-            setLoading(false);
-        };
-
-        initializeUser();
+        loadAllIndividuals();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
+
+    // Resolve the "notating as" attribution. Re-runs whenever the logged-in
+    // identity changes (login, logout, /me rehydrate on refresh, account switch)
+    // so attribution always follows the person actually logged in — never a
+    // stale prior selection.
+    useEffect(() => {
+        setLoading(true);
+        const saved = readSavedSelection();
+
+        // Enforced + logged in: identity drives the default. Honor a manual
+        // override only when THIS account is the one that made it.
+        if (authUser) {
+            if (saved && saved.ownerEmail === authUser.email) {
+                setCurrentUser(saved.user);
+            } else if (authUser.person) {
+                applyUser(authUser.person);   // silent auto-default to the logged-in person
+            } else {
+                applyUser(null);              // logged in but no linked Person → no attribution
+            }
+            setLoading(false);
+            return;
+        }
+
+        // No identity (dev login-bypass, or /me not yet resolved): legacy
+        // behavior — restore a saved selection, else honor ?employee_id=.
+        if (saved) {
+            setCurrentUser(saved.user);
+            setLoading(false);
+            return;
+        }
+        const employeeId = getEmployeeIdFromQuery();
+        if (employeeId) {
+            fetchUserByEmployeeId(employeeId)
+                .then((person) => applyUser(person.data.person))
+                .catch(() => setError('Failed to fetch user data'))
+                .finally(() => setLoading(false));
+        } else {
+            setLoading(false);
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [authUser?.email]);
 
     return (
         <UserContext.Provider value={{

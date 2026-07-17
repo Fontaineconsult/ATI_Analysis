@@ -97,7 +97,7 @@ function ImplementationRemediationManager({
                 <Heading as="h4" size="xs" color="teal.700" textTransform="uppercase" letterSpacing="wide" mb={2}>
                     Interfaces it remediates
                 </Heading>
-                <Text fontSize="xs" color="gray.500" mb={3}>
+                <Text fontSize="xs" color="gray.600" mb={3}>
                     The salient surfaces this implementation remediates. The assets shown on the panel are derived
                     from these via the interface’s backing asset.
                 </Text>
@@ -119,7 +119,7 @@ function ImplementationRemediationManager({
                 <Heading as="h4" size="xs" color="teal.700" textTransform="uppercase" letterSpacing="wide" mb={2}>
                     Tools it uses
                 </Heading>
-                <Text fontSize="xs" color="gray.500" mb={3}>
+                <Text fontSize="xs" color="gray.600" mb={3}>
                     The instruments this implementation uses to do the remediation work (scanners, captioning services, …).
                 </Text>
                 <EntityAttachmentSelector

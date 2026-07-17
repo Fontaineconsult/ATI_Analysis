@@ -98,10 +98,10 @@ function AssetsInterfacesTab() {
                     vs <code>canvas-systemwide</code>), because who can act on each differs.
                 </Para>
                 <Section title="Asset classes">
-                    <VocabTable vocab={vocab?.asset_classes} notes={ASSET_CLASS_NOTES} />
+                    <VocabTable label="Asset classes" vocab={vocab?.asset_classes} notes={ASSET_CLASS_NOTES} />
                 </Section>
                 <Section title="Asset scopes">
-                    <VocabTable vocab={vocab?.asset_scopes} notes={ASSET_SCOPE_NOTES} />
+                    <VocabTable label="Asset scopes" vocab={vocab?.asset_scopes} notes={ASSET_SCOPE_NOTES} />
                 </Section>
                 <Para mt={2}>
                     Deliberately, an asset has <b>no single &quot;owner&quot;</b>. Instead it
@@ -172,7 +172,7 @@ function AssetsInterfacesTab() {
                     itself a compliance activity — a TAAP can serve as evidence for an indicator.
                 </Para>
                 <Section title="TAAP outcomes">
-                    <VocabTable vocab={vocab?.taap_outcomes} notes={TAAP_OUTCOME_NOTES} />
+                    <VocabTable label="TAAP outcomes" vocab={vocab?.taap_outcomes} notes={TAAP_OUTCOME_NOTES} />
                 </Section>
             </Card>
 
@@ -200,7 +200,7 @@ e.g.  canvas-sfsu--course-shells--teaching-and-learning--course-home`}
                     those are descriptive and editable.
                 </Para>
                 <Section title="Functions (identity-bearing)">
-                    <VocabTable vocab={vocab?.functions} notes={FUNCTION_NOTES} />
+                    <VocabTable label="Interface functions" vocab={vocab?.functions} notes={FUNCTION_NOTES} />
                 </Section>
                 <Section title="Audiences (descriptive)">
                     <Para>
@@ -208,7 +208,7 @@ e.g.  canvas-sfsu--course-shells--teaching-and-learning--course-home`}
                         because the duty and its accommodation population differ by audience. An
                         interface can serve several.
                     </Para>
-                    <VocabTable vocab={vocab?.audiences} notes={AUDIENCE_NOTES} />
+                    <VocabTable label="Audiences" vocab={vocab?.audiences} notes={AUDIENCE_NOTES} />
                 </Section>
                 <Section title="Coverage domains (descriptive)">
                     <Para>
@@ -216,7 +216,7 @@ e.g.  canvas-sfsu--course-shells--teaching-and-learning--course-home`}
                         course content, library assets, public webpages, and so on. Multi-valued
                         and adjustable as attention shifts.
                     </Para>
-                    <VocabTable vocab={vocab?.coverage_domains} />
+                    <VocabTable label="Coverage domains" vocab={vocab?.coverage_domains} />
                 </Section>
                 <Section title="Provenance (descriptive, diagnostic)">
                     <Para>
@@ -224,7 +224,7 @@ e.g.  canvas-sfsu--course-shells--teaching-and-learning--course-home`}
                         not a defect: comparing what the ATI said it tracks against where work
                         actually clusters shows whether attention matches reality.
                     </Para>
-                    <VocabTable vocab={vocab?.interface_provenances} notes={PROVENANCE_NOTES} />
+                    <VocabTable label="Interface provenances" vocab={vocab?.interface_provenances} notes={PROVENANCE_NOTES} />
                 </Section>
                 <Section title="Working-group accountability (an edge, never identity)">
                     <Para>
@@ -246,7 +246,7 @@ e.g.  canvas-sfsu--course-shells--teaching-and-learning--course-home`}
                     and to VPAT/ACR line items that describe them.
                 </Para>
                 <Section title="Component kinds">
-                    <VocabTable vocab={vocab?.component_kinds} notes={COMPONENT_KIND_NOTES} />
+                    <VocabTable label="Component kinds" vocab={vocab?.component_kinds} notes={COMPONENT_KIND_NOTES} />
                 </Section>
                 <List spacing={1} pl={5} styleType="disc" fontSize="sm" color="gray.700" mt={2}>
                     <ListItem>

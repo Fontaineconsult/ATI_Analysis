@@ -255,7 +255,7 @@ const AtiStats = () => {
                         {stats.unassignedEvidence}
                     </Text>
                 </Text>
-                <Text fontSize="xs" color="gray.500">
+                <Text fontSize="xs" color="gray.600">
                     Evidence nodes should have at least one person assigned to track implementation progress.
                 </Text>
             </Box>

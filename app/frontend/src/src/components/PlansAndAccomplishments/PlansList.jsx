@@ -100,7 +100,7 @@ function PlansList({ plans = [], selectedId, onSelect, emptyMessage = 'No plans 
 
     if (!plans || plans.length === 0) {
         return (
-            <Box p={4} color="gray.500" fontSize="sm" fontStyle="italic">
+            <Box p={4} color="gray.600" fontSize="sm" fontStyle="italic">
                 {emptyMessage}
             </Box>
         );
@@ -116,6 +116,7 @@ function PlansList({ plans = [], selectedId, onSelect, emptyMessage = 'No plans 
                     size="sm"
                     value={sortBy}
                     onChange={(e) => setSortBy(e.target.value)}
+                    aria-label="Sort plans by"
                     borderColor="gray.300"
                     _focus={{ borderColor: 'teal.500', boxShadow: '0 0 0 1px teal.500' }}
                 >
@@ -144,7 +145,7 @@ function PlansList({ plans = [], selectedId, onSelect, emptyMessage = 'No plans 
                 bg="white"
             >
                 {sorted.length === 0 ? (
-                    <Box p={4} color="gray.500" fontSize="sm" fontStyle="italic">
+                    <Box p={4} color="gray.600" fontSize="sm" fontStyle="italic">
                         {emptyMessage}
                     </Box>
                 ) : (
@@ -172,13 +173,13 @@ function PlansList({ plans = [], selectedId, onSelect, emptyMessage = 'No plans 
                                 >
                                     {section.label}
                                 </Heading>
-                                <Text fontSize="2xs" fontWeight="semibold" color="gray.500">
+                                <Text fontSize="2xs" fontWeight="semibold" color="gray.600">
                                     {section.plans.length}
                                 </Text>
                             </HStack>
 
                             {section.plans.length === 0 ? (
-                                <Box px={3} py={2.5} color="gray.400" fontSize="xs" fontStyle="italic">
+                                <Box px={3} py={2.5} color="gray.600" fontSize="xs" fontStyle="italic">
                                     No plans
                                 </Box>
                             ) : (

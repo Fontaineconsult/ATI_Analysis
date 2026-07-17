@@ -80,7 +80,7 @@ function VendorDetailPanel({ vendorName, onAfterMutate, onReselect, onGoToAsset 
     if (!vendorName) {
         return (
             <Box p={8} borderWidth="1px" borderStyle="dashed" borderColor="gray.300" borderRadius="lg" bg="gray.50" textAlign="center">
-                <Text color="gray.500" fontSize="sm">
+                <Text color="gray.600" fontSize="sm">
                     Select a vendor on the left, or click <strong>Add Vendor</strong> to create one.
                 </Text>
             </Box>
@@ -133,17 +133,17 @@ function VendorDetailPanel({ vendorName, onAfterMutate, onReselect, onGoToAsset 
                 </HStack>
                 <Divider my={3} borderColor="gray.200" />
                 <Box>
-                    <Text fontSize="xs" color="gray.500" textTransform="uppercase" fontWeight="bold">Location</Text>
+                    <Text fontSize="xs" color="gray.600" textTransform="uppercase" fontWeight="bold">Location</Text>
                     {vendor.location
                         ? <Text fontSize="sm" color="gray.800">{vendor.location}</Text>
-                        : <Text fontSize="sm" color="gray.400" fontStyle="italic">Not set</Text>}
+                        : <Text fontSize="sm" color="gray.600" fontStyle="italic">Not set</Text>}
                 </Box>
             </Card>
 
             {/* Supplied assets (read-only; managed from the asset side) */}
             <Card title="Supplies (assets)">
                 {supplies.length === 0 ? (
-                    <Text fontSize="sm" color="gray.500" fontStyle="italic">This vendor supplies no assets yet.</Text>
+                    <Text fontSize="sm" color="gray.600" fontStyle="italic">This vendor supplies no assets yet.</Text>
                 ) : (
                     <VStack align="stretch" spacing={1}>
                         {supplies.map((a) => (

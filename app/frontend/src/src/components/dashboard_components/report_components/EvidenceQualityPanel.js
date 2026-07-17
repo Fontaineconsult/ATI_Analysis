@@ -12,7 +12,7 @@ import {
     Spinner,
 } from '@chakra-ui/react';
 import { StatusLevelContext } from '../../../context/StatusLevelContext';
-import { getStatusColor } from '../../../services/utils/tools';
+import { getStatusColor, getStatusBackgroundColor, getStatusTextColor } from '../../../services/utils/statusColors';
 
 const CATEGORIES = [
     {
@@ -64,14 +64,14 @@ const CategoryBlock = ({ category, level }) => {
             </Text>
 
             {!hasContent && (
-                <Text fontSize="xs" color="gray.400" fontStyle="italic">
+                <Text fontSize="xs" color="gray.600" fontStyle="italic">
                     No criteria defined
                 </Text>
             )}
 
             {descriptions.length > 0 && (
                 <Box mb={requirements.length > 0 ? 2 : 0}>
-                    <Text fontSize="2xs" fontWeight="semibold" color="gray.500" mb={1}>
+                    <Text fontSize="2xs" fontWeight="semibold" color="gray.600" mb={1}>
                         Descriptions ({descriptions.length})
                     </Text>
                     <List spacing={1} pl={4} styleType="disc">
@@ -86,7 +86,7 @@ const CategoryBlock = ({ category, level }) => {
 
             {requirements.length > 0 && (
                 <Box>
-                    <Text fontSize="2xs" fontWeight="semibold" color="gray.500" mb={1}>
+                    <Text fontSize="2xs" fontWeight="semibold" color="gray.600" mb={1}>
                         Requirements ({requirements.length})
                     </Text>
                     <List spacing={1} pl={4} styleType="disc">
@@ -129,8 +129,8 @@ const LevelCard = ({ level }) => {
             <HStack justify="space-between" mb={3} pl={2}>
                 <HStack spacing={2}>
                     <Badge
-                        color="white"
-                        bg={statusColor}
+                        color={getStatusTextColor(level.status_level)}
+                        bg={getStatusBackgroundColor(level.status_level)}
                         fontSize="2xs"
                         textTransform="uppercase"
                     >
@@ -139,7 +139,7 @@ const LevelCard = ({ level }) => {
                     <Text fontSize="sm" fontWeight="bold" color="gray.800">
                         {level.status_level}
                     </Text>
-                    <Text fontSize="xs" color="gray.500">
+                    <Text fontSize="xs" color="gray.600">
                         (Level {level.status_value})
                     </Text>
                 </HStack>
@@ -208,7 +208,7 @@ const EvidenceQualityPanel = ({ currentStatusLevelName }) => {
                 borderColor="gray.200"
                 boxShadow="sm"
             >
-                <Text fontSize="xs" color="gray.500" fontStyle="italic">
+                <Text fontSize="xs" color="gray.600" fontStyle="italic">
                     No quality criteria found for status level "{currentStatusLevelName}".
                 </Text>
             </Box>
@@ -227,7 +227,7 @@ const EvidenceQualityPanel = ({ currentStatusLevelName }) => {
             <Heading as="h3" size="sm" color="teal.700" mb={1}>
                 Evidence Quality Criteria
             </Heading>
-            <Text fontSize="xs" color="gray.500" mb={4}>
+            <Text fontSize="xs" color="gray.600" mb={4}>
                 Descriptions and requirements tied to this indicator's status level.
             </Text>
 

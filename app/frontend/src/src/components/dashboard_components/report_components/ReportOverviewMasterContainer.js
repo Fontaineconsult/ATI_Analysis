@@ -31,7 +31,7 @@ function ReportOverviewMasterContainer() {
         <Box maxW="1200px" mx="auto" p={6}>
             <VStack align="stretch" spacing={6}>
                 <Box bg="white" borderRadius="lg" p={6} boxShadow="sm">
-                    <Heading as="h1" size="lg" color="gray.800" mb={4}>
+                    <Heading as="h2" size="lg" color="gray.800" mb={4}>
                         Report Overview
                     </Heading>
 

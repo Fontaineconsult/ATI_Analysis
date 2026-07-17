@@ -129,7 +129,7 @@ function Login() {
                         </VStack>
                     </form>
 
-                    <Text fontSize="xs" color="gray.500" mt={4}>
+                    <Text fontSize="xs" color="gray.600" mt={4}>
                         email fontaine@sfsu.edu for access.
                     </Text>
                 </Box>
