@@ -1,10 +1,19 @@
 /**
- * Working-group identity — single source of truth for the brand accent trio that
- * marks the three ATI working groups (design-sense §2 & §8.4).
+ * Working-group identity — THE single source of truth for the ATI working-group set and
+ * every per-group identity value (design-sense §2 & §8.4). All FE consumers derive from
+ * this module; no other file should hardcode the group set, names, codes, dataKeys,
+ * colors, or ordering.
  *
- * Web = teal.500 (brand blue) · Instructional Materials = purple.500 ·
- * Procurement = coral.500. Rendered as a small dot + an accent underline/border
- * wherever a working group is named.
+ * Six groups: Web (teal.500 / #4966A4) · Instructional Materials (purple.500 / #635098) ·
+ * Procurement (coral.500 / #DB5850) · Communication & Training (blue.500) · Governance
+ * (green.500) — the last two are 2026-2027 evidence groups, dashboard:false until they
+ * activate — plus Steering (oversight; campus-plan only, hex #354A7A). Rendered as a small
+ * dot + an accent underline/border wherever a working group is named.
+ *
+ * Per-group fields: slug, code, name, dataKey, dashboard, accent/accentDark/accentTint
+ * (Chakra tokens), hex (raw — for inline SVG/print/email; authored, NOT derived from the
+ * token — see Steering), colorScheme, trendKey (reportMetrics), campusPlanOrder (present
+ * only for groups that get a WorkingGroupPlan; Steering=0/first).
  *
  * This consolidates the map that previously lived (duplicated) in
  * SubNavbar.js and GoalNavigator.js's WORKING_GROUPS. Resolve by URL slug
@@ -43,7 +52,10 @@ export const WORKING_GROUP_IDENTITY = {
         accent: 'teal.500',     // brand blue
         accentDark: 'teal.700',
         accentTint: 'teal.50',
+        hex: '#4966A4',         // raw hex (= resolved teal.500) for inline SVG/print/email consumers
         colorScheme: 'teal',
+        trendKey: 'Web',        // key year-over-year trends are read by (reportMetrics)
+        campusPlanOrder: 1,     // Steering-first card order on the campus plan (Steering=0)
     },
     'instructional-materials': {
         slug: 'instructional-materials',
@@ -54,7 +66,10 @@ export const WORKING_GROUP_IDENTITY = {
         accent: 'purple.500',
         accentDark: 'purple.700',
         accentTint: 'purple.50',
+        hex: '#635098',         // = resolved purple.500
         colorScheme: 'purple',
+        trendKey: 'Instructional Materials',
+        campusPlanOrder: 2,
     },
     procurement: {
         slug: 'procurement',
@@ -65,7 +80,10 @@ export const WORKING_GROUP_IDENTITY = {
         accent: 'coral.500',
         accentDark: 'coral.700',
         accentTint: 'coral.50',
+        hex: '#DB5850',         // = resolved coral.500
         colorScheme: 'coral',
+        trendKey: 'Procurement',
+        campusPlanOrder: 3,
     },
     'communication-training': {
         slug: 'communication-training',
@@ -79,7 +97,11 @@ export const WORKING_GROUP_IDENTITY = {
         accent: 'blue.500',
         accentDark: 'blue.700',
         accentTint: 'blue.50',
+        hex: '#3182CE',         // = resolved blue.500 (standard Chakra); not yet rendered anywhere
         colorScheme: 'blue',
+        trendKey: 'Communication & Training',
+        // no campusPlanOrder — com/gov are not in working_group_abbrevs, so they get no
+        // per-campus WorkingGroupPlan and never appear on the campus plan.
     },
     governance: {
         slug: 'governance',
@@ -91,7 +113,9 @@ export const WORKING_GROUP_IDENTITY = {
         accent: 'green.500',
         accentDark: 'green.700',
         accentTint: 'green.50',
+        hex: '#38A169',         // = resolved green.500 (standard Chakra)
         colorScheme: 'green',
+        trendKey: 'Governance, Planning & Policies',
     },
     steering: {
         slug: 'steering',
@@ -102,7 +126,13 @@ export const WORKING_GROUP_IDENTITY = {
         accent: 'orange.500',
         accentDark: 'orange.700',
         accentTint: 'orange.50',
+        // hex is INTENTIONALLY not the resolve of accent (orange.500): the campus plan renders
+        // Steering in dark brand blue (#354A7A = teal.700), so hex is authored independently.
+        // The orange accent token is dormant (dashboard:false → excluded from every rendered
+        // dashboard surface; the campus plan uses hex, not the token).
+        hex: '#354A7A',
         colorScheme: 'orange',
+        campusPlanOrder: 0,     // Steering leads the campus-plan card order
     },
 };
 
@@ -147,12 +177,41 @@ export function getWorkingGroupIdentity(key) {
     if (bySlug) return bySlug;
     const slug = NAME_TO_SLUG[raw.toLowerCase()];
     if (slug) return WORKING_GROUP_IDENTITY[slug];
-    return { slug: null, name: raw, accent: 'gray.400', accentDark: 'gray.700', accentTint: 'gray.50', colorScheme: 'gray' };
+    return { slug: null, name: raw, accent: 'gray.400', accentDark: 'gray.700', accentTint: 'gray.50', hex: '#718096', colorScheme: 'gray' };
 }
 
-const NEUTRAL_IDENTITY = { slug: null, name: '', accent: 'gray.400', accentDark: 'gray.700', accentTint: 'gray.50', colorScheme: 'gray' };
+const NEUTRAL_IDENTITY = { slug: null, name: '', accent: 'gray.400', accentDark: 'gray.700', accentTint: 'gray.50', hex: '#718096', colorScheme: 'gray' };
 
 /** Just the accent token for a working group (convenience for dots/borders). */
 export function getWorkingGroupAccent(key) {
     return getWorkingGroupIdentity(key).accent;
+}
+
+/** Raw hex color for a working group (for inline SVG / print / email — where a Chakra
+ *  token can't be resolved). Neutral gray (#718096) for unknown keys. */
+export function getWgHex(key) {
+    return getWorkingGroupIdentity(key).hex;
+}
+
+// Campus-plan card order — the groups that get a per-campus WorkingGroupPlan (those with a
+// campusPlanOrder), sorted Steering-first. This is authored order, NOT ALL_ORDER (which is
+// Steering-last), so deriving campusPlanConfig.WG_ORDER from this preserves current behavior.
+// Yields: [Steering, Web, Instructional Materials, Procurement].
+export const CAMPUS_PLAN_ORDER = ALL_WORKING_GROUPS
+    .filter((w) => w.campusPlanOrder != null)
+    .sort((a, b) => a.campusPlanOrder - b.campusPlanOrder);
+
+// reportMetrics WG_DEFS shape: { key: <dataKey>, name, trendKey, accent } for each dashboard
+// group. Consolidates the literal array previously hardcoded in reportMetrics.js.
+export const WG_DEFS = WORKING_GROUP_LIST.map((w) => ({
+    key: w.dataKey,
+    name: w.name,
+    trendKey: w.trendKey ?? w.name,
+    accent: w.accent,
+}));
+
+/** Fresh DataContext state slice for the dashboard working groups: { [dataKey]: null }.
+ *  Callers merge in non-WG keys (indicators, implementations, ...). */
+export function makeInitialWgState() {
+    return Object.fromEntries(WORKING_GROUP_LIST.map((w) => [w.dataKey, null]));
 }
