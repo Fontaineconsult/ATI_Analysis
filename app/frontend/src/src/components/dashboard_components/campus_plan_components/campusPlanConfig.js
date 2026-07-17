@@ -6,6 +6,7 @@
  * styles/planStatusColors.js (getPlanStatusColorScheme); this file only owns the
  * trajectory vocabulary and the plan-status *ordering* used by the badge rows.
  */
+import { CAMPUS_PLAN_ORDER } from '../../../styles/workingGroupIdentity';
 
 // Indicator trajectory vocabulary. Keys mirror data_config.trajectory_choices.
 // Trajectory is a semantic (status-like) signal, so saturated colors are
@@ -38,18 +39,14 @@ export const PLAN_STATUS_ORDER = ['In Progress', 'Not Started', 'On Hold', 'Comp
 // "stale" in the stat strip / row age cell (design handoff v2 §2).
 export const STALE_DAYS = 30;
 
-// Working-group card order + identity accent colors (design handoff v2 §5).
-// Keyed by ATIWorkingGroup.name. Steering leads as the oversight body; it is a
-// real 4th working group present in the graph (see the campus-plan payload's
-// working_group_plans). Keep these in sync with the SubNavbar dots / GoalNavigator.
-export const WG_ORDER = ['Steering', 'Web', 'Instructional Materials', 'Procurement'];
+// Working-group card order + identity accent colors (design handoff v2 §5), derived from the
+// WG single-source-of-truth. CAMPUS_PLAN_ORDER is the Steering-first set of groups that get a
+// per-campus WorkingGroupPlan. WG_ORDER keeps ATIWorkingGroup.name order; WG_ACCENT maps each
+// name to its raw hex accent (Steering = dark brand blue, authored in the SSOT). Steering
+// leads as the oversight body.
+export const WG_ORDER = CAMPUS_PLAN_ORDER.map((w) => w.name);
 
-export const WG_ACCENT = {
-    Steering: '#354A7A',
-    Web: '#4966A4',
-    'Instructional Materials': '#635098',
-    Procurement: '#DB5850',
-};
+export const WG_ACCENT = Object.fromEntries(CAMPUS_PLAN_ORDER.map((w) => [w.name, w.hex]));
 
 export function getWgAccent(workingGroupName) {
     return WG_ACCENT[workingGroupName] || '#718096'; // neutral gray fallback
