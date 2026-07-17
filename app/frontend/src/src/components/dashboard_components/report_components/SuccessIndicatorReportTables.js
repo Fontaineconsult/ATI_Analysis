@@ -26,6 +26,7 @@ import { getStatusColor, getStatusBackgroundColor, getStatusTextColor } from '..
 import { getIndicatorSummary } from '../../graph_components/indicators/indicatorHelpers';
 import ViewReportButton from '../../functional_components/ViewReportButton';
 import { findTrendForIndicator } from './reportMetrics';
+import { CODE_TO_SLUG, WORKING_GROUP_LIST, getWorkingGroupIdentity } from '../../../styles/workingGroupIdentity';
 
 /*
  * The "ATI Success Indicators Report" tables — the per-working-group goal tables that make
@@ -145,12 +146,7 @@ const SuccessIndicatorReportTables = ({ data, campus, navigate, openApprovalModa
 
             const [numbers, suffix] = compositeKey.split('-');
             const [gNum, iNum] = numbers.split('.');
-            const workingGroupMap = {
-                'web': 'web',
-                'pro': 'procurement',
-                'ins': 'instructional-materials',
-            };
-            const workingGroupSegment = workingGroupMap[suffix] || suffix;
+            const workingGroupSegment = CODE_TO_SLUG[suffix] || suffix;
             const viewUrl = `${baseUrl}/ati/dashboard/reports/${workingGroupSegment}/${gNum}/${iNum}`;
             const directLinkUrl = `${baseUrl}/ati/dashboard/reports#${compositeKey}`;
 
@@ -370,9 +366,7 @@ const SuccessIndicatorReportTables = ({ data, campus, navigate, openApprovalModa
                                                             isDisabled={isButtonDisabled}
                                                             onClick={() => {
                                                                 if (!isButtonDisabled) {
-                                                                    const workingGroupKey = workingGroupName === "Web" ? "web" :
-                                                                        workingGroupName === "Procurement" ? "procurement" :
-                                                                            "instructional-materials";
+                                                                    const workingGroupKey = getWorkingGroupIdentity(workingGroupName).slug;
                                                                     const goalNum = goal.goal?.properties?.goal_number;
                                                                     const indicatorNum = indicatorNumber;
 
@@ -400,12 +394,10 @@ const SuccessIndicatorReportTables = ({ data, campus, navigate, openApprovalModa
     // All goals for one working group.
     const renderWorkingGroup = (workingGroupData, workingGroupName) => {
         const getAnchorId = (name) => {
-            const idMap = {
-                'Web': 'web-section',
-                'Procurement': 'procurement-section',
-                'Instructional Materials': 'instructional-materials-section',
-            };
-            return idMap[name] || name.toLowerCase().replace(/\s+/g, '-') + '-section';
+            // slug-based section anchor, from the SSOT; the fallback slugifies an unknown name
+            // to exactly the same shape the old idMap produced.
+            const slug = getWorkingGroupIdentity(name).slug || name.toLowerCase().replace(/\s+/g, '-');
+            return `${slug}-section`;
         };
 
         if (!workingGroupData?.goals || workingGroupData.goals.length === 0) {
@@ -437,13 +429,14 @@ const SuccessIndicatorReportTables = ({ data, campus, navigate, openApprovalModa
 
     return (
         <Box>
-            {data.web && renderWorkingGroup(data.web, 'Web')}
-            {data.web && data.procurement && <Divider my={6} borderColor="gray.200" />}
-
-            {data.procurement && renderWorkingGroup(data.procurement, 'Procurement')}
-            {data.procurement && data.instructionalMaterials && <Divider my={6} borderColor="gray.200" />}
-
-            {data.instructionalMaterials && renderWorkingGroup(data.instructionalMaterials, 'Instructional Materials')}
+            {/* One section per dashboard working group (in canonical SSOT order), with a
+                divider between consecutive present groups — same divider behavior as before. */}
+            {WORKING_GROUP_LIST.filter((w) => data[w.dataKey]).map((w, i) => (
+                <React.Fragment key={w.dataKey}>
+                    {i > 0 && <Divider my={6} borderColor="gray.200" />}
+                    {renderWorkingGroup(data[w.dataKey], w.name)}
+                </React.Fragment>
+            ))}
         </Box>
     );
 };
