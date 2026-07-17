@@ -3,15 +3,11 @@ import {fetchPrimaryData, fetchCurrentYearIndicator, fetchTrends, fetchAllImplem
 import { useToast } from '@chakra-ui/react';
 import {year_difference} from "../services/utils/tools";
 import { useSettings } from './SettingsContext';
+import { WORKING_GROUP_LIST, SLUG_TO_DATAKEY, makeInitialWgState } from '../styles/workingGroupIdentity';
 
-const transformWorkingGroup = (workingGroup) => {
-    const mapping = {
-        'instructional-materials': 'instructionalMaterials',
-        'web': 'web',
-        'procurement': 'procurement'
-    };
-    return mapping[workingGroup] || workingGroup;
-};
+// Slug -> DataContext state key, derived from the WG single-source-of-truth. Keeps the
+// passthrough fallback so an unknown slug maps to itself, exactly as before.
+const transformWorkingGroup = (workingGroup) => SLUG_TO_DATAKEY[workingGroup] || workingGroup;
 
 // Create a context
 export const DataContext = createContext();
@@ -21,9 +17,7 @@ export const DataProvider = ({ children }) => {
     const { currentCampus } = useSettings();
 
     const [data, setData] = useState({
-        web: null,
-        instructionalMaterials: null,
-        procurement: null,
+        ...makeInitialWgState(),   // { web: null, instructionalMaterials: null, procurement: null }
         indicators: null,
         implementations: {}
     });
@@ -118,19 +112,20 @@ export const DataProvider = ({ children }) => {
     const loadData = async () => {
         try {
             setLoading(true);
-            const [webData, instructionalMaterialsData, procurementData, indicatorsData, yoyTrends, implementationsData] = await Promise.all([
-                fetchPrimaryData("web", selectedYear, currentCampus),
-                fetchPrimaryData("instructional-materials", selectedYear, currentCampus),
-                fetchPrimaryData("procurement", selectedYear, currentCampus),
+            // WG fetches are derived from the SSOT (one per dashboard group, in list order);
+            // the three non-WG fetches follow. All in one Promise.all to preserve concurrency.
+            const results = await Promise.all([
+                ...WORKING_GROUP_LIST.map((w) => fetchPrimaryData(w.slug, selectedYear, currentCampus)),
                 fetchCurrentYearIndicator(selectedYear),
                 fetchTrends(year_difference(selectedYear), selectedYear, currentCampus),
                 fetchAllImplementations()
             ]);
+            const wgResults = results.slice(0, WORKING_GROUP_LIST.length);
+            const [indicatorsData, yoyTrends, implementationsData] = results.slice(WORKING_GROUP_LIST.length);
+            const wgData = Object.fromEntries(WORKING_GROUP_LIST.map((w, i) => [w.dataKey, wgResults[i].data]));
 
             setData({
-                web: webData.data,
-                instructionalMaterials: instructionalMaterialsData.data,
-                procurement: procurementData.data,
+                ...wgData,
                 indicators: indicatorsData.data,
                 yoyTrends: yoyTrends.data,
                 implementations: implementationsData.status?.data || implementationsData.data || {}
@@ -221,18 +216,17 @@ export const DataProvider = ({ children }) => {
     const refreshImplementations = async () => {
         try {
             setUpdating(true);
-            const [webData, instructionalMaterialsData, procurementData, implementationsData] = await Promise.all([
-                fetchPrimaryData("web", selectedYear, currentCampus),
-                fetchPrimaryData("instructional-materials", selectedYear, currentCampus),
-                fetchPrimaryData("procurement", selectedYear, currentCampus),
+            const results = await Promise.all([
+                ...WORKING_GROUP_LIST.map((w) => fetchPrimaryData(w.slug, selectedYear, currentCampus)),
                 fetchAllImplementations()
             ]);
+            const wgResults = results.slice(0, WORKING_GROUP_LIST.length);
+            const implementationsData = results[WORKING_GROUP_LIST.length];
+            const wgData = Object.fromEntries(WORKING_GROUP_LIST.map((w, i) => [w.dataKey, wgResults[i].data]));
 
             setData((prevData) => ({
                 ...prevData,
-                web: webData.data,
-                instructionalMaterials: instructionalMaterialsData.data,
-                procurement: procurementData.data,
+                ...wgData,
                 implementations: implementationsData.status?.data || implementationsData.data || {}
             }));
 
