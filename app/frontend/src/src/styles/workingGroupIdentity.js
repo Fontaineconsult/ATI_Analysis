@@ -67,6 +67,32 @@ export const WORKING_GROUP_IDENTITY = {
         accentTint: 'coral.50',
         colorScheme: 'coral',
     },
+    'communication-training': {
+        slug: 'communication-training',
+        code: 'com',
+        name: 'Communication & Training',
+        dataKey: 'communicationTraining',
+        // New evidence group; its indicators are introduced_in_year=2026-2027. Kept
+        // dashboard:false until 2026-2027 activates so it doesn't show as an empty tab in
+        // the current year — flip to true when rolling to 2026-2027.
+        dashboard: false,
+        accent: 'blue.500',
+        accentDark: 'blue.700',
+        accentTint: 'blue.50',
+        colorScheme: 'blue',
+    },
+    governance: {
+        slug: 'governance',
+        code: 'gov',
+        name: 'Governance, Planning & Policies',
+        dataKey: 'governance',
+        // New evidence group (2026-2027). See note on communication-training above.
+        dashboard: false,
+        accent: 'green.500',
+        accentDark: 'green.700',
+        accentTint: 'green.50',
+        colorScheme: 'green',
+    },
     steering: {
         slug: 'steering',
         code: 'ste',
@@ -82,7 +108,7 @@ export const WORKING_GROUP_IDENTITY = {
 
 // Full ordered set (includes non-dashboard groups like Steering) — for identity lookups
 // and the data-driven Campus Plan, which renders every group that has a WorkingGroupPlan.
-const ALL_ORDER = ['web', 'instructional-materials', 'procurement', 'steering'];
+const ALL_ORDER = ['web', 'instructional-materials', 'procurement', 'communication-training', 'governance', 'steering'];
 export const ALL_WORKING_GROUPS = ALL_ORDER.map((slug) => WORKING_GROUP_IDENTITY[slug]);
 
 // Dashboard-visible working groups (the ATI measurement areas). EVERY dashboard surface

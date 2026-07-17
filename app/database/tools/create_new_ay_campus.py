@@ -124,7 +124,13 @@ def create_stub_yse_for_missing_campuses(new_year):
     year_node = AcademicYear.nodes.get(name=new_year)
 
     indicators = SuccessIndicator.nodes.all()
-    active_indicators = [i for i in indicators if not i.removed]
+    # Year-gate: an SI introduced in a later year must not be stubbed into an earlier year.
+    # introduced_in_year is null for legacy SIs ("always existed"); the "YYYY-YYYY" format
+    # compares lexicographically = chronologically.
+    active_indicators = [
+        i for i in indicators
+        if not i.removed and (not i.introduced_in_year or i.introduced_in_year <= new_year)
+    ]
 
     created = 0
     for abbrev in ALL_CAMPUSES:

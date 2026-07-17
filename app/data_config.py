@@ -17,20 +17,50 @@ working_group_names = {
     'web': 'Web',
     'ins': 'Instructional Materials',
     'ste': 'Steering',
+    'com': 'Communication & Training',
+    'gov': 'Governance, Planning & Policies',
     'Procurement': 'Procurement',
     'Web': 'Web',
     'Instructional Materials': 'Instructional Materials',
     'Steering': 'Steering',
+    'Communication & Training': 'Communication & Training',
+    'Governance, Planning & Policies': 'Governance, Planning & Policies',
 }
 
 compsite_key_wg_names = {
     'pro': 'pro',
     'web': 'web',
     'ins': 'ins',
+    'com': 'com',
+    'gov': 'gov',
     'Procurement': 'pro',
     'Web': 'web',
-    'Instructional Materials': 'ins'
+    'Instructional Materials': 'ins',
+    'Communication & Training': 'com',
+    'Governance, Planning & Policies': 'gov',
 }
+
+# Canonical registry of ATI working groups — single source of truth for the SET of groups.
+# seed_working_groups.py MERGEs one ATIWorkingGroup per entry (idempotent, keyed on `name`).
+#   has_indicators: carries Goals/SuccessIndicators and appears in the evidence/report vocab
+#     `working_groups`. Steering is coordination-only (False).
+# `com`/`gov` are the new (2026-2027) evidence groups. NOTE they are intentionally NOT in
+# `working_group_abbrevs` below: that tuple drives per-campus WorkingGroupPlan creation
+# (campus-plan scaffolding), a separate concern from authoring their indicators. Add them
+# there (and in queries/committees/create.py) when campus plans should carry com/gov.
+WORKING_GROUP_DEFS = [
+    {"abbrev": "web", "name": "Web",                             "url_slug": "web",                     "has_indicators": True},
+    {"abbrev": "pro", "name": "Procurement",                     "url_slug": "procurement",             "has_indicators": True},
+    {"abbrev": "ins", "name": "Instructional Materials",         "url_slug": "instructional-materials", "has_indicators": True},
+    {"abbrev": "com", "name": "Communication & Training",        "url_slug": "communication-training",  "has_indicators": True},
+    {"abbrev": "gov", "name": "Governance, Planning & Policies", "url_slug": "governance",              "has_indicators": True},
+    {"abbrev": "ste", "name": "Steering",                        "url_slug": "steering",                "has_indicators": False},
+]
+
+# Abbreviations that participate in per-campus WorkingGroupPlan creation (create_campus_plan,
+# the AY rollover, seed_working_groups --backfill-plans). Mirrors WORKING_GROUP_ABBREVS in
+# queries/committees/create.py. com/gov are deliberately excluded for now (see note above).
+working_group_abbrevs = ("web", "pro", "ins", "ste")
 
 academic_years = [
     "2019-2020",
@@ -108,9 +138,11 @@ working_group_names_web_query = {
     "web": "Web",
     "instructional-materials": "Instructional Materials",
     "procurement": "Procurement",
+    "communication-training": "Communication & Training",
+    "governance": "Governance, Planning & Policies",
 }
 
-working_groups = ["Web", "Procurement", "Instructional Materials"]
+working_groups = ["Web", "Procurement", "Instructional Materials", "Communication & Training", "Governance, Planning & Policies"]
 
 plan_statuses = [
     "Not Started",

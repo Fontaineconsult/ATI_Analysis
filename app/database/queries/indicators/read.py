@@ -17,9 +17,13 @@ def fetch_success_indicators_for_working_group(academic_year):
         // Match working groups and their goals
         MATCH (wg:ATIWorkingGroup)-[:responsible_for]->(goal:Goal)
         
-        // Match success indicators supported by each goal
+        // Match success indicators supported by each goal.
+        // Year-gate: hide SIs introduced after the viewed year (a null introduced_in_year is
+        // a legacy "always existed" SI; the "YYYY-YYYY" format compares chronologically).
         OPTIONAL MATCH (goal)-[:supported_by]->(indicator:SuccessIndicator)
-        
+            WHERE indicator.introduced_in_year IS NULL
+               OR indicator.introduced_in_year <= $academic_year
+
         // Match year-specific evidence for each indicator in the given academic year
         OPTIONAL MATCH (indicator)<-[:tracks]-(evidence:YearSuccessEvidence)
                                  -[:evidence_in_year]->(:AcademicYear {name: $academic_year})

@@ -22,7 +22,8 @@ def create_success_indicator(number,
                              examples_of_evidence=None,
                              established_example=None,
                              managed_example=None,
-                             optimizing_example=None):
+                             optimizing_example=None,
+                             introduced_in_year=None):
     if date_added is None:
         date_added = dt.now().strftime('%Y-%m-%d')
     elif isinstance(date_added, str):
@@ -70,7 +71,8 @@ def create_success_indicator(number,
             examples_of_evidence=examples_of_evidence or [],
             established_example=established_example,
             managed_example=managed_example,
-            optimizing_example=optimizing_example
+            optimizing_example=optimizing_example,
+            introduced_in_year=introduced_in_year
         )
         indicator.save()
         goal_node.supporting_success_indicators.connect(indicator)
