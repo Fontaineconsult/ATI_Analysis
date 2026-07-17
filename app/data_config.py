@@ -7,60 +7,50 @@ imports from here). Class registries that map strings to neomodel classes live
 in app/database/class_factory.py.
 """
 
-# Abbrev/name → canonical ATIWorkingGroup.name lookup. `ste`/Steering is the
-# coordination/oversight group: it IS a real working group for plan creation
-# (create_campus_plan builds a Steering WorkingGroupPlan), but it is deliberately
-# absent from the `working_groups` list below, which drives evidence/report/export
-# code where Steering has no indicators and should not appear.
-working_group_names = {
-    'pro': 'Procurement',
-    'web': 'Web',
-    'ins': 'Instructional Materials',
-    'ste': 'Steering',
-    'com': 'Communication & Training',
-    'gov': 'Governance, Planning & Policies',
-    'Procurement': 'Procurement',
-    'Web': 'Web',
-    'Instructional Materials': 'Instructional Materials',
-    'Steering': 'Steering',
-    'Communication & Training': 'Communication & Training',
-    'Governance, Planning & Policies': 'Governance, Planning & Policies',
-}
-
-compsite_key_wg_names = {
-    'pro': 'pro',
-    'web': 'web',
-    'ins': 'ins',
-    'com': 'com',
-    'gov': 'gov',
-    'Procurement': 'pro',
-    'Web': 'web',
-    'Instructional Materials': 'ins',
-    'Communication & Training': 'com',
-    'Governance, Planning & Policies': 'gov',
-}
-
-# Canonical registry of ATI working groups — single source of truth for the SET of groups.
-# seed_working_groups.py MERGEs one ATIWorkingGroup per entry (idempotent, keyed on `name`).
-#   has_indicators: carries Goals/SuccessIndicators and appears in the evidence/report vocab
-#     `working_groups`. Steering is coordination-only (False).
-# `com`/`gov` are the new (2026-2027) evidence groups. NOTE they are intentionally NOT in
-# `working_group_abbrevs` below: that tuple drives per-campus WorkingGroupPlan creation
-# (campus-plan scaffolding), a separate concern from authoring their indicators. Add them
-# there (and in queries/committees/create.py) when campus plans should carry com/gov.
+# =============================================================================
+# Working groups — THE single source of truth for the SET of ATI working groups.
+# Everything below (the lookup maps, the evidence/report vocabulary, the campus-plan
+# abbrev set, and the evidence-query gate) DERIVES from this list. Add a group here
+# and it propagates; do not hand-edit the derived maps. seed_working_groups.py MERGEs
+# one ATIWorkingGroup per entry (idempotent, keyed on `name`).
+#   has_indicators — carries Goals/SuccessIndicators; appears in the evidence/report vocab
+#     `working_groups` and in the evidence-query gate. Steering is coordination-only (False).
+#   campus_plan    — gets a per-campus WorkingGroupPlan (create_campus_plan / AY rollover /
+#     seed_working_groups --backfill-plans). com/gov are evidence groups that do not (yet)
+#     carry campus plans (False); Steering does (True) though it has no indicators.
+# Order matters: the ordered derivations (`working_groups`, `working_group_abbrevs`)
+# preserve registry order.
+# =============================================================================
 WORKING_GROUP_DEFS = [
-    {"abbrev": "web", "name": "Web",                             "url_slug": "web",                     "has_indicators": True},
-    {"abbrev": "pro", "name": "Procurement",                     "url_slug": "procurement",             "has_indicators": True},
-    {"abbrev": "ins", "name": "Instructional Materials",         "url_slug": "instructional-materials", "has_indicators": True},
-    {"abbrev": "com", "name": "Communication & Training",        "url_slug": "communication-training",  "has_indicators": True},
-    {"abbrev": "gov", "name": "Governance, Planning & Policies", "url_slug": "governance",              "has_indicators": True},
-    {"abbrev": "ste", "name": "Steering",                        "url_slug": "steering",                "has_indicators": False},
+    {"abbrev": "web", "name": "Web",                             "url_slug": "web",                     "has_indicators": True,  "campus_plan": True},
+    {"abbrev": "pro", "name": "Procurement",                     "url_slug": "procurement",             "has_indicators": True,  "campus_plan": True},
+    {"abbrev": "ins", "name": "Instructional Materials",         "url_slug": "instructional-materials", "has_indicators": True,  "campus_plan": True},
+    {"abbrev": "com", "name": "Communication & Training",        "url_slug": "communication-training",  "has_indicators": True,  "campus_plan": False},
+    {"abbrev": "gov", "name": "Governance, Planning & Policies", "url_slug": "governance",              "has_indicators": True,  "campus_plan": False},
+    {"abbrev": "ste", "name": "Steering",                        "url_slug": "steering",                "has_indicators": False, "campus_plan": True},
 ]
+
+# Indicator-carrying groups (evidence/report surfaces). Helper for the derivations below.
+_INDICATOR_DEFS = [d for d in WORKING_GROUP_DEFS if d["has_indicators"]]
+
+# Abbrev/name -> canonical ATIWorkingGroup.name (ALL groups; both key forms accepted).
+# Derived from WORKING_GROUP_DEFS.
+working_group_names = {
+    **{d["abbrev"]: d["name"] for d in WORKING_GROUP_DEFS},
+    **{d["name"]: d["name"] for d in WORKING_GROUP_DEFS},
+}
+
+# Abbrev/name -> 3-letter code, for building SuccessIndicator.composite_key. Only groups
+# that carry indicators (Steering has none). Derived.
+compsite_key_wg_names = {
+    **{d["abbrev"]: d["abbrev"] for d in _INDICATOR_DEFS},
+    **{d["name"]: d["abbrev"] for d in _INDICATOR_DEFS},
+}
 
 # Abbreviations that participate in per-campus WorkingGroupPlan creation (create_campus_plan,
 # the AY rollover, seed_working_groups --backfill-plans). Mirrors WORKING_GROUP_ABBREVS in
-# queries/committees/create.py. com/gov are deliberately excluded for now (see note above).
-working_group_abbrevs = ("web", "pro", "ins", "ste")
+# queries/committees/create.py. Derived from the `campus_plan` flag.
+working_group_abbrevs = tuple(d["abbrev"] for d in WORKING_GROUP_DEFS if d["campus_plan"])
 
 academic_years = [
     "2019-2020",
@@ -134,15 +124,15 @@ metric_types = [
     "descriptive",
 ]
 
-working_group_names_web_query = {
-    "web": "Web",
-    "instructional-materials": "Instructional Materials",
-    "procurement": "Procurement",
-    "communication-training": "Communication & Training",
-    "governance": "Governance, Planning & Policies",
-}
+# URL-slug -> canonical name, for the evidence query endpoint (GET /evidence/<slug>/<ay>).
+# The endpoint gate: a slug is queryable iff it's a key here. Only indicator-carrying groups
+# (Steering has no evidence). Derived — registering a has_indicators group makes its slug
+# queryable with no endpoint change.
+working_group_names_web_query = {d["url_slug"]: d["name"] for d in _INDICATOR_DEFS}
 
-working_groups = ["Web", "Procurement", "Instructional Materials", "Communication & Training", "Governance, Planning & Policies"]
+# Flat list of indicator-carrying working-group names, in registry order — the evidence/
+# report/export vocabulary iterated across the app. Derived.
+working_groups = [d["name"] for d in _INDICATOR_DEFS]
 
 plan_statuses = [
     "Not Started",
