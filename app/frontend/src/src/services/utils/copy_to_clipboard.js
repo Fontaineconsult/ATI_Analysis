@@ -1,3 +1,5 @@
+import { CODE_TO_SLUG } from '../../styles/workingGroupIdentity';
+
 // Function to generate HTML for copying goal group to clipboard
 const generateGoalHTML = (goal, workingGroupName) => {
     const baseUrl = window.location.origin;
@@ -36,12 +38,7 @@ const generateGoalHTML = (goal, workingGroupName) => {
         // Generate View URL
         const [numbers, suffix] = compositeKey.split('-');
         const [gNum, iNum] = numbers.split('.');
-        const workingGroupMap = {
-            'web': 'web',
-            'pro': 'procurement',
-            'ins': 'instructional-materials'
-        };
-        const workingGroupSegment = workingGroupMap[suffix] || suffix;
+        const workingGroupSegment = CODE_TO_SLUG[suffix] || suffix;
         const viewUrl = `${baseUrl}/dashboard/reports/${workingGroupSegment}/${gNum}/${iNum}`;
 
         // Generate Direct Link (with hash)
@@ -157,8 +154,7 @@ const copyGoalToClipboard = async (goal, workingGroupName) => {
             const baseUrl = window.location.origin;
             const [numbers, suffix] = compositeKey.split('-');
             const [gNum, iNum] = numbers.split('.');
-            const workingGroupMap = {'web': 'web', 'pro': 'procurement', 'ins': 'instructional-materials'};
-            const workingGroupSegment = workingGroupMap[suffix] || suffix;
+            const workingGroupSegment = CODE_TO_SLUG[suffix] || suffix;
             const viewUrl = `${baseUrl}/dashboard/reports/${workingGroupSegment}/${gNum}/${iNum}`;
             const directLinkUrl = `${baseUrl}/dashboard/reports#${compositeKey}`;
             return `${goal.goal?.properties?.goal_number}.${indicatorNumber} - ${description}\nView: ${viewUrl}\nDirect Link: ${directLinkUrl}`;
