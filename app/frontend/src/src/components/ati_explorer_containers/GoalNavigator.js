@@ -3,23 +3,17 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Box, Heading, Divider, Button, HStack } from '@chakra-ui/react';
 import Goal from '../graph_components/indicators/Goal';
 import { HelpTip } from '../functional_components/DescriptorHelp';
-
-// URL slug -> display name + the key of `data` that holds this group's goals. The three
-// working groups render the SAME goal display, so one config replaces the old per-group
-// WebData / InstructionalMaterialsData / ProcurementData wrappers and the switch statements.
-// `accent` is each group's identity mark from the brand trio (blue/purple/coral) —
-// keep in sync with the SubNavbar working-group dots (design-sense §2).
-const WORKING_GROUPS = {
-    'web': { name: 'Web', dataKey: 'web', accent: 'teal.500' },
-    'instructional-materials': { name: 'Instructional Materials', dataKey: 'instructionalMaterials', accent: 'purple.500' },
-    'procurement': { name: 'Procurement', dataKey: 'procurement', accent: 'coral.500' },
-};
+import { getWorkingGroupIdentity } from '../../styles/workingGroupIdentity';
 
 function GoalNavigator({ data }) {
     const { workingGroup, goalId, indicatorNumber, campus } = useParams();
     const navigate = useNavigate();
 
-    const config = WORKING_GROUPS[workingGroup];
+    // Resolve the group's identity (name/dataKey/accent) from the WG single-source-of-truth.
+    // Only dashboard-visible groups render a goal view here (the old local map held exactly
+    // those three); anything else falls through to the "select a valid working group" notice.
+    const identity = getWorkingGroupIdentity(workingGroup);
+    const config = identity.dashboard ? identity : null;
     const allGoals = (config && data?.[config.dataKey]?.goals) || [];
 
     // If a goalId is in the URL, show only that goal; otherwise show all.
