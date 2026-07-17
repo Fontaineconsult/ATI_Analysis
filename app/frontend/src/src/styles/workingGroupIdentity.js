@@ -47,6 +47,7 @@ export const WORKING_GROUP_IDENTITY = {
         slug: 'web',
         code: 'web',
         name: 'Web',
+        shortLabel: 'Web',     // compact label for dense tables (member-admin columns)
         dataKey: 'web',
         dashboard: true,
         accent: 'teal.500',     // brand blue
@@ -61,6 +62,7 @@ export const WORKING_GROUP_IDENTITY = {
         slug: 'instructional-materials',
         code: 'ins',
         name: 'Instructional Materials',
+        shortLabel: 'Ins',
         dataKey: 'instructionalMaterials',
         dashboard: true,
         accent: 'purple.500',
@@ -75,6 +77,7 @@ export const WORKING_GROUP_IDENTITY = {
         slug: 'procurement',
         code: 'pro',
         name: 'Procurement',
+        shortLabel: 'Pro',
         dataKey: 'procurement',
         dashboard: true,
         accent: 'coral.500',
@@ -89,6 +92,7 @@ export const WORKING_GROUP_IDENTITY = {
         slug: 'communication-training',
         code: 'com',
         name: 'Communication & Training',
+        shortLabel: 'Comm',
         dataKey: 'communicationTraining',
         // New evidence group; its indicators are introduced_in_year=2026-2027. Kept
         // dashboard:false until 2026-2027 activates so it doesn't show as an empty tab in
@@ -107,6 +111,7 @@ export const WORKING_GROUP_IDENTITY = {
         slug: 'governance',
         code: 'gov',
         name: 'Governance, Planning & Policies',
+        shortLabel: 'Gov',
         dataKey: 'governance',
         // New evidence group (2026-2027). See note on communication-training above.
         dashboard: false,
@@ -121,6 +126,7 @@ export const WORKING_GROUP_IDENTITY = {
         slug: 'steering',
         code: 'ste',
         name: 'Steering',
+        shortLabel: 'Steering',
         dataKey: 'steering',
         dashboard: false,       // meta/oversight group — Campus Plan only, not the dashboard
         accent: 'orange.500',

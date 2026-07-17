@@ -23,14 +23,13 @@ import {
 } from '@chakra-ui/react';
 import { DataContext } from '../../../context/DataContext';
 import { StatusLevelContext } from '../../../context/StatusLevelContext'; // Import StatusLevelContext
+import { WORKING_GROUP_LIST, getWorkingGroupIdentity } from '../../../styles/workingGroupIdentity';
 
 const calculateStatistics = (data) => {
     const stats = {
-        workingGroups: {
-            web: { goals: 0, indicators: 0 },
-            instructionalMaterials: { goals: 0, indicators: 0 },
-            procurement: { goals: 0, indicators: 0 }
-        },
+        workingGroups: Object.fromEntries(
+            WORKING_GROUP_LIST.map((w) => [w.dataKey, { goals: 0, indicators: 0 }])
+        ),
         statusLevels: {
             'Not Started': 0,
             Initiated: 0,
@@ -79,15 +78,11 @@ const calculateStatistics = (data) => {
     };
 
     // Process each working group
-    if (data.web) {
-        stats.workingGroups.web = processWorkingGroup(data.web);
-    }
-    if (data.instructionalMaterials) {
-        stats.workingGroups.instructionalMaterials = processWorkingGroup(data.instructionalMaterials);
-    }
-    if (data.procurement) {
-        stats.workingGroups.procurement = processWorkingGroup(data.procurement);
-    }
+    WORKING_GROUP_LIST.forEach((w) => {
+        if (data[w.dataKey]) {
+            stats.workingGroups[w.dataKey] = processWorkingGroup(data[w.dataKey]);
+        }
+    });
 
     return stats;
 };
@@ -550,21 +545,13 @@ function ATIOverview() {
                                                 </Tr>
                                             </Thead>
                                             <Tbody>
-                                                <Tr>
-                                                    <Td>Web</Td>
-                                                    <Td isNumeric>{stats.workingGroups.web.goals}</Td>
-                                                    <Td isNumeric>{stats.workingGroups.web.indicators}</Td>
-                                                </Tr>
-                                                <Tr>
-                                                    <Td>Instructional Materials</Td>
-                                                    <Td isNumeric>{stats.workingGroups.instructionalMaterials.goals}</Td>
-                                                    <Td isNumeric>{stats.workingGroups.instructionalMaterials.indicators}</Td>
-                                                </Tr>
-                                                <Tr>
-                                                    <Td>Procurement</Td>
-                                                    <Td isNumeric>{stats.workingGroups.procurement.goals}</Td>
-                                                    <Td isNumeric>{stats.workingGroups.procurement.indicators}</Td>
-                                                </Tr>
+                                                {WORKING_GROUP_LIST.map((w) => (
+                                                    <Tr key={w.dataKey}>
+                                                        <Td>{w.name}</Td>
+                                                        <Td isNumeric>{stats.workingGroups[w.dataKey].goals}</Td>
+                                                        <Td isNumeric>{stats.workingGroups[w.dataKey].indicators}</Td>
+                                                    </Tr>
+                                                ))}
                                             </Tbody>
                                         </Table>
                                     </TableContainer>
@@ -682,13 +669,7 @@ function ATIOverview() {
                                                     <Td>{member.ati_role || 'Member'}</Td>
                                                     <Td>
                                                         {member.workingGroups
-                                                            ?.map((group) =>
-                                                                group.name === 'Instructional Materials'
-                                                                    ? 'Ins'
-                                                                    : group.name === 'Procurement'
-                                                                        ? 'Pro'
-                                                                        : 'Web'
-                                                            )
+                                                            ?.map((group) => getWorkingGroupIdentity(group.name).shortLabel || group.name)
                                                             .join(', ')}
                                                     </Td>
                                                 </Tr>

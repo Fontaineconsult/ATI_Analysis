@@ -54,6 +54,12 @@ describe('SSOT — per-group parity fields', () => {
         });
     });
 
+    it('shortLabel matches the current member-admin column headers', () => {
+        expect(WORKING_GROUP_IDENTITY.web.shortLabel).toBe('Web');
+        expect(WORKING_GROUP_IDENTITY['instructional-materials'].shortLabel).toBe('Ins');
+        expect(WORKING_GROUP_IDENTITY.procurement.shortLabel).toBe('Pro');
+    });
+
     it('dashboard groups carry the exact accent token + trendKey used by reportMetrics', () => {
         ['web', 'instructional-materials', 'procurement'].forEach((slug) => {
             expect(WORKING_GROUP_IDENTITY[slug].accent).toBe(PARITY[slug].accent);
