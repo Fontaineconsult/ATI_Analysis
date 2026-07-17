@@ -9,7 +9,12 @@
 const base = require('@playwright/test');
 const AxeBuilder = require('@axe-core/playwright').default;
 
-const AXE_TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'];
+// Deep mode: AXE_EXTRA_TAGS=best-practice npx playwright test …
+// adds axe's best-practice rules (heading-order, landmark uniqueness, region)
+// — the layer where WAVE-style "alerts" live beyond the WCAG A/AA errors.
+const AXE_TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'].concat(
+    process.env.AXE_EXTRA_TAGS ? process.env.AXE_EXTRA_TAGS.split(',') : [],
+);
 
 const test = base.test.extend({
     makeAxeBuilder: async ({ page }, use) => {

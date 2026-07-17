@@ -111,6 +111,7 @@ function ExecutiveSummaryTab() {
                     engine. Each familiar enterprise category captures one facet:
                 </Para>
                 <VocabTable
+                    label="System categories"
                     vocab={CATEGORY_LABELS}
                     notes={CATEGORY_NOTES}
                     keyHeader="Category"

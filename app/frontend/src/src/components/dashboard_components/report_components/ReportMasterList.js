@@ -17,6 +17,7 @@ import {
     ModalBody,
     ModalCloseButton,
     useDisclosure,
+    VisuallyHidden,
 } from '@chakra-ui/react';
 import { DataContext } from '../../../context/DataContext';
 import Card from '../../graph_components/common/Card';
@@ -93,6 +94,13 @@ const ReportMasterList = () => {
                 </Box>
             ) : (
                 <>
+                    {/* Page-level heading for the heading hierarchy (h1 header → h2 here
+                        → h3 metric cards). Hidden — the SubNavbar names the section
+                        visually; the layout starts with the copy row + stat tiles. */}
+                    <VisuallyHidden>
+                        <Heading as="h2">View Reports</Heading>
+                    </VisuallyHidden>
+
                     {/* Copy a compact, email-ready (Outlook-safe) status report — one
                         working group at a time — for the active campus */}
                     <Flex justify="flex-end" align="center" gap={3} mb={3} wrap="wrap">

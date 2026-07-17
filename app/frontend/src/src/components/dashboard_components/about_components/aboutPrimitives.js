@@ -157,7 +157,7 @@ export const TermDef = ({ term, badge, children }) => (
 
 // Renders a vocabulary dict ({key: label}) or array as a two/three-column
 // table. `notes` is an optional {key: explanation} map for a third column.
-export const VocabTable = ({ vocab, keyHeader = 'Stored value', labelHeader = 'Label', notes, notesHeader = 'Meaning' }) => {
+export const VocabTable = ({ vocab, label, keyHeader = 'Stored value', labelHeader = 'Label', notes, notesHeader = 'Meaning' }) => {
     if (!vocab) {
         return (
             <Text fontSize="sm" color="gray.600" fontStyle="italic">
@@ -173,7 +173,7 @@ export const VocabTable = ({ vocab, keyHeader = 'Stored value', labelHeader = 'L
         <TableContainer
             tabIndex={0}
             role="region"
-            aria-label={`${keyHeader} table`}
+            aria-label={label || `${keyHeader} table`}
             _focusVisible={{ outline: '2px solid', outlineColor: 'teal.500' }}
         >
             <Table variant="simple" size="sm">

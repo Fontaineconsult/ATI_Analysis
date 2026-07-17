@@ -89,49 +89,49 @@ function GlossaryTab() {
                 </Para>
                 <SimpleGrid columns={{ base: 1, lg: 2 }} spacing={3} mt={2}>
                     <Section title="Status levels (maturity ladder)">
-                        <VocabTable vocab={vocab?.status_levels} keyHeader="Level (in order)" />
+                        <VocabTable label="Status levels" vocab={vocab?.status_levels} keyHeader="Level (in order)" />
                     </Section>
                     <Section title="Working groups">
-                        <VocabTable vocab={vocab?.working_groups} keyHeader="Group" />
+                        <VocabTable label="Working groups" vocab={vocab?.working_groups} keyHeader="Group" />
                     </Section>
                     <Section title="Trajectory">
-                        <VocabTable vocab={vocab?.trajectory_choices} />
+                        <VocabTable label="Trajectory choices" vocab={vocab?.trajectory_choices} />
                     </Section>
                     <Section title="Plan statuses">
-                        <VocabTable vocab={vocab?.plan_statuses} keyHeader="Status" />
+                        <VocabTable label="Plan statuses" vocab={vocab?.plan_statuses} keyHeader="Status" />
                     </Section>
                     <Section title="Asset classes">
-                        <VocabTable vocab={vocab?.asset_classes} />
+                        <VocabTable label="Asset classes" vocab={vocab?.asset_classes} />
                     </Section>
                     <Section title="Asset scopes">
-                        <VocabTable vocab={vocab?.asset_scopes} />
+                        <VocabTable label="Asset scopes" vocab={vocab?.asset_scopes} />
                     </Section>
                     <Section title="TAAP outcomes">
-                        <VocabTable vocab={vocab?.taap_outcomes} />
+                        <VocabTable label="TAAP outcomes" vocab={vocab?.taap_outcomes} />
                     </Section>
                     <Section title="Interface functions">
-                        <VocabTable vocab={vocab?.functions} />
+                        <VocabTable label="Interface functions" vocab={vocab?.functions} />
                     </Section>
                     <Section title="Audiences">
-                        <VocabTable vocab={vocab?.audiences} />
+                        <VocabTable label="Audiences" vocab={vocab?.audiences} />
                     </Section>
                     <Section title="Coverage domains">
-                        <VocabTable vocab={vocab?.coverage_domains} />
+                        <VocabTable label="Coverage domains" vocab={vocab?.coverage_domains} />
                     </Section>
                     <Section title="Interface provenance">
-                        <VocabTable vocab={vocab?.interface_provenances} />
+                        <VocabTable label="Interface provenances" vocab={vocab?.interface_provenances} />
                     </Section>
                     <Section title="Component kinds">
-                        <VocabTable vocab={vocab?.component_kinds} />
+                        <VocabTable label="Component kinds" vocab={vocab?.component_kinds} />
                     </Section>
                     <Section title="Message types">
-                        <VocabTable vocab={vocab?.message_types} keyHeader="Type" />
+                        <VocabTable label="Message types" vocab={vocab?.message_types} keyHeader="Type" />
                     </Section>
                     <Section title="Metric types">
-                        <VocabTable vocab={vocab?.metric_types} keyHeader="Type" />
+                        <VocabTable label="Metric types" vocab={vocab?.metric_types} keyHeader="Type" />
                     </Section>
                     <Section title="Academic years">
-                        <VocabTable vocab={vocab?.academic_years} keyHeader="Year" />
+                        <VocabTable label="Academic years" vocab={vocab?.academic_years} keyHeader="Year" />
                     </Section>
                 </SimpleGrid>
             </Card>
