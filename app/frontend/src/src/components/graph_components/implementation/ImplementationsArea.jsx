@@ -57,6 +57,9 @@ function ImplementationsArea() {
     // Owned here (not in the list) so the category counts + stat strip below scope to
     // the same campus the list shows. Default off: active campus only.
     const [showAllCampuses, setShowAllCampuses] = useState(false);
+    // Retired implementations are hidden by default; the toggle (in the list bar)
+    // reveals them badged. Owned here so category counts agree with the list.
+    const [showRetired, setShowRetired] = useState(false);
 
     // Apply the URL deep-link ONCE (on arrival), then let interaction drive state —
     // otherwise our own navigate() on each click would re-collapse the view.
@@ -86,8 +89,9 @@ function ImplementationsArea() {
     // active campus (plus unassigned orphans, matching the list); "Show all Campuses"
     // widens to every campus. Keeps the counts in agreement with the list below.
     const inScope = useCallback(
-        (impl) => showAllCampuses || implementationInCampus(impl, campus),
-        [showAllCampuses, campus],
+        (impl) => (showAllCampuses || implementationInCampus(impl, campus))
+            && (showRetired || !impl.retired),
+        [showAllCampuses, campus, showRetired],
     );
     const scopedByType = useMemo(() => {
         const out = {};
@@ -96,17 +100,28 @@ function ImplementationsArea() {
     }, [byType, inScope]);
     const scopedAll = useMemo(() => TYPE_KEYS.flatMap((t) => scopedByType[t]), [scopedByType]);
 
-    // Diagnostic counts over the campus-scoped set (so they match the category buttons).
+    // Diagnostic counts over the campus-scoped set (so they match the category
+    // buttons). Retired implementations never count toward the actionable
+    // warnings — they're done, not neglected — and get their own tile instead.
+    const retiredCount = useMemo(
+        () => allImplementations.filter(
+            (impl) => (showAllCampuses || implementationInCampus(impl, campus)) && impl.retired,
+        ).length,
+        [allImplementations, showAllCampuses, campus],
+    );
     const stats = useMemo(() => {
+        let total = 0;
         let noEvidence = 0;
         let noOwner = 0;
         let noActiveDocs = 0;
         scopedAll.forEach((impl) => {
+            if (impl.retired) return;
+            total += 1;
             if (!(impl.is_evidence_for?.length)) noEvidence += 1;
             if (!(impl.owned_by?.length)) noOwner += 1;
             if (allDocumentsDepreciated(impl)) noActiveDocs += 1;
         });
-        return { total: scopedAll.length, noEvidence, noOwner, noActiveDocs };
+        return { total, noEvidence, noOwner, noActiveDocs };
     }, [scopedAll]);
 
     const definition = !isAll && getNodeTypeDefinition ? getNodeTypeDefinition(selectedType) : null;
@@ -162,6 +177,7 @@ function ImplementationsArea() {
                 noEvidenceCount={stats.noEvidence}
                 noOwnerCount={stats.noOwner}
                 noActiveDocsCount={stats.noActiveDocs}
+                retiredCount={retiredCount}
             />
 
             {/* Category buttons — All (grouped) + the seven types, with counts */}
@@ -215,6 +231,8 @@ function ImplementationsArea() {
                         activeCampus={campus}
                         showAllCampuses={showAllCampuses}
                         setShowAllCampuses={setShowAllCampuses}
+                        showRetired={showRetired}
+                        setShowRetired={setShowRetired}
                         typeName={isAll ? 'implementation' : typeLabel(selectedType)}
                         selectedId={selectedId}
                         onSelect={handleSelect}

@@ -331,6 +331,9 @@ function generateReport(evidenceItem) {
             if (etype.evidenceType?.properties?.title) {
                 report += etype.evidenceType.properties.title;
             }
+            if (etype.evidenceType?.properties?.retired) {
+                report += ' (RETIRED)';
+            }
             report += '\n';
 
             if (etype.evidenceType?.properties?.description) {
@@ -973,11 +976,22 @@ function GenerateReportComponent({ evidenceItem }) {
                                     borderRadius="md"
                                     borderLeft="4px solid"
                                     borderLeftColor="teal.400"
+                                    className={etype.evidenceType?.properties?.retired ? 'retired' : undefined}
                                 >
                                     <HStack spacing={2} mb={3}>
                                         <Badge colorScheme="teal" fontSize="xs">
                                             {etype.type}
                                         </Badge>
+                                        {etype.evidenceType?.properties?.retired && (
+                                            <Badge
+                                                colorScheme="gray"
+                                                variant="solid"
+                                                fontSize="xs"
+                                                title={etype.evidenceType.properties.retired_note || 'This implementation has been retired'}
+                                            >
+                                                Retired{etype.evidenceType.properties.retired_date ? ` ${String(etype.evidenceType.properties.retired_date)}` : ''}
+                                            </Badge>
+                                        )}
                                         {etype.evidenceType?.properties?.title && (
                                             <Heading
                                                 as="h4"

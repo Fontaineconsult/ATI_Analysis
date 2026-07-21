@@ -41,6 +41,8 @@ function ImplementationList({
     activeCampus,
     showAllCampuses = false,
     setShowAllCampuses = () => {},
+    showRetired = false,
+    setShowRetired = () => {},
     selectedId,
     onSelect,
     onAdd,
@@ -48,9 +50,9 @@ function ImplementationList({
     emptyMessage,
 }) {
     const [search, setSearch] = useState('');
-    // The campus scope (Show all Campuses) is owned by the parent so the category
-    // counts + stat strip agree with what this list shows. Default off: active
-    // campus only (plus not-yet-assigned orphans, so they don't disappear).
+    // The campus scope (Show all Campuses) and the retired filter are owned by
+    // the parent so the category counts + stat strip agree with what this list
+    // shows. Defaults: active campus only, retired hidden.
 
     const lower = typeName.toLowerCase();
 
@@ -58,10 +60,11 @@ function ImplementationList({
         const q = search.trim().toLowerCase();
         return items.filter((impl) => {
             if (q && !(impl.title || '').toLowerCase().includes(q)) return false;
+            if (!showRetired && impl.retired) return false;
             if (showAllCampuses) return true;
             return implementationInCampus(impl, activeCampus);
         });
-    }, [items, search, showAllCampuses, activeCampus]);
+    }, [items, search, showAllCampuses, showRetired, activeCampus]);
 
     // Group into category sections (only when asked + non-empty).
     const sections = useMemo(() => {
@@ -101,10 +104,22 @@ function ImplementationList({
                     }
                 }}
             >
-                <Text fontSize="sm" fontWeight={isSelected ? 'semibold' : 'medium'} color="gray.800" noOfLines={2}>
+                <Text
+                    fontSize="sm"
+                    fontWeight={isSelected ? 'semibold' : 'medium'}
+                    color={impl.retired ? 'gray.600' : 'gray.800'}
+                    fontStyle={impl.retired ? 'italic' : 'normal'}
+                    noOfLines={2}
+                >
                     {impl.title || '(untitled)'}
                 </Text>
                 <HStack spacing={1.5} mt={1.5} flexWrap="wrap">
+                    {impl.retired && (
+                        <Badge colorScheme="gray" variant="solid" fontSize="2xs" borderRadius="full" px={2}
+                               title={impl.retired_date ? `Retired ${impl.retired_date}` : 'Retired'}>
+                            Retired
+                        </Badge>
+                    )}
                     <Badge colorScheme={yseCount === 0 ? 'red' : 'teal'} variant="subtle" fontSize="2xs" borderRadius="full" px={2}>
                         {yseCount} YSE
                     </Badge>
@@ -155,6 +170,15 @@ function ImplementationList({
                     aria-pressed={showAllCampuses}
                 >
                     Show all Campuses
+                </Button>
+                <Button
+                    size="xs"
+                    colorScheme="gray"
+                    variant={showRetired ? 'solid' : 'outline'}
+                    onClick={() => setShowRetired((v) => !v)}
+                    aria-pressed={showRetired}
+                >
+                    Show retired
                 </Button>
                 <Spacer />
                 <Text fontSize="2xs" color="gray.600">

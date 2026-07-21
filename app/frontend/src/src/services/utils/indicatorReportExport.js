@@ -169,6 +169,9 @@ function implementationsHtml(report, campus, origin) {
     return dataTable(['Implementation', 'Owner', 'Accountable', 'Team', 'Evidence'], impls.map((im) => {
         const href = implHref(im.type, im.unique_id, campus, origin);
         let title = `<b>${esc(im.type)}</b> — ${linkOrText(im.title, href)}`;
+        if (isTrue(im.retired)) {
+            title += ` <span style="background:#EDF2F7;color:#4A5568;border-radius:3px;padding:0 4px;font-size:11px;font-weight:600;">RETIRED${im.retired_date ? ` ${esc(String(im.retired_date))}` : ''}</span>`;
+        }
         if (isTrue(im.no_active_documents)) title += ` <span style="color:#C05621;font-size:11px;">⚠ no active docs</span>`;
         const dims = (im.dimensions || []).map((d) => esc(d.name)).join(', ');
         if (dims) title += `<div style="color:${MUTED};font-size:11px;">${dims}</div>`;
@@ -313,7 +316,7 @@ function plainText(report, campus, origin) {
     L.push('', `IMPLEMENTATION EVIDENCE (${impls.length})`);
     if (impls.length) {
         impls.forEach((im) => {
-            L.push(`  - [${im.type}] ${im.title}${implHref(im.type, im.unique_id, campus, origin) ? ` — ${implHref(im.type, im.unique_id, campus, origin)}` : ''}`);
+            L.push(`  - [${im.type}] ${im.title}${im.retired ? ` (RETIRED${im.retired_date ? ` ${im.retired_date}` : ''})` : ''}${implHref(im.type, im.unique_id, campus, origin) ? ` — ${implHref(im.type, im.unique_id, campus, origin)}` : ''}`);
             if (im.owner?.name) L.push(`      Owner: ${im.owner.name}`);
             if (im.accountable_working_group) L.push(`      Accountable: ${im.accountable_working_group}`);
             (im.participants || []).forEach((p) => L.push(`      Team: ${p.person?.name}${p.role_handle ? ` · ${p.role_handle.replace(/^role:/, '')}` : ''}${p.note ? ` (${p.note})` : ''}`));

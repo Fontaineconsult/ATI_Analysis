@@ -373,6 +373,8 @@ class ImplementationAPI(MethodView):
                 return self.handle_assign_documentation_to_implementation(data)
             elif action == "update_implementation":
                 return self.handle_update_implementation(data)
+            elif action == "retire_implementation":
+                return self.handle_retire_implementation(data)
             elif action == "assign_implementation_to_yse":
                 return self.handle_assign_implementation_to_yse(data)
             elif action == "update_documentation_year":
@@ -527,6 +529,38 @@ class ImplementationAPI(MethodView):
 
         except implementation_class.DoesNotExist:
             raise NotFoundError(f"No {implementation_type} found with unique_id: {unique_id}")
+
+    def handle_retire_implementation(self, data):
+        """Set or clear the retirement lifecycle on an implementation.
+
+        Body: implementation_type, unique_id, retired (bool), and when retiring
+        optionally retired_date ('YYYY-MM-DD', default today) + retired_note.
+        Un-retiring clears date and note.
+        """
+        from app.database.queries.implementation.update import retire_implementation
+
+        implementation_type = data.get('implementation_type')
+        unique_id = data.get('unique_id')
+        retired = data.get('retired')
+
+        if not implementation_type or not unique_id:
+            raise ValidationError("Missing required fields: 'implementation_type' and 'unique_id'")
+        if not isinstance(retired, bool):
+            raise ValidationError("'retired' must be a boolean")
+
+        result = retire_implementation(
+            implementation_type,
+            unique_id,
+            retired,
+            retired_date=data.get('retired_date'),
+            retired_note=data.get('retired_note'),
+        )
+        verb = 'retired' if retired else 'reactivated'
+        return make_response(
+            "success",
+            data=result,
+            message=f"{implementation_type} {verb} successfully",
+        ), 200
 
     def handle_assign_person_as_implementor(self, data):
         if 'unique_id' not in data or 'year_success_evidence' not in data:

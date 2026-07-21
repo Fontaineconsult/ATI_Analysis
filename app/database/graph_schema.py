@@ -850,6 +850,12 @@ class InternalPolicy(StructuredNode):
 
     title = StringProperty(unique_index=True, required=True)
     description = StringProperty()
+    # Retirement lifecycle: an implementation that is no longer in use. Historical
+    # evidence links remain valid; UIs badge and (by default) hide retired items.
+    retired = BooleanProperty(default=False)
+    retired_date = DateProperty()
+    retired_note = StringProperty()
+
     effective_date = DateProperty()
     last_updated = DateProperty()
     supporting_documents = RelationshipTo("Document", "is_documented_by", model=DocumentedByRel)
@@ -870,6 +876,9 @@ class InternalPolicy(StructuredNode):
             'effective_date': self.effective_date,
             'last_updated': self.last_updated,
             "unique_id": self.unique_id,
+            "retired": bool(self.retired),
+            "retired_date": str(self.retired_date) if self.retired_date else None,
+            "retired_note": self.retired_note,
             "dimensions": [{"handle": d.handle, "name": d.name} for d in self.classified_under.all()],
         }
 
@@ -890,6 +899,12 @@ class Process(StructuredNode):
 
     title = StringProperty(unique_index=True, required=True)
     description = StringProperty()
+    # Retirement lifecycle: an implementation that is no longer in use. Historical
+    # evidence links remain valid; UIs badge and (by default) hide retired items.
+    retired = BooleanProperty(default=False)
+    retired_date = DateProperty()
+    retired_note = StringProperty()
+
     process_markdown = StringProperty()
     supporting_documents = RelationshipTo("Document", "is_documented_by", model=DocumentedByRel)
     supporting_webpages = RelationshipTo("Webpage", "is_documented_by", model=DocumentedByRel)
@@ -911,6 +926,9 @@ class Process(StructuredNode):
             'title': self.title,
             'description': self.description,
             "unique_id": self.unique_id,
+            "retired": bool(self.retired),
+            "retired_date": str(self.retired_date) if self.retired_date else None,
+            "retired_note": self.retired_note,
             "dimensions": [{"handle": d.handle, "name": d.name} for d in self.classified_under.all()],
             "participants": serialize_participants(self),
         }
@@ -934,6 +952,12 @@ class Project(StructuredNode):
 
     title = StringProperty(unique_index=True, required=True)
     description = StringProperty()
+    # Retirement lifecycle: an implementation that is no longer in use. Historical
+    # evidence links remain valid; UIs badge and (by default) hide retired items.
+    retired = BooleanProperty(default=False)
+    retired_date = DateProperty()
+    retired_note = StringProperty()
+
     supporting_documents = RelationshipTo("Document", "is_documented_by", model=DocumentedByRel)
     supporting_webpages = RelationshipTo("Webpage", "is_documented_by", model=DocumentedByRel)
     supporting_notes = RelationshipTo("Note", "is_documented_by", model=DocumentedByRel)
@@ -956,6 +980,9 @@ class Project(StructuredNode):
             'title': self.title,
             'description': self.description,
             "unique_id": self.unique_id,
+            "retired": bool(self.retired),
+            "retired_date": str(self.retired_date) if self.retired_date else None,
+            "retired_note": self.retired_note,
             "dimensions": [{"handle": d.handle, "name": d.name} for d in self.classified_under.all()],
             "participants": serialize_participants(self),
         }
@@ -976,6 +1003,12 @@ class Procedure(StructuredNode):
 
     title = StringProperty(unique_index=True, required=True)
     description = StringProperty()
+    # Retirement lifecycle: an implementation that is no longer in use. Historical
+    # evidence links remain valid; UIs badge and (by default) hide retired items.
+    retired = BooleanProperty(default=False)
+    retired_date = DateProperty()
+    retired_note = StringProperty()
+
     procedure_markdown = StringProperty()
     supporting_documents = RelationshipTo("Document", "is_documented_by", model=DocumentedByRel)
     supporting_webpages = RelationshipTo("Webpage", "is_documented_by", model=DocumentedByRel)
@@ -996,6 +1029,9 @@ class Procedure(StructuredNode):
             'title': self.title,
             'description': self.description,
             "unique_id": self.unique_id,
+            "retired": bool(self.retired),
+            "retired_date": str(self.retired_date) if self.retired_date else None,
+            "retired_note": self.retired_note,
             "dimensions": [{"handle": d.handle, "name": d.name} for d in self.classified_under.all()],
             "participants": serialize_participants(self),
         }
@@ -1016,6 +1052,12 @@ class Service(StructuredNode):
 
     title = StringProperty(unique_index=True, required=True)
     description = StringProperty()
+    # Retirement lifecycle: an implementation that is no longer in use. Historical
+    # evidence links remain valid; UIs badge and (by default) hide retired items.
+    retired = BooleanProperty(default=False)
+    retired_date = DateProperty()
+    retired_note = StringProperty()
+
     supporting_documents = RelationshipTo("Document", "is_documented_by", model=DocumentedByRel)
     supporting_webpages = RelationshipTo("Webpage", "is_documented_by", model=DocumentedByRel)
     supporting_notes = RelationshipTo("Note", "is_documented_by", model=DocumentedByRel)
@@ -1036,6 +1078,9 @@ class Service(StructuredNode):
             'title': self.title,
             'description': self.description,
             "unique_id": self.unique_id,
+            "retired": bool(self.retired),
+            "retired_date": str(self.retired_date) if self.retired_date else None,
+            "retired_note": self.retired_note,
             "dimensions": [{"handle": d.handle, "name": d.name} for d in self.classified_under.all()],
             "participants": serialize_participants(self),
         }
@@ -1058,6 +1103,12 @@ class Guidance(StructuredNode):
 
     title = StringProperty(unique_index=True, required=True)
     description = StringProperty()
+    # Retirement lifecycle: an implementation that is no longer in use. Historical
+    # evidence links remain valid; UIs badge and (by default) hide retired items.
+    retired = BooleanProperty(default=False)
+    retired_date = DateProperty()
+    retired_note = StringProperty()
+
     supporting_documents = RelationshipTo("Document", "is_documented_by", model=DocumentedByRel)
     supporting_webpages = RelationshipTo("Webpage", "is_documented_by", model=DocumentedByRel)
     supporting_notes = RelationshipTo("Note", "is_documented_by", model=DocumentedByRel)
@@ -1080,6 +1131,9 @@ class Guidance(StructuredNode):
             'title': self.title,
             'description': self.description,
             "unique_id": self.unique_id,
+            "retired": bool(self.retired),
+            "retired_date": str(self.retired_date) if self.retired_date else None,
+            "retired_note": self.retired_note,
             "dimensions": [{"handle": d.handle, "name": d.name} for d in self.classified_under.all()],
         }
 
@@ -1095,6 +1149,12 @@ class Tracking(StructuredNode):
 
     title = StringProperty(unique_index=True, required=True)
     description = StringProperty()
+    # Retirement lifecycle: an implementation that is no longer in use. Historical
+    # evidence links remain valid; UIs badge and (by default) hide retired items.
+    retired = BooleanProperty(default=False)
+    retired_date = DateProperty()
+    retired_note = StringProperty()
+
     supporting_documents = RelationshipTo("Document", "is_documented_by", model=DocumentedByRel)
     supporting_webpages = RelationshipTo("Webpage", "is_documented_by", model=DocumentedByRel)
     supporting_notes = RelationshipTo("Note", "is_documented_by", model=DocumentedByRel)
@@ -1108,7 +1168,10 @@ class Tracking(StructuredNode):
         return {
             'title': self.title,
             'description': self.description,
-            "unique_id": self.unique_id
+            "unique_id": self.unique_id,
+            "retired": bool(self.retired),
+            "retired_date": str(self.retired_date) if self.retired_date else None,
+            "retired_note": self.retired_note,
         }
 
 

@@ -128,6 +128,9 @@ def _implementation_payload(impl, type_name, academic_year):
         "unique_id": impl.unique_id,
         "title": impl.title,
         "description": impl.description,
+        "retired": bool(getattr(impl, "retired", False)),
+        "retired_date": str(impl.retired_date) if getattr(impl, "retired_date", None) else None,
+        "retired_note": getattr(impl, "retired_note", None),
         "owner": _person_ref(owner) if owner else None,
         "dimensions": (
             [{"handle": d.handle, "name": d.name} for d in impl.classified_under.all()]

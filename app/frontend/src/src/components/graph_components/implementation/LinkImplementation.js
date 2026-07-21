@@ -40,7 +40,9 @@ function LinkImplementationModal({
         try {
             const response = await fetchImplementationsByType(type);
             const implementations = response?.status?.data || response?.data || [];
-            setExistingImplementations(implementations);
+            // Retired implementations are closed to new evidence assignment
+            // (the backend enforces this too).
+            setExistingImplementations(implementations.filter((impl) => !impl.retired));
         } catch (error) {
             console.error('Error loading implementations:', error);
             setExistingImplementations([]);

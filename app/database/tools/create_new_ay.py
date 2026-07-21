@@ -58,11 +58,13 @@ def duplicate_year_success_evidence(old_year, new_year):
         }
         WITH e, e2
         
-        // Process incoming relationships
+        // Process incoming relationships. Retired implementations do NOT carry
+        // forward (kept in sync with create_new_ay_campus.py).
         CALL {
             WITH e, e2
             MATCH (n)-[rel_in]->(e)
             WHERE type(rel_in) <> 'evidence_in_year'
+              AND NOT (type(rel_in) = 'is_evidence_for' AND coalesce(n.retired, false))
             WITH e2, type(rel_in) AS relType, properties(rel_in) AS relProps, n
             CALL apoc.create.relationship(n, relType, relProps, e2) YIELD rel
             RETURN count(*) AS incomingRelCount

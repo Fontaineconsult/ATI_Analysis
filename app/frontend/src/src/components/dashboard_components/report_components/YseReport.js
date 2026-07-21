@@ -163,6 +163,9 @@ function PlainTextReport({ evidenceItem, indicatorItem }) {
                 if (etype.evidenceType?.properties?.title) {
                     report += etype.evidenceType.properties.title;
                 }
+                if (etype.evidenceType?.properties?.retired) {
+                    report += ' (RETIRED)';
+                }
                 report += '\n';
 
                 if (etype.evidenceType?.properties?.description) {

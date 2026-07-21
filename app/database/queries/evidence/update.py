@@ -5,9 +5,7 @@ from datetime import datetime
 
 from app.database.class_factory import implementation_classes
 from app.database.graph_schema import *
-from app.endpoints.data_api.errors.custom_exceptions import NotFoundError, CrudError
-
-from app.endpoints.data_api.errors.custom_exceptions import CrudError
+from app.endpoints.data_api.errors.custom_exceptions import NotFoundError, CrudError, ValidationError
 
 def assign_implementation_to_year_success_indicator(year_success_identifier: str,
                                                     implementation_type: str,
@@ -18,12 +16,21 @@ def assign_implementation_to_year_success_indicator(year_success_identifier: str
         implementation_class = implementation_classes[implementation_type]
         implementation_node = implementation_class.nodes.get(title=implementation_title)
 
+        # Retired implementations are closed to new evidence assignment (their
+        # existing historical links are untouched).
+        if getattr(implementation_node, 'retired', False):
+            raise ValidationError(
+                f"Implementation {implementation_title} is retired and cannot be assigned to new evidence"
+            )
+
         if implementation_node.is_evidence_for.is_connected(year_success_evidence):
             raise CrudError(f"Implementation {implementation_title} is already assigned to success indicator {year_success_identifier}")
 
         implementation_node.is_evidence_for.connect(year_success_evidence)
         print(f"Implementation {implementation_title} assigned to success indicator {year_success_identifier}")
         return True
+    except (ValidationError, CrudError):
+        raise
     except Exception as e:
         raise CrudError(f"Error assigning implementation {implementation_title} to success indicator {year_success_identifier}: {e}")
 

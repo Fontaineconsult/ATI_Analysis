@@ -256,6 +256,38 @@ def _resolve_implementation(implementation_unique_id, implementation_type):
         raise NotFoundError(f"No {implementation_type} found with unique_id: {implementation_unique_id}")
 
 
+def retire_implementation(implementation_type, implementation_unique_id, retired,
+                          retired_date=None, retired_note=None):
+    """Set or clear an implementation's retirement lifecycle.
+
+    Retiring stamps retired=True with the given date (ISO 'YYYY-MM-DD', default
+    today) and optional note. Un-retiring clears both — they describe a
+    retirement that no longer stands. Historical is_evidence_for links are
+    never touched.
+
+    :return: the node's serialized dict (includes the retired fields).
+    """
+    impl_node = _resolve_implementation(implementation_unique_id, implementation_type)
+
+    if retired:
+        if retired_date:
+            try:
+                impl_node.retired_date = date.fromisoformat(retired_date)
+            except ValueError:
+                raise ValidationError(f"Invalid retired_date (expected YYYY-MM-DD): {retired_date}")
+        else:
+            impl_node.retired_date = date.today()
+        impl_node.retired = True
+        impl_node.retired_note = (retired_note or '').strip() or None
+    else:
+        impl_node.retired = False
+        impl_node.retired_date = None
+        impl_node.retired_note = None
+
+    impl_node.save()
+    return impl_node.serialize()
+
+
 def assign_person_as_owner(implementation_unique_id, implementation_type, person_unique_id):
     """Connect a Person to an implementation via the owned_by edge."""
     impl_node = _resolve_implementation(implementation_unique_id, implementation_type)

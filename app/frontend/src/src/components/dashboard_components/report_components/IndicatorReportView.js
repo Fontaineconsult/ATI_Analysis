@@ -237,7 +237,8 @@ const ImplementationEntry = ({ impl, campus, navigate }) => {
     const remediates = (impl.remediates_interfaces || []).map((i) => i.title).filter(Boolean).join(', ');
     return (
         <Box borderWidth="1px" borderColor="gray.200" borderRadius="lg" bg="white" boxShadow="sm" overflow="hidden"
-            borderLeftWidth="3px" borderLeftColor={`${accent}.400`}>
+            borderLeftWidth="3px" borderLeftColor={`${accent}.400`}
+            className={impl.retired ? 'retired' : undefined}>
             {/* Header band — implementation type + name */}
             <Box bg={`${accent}.50`} borderBottomWidth="1px" borderColor="gray.200" px={4} py={2.5}>
                 <HStack spacing={2.5} align="center" flexWrap="wrap">
@@ -249,6 +250,16 @@ const ImplementationEntry = ({ impl, campus, navigate }) => {
                         onClick={() => impl.unique_id && navigate(getImplementationURL(impl.type, impl.unique_id, campus))}>
                         {impl.title}
                     </Heading>
+                    {impl.retired && (
+                        <Badge
+                            colorScheme="gray"
+                            variant="solid"
+                            fontSize="2xs"
+                            title={impl.retired_note || 'This implementation has been retired'}
+                        >
+                            Retired{impl.retired_date ? ` ${impl.retired_date}` : ''}
+                        </Badge>
+                    )}
                     {noActiveDocs && (
                         <Badge colorScheme="orange" variant="solid" fontSize="2xs" title="Every document on this implementation is depreciated — no active documentation">
                             ⚠ No active documentation

@@ -236,3 +236,29 @@ describe('IndicatorReportView — Companion Guide', () => {
         expect(screen.queryByRole('heading', { name: /Companion Guide/i })).not.toBeInTheDocument();
     });
 });
+
+describe('IndicatorReportView — retired implementations', () => {
+    it('badges a retired implementation and greys its whole card via the retired class', () => {
+        renderReport({
+            ...REPORT,
+            implementations: [{
+                ...REPORT.implementations[0],
+                retired: true,
+                retired_date: '2026-06-30',
+                retired_note: 'Superseded by the new audit process.',
+            }],
+        });
+        const badge = screen.getByText(/Retired 2026-06-30/);
+        expect(badge).toBeInTheDocument();
+        expect(badge).toHaveAttribute('title', 'Superseded by the new audit process.');
+        // The entire card carries the .retired class (grayscale treatment).
+        const card = screen.getByRole('heading', { name: /Homepage audit process/ }).closest('.retired');
+        expect(card).not.toBeNull();
+    });
+
+    it('adds no retired class to active implementations', () => {
+        renderReport();
+        const card = screen.getByRole('heading', { name: /Homepage audit process/ }).closest('.retired');
+        expect(card).toBeNull();
+    });
+});

@@ -253,21 +253,35 @@ function EvidenceTypeMasterList({ evidence, yearIdentifier, onRefresh }) {
                                         <Text fontSize="sm">{evidenceType}</Text>
                                     </Td>
                                     <Td>
-                                        {implementationLink ? (
-                                            <Link
-                                                as={RouterLink}
-                                                to={implementationLink}
-                                                fontSize="sm"
-                                                color="teal.700"
-                                                fontWeight="medium"
-                                                _hover={{ color: 'teal.600', textDecoration: 'underline' }}
-                                                title="Open this implementation"
-                                            >
-                                                {evidenceTitle}
-                                            </Link>
-                                        ) : (
-                                            <Text fontSize="sm">{evidenceTitle}</Text>
-                                        )}
+                                        <HStack spacing={2} align="center">
+                                            {implementationLink ? (
+                                                <Link
+                                                    as={RouterLink}
+                                                    to={implementationLink}
+                                                    fontSize="sm"
+                                                    color="teal.700"
+                                                    fontWeight="medium"
+                                                    _hover={{ color: 'teal.600', textDecoration: 'underline' }}
+                                                    title="Open this implementation"
+                                                >
+                                                    {evidenceTitle}
+                                                </Link>
+                                            ) : (
+                                                <Text fontSize="sm">{evidenceTitle}</Text>
+                                            )}
+                                            {evidenceItem.evidenceType?.properties?.retired && (
+                                                <Badge
+                                                    colorScheme="gray"
+                                                    variant="solid"
+                                                    fontSize="2xs"
+                                                    borderRadius="full"
+                                                    px={2}
+                                                    title={evidenceItem.evidenceType.properties.retired_note || 'This implementation has been retired'}
+                                                >
+                                                    Retired{evidenceItem.evidenceType.properties.retired_date ? ` ${String(evidenceItem.evidenceType.properties.retired_date)}` : ''}
+                                                </Badge>
+                                            )}
+                                        </HStack>
                                     </Td>
                                     <Td>
                                         {renderDocumentationCounts(evidenceItem)}

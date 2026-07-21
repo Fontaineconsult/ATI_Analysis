@@ -85,3 +85,23 @@ describe('buildIndicatorReport', () => {
         expect(buildIndicatorReport(null)).toEqual({ html: '', plainText: '' });
     });
 });
+
+describe('buildIndicatorReport — retired implementations', () => {
+    const retiredReport = {
+        ...REPORT,
+        implementations: [{
+            ...REPORT.implementations[0],
+            retired: true,
+            retired_date: '2026-06-30',
+        }],
+    };
+    const { html, plainText } = buildIndicatorReport(retiredReport, { origin: ORIGIN });
+
+    it('flags retired implementations in the HTML export', () => {
+        expect(html).toContain('RETIRED 2026-06-30');
+    });
+
+    it('flags retired implementations in the plain-text export', () => {
+        expect(plainText).toContain('(RETIRED 2026-06-30)');
+    });
+});

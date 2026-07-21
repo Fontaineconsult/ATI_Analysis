@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useContext, useEffect, useRef, useState } from 'react';
 import {
     Alert,
     AlertIcon,
@@ -44,6 +44,7 @@ import {
 } from './implementationConfig';
 import {
     assignPersonAsOwner,
+    retireImplementation,
     setImplementationDimensions,
     unassignPersonAsOwner,
     updateImplementation,
@@ -95,6 +96,12 @@ function ImplementationDetailPanel({ implementation, onAfterChange }) {
     const [editForm, setEditForm] = useState({ title: '', description: '', dimensions: [] });
     const [dimensionOptions, setDimensionOptions] = useState([]);
     const [removingYse, setRemovingYse] = useState(null);
+
+    // Retirement lifecycle (retire modal + unretire confirm).
+    const { isOpen: isRetireOpen, onOpen: onRetireOpen, onClose: onRetireClose } = useDisclosure();
+    const retireDateRef = useRef(null);
+    const [retireForm, setRetireForm] = useState({ date: '', note: '' });
+    const [retiring, setRetiring] = useState(false);
 
     const refresh = () => { if (onAfterChange) onAfterChange(); };
 
@@ -254,6 +261,40 @@ function ImplementationDetailPanel({ implementation, onAfterChange }) {
 
     const dimensionLabel = describeField?.('Implementation', 'dimensions')?.title || 'AMM Dimensions';
 
+    const openRetire = () => {
+        setRetireForm({ date: new Date().toISOString().slice(0, 10), note: '' });
+        onRetireOpen();
+    };
+
+    const handleRetire = async () => {
+        setRetiring(true);
+        try {
+            await retireImplementation(type, implementation.unique_id, {
+                retired: true,
+                retired_date: retireForm.date || undefined,
+                retired_note: retireForm.note || undefined,
+            });
+            toast({ title: `${typeLabel(type)} retired`, status: 'success', duration: 2000 });
+            onRetireClose();
+            refresh();
+        } catch (e) {
+            toast({ title: 'Failed to retire', description: e?.response?.data?.error || e.message, status: 'error', duration: 3500 });
+        } finally {
+            setRetiring(false);
+        }
+    };
+
+    const handleUnretire = async () => {
+        if (!window.confirm('Reactivate this implementation? The retired date and note will be cleared.')) return;
+        try {
+            await retireImplementation(type, implementation.unique_id, { retired: false });
+            toast({ title: `${typeLabel(type)} reactivated`, status: 'success', duration: 2000 });
+            refresh();
+        } catch (e) {
+            toast({ title: 'Failed to reactivate', description: e?.response?.data?.error || e.message, status: 'error', duration: 3500 });
+        }
+    };
+
     return (
         <VStack align="stretch" spacing={4}>
             {/* Identity header */}
@@ -263,12 +304,25 @@ function ImplementationDetailPanel({ implementation, onAfterChange }) {
                         {implementation.title || '(untitled)'}
                     </Heading>
                     <HStack spacing={2} flexShrink={0}>
+                        {implementation.retired && (
+                            <Badge colorScheme="gray" variant="solid" fontSize="xs" px={2} py={1} borderRadius="md">
+                                Retired
+                            </Badge>
+                        )}
                         <Badge colorScheme={typeColor(type)} fontSize="xs" px={2} py={1} borderRadius="md">
                             {typeLabel(type)}
                         </Badge>
                         <HelpTip nodeType={type} />
                         <Button size="xs" variant="ghost" colorScheme="teal" leftIcon={<LinkIcon />} onClick={copyLink}>
                             Copy link
+                        </Button>
+                        <Button
+                            size="xs"
+                            variant="ghost"
+                            colorScheme="gray"
+                            onClick={implementation.retired ? handleUnretire : openRetire}
+                        >
+                            {implementation.retired ? 'Unretire' : 'Retire'}
                         </Button>
                     </HStack>
                 </HStack>
@@ -300,6 +354,21 @@ function ImplementationDetailPanel({ implementation, onAfterChange }) {
                 </Wrap>
             </Card>
 
+            {/* Retirement banner — the why and when, right under the identity card */}
+            {implementation.retired && (
+                <Alert status="info" borderRadius="lg" fontSize="sm" bg="gray.100">
+                    <AlertIcon color="gray.600" />
+                    <Box>
+                        <Text fontWeight="semibold" color="gray.800">
+                            Retired{implementation.retired_date ? ` on ${implementation.retired_date}` : ''}
+                        </Text>
+                        {implementation.retired_note && (
+                            <Text color="gray.700" mt={0.5}>{implementation.retired_note}</Text>
+                        )}
+                    </Box>
+                </Alert>
+            )}
+
             {/* Warning: every attached document/webpage is dead — no live documentation */}
             {docsAllDeprecated && (
                 <Alert status="warning" borderRadius="lg" fontSize="sm">
@@ -307,6 +376,49 @@ function ImplementationDetailPanel({ implementation, onAfterChange }) {
                     All {documentationCount} attached documentation item{documentationCount === 1 ? ' is' : 's are'} deprecated or no longer available — this implementation has no active documentation.
                 </Alert>
             )}
+
+            {/* Retire modal — date (default today) + optional why-note */}
+            <Modal isOpen={isRetireOpen} onClose={onRetireClose} initialFocusRef={retireDateRef} size="md">
+                <ModalOverlay />
+                <ModalContent>
+                    <ModalHeader fontSize="md">Retire {typeLabel(type)}</ModalHeader>
+                    <ModalCloseButton />
+                    <ModalBody>
+                        <VStack align="stretch" spacing={3}>
+                            <Text fontSize="sm" color="gray.700">
+                                Marks “{implementation.title}” as no longer in use. Evidence links and
+                                history stay intact; it will be hidden from the list by default.
+                            </Text>
+                            <FormControl>
+                                <FormLabel fontSize="sm" color="gray.700" fontWeight="semibold">Retired date</FormLabel>
+                                <Input
+                                    ref={retireDateRef}
+                                    type="date"
+                                    size="sm"
+                                    value={retireForm.date}
+                                    onChange={(e) => setRetireForm((f) => ({ ...f, date: e.target.value }))}
+                                />
+                            </FormControl>
+                            <FormControl>
+                                <FormLabel fontSize="sm" color="gray.700" fontWeight="semibold">Note — why it was retired</FormLabel>
+                                <Textarea
+                                    size="sm"
+                                    rows={3}
+                                    value={retireForm.note}
+                                    onChange={(e) => setRetireForm((f) => ({ ...f, note: e.target.value }))}
+                                    placeholder="Replaced by …, superseded by …, no longer applicable because …"
+                                />
+                            </FormControl>
+                        </VStack>
+                    </ModalBody>
+                    <ModalFooter>
+                        <Button variant="ghost" size="sm" mr={2} onClick={onRetireClose}>Cancel</Button>
+                        <Button colorScheme="gray" size="sm" onClick={handleRetire} isLoading={retiring} loadingText="Retiring">
+                            Retire
+                        </Button>
+                    </ModalFooter>
+                </ModalContent>
+            </Modal>
 
             {/* Details — title / description / dimensions (inline edit) */}
             <Card
@@ -424,9 +536,21 @@ function ImplementationDetailPanel({ implementation, onAfterChange }) {
             <Card
                 title={<>Evidence For · {currentAcademicYear} ({ysesThisYearHere.length}) <HelpTip relType="is_evidence_for" /></>}
                 action={
-                    <Button size="xs" colorScheme="teal" variant="outline" onClick={onManageYsesOpen}>
-                        Manage Linked YSEs
-                    </Button>
+                    <Tooltip
+                        label="Retired implementations cannot be assigned to new evidence"
+                        isDisabled={!implementation.retired}
+                        hasArrow
+                    >
+                        <Button
+                            size="xs"
+                            colorScheme="teal"
+                            variant="outline"
+                            onClick={onManageYsesOpen}
+                            isDisabled={implementation.retired}
+                        >
+                            Manage Linked YSEs
+                        </Button>
+                    </Tooltip>
                 }
             >
                 <Divider mb={3} borderColor="gray.200" />

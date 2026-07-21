@@ -389,6 +389,26 @@ export const updateImplementation = async (implementation_type, unique_id, title
 }
 
 
+// Set or clear an implementation's retirement lifecycle. Retiring stamps the
+// date (default today, server-side) + optional note; un-retiring clears both.
+export const retireImplementation = async (implementation_type, unique_id, { retired, retired_date, retired_note } = {}) => {
+    try {
+        const response = await axios.put(`${process.env.REACT_APP_API_URL}/implementations`, {
+            action: "retire_implementation",
+            implementation_type,
+            unique_id,
+            retired,
+            retired_date,
+            retired_note,
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error retiring implementation:', error);
+        throw error;
+    }
+}
+
+
 export const assignImplementationToYSE = async (yearIdentifier, implementationType, implementationTitle) => {
     try {
         const response = await axios.put(`${process.env.REACT_APP_API_URL}/implementations`, {
