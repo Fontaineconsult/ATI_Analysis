@@ -12,6 +12,7 @@ import {
 } from '@chakra-ui/react';
 import { assignImplementationToYSE } from '../../../services/api/put';
 import { fetchImplementationsByType } from '../../../services/api/get';
+import { EVIDENCE_STRENGTH_LEVELS, strengthConfig } from './implementationConfig';
 
 function LinkImplementationModal({
                                      implementationTypes,
@@ -25,6 +26,7 @@ function LinkImplementationModal({
     const [existingImplementations, setExistingImplementations] = useState([]);
     const [selectedExisting, setSelectedExisting] = useState('');
     const [selectedDescription, setSelectedDescription] = useState('');
+    const [selectedStrength, setSelectedStrength] = useState('');
     const [isLoadingExisting, setIsLoadingExisting] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const toast = useToast();
@@ -69,7 +71,8 @@ function LinkImplementationModal({
             await assignImplementationToYSE(
                 yearIdentifier,
                 selectedType,
-                selectedExisting
+                selectedExisting,
+                selectedStrength === '' ? undefined : Number(selectedStrength)
             );
 
             toast({
@@ -167,6 +170,39 @@ function LinkImplementationModal({
                             </option>
                         ))}
                     </Select>
+                </FormControl>
+
+                <FormControl>
+                    <FormLabel
+                        fontSize="xs"
+                        color="gray.600"
+                        fontWeight="semibold"
+                        textTransform="uppercase"
+                    >
+                        Evidence Strength
+                    </FormLabel>
+                    <Select
+                        placeholder="Unrated"
+                        aria-label="Evidence strength"
+                        value={selectedStrength}
+                        onChange={(e) => setSelectedStrength(e.target.value)}
+                        size="sm"
+                        borderColor="gray.200"
+                        fontSize="sm"
+                        _hover={{ borderColor: 'teal.300' }}
+                        _focus={{ borderColor: 'teal.500', boxShadow: '0 0 0 1px rgba(56, 178, 172, 0.3)' }}
+                    >
+                        {EVIDENCE_STRENGTH_LEVELS.map((level) => (
+                            <option key={level.value} value={level.value}>
+                                {level.value} — {level.label}
+                            </option>
+                        ))}
+                    </Select>
+                    {strengthConfig(selectedStrength) && (
+                        <Text fontSize="xs" color="gray.600" mt={1}>
+                            {strengthConfig(selectedStrength).description}
+                        </Text>
+                    )}
                 </FormControl>
 
                 {selectedDescription && (

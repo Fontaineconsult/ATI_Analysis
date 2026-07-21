@@ -514,6 +514,19 @@ class DocumentedByRel(StructuredRel):
     added_by = StringProperty()  # unique_id of the Person who added it
 
 
+class IsEvidenceForRel(StructuredRel):
+    """Implementation → YearSuccessEvidence evidence link, qualified by how
+    strongly the work addresses the indicator's requirements.
+
+    strength (0-3; absent/None = unrated — vocab in data_config.evidence_strength_levels):
+      0  No Contribution — does not address any requirement of the indicator.
+      1  Indirect Support — helps the indicator without directly addressing its requirements.
+      2  Partial — directly addresses some, but not all, requirements.
+      3  Full — directly and completely addresses the requirements.
+    """
+    strength = IntegerProperty()
+
+
 
 class YseProgressRel(StructuredRel):
     """Relationship between Plans and YearSuccessEvidence to track progress updates"""
@@ -863,7 +876,7 @@ class InternalPolicy(StructuredNode):
     supporting_notes = RelationshipTo("Note", "is_documented_by", model=DocumentedByRel)
     supporting_messages = RelationshipTo("Message", "is_documented_by", model=DocumentedByRel)
     supporting_metrics = RelationshipTo("Metric", "has_metric")
-    is_evidence_for = RelationshipTo("YearSuccessEvidence", "is_evidence_for")
+    is_evidence_for = RelationshipTo("YearSuccessEvidence", "is_evidence_for", model=IsEvidenceForRel)
     owned_by = RelationshipTo("Person", "owned_by")
     classified_under = RelationshipTo("Dimension", "classified_under")  # cross-cutting AMM dimension(s) of the work
 
@@ -911,7 +924,7 @@ class Process(StructuredNode):
     supporting_notes = RelationshipTo("Note", "is_documented_by", model=DocumentedByRel)
     supporting_messages = RelationshipTo("Message", "is_documented_by", model=DocumentedByRel)
     supporting_metrics = RelationshipTo("Metric", "has_metric")
-    is_evidence_for = RelationshipTo("YearSuccessEvidence", "is_evidence_for")
+    is_evidence_for = RelationshipTo("YearSuccessEvidence", "is_evidence_for", model=IsEvidenceForRel)
     owned_by = RelationshipTo("Person", "owned_by")
     includes_procedures = RelationshipTo("Procedure", "includes_procedure")
     remediates_interface = RelationshipTo("Interface", "remediates_interface")
@@ -963,7 +976,7 @@ class Project(StructuredNode):
     supporting_notes = RelationshipTo("Note", "is_documented_by", model=DocumentedByRel)
     supporting_messages = RelationshipTo("Message", "is_documented_by", model=DocumentedByRel)
     supporting_metrics = RelationshipTo("Metric", "has_metric")
-    is_evidence_for = RelationshipTo("YearSuccessEvidence", "is_evidence_for")
+    is_evidence_for = RelationshipTo("YearSuccessEvidence", "is_evidence_for", model=IsEvidenceForRel)
     owned_by = RelationshipTo("Person", "owned_by")
     includes_procedures = RelationshipTo("Procedure", "includes_procedure")
     remediates_interface = RelationshipTo("Interface", "remediates_interface")
@@ -1015,7 +1028,7 @@ class Procedure(StructuredNode):
     supporting_notes = RelationshipTo("Note", "is_documented_by", model=DocumentedByRel)
     supporting_messages = RelationshipTo("Message", "is_documented_by", model=DocumentedByRel)
     supporting_metrics = RelationshipTo("Metric", "has_metric")
-    is_evidence_for = RelationshipTo("YearSuccessEvidence", "is_evidence_for")
+    is_evidence_for = RelationshipTo("YearSuccessEvidence", "is_evidence_for", model=IsEvidenceForRel)
     owned_by = RelationshipTo("Person", "owned_by")
     remediates_interface = RelationshipTo("Interface", "remediates_interface")
     accountable_working_group = RelationshipTo("ATIWorkingGroup", "accountable_working_group")  # committee accountable for this work (distinct from owned_by Person)
@@ -1063,7 +1076,7 @@ class Service(StructuredNode):
     supporting_notes = RelationshipTo("Note", "is_documented_by", model=DocumentedByRel)
     supporting_messages = RelationshipTo("Message", "is_documented_by", model=DocumentedByRel)
     supporting_metrics = RelationshipTo("Metric", "has_metric")
-    is_evidence_for = RelationshipTo("YearSuccessEvidence", "is_evidence_for")
+    is_evidence_for = RelationshipTo("YearSuccessEvidence", "is_evidence_for", model=IsEvidenceForRel)
     owned_by = RelationshipTo("Person", "owned_by")
     includes_procedures = RelationshipTo("Procedure", "includes_procedure")
     remediates_interface = RelationshipTo("Interface", "remediates_interface")
@@ -1114,7 +1127,7 @@ class Guidance(StructuredNode):
     supporting_notes = RelationshipTo("Note", "is_documented_by", model=DocumentedByRel)
     supporting_messages = RelationshipTo("Message", "is_documented_by", model=DocumentedByRel)
     supporting_metrics = RelationshipTo("Metric", "has_metric")
-    is_evidence_for = RelationshipTo("YearSuccessEvidence", "is_evidence_for")
+    is_evidence_for = RelationshipTo("YearSuccessEvidence", "is_evidence_for", model=IsEvidenceForRel)
     owned_by = RelationshipTo("Person", "owned_by")
     references_procedure = RelationshipTo("Procedure", "references_procedure")
     references_process = RelationshipTo("Process", "references_process")
@@ -1160,7 +1173,7 @@ class Tracking(StructuredNode):
     supporting_notes = RelationshipTo("Note", "is_documented_by", model=DocumentedByRel)
     supporting_messages = RelationshipTo("Message", "is_documented_by", model=DocumentedByRel)
     supporting_metrics = RelationshipTo("Metric", "has_metric")
-    is_evidence_for = RelationshipTo("YearSuccessEvidence", "is_evidence_for")
+    is_evidence_for = RelationshipTo("YearSuccessEvidence", "is_evidence_for", model=IsEvidenceForRel)
     owned_by = RelationshipTo("Person", "owned_by")
 
     #serialize
@@ -1365,14 +1378,14 @@ class YearSuccessEvidence(StructuredNode):
     campus = RelationshipTo("Campus", "evidence_at_campus")
 
     # Relationships from implementation nodes
-    processes_that_evidence = RelationshipFrom("Process", "is_evidence_for")
-    projects_that_evidence = RelationshipFrom("Project", "is_evidence_for")
-    procedures_that_evidence = RelationshipFrom("Procedure", "is_evidence_for")
-    services_that_evidence = RelationshipFrom("Service", "is_evidence_for")
-    guidance_that_evidence = RelationshipFrom("Guidance", "is_evidence_for")
-    trackings_that_evidence = RelationshipFrom("Tracking", "is_evidence_for")
-    internal_policies_that_evidence = RelationshipFrom("InternalPolicy", "is_evidence_for")
-    taaps_that_evidence = RelationshipFrom("TAAP", "is_evidence_for")
+    processes_that_evidence = RelationshipFrom("Process", "is_evidence_for", model=IsEvidenceForRel)
+    projects_that_evidence = RelationshipFrom("Project", "is_evidence_for", model=IsEvidenceForRel)
+    procedures_that_evidence = RelationshipFrom("Procedure", "is_evidence_for", model=IsEvidenceForRel)
+    services_that_evidence = RelationshipFrom("Service", "is_evidence_for", model=IsEvidenceForRel)
+    guidance_that_evidence = RelationshipFrom("Guidance", "is_evidence_for", model=IsEvidenceForRel)
+    trackings_that_evidence = RelationshipFrom("Tracking", "is_evidence_for", model=IsEvidenceForRel)
+    internal_policies_that_evidence = RelationshipFrom("InternalPolicy", "is_evidence_for", model=IsEvidenceForRel)
+    taaps_that_evidence = RelationshipFrom("TAAP", "is_evidence_for", model=IsEvidenceForRel)
 
     # Assets are NOT evidence: an asset's accessibility status reaches YSE through the
     # implementation that remediates it (Process/Project/Procedure/Service.is_evidence_for)
@@ -2413,7 +2426,7 @@ class TAAP(StructuredNode):
     signed_by = RelationshipTo("Person", "signed_by")
 
     # Evidence + documentation (standard pattern)
-    is_evidence_for = RelationshipTo("YearSuccessEvidence", "is_evidence_for")
+    is_evidence_for = RelationshipTo("YearSuccessEvidence", "is_evidence_for", model=IsEvidenceForRel)
     supporting_documents = RelationshipTo("Document", "is_documented_by", model=DocumentedByRel)
     supporting_webpages = RelationshipTo("Webpage", "is_documented_by", model=DocumentedByRel)
     supporting_notes = RelationshipTo("Note", "is_documented_by", model=DocumentedByRel)

@@ -2,6 +2,7 @@ import React from 'react';
 import { Box, VStack, HStack, Text, Badge, Icon, Tooltip } from '@chakra-ui/react';
 import { FaUser, FaListUl, FaRegComment, FaCheckCircle } from 'react-icons/fa';
 import { getIndicatorSummary, getStatusColor } from './indicatorHelpers';
+import { strengthConfig } from '../implementation/implementationConfig';
 import StatusLevelLadder from '../../functional_components/StatusLevelLadder';
 import useListboxNavigation from '../../../hooks/useListboxNavigation';
 
@@ -56,7 +57,7 @@ function SuccessIndicatorList({ indicators = [], selectedKey, onSelect }) {
                         {...getItemProps(index)}
                         role="option"
                         aria-selected={isSelected}
-                        aria-label={`Indicator ${s.compositeKey}, ${s.statusLevel || 'no evidence'}${s.description ? `: ${s.description}` : ''}`}
+                        aria-label={`Indicator ${s.compositeKey}, ${s.statusLevel || 'no evidence'}${s.implCount > 0 ? `, evidence strength ${strengthConfig(s.maxStrength)?.label || 'unrated'}` : ''}${s.description ? `: ${s.description}` : ''}`}
                         onClick={() => { if (onSelect) onSelect(s.compositeKey); }}
                         cursor="pointer"
                         bg="white"
@@ -102,7 +103,7 @@ function SuccessIndicatorList({ indicators = [], selectedKey, onSelect }) {
                             <Text fontSize="xs" color="gray.600" noOfLines={2} mb={2}>{s.description}</Text>
                         )}
 
-                        {(s.flagMissingImplementation || s.noActiveDocs) && (
+                        {(s.flagMissingImplementation || s.noActiveDocs || s.allImplsRetired) && (
                             <HStack spacing={1.5} mb={2} flexWrap="wrap">
                                 {s.flagMissingImplementation && (
                                     <Badge
@@ -114,6 +115,18 @@ function SuccessIndicatorList({ indicators = [], selectedKey, onSelect }) {
                                         title="No implementations are linked to this indicator"
                                     >
                                         ⚠ No implementations
+                                    </Badge>
+                                )}
+                                {s.allImplsRetired && (
+                                    <Badge
+                                        colorScheme="orange"
+                                        variant="solid"
+                                        fontSize="2xs"
+                                        borderRadius="full"
+                                        px={2}
+                                        title="Every implementation linked to this indicator is retired — no active work addresses it"
+                                    >
+                                        ⚠ Imps retired
                                     </Badge>
                                 )}
                                 {s.noActiveDocs && (
@@ -136,6 +149,30 @@ function SuccessIndicatorList({ indicators = [], selectedKey, onSelect }) {
                                 <CountChip icon={FaUser} count={s.personCount} label="responsible persons" zeroColor="red.500" />
                                 <CountChip icon={FaListUl} count={s.implCount} label="implementations" zeroColor={s.flagMissingImplementation ? 'red.500' : 'gray.300'} />
                                 <CountChip icon={FaRegComment} count={s.annotationCount} label="annotations" />
+                                {/* Evidence-strength quality: the strongest rated link.
+                                    aria-hidden like the chips — the row label carries it. */}
+                                {s.implCount > 0 && (
+                                    strengthConfig(s.maxStrength) ? (
+                                        <Tooltip label={`Strongest evidence link: ${strengthConfig(s.maxStrength).description}`} openDelay={400}>
+                                            <Badge
+                                                colorScheme={strengthConfig(s.maxStrength).colorScheme}
+                                                variant="subtle"
+                                                fontSize="2xs"
+                                                borderRadius="full"
+                                                px={2}
+                                                aria-hidden="true"
+                                            >
+                                                {strengthConfig(s.maxStrength).label}
+                                            </Badge>
+                                        </Tooltip>
+                                    ) : (
+                                        <Tooltip label="No evidence link has a strength rating yet — rate them in the evidence table below" openDelay={400}>
+                                            <Badge colorScheme="gray" variant="outline" fontSize="2xs" borderRadius="full" px={2} aria-hidden="true">
+                                                Unrated
+                                            </Badge>
+                                        </Tooltip>
+                                    )
+                                )}
                             </HStack>
                             <HStack spacing={1}>
                                 {s.readyForReview && !s.approved && (

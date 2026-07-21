@@ -33,6 +33,23 @@ export const IMPLEMENTATION_TYPES = [
 // Canonical display order of the type keys.
 export const TYPE_KEYS = IMPLEMENTATION_TYPES.map((t) => t.key);
 
+// Evidence strength — the 0-3 rating carried on an is_evidence_for link
+// (implementation → YSE). Mirrors data_config.evidence_strength_levels (also
+// served via GET /settings); absent/null = unrated. Colors: 0 reads as a
+// warning (why is this linked?), 3 as solid evidence.
+export const EVIDENCE_STRENGTH_LEVELS = [
+    { value: 0, label: 'No Contribution', colorScheme: 'red', description: 'Does not address any requirement of the success indicator — review whether the link belongs at all.' },
+    { value: 1, label: 'Indirect Support', colorScheme: 'orange', description: 'Supports the success indicator indirectly — enabling or adjacent work that does not itself address the indicator’s requirements.' },
+    { value: 2, label: 'Partial', colorScheme: 'blue', description: 'Directly addresses some, but not all, of the success indicator’s requirements.' },
+    { value: 3, label: 'Full', colorScheme: 'green', description: 'Directly and completely addresses the success indicator’s requirements.' },
+];
+
+// null/undefined/non-numeric → null (unrated); else the level config.
+export const strengthConfig = (value) => {
+    if (value === null || value === undefined || value === '') return null;
+    return EVIDENCE_STRENGTH_LEVELS.find((l) => l.value === Number(value)) || null;
+};
+
 // Capability tiers (Sets for O(1) membership). Source: update.py constants.
 const DOING_TYPES = new Set(['Process', 'Project', 'Procedure', 'Service']);
 const DIMENSION_TYPES = new Set(['Process', 'Project', 'Procedure', 'Service', 'InternalPolicy', 'Guidance']);

@@ -262,3 +262,21 @@ describe('IndicatorReportView — retired implementations', () => {
         expect(card).toBeNull();
     });
 });
+
+describe('IndicatorReportView — all implementations retired', () => {
+    it('shows the indicator-level retired warning when every implementation is retired', () => {
+        renderReport({
+            ...REPORT,
+            implementations: [{
+                ...REPORT.implementations[0],
+                retired: true, retired_date: '2026-06-30',
+            }],
+        });
+        expect(screen.getByText('⚠ All implementations retired')).toBeInTheDocument();
+    });
+
+    it('shows no indicator-level warning when an active implementation remains', () => {
+        renderReport();
+        expect(screen.queryByText('⚠ All implementations retired')).not.toBeInTheDocument();
+    });
+});

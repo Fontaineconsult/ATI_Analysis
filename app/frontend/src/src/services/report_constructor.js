@@ -22,6 +22,7 @@ import {
 import {useNavigate, useParams} from "react-router-dom";
 import {navigateToIndicator} from "./utils/tools";
 import { getStatusBackgroundColor, getStatusTextColor } from "./utils/statusColors";
+import { strengthConfig } from "../components/graph_components/implementation/implementationConfig";
 import EvidenceQualityPanel from "../components/dashboard_components/report_components/EvidenceQualityPanel";
 
 let datas = {
@@ -982,6 +983,16 @@ function GenerateReportComponent({ evidenceItem }) {
                                         <Badge colorScheme="teal" fontSize="xs">
                                             {etype.type}
                                         </Badge>
+                                        {strengthConfig(etype.strength) && (
+                                            <Badge
+                                                colorScheme={strengthConfig(etype.strength).colorScheme}
+                                                variant="subtle"
+                                                fontSize="xs"
+                                                title={strengthConfig(etype.strength).description}
+                                            >
+                                                {strengthConfig(etype.strength).label}
+                                            </Badge>
+                                        )}
                                         {etype.evidenceType?.properties?.retired && (
                                             <Badge
                                                 colorScheme="gray"

@@ -39,6 +39,7 @@ import {
     hasAssets,
     hasParticipants,
     isDimensioned,
+    strengthConfig,
     typeColor,
     typeLabel,
 } from './implementationConfig';
@@ -583,6 +584,24 @@ function ImplementationDetailPanel({ implementation, onAfterChange }) {
                                     <Text fontSize="xs" color="gray.600" noOfLines={1}>
                                         {yse.success_indicator}
                                     </Text>
+                                    {strengthConfig(yse.strength) ? (
+                                        <Badge
+                                            colorScheme={strengthConfig(yse.strength).colorScheme}
+                                            variant="subtle"
+                                            fontSize="2xs"
+                                            borderRadius="full"
+                                            px={2}
+                                            flexShrink={0}
+                                            title={strengthConfig(yse.strength).description}
+                                        >
+                                            {strengthConfig(yse.strength).label}
+                                        </Badge>
+                                    ) : (
+                                        <Badge colorScheme="gray" variant="outline" fontSize="2xs" borderRadius="full" px={2} flexShrink={0}
+                                               title="No strength rating yet — set it from the indicator's goal view">
+                                            Unrated
+                                        </Badge>
+                                    )}
                                 </HStack>
                                 <Tooltip label="Remove this evidence link">
                                     <IconButton

@@ -409,13 +409,32 @@ export const retireImplementation = async (implementation_type, unique_id, { ret
 }
 
 
-export const assignImplementationToYSE = async (yearIdentifier, implementationType, implementationTitle) => {
+// Set or clear (null) the 0-3 strength rating on an existing evidence link.
+export const setEvidenceStrength = async (yearIdentifier, implementationType, uniqueId, strength) => {
+    try {
+        const response = await axios.put(`${process.env.REACT_APP_API_URL}/implementations`, {
+            action: "set_evidence_strength",
+            year_success_identifier: yearIdentifier,
+            implementation_type: implementationType,
+            unique_id: uniqueId,
+            strength,
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error setting evidence strength:', error);
+        throw error;
+    }
+}
+
+
+export const assignImplementationToYSE = async (yearIdentifier, implementationType, implementationTitle, strength = undefined) => {
     try {
         const response = await axios.put(`${process.env.REACT_APP_API_URL}/implementations`, {
             action: "assign_implementation_to_yse",
             year_success_identifier: yearIdentifier,
             implementation_type: implementationType,
-            implementation_title: implementationTitle
+            implementation_title: implementationTitle,
+            ...(strength !== undefined && strength !== null ? { strength } : {}),
         });
         return response.data;
     } catch (error) {

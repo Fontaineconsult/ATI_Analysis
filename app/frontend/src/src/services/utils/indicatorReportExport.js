@@ -166,9 +166,17 @@ function implementationsHtml(report, campus, origin) {
             ? `<p style="${FONT}color:${MUTED};font-size:12px;">Exempt from implementation evidence.</p>`
             : emptyNote();
     }
-    return dataTable(['Implementation', 'Owner', 'Accountable', 'Team', 'Evidence'], impls.map((im) => {
+    const allRetired = impls.length > 0 && impls.every((im) => isTrue(im.retired));
+    const retiredWarning = allRetired
+        ? `<p style="${FONT}color:#C05621;font-size:12px;font-weight:600;">⚠ All implementations linked to this indicator are retired — no active work addresses it.</p>`
+        : '';
+    return retiredWarning + dataTable(['Implementation', 'Owner', 'Accountable', 'Team', 'Evidence'], impls.map((im) => {
         const href = implHref(im.type, im.unique_id, campus, origin);
         let title = `<b>${esc(im.type)}</b> — ${linkOrText(im.title, href)}`;
+        if (im.strength !== null && im.strength !== undefined) {
+            const S = { 0: 'No Contribution', 1: 'Indirect Support', 2: 'Partial', 3: 'Full' };
+            title += ` <span style="background:#EBF8FF;color:#2C5282;border-radius:3px;padding:0 4px;font-size:11px;font-weight:600;">STRENGTH ${im.strength} — ${S[im.strength] || ''}</span>`;
+        }
         if (isTrue(im.retired)) {
             title += ` <span style="background:#EDF2F7;color:#4A5568;border-radius:3px;padding:0 4px;font-size:11px;font-weight:600;">RETIRED${im.retired_date ? ` ${esc(String(im.retired_date))}` : ''}</span>`;
         }
@@ -314,9 +322,14 @@ function plainText(report, campus, origin) {
 
     const impls = report.implementations || [];
     L.push('', `IMPLEMENTATION EVIDENCE (${impls.length})`);
+    if (impls.length && impls.every((im) => im.retired)) {
+        L.push('  ⚠ ALL IMPLEMENTATIONS RETIRED — no active work addresses this indicator');
+    }
     if (impls.length) {
         impls.forEach((im) => {
-            L.push(`  - [${im.type}] ${im.title}${im.retired ? ` (RETIRED${im.retired_date ? ` ${im.retired_date}` : ''})` : ''}${implHref(im.type, im.unique_id, campus, origin) ? ` — ${implHref(im.type, im.unique_id, campus, origin)}` : ''}`);
+            const S = { 0: 'No Contribution', 1: 'Indirect Support', 2: 'Partial', 3: 'Full' };
+            const strengthTag = im.strength !== null && im.strength !== undefined ? ` [Strength ${im.strength} — ${S[im.strength] || ''}]` : '';
+            L.push(`  - [${im.type}] ${im.title}${strengthTag}${im.retired ? ` (RETIRED${im.retired_date ? ` ${im.retired_date}` : ''})` : ''}${implHref(im.type, im.unique_id, campus, origin) ? ` — ${implHref(im.type, im.unique_id, campus, origin)}` : ''}`);
             if (im.owner?.name) L.push(`      Owner: ${im.owner.name}`);
             if (im.accountable_working_group) L.push(`      Accountable: ${im.accountable_working_group}`);
             (im.participants || []).forEach((p) => L.push(`      Team: ${p.person?.name}${p.role_handle ? ` · ${p.role_handle.replace(/^role:/, '')}` : ''}${p.note ? ` (${p.note})` : ''}`));

@@ -377,6 +377,8 @@ class ImplementationAPI(MethodView):
                 return self.handle_retire_implementation(data)
             elif action == "assign_implementation_to_yse":
                 return self.handle_assign_implementation_to_yse(data)
+            elif action == "set_evidence_strength":
+                return self.handle_set_evidence_strength(data)
             elif action == "update_documentation_year":
                 return self.handle_update_documentation_year(data)
             elif action == "get_documents_for_year":
@@ -490,9 +492,30 @@ class ImplementationAPI(MethodView):
         assign_implementation_to_year_success_indicator(
             data['year_success_identifier'],
             data['implementation_type'],
-            data['implementation_title']
+            data['implementation_title'],
+            strength=data.get('strength'),
         )
         return make_response({"status": "success", "message": "Implementation assigned to YSE"}), 200
+
+    def handle_set_evidence_strength(self, data):
+        """Set or clear (null) the strength rating on an existing evidence link.
+
+        Body: year_success_identifier, implementation_type, unique_id,
+        strength (0-3 or null).
+        """
+        from app.database.queries.evidence.update import set_evidence_strength
+
+        required = ['year_success_identifier', 'implementation_type', 'unique_id']
+        if not all(field in data for field in required):
+            raise ValidationError(f"Missing required fields: {required}")
+
+        result = set_evidence_strength(
+            data['year_success_identifier'],
+            data['implementation_type'],
+            data['unique_id'],
+            data.get('strength'),
+        )
+        return make_response("success", data=result, message="Evidence strength updated"), 200
 
     def handle_update_implementation(self, data):
         """

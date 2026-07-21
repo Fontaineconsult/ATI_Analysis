@@ -7,10 +7,21 @@ from app.database.class_factory import implementation_classes
 from app.database.graph_schema import *
 from app.endpoints.data_api.errors.custom_exceptions import NotFoundError, CrudError, ValidationError
 
+def _validate_evidence_strength(strength):
+    """Normalize/validate an evidence-strength value: int 0-3 or None (unrated)."""
+    if strength is None:
+        return None
+    if isinstance(strength, bool) or not isinstance(strength, int) or strength not in (0, 1, 2, 3):
+        raise ValidationError(f"Invalid evidence strength (expected 0-3 or null): {strength!r}")
+    return strength
+
+
 def assign_implementation_to_year_success_indicator(year_success_identifier: str,
                                                     implementation_type: str,
-                                                    implementation_title: str) -> bool:
+                                                    implementation_title: str,
+                                                    strength=None) -> bool:
 
+    strength = _validate_evidence_strength(strength)
     try:
         year_success_evidence = YearSuccessEvidence.nodes.get(year_identifier=year_success_identifier)
         implementation_class = implementation_classes[implementation_type]
@@ -26,13 +37,50 @@ def assign_implementation_to_year_success_indicator(year_success_identifier: str
         if implementation_node.is_evidence_for.is_connected(year_success_evidence):
             raise CrudError(f"Implementation {implementation_title} is already assigned to success indicator {year_success_identifier}")
 
-        implementation_node.is_evidence_for.connect(year_success_evidence)
+        if strength is not None:
+            implementation_node.is_evidence_for.connect(year_success_evidence, {'strength': strength})
+        else:
+            implementation_node.is_evidence_for.connect(year_success_evidence)
         print(f"Implementation {implementation_title} assigned to success indicator {year_success_identifier}")
         return True
     except (ValidationError, CrudError):
         raise
     except Exception as e:
         raise CrudError(f"Error assigning implementation {implementation_title} to success indicator {year_success_identifier}: {e}")
+
+
+def set_evidence_strength(year_success_identifier: str,
+                          implementation_type: str,
+                          implementation_unique_id: str,
+                          strength):
+    """Set (or clear, with None) the strength rating on an existing
+    is_evidence_for link between an implementation and a YSE.
+
+    :return: {'strength': <0-3 or None>} — the stored value.
+    """
+    strength = _validate_evidence_strength(strength)
+
+    if implementation_type not in implementation_classes:
+        raise ValidationError(f"Invalid implementation_type: {implementation_type}")
+    implementation_class = implementation_classes[implementation_type]
+    try:
+        implementation_node = implementation_class.nodes.get(unique_id=implementation_unique_id)
+    except implementation_class.DoesNotExist:
+        raise NotFoundError(f"No {implementation_type} found with unique_id: {implementation_unique_id}")
+    try:
+        year_success_evidence = YearSuccessEvidence.nodes.get(year_identifier=year_success_identifier)
+    except YearSuccessEvidence.DoesNotExist:
+        raise NotFoundError(f"No YearSuccessEvidence found with year_identifier: {year_success_identifier}")
+
+    rel = implementation_node.is_evidence_for.relationship(year_success_evidence)
+    if rel is None:
+        raise NotFoundError(
+            f"{implementation_type} {implementation_unique_id} is not evidence for {year_success_identifier}"
+        )
+
+    rel.strength = strength
+    rel.save()
+    return {'strength': strength}
 
 
 def update_status_level_node(unique_id, data):

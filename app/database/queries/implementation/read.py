@@ -270,8 +270,9 @@ _IMPL_PROJECTION = """
             CASE WHEN sf.original_filename IS NULL THEN '' ELSE '?name=' + apoc.text.urlencode(sf.original_filename) END
         } ])
       } ],
-      is_evidence_for: [ (impl)-[:is_evidence_for]->(yse:YearSuccessEvidence) | {
+      is_evidence_for: [ (impl)-[ev_r:is_evidence_for]->(yse:YearSuccessEvidence) | {
         year_identifier: yse.year_identifier, unique_id: yse.unique_id,
+        strength: ev_r.strength,
         success_indicator: head([ (yse)-[:tracks]->(si:SuccessIndicator) | si.success_indicator ]),
         indicator_number: head([ (yse)-[:tracks]->(si:SuccessIndicator) | si.number ]),
         indicator_composite_key: head([ (yse)-[:tracks]->(si:SuccessIndicator) | si.composite_key ]),
