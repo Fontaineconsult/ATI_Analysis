@@ -409,6 +409,27 @@ export const retireImplementation = async (implementation_type, unique_id, { ret
 }
 
 
+// Copy this year's evidence links (and by default the source YSEs' assigned
+// people) from the current campus to other campuses. Idempotent server-side.
+export const copyEvidenceToCampuses = async (implementationType, uniqueId, yearName, sourceCampus, targetCampuses, includePeople = true) => {
+    try {
+        const response = await axios.put(`${process.env.REACT_APP_API_URL}/implementations`, {
+            action: "copy_evidence_to_campuses",
+            implementation_type: implementationType,
+            unique_id: uniqueId,
+            year_name: yearName,
+            source_campus: sourceCampus,
+            target_campuses: targetCampuses,
+            include_people: includePeople,
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error copying evidence to campuses:', error);
+        throw error;
+    }
+}
+
+
 // Set or clear (null) the 0-3 strength rating on an existing evidence link.
 export const setEvidenceStrength = async (yearIdentifier, implementationType, uniqueId, strength) => {
     try {

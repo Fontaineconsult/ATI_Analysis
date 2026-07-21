@@ -379,6 +379,8 @@ class ImplementationAPI(MethodView):
                 return self.handle_assign_implementation_to_yse(data)
             elif action == "set_evidence_strength":
                 return self.handle_set_evidence_strength(data)
+            elif action == "copy_evidence_to_campuses":
+                return self.handle_copy_evidence_to_campuses(data)
             elif action == "update_documentation_year":
                 return self.handle_update_documentation_year(data)
             elif action == "get_documents_for_year":
@@ -516,6 +518,29 @@ class ImplementationAPI(MethodView):
             data.get('strength'),
         )
         return make_response("success", data=result, message="Evidence strength updated"), 200
+
+    def handle_copy_evidence_to_campuses(self, data):
+        """Copy this year's evidence links (and by default the source YSEs'
+        assigned people) from one campus to others.
+
+        Body: implementation_type, unique_id, year_name, source_campus,
+        target_campuses (list), include_people (bool, default true).
+        """
+        from app.database.queries.evidence.update import copy_evidence_to_campuses
+
+        required = ['implementation_type', 'unique_id', 'year_name', 'source_campus', 'target_campuses']
+        if not all(field in data for field in required):
+            raise ValidationError(f"Missing required fields: {required}")
+
+        result = copy_evidence_to_campuses(
+            data['implementation_type'],
+            data['unique_id'],
+            data['year_name'],
+            data['source_campus'],
+            data['target_campuses'],
+            include_people=data.get('include_people', True),
+        )
+        return make_response("success", data=result, message="Evidence links copied"), 200
 
     def handle_update_implementation(self, data):
         """

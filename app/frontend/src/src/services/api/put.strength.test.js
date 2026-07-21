@@ -10,7 +10,7 @@ jest.mock('axios', () => ({
 }));
 
 import axios from 'axios';
-import { assignImplementationToYSE, setEvidenceStrength } from './put';
+import { assignImplementationToYSE, copyEvidenceToCampuses, setEvidenceStrength } from './put';
 
 describe('setEvidenceStrength', () => {
     beforeEach(() => {
@@ -59,5 +59,39 @@ describe('assignImplementationToYSE with strength', () => {
         axios.put.mockResolvedValueOnce({ status: 200, data: { status: 'success' } });
         await assignImplementationToYSE('9999-9999_1_web_sfsu', 'Process', 'My Process');
         expect(axios.put.mock.calls[0][1]).not.toHaveProperty('strength');
+    });
+});
+
+describe('copyEvidenceToCampuses', () => {
+    beforeEach(() => {
+        axios.put.mockReset();
+    });
+
+    it('PUTs the copy action with targets and include_people', async () => {
+        axios.put.mockResolvedValueOnce({
+            status: 200,
+            data: { status: 'success', data: { ssu: { created: 2, already_linked: 0, skipped_missing_indicator: 0, people_added: 3 } } },
+        });
+
+        const result = await copyEvidenceToCampuses('Process', 'abc123', '2025-2026', 'sfsu', ['ssu', 'csueb'], true);
+
+        const [url, payload] = axios.put.mock.calls[0];
+        expect(url).toMatch(/\/implementations$/);
+        expect(payload).toEqual({
+            action: 'copy_evidence_to_campuses',
+            implementation_type: 'Process',
+            unique_id: 'abc123',
+            year_name: '2025-2026',
+            source_campus: 'sfsu',
+            target_campuses: ['ssu', 'csueb'],
+            include_people: true,
+        });
+        expect(result.data.ssu.created).toBe(2);
+    });
+
+    it('passes include_people false through', async () => {
+        axios.put.mockResolvedValueOnce({ status: 200, data: { status: 'success', data: {} } });
+        await copyEvidenceToCampuses('Process', 'abc123', '2025-2026', 'sfsu', ['ssu'], false);
+        expect(axios.put.mock.calls[0][1].include_people).toBe(false);
     });
 });

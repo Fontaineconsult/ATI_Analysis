@@ -3,6 +3,8 @@
 #
 from datetime import datetime
 
+from neomodel import db
+
 from app.database.class_factory import implementation_classes
 from app.database.graph_schema import *
 from app.endpoints.data_api.errors.custom_exceptions import NotFoundError, CrudError, ValidationError
@@ -47,6 +49,108 @@ def assign_implementation_to_year_success_indicator(year_success_identifier: str
         raise
     except Exception as e:
         raise CrudError(f"Error assigning implementation {implementation_title} to success indicator {year_success_identifier}: {e}")
+
+
+def copy_evidence_to_campuses(implementation_type: str,
+                              implementation_unique_id: str,
+                              year_name: str,
+                              source_campus: str,
+                              target_campuses,
+                              include_people: bool = True):
+    """Copy an implementation's current-year evidence links from one campus to
+    others: for each YSE the implementation evidences at `source_campus` in
+    `year_name`, MERGE an is_evidence_for link to the SAME indicator's YSE at
+    each target campus (matched via the tracks edge — no identifier surgery).
+
+    - Strength copies ON CREATE only: a target link that already exists keeps
+      its own rating.
+    - include_people also MERGEs the source YSE's assigned people
+      (Person-implements->YSE) onto the target YSE — for every matched pair,
+      so a re-run syncs newly assigned people. Implementation-level owners /
+      participants / assets live on the shared implementation node and need
+      no copying.
+    - Idempotent throughout; targets with no matching indicator YSE are
+      reported as skipped, never an error.
+
+    :return: {campus: {created, already_linked, skipped_missing_indicator,
+              people_added}}
+    """
+    if implementation_type not in implementation_classes:
+        raise ValidationError(f"Invalid implementation_type: {implementation_type}")
+    if not isinstance(target_campuses, (list, tuple)) or not target_campuses:
+        raise ValidationError("target_campuses must be a non-empty list of campus abbreviations")
+    if source_campus in target_campuses:
+        raise ValidationError("source campus cannot be a copy target")
+
+    implementation_class = implementation_classes[implementation_type]
+    try:
+        impl_node = implementation_class.nodes.get(unique_id=implementation_unique_id)
+    except implementation_class.DoesNotExist:
+        raise NotFoundError(f"No {implementation_type} found with unique_id: {implementation_unique_id}")
+
+    # Retired implementations are closed to new evidence assignment.
+    if getattr(impl_node, 'retired', False):
+        raise ValidationError(
+            f"Implementation {impl_node.title} is retired and cannot be assigned to new evidence"
+        )
+
+    label = implementation_type  # validated against implementation_classes above
+
+    summary = {}
+    for target in target_campuses:
+        rows, _ = db.cypher_query(
+            f"""
+            MATCH (impl:{label} {{unique_id: $uid}})-[src_r:is_evidence_for]->(src:YearSuccessEvidence)
+                  -[:evidence_in_year]->(y:AcademicYear {{name: $year}})
+            WHERE (src)-[:evidence_at_campus]->(:Campus {{abbreviation: $source}})
+            MATCH (src)-[:tracks]->(si:SuccessIndicator)
+            OPTIONAL MATCH (tgt:YearSuccessEvidence)-[:tracks]->(si)
+              WHERE (tgt)-[:evidence_in_year]->(y)
+                AND (tgt)-[:evidence_at_campus]->(:Campus {{abbreviation: $target}})
+            RETURN src.year_identifier, src_r.strength, tgt.year_identifier,
+                   tgt IS NOT NULL AND exists((impl)-[:is_evidence_for]->(tgt))
+            """,
+            {"uid": implementation_unique_id, "year": year_name,
+             "source": source_campus, "target": target},
+        )
+
+        created = already = missing = people_added = 0
+        for src_id, strength, tgt_id, already_linked in rows:
+            if tgt_id is None:
+                missing += 1
+                continue
+            if already_linked:
+                already += 1
+            else:
+                db.cypher_query(
+                    f"""
+                    MATCH (impl:{label} {{unique_id: $uid}}), (tgt:YearSuccessEvidence {{year_identifier: $tgt_id}})
+                    MERGE (impl)-[nr:is_evidence_for]->(tgt)
+                    ON CREATE SET nr.strength = $strength
+                    """,
+                    {"uid": implementation_unique_id, "tgt_id": tgt_id, "strength": strength},
+                )
+                created += 1
+            if include_people:
+                prows, _ = db.cypher_query(
+                    """
+                    MATCH (p:Person)-[:implements]->(:YearSuccessEvidence {year_identifier: $src_id})
+                    MATCH (tgt:YearSuccessEvidence {year_identifier: $tgt_id})
+                    WHERE NOT (p)-[:implements]->(tgt)
+                    MERGE (p)-[:implements]->(tgt)
+                    RETURN count(p)
+                    """,
+                    {"src_id": src_id, "tgt_id": tgt_id},
+                )
+                people_added += prows[0][0] if prows else 0
+
+        summary[target] = {
+            "created": created,
+            "already_linked": already,
+            "skipped_missing_indicator": missing,
+            "people_added": people_added,
+        }
+    return summary
 
 
 def set_evidence_strength(year_success_identifier: str,

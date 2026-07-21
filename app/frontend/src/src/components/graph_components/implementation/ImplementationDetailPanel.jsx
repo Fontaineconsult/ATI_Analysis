@@ -45,6 +45,7 @@ import {
 } from './implementationConfig';
 import {
     assignPersonAsOwner,
+    copyEvidenceToCampuses,
     retireImplementation,
     setImplementationDimensions,
     unassignPersonAsOwner,
@@ -82,7 +83,7 @@ function ImplementationDetailPanel({ implementation, onAfterChange }) {
     const { campus } = useParams();
     const navigate = useNavigate();
     const toast = useToast();
-    const { currentAcademicYear } = useContext(SettingsContext);
+    const { currentAcademicYear, campuses: allCampuses } = useContext(SettingsContext);
     const { individuals, loadAllIndividuals } = useContext(UserContext);
     const { describeField } = useDescriptors();
     const { isOpen: isManageYsesOpen, onOpen: onManageYsesOpen, onClose: onManageYsesClose } = useDisclosure();
@@ -103,6 +104,12 @@ function ImplementationDetailPanel({ implementation, onAfterChange }) {
     const retireDateRef = useRef(null);
     const [retireForm, setRetireForm] = useState({ date: '', note: '' });
     const [retiring, setRetiring] = useState(false);
+
+    // Copy-to-campuses (duplicate this year's evidence links at other campuses).
+    const { isOpen: isCopyOpen, onOpen: onCopyOpen, onClose: onCopyClose } = useDisclosure();
+    const [copyTargets, setCopyTargets] = useState([]);
+    const [copyPeople, setCopyPeople] = useState(true);
+    const [copying, setCopying] = useState(false);
 
     const refresh = () => { if (onAfterChange) onAfterChange(); };
 
@@ -296,6 +303,46 @@ function ImplementationDetailPanel({ implementation, onAfterChange }) {
         }
     };
 
+    // Copy-to-campuses: duplicate this year's evidence links (same indicators)
+    // at the selected campuses. Owners/participants/assets live on this shared
+    // implementation node and need no copying.
+    const otherCampuses = (allCampuses || []).filter((c) => c.abbreviation !== campus);
+
+    const openCopy = () => {
+        setCopyTargets(otherCampuses.map((c) => c.abbreviation));
+        setCopyPeople(true);
+        onCopyOpen();
+    };
+
+    const handleCopy = async () => {
+        setCopying(true);
+        try {
+            const resp = await copyEvidenceToCampuses(
+                type, implementation.unique_id, currentAcademicYear, campus, copyTargets, copyPeople,
+            );
+            const summary = resp?.data || {};
+            const parts = Object.entries(summary).map(([abbrev, s]) => {
+                const bits = [`${s.created} created`, `${s.already_linked} already linked`];
+                if (s.skipped_missing_indicator) bits.push(`${s.skipped_missing_indicator} skipped (no matching indicator)`);
+                if (copyPeople && s.people_added) bits.push(`${s.people_added} people added`);
+                return `${abbrev.toUpperCase()}: ${bits.join(', ')}`;
+            });
+            toast({
+                title: 'Evidence links copied',
+                description: parts.join(' · ') || 'Nothing to copy.',
+                status: 'success',
+                duration: 7000,
+                isClosable: true,
+            });
+            onCopyClose();
+            refresh();
+        } catch (e) {
+            toast({ title: 'Copy failed', description: e?.response?.data?.error || e.message, status: 'error', duration: 3500 });
+        } finally {
+            setCopying(false);
+        }
+    };
+
     return (
         <VStack align="stretch" spacing={4}>
             {/* Identity header */}
@@ -421,6 +468,61 @@ function ImplementationDetailPanel({ implementation, onAfterChange }) {
                 </ModalContent>
             </Modal>
 
+            {/* Copy-to-campuses modal — duplicate this year's evidence links */}
+            <Modal isOpen={isCopyOpen} onClose={onCopyClose} size="md">
+                <ModalOverlay />
+                <ModalContent>
+                    <ModalHeader fontSize="md">Copy evidence links to other campuses</ModalHeader>
+                    <ModalCloseButton />
+                    <ModalBody>
+                        <VStack align="stretch" spacing={3}>
+                            <Text fontSize="sm" color="gray.700">
+                                Copies the {ysesThisYearHere.length} evidence link{ysesThisYearHere.length === 1 ? '' : 's'} this
+                                implementation has at {(campus || '').toUpperCase()} for {currentAcademicYear} to the same
+                                indicators at the selected campuses. Strength ratings carry over to new links;
+                                links that already exist are left untouched.
+                            </Text>
+                            <FormControl>
+                                <FormLabel fontSize="sm" color="gray.700" fontWeight="semibold">Target campuses</FormLabel>
+                                <CheckboxGroup value={copyTargets} onChange={(vals) => setCopyTargets(vals)}>
+                                    <VStack align="stretch" spacing={1}>
+                                        {otherCampuses.map((c) => (
+                                            <Checkbox key={c.abbreviation} value={c.abbreviation} size="sm">
+                                                {c.name}
+                                            </Checkbox>
+                                        ))}
+                                    </VStack>
+                                </CheckboxGroup>
+                            </FormControl>
+                            <Checkbox
+                                size="sm"
+                                isChecked={copyPeople}
+                                onChange={(e) => setCopyPeople(e.target.checked)}
+                            >
+                                Also copy assigned people onto the target indicators
+                            </Checkbox>
+                            <Text fontSize="xs" color="gray.600">
+                                Owners, participants, and applied assets live on the implementation itself and are
+                                already shared across campuses — nothing to copy there.
+                            </Text>
+                        </VStack>
+                    </ModalBody>
+                    <ModalFooter>
+                        <Button variant="ghost" size="sm" mr={2} onClick={onCopyClose}>Cancel</Button>
+                        <Button
+                            colorScheme="teal"
+                            size="sm"
+                            onClick={handleCopy}
+                            isLoading={copying}
+                            loadingText="Copying"
+                            isDisabled={copyTargets.length === 0}
+                        >
+                            Copy
+                        </Button>
+                    </ModalFooter>
+                </ModalContent>
+            </Modal>
+
             {/* Details — title / description / dimensions (inline edit) */}
             <Card
                 title="Details"
@@ -537,21 +639,39 @@ function ImplementationDetailPanel({ implementation, onAfterChange }) {
             <Card
                 title={<>Evidence For · {currentAcademicYear} ({ysesThisYearHere.length}) <HelpTip relType="is_evidence_for" /></>}
                 action={
-                    <Tooltip
-                        label="Retired implementations cannot be assigned to new evidence"
-                        isDisabled={!implementation.retired}
-                        hasArrow
-                    >
-                        <Button
-                            size="xs"
-                            colorScheme="teal"
-                            variant="outline"
-                            onClick={onManageYsesOpen}
-                            isDisabled={implementation.retired}
+                    <HStack spacing={2}>
+                        <Tooltip
+                            label={implementation.retired
+                                ? 'Retired implementations cannot be assigned to new evidence'
+                                : 'Duplicate this year’s evidence links (same indicators) at other campuses'}
+                            hasArrow
                         >
-                            Manage Linked YSEs
-                        </Button>
-                    </Tooltip>
+                            <Button
+                                size="xs"
+                                colorScheme="teal"
+                                variant="outline"
+                                onClick={openCopy}
+                                isDisabled={implementation.retired || ysesThisYearHere.length === 0 || otherCampuses.length === 0}
+                            >
+                                Copy to campuses…
+                            </Button>
+                        </Tooltip>
+                        <Tooltip
+                            label="Retired implementations cannot be assigned to new evidence"
+                            isDisabled={!implementation.retired}
+                            hasArrow
+                        >
+                            <Button
+                                size="xs"
+                                colorScheme="teal"
+                                variant="outline"
+                                onClick={onManageYsesOpen}
+                                isDisabled={implementation.retired}
+                            >
+                                Manage Linked YSEs
+                            </Button>
+                        </Tooltip>
+                    </HStack>
                 }
             >
                 <Divider mb={3} borderColor="gray.200" />
