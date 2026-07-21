@@ -22,6 +22,7 @@ import {
 import {useNavigate, useParams} from "react-router-dom";
 import {navigateToIndicator} from "./utils/tools";
 import { getStatusBackgroundColor, getStatusTextColor } from "./utils/statusColors";
+import { strengthConfig } from "../components/graph_components/implementation/implementationConfig";
 import EvidenceQualityPanel from "../components/dashboard_components/report_components/EvidenceQualityPanel";
 
 let datas = {
@@ -330,6 +331,9 @@ function generateReport(evidenceItem) {
             report += `\n[${etype.type}] `;
             if (etype.evidenceType?.properties?.title) {
                 report += etype.evidenceType.properties.title;
+            }
+            if (etype.evidenceType?.properties?.retired) {
+                report += ' (RETIRED)';
             }
             report += '\n';
 
@@ -973,11 +977,32 @@ function GenerateReportComponent({ evidenceItem }) {
                                     borderRadius="md"
                                     borderLeft="4px solid"
                                     borderLeftColor="teal.400"
+                                    className={etype.evidenceType?.properties?.retired ? 'retired' : undefined}
                                 >
                                     <HStack spacing={2} mb={3}>
                                         <Badge colorScheme="teal" fontSize="xs">
                                             {etype.type}
                                         </Badge>
+                                        {strengthConfig(etype.strength) && (
+                                            <Badge
+                                                colorScheme={strengthConfig(etype.strength).colorScheme}
+                                                variant="subtle"
+                                                fontSize="xs"
+                                                title={strengthConfig(etype.strength).description}
+                                            >
+                                                {strengthConfig(etype.strength).label}
+                                            </Badge>
+                                        )}
+                                        {etype.evidenceType?.properties?.retired && (
+                                            <Badge
+                                                colorScheme="gray"
+                                                variant="solid"
+                                                fontSize="xs"
+                                                title={etype.evidenceType.properties.retired_note || 'This implementation has been retired'}
+                                            >
+                                                Retired{etype.evidenceType.properties.retired_date ? ` ${String(etype.evidenceType.properties.retired_date)}` : ''}
+                                            </Badge>
+                                        )}
                                         {etype.evidenceType?.properties?.title && (
                                             <Heading
                                                 as="h4"

@@ -117,10 +117,11 @@ def _supporting(manager, academic_year):
     return out
 
 
-def _implementation_payload(impl, type_name, academic_year):
+def _implementation_payload(impl, type_name, academic_year, strength=None):
     """Render-ready projection of one implementation node: its documentation (filtered),
     owner, AMM dimensions, and — for the doing-types — accountable working group,
-    participant team, and the interfaces it remediates."""
+    participant team, and the interfaces it remediates. `strength` is the 0-3
+    rating carried on this YSE's is_evidence_for rel (None = unrated)."""
     owner = impl.owned_by.single() if hasattr(impl, "owned_by") else None
 
     payload = {
@@ -128,6 +129,10 @@ def _implementation_payload(impl, type_name, academic_year):
         "unique_id": impl.unique_id,
         "title": impl.title,
         "description": impl.description,
+        "strength": strength,
+        "retired": bool(getattr(impl, "retired", False)),
+        "retired_date": str(impl.retired_date) if getattr(impl, "retired_date", None) else None,
+        "retired_note": getattr(impl, "retired_note", None),
         "owner": _person_ref(owner) if owner else None,
         "dimensions": (
             [{"handle": d.handle, "name": d.name} for d in impl.classified_under.all()]
@@ -309,8 +314,13 @@ def get_indicator_report(composite_key, academic_year, campus_abbreviation=None)
 
     implementations = []
     for manager_name, type_name in _EVIDENCE_MANAGERS:
-        for impl in getattr(yse, manager_name).all():
-            implementations.append(_implementation_payload(impl, type_name, academic_year))
+        manager = getattr(yse, manager_name)
+        for impl in manager.all():
+            rel = manager.relationship(impl)
+            implementations.append(_implementation_payload(
+                impl, type_name, academic_year,
+                strength=getattr(rel, "strength", None) if rel else None,
+            ))
 
     rollup = _rollup(year_identifier)
 

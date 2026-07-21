@@ -74,6 +74,24 @@ export function getIndicatorSummary(wrapper) {
     }
     const implCount = evidenceTypes.length;
 
+    // Retirement across the indicator's implementations: when EVERY linked
+    // implementation is retired, the impl count looks healthy while no active
+    // work addresses the indicator — same diagnostic shape as noActiveDocs.
+    const retiredImplCount = evidenceTypes.filter(
+        (et) => isDeprecated(et.evidenceType?.properties?.retired),
+    ).length;
+    const allImplsRetired = implCount > 0 && retiredImplCount === implCount;
+
+    // Evidence-strength quality: the STRONGEST rated is_evidence_for link
+    // (0-3, null = no link has a rating yet). The best link answers "how well
+    // is this indicator addressed?"; unrated links are ignored rather than
+    // treated as zero.
+    const ratedStrengths = evidenceTypes
+        .map((et) => et.strength)
+        .filter((s) => s !== null && s !== undefined)
+        .map(Number);
+    const maxStrength = ratedStrengths.length ? Math.max(...ratedStrengths) : null;
+
     // Some indicators are not met through traditional implementation work; when the
     // SI settings flag is set we suppress the missing-implementation diagnostic.
     const overrideImplementationRequirement =
@@ -89,6 +107,10 @@ export function getIndicatorSummary(wrapper) {
         statusValue: statusProps.status_value ?? null,
         personCount: ev.persons?.length || 0,
         implCount,
+        maxStrength,
+        retiredImplCount,
+        // Every linked implementation is retired — no active work this year.
+        allImplsRetired,
         noImplementations: implCount === 0,
         overrideImplementationRequirement,
         // Only flag missing implementations when the indicator actually requires them.

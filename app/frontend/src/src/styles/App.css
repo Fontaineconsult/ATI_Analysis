@@ -351,9 +351,13 @@ button:focus, a:focus {
   transition: opacity 0.3s ease, background-color 0.3s ease;
 }
 
-/* Styling for rows that have been removed */
-.success-indicator-row-removed {
-  opacity: 0.6;
+/* Retired implementation cards (reports views): the whole card reads as
+   inactive. grayscale(1) kills every color accent (left border, header band,
+   type badges) while preserving luminance — so real WCAG contrast is intact.
+   Never use opacity for this: it washes text below the AA threshold. */
+.retired {
+  filter: grayscale(1);
+  background-color: var(--chakra-colors-gray-50);
 }
 
 .App,

@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useContext, useEffect, useRef, useState } from 'react';
 import {
     Alert,
     AlertIcon,
@@ -39,11 +39,14 @@ import {
     hasAssets,
     hasParticipants,
     isDimensioned,
+    strengthConfig,
     typeColor,
     typeLabel,
 } from './implementationConfig';
 import {
     assignPersonAsOwner,
+    copyEvidenceToCampuses,
+    retireImplementation,
     setImplementationDimensions,
     unassignPersonAsOwner,
     updateImplementation,
@@ -80,7 +83,7 @@ function ImplementationDetailPanel({ implementation, onAfterChange }) {
     const { campus } = useParams();
     const navigate = useNavigate();
     const toast = useToast();
-    const { currentAcademicYear } = useContext(SettingsContext);
+    const { currentAcademicYear, campuses: allCampuses } = useContext(SettingsContext);
     const { individuals, loadAllIndividuals } = useContext(UserContext);
     const { describeField } = useDescriptors();
     const { isOpen: isManageYsesOpen, onOpen: onManageYsesOpen, onClose: onManageYsesClose } = useDisclosure();
@@ -95,6 +98,18 @@ function ImplementationDetailPanel({ implementation, onAfterChange }) {
     const [editForm, setEditForm] = useState({ title: '', description: '', dimensions: [] });
     const [dimensionOptions, setDimensionOptions] = useState([]);
     const [removingYse, setRemovingYse] = useState(null);
+
+    // Retirement lifecycle (retire modal + unretire confirm).
+    const { isOpen: isRetireOpen, onOpen: onRetireOpen, onClose: onRetireClose } = useDisclosure();
+    const retireDateRef = useRef(null);
+    const [retireForm, setRetireForm] = useState({ date: '', note: '' });
+    const [retiring, setRetiring] = useState(false);
+
+    // Copy-to-campuses (duplicate this year's evidence links at other campuses).
+    const { isOpen: isCopyOpen, onOpen: onCopyOpen, onClose: onCopyClose } = useDisclosure();
+    const [copyTargets, setCopyTargets] = useState([]);
+    const [copyPeople, setCopyPeople] = useState(true);
+    const [copying, setCopying] = useState(false);
 
     const refresh = () => { if (onAfterChange) onAfterChange(); };
 
@@ -254,6 +269,80 @@ function ImplementationDetailPanel({ implementation, onAfterChange }) {
 
     const dimensionLabel = describeField?.('Implementation', 'dimensions')?.title || 'AMM Dimensions';
 
+    const openRetire = () => {
+        setRetireForm({ date: new Date().toISOString().slice(0, 10), note: '' });
+        onRetireOpen();
+    };
+
+    const handleRetire = async () => {
+        setRetiring(true);
+        try {
+            await retireImplementation(type, implementation.unique_id, {
+                retired: true,
+                retired_date: retireForm.date || undefined,
+                retired_note: retireForm.note || undefined,
+            });
+            toast({ title: `${typeLabel(type)} retired`, status: 'success', duration: 2000 });
+            onRetireClose();
+            refresh();
+        } catch (e) {
+            toast({ title: 'Failed to retire', description: e?.response?.data?.error || e.message, status: 'error', duration: 3500 });
+        } finally {
+            setRetiring(false);
+        }
+    };
+
+    const handleUnretire = async () => {
+        if (!window.confirm('Reactivate this implementation? The retired date and note will be cleared.')) return;
+        try {
+            await retireImplementation(type, implementation.unique_id, { retired: false });
+            toast({ title: `${typeLabel(type)} reactivated`, status: 'success', duration: 2000 });
+            refresh();
+        } catch (e) {
+            toast({ title: 'Failed to reactivate', description: e?.response?.data?.error || e.message, status: 'error', duration: 3500 });
+        }
+    };
+
+    // Copy-to-campuses: duplicate this year's evidence links (same indicators)
+    // at the selected campuses. Owners/participants/assets live on this shared
+    // implementation node and need no copying.
+    const otherCampuses = (allCampuses || []).filter((c) => c.abbreviation !== campus);
+
+    const openCopy = () => {
+        setCopyTargets(otherCampuses.map((c) => c.abbreviation));
+        setCopyPeople(true);
+        onCopyOpen();
+    };
+
+    const handleCopy = async () => {
+        setCopying(true);
+        try {
+            const resp = await copyEvidenceToCampuses(
+                type, implementation.unique_id, currentAcademicYear, campus, copyTargets, copyPeople,
+            );
+            const summary = resp?.data || {};
+            const parts = Object.entries(summary).map(([abbrev, s]) => {
+                const bits = [`${s.created} created`, `${s.already_linked} already linked`];
+                if (s.skipped_missing_indicator) bits.push(`${s.skipped_missing_indicator} skipped (no matching indicator)`);
+                if (copyPeople && s.people_added) bits.push(`${s.people_added} people added`);
+                return `${abbrev.toUpperCase()}: ${bits.join(', ')}`;
+            });
+            toast({
+                title: 'Evidence links copied',
+                description: parts.join(' · ') || 'Nothing to copy.',
+                status: 'success',
+                duration: 7000,
+                isClosable: true,
+            });
+            onCopyClose();
+            refresh();
+        } catch (e) {
+            toast({ title: 'Copy failed', description: e?.response?.data?.error || e.message, status: 'error', duration: 3500 });
+        } finally {
+            setCopying(false);
+        }
+    };
+
     return (
         <VStack align="stretch" spacing={4}>
             {/* Identity header */}
@@ -263,12 +352,25 @@ function ImplementationDetailPanel({ implementation, onAfterChange }) {
                         {implementation.title || '(untitled)'}
                     </Heading>
                     <HStack spacing={2} flexShrink={0}>
+                        {implementation.retired && (
+                            <Badge colorScheme="gray" variant="solid" fontSize="xs" px={2} py={1} borderRadius="md">
+                                Retired
+                            </Badge>
+                        )}
                         <Badge colorScheme={typeColor(type)} fontSize="xs" px={2} py={1} borderRadius="md">
                             {typeLabel(type)}
                         </Badge>
                         <HelpTip nodeType={type} />
                         <Button size="xs" variant="ghost" colorScheme="teal" leftIcon={<LinkIcon />} onClick={copyLink}>
                             Copy link
+                        </Button>
+                        <Button
+                            size="xs"
+                            variant="ghost"
+                            colorScheme="gray"
+                            onClick={implementation.retired ? handleUnretire : openRetire}
+                        >
+                            {implementation.retired ? 'Unretire' : 'Retire'}
                         </Button>
                     </HStack>
                 </HStack>
@@ -300,6 +402,21 @@ function ImplementationDetailPanel({ implementation, onAfterChange }) {
                 </Wrap>
             </Card>
 
+            {/* Retirement banner — the why and when, right under the identity card */}
+            {implementation.retired && (
+                <Alert status="info" borderRadius="lg" fontSize="sm" bg="gray.100">
+                    <AlertIcon color="gray.600" />
+                    <Box>
+                        <Text fontWeight="semibold" color="gray.800">
+                            Retired{implementation.retired_date ? ` on ${implementation.retired_date}` : ''}
+                        </Text>
+                        {implementation.retired_note && (
+                            <Text color="gray.700" mt={0.5}>{implementation.retired_note}</Text>
+                        )}
+                    </Box>
+                </Alert>
+            )}
+
             {/* Warning: every attached document/webpage is dead — no live documentation */}
             {docsAllDeprecated && (
                 <Alert status="warning" borderRadius="lg" fontSize="sm">
@@ -307,6 +424,104 @@ function ImplementationDetailPanel({ implementation, onAfterChange }) {
                     All {documentationCount} attached documentation item{documentationCount === 1 ? ' is' : 's are'} deprecated or no longer available — this implementation has no active documentation.
                 </Alert>
             )}
+
+            {/* Retire modal — date (default today) + optional why-note */}
+            <Modal isOpen={isRetireOpen} onClose={onRetireClose} initialFocusRef={retireDateRef} size="md">
+                <ModalOverlay />
+                <ModalContent>
+                    <ModalHeader fontSize="md">Retire {typeLabel(type)}</ModalHeader>
+                    <ModalCloseButton />
+                    <ModalBody>
+                        <VStack align="stretch" spacing={3}>
+                            <Text fontSize="sm" color="gray.700">
+                                Marks “{implementation.title}” as no longer in use. Evidence links and
+                                history stay intact; it will be hidden from the list by default.
+                            </Text>
+                            <FormControl>
+                                <FormLabel fontSize="sm" color="gray.700" fontWeight="semibold">Retired date</FormLabel>
+                                <Input
+                                    ref={retireDateRef}
+                                    type="date"
+                                    size="sm"
+                                    value={retireForm.date}
+                                    onChange={(e) => setRetireForm((f) => ({ ...f, date: e.target.value }))}
+                                />
+                            </FormControl>
+                            <FormControl>
+                                <FormLabel fontSize="sm" color="gray.700" fontWeight="semibold">Note — why it was retired</FormLabel>
+                                <Textarea
+                                    size="sm"
+                                    rows={3}
+                                    value={retireForm.note}
+                                    onChange={(e) => setRetireForm((f) => ({ ...f, note: e.target.value }))}
+                                    placeholder="Replaced by …, superseded by …, no longer applicable because …"
+                                />
+                            </FormControl>
+                        </VStack>
+                    </ModalBody>
+                    <ModalFooter>
+                        <Button variant="ghost" size="sm" mr={2} onClick={onRetireClose}>Cancel</Button>
+                        <Button colorScheme="gray" size="sm" onClick={handleRetire} isLoading={retiring} loadingText="Retiring">
+                            Retire
+                        </Button>
+                    </ModalFooter>
+                </ModalContent>
+            </Modal>
+
+            {/* Copy-to-campuses modal — duplicate this year's evidence links */}
+            <Modal isOpen={isCopyOpen} onClose={onCopyClose} size="md">
+                <ModalOverlay />
+                <ModalContent>
+                    <ModalHeader fontSize="md">Copy evidence links to other campuses</ModalHeader>
+                    <ModalCloseButton />
+                    <ModalBody>
+                        <VStack align="stretch" spacing={3}>
+                            <Text fontSize="sm" color="gray.700">
+                                Copies the {ysesThisYearHere.length} evidence link{ysesThisYearHere.length === 1 ? '' : 's'} this
+                                implementation has at {(campus || '').toUpperCase()} for {currentAcademicYear} to the same
+                                indicators at the selected campuses. Strength ratings carry over to new links;
+                                links that already exist are left untouched.
+                            </Text>
+                            <FormControl>
+                                <FormLabel fontSize="sm" color="gray.700" fontWeight="semibold">Target campuses</FormLabel>
+                                <CheckboxGroup value={copyTargets} onChange={(vals) => setCopyTargets(vals)}>
+                                    <VStack align="stretch" spacing={1}>
+                                        {otherCampuses.map((c) => (
+                                            <Checkbox key={c.abbreviation} value={c.abbreviation} size="sm">
+                                                {c.name}
+                                            </Checkbox>
+                                        ))}
+                                    </VStack>
+                                </CheckboxGroup>
+                            </FormControl>
+                            <Checkbox
+                                size="sm"
+                                isChecked={copyPeople}
+                                onChange={(e) => setCopyPeople(e.target.checked)}
+                            >
+                                Also copy assigned people onto the target indicators
+                            </Checkbox>
+                            <Text fontSize="xs" color="gray.600">
+                                Owners, participants, and applied assets live on the implementation itself and are
+                                already shared across campuses — nothing to copy there.
+                            </Text>
+                        </VStack>
+                    </ModalBody>
+                    <ModalFooter>
+                        <Button variant="ghost" size="sm" mr={2} onClick={onCopyClose}>Cancel</Button>
+                        <Button
+                            colorScheme="teal"
+                            size="sm"
+                            onClick={handleCopy}
+                            isLoading={copying}
+                            loadingText="Copying"
+                            isDisabled={copyTargets.length === 0}
+                        >
+                            Copy
+                        </Button>
+                    </ModalFooter>
+                </ModalContent>
+            </Modal>
 
             {/* Details — title / description / dimensions (inline edit) */}
             <Card
@@ -424,9 +639,39 @@ function ImplementationDetailPanel({ implementation, onAfterChange }) {
             <Card
                 title={<>Evidence For · {currentAcademicYear} ({ysesThisYearHere.length}) <HelpTip relType="is_evidence_for" /></>}
                 action={
-                    <Button size="xs" colorScheme="teal" variant="outline" onClick={onManageYsesOpen}>
-                        Manage Linked YSEs
-                    </Button>
+                    <HStack spacing={2}>
+                        <Tooltip
+                            label={implementation.retired
+                                ? 'Retired implementations cannot be assigned to new evidence'
+                                : 'Duplicate this year’s evidence links (same indicators) at other campuses'}
+                            hasArrow
+                        >
+                            <Button
+                                size="xs"
+                                colorScheme="teal"
+                                variant="outline"
+                                onClick={openCopy}
+                                isDisabled={implementation.retired || ysesThisYearHere.length === 0 || otherCampuses.length === 0}
+                            >
+                                Copy to campuses…
+                            </Button>
+                        </Tooltip>
+                        <Tooltip
+                            label="Retired implementations cannot be assigned to new evidence"
+                            isDisabled={!implementation.retired}
+                            hasArrow
+                        >
+                            <Button
+                                size="xs"
+                                colorScheme="teal"
+                                variant="outline"
+                                onClick={onManageYsesOpen}
+                                isDisabled={implementation.retired}
+                            >
+                                Manage Linked YSEs
+                            </Button>
+                        </Tooltip>
+                    </HStack>
                 }
             >
                 <Divider mb={3} borderColor="gray.200" />
@@ -459,6 +704,24 @@ function ImplementationDetailPanel({ implementation, onAfterChange }) {
                                     <Text fontSize="xs" color="gray.600" noOfLines={1}>
                                         {yse.success_indicator}
                                     </Text>
+                                    {strengthConfig(yse.strength) ? (
+                                        <Badge
+                                            colorScheme={strengthConfig(yse.strength).colorScheme}
+                                            variant="subtle"
+                                            fontSize="2xs"
+                                            borderRadius="full"
+                                            px={2}
+                                            flexShrink={0}
+                                            title={strengthConfig(yse.strength).description}
+                                        >
+                                            {strengthConfig(yse.strength).label}
+                                        </Badge>
+                                    ) : (
+                                        <Badge colorScheme="gray" variant="outline" fontSize="2xs" borderRadius="full" px={2} flexShrink={0}
+                                               title="No strength rating yet — set it from the indicator's goal view">
+                                            Unrated
+                                        </Badge>
+                                    )}
                                 </HStack>
                                 <Tooltip label="Remove this evidence link">
                                     <IconButton

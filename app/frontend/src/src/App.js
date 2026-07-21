@@ -28,7 +28,7 @@ import SubNavbar from './components/SubNavbar';
 import YseAvailabilityBanner from './components/functional_components/YseAvailabilityBanner';
 import './styles/App.css';
 import { useSettings } from "./context/SettingsContext";
-import sfbrnLogoLight from './assets/img/sfbrn-logo-light.svg';
+import sfbrnLogoLightEg from './assets/img/sfbrn-logo-light-eg.svg';
 
 // Wrapper component that syncs the :campus URL param to SettingsContext
 function CampusSyncWrapper({ children }) {
@@ -142,8 +142,8 @@ function AppContent() {
                         <Box>
                             <Heading as="h1" size="md" whiteSpace="nowrap">
                                 <Image
-                                    src={sfbrnLogoLight}
-                                    alt={`SFBRN â€” ${campusDisplayName} ATI Annual Report`}
+                                    src={sfbrnLogoLightEg}
+                                    alt={`SFBRN Evidence Graph — ${campusDisplayName} ATI Annual Report`}
                                     height="24px"
                                     width="auto"
                                     draggable={false}

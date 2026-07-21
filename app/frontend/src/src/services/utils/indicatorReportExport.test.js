@@ -85,3 +85,67 @@ describe('buildIndicatorReport', () => {
         expect(buildIndicatorReport(null)).toEqual({ html: '', plainText: '' });
     });
 });
+
+describe('buildIndicatorReport — retired implementations', () => {
+    const retiredReport = {
+        ...REPORT,
+        implementations: [{
+            ...REPORT.implementations[0],
+            retired: true,
+            retired_date: '2026-06-30',
+        }],
+    };
+    const { html, plainText } = buildIndicatorReport(retiredReport, { origin: ORIGIN });
+
+    it('flags retired implementations in the HTML export', () => {
+        expect(html).toContain('RETIRED 2026-06-30');
+    });
+
+    it('flags retired implementations in the plain-text export', () => {
+        expect(plainText).toContain('(RETIRED 2026-06-30)');
+    });
+});
+
+describe('buildIndicatorReport — evidence strength', () => {
+    const ratedReport = {
+        ...REPORT,
+        implementations: [{ ...REPORT.implementations[0], strength: 2 }],
+    };
+    const { html, plainText } = buildIndicatorReport(ratedReport, { origin: ORIGIN });
+
+    it('flags the strength in the HTML export', () => {
+        expect(html).toContain('STRENGTH 2 — Partial');
+    });
+
+    it('flags the strength in the plain-text export', () => {
+        expect(plainText).toContain('[Strength 2 — Partial]');
+    });
+
+    it('omits the strength tag for unrated links', () => {
+        const { html: h2, plainText: t2 } = buildIndicatorReport(REPORT, { origin: ORIGIN });
+        expect(h2).not.toContain('STRENGTH');
+        expect(t2).not.toContain('[Strength');
+    });
+});
+
+describe('buildIndicatorReport — all implementations retired', () => {
+    const allRetiredReport = {
+        ...REPORT,
+        implementations: [{ ...REPORT.implementations[0], retired: true, retired_date: '2026-06-30' }],
+    };
+    const { html, plainText } = buildIndicatorReport(allRetiredReport, { origin: ORIGIN });
+
+    it('warns in the HTML export when every implementation is retired', () => {
+        expect(html).toContain('All implementations linked to this indicator are retired');
+    });
+
+    it('warns in the plain-text export when every implementation is retired', () => {
+        expect(plainText).toContain('ALL IMPLEMENTATIONS RETIRED');
+    });
+
+    it('does not warn when at least one implementation is active', () => {
+        const { html: h2, plainText: t2 } = buildIndicatorReport(REPORT, { origin: ORIGIN });
+        expect(h2).not.toContain('All implementations linked');
+        expect(t2).not.toContain('ALL IMPLEMENTATIONS RETIRED');
+    });
+});

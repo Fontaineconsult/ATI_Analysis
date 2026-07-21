@@ -310,6 +310,20 @@ const SuccessIndicatorReportTables = ({ data, campus, navigate, openApprovalModa
                                             <Td fontWeight="medium" color="gray.700" fontSize="xs">{indicatorNumber}</Td>
                                             <Td color="gray.700" fontSize="xs">
                                                 <Text fontSize="xs">{indicator.indicator?.properties?.success_indicator}</Text>
+                                                {diag.allImplsRetired && (
+                                                    <Badge
+                                                        mt={1}
+                                                        mr={1}
+                                                        colorScheme="orange"
+                                                        variant="solid"
+                                                        fontSize="2xs"
+                                                        borderRadius="full"
+                                                        px={2}
+                                                        title="Every implementation linked to this indicator is retired — no active work addresses it"
+                                                    >
+                                                        ⚠ Imps retired
+                                                    </Badge>
+                                                )}
                                                 {diag.noActiveDocs && (
                                                     <Badge
                                                         mt={1}

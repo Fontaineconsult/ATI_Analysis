@@ -26,13 +26,13 @@ test.describe('page titles and focus on navigation', () => {
         // /dashboard client-redirects to /dashboard/reports (Dashboard.js), so
         // both land on the View Reports title.
         await gotoAndSettle(page, campusPath('/dashboard'));
-        await expect(page).toHaveTitle(/Dashboard · View Reports — ATI Annual Report/);
+        await expect(page).toHaveTitle(/Dashboard · View Reports — SFBRN Evidence Graph/);
 
         await gotoAndSettle(page, campusPath('/dashboard/campus-plan'));
-        await expect(page).toHaveTitle(/Dashboard · Campus Plan — ATI Annual Report/);
+        await expect(page).toHaveTitle(/Dashboard · Campus Plan — SFBRN Evidence Graph/);
 
         await gotoAndSettle(page, campusPath('/about/glossary'));
-        await expect(page).toHaveTitle(/About · Glossary — ATI Annual Report/);
+        await expect(page).toHaveTitle(/About · Glossary — SFBRN Evidence Graph/);
     });
 
     test('page-level navigation moves focus to main', async ({ page }) => {

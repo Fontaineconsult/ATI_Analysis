@@ -260,6 +260,27 @@ query_statuses = {
 
 
 # ---------------------------------------------------------------------------
+# Evidence strength — how strongly an implementation's is_evidence_for link
+# addresses the requirements of the success indicator it evidences. Stored as
+# an integer 0-3 on the relationship itself (graph_schema.IsEvidenceForRel);
+# an absent value means "unrated". Ordered: higher = stronger evidence.
+# ---------------------------------------------------------------------------
+evidence_strength_levels = {
+    0: "No Contribution",
+    1: "Indirect Support",
+    2: "Partial",
+    3: "Full",
+}
+
+evidence_strength_descriptions = {
+    0: "Does not address any requirement of the success indicator — review whether the link belongs at all.",
+    1: "Supports the success indicator indirectly — enabling or adjacent work that does not itself address the indicator's requirements.",
+    2: "Directly addresses some, but not all, of the success indicator's requirements.",
+    3: "Directly and completely addresses the success indicator's requirements.",
+}
+
+
+# ---------------------------------------------------------------------------
 # Public vocabularies surfaced to the frontend (read-only).
 #
 # This is the single source of truth: the frontend fetches these over
@@ -290,6 +311,8 @@ PUBLIC_VOCABULARIES = {
     "plan_statuses":         plan_statuses,
     # evidence / indicators / reference
     "status_levels":         status_levels,
+    "evidence_strength_levels":       evidence_strength_levels,
+    "evidence_strength_descriptions": evidence_strength_descriptions,
     "working_groups":        working_groups,
     "message_types":         message_types,
     "metric_types":          metric_types,

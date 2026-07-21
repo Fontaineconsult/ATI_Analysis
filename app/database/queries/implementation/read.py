@@ -160,6 +160,9 @@ def get_all_implementations_by_type(implementation_type: str) -> list:
             'title': impl.title,
             'description': impl.description,
             'type': implementation_type,
+            'retired': bool(impl.retired),
+            'retired_date': str(impl.retired_date) if impl.retired_date else None,
+            'retired_note': impl.retired_note,
             'dimensions': [
                 {'handle': d.handle, 'name': d.name} for d in impl.classified_under.all()
             ] if hasattr(impl, 'classified_under') else [],
@@ -188,6 +191,9 @@ _IMPL_PROJECTION = """
       title: impl.title,
       description: impl.description,
       type: $type_name,
+      retired: coalesce(impl.retired, false),
+      retired_date: toString(impl.retired_date),
+      retired_note: impl.retired_note,
       owned_by: [ (impl)-[:owned_by]->(p:Person) |
         { unique_id: p.unique_id, name: p.name, title: p.title, email: p.email, employee_id: p.employee_id } ],
       supporting_documents: [ (impl)-[r:is_documented_by]->(d:Document) | {
@@ -264,8 +270,9 @@ _IMPL_PROJECTION = """
             CASE WHEN sf.original_filename IS NULL THEN '' ELSE '?name=' + apoc.text.urlencode(sf.original_filename) END
         } ])
       } ],
-      is_evidence_for: [ (impl)-[:is_evidence_for]->(yse:YearSuccessEvidence) | {
+      is_evidence_for: [ (impl)-[ev_r:is_evidence_for]->(yse:YearSuccessEvidence) | {
         year_identifier: yse.year_identifier, unique_id: yse.unique_id,
+        strength: ev_r.strength,
         success_indicator: head([ (yse)-[:tracks]->(si:SuccessIndicator) | si.success_indicator ]),
         indicator_number: head([ (yse)-[:tracks]->(si:SuccessIndicator) | si.number ]),
         indicator_composite_key: head([ (yse)-[:tracks]->(si:SuccessIndicator) | si.composite_key ]),

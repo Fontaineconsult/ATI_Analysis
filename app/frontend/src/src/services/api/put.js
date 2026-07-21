@@ -389,13 +389,73 @@ export const updateImplementation = async (implementation_type, unique_id, title
 }
 
 
-export const assignImplementationToYSE = async (yearIdentifier, implementationType, implementationTitle) => {
+// Set or clear an implementation's retirement lifecycle. Retiring stamps the
+// date (default today, server-side) + optional note; un-retiring clears both.
+export const retireImplementation = async (implementation_type, unique_id, { retired, retired_date, retired_note } = {}) => {
+    try {
+        const response = await axios.put(`${process.env.REACT_APP_API_URL}/implementations`, {
+            action: "retire_implementation",
+            implementation_type,
+            unique_id,
+            retired,
+            retired_date,
+            retired_note,
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error retiring implementation:', error);
+        throw error;
+    }
+}
+
+
+// Copy this year's evidence links (and by default the source YSEs' assigned
+// people) from the current campus to other campuses. Idempotent server-side.
+export const copyEvidenceToCampuses = async (implementationType, uniqueId, yearName, sourceCampus, targetCampuses, includePeople = true) => {
+    try {
+        const response = await axios.put(`${process.env.REACT_APP_API_URL}/implementations`, {
+            action: "copy_evidence_to_campuses",
+            implementation_type: implementationType,
+            unique_id: uniqueId,
+            year_name: yearName,
+            source_campus: sourceCampus,
+            target_campuses: targetCampuses,
+            include_people: includePeople,
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error copying evidence to campuses:', error);
+        throw error;
+    }
+}
+
+
+// Set or clear (null) the 0-3 strength rating on an existing evidence link.
+export const setEvidenceStrength = async (yearIdentifier, implementationType, uniqueId, strength) => {
+    try {
+        const response = await axios.put(`${process.env.REACT_APP_API_URL}/implementations`, {
+            action: "set_evidence_strength",
+            year_success_identifier: yearIdentifier,
+            implementation_type: implementationType,
+            unique_id: uniqueId,
+            strength,
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error setting evidence strength:', error);
+        throw error;
+    }
+}
+
+
+export const assignImplementationToYSE = async (yearIdentifier, implementationType, implementationTitle, strength = undefined) => {
     try {
         const response = await axios.put(`${process.env.REACT_APP_API_URL}/implementations`, {
             action: "assign_implementation_to_yse",
             year_success_identifier: yearIdentifier,
             implementation_type: implementationType,
-            implementation_title: implementationTitle
+            implementation_title: implementationTitle,
+            ...(strength !== undefined && strength !== null ? { strength } : {}),
         });
         return response.data;
     } catch (error) {

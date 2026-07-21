@@ -14,7 +14,7 @@ import {
     VStack,
 } from '@chakra-ui/react';
 import { useAuth } from '../context/AuthContext';
-import sfbrnLogoLight from '../assets/img/sfbrn-logo-light.svg';
+import sfbrnLogoLightEg from '../assets/img/sfbrn-logo-light-eg.svg';
 
 // Sign-in screen rendered by AuthGate whenever enforcement is on and no
 // session exists. Local credentials today; when campus SSO lands this gains a
@@ -59,7 +59,7 @@ function Login() {
             >
                 {/* Brand band — mirrors the app header */}
                 <Box bg="teal.800" px={6} py={5}>
-                    <Image src={sfbrnLogoLight} alt="SFBRN" height="24px" draggable={false} />
+                    <Image src={sfbrnLogoLightEg} alt="SFBRN Evidence Graph" height="24px" draggable={false} />
                     <Box
                         mt="5px"
                         height="2px"

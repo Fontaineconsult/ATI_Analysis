@@ -30,6 +30,7 @@ import {
     HStack,
     Tooltip,
     Badge,
+    Select,
     Wrap,
     WrapItem
 } from '@chakra-ui/react';
@@ -37,6 +38,8 @@ import { DeleteIcon, ViewIcon } from '@chakra-ui/icons';
 import SupportingDocumentationTabs from "../../implementation_explorer/doc_components/SupportingDocumentationTabs";
 import normalizeWrappedDocs from "../../implementation_explorer/doc_components/normalizeWrappedDocs";
 import { unassignImplementationFromYSE } from '../../../services/api/delete';
+import { setEvidenceStrength } from '../../../services/api/put';
+import { EVIDENCE_STRENGTH_LEVELS, strengthConfig } from '../implementation/implementationConfig';
 
 function EvidenceTypeMasterList({ evidence, yearIdentifier, onRefresh }) {
 
@@ -48,6 +51,38 @@ function EvidenceTypeMasterList({ evidence, yearIdentifier, onRefresh }) {
     const cancelRef = React.useRef();
     const toast = useToast();
     const { campus } = useParams();
+    // Optimistic per-link strength overrides (key `${type}:${unique_id}`), so the
+    // select reflects the change immediately while onRefresh reloads the payload.
+    const [strengthOverrides, setStrengthOverrides] = useState({});
+
+    const handleStrengthChange = async (evidenceItem, rawValue) => {
+        const implType = evidenceItem.type;
+        const uniqueId = evidenceItem.evidenceType?.properties?.unique_id;
+        const value = rawValue === '' ? null : Number(rawValue);
+        if (!implType || !uniqueId || !yearIdentifier) return;
+        const key = `${implType}:${uniqueId}`;
+        setStrengthOverrides((m) => ({ ...m, [key]: value }));
+        try {
+            await setEvidenceStrength(yearIdentifier, implType, uniqueId, value);
+            const cfg = strengthConfig(value);
+            toast({
+                title: cfg ? `Strength set to ${cfg.label}` : 'Strength cleared',
+                status: 'success', duration: 2000, isClosable: true, position: 'top-right',
+            });
+            if (onRefresh) onRefresh();
+        } catch (error) {
+            setStrengthOverrides((m) => {
+                const next = { ...m };
+                delete next[key];
+                return next;
+            });
+            toast({
+                title: 'Failed to set strength',
+                description: error.response?.data?.error || error.message,
+                status: 'error', duration: 3500, isClosable: true, position: 'top-right',
+            });
+        }
+    };
 
     // Helper function to get documentation counts
     const getDocumentationCounts = (evidenceItem) => {
@@ -217,9 +252,17 @@ function EvidenceTypeMasterList({ evidence, yearIdentifier, onRefresh }) {
                 >
                     <Thead bg="gray.50">
                         <Tr>
-                            <Th width="15%">Type</Th>
-                            <Th width="35%">Title</Th>
-                            <Th width="30%">
+                            <Th width="12%">Type</Th>
+                            <Th width="30%">Title</Th>
+                            <Th width="16%">
+                                <Tooltip
+                                    label="How strongly this implementation addresses the indicator's requirements: 0 No Contribution · 1 Indirect Support · 2 Partial · 3 Full"
+                                    placement="top"
+                                >
+                                    <Text as="span" cursor="help">Strength</Text>
+                                </Tooltip>
+                            </Th>
+                            <Th width="22%">
                                 <Tooltip
                                     label="Doc=Documents, Web=Webpages, Note=Notes, Msg=Messages, Met=Metrics"
                                     placement="top"
@@ -242,6 +285,11 @@ function EvidenceTypeMasterList({ evidence, yearIdentifier, onRefresh }) {
                             const implementationLink = campus && implUniqueId
                                 ? `/${campus}/ati-explorer/implementations/${evidenceType}/${implUniqueId}`
                                 : null;
+                            const strengthKey = `${evidenceType}:${implUniqueId}`;
+                            const strengthValue = strengthOverrides[strengthKey] !== undefined
+                                ? strengthOverrides[strengthKey]
+                                : (evidenceItem.strength ?? null);
+                            const strengthCfg = strengthConfig(strengthValue);
 
                             return (
                                 <Tr
@@ -253,21 +301,54 @@ function EvidenceTypeMasterList({ evidence, yearIdentifier, onRefresh }) {
                                         <Text fontSize="sm">{evidenceType}</Text>
                                     </Td>
                                     <Td>
-                                        {implementationLink ? (
-                                            <Link
-                                                as={RouterLink}
-                                                to={implementationLink}
-                                                fontSize="sm"
-                                                color="teal.700"
-                                                fontWeight="medium"
-                                                _hover={{ color: 'teal.600', textDecoration: 'underline' }}
-                                                title="Open this implementation"
-                                            >
-                                                {evidenceTitle}
-                                            </Link>
-                                        ) : (
-                                            <Text fontSize="sm">{evidenceTitle}</Text>
-                                        )}
+                                        <HStack spacing={2} align="center">
+                                            {implementationLink ? (
+                                                <Link
+                                                    as={RouterLink}
+                                                    to={implementationLink}
+                                                    fontSize="sm"
+                                                    color="teal.700"
+                                                    fontWeight="medium"
+                                                    _hover={{ color: 'teal.600', textDecoration: 'underline' }}
+                                                    title="Open this implementation"
+                                                >
+                                                    {evidenceTitle}
+                                                </Link>
+                                            ) : (
+                                                <Text fontSize="sm">{evidenceTitle}</Text>
+                                            )}
+                                            {evidenceItem.evidenceType?.properties?.retired && (
+                                                <Badge
+                                                    colorScheme="gray"
+                                                    variant="solid"
+                                                    fontSize="2xs"
+                                                    borderRadius="full"
+                                                    px={2}
+                                                    title={evidenceItem.evidenceType.properties.retired_note || 'This implementation has been retired'}
+                                                >
+                                                    Retired{evidenceItem.evidenceType.properties.retired_date ? ` ${String(evidenceItem.evidenceType.properties.retired_date)}` : ''}
+                                                </Badge>
+                                            )}
+                                        </HStack>
+                                    </Td>
+                                    <Td>
+                                        <Select
+                                            size="xs"
+                                            maxW="160px"
+                                            placeholder="Unrated"
+                                            aria-label={`Evidence strength — ${evidenceTitle}`}
+                                            title={strengthCfg?.description || 'How strongly this implementation addresses the indicator'}
+                                            value={strengthValue === null ? '' : String(strengthValue)}
+                                            onChange={(e) => handleStrengthChange(evidenceItem, e.target.value)}
+                                            borderColor="gray.300"
+                                            _focus={{ borderColor: 'teal.500' }}
+                                        >
+                                            {EVIDENCE_STRENGTH_LEVELS.map((level) => (
+                                                <option key={level.value} value={level.value}>
+                                                    {level.value} — {level.label}
+                                                </option>
+                                            ))}
+                                        </Select>
                                     </Td>
                                     <Td>
                                         {renderDocumentationCounts(evidenceItem)}

@@ -91,6 +91,14 @@ function GlossaryTab() {
                     <Section title="Status levels (maturity ladder)">
                         <VocabTable label="Status levels" vocab={vocab?.status_levels} keyHeader="Level (in order)" />
                     </Section>
+                    <Section title="Evidence strength (implementation → indicator)">
+                        <VocabTable
+                            label="Evidence strength"
+                            vocab={vocab?.evidence_strength_levels}
+                            notes={vocab?.evidence_strength_descriptions}
+                            keyHeader="Strength"
+                        />
+                    </Section>
                     <Section title="Working groups">
                         <VocabTable label="Working groups" vocab={vocab?.working_groups} keyHeader="Group" />
                     </Section>

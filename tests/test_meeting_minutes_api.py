@@ -51,6 +51,14 @@ def cleanup_minutes(neo4j_connection):
             """,
             {"ids": ids},
         )
+    # test_endpoint_flow deletes its minutes THROUGH the endpoint, which (by
+    # design — attachments can be shared) leaves the attached Webpage behind as
+    # an orphan the id-based cleanup above can no longer reach. Its unique-url
+    # constraint then 500s the NEXT run's attach. Sweep the reserved test
+    # domain unconditionally — example.edu can never be production data.
+    db.cypher_query(
+        "MATCH (w:Webpage) WHERE w.url STARTS WITH 'https://example.edu/' DETACH DELETE w"
+    )
 
 
 @pytest.fixture

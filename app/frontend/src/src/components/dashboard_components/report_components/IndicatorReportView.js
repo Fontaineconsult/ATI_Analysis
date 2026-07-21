@@ -21,6 +21,7 @@ import {
 import { useNavigate, useParams } from 'react-router-dom';
 
 import { getImplementationURL, navigateToIndicator } from '../../../services/utils/tools';
+import { strengthConfig } from '../../graph_components/implementation/implementationConfig';
 import StatusLevelLadder from '../../functional_components/StatusLevelLadder';
 import StatusProgression from '../campus_plan_components/StatusProgression';
 import { StatusLevelContext } from '../../../context/StatusLevelContext';
@@ -237,7 +238,8 @@ const ImplementationEntry = ({ impl, campus, navigate }) => {
     const remediates = (impl.remediates_interfaces || []).map((i) => i.title).filter(Boolean).join(', ');
     return (
         <Box borderWidth="1px" borderColor="gray.200" borderRadius="lg" bg="white" boxShadow="sm" overflow="hidden"
-            borderLeftWidth="3px" borderLeftColor={`${accent}.400`}>
+            borderLeftWidth="3px" borderLeftColor={`${accent}.400`}
+            className={impl.retired ? 'retired' : undefined}>
             {/* Header band — implementation type + name */}
             <Box bg={`${accent}.50`} borderBottomWidth="1px" borderColor="gray.200" px={4} py={2.5}>
                 <HStack spacing={2.5} align="center" flexWrap="wrap">
@@ -249,6 +251,26 @@ const ImplementationEntry = ({ impl, campus, navigate }) => {
                         onClick={() => impl.unique_id && navigate(getImplementationURL(impl.type, impl.unique_id, campus))}>
                         {impl.title}
                     </Heading>
+                    {strengthConfig(impl.strength) && (
+                        <Badge
+                            colorScheme={strengthConfig(impl.strength).colorScheme}
+                            variant="subtle"
+                            fontSize="2xs"
+                            title={strengthConfig(impl.strength).description}
+                        >
+                            {strengthConfig(impl.strength).label}
+                        </Badge>
+                    )}
+                    {impl.retired && (
+                        <Badge
+                            colorScheme="gray"
+                            variant="solid"
+                            fontSize="2xs"
+                            title={impl.retired_note || 'This implementation has been retired'}
+                        >
+                            Retired{impl.retired_date ? ` ${impl.retired_date}` : ''}
+                        </Badge>
+                    )}
                     {noActiveDocs && (
                         <Badge colorScheme="orange" variant="solid" fontSize="2xs" title="Every document on this implementation is depreciated — no active documentation">
                             ⚠ No active documentation
@@ -506,6 +528,19 @@ const IndicatorReportView = ({ report }) => {
                 <ReportSection id="sec-impl" title="Implementation Evidence" count={implementations.length}>
                     {implementations.length ? (
                         <VStack align="stretch" spacing={3}>
+                            {implementations.length > 0 && implementations.every((impl) => impl.retired) && (
+                                <Badge
+                                    alignSelf="flex-start"
+                                    colorScheme="orange"
+                                    variant="solid"
+                                    fontSize="2xs"
+                                    borderRadius="full"
+                                    px={2}
+                                    title="Every implementation linked to this indicator is retired — no active work addresses it"
+                                >
+                                    ⚠ All implementations retired
+                                </Badge>
+                            )}
                             {implementations.map((impl) => (
                                 <ImplementationEntry key={`${impl.type}-${impl.unique_id}`} impl={impl} campus={campus} navigate={navigate} />
                             ))}

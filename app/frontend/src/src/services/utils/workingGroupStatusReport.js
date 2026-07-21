@@ -92,6 +92,10 @@ function collectSections(data, { campus, year, origin }, wgList) {
             .map((et) => ({
                 title: et.evidenceType.properties.title || '(untitled)',
                 typeLabel: typeLabel(et.type),
+                retired: isTrue(et.evidenceType.properties.retired),
+                retiredDate: et.evidenceType.properties.retired_date
+                    ? String(et.evidenceType.properties.retired_date) : null,
+                strength: (et.strength === null || et.strength === undefined) ? null : Number(et.strength),
                 link: implLink(et.type, et.evidenceType.properties.unique_id),
                 docs: (et.docs || [])
                     .filter((d) => d && d.document?.properties)
@@ -191,7 +195,14 @@ function renderRowHtml(r, cell) {
             const name = im.link
                 ? `<a href="${esc(im.link)}" style="color:${LINK};text-decoration:none;">${esc(im.title)}</a>`
                 : esc(im.title);
-            let block = `<div style="margin-bottom:5px;">${name} <span style="color:${MUTED};font-size:11px;">(${esc(im.typeLabel)})</span>`;
+            const STRENGTH_LABELS = { 0: 'No Contribution', 1: 'Indirect Support', 2: 'Partial', 3: 'Full' };
+            const strengthBadge = im.strength !== null
+                ? ` <span style="background:#EBF8FF;color:#2C5282;border-radius:3px;padding:0 4px;font-size:11px;font-weight:600;">STRENGTH ${im.strength} — ${STRENGTH_LABELS[im.strength] || ''}</span>`
+                : '';
+            const retiredBadge = im.retired
+                ? ` <span style="background:#EDF2F7;color:#4A5568;border-radius:3px;padding:0 4px;font-size:11px;font-weight:600;">RETIRED${im.retiredDate ? ` ${esc(im.retiredDate)}` : ''}</span>`
+                : '';
+            let block = `<div style="margin-bottom:5px;">${name} <span style="color:${MUTED};font-size:11px;">(${esc(im.typeLabel)})</span>${strengthBadge}${retiredBadge}`;
             const sub = [];
             for (const d of im.docs) {
                 sub.push(`${esc(d.name)}${flagBadgeHtml(d.deprecated, false)}`);
@@ -290,7 +301,7 @@ function renderPlainText(sections, { campusLabel, year, heading }) {
                 t += `  Implementations:\n`;
                 if (r.impls.length) {
                     for (const im of r.impls) {
-                        t += `    - ${im.title} (${im.typeLabel})${im.link ? ` — ${im.link}` : ''}\n`;
+                        t += `    - ${im.title} (${im.typeLabel})${im.strength !== null ? ` [Strength ${im.strength}]` : ''}${im.retired ? ` (RETIRED${im.retiredDate ? ` ${im.retiredDate}` : ''})` : ''}${im.link ? ` — ${im.link}` : ''}\n`;
                         for (const d of im.docs) {
                             t += `        • ${d.name}${d.deprecated ? ' [deprecated]' : ''}\n`;
                         }

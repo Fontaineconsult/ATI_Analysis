@@ -287,11 +287,14 @@ def fetch_evidence_for_working_group(working_group, academic_year, campus_abbrev
          ] AS msgs,
          metrics
 
-    // Create a map for each evidence type with its documentation and metrics
+    // Create a map for each evidence type with its documentation and metrics.
+    // strength rides the is_evidence_for rel itself (IsEvidenceForRel) — re-derived
+    // here via a pattern comprehension so it needn't thread through every WITH above.
     WITH wg, goal, indicator, evidence, evidenceCampus, evidenceNotes, evidenceMessages, evidenceMetrics, statusLevel, adminReviewers, adminReviewNotes, persons, plans, plansWithNotes,
          {
            type: labels(evidenceType)[0],
            evidenceType: evidenceType,
+           strength: head([ (evidence)<-[evRel:is_evidence_for]-(evidenceType) | evRel.strength ]),
            docs: docs,
            webs: webs,
            notes: notes,

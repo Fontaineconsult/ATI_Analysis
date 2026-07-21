@@ -514,6 +514,19 @@ class DocumentedByRel(StructuredRel):
     added_by = StringProperty()  # unique_id of the Person who added it
 
 
+class IsEvidenceForRel(StructuredRel):
+    """Implementation → YearSuccessEvidence evidence link, qualified by how
+    strongly the work addresses the indicator's requirements.
+
+    strength (0-3; absent/None = unrated — vocab in data_config.evidence_strength_levels):
+      0  No Contribution — does not address any requirement of the indicator.
+      1  Indirect Support — helps the indicator without directly addressing its requirements.
+      2  Partial — directly addresses some, but not all, requirements.
+      3  Full — directly and completely addresses the requirements.
+    """
+    strength = IntegerProperty()
+
+
 
 class YseProgressRel(StructuredRel):
     """Relationship between Plans and YearSuccessEvidence to track progress updates"""
@@ -850,6 +863,12 @@ class InternalPolicy(StructuredNode):
 
     title = StringProperty(unique_index=True, required=True)
     description = StringProperty()
+    # Retirement lifecycle: an implementation that is no longer in use. Historical
+    # evidence links remain valid; UIs badge and (by default) hide retired items.
+    retired = BooleanProperty(default=False)
+    retired_date = DateProperty()
+    retired_note = StringProperty()
+
     effective_date = DateProperty()
     last_updated = DateProperty()
     supporting_documents = RelationshipTo("Document", "is_documented_by", model=DocumentedByRel)
@@ -857,7 +876,7 @@ class InternalPolicy(StructuredNode):
     supporting_notes = RelationshipTo("Note", "is_documented_by", model=DocumentedByRel)
     supporting_messages = RelationshipTo("Message", "is_documented_by", model=DocumentedByRel)
     supporting_metrics = RelationshipTo("Metric", "has_metric")
-    is_evidence_for = RelationshipTo("YearSuccessEvidence", "is_evidence_for")
+    is_evidence_for = RelationshipTo("YearSuccessEvidence", "is_evidence_for", model=IsEvidenceForRel)
     owned_by = RelationshipTo("Person", "owned_by")
     classified_under = RelationshipTo("Dimension", "classified_under")  # cross-cutting AMM dimension(s) of the work
 
@@ -870,6 +889,9 @@ class InternalPolicy(StructuredNode):
             'effective_date': self.effective_date,
             'last_updated': self.last_updated,
             "unique_id": self.unique_id,
+            "retired": bool(self.retired),
+            "retired_date": str(self.retired_date) if self.retired_date else None,
+            "retired_note": self.retired_note,
             "dimensions": [{"handle": d.handle, "name": d.name} for d in self.classified_under.all()],
         }
 
@@ -890,13 +912,19 @@ class Process(StructuredNode):
 
     title = StringProperty(unique_index=True, required=True)
     description = StringProperty()
+    # Retirement lifecycle: an implementation that is no longer in use. Historical
+    # evidence links remain valid; UIs badge and (by default) hide retired items.
+    retired = BooleanProperty(default=False)
+    retired_date = DateProperty()
+    retired_note = StringProperty()
+
     process_markdown = StringProperty()
     supporting_documents = RelationshipTo("Document", "is_documented_by", model=DocumentedByRel)
     supporting_webpages = RelationshipTo("Webpage", "is_documented_by", model=DocumentedByRel)
     supporting_notes = RelationshipTo("Note", "is_documented_by", model=DocumentedByRel)
     supporting_messages = RelationshipTo("Message", "is_documented_by", model=DocumentedByRel)
     supporting_metrics = RelationshipTo("Metric", "has_metric")
-    is_evidence_for = RelationshipTo("YearSuccessEvidence", "is_evidence_for")
+    is_evidence_for = RelationshipTo("YearSuccessEvidence", "is_evidence_for", model=IsEvidenceForRel)
     owned_by = RelationshipTo("Person", "owned_by")
     includes_procedures = RelationshipTo("Procedure", "includes_procedure")
     remediates_interface = RelationshipTo("Interface", "remediates_interface")
@@ -911,6 +939,9 @@ class Process(StructuredNode):
             'title': self.title,
             'description': self.description,
             "unique_id": self.unique_id,
+            "retired": bool(self.retired),
+            "retired_date": str(self.retired_date) if self.retired_date else None,
+            "retired_note": self.retired_note,
             "dimensions": [{"handle": d.handle, "name": d.name} for d in self.classified_under.all()],
             "participants": serialize_participants(self),
         }
@@ -934,12 +965,18 @@ class Project(StructuredNode):
 
     title = StringProperty(unique_index=True, required=True)
     description = StringProperty()
+    # Retirement lifecycle: an implementation that is no longer in use. Historical
+    # evidence links remain valid; UIs badge and (by default) hide retired items.
+    retired = BooleanProperty(default=False)
+    retired_date = DateProperty()
+    retired_note = StringProperty()
+
     supporting_documents = RelationshipTo("Document", "is_documented_by", model=DocumentedByRel)
     supporting_webpages = RelationshipTo("Webpage", "is_documented_by", model=DocumentedByRel)
     supporting_notes = RelationshipTo("Note", "is_documented_by", model=DocumentedByRel)
     supporting_messages = RelationshipTo("Message", "is_documented_by", model=DocumentedByRel)
     supporting_metrics = RelationshipTo("Metric", "has_metric")
-    is_evidence_for = RelationshipTo("YearSuccessEvidence", "is_evidence_for")
+    is_evidence_for = RelationshipTo("YearSuccessEvidence", "is_evidence_for", model=IsEvidenceForRel)
     owned_by = RelationshipTo("Person", "owned_by")
     includes_procedures = RelationshipTo("Procedure", "includes_procedure")
     remediates_interface = RelationshipTo("Interface", "remediates_interface")
@@ -956,6 +993,9 @@ class Project(StructuredNode):
             'title': self.title,
             'description': self.description,
             "unique_id": self.unique_id,
+            "retired": bool(self.retired),
+            "retired_date": str(self.retired_date) if self.retired_date else None,
+            "retired_note": self.retired_note,
             "dimensions": [{"handle": d.handle, "name": d.name} for d in self.classified_under.all()],
             "participants": serialize_participants(self),
         }
@@ -976,13 +1016,19 @@ class Procedure(StructuredNode):
 
     title = StringProperty(unique_index=True, required=True)
     description = StringProperty()
+    # Retirement lifecycle: an implementation that is no longer in use. Historical
+    # evidence links remain valid; UIs badge and (by default) hide retired items.
+    retired = BooleanProperty(default=False)
+    retired_date = DateProperty()
+    retired_note = StringProperty()
+
     procedure_markdown = StringProperty()
     supporting_documents = RelationshipTo("Document", "is_documented_by", model=DocumentedByRel)
     supporting_webpages = RelationshipTo("Webpage", "is_documented_by", model=DocumentedByRel)
     supporting_notes = RelationshipTo("Note", "is_documented_by", model=DocumentedByRel)
     supporting_messages = RelationshipTo("Message", "is_documented_by", model=DocumentedByRel)
     supporting_metrics = RelationshipTo("Metric", "has_metric")
-    is_evidence_for = RelationshipTo("YearSuccessEvidence", "is_evidence_for")
+    is_evidence_for = RelationshipTo("YearSuccessEvidence", "is_evidence_for", model=IsEvidenceForRel)
     owned_by = RelationshipTo("Person", "owned_by")
     remediates_interface = RelationshipTo("Interface", "remediates_interface")
     accountable_working_group = RelationshipTo("ATIWorkingGroup", "accountable_working_group")  # committee accountable for this work (distinct from owned_by Person)
@@ -996,6 +1042,9 @@ class Procedure(StructuredNode):
             'title': self.title,
             'description': self.description,
             "unique_id": self.unique_id,
+            "retired": bool(self.retired),
+            "retired_date": str(self.retired_date) if self.retired_date else None,
+            "retired_note": self.retired_note,
             "dimensions": [{"handle": d.handle, "name": d.name} for d in self.classified_under.all()],
             "participants": serialize_participants(self),
         }
@@ -1016,12 +1065,18 @@ class Service(StructuredNode):
 
     title = StringProperty(unique_index=True, required=True)
     description = StringProperty()
+    # Retirement lifecycle: an implementation that is no longer in use. Historical
+    # evidence links remain valid; UIs badge and (by default) hide retired items.
+    retired = BooleanProperty(default=False)
+    retired_date = DateProperty()
+    retired_note = StringProperty()
+
     supporting_documents = RelationshipTo("Document", "is_documented_by", model=DocumentedByRel)
     supporting_webpages = RelationshipTo("Webpage", "is_documented_by", model=DocumentedByRel)
     supporting_notes = RelationshipTo("Note", "is_documented_by", model=DocumentedByRel)
     supporting_messages = RelationshipTo("Message", "is_documented_by", model=DocumentedByRel)
     supporting_metrics = RelationshipTo("Metric", "has_metric")
-    is_evidence_for = RelationshipTo("YearSuccessEvidence", "is_evidence_for")
+    is_evidence_for = RelationshipTo("YearSuccessEvidence", "is_evidence_for", model=IsEvidenceForRel)
     owned_by = RelationshipTo("Person", "owned_by")
     includes_procedures = RelationshipTo("Procedure", "includes_procedure")
     remediates_interface = RelationshipTo("Interface", "remediates_interface")
@@ -1036,6 +1091,9 @@ class Service(StructuredNode):
             'title': self.title,
             'description': self.description,
             "unique_id": self.unique_id,
+            "retired": bool(self.retired),
+            "retired_date": str(self.retired_date) if self.retired_date else None,
+            "retired_note": self.retired_note,
             "dimensions": [{"handle": d.handle, "name": d.name} for d in self.classified_under.all()],
             "participants": serialize_participants(self),
         }
@@ -1058,12 +1116,18 @@ class Guidance(StructuredNode):
 
     title = StringProperty(unique_index=True, required=True)
     description = StringProperty()
+    # Retirement lifecycle: an implementation that is no longer in use. Historical
+    # evidence links remain valid; UIs badge and (by default) hide retired items.
+    retired = BooleanProperty(default=False)
+    retired_date = DateProperty()
+    retired_note = StringProperty()
+
     supporting_documents = RelationshipTo("Document", "is_documented_by", model=DocumentedByRel)
     supporting_webpages = RelationshipTo("Webpage", "is_documented_by", model=DocumentedByRel)
     supporting_notes = RelationshipTo("Note", "is_documented_by", model=DocumentedByRel)
     supporting_messages = RelationshipTo("Message", "is_documented_by", model=DocumentedByRel)
     supporting_metrics = RelationshipTo("Metric", "has_metric")
-    is_evidence_for = RelationshipTo("YearSuccessEvidence", "is_evidence_for")
+    is_evidence_for = RelationshipTo("YearSuccessEvidence", "is_evidence_for", model=IsEvidenceForRel)
     owned_by = RelationshipTo("Person", "owned_by")
     references_procedure = RelationshipTo("Procedure", "references_procedure")
     references_process = RelationshipTo("Process", "references_process")
@@ -1080,6 +1144,9 @@ class Guidance(StructuredNode):
             'title': self.title,
             'description': self.description,
             "unique_id": self.unique_id,
+            "retired": bool(self.retired),
+            "retired_date": str(self.retired_date) if self.retired_date else None,
+            "retired_note": self.retired_note,
             "dimensions": [{"handle": d.handle, "name": d.name} for d in self.classified_under.all()],
         }
 
@@ -1095,12 +1162,18 @@ class Tracking(StructuredNode):
 
     title = StringProperty(unique_index=True, required=True)
     description = StringProperty()
+    # Retirement lifecycle: an implementation that is no longer in use. Historical
+    # evidence links remain valid; UIs badge and (by default) hide retired items.
+    retired = BooleanProperty(default=False)
+    retired_date = DateProperty()
+    retired_note = StringProperty()
+
     supporting_documents = RelationshipTo("Document", "is_documented_by", model=DocumentedByRel)
     supporting_webpages = RelationshipTo("Webpage", "is_documented_by", model=DocumentedByRel)
     supporting_notes = RelationshipTo("Note", "is_documented_by", model=DocumentedByRel)
     supporting_messages = RelationshipTo("Message", "is_documented_by", model=DocumentedByRel)
     supporting_metrics = RelationshipTo("Metric", "has_metric")
-    is_evidence_for = RelationshipTo("YearSuccessEvidence", "is_evidence_for")
+    is_evidence_for = RelationshipTo("YearSuccessEvidence", "is_evidence_for", model=IsEvidenceForRel)
     owned_by = RelationshipTo("Person", "owned_by")
 
     #serialize
@@ -1108,7 +1181,10 @@ class Tracking(StructuredNode):
         return {
             'title': self.title,
             'description': self.description,
-            "unique_id": self.unique_id
+            "unique_id": self.unique_id,
+            "retired": bool(self.retired),
+            "retired_date": str(self.retired_date) if self.retired_date else None,
+            "retired_note": self.retired_note,
         }
 
 
@@ -1302,14 +1378,14 @@ class YearSuccessEvidence(StructuredNode):
     campus = RelationshipTo("Campus", "evidence_at_campus")
 
     # Relationships from implementation nodes
-    processes_that_evidence = RelationshipFrom("Process", "is_evidence_for")
-    projects_that_evidence = RelationshipFrom("Project", "is_evidence_for")
-    procedures_that_evidence = RelationshipFrom("Procedure", "is_evidence_for")
-    services_that_evidence = RelationshipFrom("Service", "is_evidence_for")
-    guidance_that_evidence = RelationshipFrom("Guidance", "is_evidence_for")
-    trackings_that_evidence = RelationshipFrom("Tracking", "is_evidence_for")
-    internal_policies_that_evidence = RelationshipFrom("InternalPolicy", "is_evidence_for")
-    taaps_that_evidence = RelationshipFrom("TAAP", "is_evidence_for")
+    processes_that_evidence = RelationshipFrom("Process", "is_evidence_for", model=IsEvidenceForRel)
+    projects_that_evidence = RelationshipFrom("Project", "is_evidence_for", model=IsEvidenceForRel)
+    procedures_that_evidence = RelationshipFrom("Procedure", "is_evidence_for", model=IsEvidenceForRel)
+    services_that_evidence = RelationshipFrom("Service", "is_evidence_for", model=IsEvidenceForRel)
+    guidance_that_evidence = RelationshipFrom("Guidance", "is_evidence_for", model=IsEvidenceForRel)
+    trackings_that_evidence = RelationshipFrom("Tracking", "is_evidence_for", model=IsEvidenceForRel)
+    internal_policies_that_evidence = RelationshipFrom("InternalPolicy", "is_evidence_for", model=IsEvidenceForRel)
+    taaps_that_evidence = RelationshipFrom("TAAP", "is_evidence_for", model=IsEvidenceForRel)
 
     # Assets are NOT evidence: an asset's accessibility status reaches YSE through the
     # implementation that remediates it (Process/Project/Procedure/Service.is_evidence_for)
@@ -2350,7 +2426,7 @@ class TAAP(StructuredNode):
     signed_by = RelationshipTo("Person", "signed_by")
 
     # Evidence + documentation (standard pattern)
-    is_evidence_for = RelationshipTo("YearSuccessEvidence", "is_evidence_for")
+    is_evidence_for = RelationshipTo("YearSuccessEvidence", "is_evidence_for", model=IsEvidenceForRel)
     supporting_documents = RelationshipTo("Document", "is_documented_by", model=DocumentedByRel)
     supporting_webpages = RelationshipTo("Webpage", "is_documented_by", model=DocumentedByRel)
     supporting_notes = RelationshipTo("Note", "is_documented_by", model=DocumentedByRel)

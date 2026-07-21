@@ -373,8 +373,14 @@ class ImplementationAPI(MethodView):
                 return self.handle_assign_documentation_to_implementation(data)
             elif action == "update_implementation":
                 return self.handle_update_implementation(data)
+            elif action == "retire_implementation":
+                return self.handle_retire_implementation(data)
             elif action == "assign_implementation_to_yse":
                 return self.handle_assign_implementation_to_yse(data)
+            elif action == "set_evidence_strength":
+                return self.handle_set_evidence_strength(data)
+            elif action == "copy_evidence_to_campuses":
+                return self.handle_copy_evidence_to_campuses(data)
             elif action == "update_documentation_year":
                 return self.handle_update_documentation_year(data)
             elif action == "get_documents_for_year":
@@ -488,9 +494,53 @@ class ImplementationAPI(MethodView):
         assign_implementation_to_year_success_indicator(
             data['year_success_identifier'],
             data['implementation_type'],
-            data['implementation_title']
+            data['implementation_title'],
+            strength=data.get('strength'),
         )
         return make_response({"status": "success", "message": "Implementation assigned to YSE"}), 200
+
+    def handle_set_evidence_strength(self, data):
+        """Set or clear (null) the strength rating on an existing evidence link.
+
+        Body: year_success_identifier, implementation_type, unique_id,
+        strength (0-3 or null).
+        """
+        from app.database.queries.evidence.update import set_evidence_strength
+
+        required = ['year_success_identifier', 'implementation_type', 'unique_id']
+        if not all(field in data for field in required):
+            raise ValidationError(f"Missing required fields: {required}")
+
+        result = set_evidence_strength(
+            data['year_success_identifier'],
+            data['implementation_type'],
+            data['unique_id'],
+            data.get('strength'),
+        )
+        return make_response("success", data=result, message="Evidence strength updated"), 200
+
+    def handle_copy_evidence_to_campuses(self, data):
+        """Copy this year's evidence links (and by default the source YSEs'
+        assigned people) from one campus to others.
+
+        Body: implementation_type, unique_id, year_name, source_campus,
+        target_campuses (list), include_people (bool, default true).
+        """
+        from app.database.queries.evidence.update import copy_evidence_to_campuses
+
+        required = ['implementation_type', 'unique_id', 'year_name', 'source_campus', 'target_campuses']
+        if not all(field in data for field in required):
+            raise ValidationError(f"Missing required fields: {required}")
+
+        result = copy_evidence_to_campuses(
+            data['implementation_type'],
+            data['unique_id'],
+            data['year_name'],
+            data['source_campus'],
+            data['target_campuses'],
+            include_people=data.get('include_people', True),
+        )
+        return make_response("success", data=result, message="Evidence links copied"), 200
 
     def handle_update_implementation(self, data):
         """
@@ -527,6 +577,38 @@ class ImplementationAPI(MethodView):
 
         except implementation_class.DoesNotExist:
             raise NotFoundError(f"No {implementation_type} found with unique_id: {unique_id}")
+
+    def handle_retire_implementation(self, data):
+        """Set or clear the retirement lifecycle on an implementation.
+
+        Body: implementation_type, unique_id, retired (bool), and when retiring
+        optionally retired_date ('YYYY-MM-DD', default today) + retired_note.
+        Un-retiring clears date and note.
+        """
+        from app.database.queries.implementation.update import retire_implementation
+
+        implementation_type = data.get('implementation_type')
+        unique_id = data.get('unique_id')
+        retired = data.get('retired')
+
+        if not implementation_type or not unique_id:
+            raise ValidationError("Missing required fields: 'implementation_type' and 'unique_id'")
+        if not isinstance(retired, bool):
+            raise ValidationError("'retired' must be a boolean")
+
+        result = retire_implementation(
+            implementation_type,
+            unique_id,
+            retired,
+            retired_date=data.get('retired_date'),
+            retired_note=data.get('retired_note'),
+        )
+        verb = 'retired' if retired else 'reactivated'
+        return make_response(
+            "success",
+            data=result,
+            message=f"{implementation_type} {verb} successfully",
+        ), 200
 
     def handle_assign_person_as_implementor(self, data):
         if 'unique_id' not in data or 'year_success_evidence' not in data:
