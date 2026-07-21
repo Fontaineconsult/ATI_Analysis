@@ -48,7 +48,7 @@ export function pageInfoFromPath(pathname) {
     return {
         pageKey: segments.slice(0, 3).join('/'),
         pageName,
-        title: pageName ? `${pageName} — ATI Annual Report` : 'ATI Annual Report',
+        title: pageName ? `${pageName} — SFBRN Evidence Graph` : 'SFBRN Evidence Graph',
     };
 }
 
