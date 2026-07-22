@@ -12,7 +12,9 @@ const { createProxyMiddleware } = require('http-proxy-middleware');
 
 module.exports = function (app) {
     app.use(
-        ['/ati/data-api', '/ati/auth'],
+        // /ati/reports/public is the server-rendered public report page —
+        // proxied so it's reachable on :3000 in dev (and scannable by e2e).
+        ['/ati/data-api', '/ati/auth', '/ati/reports/public'],
         createProxyMiddleware({
             target: 'http://127.0.0.1:5000',
             changeOrigin: true,

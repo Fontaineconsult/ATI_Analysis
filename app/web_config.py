@@ -39,6 +39,9 @@ class BaseConfig:
     CORS_ORIGINS = config.get_list('CORS_ORIGINS', ['http://localhost:3000', 'http://127.0.0.1:3000'])
 
     AUTH_ENFORCED = config.get_bool('AUTH_ENFORCED', False)
+    # Kill-switch for the unauthenticated server-rendered report pages under
+    # /ati/reports/public (they assume the campus-IP perimeter; flip off to 404 them).
+    PUBLIC_REPORTS_ENABLED = config.get_bool('PUBLIC_REPORTS_ENABLED', True)
     AUTH_PROVIDER = config.get('AUTH_PROVIDER', 'local')
     # Raw comma-separated strings; create_app parses them to frozensets (parse_admins).
     # Parsing lives in the factory, not here, to avoid importing app.auth into this

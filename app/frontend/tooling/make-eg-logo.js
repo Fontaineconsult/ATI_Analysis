@@ -113,5 +113,12 @@ function build(srcFile, outFile, paletteKey, comment) {
 
 build('sfbrn-logo-light.svg', `${ASSETS}/sfbrn-logo-light-eg.svg`, 'light',
     'Evidence Graph lockup (light/on-navy). Generated from sfbrn-logo-light.svg — text is outlined Arial caps (no font dependency). Keep in sync with sfbrn-logo-eg.svg.');
+// Flask-served copy for the public report pages (app static points at the React
+// build, so the blueprint carries its own).
+fs.copyFileSync(
+    `${ASSETS}/sfbrn-logo-light-eg.svg`,
+    'C:/Users/Fonta/PycharmProjects/ATI_Analysis/app/public_reports/static/sfbrn-logo-light-eg.svg',
+);
+console.log('sfbrn-logo-light-eg.svg → app/public_reports/static/');
 build('sfbrn-logo.svg', `${ASSETS}/sfbrn-logo-eg.svg`, 'dark',
     'Evidence Graph lockup (dark/on-light). Generated from sfbrn-logo.svg — text is outlined Arial caps (no font dependency). Keep in sync with sfbrn-logo-light-eg.svg.');

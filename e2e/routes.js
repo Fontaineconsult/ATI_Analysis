@@ -37,6 +37,9 @@ const ROUTES = [
     { name: 'explorer: assets tools tab', path: p('/ati-explorer/assets/tools') },
     { name: 'explorer: assets components tab', path: p('/ati-explorer/assets/components') },
 
+    // Public server-rendered report (Flask/Jinja via the dev proxy — no React)
+    { name: 'public: indicator report', path: '/ati/reports/public/sfsu/2025-2026/web/1/1' },
+
     // About area (static content — no graph data required)
     { name: 'about: overview', path: p('/about/overview') },
     { name: 'about: executive summary', path: p('/about/executive-summary') },

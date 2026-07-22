@@ -108,6 +108,13 @@ def create_app(config_object=None):
     # Register your API blueprints
     app.register_blueprint(auth_endpoints, url_prefix='/ati/auth/v1')
     app.register_blueprint(data_api_endpoints, url_prefix='/ati/data-api/v1')
+
+    # Unauthenticated server-rendered report pages (campus-IP perimeter only;
+    # PUBLIC_REPORTS_ENABLED kill-switch). Static-prefix rules outrank the React
+    # catch-all in werkzeug's routing regardless of registration order.
+    from app.public_reports import public_reports
+    app.register_blueprint(public_reports, url_prefix='/ati/reports/public')
+
     app.register_blueprint(react_pages, url_prefix='/ati')
 
     # Serve React App for non-API routes under /ati-explorer
