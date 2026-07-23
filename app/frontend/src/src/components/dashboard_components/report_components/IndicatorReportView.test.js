@@ -280,3 +280,18 @@ describe('IndicatorReportView — all implementations retired', () => {
         expect(screen.queryByText('⚠ All implementations retired')).not.toBeInTheDocument();
     });
 });
+
+describe('IndicatorReportView — copy public link', () => {
+    it('copies the public report URL derived from the composite key', () => {
+        const writeText = jest.fn();
+        Object.assign(navigator, { clipboard: { writeText } });
+
+        renderReport();
+        screen.getByRole('button', { name: /Copy public link/i }).click();
+
+        expect(writeText).toHaveBeenCalledTimes(1);
+        const url = writeText.mock.calls[0][0];
+        expect(url).toContain('/ati/reports/public/');
+        expect(url).toContain('/2025-2026/web/1/2');
+    });
+});

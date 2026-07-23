@@ -186,6 +186,7 @@ def get_all_implementations_by_type(implementation_type: str) -> list:
 # that lack those edges — matching the legacy hasattr guards.
 _IMPL_PROJECTION = """
     MATCH (impl:%(label)s)
+    WHERE $unique_id IS NULL OR impl.unique_id = $unique_id
     RETURN apoc.convert.toJson(collect({
       unique_id: impl.unique_id,
       title: impl.title,
@@ -295,13 +296,16 @@ _IMPL_PROJECTION = """
 """
 
 
-def _all_implementations_of_type(label):
+def _all_implementations_of_type(label, unique_id=None):
     """Batched projection of every node of one implementation type — a single apoc query that
     reproduces the legacy per-impl dict (plus light post-processing for the two derived fields:
-    `campuses` and the deduped `assets`)."""
+    `campuses` and the deduped `assets`). Pass unique_id to project a single node."""
     import json
 
-    rows, _meta = db.cypher_query(_IMPL_PROJECTION % {"label": label}, {"type_name": label})
+    rows, _meta = db.cypher_query(
+        _IMPL_PROJECTION % {"label": label},
+        {"type_name": label, "unique_id": unique_id},
+    )
     impls = json.loads(rows[0][0]) if rows and rows[0] and rows[0][0] else []
 
     for impl in impls:
@@ -326,6 +330,17 @@ def _all_implementations_of_type(label):
         impl["assets"] = list(merged.values())
 
     return impls
+
+
+def get_implementation_detail(implementation_type, unique_id):
+    """One implementation's full projection (same shape as the area list rows),
+    or None when the type/uid doesn't resolve."""
+    from app.database.class_factory import implementation_classes
+
+    if implementation_type not in implementation_classes:
+        raise ValidationError(f"Invalid implementation_type: {implementation_type}")
+    impls = _all_implementations_of_type(implementation_type, unique_id=unique_id)
+    return impls[0] if impls else None
 
 
 def get_all_implementations() -> dict:

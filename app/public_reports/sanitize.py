@@ -51,6 +51,11 @@ def _implementation(im):
     return {
         'type': im.get('type'),
         'title': im.get('title'),
+        # Cross-link to the public implementation page (identifier only — safe).
+        'public_url': (
+            f"/ati/reports/public/implementation/{im.get('type')}/{im.get('unique_id')}"
+            if im.get('type') and im.get('unique_id') else None
+        ),
         'description': im.get('description'),
         'strength': im.get('strength'),
         'retired': bool(im.get('retired')),
@@ -76,6 +81,106 @@ def _implementation(im):
         'notes': [_annotation(n) for n in (im.get('notes') or [])],
         'messages': [_annotation(m) for m in (im.get('messages') or [])],
         'metrics': [_annotation(m) for m in (im.get('metrics') or [])],
+    }
+
+
+_WG_SUFFIX_TO_SEGMENT = {'web': 'web', 'ins': 'instructional-materials', 'pro': 'procurement'}
+
+
+def _public_indicator_url(composite_key, campus_abbrev, year):
+    """Build the public report URL for an evidence link's indicator, or None
+    when the composite key doesn't parse (defensive — never breaks the page)."""
+    try:
+        numbers, suffix = composite_key.split('-', 1)
+        goal, si = numbers.split('.', 1)
+        segment = _WG_SUFFIX_TO_SEGMENT[suffix]
+        return f"/ati/reports/public/{campus_abbrev}/{year}/{segment}/{int(goal)}/{int(si)}"
+    except (AttributeError, KeyError, ValueError):
+        return None
+
+
+def public_implementation_payload(impl):
+    """Allowlist projection of one implementation (area-list shape) for the
+    public page. Same exclusions as the indicator report: no emails, no file
+    download URLs; notes/messages/metrics included."""
+    def _created_by(item):
+        cb = item.get('created_by')
+        return cb.get('name') if isinstance(cb, dict) else None
+
+    evidence_for = []
+    for link in (impl.get('is_evidence_for') or []):
+        campus = (link.get('campus') or {})
+        year = (link.get('year_identifier') or '')[:9] or None
+        evidence_for.append({
+            'composite_key': link.get('indicator_composite_key'),
+            'success_indicator': link.get('success_indicator'),
+            'campus': campus.get('abbreviation'),
+            'campus_name': campus.get('name'),
+            'year': year,
+            'strength': link.get('strength'),
+            'public_url': _public_indicator_url(
+                link.get('indicator_composite_key'), campus.get('abbreviation'), year,
+            ) if campus.get('abbreviation') and year else None,
+        })
+    evidence_for.sort(key=lambda e: (e['year'] or '', e['composite_key'] or ''), reverse=True)
+
+    return {
+        'type': impl.get('type'),
+        'unique_id': impl.get('unique_id'),
+        'title': impl.get('title'),
+        'description': impl.get('description'),
+        'retired': bool(impl.get('retired')),
+        'retired_date': _s(impl.get('retired_date')),
+        'retired_note': impl.get('retired_note'),
+        'owners': [p.get('name') for p in (impl.get('owned_by') or []) if p.get('name')],
+        'dimensions': [d.get('name') for d in (impl.get('dimensions') or []) if d.get('name')],
+        'participants': [
+            {
+                'name': (p.get('person') or {}).get('name'),
+                'role': (p.get('role_handle') or '').replace('role:', '') or None,
+                'note': p.get('note'),
+            }
+            for p in (impl.get('participants') or [])
+            if (p.get('person') or {}).get('name')
+        ],
+        'campuses': impl.get('campuses') or [],
+        'evidence_for': evidence_for,
+        'documents': [
+            {'name': d.get('name'), 'deprecated': bool(d.get('depreciated'))}
+            for d in (impl.get('supporting_documents') or []) if d.get('name')
+        ],
+        'webpages': [
+            {'name': w.get('name') or w.get('url'), 'url': w.get('url'),
+             'gone': bool(w.get('no_longer_exists')), 'deprecated': bool(w.get('depreciated'))}
+            for w in (impl.get('supporting_webpages') or [])
+        ],
+        'notes': [
+            {'name': n.get('name'), 'content': n.get('content'),
+             'date': _s(n.get('date_created')), 'created_by': _created_by(n)}
+            for n in (impl.get('supporting_notes') or [])
+        ],
+        'messages': [
+            {'name': m.get('name'), 'content': m.get('content'),
+             'date': _s(m.get('date_created')), 'created_by': _created_by(m)}
+            for m in (impl.get('supporting_messages') or [])
+        ],
+        'metrics': [
+            {'name': m.get('name'), 'single_value': m.get('single_value'),
+             'comment': m.get('comment'), 'metric_type': m.get('metric_type')}
+            for m in (impl.get('supporting_metrics') or [])
+        ],
+        'assets': [
+            {'title': a.get('title'), 'identifier': a.get('asset_identifier')}
+            for a in (impl.get('assets') or [])
+        ],
+        'interfaces': [
+            {'title': i.get('title'), 'identifier': i.get('interface_identifier')}
+            for i in (impl.get('interfaces') or [])
+        ],
+        'tools': [
+            {'title': t.get('title'), 'identifier': t.get('tool_identifier')}
+            for t in (impl.get('tools') or [])
+        ],
     }
 
 

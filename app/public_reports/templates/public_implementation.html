@@ -1,0 +1,118 @@
+{% extends "public_base.html" %}
+
+{% block title %}{{ im.title }} · {{ im.type }} — SFBRN Evidence Graph{% endblock %}
+
+{% block footer_meta %}{{ im.type }} implementation ·{% endblock %}
+
+{% block content %}
+<h1>
+  <span class="badge type">{{ im.type }}</span>
+  {{ im.title }}
+  {% if im.retired %}<span class="badge retired">Retired{% if im.retired_date %} {{ im.retired_date }}{% endif %}</span>{% endif %}
+</h1>
+{% if im.retired and im.retired_note %}<p class="lede">{{ im.retired_note }}</p>{% endif %}
+{% if im.description %}<p class="lede">{{ im.description }}</p>{% endif %}
+
+<h2>Overview</h2>
+<table>
+  <caption>Implementation identity and stewardship</caption>
+  <tr><th scope="row">Type</th><td>{{ im.type }}</td></tr>
+  {% if im.owners %}<tr><th scope="row">Owner{{ 's' if im.owners | length > 1 }}</th><td>{{ im.owners | join(', ') }}</td></tr>{% endif %}
+  {% if im.dimensions %}<tr><th scope="row">Dimensions</th><td>{{ im.dimensions | join(', ') }}</td></tr>{% endif %}
+  {% if im.campuses %}<tr><th scope="row">Campuses</th><td>{{ im.campuses | map('upper') | join(', ') }}</td></tr>{% endif %}
+  <tr><th scope="row">Status</th>
+      <td>{% if im.retired %}<span class="badge retired">Retired{% if im.retired_date %} {{ im.retired_date }}{% endif %}</span>
+          {% else %}Active{% endif %}</td></tr>
+</table>
+
+{% if im.participants %}
+<h2>Working Team</h2>
+<table>
+  <thead><tr><th scope="col">Name</th><th scope="col">Role</th><th scope="col">Note</th></tr></thead>
+  <tbody>
+  {% for p in im.participants %}
+    <tr><td>{{ p.name }}</td><td>{{ p.role or '—' }}</td><td>{{ p.note or '—' }}</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endif %}
+
+<h2>Evidence For ({{ im.evidence_for | length }})</h2>
+{% if im.evidence_for %}
+<table>
+  <caption>Success indicators this implementation evidences, by year and campus</caption>
+  <thead><tr><th scope="col">Year</th><th scope="col">Campus</th><th scope="col">Indicator</th><th scope="col">Strength</th></tr></thead>
+  <tbody>
+  {% for ev in im.evidence_for %}
+    <tr>
+      <td>{{ ev.year or '—' }}</td>
+      <td>{{ (ev.campus or '—') | upper }}</td>
+      <td>
+        {% if ev.public_url %}<a href="{{ ev.public_url }}"><span class="mono">{{ ev.composite_key }}</span></a>{% else %}<span class="mono">{{ ev.composite_key or '—' }}</span>{% endif %}
+        {% if ev.success_indicator %}<div class="muted">{{ ev.success_indicator }}</div>{% endif %}
+      </td>
+      <td>
+        {% if ev.strength is not none %}
+          <span class="badge s{{ ev.strength }}">{{ ['No Contribution','Indirect Support','Partial','Full'][ev.strength] }}</span>
+        {% else %}<span class="badge unrated">Unrated</span>{% endif %}
+      </td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% else %}<p class="empty">Not linked to any success indicator.</p>{% endif %}
+
+{% if im.documents or im.webpages %}
+<h2>Supporting Documentation</h2>
+{% if im.documents %}
+  <h3>Documents</h3>
+  <ul>{% for d in im.documents %}<li>{{ d.name }}{% if d.deprecated %} <span class="muted">(deprecated)</span>{% endif %}</li>{% endfor %}</ul>
+{% endif %}
+{% if im.webpages %}
+  <h3>Webpages</h3>
+  <ul>{% for w in im.webpages %}
+    <li>{% if w.url and not w.gone %}<a href="{{ w.url }}" rel="noopener">{{ w.name }}</a>{% else %}{{ w.name }}{% endif %}
+        {% if w.gone %} <span class="muted">(no longer available)</span>{% elif w.deprecated %} <span class="muted">(deprecated)</span>{% endif %}</li>
+  {% endfor %}</ul>
+{% endif %}
+{% endif %}
+
+{% if im.notes or im.messages or im.metrics %}
+<h2>Annotations</h2>
+{% if im.notes %}
+  <h3>Notes</h3>
+  <ul>{% for n in im.notes %}<li>{{ n.content or n.name }}{% if n.created_by or n.date %} <span class="muted">— {{ n.created_by or '' }}{% if n.date %} {{ n.date }}{% endif %}</span>{% endif %}</li>{% endfor %}</ul>
+{% endif %}
+{% if im.messages %}
+  <h3>Messages</h3>
+  <ul>{% for m in im.messages %}<li>{{ m.content or m.name }}{% if m.created_by or m.date %} <span class="muted">— {{ m.created_by or '' }}{% if m.date %} {{ m.date }}{% endif %}</span>{% endif %}</li>{% endfor %}</ul>
+{% endif %}
+{% if im.metrics %}
+  <h3>Metrics</h3>
+  <table>
+    <thead><tr><th scope="col">Metric</th><th scope="col">Value</th><th scope="col">Comment</th></tr></thead>
+    <tbody>
+    {% for m in im.metrics %}
+      <tr><td>{{ m.name }}</td><td>{{ m.single_value if m.single_value is not none else '—' }}</td><td>{{ m.comment or '—' }}</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+{% endif %}
+{% endif %}
+
+{% if im.assets or im.interfaces or im.tools %}
+<h2>ICT This Work Applies To</h2>
+{% if im.assets %}
+  <h3>Assets</h3>
+  <ul>{% for a in im.assets %}<li>{{ a.title }} <span class="mono muted">{{ a.identifier }}</span></li>{% endfor %}</ul>
+{% endif %}
+{% if im.interfaces %}
+  <h3>Interfaces</h3>
+  <ul>{% for i in im.interfaces %}<li>{{ i.title }} <span class="mono muted">{{ i.identifier }}</span></li>{% endfor %}</ul>
+{% endif %}
+{% if im.tools %}
+  <h3>Tools</h3>
+  <ul>{% for t in im.tools %}<li>{{ t.title }} <span class="mono muted">{{ t.identifier }}</span></li>{% endfor %}</ul>
+{% endif %}
+{% endif %}
+{% endblock %}

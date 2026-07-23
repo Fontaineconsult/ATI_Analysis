@@ -83,3 +83,30 @@ def indicator_report(campus, year, wg, goal, indicator):
     edit_url = f"/ati/{campus}/dashboard/reports/{wg}/{goal}/{indicator}"
 
     return render_template('public_report.html', r=public_report_payload(report), edit_url=edit_url)
+
+
+@public_reports.route('/implementation/<impl_type>/<unique_id>')
+def implementation_detail(impl_type, unique_id):
+    """Public view of one implementation — its identity, evidence links (with
+    cross-links to the public indicator reports), documentation names, and
+    annotations. Not campus/year-scoped: the implementation node is shared."""
+    if not current_app.config.get('PUBLIC_REPORTS_ENABLED', True):
+        abort(404)
+
+    from app.database.queries.implementation.read import get_implementation_detail
+    from app.endpoints.data_api.errors.custom_exceptions import ValidationError
+    from app.public_reports.sanitize import public_implementation_payload
+
+    try:
+        impl = get_implementation_detail(impl_type, unique_id)
+    except ValidationError:
+        abort(404)
+    if impl is None:
+        abort(404)
+
+    edit_url = f"/ati/{_DEFAULT_CAMPUS}/ati-explorer/implementations/{impl_type}/{unique_id}"
+    return render_template(
+        'public_implementation.html',
+        im=public_implementation_payload(impl),
+        edit_url=edit_url,
+    )

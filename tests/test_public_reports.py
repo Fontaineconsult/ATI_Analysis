@@ -119,6 +119,65 @@ def test_public_report_renders(flask_client):
     assert "/ati/reports/public/static/sfbrn-logo-light-eg.svg" in html
 
 
+@pytest.mark.unit
+def test_implementation_sanitizer_strips_emails_and_builds_cross_links():
+    from app.public_reports.sanitize import public_implementation_payload
+
+    raw = {
+        "type": "Process", "unique_id": "abc123", "title": "Audit process",
+        "description": "Quarterly.", "retired": False,
+        "owned_by": [{"name": "Owen Owner", "email": "owen@sfsu.edu", "employee_id": "E1"}],
+        "supporting_documents": [{"name": "Report", "depreciated": False,
+                                  "file": {"download_url": "/ati/data-api/v1/files/secret"}}],
+        "supporting_webpages": [{"name": "Page", "url": "https://example.org/p"}],
+        "supporting_notes": [{"name": "n", "content": "Kept note",
+                              "created_by": {"name": "Pat", "email": "pat@sfsu.edu"}}],
+        "supporting_messages": [], "supporting_metrics": [],
+        "is_evidence_for": [{
+            "year_identifier": "2025-2026-1.1-web-sfsu", "unique_id": "y1", "strength": 2,
+            "success_indicator": "Assigned authority…", "indicator_composite_key": "1.1-web",
+            "campus": {"abbreviation": "sfsu", "name": "SFSU"},
+        }],
+        "dimensions": [], "participants": [{"person": {"name": "Team"}, "role_handle": "role:dev", "note": None}],
+        "assets": [], "interfaces": [], "tools": [], "campuses": ["sfsu"],
+    }
+    clean = public_implementation_payload(raw)
+    flat = str(clean)
+    assert "@" not in flat
+    assert "secret" not in flat
+    assert clean["owners"] == ["Owen Owner"]
+    assert clean["notes"][0] == {"name": "n", "content": "Kept note", "date": None, "created_by": "Pat"}
+    ev = clean["evidence_for"][0]
+    assert ev["public_url"] == "/ati/reports/public/sfsu/2025-2026/web/1/1"
+    assert ev["strength"] == 2 and ev["year"] == "2025-2026"
+
+
+@pytest.mark.api
+def test_public_implementation_page_renders_and_cross_links(flask_client):
+    import re
+    # Discover a real implementation through the public indicator page's link.
+    report_html = flask_client.get(PUBLIC_URL).get_data(as_text=True)
+    m = re.search(r'href="(/ati/reports/public/implementation/\w+/[\w-]+)"', report_html)
+    assert m, "public report should cross-link at least one implementation"
+    impl_url = m.group(1)
+
+    resp = flask_client.get(impl_url)
+    assert resp.status_code == 200
+    html = resp.get_data(as_text=True)
+    assert "Evidence For" in html
+    assert "Sign in to edit" in html
+    # Round trip: the implementation page links back to public indicator reports.
+    assert "/ati/reports/public/sfsu/" in html
+    emails = re.findall(r"[\w.+-]+@[\w-]+\.[\w.-]+", html)
+    assert not emails, f"public implementation page must contain no emails: {emails[:3]}"
+
+
+@pytest.mark.api
+def test_public_implementation_unknown_type_or_uid_404(flask_client):
+    assert flask_client.get("/ati/reports/public/implementation/NotAType/abc").status_code == 404
+    assert flask_client.get("/ati/reports/public/implementation/Process/no-such-uid").status_code == 404
+
+
 @pytest.mark.api
 def test_public_logo_asset_is_served(flask_client):
     resp = flask_client.get("/ati/reports/public/static/sfbrn-logo-light-eg.svg")

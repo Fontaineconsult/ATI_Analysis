@@ -1,86 +1,11 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="robots" content="noindex">
-<title>{{ r.indicator.composite_key }} · {{ r.campus.name or r.campus.abbreviation }} {{ r.year }} — SFBRN Evidence Graph</title>
-<style>
-  /* Self-contained styles on the app's design tokens (design-sense.md).
-     gray #4A5568 is the AA floor for muted text; status/strength colors are
-     the AA-safe text ramps used in the app. */
-  :root { --brand:#4966A4; --brand-dark:#354A7A; --ink:#1A202C; --muted:#4A5568;
-          --line:#E2E8F0; --bg:#F7FAFC; }
-  * { box-sizing: border-box; }
-  body { margin:0; font-family: Roboto, "Segoe UI", Arial, sans-serif; color:var(--ink);
-         background:var(--bg); line-height:1.5; }
-  .skip { position:absolute; left:-9999px; top:0; background:#fff; color:var(--brand-dark);
-          padding:8px 16px; z-index:10; border-radius:0 0 6px 0; font-weight:600; }
-  .skip:focus { left:0; }
-  header.site { background:#2A3A62; color:#fff; padding:14px 24px;
-                display:flex; align-items:center; justify-content:space-between;
-                flex-wrap:wrap; gap:12px; }
-  header.site .brand { font-size:18px; font-weight:700; letter-spacing:.02em; }
-  header.site .brand small { font-weight:400; color:#C9D3E8; }
-  a.login-btn { display:inline-block; background:#fff; color:#2A3A62; font-weight:600;
-                font-size:13px; padding:7px 16px; border-radius:6px; text-decoration:none; }
-  a.login-btn:hover { background:#E4E9F4; }
-  a.login-btn:focus-visible { outline:3px solid #7E93BF; outline-offset:2px; }
-  header.site .rule { height:2px; border-radius:2px; margin:6px 0 4px;
-                      background:linear-gradient(to right,#7E93BF,#9B8CC4,#E2706A); max-width:420px; }
-  header.site .sub { font-size:11px; letter-spacing:.18em; text-transform:uppercase; color:#E4E9F4; }
-  main { max-width: 920px; margin: 0 auto; padding: 24px 24px 48px; }
-  h1 { font-size:22px; color:var(--ink); margin:18px 0 4px; }
-  h1 .ck { font-family: Consolas, monospace; color:var(--brand-dark); }
-  h2 { font-size:15px; color:var(--brand-dark); text-transform:uppercase; letter-spacing:.06em;
-       border-bottom:2px solid var(--line); padding-bottom:4px; margin:32px 0 10px; }
-  h3 { font-size:14px; margin:16px 0 6px; }
-  p.lede { color:var(--muted); margin:0 0 8px; }
-  table { border-collapse:collapse; width:100%; background:#fff; font-size:13px; margin:8px 0; }
-  caption { text-align:left; font-size:12px; color:var(--muted); padding:4px 0; caption-side: top; }
-  th, td { border:1px solid var(--line); padding:6px 10px; text-align:left; vertical-align:top; }
-  th { background:var(--bg); color:var(--muted); font-size:12px; text-transform:uppercase;
-       letter-spacing:.04em; }
-  ul, ol, dl { margin:6px 0 12px; padding-left: 22px; font-size:13px; }
-  dl { padding-left:0; }
-  dt { font-weight:600; font-size:12px; color:var(--muted); margin-top:8px; }
-  dd { margin:2px 0 4px 0; }
-  a { color:var(--brand); }
-  .badge { display:inline-block; border-radius:9px; padding:1px 9px; font-size:11px;
-           font-weight:700; letter-spacing:.02em; }
-  .badge.type { background:#E4E9F4; color:var(--brand-dark); text-transform:uppercase; }
-  .badge.retired { background:#4A5568; color:#fff; }
-  .badge.review-done { background:#E6F4EA; color:#276749; }
-  .badge.review-open { background:#EDF2F7; color:#4A5568; }
-  .s0 { background:#FFF5F5; color:#C53030; } .s1 { background:#FFFAF0; color:#9C4221; }
-  .s2 { background:#EBF8FF; color:#2C5282; } .s3 { background:#E6F4EA; color:#276749; }
-  .status { font-weight:700; }
-  .st-not-started{color:#C53030} .st-initiated{color:#9C4221} .st-defined{color:#975A16}
-  .st-established{color:#2F7A2F} .st-managed{color:#246f24} .st-optimizing{color:#157744}
-  article.impl { background:#fff; border:1px solid var(--line); border-left:4px solid var(--brand);
-                 border-radius:8px; padding:12px 16px; margin:12px 0; }
-  article.impl.retired-card { filter: grayscale(1); background:var(--bg); }
-  .muted { color:var(--muted); } .mono { font-family: Consolas, monospace; font-size:12px; }
-  .empty { color:var(--muted); font-style:italic; font-size:13px; }
-  footer.site { max-width:920px; margin:0 auto; padding:16px 24px 32px; font-size:12px;
-                color:var(--muted); border-top:1px solid var(--line); }
-  @media print { header.site{background:#fff;color:var(--ink)} header.site .sub{color:var(--muted)} }
-</style>
-</head>
-<body>
-<a class="skip" href="#main">Skip to main content</a>
-<header class="site">
-  <div>
-    <img src="{{ url_for('public_reports.static', filename='sfbrn-logo-light-eg.svg') }}"
-         alt="SFBRN Evidence Graph" height="24">
-    <div class="rule" aria-hidden="true"></div>
-    <div class="sub">Accessible Technology Initiative — Public Report</div>
-  </div>
-  <a class="login-btn" href="{{ edit_url }}">Sign in to edit</a>
-</header>
+{% extends "public_base.html" %}
 
-<main id="main">
-  <h1><span class="ck">{{ r.indicator.composite_key }}</span> — {{ r.indicator.success_indicator }}</h1>
+{% block title %}{{ r.indicator.composite_key }} · {{ r.campus.name or r.campus.abbreviation }} {{ r.year }} — SFBRN Evidence Graph{% endblock %}
+
+{% block footer_meta %}{{ r.campus.name or r.campus.abbreviation }} · {{ r.year }} ·{% endblock %}
+
+{% block content %}
+<h1><span class="ck">{{ r.indicator.composite_key }}</span> — {{ r.indicator.success_indicator }}</h1>
   <p class="lede">Goal {{ r.indicator.goal_number }}: {{ r.indicator.goal_name }} · {{ r.indicator.working_group }} Working Group</p>
 
   <h2>Overview</h2>
@@ -127,7 +52,7 @@
     <article class="impl{% if im.retired %} retired-card{% endif %}">
       <h3>
         <span class="badge type">{{ im.type }}</span>
-        {{ im.title }}
+        {% if im.public_url %}<a href="{{ im.public_url }}">{{ im.title }}</a>{% else %}{{ im.title }}{% endif %}
         {% if im.strength is not none %}
           <span class="badge s{{ im.strength }}">{{ ['No Contribution','Indirect Support','Partial','Full'][im.strength] }}</span>
         {% endif %}
@@ -254,12 +179,4 @@
   <h2>Examples of Qualifying Evidence</h2>
   <ul>{% for ex in r.indicator.examples_of_evidence %}<li>{{ ex }}</li>{% endfor %}</ul>
   {% endif %}
-</main>
-
-<footer class="site">
-  SFBRN Evidence Graph — CSU Accessible Technology Initiative public report ·
-  {{ r.campus.name or r.campus.abbreviation }} · {{ r.year }} ·
-  Generated from the live evidence graph. Document files and review notes are available in the internal application.
-</footer>
-</body>
-</html>
+{% endblock %}

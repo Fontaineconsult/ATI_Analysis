@@ -195,6 +195,16 @@ function ImplementationDetailPanel({ implementation, onAfterChange }) {
         });
     };
 
+    const copyPublicLink = () => {
+        const url = `${window.location.origin}/ati/reports/public/implementation/${type}/${implementation.unique_id}`;
+        navigator.clipboard.writeText(url);
+        toast({
+            title: 'Public link copied!',
+            description: 'Shareable read-only page for this implementation copied to clipboard.',
+            status: 'success', duration: 2000, isClosable: true,
+        });
+    };
+
     // Copy the supporting Documents + Webpages as email-ready bullets (title — URL, one per
     // line). Plain text so it pastes cleanly into an email; raw URLs auto-link in most clients.
     const copyDocumentationLinks = () => {
@@ -363,6 +373,15 @@ function ImplementationDetailPanel({ implementation, onAfterChange }) {
                         <HelpTip nodeType={type} />
                         <Button size="xs" variant="ghost" colorScheme="teal" leftIcon={<LinkIcon />} onClick={copyLink}>
                             Copy link
+                        </Button>
+                        <Button
+                            size="xs"
+                            variant="ghost"
+                            colorScheme="teal"
+                            onClick={copyPublicLink}
+                            title="Copy the shareable read-only public page for this implementation"
+                        >
+                            Copy public link
                         </Button>
                         <Button
                             size="xs"

@@ -17,6 +17,7 @@ import {
     VStack,
     Wrap,
     WrapItem,
+    useToast,
 } from '@chakra-ui/react';
 import { useNavigate, useParams } from 'react-router-dom';
 
@@ -359,6 +360,7 @@ const TaapEntry = ({ taap }) => (
 const IndicatorReportView = ({ report }) => {
     const navigate = useNavigate();
     const { campus } = useParams();
+    const toast = useToast();
 
     if (!report) return null;
     const {
@@ -400,6 +402,28 @@ const IndicatorReportView = ({ report }) => {
                         </Box>
                         <HStack className="report-no-print" spacing={2} flexShrink={0}>
                             <CopyIndicatorReportButton report={report} />
+                            <Button
+                                size="sm"
+                                variant="outline"
+                                colorScheme="teal"
+                                title="Copy the shareable read-only public page for this report"
+                                onClick={() => {
+                                    // Derive the public URL from the composite key ("1.1-web").
+                                    const [numbers, suffix] = (indicator.composite_key || '').split('-');
+                                    const [goalNum, siNum] = (numbers || '').split('.');
+                                    const seg = { web: 'web', ins: 'instructional-materials', pro: 'procurement' }[suffix];
+                                    if (!seg || !goalNum || !siNum) return;
+                                    const url = `${window.location.origin}/ati/reports/public/${campus}/${report.year}/${seg}/${goalNum}/${siNum}`;
+                                    navigator.clipboard.writeText(url);
+                                    toast({
+                                        title: 'Public link copied!',
+                                        description: 'Shareable read-only report link copied to clipboard.',
+                                        status: 'success', duration: 2000, isClosable: true,
+                                    });
+                                }}
+                            >
+                                Copy public link
+                            </Button>
                             <Button size="sm" colorScheme="teal" onClick={() => window.print()}>Print report</Button>
                             <Button size="sm" variant="outline" colorScheme="teal" onClick={openEdit}>Edit</Button>
                         </HStack>
