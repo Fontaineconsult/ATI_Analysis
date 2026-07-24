@@ -13,7 +13,7 @@ skipped (see server.build_server) so one bad feature can't take down the server.
 
 from . import (
     catalog, meeting_minutes, meeting_minutes_write, notes_write, ontology, ontology_write,
-    query, query_write, registry_queries, schema_notes,
+    people_write, query, query_write, registry_queries, schema_notes,
 )
 
 ALL_FEATURES = [
@@ -27,4 +27,5 @@ ALL_FEATURES = [
     notes_write,            # transcript annotation: attach notes to YSE/implementations (write-gated)
     query_write,            # pending questions (Query): create/update/settle/link/delete (write-gated)
     meeting_minutes_write,  # meeting records: record/update/link/delete (write-gated)
+    people_write,           # people & org units: create/update + assignments (write-gated)
 ]
