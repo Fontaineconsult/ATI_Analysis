@@ -47,7 +47,9 @@ def build_server():
     )
 
     FastMCP = _require_fastmcp()
-    mcp = FastMCP(settings.server_name)
+    # host/port must be passed explicitly — this SDK's FastMCP ignores its
+    # FASTMCP_* env vars at construction (see config.py). Harmless for stdio.
+    mcp = FastMCP(settings.server_name, host=settings.host, port=settings.port)
 
     for feature in ALL_FEATURES:
         name = getattr(feature, "NAME", feature.__name__)
