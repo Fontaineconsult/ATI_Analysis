@@ -36,6 +36,13 @@ CI=true npm test -- --testPathPattern=services/api  # filter
 # Academic-year rollover
 python -m app.database.tools.create_new_ay_campus
 
+# Batch cypher files (e.g. ontology-ingest output in app/database/batch/auto-assignments/)
+python -m app.database.cypher_runner.run_file <file.cypher>            # EXPLAIN-validate only
+python -m app.database.cypher_runner.run_file <file.cypher> --execute  # validate, then run
+
+# Curated single queries against the graph (registry: app/database/cypher_runner/query_registry.yaml)
+python -m app.database.cypher_runner.run_query --list
+
 # Run graph_schema.py to install neomodel constraints
 PYTHONPATH=. python app/database/graph_schema.py
 ```
@@ -166,3 +173,5 @@ Established preferences from prior sessions live in `.claude/projects/<project>/
 `/semester-migration` — rolls the app to a new academic year (creates new AcademicYear node, duplicates YSE across campuses, creates CampusPlan + WorkingGroupPlan stubs, resets admin review flags, updates frontend year defaults). Triggered by requests like "migrate to 2025-2026", "academic year rollover".
 
 `/accessibility-scan` — runs the axe sweep in `e2e/` over every page, aggregates violations into a per-component worklist, fixes them at the token/component level (fix cookbook included), and re-verifies to green. Triggered by "run an accessibility scan", "fix the axe/WAVE errors", or after UI changes.
+
+`/ontology-ingest` — turns source material (transcripts in `app/database/ontology/raw_transcripts/`, documents, emails) into idempotent batch Cypher saved to `app/database/batch/auto-assignments/`. Encodes the routing rubric (which ontology element a fact maps to) and the signal-strength scale (how strong the evidence must be per node/edge type), plus person-identity resolution and recon protocol. A verify-before-commit gate presents every decision under clear headings with reasoning for user approval before any Cypher is written or executed. Triggered by "ingest this transcript", "graph this meeting", "turn this into cypher".

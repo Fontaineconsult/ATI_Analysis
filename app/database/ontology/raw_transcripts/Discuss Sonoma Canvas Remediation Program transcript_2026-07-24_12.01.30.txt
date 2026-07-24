@@ -1,0 +1,2391 @@
+[Timothy] 11:00:25
+accessibility person. And she left in April of 25.
+
+[Timothy] 11:00:32
+So, um…
+
+[Timothy] 11:00:34
+There was just a big drop there, and uh…
+
+[Timothy] 11:00:38
+we had… we had students that had been here for quite some time, so they were sort of on autopilot, you know? And… and they could…
+
+[Timothy] 11:00:44
+Handle it. And then I was like…
+
+[Daniel Fontaine] 11:00:45
+Yes.
+
+[Timothy] 11:00:48
+But I was like, wait a second. What's gonna happen when graduation comes along? Um, so…
+
+[Daniel Fontaine] 11:00:56
+Sure… who…
+
+[Timothy] 11:00:56
+Started picking it up in 25, and um…
+
+[Daniel Fontaine] 11:01:00
+Okay, so I'm sorry, I'm recording this. I'm keeping like solid transcripts of all these conversations. The name of the person who left in '25, full name, I got cut out.
+
+[Timothy] 11:01:03
+Yeah.
+
+[Timothy] 11:01:10
+Oh, Kristen… Kristen Denver.
+
+[Daniel Fontaine] 11:01:12
+Kristen Denver. Okay, good to know. Okay, good. And then, so you took over… Where were you at that time, and then how did you take over the role?
+
+[Timothy] 11:01:13
+Yeah.
+
+[Timothy] 11:01:21
+I was still in this, still in the same department, our CTET department, and we sort of run classrooms. We do Canvas development. I sit next to our.
+
+[Daniel Fontaine] 11:01:26
+Okay.
+
+[Timothy] 11:01:36
+a Canvas administrator, and so I do a lot of Canvas support, and then also classroom support, and, uh, building… building the rooms out, and then pushing the software out to the… or the firmware out to the…
+
+[Timothy] 11:01:50
+stuff that, you know, in the room. So it all works. So I sort of wore…
+
+[Daniel Fontaine] 11:01:51
+Okay.
+
+[Timothy] 11:01:56
+many different hats for quite some time. And.
+
+[Daniel Fontaine] 11:01:58
+Yeah.
+
+[Timothy] 11:02:01
+I think John Lynch finally was like, well, wait a second.
+
+[Timothy] 11:02:07
+you're literally doing four people's jobs. We're gonna bring you down to, like, one or two.
+
+[Daniel Fontaine] 11:02:10
+Yeah.
+
+[Daniel Fontaine] 11:02:12
+Mm-hmm. That's good. Okay.
+
+[Timothy] 11:02:14
+So that's where it ended up. Yeah. And I just felt like.
+
+[Timothy] 11:02:19
+that drop, you know, I was like, there was no instigation. Worked with faculty that were.
+
+[Timothy] 11:02:27
+You know, just saying, hey, you know.
+
+[Timothy] 11:02:30
+Why do I need to remediate? You know, what do I need to, why? And so, you know, going back and sort of showing them, you know, what's on the books and what laws are going to happen.
+
+[Timothy] 11:02:45
+And it's become a real push for faculty to do their own courses sometimes, especially PDFs. So we do, we do all the PDFs.
+
+[Daniel Fontaine] 11:02:51
+Mm-hmm.
+
+[Timothy] 11:02:54
+And um.
+
+[Timothy] 11:02:56
+We don't really have the budget for a lot of things, so…
+
+[Timothy] 11:03:01
+For videos, I have my students watching them in real time with the captioning.
+
+[Timothy] 11:03:07
+and then, you know, changing their role in Camtasia. I mean in.
+
+[Timothy] 11:03:14
+You know, our…
+
+[Timothy] 11:03:16
+Good grief, now I'm totally drawn to work. Or Panopto, you know?
+
+[Daniel Fontaine] 11:03:21
+Yeah, right.
+
+[Timothy] 11:03:21
+So, um…
+
+[Timothy] 11:03:23
+So they can actually edit the captioning. But you know, those kind of things take a long time.
+
+[Timothy] 11:03:29
+And we do have a remediate, you know, we have an accessibility department, but they just do the courses that.
+
+[Timothy] 11:03:38
+There is somebody that says, hey, I have…
+
+[Timothy] 11:03:41
+I need the rest of them is like all on us. So I don't know if that makes any sense.
+
+[Daniel Fontaine] 11:03:44
+Mm-hmm.
+
+[Daniel Fontaine] 11:03:46
+Yeah, yeah, yeah. No, it does, and we're, you know, having the exact same conversation here, and I think… so Christian is probably going to be leading… Christian here… I don't know if you two have met before, have you talked at all?
+
+[Timothy] 11:03:54
+Christian.
+
+[Timothy] 11:03:58
+No, no, I have not met Christian before. Maybe, I don't know.
+
+[Daniel Fontaine] 11:04:01
+Great. Well, this is a good chance. Yeah.
+
+[Timothy] 11:04:03
+Yeah.
+
+[Cristian Alvarado] 11:04:04
+Yeah, I don't think we've met before.
+
+[Timothy] 11:04:07
+No.
+
+[Daniel Fontaine] 11:04:09
+So, well, anyway, we'll just quick introductions. I'm Daniel. I've assumed this role of lead accessibility, accessibility lead for the SF BRN, and we're starting to figuring out how all that works. But there's definitely like a networking function here, which is what I'm trying to do. I know, Christian, you could…
+
+[Timothy] 11:04:18
+Oh, good. Good.
+
+[Daniel Fontaine] 11:04:26
+talking off about all this, all the Canvas stuff and all the LMS, and this is definitely his area. And he, so he's with the AT, Accessible, not Accessible Technology, Academic Technology, so who runs Canvas, so he'll probably be.
+
+[Timothy] 11:04:36
+Okay.
+
+[Daniel Fontaine] 11:04:42
+leading most of the canvas remediation work that's going to be going to be done here, and they're building up a program which really hasn't existed. So having your feedback here is really valuable because you've been doing this for a while. So I kind of just pick your brain for a bit and just get some details. Those are going to all get recorded in this transcript, which I'm going to stick in somewhere and have, you know, build a report back on.
+
+[Timothy] 11:04:46
+Okay.
+
+[Timothy] 11:04:53
+Yeah. Okay.
+
+[Timothy] 11:04:55
+Yes.
+
+[Timothy] 11:05:00
+Oh, good.
+
+[Timothy] 11:05:04
+Yeah. One thing that I am working on that's sort of a goal.
+
+[Timothy] 11:05:11
+is…
+
+[Timothy] 11:05:12
+you know, because remediation is is such. It's it's big. And my wife works in the environmental sector. So you know, we're talking eirs and all these other things need to be remediated. So my students.
+
+[Timothy] 11:05:27
+We've got a pretty good team right now of, you know, six, seven.
+
+[Timothy] 11:05:33
+I'm working on getting them a certificate program, a certification of when they leave this campus that they're, they're gonna be certified as remediators. So on top of walking out with their bachelor's degree, they're gonna walk out with a certification that's like.
+
+[Daniel Fontaine] 11:05:47
+Interesting.
+
+[Timothy] 11:05:52
+you hire me in this field, marketing, whatever, I know how accessibility works. Um, that's something I just came… I came up with, and I think John's gonna…
+
+[Timothy] 11:06:01
+Let me run with that. So I'm building something out that basically says, you know, this remediation work you're doing, it's…
+
+[Daniel Fontaine] 11:06:02
+Mmhm.
+
+[Timothy] 11:06:10
+You're going to have something that at the end of your college career, you're also going to be able to step in and be more marketable in the fields.
+
+[Daniel Fontaine] 11:06:18
+Yeah, that's real valuable. Are you in communication with Leon and the bigger team about that content? Yeah.
+
+[Timothy] 11:06:26
+Yeah, I'm working on sort of developing… I'm pulling all the…
+
+[Timothy] 11:06:31
+certification programs that are out there, and so I've sort of ran…
+
+[Timothy] 11:06:36
+put all those into one meshed file and, uh, ran into, like, okay, which ones… which ones cost? Which ones are free? How can I build something that, you know.
+
+[Timothy] 11:06:50
+You know.
+
+[Timothy] 11:06:50
+makes them stronger.
+
+[Timothy] 11:06:54
+So it's been sort of a chore, but also…
+
+[Timothy] 11:06:59
+I run the students through, I built a manual in Canvas that has all the remediation tools that they need and what they possibly could run into.
+
+[Daniel Fontaine] 11:07:06
+Mmhm.
+
+[Daniel Fontaine] 11:07:15
+Let me make a quick note and come back to you. So there's two goals here. One is to get you and Christian to hopefully share resources. And two, I have to do the ATI reports. So any evidence, the stuff you're working on, eventually I'll need to collect. So the Canvas course, and the AI will pick this up.
+
+[Timothy] 11:07:16
+Yeah.
+
+[Timothy] 11:07:20
+Yeah.
+
+[Daniel Fontaine] 11:07:31
+I need to get that from you, uh, get the Canvas course from Tim. So, that's, yeah.
+
+[Timothy] 11:07:32
+Yeah.
+
+[Timothy] 11:07:36
+Sure.
+
+[Timothy] 11:07:37
+Yeah, just make a list and we can all take care of that kind of stuff. But yeah.
+
+[Daniel Fontaine] 11:07:39
+Yeah, yeah.
+
+[Timothy] 11:07:43
+I've also tried things like…
+
+[Timothy] 11:07:46
+you know, building stuff in ChatGPT, that… and just feed it all of the accessibility stuff, and then… and then throw in a table and be like.
+
+[Timothy] 11:07:55
+how do I remediate this table? And, you know, it's like, eh, you know, infographics are hard, but, um, some… they always are. Uh, but, you know.
+
+[Daniel Fontaine] 11:08:04
+Yes. Oh, yes, yes.
+
+[Timothy] 11:08:09
+So far, I really haven't had any luck with the AI as far as building something that.
+
+[Timothy] 11:08:15
+You know, chew through stuff for our students, so…
+
+[Daniel Fontaine] 11:08:20
+Okay. Okay.
+
+[Daniel Fontaine] 11:08:22
+Great, that's really helpful. Um, so then, I guess, I mean, I could… we have this, like, we're trying to get the program going here, and I just have some questions that I can run through, and then you could just, you know, tell me what's going on. So, um…
+
+[Timothy] 11:08:30
+Okay, yeah.
+
+[Daniel Fontaine] 11:08:35
+Let's see, I just want to… so for remediation, are you using Acrobat Professional as one of your main remediation tools?
+
+[Timothy] 11:08:38
+Mm-hmm.
+
+[Timothy] 11:08:43
+Yeah, and Equidox
+
+[Daniel Fontaine] 11:08:43
+Okay. And Equidox. You have Acrobat and Equidox. Are you using this Fullerton tool at all? Their AI tool? No. Okay.
+
+[Timothy] 11:08:50
+No.
+
+[Timothy] 11:08:51
+Actually, if you send me that, I can definitely start looking into that in a stronger way
+
+[Daniel Fontaine] 11:08:53
+I can do that.
+
+[Daniel Fontaine] 11:08:58
+Okay.
+
+[Daniel Fontaine] 11:08:59
+And then, are you using the Microsoft Office tools for their own accessibility, internal accessibility? Okay.
+
+[Timothy] 11:09:04
+Yep.
+
+[Timothy] 11:09:05
+Yeah
+
+[Daniel Fontaine] 11:09:06
+Great. Do you do any screen reader testing, Nvidia or JAWS on any of the content?
+
+[Timothy] 11:09:10
+Uh, yeah, we do. We do, um, some of the jaws. Uh, we also just…
+
+[Daniel Fontaine] 11:09:12
+Okay.
+
+[Timothy] 11:09:16
+You know, we
+
+[Timothy] 11:09:17
+Yeah, we do that.
+
+[Timothy] 11:09:20
+It's tough because
+
+[Timothy] 11:09:23
+Or, you know working you know having the students do it all
+
+[Timothy] 11:09:27
+I am constantly having to come back and just double-check their work. One thing that
+
+[Daniel Fontaine] 11:09:30
+Sure, Director Armstrong.
+
+[Timothy] 11:09:35
+you know.
+
+[Timothy] 11:09:36
+they got their career going at Sonoma State, you know, so they… you know, the remediation is the job, you know, and so…
+
+[Timothy] 11:09:44
+a lot of times they'll just have to, you know. Sit down, say, Hey. what are you doing with this pay? You know. What are you doing? How is it going? Show me what you've done with the last couple.
+
+[Timothy] 11:09:54
+PDFs you've been doing, just to double check
+
+[Timothy] 11:09:58
+you know, some students are just in real investigators, and
+
+[Daniel Fontaine] 11:10:02
+Mm-hmm.
+
+[Timothy] 11:10:03
+You know, you just
+
+[Timothy] 11:10:05
+You find out, you're like, wow, you're doing the X, Y, and Z, and other ones are like,
+
+[Timothy] 11:10:10
+Looks like a heading two.
+
+[Daniel Fontaine] 11:10:13
+Yeah, yeah, gotta eyeball that.
+
+[Timothy] 11:10:14
+And you're sort of like, you're sort of like, whoa, wait a second. You know, so, and also I think that we, you know.
+
+[Timothy] 11:10:23
+Picked up that, you know, some of the remediation…
+
+[Timothy] 11:10:27
+skills that they learned, they… they basically picked it up on their own. Just… just figuring out Equidox, figuring it out Acrobat, and…
+
+[Daniel Fontaine] 11:10:31
+Mm-hmm.
+
+[Timothy] 11:10:37
+That approach, I don't think is very good. It needs to be. That's why I'm looking at some kind of certification program so that they they would be learning this and understanding that, you know, it's like just because it's here doesn't mean it's
+
+[Daniel Fontaine] 11:10:40
+Yeah. Okay.
+
+[Daniel Fontaine] 11:10:44
+Yeah, it's…
+
+[Timothy] 11:10:53
+you know.
+
+[Timothy] 11:10:54
+You know, you gotta…
+
+[Timothy] 11:10:56
+Mark thinks the correct way
+
+[Daniel Fontaine] 11:10:56
+Sure.
+
+[Timothy] 11:10:58
+And.
+
+[Daniel Fontaine] 11:10:58
+Are you using, so I know we have a tie-in with the community colleges now with their whole training series. Are you accessing those as part of the student training?
+
+[Timothy] 11:11:09
+Um, I've done it a little bit, but I haven't thrown my students on it, um, and that's just something that I think I need to do pretty soon. Summer is, like.
+
+[Daniel Fontaine] 11:11:11
+Okay.
+
+[Daniel Fontaine] 11:11:15
+Okay.
+
+[Timothy] 11:11:18
+We sort of have a bare bones.
+
+[Timothy] 11:11:21
+You know, student schedule in the summer. So they're probably doing.
+
+[Timothy] 11:11:26
+89 to 90% of the work is remediation versus once the school starts, then they sort of, they put on a few different hats. So they're also.
+
+[Daniel Fontaine] 11:11:29
+Okay.
+
+[Timothy] 11:11:37
+tech runners, so they also run out to the classroom, and so…
+
+[Daniel Fontaine] 11:11:38
+Mm-hmm.
+
+[Timothy] 11:11:41
+They handle audio issues.
+
+[Timothy] 11:11:44
+you know.
+
+[Timothy] 11:11:46
+projector issues in any classroom. So they fix stuff.
+
+[Timothy] 11:11:51
+So, then they come back and they got to remediate. So.
+
+[Timothy] 11:11:56
+We'll have to see how it goes.
+
+[Timothy] 11:12:02
+Yeah, John Lynch. Yes, we are the same group of students.
+
+[Timothy] 11:12:08
+So they all wear big hats.
+
+[Daniel Fontaine] 11:12:12
+That's good. I mean, yeah, you got to share resources.
+
+[Cristian Alvarado] 11:12:14
+Yeah, and…
+
+[Cristian Alvarado] 11:12:15
+So, so we're, yeah, we're, we're in the same bucket then.
+
+[Timothy] 11:12:15
+Yeah
+
+[Timothy] 11:12:18
+Okay.
+
+[Cristian Alvarado] 11:12:19
+So that's good to know.
+
+[Timothy] 11:12:20
+Oh, so your students are also doing the…
+
+[Cristian Alvarado] 11:12:24
+Uh, yeah, so our… our students are primarily not.
+
+[Cristian Alvarado] 11:12:29
+doing accessibility work, that this is something that we're inheriting because…
+
+[Cristian Alvarado] 11:12:35
+Nobody else on campus seems to be able to do this.
+
+[Timothy] 11:12:39
+Yep, that's what happened to us. Same kind of thing. Nobody else…
+
+[Timothy] 11:12:45
+was taking it on, and
+
+[Timothy] 11:12:47
+You know, I was like
+
+[Timothy] 11:12:50
+worried about that April deadline, and I was really pushing for, you know, like, we're not gonna even come close. And then they're like, ah, surprise, we'll move it a year out. So, um…
+
+[Timothy] 11:13:01
+So we'll see. I don't know. Also
+
+[Timothy] 11:13:06
+You know, we have form emails. So when we run like cityscape and we look at the courses, and we look at the you do it score
+
+[Timothy] 11:13:15
+I mark, I always pick the top ones that have the least amount of remediation and then I run the UDOIT score and then I screen capture that. So I have a before.
+
+[Timothy] 11:13:29
+And then when we finish, we have an after. And it's not always 100%, but we get pretty darn close for most of the time.
+
+[Timothy] 11:13:37
+But one of the things we also do is we then…
+
+[Timothy] 11:13:41
+build out and use the ticketing system, SNOW, to build a ticket for that remediation.
+
+[Timothy] 11:13:48
+So, um, I just… we put them in a queue, uh, we sent out an email to the instructor that basically is, this is… this is a, you know, this is what we're doing, this is how we do it.
+
+[Timothy] 11:14:00
+Um, and so you're gonna see a designer in the Canvas course that's gonna do this remediation.
+
+[Timothy] 11:14:06
+Uh, I do give them…
+
+[Timothy] 11:14:07
+We do have a little opt out if they really want to opt out.
+
+[Timothy] 11:14:13
+I think I've only had one instructor over a year that opted out.
+
+[Timothy] 11:14:18
+So most of them like, yeah, good. You know, the, you know, nothing's changed.
+
+[Timothy] 11:14:24
+Even things like I just have them remediate. So if there's spelling errors in a Canvas course, I'm like, yeah, just leave them. It's their content. We're not here to change content or fix things. We're just here to remediate.
+
+[Timothy] 11:14:42
+So I make them aware of spelling errors, but I'll…
+
+[Timothy] 11:14:46
+Tell them they need, you know, I'm like, hey, on page about anthropology, whatever, I found some spelling errors or not. I don't know. So, you know, so then we fix that kind of, you know, I just make them aware.
+
+[Timothy] 11:15:00
+And then once we finish that remediation.
+
+[Timothy] 11:15:04
+Then we send out the final closure for that snow ticket, and that ticket then gets closed, and we send out an email, and we send them the score of what the score is for their course.
+
+[Timothy] 11:15:16
+And then remind them to, if they go forward, to use that… this content, and not go back to a sandbox course, or a previous semester, um, to import into another semester.
+
+[Timothy] 11:15:31
+And then we just take the student out of the designer role and then
+
+[Timothy] 11:15:35
+Close that ticket up. So it's been pretty good
+
+[Timothy] 11:15:39
+I know there's other ways that people do it, like maybe in Trello or something like that, but, um, I found the ticketing system just works, because all our students are in there.
+
+[Timothy] 11:15:48
+And they can see the… they can see the courses, and they can be like…
+
+[Timothy] 11:15:51
+You know, I had trauma from…
+
+[Timothy] 11:15:55
+working with previous nursing course, so I'm going to move on to econ, and I'll just do this one. So that's been sort of fun for them, I think.
+
+[Timothy] 11:16:04
+I don't know if John talked about that system that we do or not, but it seems to be working pretty well.
+
+[Daniel Fontaine] 11:16:12
+That would be, if you have any documentation about that too, I would definitely like to get my hands on it. A note for you, AI. Thank you.
+
+[Timothy] 11:16:15
+Yeah, yeah.
+
+[Daniel Fontaine] 11:16:20
+Good. That's actually all really helpful. Good. I'm just going to keep asking questions. And I like the tangents are going on and talking about everything because it just like brings it all out. And these are all the details we need. Abbey Fine Reader, are you using that to do OCR? Or what is your OCR tool?
+
+[Timothy] 11:16:22
+Yeah.
+
+[Timothy] 11:16:28
+Yeah. Yeah.
+
+[Timothy] 11:16:31
+Okay, ticketing.
+
+[Timothy] 11:16:38
+Or OCR?
+
+[Timothy] 11:16:40
+We're using… well, we're using the Equidox, we're using… we're not using Abby
+
+[Daniel Fontaine] 11:16:46
+Okay.
+
+[Timothy] 11:16:48
+Let's see, let me just…
+
+[Timothy] 11:16:51
+Put something up here real quick.
+
+[Timothy] 11:16:57
+So, for the OCR, a lot of times we'll just have, like.
+
+[Timothy] 11:17:01
+pages being read and, you know, we just use the reader that's in Microsoft or in, you know, something like that. Or we just…
+
+[Timothy] 11:17:12
+View it as a page and then look at the look at how it's being read. So we'll
+
+[Daniel Fontaine] 11:17:16
+Mm-hmm.
+
+[Timothy] 11:17:18
+Label it down with numbers and, you know, so it's read correctly in the right order.
+
+[Daniel Fontaine] 11:17:24
+And then do you, if when possible, do you try to convert documents into pages in Canvas?
+
+[Timothy] 11:17:33
+Not usually. Um…
+
+[Timothy] 11:17:38
+We've sort of got that run as far as, like, it's their content, so don't do it, you know? But occasionally, yes. If it's really rough, then I will make it a page. But for the most part, we're told.
+
+[Daniel Fontaine] 11:17:44
+Mm-hmm.
+
+[Timothy] 11:17:53
+don't change…
+
+[Timothy] 11:17:55
+you know, their stuff. So if it's a PDF, you know, then we just make it accessible and make it readable, but we don't change it into a page. That's sort of the rule that we try to.
+
+[Daniel Fontaine] 11:18:07
+Okay.
+
+[Timothy] 11:18:10
+This is the other part, is we don't really have a canvas, like…
+
+[Timothy] 11:18:17
+designer that can work with faculty on best practices
+
+[Timothy] 11:18:22
+So it's like
+
+[Timothy] 11:18:24
+I mean, 2020, I did a lot of that, but we don't have someone that's really teaching classes and best practices for building out Canvas courses.
+
+[Timothy] 11:18:35
+So we're lacking a lot. I mean, we lost, I think, three or four people out of this department. And no one's been replaced. So
+
+[Daniel Fontaine] 11:18:45
+Sure.
+
+[Timothy] 11:18:45
+That's been sort of a fun part, but we're hoping for a designer position
+
+[Timothy] 11:18:51
+That maybe we could move… we could get someone eventually to replace the one that we lost, um, over a year ago.
+
+[Timothy] 11:18:58
+So, our Canvas admin has taken on a lot of that role as far as helping faculty do some of the things. But
+
+[Timothy] 11:19:12
+And we've also
+
+[Timothy] 11:19:14
+Because of the cuts, we don't have too many lectures. So we have a lot of the full-time faculty going back into the classroom. And so
+
+[Timothy] 11:19:23
+They're bringing up their old courses and.
+
+[Timothy] 11:19:27
+Not, you know. So we don't really have a chance to like
+
+[Timothy] 11:19:31
+mold them so much, if that makes any sense.
+
+[Daniel Fontaine] 11:19:35
+Stuck in their ways.
+
+[Timothy] 11:19:36
+Yes, but also they've built that course and they're done. And
+
+[Daniel Fontaine] 11:19:37
+Yeah, yes.
+
+[Daniel Fontaine] 11:19:40
+No.
+
+[Timothy] 11:19:42
+you know, we can run through the you do it, but
+
+[Timothy] 11:19:46
+as a non-faculty, I feel like it's more important to have a faculty member
+
+[Timothy] 11:19:53
+approach them and you
+
+[Timothy] 11:19:56
+as a designer, and help them work at that course. You know, as me, I'm like, well, we've… yeah, I got this team, we've edit… we've, uh, remediated your course to 99%, um, and then…
+
+[Daniel Fontaine] 11:19:58
+Mm-hmm.
+
+[Timothy] 11:20:10
+When occasionally I also have the students.
+
+[Timothy] 11:20:14
+Well, not occasionally, but as I'm working with the students, I have them make notes
+
+[Timothy] 11:20:20
+And the note field is
+
+[Timothy] 11:20:23
+Basically
+
+[Timothy] 11:20:24
+things that we could possibly change. And then I put that in the final email as well.
+
+[Timothy] 11:20:32
+And I have them write it up. So the idea is, is like, oh, by the way.
+
+[Daniel Fontaine] 11:20:32
+Great.
+
+[Timothy] 11:20:37
+Pages are a better format than using X, Y, and Z.
+
+[Timothy] 11:20:42
+And…
+
+[Timothy] 11:20:44
+For your videos, you know, possibly.
+
+[Timothy] 11:20:48
+putting them into Panopto versus YouTube might be a better option just to keep your content secure, or, you know, things like that.
+
+[Timothy] 11:20:58
+That way it's easier to move it over.
+
+[Timothy] 11:21:00
+Unless we switch video platforms.
+
+[Timothy] 11:21:04
+We did.
+
+[Daniel Fontaine] 11:21:06
+Yes, we're dealing with that now as well.
+
+[Timothy] 11:21:06
+That was a nightmare.
+
+[Timothy] 11:21:09
+Which ones do you use? What are you using now?
+
+[Daniel Fontaine] 11:21:11
+We just have Canvas Studio. We're working on getting the…
+
+[Timothy] 11:21:14
+Okay.
+
+[Daniel Fontaine] 11:21:17
+The contracts for the captioning vendor.
+
+[Daniel Fontaine] 11:21:20
+set up. Do you have a vendor for captioning, or is it… you said it was all in-house, your students are doing it themselves?
+
+[Timothy] 11:21:20
+Okay.
+
+[Timothy] 11:21:25
+Um, the captioning for video, um, we do have it, but…
+
+[Timothy] 11:21:31
+It's only available through DS. So we don't have that captioning service. It's.
+
+[Daniel Fontaine] 11:21:34
+The other ones.
+
+[Timothy] 11:21:37
+Oh my gosh, I'm drawing a blank. They have two licenses with it.
+
+[Timothy] 11:21:46
+Verbit.
+
+[Timothy] 11:21:46
+That's it. Yeah.
+
+[Daniel Fontaine] 11:21:46
+They have verbiage. Okay. All right.
+
+[Timothy] 11:21:50
+But we don't, and I've strongly made a recommendation that we should
+
+[Timothy] 11:21:57
+And if we are going to go forward with a lot more remediation with videos, I think that maybe it could be a better option to be purchased
+
+[Timothy] 11:22:07
+As a whole group.
+
+[Daniel Fontaine] 11:22:09
+Yes, yeah.
+
+[Timothy] 11:22:10
+Uh, and then a site license for the CSU, or the site license for just the barn, just us. Um, and if we had that, it would really speed up the video stuff.
+
+[Daniel Fontaine] 11:22:16
+Yeah. There's… yeah.
+
+[Timothy] 11:22:23
+Um, you know, because it's our poor students, you know, having to watch those videos.
+
+[Daniel Fontaine] 11:22:28
+Yeah. Yeah.
+
+[Timothy] 11:22:30
+And I can't really have them do anything with anything in YouTube, so.
+
+[Daniel Fontaine] 11:22:35
+Bold vote plus one for SFBRN site license.
+
+[Timothy] 11:22:39
+Yeah, I really… I'm sort of putting that in John's ear, so I'm sure that if he can get it up to…
+
+[Daniel Fontaine] 11:22:40
+Yeah.
+
+[Daniel Fontaine] 11:22:44
+Yeah.
+
+[Timothy] 11:22:49
+up the line of command and see if we can get it. That would be awesome.
+
+[Timothy] 11:22:56
+Um, but I also feel like…
+
+[Timothy] 11:23:00
+we don't have all the tools that would be nice, you know, like that Verbit would be great. Other ones, other readers, um…
+
+[Timothy] 11:23:07
+Having a real license for JAWS and things like that would be great.
+
+[Daniel Fontaine] 11:23:12
+Yeah, I'll send you that. We have that. That's a chancellor's office. Yeah, I'll make a note. Send Tim all the links I have at the end of this meeting.
+
+[Timothy] 11:23:14
+Okay.
+
+[Timothy] 11:23:18
+Yeah. Okay.
+
+[Timothy] 11:23:21
+Yeah, definitely. My role's been…
+
+[Timothy] 11:23:24
+it hasn't been until, like, probably June of this year that I haven't been wearing, like, 3 or 4 hats.
+
+[Daniel Fontaine] 11:23:31
+Sure, sure, of course.
+
+[Timothy] 11:23:32
+So it's like I'm running to do the remediation and then I'm running to build a classroom and then I'm running to
+
+[Daniel Fontaine] 11:23:34
+Yeah.
+
+[Timothy] 11:23:41
+Do, you know, Canvas help on Zoom, so it's like, you know, just… so I think
+
+[Timothy] 11:23:47
+I'm having a lot of things taken off my plate, which…
+
+[Timothy] 11:23:50
+I don't mind because the classroom stuff is a lot, you know?
+
+[Daniel Fontaine] 11:23:51
+Mm-hmm.
+
+[Timothy] 11:23:56
+If I have to replace a…
+
+[Timothy] 11:23:59
+you know…
+
+[Timothy] 11:24:01
+you know, some extra on device in the classroom, you know, it's like, that's my day.
+
+[Timothy] 11:24:06
+You know?
+
+[Daniel Fontaine] 11:24:06
+Oh, yeah. About.
+
+[Timothy] 11:24:07
+or…
+
+[Timothy] 11:24:08
+Having to replace a projector, which…
+
+[Timothy] 11:24:11
+I absolutely hate.
+
+[Timothy] 11:24:16
+So, um…
+
+[Daniel Fontaine] 11:24:17
+I can't speak as much to that as I'm sure Christian can.
+
+[Timothy] 11:24:19
+Yeah. And hopefully, yeah, Christian, if you, you know.
+
+[Timothy] 11:24:24
+For your if your team is doing like basically the same kind of thing as mine.
+
+[Timothy] 11:24:30
+You know, I'm trying to work on a path that like for my students that there's some students that really show an interest for remediation and they really like it a lot. So I'm sort of pushing them going into the remediation.
+
+[Timothy] 11:24:45
+We've also stepped up the program where we've got funding to have two students on.
+
+[Timothy] 11:24:50
+At the same time, all day long.
+
+[Timothy] 11:24:53
+But that's about as many as we have.
+
+[Timothy] 11:24:58
+So, some of the students are like, that's where I'm pushing some of them to…
+
+[Timothy] 11:25:01
+Work with, like, there's a…
+
+[Timothy] 11:25:05
+Uh, a UDOIT summer camp coming up.
+
+[Timothy] 11:25:07
+And I'm put, I'm like, Hey, maybe I can get you guys into, I'm gonna get you guys into it. And.
+
+[Timothy] 11:25:13
+You know, as soon as it said summer camp date.
+
+[Timothy] 11:25:17
+They got really depressed. Like, no, I was like, no, it's only two days. You'll be good.
+
+[Daniel Fontaine] 11:25:21
+Oh, summer. Oh.
+
+[Daniel Fontaine] 11:25:24
+It will pay you.
+
+[Timothy] 11:25:26
+You know, things like that. But then other students that have that more savvy edge to like, hey, I.
+
+[Timothy] 11:25:32
+Love the idea of, like.
+
+[Timothy] 11:25:35
+doing more hardware stuff, then I sort of have a venue for them to go that direction. So I'm building two different paths for students. And.
+
+[Timothy] 11:25:47
+Because of our small team, and they're bringing back, um…
+
+[Timothy] 11:25:53
+You know, one remote day.
+
+[Timothy] 11:25:56
+I think I'm gonna have one staff person, you know, another staff person, he's taking a remote day.
+
+[Timothy] 11:26:01
+So this is going to be a little bit more impacted. So.
+
+[Timothy] 11:26:06
+Basically, I have two lead students that do all of the
+
+[Timothy] 11:26:11
+all the work at the desk to help, like, running the UDOIT scores, things like that. And then they build those, um, snow kit… snow tickets.
+
+[Daniel Fontaine] 11:26:17
+Mm-hmm.
+
+[Timothy] 11:26:23
+And they send out the first email.
+
+[Daniel Fontaine] 11:26:23
+Okay.
+
+[Timothy] 11:26:26
+So all that's done with the screenshots by them. And then, basically, the other ones…
+
+[Timothy] 11:26:33
+We have just remediating, but it is…
+
+[Timothy] 11:26:36
+It's tricky in that role, you know, it's, as you know, students, some are…
+
+[Timothy] 11:26:43
+just…
+
+[Timothy] 11:26:44
+You know, the ones that I promoted, they're just remediating monsters.
+
+[Timothy] 11:26:49
+And they just want to remediate and they go and they're just like and other ones.
+
+[Daniel Fontaine] 11:26:50
+Oh, yeah.
+
+[Timothy] 11:26:58
+They'll be lucky to get through a course and, you know…
+
+[Daniel Fontaine] 11:27:00
+Yeah, I…
+
+[Timothy] 11:27:01
+in weeks and weeks, you know, and I looked at like the report, like the average time it should take someone to remediate a course.
+
+[Timothy] 11:27:10
+Um, and that's something I don't really want to get into, is, like, timing people.
+
+[Daniel Fontaine] 11:27:15
+Mm-hmm.
+
+[Timothy] 11:27:16
+Or, you know, I would like to give them the autonomy of, of being like, Hey, I can remediate this course. I'm gonna be pretty efficient at it.
+
+[Timothy] 11:27:25
+But then there's some that I think I really have to…
+
+[Timothy] 11:27:28
+Put a stopwatch on them. I don't know, I'm not too sure to how to handle that yet. I'm going to probably make John the bad guy.
+
+[Daniel Fontaine] 11:27:31
+Yeah, yeah.
+
+[Daniel Fontaine] 11:27:39
+Well, that is their job. We are staff. We don't get to do that.
+
+[Timothy] 11:27:42
+Yep.
+
+[Timothy] 11:27:43
+Yep, exactly.
+
+[Daniel Fontaine] 11:27:44
+No, it's you know you can. You can, but still put it on him. Yeah.
+
+[Timothy] 11:27:46
+I try to, you know, it's just by checking in with them every day when they're on course and saying, hey, how's it going?
+
+[Daniel Fontaine] 11:27:50
+Yeah. Okay.
+
+[Timothy] 11:27:53
+What, you know, did you find anything interesting? You know, tell me about it, you know, and…
+
+[Timothy] 11:27:59
+Keeps them going a little bit more. Uh, but yeah, the previous person, Denver.
+
+[Timothy] 11:28:05
+worked and had some meetings with them here and there, but, basically they're sort of hands off, you know, they just left them to their own devices. And I find that.
+
+[Daniel Fontaine] 11:28:16
+Yeah, you got to be on them. Yeah.
+
+[Timothy] 11:28:17
+You got to be on them, got to hurt them like cats, if that's possible.
+
+[Daniel Fontaine] 11:28:20
+Yep.
+
+[Daniel Fontaine] 11:28:22
+Yeah, yeah, it's the same same in the the accommodation side. It's yeah.
+
+[Timothy] 11:28:23
+Yeah.
+
+[Daniel Fontaine] 11:28:28
+It's just boring, you know, it's repetitive and can be repetitive and boring and you gotta hire the right personalities for it. Also, yeah, it's more.
+
+[Timothy] 11:28:28
+Yeah.
+
+[Timothy] 11:28:33
+Yeah, yeah.
+
+[Timothy] 11:28:35
+Yeah, and um…
+
+[Timothy] 11:28:37
+Yeah, we… we have a few… like, we have…
+
+[Timothy] 11:28:42
+We got a few students, like ones from India, ones from China.
+
+[Timothy] 11:28:49
+Um, I…
+
+[Timothy] 11:28:51
+I work with them just to make sure they understand, you know.
+
+[Timothy] 11:28:55
+what we're doing, I think they… they understand the process, the remediation, uh, but sometimes, like, English is not their first language, so…
+
+[Timothy] 11:29:07
+Sometimes I will just help them out with the videos, help them out with some of the stuff there.
+
+[Timothy] 11:29:14
+Uh, if they have any issues. And I just… I think it's also…
+
+[Timothy] 11:29:18
+being really available to the students, uh, you know, so they don't feel intimidated.
+
+[Daniel Fontaine] 11:29:24
+Mm-hmm.
+
+[Timothy] 11:29:24
+Asking a question, and just being like, hey, there is no…
+
+[Timothy] 11:29:28
+stupid questions. There's only, you know, a question, it's valuable, because it's, you know…
+
+[Timothy] 11:29:34
+If it's a mistake, it gets carried forward and we can just fix it right now. So.
+
+[Timothy] 11:29:40
+It's part of that fun part, having students.
+
+[Daniel Fontaine] 11:29:45
+So if I could just like from start to finish so I could better understand the process and some of the infrastructure and the way you're storing files and how so they could take me from the beginning to end on the start of a course to the end of the course.
+
+[Timothy] 11:29:50
+Yeah.
+
+[Daniel Fontaine] 11:30:00
+Just like how your process functions.
+
+[Timothy] 11:30:02
+Yeah.
+
+[Timothy] 11:30:02
+So once we got it into the ticketing system.
+
+[Timothy] 11:30:07
+Then we assign it to, you know, a student will pick it, and assign it to themselves in snow.
+
+[Timothy] 11:30:14
+And then, um…
+
+[Timothy] 11:30:16
+Usually they they'll start with, you do it.
+
+[Timothy] 11:30:21
+and look at, you know, major to minor issues.
+
+[Timothy] 11:30:28
+This process, I sort of let them do their own thing. Some work on the major stuff first, some work on the minor.
+
+[Timothy] 11:30:37
+All of that is, you know, the PDFs through Equidox, things like that.
+
+[Timothy] 11:30:45
+all the files.
+
+[Timothy] 11:30:47
+Since our computers are, like, single sign-on and, you know, authenticated.
+
+[Timothy] 11:30:52
+They sign on. So…
+
+[Timothy] 11:30:55
+they're sort of stuck at one station, if they're in the middle of a document. Uh, because then when they download it.
+
+[Daniel Fontaine] 11:31:03
+Mm-hmm.
+
+[Timothy] 11:31:04
+It's only on that computer.
+
+[Daniel Fontaine] 11:31:06
+Right, right, right.
+
+[Timothy] 11:31:07
+So that's something I've been thinking about.
+
+[Timothy] 11:31:14
+But I don't know how that's gonna work.
+
+[Daniel Fontaine] 11:31:14
+We have…
+
+[Daniel Fontaine] 11:31:16
+we… and we've always had, and I would… if you can get your systems team to do this, get an on-prem, like, shared drive, an actual network drive. That's the… the cheapest, uh, and the most effective way to share the files between the computers, especially if you end up using something like ABBYY FineReader.
+
+[Daniel Fontaine] 11:31:34
+you need concurrency on writes and reads, which Box won't do, or any of these other ones. So I recommend that, if you can get them to do it.
+
+[Timothy] 11:31:39
+Okay.
+
+[Timothy] 11:31:42
+Okay, yeah. We have, yeah, we can easily do a shared drive setup.
+
+[Daniel Fontaine] 11:31:43
+Yep.
+
+[Daniel Fontaine] 11:31:47
+Yeah, yeah.
+
+[Timothy] 11:31:50
+But yeah, I just hadn't really put that into effect. But I think that that would be…
+
+[Daniel Fontaine] 11:31:55
+Yeah.
+
+[Timothy] 11:31:59
+Easier, uh, because, yeah.
+
+[Timothy] 11:32:02
+We…
+
+[Timothy] 11:32:04
+If a student leaves, then we basically, whatever.
+
+[Timothy] 11:32:09
+process they've had, we basically are starting.
+
+[Timothy] 11:32:12
+But you do it all over again. So if in the middle of a document, but the shared could work. I'll run that by John. See if we can just get a sh.
+
+[Daniel Fontaine] 11:32:12
+Mm-hmm. Okay.
+
+[Timothy] 11:32:20
+something in our shared drive.
+
+[Daniel Fontaine] 11:32:24
+Yeah, yeah. Just like a mounted network drive is what you want. You just mount it to the desktop. It works perfect. So yeah.
+
+[Timothy] 11:32:25
+in a particular place.
+
+[Timothy] 11:32:27
+Yeah, yeah.
+
+[Timothy] 11:32:31
+Okay. Yeah. Um, yeah.
+
+[Timothy] 11:32:34
+Yeah, I definitely have that. And then…
+
+[Timothy] 11:32:38
+Once…
+
+[Timothy] 11:32:39
+They finish a course.
+
+[Timothy] 11:32:40
+You know, finish the remediation. I have them run the you do it again and to show the final score.
+
+[Daniel Fontaine] 11:32:40
+Mmhm.
+
+[Timothy] 11:32:48
+So we're really relying on that quite a bit.
+
+[Daniel Fontaine] 11:32:51
+Okay.
+
+[Timothy] 11:32:53
+The You Fix It, um…
+
+[Timothy] 11:32:56
+I'll I'll do that one. I have the students run that through, because a lot of times.
+
+[Timothy] 11:33:01
+This is the fun part, is…
+
+[Timothy] 11:33:05
+in the files in canvas. Sometimes we'll have syllabus 2024, a syllabus 2025 syllabus, you know. And then you have a lot of stuff that's not being used so that you fix it. And I'm like, Okay, your results are here.
+
+[Timothy] 11:33:21
+But these aren't being used at all. So.
+
+[Daniel Fontaine] 11:33:22
+Mm-hmm.
+
+[Timothy] 11:33:25
+A lot of times that's when I have students make notes.
+
+[Timothy] 11:33:30
+that we then append to the final email.
+
+[Timothy] 11:33:34
+Just saying.
+
+[Timothy] 11:33:35
+Think about it. You know, you have files.
+
+[Timothy] 11:33:39
+documents and PDFs in your files that are not being used in your course.
+
+[Timothy] 11:33:45
+And then I say Ufixit is an easy way to download them.
+
+[Timothy] 11:33:50
+or delete them, anything you want, just to make things easier, especially if, you know.
+
+[Timothy] 11:33:58
+they have files visible to students. That can be a real.
+
+[Timothy] 11:34:03
+real bad thing. But usually, most of the time, they have them non-visible, but still.
+
+[Timothy] 11:34:08
+It's just a lot of stuff there and sort of messes up the UDOIT score. So once we have run that, then we send out that final email.
+
+[Timothy] 11:34:17
+to the faculty saying, hey, this is your final score. This is what you got. This is what's been remediated.
+
+[Daniel Fontaine] 11:34:17
+Okay.
+
+[Timothy] 11:34:24
+These, you know, you have a lot of files that possibly you could go through and look at.
+
+[Timothy] 11:34:30
+Technically, I don't think anyone's paid attention to me on that, but um…
+
+[Timothy] 11:34:36
+I'm like, whatever, but it's like I tell them about it. I know it's a little bit more work than just saying, hey, your course has been remediated, use this one going forward. So we have these canned responses for each of the steps.
+
+[Daniel Fontaine] 11:34:41
+Yeah, for sure.
+
+[Timothy] 11:34:51
+From the when it's been.
+
+[Timothy] 11:34:54
+When it's gonna start…
+
+[Timothy] 11:34:57
+who is working on the course. So we give them the name of that person of the student.
+
+[Timothy] 11:35:02
+and telling them that they'll be in a designer role, and also telling them the process that designers know they do not see the gradebook, you know, that kind of thing. So they don't… I've had a few faculty look at the…
+
+[Daniel Fontaine] 11:35:10
+Mm-hmm.
+
+[Timothy] 11:35:14
+You know, and say, whoa, what's this person doing over here? You know, like, why is there a designer there? And that was previous to me.
+
+[Timothy] 11:35:23
+You know.
+
+[Timothy] 11:35:23
+And then I was like, oh, did you read the email that we sent to you? And then once they understand, usually it's good to go.
+
+[Timothy] 11:35:34
+And then from there we have, I have a list, I, I've sort of listing down the students, I mean the classes.
+
+[Timothy] 11:35:43
+in just a simple doc, which ones we've done and then.
+
+[Timothy] 11:35:48
+In that doc, this is something that basically I just pretty much started in that doc. It's the name of the course, the instructor, you know, and the term and also the you do it prior and after.
+
+[Timothy] 11:36:01
+So it's all in a dock that just keeps running down. And I think that John will probably…
+
+[Timothy] 11:36:07
+eventually asked me for that document.
+
+[Timothy] 11:36:11
+And I'm like, we got it. You know, and this is, um…
+
+[Timothy] 11:36:15
+Also, showing…
+
+[Daniel Fontaine] 11:36:15
+Is it a Word, Excel?
+
+[Timothy] 11:36:17
+Um, I just have it as a simple Google Doc.
+
+[Daniel Fontaine] 11:36:20
+Good luck. Okay.
+
+[Timothy] 11:36:20
+Yeah. And then I have, you know, I shared it with them. But, the idea is that we also have the student on there. I might start putting in.
+
+[Timothy] 11:36:31
+start and end dates, but I don't know how.
+
+[Timothy] 11:36:34
+Which I think I'm probably going to have to do. I don't really want to go that way, but.
+
+[Timothy] 11:36:41
+But it's nice to know, like when I read that one report that, I don't know what…
+
+[Timothy] 11:36:47
+Can't remember the name of it, but it went out sometime in March.
+
+[Timothy] 11:36:50
+And it listed… was it ATI report? It listed all the average times that it should take for, you know, someone to do a course.
+
+[Timothy] 11:37:03
+Anyway, it was a 20 some odd page report.
+
+[Timothy] 11:37:08
+And I did a summary for John on that.
+
+[Daniel Fontaine] 11:37:13
+Yeah, that's interesting, isn't it?
+
+[Daniel Fontaine] 11:37:15
+Ringing a bell.
+
+[Daniel Fontaine] 11:37:17
+Is this the sort of the remediation guideline that came out of Chico? Or is this a different — OK. Yeah. Sure. Got it.
+
+[Timothy] 11:37:22
+Yeah, I think that was it. Yeah, yeah.
+
+[Timothy] 11:37:27
+So, um…
+
+[Timothy] 11:37:28
+I think when I started seeing the times and things like that on there, that's when I was sort of like, oh boy, what am I doing wrong? You know, or am I doing this right?
+
+[Daniel Fontaine] 11:37:35
+Well…
+
+[Daniel Fontaine] 11:37:37
+They have a serious program over there.
+
+[Timothy] 11:37:39
+Yeah, I really want to spend some, you know.
+
+[Daniel Fontaine] 11:37:43
+Yeah.
+
+[Timothy] 11:37:43
+spend some time and see how they are doing it, and how we can.
+
+[Timothy] 11:37:47
+get ours a little bit better. I feel like…
+
+[Timothy] 11:37:50
+I was telling John, you know, like, I just feel like.
+
+[Timothy] 11:37:54
+For the longest time, I was just sort of isolated, you know? I didn't really have anybody to…
+
+[Timothy] 11:37:59
+bounce things off or anything, you know, and.
+
+[Daniel Fontaine] 11:38:01
+Mm-hmm, mm-hmm.
+
+[Timothy] 11:38:05
+You know, our DSA department wasn't any help to me.
+
+[Timothy] 11:38:10
+just didn't help me out at all, and I've had some meetings with them, and that's when we talked about some of the other stuff, but um…
+
+[Timothy] 11:38:18
+You know, uh…
+
+[Timothy] 11:38:20
+They're sort of off over there, and I think the only support I get is…
+
+[Timothy] 11:38:26
+You know, making sure I install their third party software into Panopto.
+
+[Daniel Fontaine] 11:38:32
+Great, okay. And they do… oh, sorry, so they're doing… they're doing all the same work, but on the accommodations, just for accommodations for students that they have, okay? Captioning…
+
+[Timothy] 11:38:44
+Just for anyone. Yeah.
+
+[Daniel Fontaine] 11:38:46
+Books, files, all that stuff, okay.
+
+[Timothy] 11:38:47
+Yep.
+
+[Timothy] 11:38:48
+Yeah. And so they're getting and so they're working with only the classes that.
+
+[Timothy] 11:38:53
+require an accommodation. And so we're picking up the other ones.
+
+[Daniel Fontaine] 11:38:54
+Yeah.
+
+[Daniel Fontaine] 11:38:56
+No.
+
+[Daniel Fontaine] 11:38:57
+Yeah.
+
+[Timothy] 11:38:58
+But yeah, so.
+
+[Timothy] 11:39:00
+That's a little fun.
+
+[Timothy] 11:39:03
+But yeah, I think…
+
+[Timothy] 11:39:07
+Last year.
+
+[Timothy] 11:39:09
+I ran workshops for you do it and you fix it for faculty.
+
+[Timothy] 11:39:15
+And so we published this in our faculty newsletter. And the idea was, is that I can be like, hey.
+
+[Timothy] 11:39:23
+You know?
+
+[Timothy] 11:39:24
+I did not draw that many people. I think I did not get very many at all.
+
+[Timothy] 11:39:31
+So I don't know how — I mean, this will be up to John.
+
+[Timothy] 11:39:36
+pushing more faculty development for this. I think that sometimes the only way we can get faculty is being like, here's the shiny carrot with some money attached to it. And then.
+
+[Timothy] 11:39:49
+take this course, you know, or come to these workshops.
+
+[Timothy] 11:39:54
+And that's, you know…
+
+[Timothy] 11:39:56
+You know, I don't know, but I think I would like to run at least a few more. You do it and you fix it.
+
+[Timothy] 11:40:04
+Workshops.
+
+[Timothy] 11:40:05
+see what I get, at least offer them, you know, just to say, you know, hey? We're we're trying to cover as much accessible as you can, and I'm putting putting it out there, and I'm here for you. But.
+
+[Timothy] 11:40:17
+Yeah, the workshops had just been.
+
+[Timothy] 11:40:19
+you know, we just don't get anybody coming to workshops. I'm not too sure how to do it. So…
+
+[Timothy] 11:40:28
+You know.
+
+[Timothy] 11:40:30
+And I haven't really, you know, like…
+
+[Daniel Fontaine] 11:40:30
+Cool.
+
+[Timothy] 11:40:34
+I'm not a pushy guy as far as, like.
+
+[Timothy] 11:40:39
+When, you know, we go to it.
+
+[Timothy] 11:40:42
+And.
+
+[Timothy] 11:40:43
+you know, department meeting or something like that, going like, hey, try, uh, you know, I'm just not…
+
+[Timothy] 11:40:50
+sitting there and pushing those issues when they have other things that they're really working on at the same time.
+
+[Daniel Fontaine] 11:40:50
+Yeah, yeah.
+
+[Daniel Fontaine] 11:40:56
+Hopefully the law will help on that.
+
+[Timothy] 11:40:59
+Yeah, I'm… I know we have that little…
+
+[Timothy] 11:41:04
+you know, little break, but I'm hoping that I'm also going to try to push.
+
+[Timothy] 11:41:10
+John into putting more things in the newsletter about it. So maybe that'll help.
+
+[Timothy] 11:41:16
+I'm not too sure.
+
+[Timothy] 11:41:20
+It's a lot.
+
+[Daniel Fontaine] 11:41:20
+Oh, Christian, if you had any questions. It is a lot.
+
+[Timothy] 11:41:24
+Yeah.
+
+[Cristian Alvarado] 11:41:25
+Yeah, uh, it honestly sounds like we're doing basically the same thing that you are.
+
+[Cristian Alvarado] 11:41:35
+Um, the… the one… the one difference for us right now is that we haven't started doing files, we're only doing the Canvas content.
+
+[Timothy] 11:41:43
+Oh, wow, okay.
+
+[Cristian Alvarado] 11:41:44
+And a lot of that is, again, we're in a position where we've never done accessibility work before, and we're assigned this.
+
+[Cristian Alvarado] 11:41:55
+during the spring semester. So we're we're playing a little catch up here.
+
+[Timothy] 11:41:59
+Mm-hmm.
+
+[Cristian Alvarado] 11:42:01
+But we're more or less doing the same thing.
+
+[Timothy] 11:42:06
+Yeah.
+
+[Cristian Alvarado] 11:42:07
+so what… what we… what we've done on our end is we, uh… I have UDOIT configured to do a batch of courses, so, like, the whole… for the whole semester.
+
+[Timothy] 11:42:17
+Yeah.
+
+[Cristian Alvarado] 11:42:19
+And we'll pull down the report as a spreadsheet, and our person is essentially going through sorting them and prioritizing them on number of students and the UDOIT score.
+
+[Timothy] 11:42:19
+Yeah. Okay.
+
+[Timothy] 11:42:23
+Yeah.
+
+[Timothy] 11:42:34
+Yes. Yeah.
+
+[Cristian Alvarado] 11:42:35
+So he's come up with a metric.
+
+[Cristian Alvarado] 11:42:39
+I don't remember the exact math that goes behind it, but he calls it the accessibility score.
+
+[Cristian Alvarado] 11:42:47
+And it's basically the higher the number, the worse it is. And it's some combination of number of students and the UDOIT score.
+
+[Timothy] 11:42:51
+Yes, yeah.
+
+[Timothy] 11:42:57
+Yeah, that's exactly the way we were doing it, too. We were doing the accessibility score, the number of students, and then, for a while, we were also looking at, like, if it was, like, a hybrid course.
+
+[Timothy] 11:43:09
+And pulling that into…
+
+[Timothy] 11:43:12
+Same kind of equation.
+
+[Timothy] 11:43:16
+I'm not too sure I'm gonna do that in the fall.
+
+[Timothy] 11:43:20
+I still do the score.
+
+[Timothy] 11:43:23
+and the amount of students. But.
+
+[Timothy] 11:43:28
+For this summer, we just did score and students. So we're going to just — yeah, we did the same kind of thing.
+
+[Timothy] 11:43:38
+Seems to work. But yeah, a lot of times I'll just.
+
+[Timothy] 11:43:42
+Stay in cityscape.
+
+[Timothy] 11:43:44
+And just sort it versus dropping it into it. We were doing the thing, dropping it into a spreadsheet. But for summer, we just didn't do it because we didn't have enough courses.
+
+[Timothy] 11:43:54
+I think I just ran a batch and it pulled up 12 new courses for third term of the summer. So I was like 12, I think I can be, I got this covered. So, and a total for the whole summer was 72.
+
+[Cristian Alvarado] 11:44:06
+Yeah.
+
+[Timothy] 11:44:09
+two courses for the entire summer, but each one of those was three different sessions. So we had a one session, two session, three session.
+
+[Timothy] 11:44:18
+The other thing that I…
+
+[Timothy] 11:44:21
+formulated and made since we send out the the emails, you know, through Snow now. I also.
+
+[Timothy] 11:44:30
+Created a new letter, which I have not sent out to anybody yet.
+
+[Timothy] 11:44:34
+But basically it's a letter that says.
+
+[Timothy] 11:44:38
+We're sorry we did not get to your course for this semester.
+
+[Timothy] 11:44:43
+And so we try to stay current with the semester that we're in.
+
+[Timothy] 11:44:48
+I'm not too sure if that's the…
+
+[Timothy] 11:44:51
+you know, we're, you know, we're remediating as the course is live. And I think, um…
+
+[Timothy] 11:44:58
+Kristen, you might be doing the same thing.
+
+[Cristian Alvarado] 11:45:01
+Yeah.
+
+[Timothy] 11:45:03
+Um, and…
+
+[Timothy] 11:45:06
+Haven't had an issue yet, like anybody deleting things or, you know, or, you know, students doing anything bad, but also thinking, is it appropriate for us to be in the live course or should we take this course?
+
+[Timothy] 11:45:21
+And…
+
+[Timothy] 11:45:22
+Copy it.
+
+[Timothy] 11:45:24
+to a shell, and then they work on the remediation of the course.
+
+[Timothy] 11:45:30
+And then…
+
+[Timothy] 11:45:32
+I'm not too sure of the process from there, but then either bringing it back in at the end of the semester and saying, here's your course.
+
+[Timothy] 11:45:41
+Use this one going forward. It's fully remediated or not.
+
+[Timothy] 11:45:45
+I think there might be too much confusion in that process, but I've just been thinking about it. So that way they're not remediating in a live course.
+
+[Cristian Alvarado] 11:45:55
+Yeah, we are doing the live course. Doing it the other way, I kind of decided against doing that, partially for…
+
+[Timothy] 11:45:57
+Yeah.
+
+[Cristian Alvarado] 11:46:05
+That's too many moving parts.
+
+[Timothy] 11:46:06
+Yeah, yeah, yeah.
+
+[Cristian Alvarado] 11:46:07
+Uh, but then you also get into the situation where you've remediated the course, it's ready to go. If they were to import that into the course, weird things happen in Canvas, where you sometimes get duplicates, and.
+
+[Timothy] 11:46:14
+Yep.
+
+[Timothy] 11:46:21
+Mm-hmm.
+
+[Cristian Alvarado] 11:46:22
+And we would rather them use the remediated course moving forward than have to sort of wait a semester for them to import.
+
+[Timothy] 11:46:31
+Yeah.
+
+[Cristian Alvarado] 11:46:32
+Um, so, so yeah, we're, we're, yeah, we're, so we're, we're doing it live.
+
+[Timothy] 11:46:37
+So, yeah.
+
+[Cristian Alvarado] 11:46:38
+Just to kind of go over our workflow, so we pulled down the report. The main person that's sort of managing the students will go and randomly assign students to courses. We don't let students self-select.
+
+[Timothy] 11:46:44
+Mmhm.
+
+[Timothy] 11:46:50
+Oh, okay.
+
+[Timothy] 11:46:54
+Okay.
+
+[Cristian Alvarado] 11:46:54
+Uh, we're also, uh, I, I am intrigued by the idea of doing it in ticketing, but right now we're not. Uh, uh, we, we just sent out, we, we send out an email.
+
+[Cristian Alvarado] 11:47:05
+Uh, to faculty using, like… like a mail merge, essentially, for… for the batch of courses that we're doing at that particular point in time.
+
+[Timothy] 11:47:09
+Yeah. Okay.
+
+[Cristian Alvarado] 11:47:14
+Um, so let me actually…
+
+[Timothy] 11:47:19
+Yeah, that's interesting. Yeah, so we both do it in live courses, which is really interesting.
+
+[Timothy] 11:47:29
+And that will be fun.
+
+[Cristian Alvarado] 11:47:29
+Okay, let me… let me figure out how to use Zoom again.
+
+[Cristian Alvarado] 11:47:34
+But…
+
+[Cristian Alvarado] 11:47:36
+So, uh, this…
+
+[Cristian Alvarado] 11:47:39
+uh… document that I… that I just had. This is… this is essentially our email template.
+
+[Timothy] 11:47:40
+Oops.
+
+[Timothy] 11:47:44
+Okay.
+
+[Cristian Alvarado] 11:47:44
+Um, so we… we send this to faculty when their batch… their courses in the batch that we're about to do, and… and we… we break them down into batches based on… on the number of students that we have, and how many courses we expect to be able to do in, like, a week, essentially.
+
+[Timothy] 11:48:00
+Yeah.
+
+[Cristian Alvarado] 11:48:01
+And we have a lot of courses, fewer than we had before, but we have a lot of courses. Our summer term has 862.
+
+[Timothy] 11:48:13
+Holy cow!
+
+[Cristian Alvarado] 11:48:14
+And our spring term had…
+
+[Cristian Alvarado] 11:48:17
+4,000… something?
+
+[Cristian Alvarado] 11:48:20
+So, yeah, we're talking different volumes, but I also luckily have a lot more students to kind of work with to be able to do this work.
+
+[Timothy] 11:48:21
+Wow.
+
+[Timothy] 11:48:25
+Yeah.
+
+[Timothy] 11:48:29
+Yeah.
+
+[Cristian Alvarado] 11:48:32
+But yeah, so we send out the email, we add the students to the courses that they've been assigned as designers, they do the work, we verify that, we rescan it with UDOIT after they completed the work.
+
+[Timothy] 11:48:38
+Okay.
+
+[Cristian Alvarado] 11:48:47
+Um, and we note that as a separate, uh, field in our spreadsheet, and our spreadsheet basically becomes our, our…
+
+[Cristian Alvarado] 11:48:55
+document of record for this, so if we need to pull reports, we can see what the score was on the initial scan, when that scan happened, when the work was completed, and what the score was afterwards, so we can show sort of a…
+
+[Timothy] 11:48:56
+Okay.
+
+[Cristian Alvarado] 11:49:09
+a difference.
+
+[Cristian Alvarado] 11:49:11
+And out of that spreadsheet, we're also compiling reports by department so that we can go sort of department by department as department chairs ask us, like, hey, what's the progress on this? We can show sort of, here's your department courses, here's sort of the differences.
+
+[Timothy] 11:49:23
+Okay.
+
+[Timothy] 11:49:28
+So, it sounds like…
+
+[Timothy] 11:49:31
+I should also move my…
+
+[Timothy] 11:49:34
+I should move my stuff from a Google Doc into Excel so I can do pivot tables or whatever.
+
+[Cristian Alvarado] 11:49:41
+Yeah, it's helpful, and it's mostly for… we haven't had a lot of pushback in that sense, but we have had a lot of questions from.
+
+[Cristian Alvarado] 11:49:52
+From deans and department chairs asking why we're going and modifying courses.
+
+[Cristian Alvarado] 11:50:00
+Um, so… so that… that's just sort of helpful to… to sort of set the stage of, like, this is the actual work that we're doing, and these are the changes that… that we're making. We're not making, like.
+
+[Timothy] 11:50:03
+Okay.
+
+[Cristian Alvarado] 11:50:10
+Changes to the content that people are…
+
+[Timothy] 11:50:12
+Mm-hmm.
+
+[Cristian Alvarado] 11:50:13
+have put in sort of instructionally, we're making tweaks so that it's more accessible for students in the course, that kind of conversation.
+
+[Timothy] 11:50:21
+Okay. Yeah, yeah. I haven't…
+
+[Timothy] 11:50:25
+had one of those conversations yet. So but I imagine it will happen. You know, just the the way it is, unless John has already addressed it. John goes to the, you know, at the beginning of the semester. So he goes to the.
+
+[Cristian Alvarado] 11:50:28
+Yeah.
+
+[Timothy] 11:50:43
+Department meetings and, you know.
+
+[Timothy] 11:50:46
+sort of runs the whole spiel about what our department does. So he might have already covered that. I'll ask him if he's had any.
+
+[Timothy] 11:50:56
+Deans or anything like that, asking about…
+
+[Timothy] 11:50:59
+any of the accessibility questions.
+
+[Timothy] 11:51:01
+But I haven't. So that's good to know.
+
+[Cristian Alvarado] 11:51:03
+Yep.
+
+[Timothy] 11:51:06
+Yeah.
+
+[Timothy] 11:51:07
+Probably a better report would be better too. Yeah.
+
+[Cristian Alvarado] 11:51:12
+Yeah, so, and again, the only thing that we haven't done right now is files, and that's mostly because we're still playing catch up.
+
+[Cristian Alvarado] 11:51:21
+Fortunately or unfortunately, depending on how you choose to see it.
+
+[Cristian Alvarado] 11:51:28
+I used to rely on Daniel doing this work.
+
+[Cristian Alvarado] 11:51:32
+Uh, here, here on, on campus, because we, we took more of a, uh.
+
+[Cristian Alvarado] 11:51:37
+a remediation-on-demand kind of approach, historically, and that was run by our DPRC.
+
+[Timothy] 11:51:40
+Okay.
+
+[Cristian Alvarado] 11:51:46
+Um, and Daniel built all this tooling around it, but now, now that, now we're doing everything versus just, uh, the courses that need to be remediated.
+
+[Timothy] 11:51:55
+Yeah.
+
+[Cristian Alvarado] 11:51:55
+Um, we're sort of having to catch up and learn quick.
+
+[Cristian Alvarado] 11:51:59
+Um, we're, we're probably going to end up using AbbeyFine, uh, Equidox, we have access now, um, but it, it's… we, we have to, we have to learn the tools, basically.
+
+[Timothy] 11:52:03
+Okay.
+
+[Cristian Alvarado] 11:52:11
+In terms of the way that we have computers set up and everything, and how we're going to do file storage.
+
+[Cristian Alvarado] 11:52:17
+We're probably… we have laptops assigned to students, and they're all sort of encrypted and have the campus authentication and everything.
+
+[Timothy] 11:52:21
+Oh, wow.
+
+[Timothy] 11:52:27
+Yeah.
+
+[Cristian Alvarado] 11:52:28
+We're probably gonna have stuff on the actual computers themselves, unless that becomes problematic.
+
+[Cristian Alvarado] 11:52:34
+Uh, in which case, we'll… we'll probably set up something with Box or… or whatever, uh, for… for the files, dependent on… on, uh, sort of technical limitations.
+
+[Timothy] 11:52:45
+Hmm.
+
+[Cristian Alvarado] 11:52:45
+Uh, setting up… setting up file shares is kind of a pain now on… on campus. Um, there was a whole… there was a whole thing of, like, thou shalt not have a file share because we have Box thing that happened.
+
+[Cristian Alvarado] 11:52:58
+Um, so, uh, but we'll see. If push comes to shove, we can set up something internally for that. We have our own data center, so…
+
+[Timothy] 11:53:05
+Yeah.
+
+[Timothy] 11:53:07
+Very cool.
+
+[Daniel Fontaine] 11:53:08
+I had to fight pretty hard to keep ours.
+
+[Cristian Alvarado] 11:53:10
+Yeah.
+
+[Cristian Alvarado] 11:53:11
+So, um, but yeah, and we… so we did summer, or we did spring, and with just the Canvas stuff, managed to get the UDOIT scores up pretty high.
+
+[Timothy] 11:53:24
+Yeah.
+
+[Cristian Alvarado] 11:53:25
+Um, we're trending in the mid to high 80s for, like, the vast majority of the courses.
+
+[Timothy] 11:53:29
+That's good.
+
+[Timothy] 11:53:33
+Yeah.
+
+[Cristian Alvarado] 11:53:33
+We've done summer because summer was smaller than spring, so that went pretty quickly.
+
+[Cristian Alvarado] 11:53:40
+Uh, and we're… we're gearing up for fall. Uh, I've… I've imported the fall courses into, uh, UDOIT to start scanning, but I… I don't…
+
+[Cristian Alvarado] 11:53:51
+believe that faculty will start actually doing anything until the week before classes start. Because that's historically when faculty do things.
+
+[Timothy] 11:53:55
+Yeah.
+
+[Timothy] 11:53:59
+Yeah.
+
+[Timothy] 11:54:03
+Yeah, our, um, Canvas…
+
+[Timothy] 11:54:06
+Fall shells became live on Wednesday, so I'm like.
+
+[Timothy] 11:54:12
+I'm gonna let those sit for a long time.
+
+[Timothy] 11:54:15
+And then usually I'll do a run, you know, just as, like you said, I'll have to, I have to do it a couple times for the later, you know.
+
+[Timothy] 11:54:24
+But, you know, by the second week, hopefully most are there. But…
+
+[Cristian Alvarado] 11:54:28
+Yeah, we we create. We create our our course shells during the break before the semester starts. So for fall.
+
+[Cristian Alvarado] 11:54:38
+We imported them all during spring break, and for spring, we'll import them all during fall break.
+
+[Timothy] 11:54:44
+Yeah, yeah.
+
+[Cristian Alvarado] 11:54:44
+So the courses exist, and there are some faculty that will go and actually do work ahead of time, but the vast majority don't.
+
+[Timothy] 11:54:52
+Mm-hmm.
+
+[Cristian Alvarado] 11:54:53
+So.
+
+[Timothy] 11:54:54
+Yeah, um…
+
+[Timothy] 11:54:57
+Yeah, we're in the same boat. Vast majority don't.
+
+[Timothy] 11:55:01
+And because we don't have that many lecturers anymore.
+
+[Timothy] 11:55:05
+Most of the instructors are pretty good about knowing how to import their previous content or building.
+
+[Timothy] 11:55:12
+So we haven't had too many contacts with that. But yeah, I like your I like your method. The assigning students.
+
+[Cristian Alvarado] 11:55:15
+Yeah.
+
+[Timothy] 11:55:20
+That's pretty cool. I, I've, I've just.
+
+[Timothy] 11:55:27
+I'll have to see. I'll have to think about that. I make sure that they don't have any conflict of interest, of course.
+
+[Cristian Alvarado] 11:55:32
+Yeah.
+
+[Timothy] 11:55:33
+There, you know, of.
+
+[Timothy] 11:55:34
+being enrolled in that class or anything like that. But, you know, or, you know, but I've been a pretty easy going with them as far as like, hey, here's the here's the courses we have in snow.
+
+[Timothy] 11:55:49
+you know, assign one to yourself, you know, and they've been pretty good about it. Uh, but yeah, assigning it to them would be a good way to go, too, but um…
+
+[Timothy] 11:55:58
+Putting them in snow is a good way to go. That way it's another place where we can run a report.
+
+[Timothy] 11:56:05
+Um, we pretty much, um.
+
+[Timothy] 11:56:09
+Name the remediation. The subject line is exactly the same.
+
+[Timothy] 11:56:14
+So it's, you know.
+
+[Timothy] 11:56:17
+It's always the same, except for…
+
+[Timothy] 11:56:19
+you know, the faculty person, and then the name of the course. But the remediation, da-da-da-da, you know, um, it's just a form, you know, we put it in there exactly the same way. So hopefully.
+
+[Timothy] 11:56:29
+When we need to run some reports in snow, we can just punch it right up and.
+
+[Timothy] 11:56:35
+Um, I have… I'm not that familiar with snow yet, so I haven't ran a report yet, but maybe it might have something as far as, like, seeing when it was entered, uh, when it was.
+
+[Timothy] 11:56:48
+You know, chosen as…
+
+[Timothy] 11:56:50
+complete. I don't, you know, don't know yet.
+
+[Cristian Alvarado] 11:56:52
+Yeah, all that information is in there.
+
+[Timothy] 11:56:54
+Yeah, I just, we basically just started using it basically. So, but it's a good way to do it for the ticketing system for keeping track of the courses.
+
+[Timothy] 11:57:07
+It sounds like we're doing almost the same kind of thing. So it's cool.
+
+[Cristian Alvarado] 11:57:07
+Yeah.
+
+[Cristian Alvarado] 11:57:10
+Yeah, it…
+
+[Cristian Alvarado] 11:57:11
+Yeah.
+
+[Timothy] 11:57:13
+Yeah.
+
+[Daniel Fontaine] 11:57:15
+Thank you. It was actually very productive. I have a lot of stuff here to work with. I don't know if you'd also be interested in talking to Zach over at East Bay. I don't know if you've talked to him before, Zach Autry. He's doing that same role over there.
+
+[Timothy] 11:57:18
+Yeah, sure.
+
+[Timothy] 11:57:20
+Yeah. Okay.
+
+[Timothy] 11:57:24
+Zach.
+
+[Timothy] 11:57:26
+No.
+
+[Timothy] 11:57:30
+East Bay. Okay.
+
+[Daniel Fontaine] 11:57:31
+And he's working on some fancy AI tools as well. So yeah.
+
+[Timothy] 11:57:36
+Yeah…
+
+[Timothy] 11:57:39
+Yeah, I sort of stalled out on the AI thing for building something that would be accessible.
+
+[Timothy] 11:57:48
+I might start it up again, but the idea was I just took all the…
+
+[Timothy] 11:57:53
+everything I could find, you know, and just start giving it that information. But.
+
+[Timothy] 11:57:58
+Not too sure how the students are going to use it yet.
+
+[Timothy] 11:58:01
+You know, when, you know, sometimes some of our students, like, are real sleuths, and, uh, if we have a PDF.
+
+[Timothy] 11:58:09
+That's a government PDF, maybe?
+
+[Timothy] 11:58:11
+Um, that was scanned.
+
+[Timothy] 11:58:14
+We'll sometimes look to see if there's a readable version available.
+
+[Timothy] 11:58:20
+online somewhere that's already done.
+
+[Timothy] 11:58:23
+But that's usually a real fishing trip.
+
+[Timothy] 11:58:29
+You know.
+
+[Daniel Fontaine] 11:58:30
+Okay. I guess the last thing I would need is, uh, are you able… Tim, are you able to produce a full, like, accessibility report from UDOIT?
+
+[Daniel Fontaine] 11:58:41
+sort of a file that you can extract and give to me that I can put as a metric for success for the ATI report.
+
+[Daniel Fontaine] 11:58:50
+Now, as I'll debug Christian, I'll probably later on, once we're further on, I'll try to grab that too to send up.
+
+[Timothy] 11:58:51
+Yeah.
+
+[Timothy] 11:58:58
+Yeah.
+
+[Daniel Fontaine] 11:58:58
+So we're measuring things on them.
+
+[Timothy] 11:59:02
+No.
+
+[Daniel Fontaine] 11:59:03
+Well, I'll reach out to you, but if you can figure out, one, just figuring out what that would look like and what's the best format is going to be important.
+
+[Timothy] 11:59:10
+Yeah, that's what I'm thinking, too. I'm trying to think of, like, what would be the best way…
+
+[Daniel Fontaine] 11:59:11
+Yeah…
+
+[Timothy] 11:59:16
+to run that report. Um… but yeah, that'll be one. I'll just run a… I'll start working on, like, running a few different ones. Um, just see what it looks like, and see which one.
+
+[Daniel Fontaine] 11:59:24
+Okay.
+
+[Timothy] 11:59:28
+You know, which filter will work best as, you know, which ones I need to take out or in to see like before and after kind of thing.
+
+[Daniel Fontaine] 11:59:36
+Sure, sure.
+
+[Timothy] 11:59:37
+Um, which I think is probably the best…
+
+[Timothy] 11:59:40
+Yeah, something like that. I can run the fall.
+
+[Daniel Fontaine] 11:59:42
+Yeah, or just like a snapshot. I think really what I care about is like a yearly snapshot, like what is for the report, like at that point in time and then We can see much longer. It's a much longer scale.
+
+[Daniel Fontaine] 11:59:54
+Or, like, if you get, like, a CSV or something, it'd be great. I don't know, just some numbers that the computer could read, too. But, well, it's fine. Whatever you can get, I'll be.
+
+[Timothy] 11:59:54
+Okay.
+
+[Timothy] 12:00:00
+Yeah.
+
+[Timothy] 12:00:02
+Yeah.
+
+[Timothy] 12:00:04
+Yeah.
+
+[Daniel Fontaine] 12:00:04
+Awesome. That's great. Okay, thanks. I'll start sending a follow up email in a little bit and then Tim, I'll send you some links. And yeah, yeah.
+
+[Timothy] 12:00:10
+Yeah, that would be awesome. The more we can get this, you know, our team better.
+
+[Timothy] 12:00:18
+prepared, the better. But yeah, it's one of those things where it's…
+
+[Daniel Fontaine] 12:00:18
+Mm-hmm.
+
+[Timothy] 12:00:23
+I might have to do a weekly or a biweekly.
+
+[Timothy] 12:00:27
+meeting with our students and cover, uh, different aspects of different tools they can use. And so, sort of build up their toolbox as well. Uh, but I see the Abbey would be great, and um…
+
+[Daniel Fontaine] 12:00:40
+Yeah, yeah.
+
+[Timothy] 12:00:40
+Things like that, but…
+
+[Daniel Fontaine] 12:00:41
+All good.
+
+[Timothy] 12:00:42
+You know, it's getting them informed, you know, and so, the previous students last year were pretty much left on their own till I jumped on board, which is bad, really bad.
+
+[Daniel Fontaine] 12:00:54
+Oof, yeah.
+
+[Timothy] 12:00:56
+And so a lot of it was fixing bad things.
+
+[Timothy] 12:01:00
+habits, you know.
+
+[Timothy] 12:01:02
+And so as we get new students, then I don't have to worry about the bad habits as much.
+
+[Timothy] 12:01:08
+So…
+
+[Daniel Fontaine] 12:01:09
+Hmm. Good luck. That's that's a lot. Yeah, yeah.
+
+[Timothy] 12:01:11
+Yeah, it'll be great though. It's all good. We'll get through it.
+
+[Daniel Fontaine] 12:01:13
+Yeah, they're fun.
+
+[Timothy] 12:01:15
+Yeah.
+
+[Daniel Fontaine] 12:01:17
+All right. Well, awesome. Thank you both. That's great. And I'm sure there'll be a little more to come as we all work together as one system.
+
+[Timothy] 12:01:19
+Yeah, thank you.
+
+[Timothy] 12:01:25
+Yeah, definitely.
+
+[Daniel Fontaine] 12:01:26
+Yeah, thank you.
+
+[Timothy] 12:01:26
+We gotta team up.
+
+[Daniel Fontaine] 12:01:27
+All right.
+
+[Daniel Fontaine] 12:01:28
+Yeah, yeah, awesome. Well, you guys have a good weekend and yeah, we'll be in touch.
+

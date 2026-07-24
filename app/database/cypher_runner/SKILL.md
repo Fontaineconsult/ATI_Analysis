@@ -9,7 +9,11 @@ Run curated Cypher against the ATI knowledge graph through a vetted registry, in
 
 The code lives at `app/database/cypher_runner/`:
 - `query_registry.yaml` — the catalog of named queries (the source of truth).
-- `run_query.py` — the executor / CLI.
+- `run_query.py` — the executor / CLI for single registry queries.
+- `run_file.py` — the batch-FILE runner: validates (EXPLAIN, read-only) and executes
+  whole `.cypher` statement files (e.g. `app/database/batch/auto-assignments/`
+  ontology-ingest output). `python -m app.database.cypher_runner.run_file <file>`
+  validates; add `--execute` to run. Sources its connection from the config gateway.
 
 ## Connection (decide-later)
 
