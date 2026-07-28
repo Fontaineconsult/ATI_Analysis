@@ -428,7 +428,7 @@ function GenerateReportComponent({ evidenceItem }) {
     const { campus } = useParams();
 
     // Get academic year from evidenceItem
-    const academicYear = evidenceItem.currentAcademicYear || "2024-2025";
+    const academicYear = evidenceItem.currentAcademicYear || "2026-2027";
 
     const handleImplementationClick = (type, uniqueId) => {
         if (uniqueId) {

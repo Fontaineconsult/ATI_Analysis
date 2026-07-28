@@ -94,10 +94,9 @@ export const WORKING_GROUP_IDENTITY = {
         name: 'Communication & Training',
         shortLabel: 'Comm',
         dataKey: 'communicationTraining',
-        // New evidence group; its indicators are introduced_in_year=2026-2027. Kept
-        // dashboard:false until 2026-2027 activates so it doesn't show as an empty tab in
-        // the current year — flip to true when rolling to 2026-2027.
-        dashboard: false,
+        // Evidence group whose indicators are introduced_in_year=2026-2027; activated
+        // (dashboard:true) with the 2026-2027 rollover.
+        dashboard: true,
         accent: 'blue.500',
         accentDark: 'blue.700',
         accentTint: 'blue.50',
@@ -116,8 +115,8 @@ export const WORKING_GROUP_IDENTITY = {
         name: 'Governance, Planning & Policies',
         shortLabel: 'Gov',
         dataKey: 'governance',
-        // New evidence group (2026-2027). See note on communication-training above.
-        dashboard: false,
+        // Evidence group activated with the 2026-2027 rollover (see communication-training).
+        dashboard: true,
         accent: 'green.500',
         accentDark: 'green.700',
         accentTint: 'green.50',

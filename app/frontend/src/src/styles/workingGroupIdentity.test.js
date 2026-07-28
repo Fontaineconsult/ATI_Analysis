@@ -73,18 +73,25 @@ describe('SSOT — per-group parity fields', () => {
     });
 });
 
-describe('SSOT — the dashboard set is exactly the current three, in order', () => {
+describe('SSOT — the dashboard set is the five indicator groups, in order (com/gov activated with the 2026-2027 rollover)', () => {
     it('WORKING_GROUP_LIST slugs == SubNavbar order', () => {
         expect(WORKING_GROUP_LIST.map((w) => w.slug)).toEqual([
             'web', 'instructional-materials', 'procurement',
+            'communication-training', 'governance',
         ]);
     });
     it('WORKING_GROUPS_ORDER mirrors it (SubNavbar path-sync allowlist)', () => {
-        expect(WORKING_GROUPS_ORDER).toEqual(['web', 'instructional-materials', 'procurement']);
+        expect(WORKING_GROUPS_ORDER).toEqual([
+            'web', 'instructional-materials', 'procurement',
+            'communication-training', 'governance',
+        ]);
     });
-    it('only the three are dashboard:true; com/gov/steering are not', () => {
+    it('the five indicator groups are dashboard:true; steering is not', () => {
         const dash = ALL_WORKING_GROUPS.filter((w) => w.dashboard).map((w) => w.slug);
-        expect(dash).toEqual(['web', 'instructional-materials', 'procurement']);
+        expect(dash).toEqual([
+            'web', 'instructional-materials', 'procurement',
+            'communication-training', 'governance',
+        ]);
     });
 });
 
@@ -133,18 +140,23 @@ describe('SSOT — campus-plan order is Steering-first (== campusPlanConfig.WG_O
 });
 
 describe('SSOT — WG_DEFS matches reportMetrics parity exactly', () => {
-    it('shape + values == the old reportMetrics.WG_DEFS literal', () => {
+    it('shape + values == the reportMetrics literal, extended by the 2026-2027 groups', () => {
         expect(WG_DEFS).toEqual([
             { key: 'web', name: 'Web', trendKey: 'Web', accent: 'teal.500' },
             { key: 'instructionalMaterials', name: 'Instructional Materials', trendKey: 'Instructional Materials', accent: 'purple.500' },
             { key: 'procurement', name: 'Procurement', trendKey: 'Procurement', accent: 'coral.500' },
+            { key: 'communicationTraining', name: 'Communication & Training', trendKey: 'Communication & Training', accent: 'blue.500' },
+            { key: 'governance', name: 'Governance, Planning & Policies', trendKey: 'Governance, Planning & Policies', accent: 'green.500' },
         ]);
     });
 });
 
 describe('SSOT — helper functions', () => {
     it('makeInitialWgState == DataContext initial WG slice', () => {
-        expect(makeInitialWgState()).toEqual({ web: null, instructionalMaterials: null, procurement: null });
+        expect(makeInitialWgState()).toEqual({
+            web: null, instructionalMaterials: null, procurement: null,
+            communicationTraining: null, governance: null,
+        });
     });
     it('getWgHex resolves by slug and by display name', () => {
         expect(getWgHex('web')).toBe('#4966A4');

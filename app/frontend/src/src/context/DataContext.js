@@ -24,7 +24,7 @@ export const DataProvider = ({ children }) => {
     const [loading, setLoading] = useState(true);
     const [updating, setUpdating] = useState(false);
     const [error, setError] = useState(null);
-    const [selectedYear, setSelectedYear] = useState('2025-2026');
+    const [selectedYear, setSelectedYear] = useState('2026-2027');
 
     // Add a simple version counter to force re-renders
     const [dataVersion, setDataVersion] = useState(0);

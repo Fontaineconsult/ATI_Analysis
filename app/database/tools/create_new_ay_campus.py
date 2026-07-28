@@ -2,12 +2,17 @@
 Campus-aware academic year migration script.
 
 Creates a new AcademicYear node (if needed), then for each campus:
-1. Duplicates all YSE nodes from the old year to the new year
-2. Copies all relationships (tracks, status_is, evidence_at_campus, implements, etc.)
-   except evidence_in_year (which gets pointed to the new year) and the episodic
-   edges advances_yse / about_yse / addresses_evidence (year-specific records)
+1. Duplicates YSE nodes from the old year to the new year — EXCEPT evidence for
+   removed SuccessIndicators (a retired indicator's evidence line ends in the year
+   it was retired; the historical record stays intact and visible in settings)
+2. Copies relationships (tracks, status_is, evidence_at_campus, implements, etc.)
+   except evidence_in_year (repointed to the new year), the episodic edges
+   advances_yse / about_yse / addresses_evidence (year-specific records), and any
+   edge whose other end is retired or no longer available (depreciated notes/
+   documents/messages, abandoned Plans, inactive Persons/TAAPs)
 3. Resets the new year's YSE to fresh-year defaults (scalar workflow fields)
-4. Creates stub YSE nodes for any campuses that don't have YSE in the old year
+4. Creates stub YSE nodes for missing (campus, active-SI) pairs, year-gated on
+   SuccessIndicator.introduced_in_year
 
 Run with: python -m app.database.tools.create_new_ay_campus
 """
@@ -56,6 +61,10 @@ def duplicate_year_success_evidence(old_year, new_year):
 
     query = """
         MATCH (e:YearSuccessEvidence)-[:evidence_in_year]->(oldYear:AcademicYear {name: $old_year})
+        // Retired indicators do not roll forward: the historical record stays intact
+        // (removed SIs and their past YSEs remain visible in settings), but a removed
+        // SI's evidence line ENDS in the year it was retired.
+        WHERE NOT EXISTS { MATCH (e)-[:tracks]->(si:SuccessIndicator) WHERE si.removed = true }
         WITH e, $new_year + substring(e.year_identifier, $year_prefix_length) AS new_year_identifier
 
         // Skip if already exists
@@ -76,11 +85,15 @@ def duplicate_year_success_evidence(old_year, new_year):
         // reset_year_workflow_fields() makes the fresh-year defaults explicit afterwards.
         WITH e, e2
 
-        // Copy outgoing relationships (except evidence_in_year)
+        // Copy outgoing relationships (except evidence_in_year). Depreciated /
+        // no-longer-available targets (retired notes, dead webpages, expired
+        // records) stay with the historical year — they are not carried forward.
         CALL {
             WITH e, e2
             MATCH (e)-[rel_out]->(n)
             WHERE type(rel_out) <> 'evidence_in_year'
+              AND coalesce(n.depreciated, false) = false
+              AND coalesce(n.no_longer_exists, false) = false
             WITH e2, type(rel_out) AS relType, properties(rel_out) AS relProps, n
             CALL apoc.create.relationship(e2, relType, relProps, n) YIELD rel
             RETURN count(*) AS outgoingRelCount
@@ -92,10 +105,18 @@ def duplicate_year_success_evidence(old_year, new_year):
         // (about_yse) or Query (addresses_evidence) belongs to the year it happened
         // in and must not attach to the new year's copy. Standing context (implements,
         // is_evidence_for, furthers_yse) carries forward.
+        // Sources that are retired / no longer available also stop here:
+        //   - depreciated documents/notes/messages
+        //   - abandoned Plans (their furthers_yse ends with the year they died)
+        //   - inactive sources (a departed Person's implements edge; an expired
+        //     TAAP's is_evidence_for) — active defaults true for labels without it.
         CALL {
             WITH e, e2
             MATCH (n)-[rel_in]->(e)
             WHERE NOT type(rel_in) IN ['evidence_in_year', 'advances_yse', 'about_yse', 'addresses_evidence']
+              AND coalesce(n.depreciated, false) = false
+              AND coalesce(n.abandoned, false) = false
+              AND coalesce(n.active, true) = true
             WITH e2, type(rel_in) AS relType, properties(rel_in) AS relProps, n
             CALL apoc.create.relationship(n, relType, relProps, e2) YIELD rel
             RETURN count(*) AS incomingRelCount
@@ -151,10 +172,10 @@ def create_stub_yse_for_missing_campuses(new_year):
         results, _ = db.cypher_query(query, {'abbrev': abbrev, 'year': new_year})
         existing_count = results[0][0] if results else 0
 
-        if existing_count >= len(active_indicators):
-            print(f"  {abbrev}: already has {existing_count} YSE nodes, skipping.")
-            continue
-
+        # No campus-level count guard: a count heuristic can silently skip a campus
+        # whose carried-forward YSE count matches the active-SI count while individual
+        # gated SIs still lack stubs. The per-identifier existence check below is the
+        # real (and idempotent) gate.
         print(f"  {abbrev}: has {existing_count} YSE nodes, creating stubs for missing indicators...")
 
         for indicator in active_indicators:
@@ -312,7 +333,7 @@ def create_campus_plans_for_year(year_name):
 
         try:
             create_campus_plan(abbrev, year_name)
-            print(f"  {abbrev}: created CampusPlan {plan_identifier!r} + 4 WorkingGroupPlans")
+            print(f"  {abbrev}: created CampusPlan {plan_identifier!r} + child WorkingGroupPlans")
             created += 1
         except ValidationError as e:
             # Race against the existence check above, or a partial run leaving
@@ -342,7 +363,7 @@ def run_migration(old_year, new_year):
 if __name__ == "__main__":
     set_connection()
 
-    OLD_YEAR = "2024-2025"
-    NEW_YEAR = "2025-2026"
+    OLD_YEAR = "2025-2026"
+    NEW_YEAR = "2026-2027"
 
     run_migration(OLD_YEAR, NEW_YEAR)

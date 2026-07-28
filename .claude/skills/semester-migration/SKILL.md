@@ -35,8 +35,8 @@ python -m app.database.tools.create_new_ay_campus
 
 `run_migration(OLD_YEAR, NEW_YEAR)` executes in this order:
 1. `ensure_academic_year(new_year)` — creates the `AcademicYear` node if absent (idempotent).
-2. `duplicate_year_success_evidence(old_year, new_year)` — for every YSE in the old year: creates a new node with `year_identifier = <NEW_YEAR> + substring(old_identifier, 9)`, copies its relationships (both directions) via APOC, connects the new node to the new `AcademicYear`. NOT copied: `evidence_in_year` (repointed) and the episodic record-of-a-year edges `advances_yse` (Accomplishment), `about_yse` (ProgressUpdate), `addresses_evidence` (Query). Standing context (`implements`, `is_evidence_for`, `furthers_yse`, `has_note`) carries forward.
-3. `create_stub_yse_for_missing_campuses(new_year)` — for each campus in `ALL_CAMPUSES` that has fewer YSEs than the active `SuccessIndicator` count, creates `Not Started` stubs.
+2. `duplicate_year_success_evidence(old_year, new_year)` — for every YSE in the old year **whose tracked SuccessIndicator is not removed** (a retired indicator's evidence line ends in the year it was retired; history stays intact and visible in settings): creates a new node with `year_identifier = <NEW_YEAR> + substring(old_identifier, 9)`, copies its relationships (both directions) via APOC, connects the new node to the new `AcademicYear`. NOT copied: `evidence_in_year` (repointed); the episodic record-of-a-year edges `advances_yse` (Accomplishment), `about_yse` (ProgressUpdate), `addresses_evidence` (Query); and any edge whose other end is retired or no longer available — `depreciated` notes/documents/messages, `no_longer_exists` webpages, `abandoned` Plans, and inactive sources (`active = false`: departed Persons, expired TAAPs). Live standing context (`implements`, `is_evidence_for`, `furthers_yse`, `has_note`) carries forward.
+3. `create_stub_yse_for_missing_campuses(new_year)` — creates `Not Started` stubs for every missing (campus, active-SI) pair, year-gated on `SuccessIndicator.introduced_in_year <= NEW_YEAR`. There is deliberately no campus-level count guard — the per-identifier existence check is the gate (a count heuristic could silently skip a campus whose carried-forward total matches the active-SI count while gated SIs still lack stubs).
 4. `reset_year_workflow_fields(new_year)` — applies fresh-year defaults to the new year's YSEs: sets the booleans `administrative_review_complete`, `ready_for_admin_review`, `worked_on_in_current_year`, `will_work_on_next_year` to `false`; clears the scalars `administrative_review_completed_date`, `priority_level`, `documentation_status`, `resources_status`, `implementation_plan_status`, `admin_review_description`; and deletes all `admin_review_completed_by` edges. (The duplication step deliberately copies no scalar workflow fields — this makes the fresh-year reset explicit.)
 5. `propagate_documentation_years_for(new_year)` — for every implementation that has YSE evidence in `new_year`, finds its `is_documented_by` rels whose `included_in_years` is a non-empty whitelist missing `new_year`, and appends `new_year`. Empty `included_in_years` lists (the default — "applies to all years") are left alone. Without this step, documentation tagged for the old year silently disappears from the master query for the new year. Idempotent.
 6. `create_campus_plans_for_year(new_year)` — creates the `CampusPlan` + four `WorkingGroupPlan` nodes (web/pro/ins/ste) per campus for the new year. Idempotent.
@@ -52,9 +52,9 @@ From the `verify()` output, confirm:
 
 If either check fails, stop and report to the user. Do not touch the frontend.
 
-### 4. Update the frontend year references
+### 4. Update the frontend + vocabulary year references
 
-Apply all four edits — all four or none:
+Apply all six edits — all six or none:
 
 1. `app/frontend/src/src/context/SettingsContext.js`
    Change the `currentAcademicYear` `useState(...)` default to `<NEW_YEAR>`.
@@ -67,6 +67,12 @@ Apply all four edits — all four or none:
 
 4. `app/frontend/src/src/services/report_constructor.js`
    Update the fallback literal `const academicYear = evidenceItem.currentAcademicYear || "<OLD_YEAR>";` to use `<NEW_YEAR>`. This is a defensive fallback for evidence items that carry no `currentAcademicYear`; leaving it stale silently pins those to the prior year.
+
+5. `app/data_config.py`
+   Append `"<NEW_YEAR>"` to the `academic_years` list (served to the frontend via `PUBLIC_VOCABULARIES` / the settings endpoint and shown in the glossary).
+
+6. `app/frontend/src/src/styles/workingGroupIdentity.js`
+   If any working group was staged `dashboard: false` pending this year's activation (com/gov were, pending 2026-2027), flip it to `true` and update the FE registry test expectations (`WORKING_GROUP_LIST` / `WORKING_GROUPS_ORDER` / `WG_DEFS` / `makeInitialWgState`). One-time per staged group — skip if none are staged.
 
 ### 5. Smoke test
 
@@ -95,6 +101,8 @@ Modified:
 - `app/frontend/src/src/context/DataContext.js` (`selectedYear` default)
 - `app/frontend/src/src/App.js` (`yearOptions` array, append-only)
 - `app/frontend/src/src/services/report_constructor.js` (`academicYear` fallback literal)
+- `app/data_config.py` (`academic_years` list, append-only)
+- `app/frontend/src/src/styles/workingGroupIdentity.js` (staged `dashboard` flips, if any)
 
 Referenced (read-only):
 - `app/database/graph_schema.py` — `AcademicYear`, `YearSuccessEvidence`, `Campus`, `SuccessIndicator`, `StatusLevel`, `set_connection`
