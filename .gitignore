@@ -44,3 +44,6 @@ wfastcgi.log
 # should never exist — ignore it at any depth (currently /nul, /app/database/nul,
 # /app/database/tools/report_export/nul).
 nul
+
+# Node dependencies (regenerable from package-lock.json; frontend and root)
+node_modules/
