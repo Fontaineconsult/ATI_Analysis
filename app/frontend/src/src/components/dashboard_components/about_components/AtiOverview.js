@@ -23,7 +23,7 @@ import {
 } from '@chakra-ui/react';
 import { DataContext } from '../../../context/DataContext';
 import { StatusLevelContext } from '../../../context/StatusLevelContext'; // Import StatusLevelContext
-import { WORKING_GROUP_LIST, getWorkingGroupIdentity } from '../../../styles/workingGroupIdentity';
+import { WORKING_GROUP_LIST, getWorkingGroupIdentity, workingGroupsForYear } from '../../../styles/workingGroupIdentity';
 
 const calculateStatistics = (data) => {
     const stats = {
@@ -89,7 +89,7 @@ const calculateStatistics = (data) => {
 
 function ATIOverview() {
     const { campus } = useParams();
-    const { data, loadAllIndividuals, loading } = useContext(DataContext);
+    const { data, loadAllIndividuals, loading, selectedYear } = useContext(DataContext);
     const [stats, setStats] = useState(null);
     const { statusLevels, loading: statusLevelsLoading, error: statusLevelsError } = useContext(StatusLevelContext); // Use StatusLevelContext
 
@@ -545,7 +545,7 @@ function ATIOverview() {
                                                 </Tr>
                                             </Thead>
                                             <Tbody>
-                                                {WORKING_GROUP_LIST.map((w) => (
+                                                {workingGroupsForYear(selectedYear).map((w) => (
                                                     <Tr key={w.dataKey}>
                                                         <Td>{w.name}</Td>
                                                         <Td isNumeric>{stats.workingGroups[w.dataKey].goals}</Td>

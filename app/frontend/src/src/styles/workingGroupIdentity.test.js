@@ -26,6 +26,7 @@ import {
     SLUG_TO_DATAKEY,
     DATAKEY_TO_SLUG,
     CAMPUS_PLAN_ORDER,
+    workingGroupsForYear,
     WG_DEFS,
     getWorkingGroupIdentity,
     getWorkingGroupAccent,
@@ -139,14 +140,29 @@ describe('SSOT — campus-plan order is Steering-first (== campusPlanConfig.WG_O
     });
 });
 
+describe('SSOT — year-aware visibility (activeFromYear)', () => {
+    it('com/gov are hidden before 2026-2027 and present from it', () => {
+        expect(workingGroupsForYear('2025-2026').map((w) => w.slug)).toEqual([
+            'web', 'instructional-materials', 'procurement',
+        ]);
+        expect(workingGroupsForYear('2026-2027').map((w) => w.slug)).toEqual([
+            'web', 'instructional-materials', 'procurement',
+            'communication-training', 'governance',
+        ]);
+    });
+    it('no year yields the full dashboard list (back-compat for year-less callers)', () => {
+        expect(workingGroupsForYear(undefined)).toEqual(WORKING_GROUP_LIST);
+    });
+});
+
 describe('SSOT — WG_DEFS matches reportMetrics parity exactly', () => {
     it('shape + values == the reportMetrics literal, extended by the 2026-2027 groups', () => {
         expect(WG_DEFS).toEqual([
             { key: 'web', name: 'Web', trendKey: 'Web', accent: 'teal.500' },
             { key: 'instructionalMaterials', name: 'Instructional Materials', trendKey: 'Instructional Materials', accent: 'purple.500' },
             { key: 'procurement', name: 'Procurement', trendKey: 'Procurement', accent: 'coral.500' },
-            { key: 'communicationTraining', name: 'Communication & Training', trendKey: 'Communication & Training', accent: 'blue.500' },
-            { key: 'governance', name: 'Governance, Planning & Policies', trendKey: 'Governance, Planning & Policies', accent: 'green.500' },
+            { key: 'communicationTraining', name: 'Communication & Training', trendKey: 'Communication & Training', accent: 'blue.500', activeFromYear: '2026-2027' },
+            { key: 'governance', name: 'Governance, Planning & Policies', trendKey: 'Governance, Planning & Policies', accent: 'green.500', activeFromYear: '2026-2027' },
         ]);
     });
 });

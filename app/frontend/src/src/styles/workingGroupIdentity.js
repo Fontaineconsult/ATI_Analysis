@@ -95,8 +95,11 @@ export const WORKING_GROUP_IDENTITY = {
         shortLabel: 'Comm',
         dataKey: 'communicationTraining',
         // Evidence group whose indicators are introduced_in_year=2026-2027; activated
-        // (dashboard:true) with the 2026-2027 rollover.
+        // (dashboard:true) with the 2026-2027 rollover. activeFromYear year-gates the
+        // group on year-scoped surfaces (nav tabs, reports, overview) so it does not
+        // render when viewing earlier years.
         dashboard: true,
+        activeFromYear: '2026-2027',
         accent: 'blue.500',
         accentDark: 'blue.700',
         accentTint: 'blue.50',
@@ -117,6 +120,7 @@ export const WORKING_GROUP_IDENTITY = {
         dataKey: 'governance',
         // Evidence group activated with the 2026-2027 rollover (see communication-training).
         dashboard: true,
+        activeFromYear: '2026-2027',
         accent: 'green.500',
         accentDark: 'green.700',
         accentTint: 'green.50',
@@ -158,6 +162,15 @@ export const WORKING_GROUP_LIST = ALL_WORKING_GROUPS.filter((w) => w.dashboard);
 
 // Dashboard display order (slugs) — used by the SubNavbar path-sync allowlist.
 export const WORKING_GROUPS_ORDER = WORKING_GROUP_LIST.map((w) => w.slug);
+
+// Year-aware visibility. A group with `activeFromYear` (com/gov: '2026-2027') is
+// hidden on year-scoped surfaces before that year; a group without the field is
+// active in every year. Callers with no year in scope pass nothing and get the
+// full dashboard list ("YYYY-YYYY" strings compare chronologically).
+export const isGroupActiveForYear = (w, year) =>
+    !w?.activeFromYear || !year || w.activeFromYear <= year;
+export const workingGroupsForYear = (year) =>
+    WORKING_GROUP_LIST.filter((w) => isGroupActiveForYear(w, year));
 
 // Derived lookup maps — built from the FULL set so non-dashboard groups (e.g. Steering in
 // the Campus Plan) still resolve by code / slug / name.
@@ -218,6 +231,8 @@ export const WG_DEFS = WORKING_GROUP_LIST.map((w) => ({
     name: w.name,
     trendKey: w.trendKey ?? w.name,
     accent: w.accent,
+    // Present only on year-gated groups (com/gov) so legacy entries keep their shape.
+    ...(w.activeFromYear ? { activeFromYear: w.activeFromYear } : {}),
 }));
 
 /** Fresh DataContext state slice for the dashboard working groups: { [dataKey]: null }.

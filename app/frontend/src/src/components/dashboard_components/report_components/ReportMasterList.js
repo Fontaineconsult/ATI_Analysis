@@ -38,7 +38,7 @@ import ApprovalMasterContainer from '../../ati_explorer_containers/ApprovalMaste
  * is a controlled child. The campus-wide metrics are memoized off the loaded DataContext tree.
  */
 const ReportMasterList = () => {
-    const { data, loading, error } = useContext(DataContext);
+    const { data, loading, error, selectedYear } = useContext(DataContext);
     const navigate = useNavigate();
     const { campus } = useParams();
     const { isOpen, onOpen, onClose } = useDisclosure();
@@ -59,7 +59,7 @@ const ReportMasterList = () => {
     // replaced wholesale on each load — including a year switch — so keying on `data` is
     // enough; not dataVersion, which churns on unrelated background refreshes). Single pass
     // over a small dataset.
-    const metrics = useMemo(() => computeReportMetrics(data), [data]);
+    const metrics = useMemo(() => computeReportMetrics(data, selectedYear), [data, selectedYear]);
 
     return (
         <Box w="100%" maxW="1400px" mx="auto" p={4} textAlign="left">
@@ -106,9 +106,11 @@ const ReportMasterList = () => {
                     <Flex justify="flex-end" align="center" gap={3} mb={3} wrap="wrap">
                         <Text fontSize="xs" color="gray.600" fontWeight="medium">Copy status report for email:</Text>
                         <ButtonGroup size="sm" spacing={2}>
-                            {STATUS_REPORT_WORKING_GROUPS.map((wg) => (
-                                <CopyStatusReportButton key={wg.key} workingGroup={wg.key} label={wg.name} />
-                            ))}
+                            {STATUS_REPORT_WORKING_GROUPS
+                                .filter((wg) => !wg.activeFromYear || wg.activeFromYear <= selectedYear)
+                                .map((wg) => (
+                                    <CopyStatusReportButton key={wg.key} workingGroup={wg.key} label={wg.name} />
+                                ))}
                         </ButtonGroup>
                     </Flex>
 

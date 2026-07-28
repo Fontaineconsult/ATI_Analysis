@@ -146,12 +146,16 @@ function tallyTrends(wrappers, yoyTrends) {
  * Build the campus-wide + per-working-group metrics object the overview renders.
  *
  * @param {object} data DataContext data ({ web, procurement, instructionalMaterials, yoyTrends })
+ * @param {string} [year] selected academic year — year-gated groups (com/gov,
+ *   activeFromYear on their WG_DEFS entry) are excluded when viewing earlier
+ *   years. Omitted year = all groups (back-compat).
  * @returns {{ campus: object, byWorkingGroup: object[] }}
  */
-export function computeReportMetrics(data) {
+export function computeReportMetrics(data, year) {
     const yoyTrends = data?.yoyTrends;
+    const defs = WG_DEFS.filter((def) => !def.activeFromYear || !year || def.activeFromYear <= year);
 
-    const byWorkingGroup = WG_DEFS.map((def) => {
+    const byWorkingGroup = defs.map((def) => {
         const wrappers = indicatorsOf(data?.[def.key]);
         const summaries = wrappers.map(getIndicatorSummary);
         return {
@@ -163,7 +167,7 @@ export function computeReportMetrics(data) {
         };
     });
 
-    const allWrappers = WG_DEFS.flatMap((def) => indicatorsOf(data?.[def.key]));
+    const allWrappers = defs.flatMap((def) => indicatorsOf(data?.[def.key]));
     const campus = summarize(allWrappers.map(getIndicatorSummary));
 
     return { campus, byWorkingGroup };

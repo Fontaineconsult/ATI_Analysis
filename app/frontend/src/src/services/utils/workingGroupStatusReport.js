@@ -23,6 +23,9 @@ export const STATUS_REPORT_WORKING_GROUPS = WORKING_GROUP_LIST.map((w) => ({
     key: w.dataKey,
     name: w.name,
     segment: w.slug,
+    // Present only on year-gated groups (com/gov) — render sites filter by the
+    // selected year so gated groups don't get a copy button in earlier years.
+    ...(w.activeFromYear ? { activeFromYear: w.activeFromYear } : {}),
 }));
 
 // Outlook-safe palette (SFBRN navy brand + calm grays).

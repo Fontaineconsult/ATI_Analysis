@@ -3,15 +3,17 @@ import { Flex, Button, Box } from '@chakra-ui/react';
 import React, { useEffect, useContext } from 'react';
 import { useLocation, Link, useParams } from 'react-router-dom';
 import { useSettings } from "../context/SettingsContext";
-import { WORKING_GROUP_LIST, WORKING_GROUPS_ORDER } from "../styles/workingGroupIdentity";
+import { WORKING_GROUPS_ORDER, workingGroupsForYear } from "../styles/workingGroupIdentity";
 
 import {UserContext} from "../context/UserContext";
+import { DataContext } from "../context/DataContext";
 
 function SubNavbar() {
     const location = useLocation();
     const { campus } = useParams();
     const { updateCurrentWorkingGroup } = useSettings();
     const { isUserAdmin } = useContext(UserContext);
+    const { selectedYear } = useContext(DataContext);
 
     useEffect(() => {
         // The working-group views now live under /dashboard/<wg>/goal/<n>. Detect the segment
@@ -42,8 +44,9 @@ function SubNavbar() {
     } else if (location.pathname.includes('/dashboard')) {
         // The dashboard working groups (derived from the WG single-source-of-truth) carry the
         // brand accent trio as their identity marks (blue/purple/coral — see design-sense §2).
+        // Year-gated groups (com/gov) only render a tab when the selected year has them.
         subNavItems = [
-            ...WORKING_GROUP_LIST.map((w) => ({
+            ...workingGroupsForYear(selectedYear).map((w) => ({
                 label: w.name,
                 path: `${campusPrefix}/dashboard/${w.slug}/goal/1`,
                 base: `${campusPrefix}/dashboard/${w.slug}`,
