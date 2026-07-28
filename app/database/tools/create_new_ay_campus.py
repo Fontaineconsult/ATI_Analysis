@@ -18,6 +18,13 @@ Run with: python -m app.database.tools.create_new_ay_campus
 """
 from app.database.graph_schema import set_connection, AcademicYear, Campus, SuccessIndicator, YearSuccessEvidence, StatusLevel, CampusPlan
 from app.database.identifiers import make_yse_identifier, YEAR_PREFIX_LENGTH, make_campus_plan_identifier
+
+# Warm up the data_api package BEFORE importing any queries module — resolves the
+# queries<->data_api circular import for standalone runs (same accommodation as the
+# seed_* tools and tests/conftest). Importing committees.create first lets data_api's
+# eager endpoint chain re-enter it half-initialized and blow up.
+import app.endpoints.data_api  # noqa: F401,E402
+
 from app.database.queries.committees.create import create_campus_plan
 from app.endpoints.data_api.errors.custom_exceptions import ValidationError
 from neomodel import db
