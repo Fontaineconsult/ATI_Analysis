@@ -294,8 +294,9 @@ def propagate_documentation_years_for(new_year):
 
 def create_campus_plans_for_year(year_name):
     """
-    For each campus in ALL_CAMPUSES, ensure a CampusPlan + its four
-    WorkingGroupPlans (web/pro/ins/ste) exist for the given year. Idempotent:
+    For each campus in ALL_CAMPUSES, ensure a CampusPlan + its child
+    WorkingGroupPlans exist for the given year — one per campus-plan-carrying
+    group in the registry (web/pro/ins/com/gov/ste as of 2026-2027). Idempotent:
     skips any campus that already has a CampusPlan with the canonical identifier.
     """
     print(f"\nCreating CampusPlans for {year_name}...")

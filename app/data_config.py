@@ -16,8 +16,10 @@ in app/database/class_factory.py.
 #   has_indicators — carries Goals/SuccessIndicators; appears in the evidence/report vocab
 #     `working_groups` and in the evidence-query gate. Steering is coordination-only (False).
 #   campus_plan    — gets a per-campus WorkingGroupPlan (create_campus_plan / AY rollover /
-#     seed_working_groups --backfill-plans). com/gov are evidence groups that do not (yet)
-#     carry campus plans (False); Steering does (True) though it has no indicators.
+#     seed_working_groups --backfill-plans). ALL groups carry campus plans as of 2026-2027:
+#     com/gov flipped True with their 2026-2027 indicator sets (existing years are NOT
+#     backfilled — their WGPs first appear when a year is created after the flip);
+#     Steering is True though it has no indicators.
 # Order matters: the ordered derivations (`working_groups`, `working_group_abbrevs`)
 # preserve registry order.
 # =============================================================================
@@ -25,8 +27,8 @@ WORKING_GROUP_DEFS = [
     {"abbrev": "web", "name": "Web",                             "url_slug": "web",                     "has_indicators": True,  "campus_plan": True},
     {"abbrev": "pro", "name": "Procurement",                     "url_slug": "procurement",             "has_indicators": True,  "campus_plan": True},
     {"abbrev": "ins", "name": "Instructional Materials",         "url_slug": "instructional-materials", "has_indicators": True,  "campus_plan": True},
-    {"abbrev": "com", "name": "Communication & Training",        "url_slug": "communication-training",  "has_indicators": True,  "campus_plan": False},
-    {"abbrev": "gov", "name": "Governance, Planning & Policies", "url_slug": "governance",              "has_indicators": True,  "campus_plan": False},
+    {"abbrev": "com", "name": "Communication & Training",        "url_slug": "communication-training",  "has_indicators": True,  "campus_plan": True},
+    {"abbrev": "gov", "name": "Governance, Planning & Policies", "url_slug": "governance",              "has_indicators": True,  "campus_plan": True},
     {"abbrev": "ste", "name": "Steering",                        "url_slug": "steering",                "has_indicators": False, "campus_plan": True},
 ]
 

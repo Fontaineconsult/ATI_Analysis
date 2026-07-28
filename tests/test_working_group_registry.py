@@ -77,7 +77,9 @@ def test_working_groups_list_matches_old_literal_including_order():
 
 
 def test_working_group_abbrevs_matches_old_literal_including_order():
-    assert working_group_abbrevs == ("web", "pro", "ins", "ste")
+    # com/gov flipped campus_plan=True with their 2026-2027 indicator sets — every
+    # registry group now carries a per-campus WorkingGroupPlan (registry order).
+    assert working_group_abbrevs == ("web", "pro", "ins", "com", "gov", "ste")
     assert isinstance(working_group_abbrevs, tuple)
 
 
@@ -106,4 +108,5 @@ def test_flag_membership_matches_todays_reality():
         "Web", "Procurement", "Instructional Materials",
         "Communication & Training", "Governance, Planning & Policies",
     }
-    assert campus_plan_abbrevs == {"web", "pro", "ins", "ste"}
+    # All groups carry campus plans as of 2026-2027 (com/gov flipped True).
+    assert campus_plan_abbrevs == {"web", "pro", "ins", "com", "gov", "ste"}

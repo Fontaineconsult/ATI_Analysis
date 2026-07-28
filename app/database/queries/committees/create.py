@@ -67,7 +67,9 @@ def create_working_group_plan(campus_abbrev: str, year_name: str, working_group_
 
 def create_campus_plan(campus_abbrev: str, year_name: str) -> CampusPlan:
     """
-    Create a CampusPlan and its four child WorkingGroupPlans (web/pro/ins/ste).
+    Create a CampusPlan and its child WorkingGroupPlans — one per campus-plan-carrying
+    group in WORKING_GROUP_ABBREVS (registry-derived; web/pro/ins/com/gov/ste as of
+    2026-2027).
 
     Connects the required edges:
       - campus -> Campus

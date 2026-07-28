@@ -111,11 +111,13 @@ describe('SSOT — campus-plan order is Steering-first (== campusPlanConfig.WG_O
     it('CAMPUS_PLAN_ORDER names match WG_ORDER exactly', () => {
         expect(CAMPUS_PLAN_ORDER.map((w) => w.name)).toEqual([
             'Steering', 'Web', 'Instructional Materials', 'Procurement',
+            'Communication & Training', 'Governance, Planning & Policies',
         ]);
     });
-    it('com/gov are excluded (no campusPlanOrder — not on campus plans)', () => {
-        expect(CAMPUS_PLAN_ORDER.map((w) => w.slug)).not.toContain('communication-training');
-        expect(CAMPUS_PLAN_ORDER.map((w) => w.slug)).not.toContain('governance');
+    it('com/gov are included (campus-plan groups as of 2026-2027), ordered last', () => {
+        expect(CAMPUS_PLAN_ORDER.map((w) => w.slug).slice(-2)).toEqual([
+            'communication-training', 'governance',
+        ]);
     });
     it('each campus-plan group exposes its hex (WG_ACCENT parity)', () => {
         const hexByName = Object.fromEntries(CAMPUS_PLAN_ORDER.map((w) => [w.name, w.hex]));
@@ -124,6 +126,8 @@ describe('SSOT — campus-plan order is Steering-first (== campusPlanConfig.WG_O
             Web: '#4966A4',
             'Instructional Materials': '#635098',
             Procurement: '#DB5850',
+            'Communication & Training': '#3182CE',
+            'Governance, Planning & Policies': '#38A169',
         });
     });
 });

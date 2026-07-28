@@ -126,12 +126,15 @@ def test_get_campus_plan_returns_200_with_full_shape(
     # A fresh plan has no president's report attached yet
     assert data["presidents_report"] is None
 
-    # Four child WorkingGroupPlans: the three indicator-bearing groups plus the
-    # Steering coordination group (added to WORKING_GROUP_ABBREVS in create.py).
+    # Six child WorkingGroupPlans: every registry group carries a campus plan as of
+    # 2026-2027 (com/gov flipped True alongside web/pro/ins and Steering).
     wgps = data["working_group_plans"]
-    assert len(wgps) == 4
+    assert len(wgps) == 6
     wg_names = {wgp["working_group"] for wgp in wgps}
-    assert wg_names == {"Web", "Procurement", "Instructional Materials", "Steering"}
+    assert wg_names == {
+        "Web", "Procurement", "Instructional Materials", "Steering",
+        "Communication & Training", "Governance, Planning & Policies",
+    }
 
     # Each child has the expected identifier shape and starts empty.
     for wgp in wgps:
@@ -140,11 +143,13 @@ def test_get_campus_plan_returns_200_with_full_shape(
         assert wgp["group_leads"] == []
         assert wgp["plans"] == []  # No campus-plan plans attached yet
         assert isinstance(wgp["available_indicators"], list)
-        # The three indicator-bearing groups expose real reference indicators;
-        # Steering has no Goals/SuccessIndicators, so its picker list is empty.
+        # The three legacy indicator-bearing groups expose real reference indicators.
+        # Steering has no Goals/SuccessIndicators ever, so its picker list is empty.
+        # com/gov are indicator groups whose SIs arrive with the 2026-2027 seed — no
+        # strict assertion, so the test holds both before and after that seed runs.
         if wgp["working_group"] == "Steering":
             assert wgp["available_indicators"] == []
-        else:
+        elif wgp["working_group"] in {"Web", "Procurement", "Instructional Materials"}:
             assert len(wgp["available_indicators"]) > 0
 
 
@@ -334,9 +339,10 @@ def test_post_create_campus_plan_persists_all_children(
     resp = flask_client.get(f"{URL_PREFIX}/campus-plans/{CAMPUS_ABBREV}/{TEST_ACADEMIC_YEAR_NAME}")
     assert resp.status_code == 200
     wgps = resp.get_json()["data"]["working_group_plans"]
-    assert len(wgps) == 4
+    assert len(wgps) == 6
     assert {w["working_group"] for w in wgps} == {
         "Web", "Procurement", "Instructional Materials", "Steering",
+        "Communication & Training", "Governance, Planning & Policies",
     }
 
 

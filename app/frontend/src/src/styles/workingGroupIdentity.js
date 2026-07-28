@@ -104,8 +104,11 @@ export const WORKING_GROUP_IDENTITY = {
         hex: '#3182CE',         // = resolved blue.500 (standard Chakra); not yet rendered anywhere
         colorScheme: 'blue',
         trendKey: 'Communication & Training',
-        // no campusPlanOrder — com/gov are not in working_group_abbrevs, so they get no
-        // per-campus WorkingGroupPlan and never appear on the campus plan.
+        // In working_group_abbrevs as of 2026-2027 (backend campus_plan: true) — gets a
+        // per-campus WorkingGroupPlan from that year's rollover onward. Earlier years have
+        // no com/gov WGPs (not backfilled); the campus plan renders only API-returned WGPs,
+        // so old years simply show fewer cards.
+        campusPlanOrder: 4,
     },
     governance: {
         slug: 'governance',
@@ -121,6 +124,8 @@ export const WORKING_GROUP_IDENTITY = {
         hex: '#38A169',         // = resolved green.500 (standard Chakra)
         colorScheme: 'green',
         trendKey: 'Governance, Planning & Policies',
+        // See note on communication-training: campus-plan group as of 2026-2027.
+        campusPlanOrder: 5,
     },
     steering: {
         slug: 'steering',
