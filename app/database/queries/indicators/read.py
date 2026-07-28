@@ -42,7 +42,16 @@ def fetch_success_indicators_for_working_group(academic_year):
         
         // Collect indicators per goal
         WITH wg, goal, collect(ind) AS successIndicators
-        
+
+        // Year-view contract: a goal appears in a year's payload ONLY if at least one
+        // of its indicators is visible that year (passes the introduced_in_year gate
+        // above). A goal whose entire indicator set post-dates the viewed year — e.g.
+        // the com/gov goals before 2026-2027 — is dropped, and a working group whose
+        // goals all drop disappears from the payload with it. Removed indicators still
+        // count as visible (history stays in settings); the gate is the year, not the
+        // removed flag.
+        WHERE size(successIndicators) > 0
+
         // Create goal map including its properties and indicators
         WITH wg, apoc.map.merge(goal {.*}, {successIndicators: successIndicators}) AS gl
         
