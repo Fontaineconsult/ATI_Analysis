@@ -24,11 +24,13 @@ def create_success_indicator(number,
                              managed_example=None,
                              optimizing_example=None,
                              introduced_in_year=None):
+    # DateProperty deflation requires a datetime.date — never a string. The None
+    # branch previously produced a strftime string, which neomodel 6 rejects.
     if date_added is None:
-        date_added = dt.now().strftime('%Y-%m-%d')
+        date_added = dt.now().date()
     elif isinstance(date_added, str):
         try:
-            date_added = parse_date(date_added)
+            date_added = parse_date(date_added).date()
         except ValueError:
             raise ValidationError("date_added must be in a valid 'YYYY-MM-DD' format if provided as a string.")
 

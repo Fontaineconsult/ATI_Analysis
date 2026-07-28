@@ -1,5 +1,20 @@
 {
   "introduced_in_year": "2026-2027",
+  "reactivations": [
+    {
+      "key": "1.2-web",
+      "text": "Develop a process to inventory for all websites, applications (web or mobile) affiliated with the university, including those developed by contract vendors.",
+      "examples_of_evidence": [
+        "Policy or procedure documents describing how digital properties are reported and logged.",
+        "Inventory database or registry (spreadsheet, system of record, or software tool).",
+        "Contract language requiring vendors to disclose or register new applications.",
+        "Change logs showing updates to the inventory when new sites/apps are added or decommissioned."
+      ],
+      "established_example": "- Position Descriptions: A designated office (e.g., central IT or Accessibility Office) is formally responsible for maintaining the inventory.\n- Budget: Resources are allocated for inventory maintenance (e.g., staffing, software).\n- Process: There is a documented procedure requiring all departments and vendor partners to register new sites and applications before launching.\n- Output: A centralized, up-to-date inventory exists in a shared system accessible to stakeholders.",
+      "managed_example": null,
+      "optimizing_example": null
+    }
+  ],
   "goals": {
     "com": {
       "1": "Promote a Campus-Wide Culture of Accessibility",
