@@ -6,7 +6,7 @@ from app.database.identifiers import (
     make_campus_plan_identifier,
     make_working_group_plan_identifier,
 )
-from app.data_config import working_group_names
+from app.data_config import working_group_names, working_group_abbrevs
 from app.endpoints.data_api.errors.custom_exceptions import (
     CrudError,
     NotFoundError,
@@ -14,13 +14,11 @@ from app.endpoints.data_api.errors.custom_exceptions import (
 )
 
 
-# Working-group abbreviations that are valid in plan identifiers and accepted
-# by create_working_group_plan / create_campus_plan below. web/pro/ins mirror the
-# suffix used in SuccessIndicator.composite_key; `ste` (Steering) is the
-# coordination group — it carries no indicators but gets a WorkingGroupPlan per
-# campus plan so oversight leads/queries/minutes have an anchor. Kept out of the
-# `working_groups` evidence/report vocabulary (see data_config).
-WORKING_GROUP_ABBREVS = ("web", "pro", "ins", "ste")
+# Working-group abbreviations that get a per-campus WorkingGroupPlan (web/pro/ins mirror the
+# SuccessIndicator.composite_key suffix; `ste` (Steering) carries no indicators but gets a plan
+# so oversight leads/queries/minutes have an anchor). Sourced from data_config so the campus-plan
+# scaffolding set has one home — add com/gov there to have campus plans carry them.
+WORKING_GROUP_ABBREVS = working_group_abbrevs
 
 
 def create_working_group_plan(campus_abbrev: str, year_name: str, working_group_abbrev: str) -> WorkingGroupPlan:
@@ -69,12 +67,14 @@ def create_working_group_plan(campus_abbrev: str, year_name: str, working_group_
 
 def create_campus_plan(campus_abbrev: str, year_name: str) -> CampusPlan:
     """
-    Create a CampusPlan and its three child WorkingGroupPlans (web/pro/ins).
+    Create a CampusPlan and its child WorkingGroupPlans — one per campus-plan-carrying
+    group in WORKING_GROUP_ABBREVS (registry-derived; web/pro/ins/com/gov/ste as of
+    2026-2027).
 
     Connects the required edges:
       - campus -> Campus
       - academic_year -> AcademicYear
-      - working_group_plans -> WorkingGroupPlan (x3, one per group)
+      - working_group_plans -> WorkingGroupPlan (one per group in WORKING_GROUP_ABBREVS)
 
     Raises ValidationError if a plan already exists for (campus, year),
     NotFoundError if the campus or year node is missing, CrudError on save failure.

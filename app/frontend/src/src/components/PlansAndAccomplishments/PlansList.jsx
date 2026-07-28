@@ -12,6 +12,7 @@ import {
     VStack,
 } from '@chakra-ui/react';
 import { getPlanStatusColor, getPlanStatusLabel } from '../../styles/planStatusColors';
+import { WORKING_GROUP_LIST } from '../../styles/workingGroupIdentity';
 
 // Lifecycle-aligned status ordering — "fresh" first, terminal states last.
 const STATUS_ORDER = {
@@ -22,13 +23,10 @@ const STATUS_ORDER = {
     'Abandoned': 4,
 };
 
-// Fixed working-group sections, in display order. Keys match the web-safe
-// values getAllPlans() stamps onto plan.workingGroup (workingGroupWebSafe).
-const WG_SECTIONS = [
-    { key: 'procurement', label: 'Procurement' },
-    { key: 'web', label: 'Web' },
-    { key: 'instructional-materials', label: 'Instructional Materials' },
-];
+// Working-group sections, derived from the WG single-source-of-truth (canonical dashboard
+// order: Web, Instructional Materials, Procurement). Keys are URL slugs, matching the
+// web-safe values getAllPlans() stamps onto plan.workingGroup (workingGroupWebSafe).
+const WG_SECTIONS = WORKING_GROUP_LIST.map((w) => ({ key: w.slug, label: w.name }));
 
 const SORT_OPTIONS = [
     { value: 'name', label: 'Name (A→Z)' },

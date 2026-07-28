@@ -22,6 +22,7 @@ import {
 import { updateIndividual } from '../../../services/api/put';
 import { createIndividual } from '../../../services/api/post';
 import { useSettings } from '../../../context/SettingsContext';
+import { WORKING_GROUP_LIST } from '../../../styles/workingGroupIdentity';
 
 const EditIndividual = ({ isOpen, onClose, individualData, onSave }) => {
     const [formData, setFormData] = useState({
@@ -293,30 +294,17 @@ const EditIndividual = ({ isOpen, onClose, individualData, onSave }) => {
                                 Working Groups
                             </FormLabel>
                             <VStack align="start" spacing={2}>
-                                <Checkbox
-                                    size="sm"
-                                    colorScheme="teal"
-                                    isChecked={formData.workingGroups?.some((wg) => wg.name === 'Web')}
-                                    onChange={(e) => handleWorkingGroupChange('Web', e.target.checked)}
-                                >
-                                    Web
-                                </Checkbox>
-                                <Checkbox
-                                    size="sm"
-                                    colorScheme="teal"
-                                    isChecked={formData.workingGroups?.some((wg) => wg.name === 'Instructional Materials')}
-                                    onChange={(e) => handleWorkingGroupChange('Instructional Materials', e.target.checked)}
-                                >
-                                    Instructional Materials
-                                </Checkbox>
-                                <Checkbox
-                                    size="sm"
-                                    colorScheme="teal"
-                                    isChecked={formData.workingGroups?.some((wg) => wg.name === 'Procurement')}
-                                    onChange={(e) => handleWorkingGroupChange('Procurement', e.target.checked)}
-                                >
-                                    Procurement
-                                </Checkbox>
+                                {WORKING_GROUP_LIST.map((w) => (
+                                    <Checkbox
+                                        key={w.slug}
+                                        size="sm"
+                                        colorScheme="teal"
+                                        isChecked={formData.workingGroups?.some((wg) => wg.name === w.name)}
+                                        onChange={(e) => handleWorkingGroupChange(w.name, e.target.checked)}
+                                    >
+                                        {w.name}
+                                    </Checkbox>
+                                ))}
                             </VStack>
                         </CheckboxGroup>
                     </VStack>

@@ -11,18 +11,16 @@
 
 import { getIndicatorSummary } from '../../graph_components/indicators/indicatorHelpers';
 import { STATUS_LEVELS_ORDER } from '../../../services/utils/statusColors';
+import { WG_DEFS } from '../../../styles/workingGroupIdentity';
 
 // The trailing status-distribution bucket: indicators with no evidence for the year (or,
 // rarely, evidence with no status assigned) — i.e. "not yet on the maturity ladder".
 export const NO_EVIDENCE = 'No evidence';
 
-// Working groups in render order, with the DataContext key, the yoyTrends key (keyed by
-// human name), and the SFBRN identity accent (Web=brand blue, IM=purple, Pro=coral).
-export const WG_DEFS = [
-    { key: 'web', name: 'Web', trendKey: 'Web', accent: 'teal.500' },
-    { key: 'instructionalMaterials', name: 'Instructional Materials', trendKey: 'Instructional Materials', accent: 'purple.500' },
-    { key: 'procurement', name: 'Procurement', trendKey: 'Procurement', accent: 'coral.500' },
-];
+// Working groups in render order (DataContext key, yoyTrends key keyed by name, SFBRN
+// identity accent), derived from the WG single-source-of-truth. Re-exported so existing
+// consumers/tests keep importing WG_DEFS from here.
+export { WG_DEFS };
 
 const pct = (count, total) => (total > 0 ? Math.round((count / total) * 100) : 0);
 

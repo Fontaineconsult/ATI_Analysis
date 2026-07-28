@@ -460,6 +460,12 @@ class SuccessIndicator(StructuredNode):
     managed_example = StringProperty()
     optimizing_example = StringProperty()
 
+    # Academic year this SI was introduced (e.g. "2026-2027"). Null = it pre-dates the gate
+    # (treated as "always existed" — every legacy SI). Year-scoped SI listings and the AY
+    # rollover's stub step exclude SIs whose introduced_in_year is later than the year being
+    # viewed/rolled, so a newly-authored SI never leaks into prior years.
+    introduced_in_year = StringProperty()
+
     notes = RelationshipTo("Note", "has_note")
     date_added = DateProperty()
     tracked_by = RelationshipFrom("SuccessIndicator", "tracks")
@@ -481,6 +487,7 @@ class SuccessIndicator(StructuredNode):
             'established_example': self.established_example,
             'managed_example': self.managed_example,
             'optimizing_example': self.optimizing_example,
+            'introduced_in_year': self.introduced_in_year,
             'date_added': self.date_added,
             "unique_id": self.unique_id
         }

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
+import { WORKING_GROUP_LIST } from '../styles/workingGroupIdentity';
 
 /**
  * SPA wayfinding for route changes (design-sense §6.1, APG Landmarks):
@@ -18,9 +19,8 @@ const SEGMENT_LABELS = {
     'ati-explorer': 'ATI Explorer',
     dashboard: 'Dashboard',
     about: 'About',
-    web: 'Web',
-    'instructional-materials': 'Instructional Materials',
-    procurement: 'Procurement',
+    // Working-group route segments (slug -> display name), derived from the SSOT.
+    ...Object.fromEntries(WORKING_GROUP_LIST.map((w) => [w.slug, w.name])),
     reports: 'View Reports',
     'report-overview': 'Copy Report',
     'campus-plan': 'Campus Plan',

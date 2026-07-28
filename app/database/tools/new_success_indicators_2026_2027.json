@@ -1,0 +1,566 @@
+{
+  "introduced_in_year": "2026-2027",
+  "reactivations": [
+    {
+      "key": "1.2-web",
+      "text": "Develop a process to inventory for all websites, applications (web or mobile) affiliated with the university, including those developed by contract vendors.",
+      "examples_of_evidence": [
+        "Policy or procedure documents describing how digital properties are reported and logged.",
+        "Inventory database or registry (spreadsheet, system of record, or software tool).",
+        "Contract language requiring vendors to disclose or register new applications.",
+        "Change logs showing updates to the inventory when new sites/apps are added or decommissioned."
+      ],
+      "established_example": "- Position Descriptions: A designated office (e.g., central IT or Accessibility Office) is formally responsible for maintaining the inventory.\n- Budget: Resources are allocated for inventory maintenance (e.g., staffing, software).\n- Process: There is a documented procedure requiring all departments and vendor partners to register new sites and applications before launching.\n- Output: A centralized, up-to-date inventory exists in a shared system accessible to stakeholders.",
+      "managed_example": null,
+      "optimizing_example": null
+    }
+  ],
+  "goals": {
+    "com": {
+      "1": "Promote a Campus-Wide Culture of Accessibility",
+      "2": "Ongoing Role-Specific Accessibility Training"
+    },
+    "gov": {
+      "1": "Establish Clear Roles and Responsibilities for Accessibility Oversight",
+      "2": "Formalize Accessibility-Related Policies and Procedures",
+      "3": "Embed Accessibility into Institutional Planning Cycles"
+    }
+  },
+  "success_indicators": [
+    {
+      "key": "1.20-web",
+      "sub_committee": "web",
+      "goal_number": 1,
+      "number": 20,
+      "text": "Establish a process to identify all campus-affiliated social media accounts and assess the accessibility of their shared content in alignment with recognized standards.",
+      "examples_of_evidence": [
+        "An inventory or registry of official campus-affiliated social media accounts.",
+        "Policies or guidelines requiring new accounts to be registered centrally.",
+        "Accessibility checklists for social media content (e.g., use of alt text, captions, hashtags, contrast, effective communication).",
+        "Training materials or workshops for social media managers.",
+        "Sample audit reports documenting accessibility findings on posts or campaigns.",
+        "Documentation of outreach to account owners with accessibility recommendations.",
+        "Workflows or checklists built into posting processes (e.g., reminders for alt text and captions)."
+      ],
+      "established_example": "At the Established level, the university has moved beyond ad hoc awareness and has a documented, consistent practice:\n- Position Descriptions: A central communications or accessibility office is tasked with maintaining the account inventory. Trained staff are tasked with manual reviews of social media accounts.\n- Budget: Resources exist for training, accessibility tools (e.g., captioning services, image description support), and audit support.\n- Process: Documented procedures outline how accounts are identified, registered, and periodically assessed for content accessibility. Account owners are expected to comply with accessibility posting guidelines.\n- Output: A current, centralized list of social media accounts exists, and reports from periodic content accessibility reviews are logged.",
+      "managed_example": null,
+      "optimizing_example": null
+    },
+    {
+      "key": "1.21-web",
+      "sub_committee": "web",
+      "goal_number": 1,
+      "number": 21,
+      "text": "Develop a process to implement and regularly review accessibility statements in alignment with CSU Chancellor’s Office guidance, ensuring statements are clearly posted on all campus-affiliated websites, applications, and digital platforms",
+      "examples_of_evidence": [
+        "Accessibility statement templates based on CSU guidance.",
+        "Policy or procedure documents requiring statements on all websites, apps, and platforms.",
+        "Centralized repository or inventory confirming which sites/platforms have statements posted.",
+        "Screenshots or URLs showing statements visibly placed on digital properties.",
+        "Communications to web administrators with instructions for posting and maintaining statements.",
+        "Review schedules/logs documenting periodic checks for accuracy and compliance.",
+        "Help desk or feedback records showing user reports submitted via posted statements."
+      ],
+      "established_example": "At the Established level, the institution has moved beyond one-off efforts and maintains a standardized, enforced practice:\n- Position Descriptions & Responsibility: Responsibility for accessibility statement review is assigned (e.g., accessibility office or central IT communications team).\n- Budget: Resources allocated for staff time, compliance reviews, and technical support for statement updates.\n- Process: Documented procedures define where statements must appear, who maintains them, and how they are reviewed (e.g., annually or bi-annually).\n- Output: All campus-affiliated websites, apps, and platforms have an accessibility statement posted that aligns with CSU Chancellor’s Office guidance.",
+      "managed_example": null,
+      "optimizing_example": null
+    },
+    {
+      "key": "2.10-web",
+      "sub_committee": "web",
+      "goal_number": 2,
+      "number": 10,
+      "text": "Establish a process for content editors to request an accessibility review of web content, electronic documents, audio/video materials, and social media posts prior to publication, ensuring compliance with WCAG 2.1 AA standards.",
+      "examples_of_evidence": [
+        "Documented workflow for requesting accessibility review prior to publishing",
+        "Defined intake form or ticketing process for review requests",
+        "Published review criteria aligned with WCAG 2.1 AA",
+        "Service-level expectations (e.g., review turnaround time)",
+        "Communication to content editors about when review is required",
+        "Tracking system for submitted and completed reviews",
+        "Templates or checklists used during review",
+        "Evidence that high-impact content requires review before release"
+      ],
+      "established_example": "- Position: Responsibility for conducting accessibility reviews is formally assigned and documented in appropriate position descriptions.\n- Budget: Dedicated staff time or workload allocation is identified to support ongoing accessibility review requests.\n- Procedures: A complete, documented pre-publication accessibility review process aligned with WCAG 2.1 AA is required and consistently followed.\n- Output: Accessibility review is a standard, tracked step prior to publishing high-impact digital content.",
+      "managed_example": null,
+      "optimizing_example": null
+    },
+    {
+      "key": "3.7-web",
+      "sub_committee": "web",
+      "goal_number": 3,
+      "number": 7,
+      "text": "Develop a process that combines automated web accessibility scanning tools with manual testing methods to identify accessibility barriers.",
+      "examples_of_evidence": [
+        "Defined schedule for automated scans (e.g., weekly, monthly, quarterly)",
+        "Manual testing protocols (e.g., keyboard-only testing checklist, screen reader testing guidance) a",
+        "Assigned staff responsible for conducting and reviewing scans, and cadence for manual reviews.",
+        "Documentation showing findings are tracked and communicated for remediation",
+        "Integration of results into remediation workflows or ticketing systems"
+      ],
+      "established_example": "- Position: Designated accessibility staff (or web governance body) formally assigned responsibility for coordinating automated scans and manual testing activities.\n- Budget: Institutional funding allocated for enterprise scanning tools and staff time to conduct manual evaluations.\n- Procedures: Documented, campus-wide process outlining scan frequency, required manual testing methods (e.g., keyboard, screen reader, form testing), documentation standards, and remediation tracking workflow.\n- Output: Regularly generated accessibility reports that combine automated scan results with documented manual testing findings and are distributed to responsible web owners for remediation.",
+      "managed_example": null,
+      "optimizing_example": null
+    },
+    {
+      "key": "5.17-ins",
+      "sub_committee": "ins",
+      "goal_number": 5,
+      "number": 17,
+      "text": "Develop a process to provide accessible course syllabi at the beginning of each term and promote use of the university-approved LMS",
+      "examples_of_evidence": [
+        "Syllabus accessibility guidelines or templates",
+        "Faculty communications outlining syllabus expectations",
+        "LMS course shell requirements or defaults",
+        "Training on accessible syllabus creation",
+        "Monitoring or spot checks of syllabus accessibility",
+        "Support resources for faculty remediation"
+      ],
+      "established_example": "At the Established level, the campus has a consistent process for accessible syllabi delivery.\n- Accessible syllabi are available at the beginning of each term\n- Faculty use standardized templates or guidance\n- Syllabi are posted within the university approved LMS\n- Accessibility expectations are clearly communicated\n- The process supports early access and student success",
+      "managed_example": null,
+      "optimizing_example": null
+    },
+    {
+      "key": "6.10-ins",
+      "sub_committee": "ins",
+      "goal_number": 6,
+      "number": 10,
+      "text": "The campus has established a process to evaluate the accessibility of Learning Tools Interoperability (LTI) integrations and external applications used within the campus Learning Management System (LMS), including publisher courseware and digital learning platforms.",
+      "examples_of_evidence": [
+        "Documented process for evaluating accessibility of LTIs and external tools used in the LMS",
+        "Accessibility review criteria aligned with Section 508 and WCAG 2.1 AA",
+        "Requirement for vendors to provide accessibility documentation (e.g., VPAT/ACR)",
+        "Collaboration between instructional design, procurement, and accessibility teams",
+        "Defined workflow for reviewing and approving tools before use in courses",
+        "Tracking of approved, conditionally approved, or restricted tools",
+        "Guidance to faculty on selecting accessible tools and requesting reviews",
+        "Integration with procurement or risk assessment processes where applicable"
+      ],
+      "established_example": "- Position: Responsibility for evaluating the accessibility of LTIs and external LMS tools is formally assigned and documented across relevant roles.\n- Budget: Identified staff time and resources support ongoing evaluation of third-party tools used in courses.\n- Procedures: A complete, documented process requires accessibility evaluation of LTIs and external applications prior to approval and use, aligned with Section 508 and WCAG 2.1 AA.\n- Output: Evidence showing that LMS-integrated tools are consistently reviewed, approved, and tracked based on accessibility, reducing the use of inaccessible third-party content.",
+      "managed_example": null,
+      "optimizing_example": null
+    },
+    {
+      "key": "7.12-ins",
+      "sub_committee": "ins",
+      "goal_number": 7,
+      "number": 12,
+      "text": "Develop a process with faculty development centers for training and resources that support faculty and instructional staff in designing accessible instructional materials and content.",
+      "examples_of_evidence": [],
+      "established_example": null,
+      "managed_example": null,
+      "optimizing_example": null
+    },
+    {
+      "key": "1.12-pro",
+      "sub_committee": "pro",
+      "goal_number": 1,
+      "number": 12,
+      "text": "Develop a risk-informed process to evaluate Section 508 compliance for acquisitions, regardless of procurement method or cost (e.g., competitive and non-competitive bids, purchase card transactions, auxiliary, technology that students are required to purchase, LTIs, MEAs.",
+      "examples_of_evidence": [
+        "Written procedures or policies requiring accessibility review for all ICT acquisitions.",
+        "of accessibility conformance processes/procedures at the procurement level",
+        "Communication outreach to campus auxiliaries, providing input on ICT procurement business processes.",
+        "Policies or procedures for auxiliaries; procedures for inclusion of LTIs in Canvas that involve a review process.",
+        "Accessibility review logs showing evaluations across procurement types (e.g., competitive bids, direct purchases, renewals, auxiliary purchases).",
+        "Training records for P-Card holders and department buyers on accessibility compliance.",
+        "Documentation showing accessibility review incorporated into purchase requisition or approval workflows.",
+        "Reports summarizing Section 508 compliance rates across procurement methods."
+      ],
+      "established_example": "- Position: Procurement (both state-side and auxiliary) and ATI accessibility staff have defined responsibilities for reviewing ICT purchases, regardless of funding source or cost.\n- Budget: Allocations exist for accessibility review staffing, tools, and training for decentralized buyers.\n- Procedures: Documented procedures integrate accessibility checks into all procurement workflows across all university affiliates.\n- Output: Comprehensive records show that accessibility review occurred for all ICT acquisitions.",
+      "managed_example": "Metrics: Monitor acquisitions and determine if reviews are proceduralized for those other entities or free software.",
+      "optimizing_example": "Administrative Review: Leadership reviews audit results to ensure equitable application of Section 508 review across all procurement pathways."
+    },
+    {
+      "key": "8.11-pro",
+      "sub_committee": "pro",
+      "goal_number": 8,
+      "number": 11,
+      "text": "The campus, including auxiliaries and affiliated entities, systematically identifies and addresses gaps across all procurement channels to ensure all acquired ICT undergoes accessibility validation.",
+      "examples_of_evidence": [
+        "Documentation identifying all procurement channels and related workflows (e.g., P-Card, auxiliary, grants, direct purchases, no-cost acquisitions).",
+        "Procedures or MOUs requiring auxiliary and affiliated entities to follow ATI procurement standards.",
+        "Reports or audits identifying and tracking gaps in accessibility review coverage.",
+        "Training materials and outreach communications for auxiliary buyers and managers.",
+        "Meeting notes or correspondence showing collaboration between campus procurement, auxiliaries, and accessibility offices.",
+        "Data showing increased participation or compliance from decentralized purchasing units."
+      ],
+      "established_example": "- Position: Roles responsible for oversight include the ATI Procurement Lead, Auxiliary Procurement Managers, and campus buyers, with duties reflected in job descriptions.\n- Budget: Resources allocated for auxiliary training, outreach, and tracking tool integration.\n- Procedures: A documented, campus-wide procedure ensures that all ICT acquisitions, regardless of funding source or cost, undergo accessibility review using the same evaluation criteria.\n- Output: All purchasing pathways demonstrate compliance with ATI procurement processes, evidenced by audit logs and centralized reports.",
+      "managed_example": "Metrics: Track percentage of ICT acquisitions reviewed across all channels, and measure reductions in unreviewed or unreported procurements.",
+      "optimizing_example": "Administrative Review: Annual reviews evaluate participation from auxiliary entities and document corrective actions where gaps are found."
+    },
+    {
+      "key": "8.12-pro",
+      "sub_committee": "pro",
+      "goal_number": 8,
+      "number": 12,
+      "text": "Follow a platform-agnostic process to ensure that all ICT purchases undergo a consistent ATI accessibility conformance review, regardless of procurement method or system used.",
+      "examples_of_evidence": [
+        "Written procedures defining accessibility review workflows for systemwide purchases.",
+        "Documentation showing accessibility review steps integrated into CSUBuy or equivalent systems.",
+        "Cross-linking established forms or processes with CSUBuy",
+        "Training or communication materials ensuring campus buyers understand review expectations for systemwide acquisitions.",
+        "Completed ACRs, TAAPs, or accessibility statements linked to systemwide contracts."
+      ],
+      "established_example": "- Position: Designated ATI Procurement Leads and system procurement liaisons are formally responsible for accessibility review coordination.\n- Budget: Resources allocated for staff participation in systemwide review processes, tool licenses, and cross-campus collaboration.\n- Procedures: Documented procedures ensure all ICT acquisitions through the CSU Systemwide platform undergo the same accessibility conformance checks as campus procurements.\n- Output: Accessibility documentation (ACRs, TAAPs, Roadmaps) attached to each systemwide purchase record.",
+      "managed_example": "Metrics: Track percentage of systemwide procurements reviewed for accessibility and time-to-completion of reviews.",
+      "optimizing_example": "Administrative Review: Annual review to assess compliance and identify opportunities for standardization or improvement."
+    },
+    {
+      "key": "1.1-com",
+      "sub_committee": "com",
+      "goal_number": 1,
+      "number": 1,
+      "text": "Develop a structured, ongoing campus-wide communication campaign (with executive support) to raise awareness about digital accessibility responsibilities and resources.",
+      "examples_of_evidence": [
+        "Documented communication plan outlining goals, audiences, messaging, channels, and frequency",
+        "Executive sponsorship or endorsements (e.g., messages from campus leadership, strategic priorities)",
+        "кампus-wide campaigns (e.g., accessibility awareness month, targeted outreach initiatives)",
+        "Use of multiple communication channels (e.g., email, websites, social media, LMS announcements, events)",
+        "Messaging tailored to different roles (e.g., faculty, staff, developers, procurement personnel, students)",
+        "Centralized accessibility website or hub with resources, guidance, and support information",
+        "Metrics or analytics tracking engagement with communication efforts (e.g., email open rates, event participation)"
+      ],
+      "established_example": "- Position: A designated individual or team is formally responsible for developing and managing campus-wide accessibility communication efforts\n- Budget: Resources are allocated to support communication activities, including campaign development, tools, and outreach efforts\n- Procedures: A documented communication strategy defines messaging, audiences, channels, and a recurring schedule for outreach, supported by executive endorsement\n- Output: Accessibility communication campaigns are consistently delivered across campus, with clear messaging and broad awareness of responsibilities and available resources",
+      "managed_example": null,
+      "optimizing_example": null
+    },
+    {
+      "key": "1.2-com",
+      "sub_committee": "com",
+      "goal_number": 1,
+      "number": 2,
+      "text": "Incorporate digital accessibility awareness into onboarding and orientation programs for faculty, staff, students, and student employees.",
+      "examples_of_evidence": [
+        "Orientation materials (e.g., slides, videos, modules) that include digital accessibility concepts and expectations",
+        "Onboarding checklists or required training modules covering accessibility basics",
+        "Role-specific onboarding content tailored to faculty, staff, student employees, and content creators",
+        "Integration of accessibility information into HR onboarding systems and student orientation programs",
+        "References to campus accessibility policies, standards (e.g., WCAG, Section 508), and support resources",
+        "Communication materials directing new community members to training, tools, and support services",
+        "Collaboration between HR, faculty development, student affairs, and accessibility teams"
+      ],
+      "established_example": "- Position: Responsibility for incorporating accessibility into onboarding and orientation is formally assigned to appropriate units (e.g., HR, faculty development, student affairs, ATI program)\n- Budget: Resources are allocated to support development and delivery of onboarding materials, including training platforms and content creation\n- Procedures: A documented process ensures accessibility awareness is consistently integrated into onboarding and orientation programs for all relevant audiences\n- Output: Evidence that new faculty, staff, and students consistently receive accessibility awareness information as part of onboarding, establishing clear expectations and available resources from the start",
+      "managed_example": null,
+      "optimizing_example": null
+    },
+    {
+      "key": "1.3-com",
+      "sub_committee": "com",
+      "goal_number": 1,
+      "number": 3,
+      "text": "Develop a communication process to ensure all digital content creators (e.g., those who create web, instructional materials, marketing, social media, electronic documents, video, audio) know where to get training, help, and resources for accessibility compliance.",
+      "examples_of_evidence": [
+        "Centralized accessibility website or resource hub with training, guidance, and support information",
+        "Documented communication process outlining how information is shared with content creators",
+        "Targeted communications to specific roles (e.g., faculty, web editors, marketing staff, social media managers)",
+        "Regular outreach campaigns (e.g., newsletters, announcements, LMS messages) highlighting available resources",
+        "Clear points of contact for accessibility support (e.g., ATI team, help desk, instructional designers)",
+        "Integration of resource information into tools and platforms used by content creators (e.g., CMS, LMS, document templates)",
+        "Job aids, quick guides, or checklists distributed to support accessible content creation"
+      ],
+      "established_example": "- Position: A designated individual or team is formally responsible for communicating accessibility resources and support to digital content creators\n- Budget: Resources are allocated to support communication efforts, including content development, platforms, and outreach activities\n- Procedures: A documented communication process ensures that information about accessibility training, help, and resources is consistently distributed to all relevant content creators\n- Output: Evidence that digital content creators across campus consistently receive clear, actionable information on where to access accessibility training, support, and resources",
+      "managed_example": null,
+      "optimizing_example": null
+    },
+    {
+      "key": "1.4-com",
+      "sub_committee": "com",
+      "goal_number": 1,
+      "number": 4,
+      "text": "Develop a process so that vendors and campus members involved in ICT procurements know who to contact for assistance, resources, and support.",
+      "examples_of_evidence": [
+        "Documented process outlining how procurement stakeholders are directed to accessibility contacts and resources",
+        "Clearly identified points of contact (e.g., accessibility team, procurement office, IT review team)",
+        "Procurement websites or portals with accessibility guidance and contact information",
+        "Standard communication templates or instructions included in procurement workflows (e.g., requisition forms, RFP documents)",
+        "Vendor-facing materials explaining how to engage with the campus on accessibility requirements",
+        "Integration of contact information into procurement systems or purchasing platforms",
+        "Training or guidance for campus requestors on how to initiate accessibility review or seek assistance"
+      ],
+      "established_example": "- Position: A designated individual or team is formally responsible for providing accessibility support and guidance for ICT procurement\n- Budget: Resources are allocated to support communication efforts and staff providing procurement-related accessibility assistance\n- Procedures: A documented process ensures procurement stakeholders and vendors are consistently directed to appropriate accessibility contacts, resources, and support channels\n- Output: Campus members and vendors involved in ICT procurement consistently know how to access accessibility support, resulting in more efficient and compliant procurement practices Records or reports showing that vendors and campus members are contacting the designated department or are directed appropriately",
+      "managed_example": null,
+      "optimizing_example": null
+    },
+    {
+      "key": "2.1-com",
+      "sub_committee": "com",
+      "goal_number": 2,
+      "number": 1,
+      "text": "Develop a comprehensive training process for web and mobile developers, designers, content contributors, and digital communicators, e.g., document creators, social media managers, and marketing staff, that covers Section 508 standards and campus-specific monitoring processes.",
+      "examples_of_evidence": [],
+      "established_example": null,
+      "managed_example": null,
+      "optimizing_example": null
+    },
+    {
+      "key": "2.2-com",
+      "sub_committee": "com",
+      "goal_number": 2,
+      "number": 2,
+      "text": "Develop a training process (with varied content and modalities) for faculty and instructional staff on the creation, adoption, and remediation of accessible instructional materials.",
+      "examples_of_evidence": [],
+      "established_example": null,
+      "managed_example": null,
+      "optimizing_example": null
+    },
+    {
+      "key": "2.3-com",
+      "sub_committee": "com",
+      "goal_number": 2,
+      "number": 3,
+      "text": "Integrate accessibility into ongoing academic technology training through faculty support centers.",
+      "examples_of_evidence": [],
+      "established_example": null,
+      "managed_example": null,
+      "optimizing_example": null
+    },
+    {
+      "key": "2.4-com",
+      "sub_committee": "com",
+      "goal_number": 2,
+      "number": 4,
+      "text": "Develop training to ensure everyone purchasing IT products and services understands relevant policies, procedures, and accessibility requirements (This can include purchase requestors, administrative support staff, technology support staff, buyers, procurement officers, and purchase cardholders).",
+      "examples_of_evidence": [],
+      "established_example": null,
+      "managed_example": null,
+      "optimizing_example": null
+    },
+    {
+      "key": "2.5-com",
+      "sub_committee": "com",
+      "goal_number": 2,
+      "number": 5,
+      "text": "Develop a process to ensure that employees with explicit ATI accessibility responsibilities in each priority area (Web, Instructional Materials, and Procurement) are prioritized for ongoing, role-specific professional development to meet evolving accessibility standards and campus goals.",
+      "examples_of_evidence": [],
+      "established_example": null,
+      "managed_example": null,
+      "optimizing_example": null
+    },
+    {
+      "key": "1.1-gov",
+      "sub_committee": "gov",
+      "goal_number": 1,
+      "number": 1,
+      "text": "Assigned authority and responsibility for accessibility documented in appropriate position descriptions",
+      "examples_of_evidence": [
+        "Position descriptions that explicitly include digital accessibility responsibilities (e.g., web content creators, instructional designers, procurement staff, IT leadership)",
+        "Standard language or competencies related to accessibility included in HR classification or job templates",
+        "Organizational charts or role matrices showing accessibility responsibilities across departments",
+        "Performance evaluation criteria tied to accessibility-related duties",
+        "Documentation aligning accessibility responsibilities with specific ATI priority areas or success indicators",
+        "HR or governance policies requiring inclusion of accessibility in relevant roles"
+      ],
+      "established_example": "- Position: Accessibility responsibilities are clearly defined and formally included in relevant position descriptions across key roles (e.g., web, instructional materials, procurement, IT, communications)\n- Budget: Funding supports roles with explicit accessibility responsibilities, including allocated time or dedicated positions\n- Procedures: A standardized process ensures accessibility responsibilities are consistently incorporated into new and updated position descriptions through HR and governance workflows\n- Output: Position descriptions across the institution consistently reflect assigned accessibility responsibilities, establishing clear accountability for implementation",
+      "managed_example": null,
+      "optimizing_example": null
+    },
+    {
+      "key": "1.2-gov",
+      "sub_committee": "gov",
+      "goal_number": 1,
+      "number": 2,
+      "text": "Assigned authority and responsibility for the web evaluation process and ongoing monitoring (to include digital content) to a body (person(s) or business entity).",
+      "examples_of_evidence": [
+        "Formal designation of a responsible body (e.g., ATI Committee, Digital Accessibility Team, IT unit, or designated coordinator)",
+        "Organizational charts or governance documents identifying responsibility for web evaluation and monitoring",
+        "Defined scope of responsibility that includes websites, web applications, and digital content (e.g., documents, multimedia)",
+        "Role charters, committee descriptions, or service definitions outlining evaluation and monitoring duties",
+        "Documented workflows showing how evaluation and monitoring activities are initiated, tracked, and reported",
+        "Cross-functional coordination agreements between units (e.g., IT, communications, academic departments)"
+      ],
+      "established_example": "- Position: A specific individual or team is formally assigned responsibility for web accessibility evaluation and ongoing monitoring, including digital content\n- Budget: Resources are allocated to support the responsible body, including staff time for evaluation and monitoring\n- Procedures: A documented process defines how the responsible body conducts, coordinates, and maintains ongoing evaluation and monitoring activities across campus systems and content\n- Output: Records or reports demonstrating that web accessibility evaluation and monitoring activities are consistently executed and coordinated by the assigned body, with clear institutional accountability",
+      "managed_example": null,
+      "optimizing_example": null
+    },
+    {
+      "key": "1.3-gov",
+      "sub_committee": "gov",
+      "goal_number": 1,
+      "number": 3,
+      "text": "Assigned authority and responsibility for the web/mobile development process (to include updates and maintenance) to a body (person(s) or business entity).",
+      "examples_of_evidence": [
+        "Formal designation of a responsible body (e.g., central IT, web services, application development team, or digital accessibility program)",
+        "Governance documentation or organizational charts identifying ownership of accessible development practices",
+        "Defined scope covering new development, redesigns, updates, and maintenance activities",
+        "Documented roles and responsibilities for developers, designers, product owners, and content contributors",
+        "Development standards or guidelines that incorporate accessibility requirements (e.g., WCAG, Section 508)",
+        "Workflows or lifecycle documentation showing how accessibility is integrated into design, development, testing, and deployment",
+        "Coordination processes between development teams and accessibility specialists"
+      ],
+      "established_example": "- Position: A designated individual or team is formally assigned responsibility for ensuring accessibility in web/mobile development, including updates and maintenance\n- Budget: Resources are allocated to support accessible development practices, including staff time, tools, and training\n- Procedures: A documented development lifecycle process ensures accessibility is consistently integrated into new builds, updates, and ongoing maintenance\n- Output: Records or reports demonstrating that web and mobile applications are developed and maintained under a coordinated, accountable process led by the assigned body that consistently incorporates accessibility requirements",
+      "managed_example": null,
+      "optimizing_example": null
+    },
+    {
+      "key": "1.4-gov",
+      "sub_committee": "gov",
+      "goal_number": 1,
+      "number": 4,
+      "text": "Assigned authority and responsibility for the accessible ICT procurement process to a body (person(s) or business entity).",
+      "examples_of_evidence": [
+        "Formal designation of a responsible body (e.g., procurement office, IT governance group, ATI committee, or accessibility program)",
+        "Organizational charts or governance documentation identifying responsibility for accessible ICT procurement",
+        "Defined roles and responsibilities for accessibility review within procurement workflows",
+        "Documented procedures showing how accessibility is assessed (e.g., ACR/VPAT review, risk assessment, vendor engagement)",
+        "Collaboration protocols between procurement, IT, accessibility specialists, and requesting departments",
+        "Communication materials outlining how campus units engage with the accessible procurement process",
+        "Integration of accessibility checkpoints into procurement systems or approval workflows"
+      ],
+      "established_example": "- Position: A designated individual or team is formally assigned responsibility for overseeing accessible ICT procurement processes\n- Budget: Resources are allocated to support accessibility review activities within procurement, including staff time and evaluation tools\n- Procedures: A documented procurement process consistently incorporates accessibility evaluation, roles, and decision-making criteria across acquisitions\n- Output: Records or reports showing that ICT procurements are consistently reviewed for accessibility under a coordinated, accountable process led by the assigned body",
+      "managed_example": null,
+      "optimizing_example": null
+    },
+    {
+      "key": "1.5-gov",
+      "sub_committee": "gov",
+      "goal_number": 1,
+      "number": 5,
+      "text": "Assigned authority and responsibility for tracking, reporting and distributing timely adoption metrics for instructional material",
+      "examples_of_evidence": [
+        "Formal designation of a responsible body (e.g., bookstore, academic affairs, institutional research, ATI program, or cross-functional committee)",
+        "Defined roles and responsibilities for tracking, validating, and reporting timely adoption data",
+        "Documented workflows for collecting adoption data from faculty and departments",
+        "Reporting structures that distribute metrics to campus leadership, departments, and relevant stakeholders",
+        "Dashboards or reporting tools (e.g., bookstore systems, analytics platforms) used to track adoption rates and timelines",
+        "Communication plans outlining how and when reports are shared",
+        "Coordination between units such as the bookstore, academic departments, and accessibility teams"
+      ],
+      "established_example": "- Position: A designated individual or team is formally assigned responsibility for tracking, reporting, and distributing timely adoption metrics\n- Budget: Resources are allocated to support data collection, reporting tools, and staff time for managing timely adoption metrics\n- Procedures: A documented process defines how timely adoption data is collected, validated, reported, and distributed to stakeholders on a regular schedule\n- Output: Evidence that timely adoption metrics are consistently tracked and distributed in a structured, reliable manner to inform institutional decision-making and compliance efforts",
+      "managed_example": null,
+      "optimizing_example": null
+    },
+    {
+      "key": "1.6-gov",
+      "sub_committee": "gov",
+      "goal_number": 1,
+      "number": 6,
+      "text": "Assigned authority and responsibility for ongoing monitoring of accessibility reports on Instructional material within the LMS to a body (person(s) or business entity).",
+      "examples_of_evidence": [
+        "Formal designation of a responsible body (e.g., ATI team, instructional design unit, LMS administration, or academic technology group)",
+        "Organizational charts or governance documentation identifying responsibility for LMS accessibility monitoring",
+        "Defined scope covering accessibility reports generated by LMS tools (e.g., Ally, UDOIT) and related analytics",
+        "Documented workflows for reviewing reports, prioritizing issues, and communicating with faculty or departments",
+        "Dashboards or reporting systems used to track accessibility scores, trends, and remediation progress",
+        "Coordination processes between accessibility specialists, instructional designers, and faculty support units",
+        "Guidance or communication materials for faculty on interpreting and addressing report findings"
+      ],
+      "established_example": "- Position: A designated individual or team is formally assigned responsibility for monitoring LMS accessibility reports and related instructional materials\n- Budget: Resources are allocated to support monitoring activities, including staff time and LMS-integrated accessibility tools\n- Procedures: A documented process defines how accessibility reports are reviewed, tracked, and communicated to stakeholders for remediation\n- Output: Records demonstrating that LMS accessibility reports are consistently monitored and acted upon through a coordinated, accountable process led by the assigned body",
+      "managed_example": null,
+      "optimizing_example": null
+    },
+    {
+      "key": "1.7-gov",
+      "sub_committee": "gov",
+      "goal_number": 1,
+      "number": 7,
+      "text": "Assigned authority and responsibility for accessibility training program(s) to a body (person(s) or business entities).",
+      "examples_of_evidence": [
+        "Formal designation of a responsible body (e.g., ATI program, faculty development center, HR training unit, IT training team)",
+        "Organizational charts or governance documentation identifying responsibility for accessibility training",
+        "Defined scope of training responsibilities, including web, instructional materials, procurement, and general awareness",
+        "Documented training plans outlining audiences, delivery methods, and frequency",
+        "Training curricula, materials, or learning pathways tailored to specific roles (e.g., faculty, developers, content creators, procurement staff)",
+        "Tracking systems for training participation and completion (e.g., LMS, HR systems)",
+        "Coordination processes between training providers and subject matter experts (e.g., accessibility specialists, instructional designers)"
+      ],
+      "established_example": "- Position: A designated individual or team is formally assigned responsibility for accessibility training programs across the institution\n- Budget: Resources are allocated to support training development, delivery, and tracking, including staff time and training platforms\n- Procedures: A documented process ensures accessibility training is consistently developed, delivered, and updated for relevant campus audiences\n- Output: Records demonstrating that accessibility training programs are delivered in a structured, coordinated manner, with clear ownership and consistent participation across key roles",
+      "managed_example": null,
+      "optimizing_example": null
+    },
+    {
+      "key": "2.1-gov",
+      "sub_committee": "gov",
+      "goal_number": 2,
+      "number": 1,
+      "text": "Campus has formally documented (e.g., Policy, Resolution, or Procedure) a process to ensure the timely adoption of textbooks and other instructional materials.",
+      "examples_of_evidence": [
+        "Official campus policy, resolution, or procedure addressing timely adoption of instructional materials",
+        "Defined adoption deadlines aligned with academic terms and bookstore operations",
+        "Documentation outlining roles and responsibilities for faculty, departments, and administrative units",
+        "Procedures describing how adoption data is collected, tracked, and enforced",
+        "Integration with bookstore systems or adoption platforms used to monitor submissions",
+        "Communication plans informing faculty of deadlines and requirements",
+        "References to accessibility considerations (e.g., time needed for alternate format conversion or remediation)"
+      ],
+      "established_example": "- Position: Responsibility for implementing and enforcing timely adoption policies is formally assigned to appropriate roles (e.g., academic affairs, bookstore, departments)\n- Budget: Resources are allocated to support systems and staff involved in managing and tracking timely adoption processes\n- Procedures: A formally documented policy or procedure defines deadlines, roles, enforcement mechanisms, and integration with accessibility considerations\n- Output: Records or reports demonstrating that timely adoption requirements are consistently implemented across the institution, with documented compliance and predictable submission patterns",
+      "managed_example": null,
+      "optimizing_example": null
+    },
+    {
+      "key": "2.2-gov",
+      "sub_committee": "gov",
+      "goal_number": 2,
+      "number": 2,
+      "text": "Campus has formally documented (through Policy or Resolution) faculty responsibility for selecting and authoring accessible instructional materials.",
+      "examples_of_evidence": [
+        "Official campus policy or resolution explicitly defining faculty responsibility for accessibility in instructional materials",
+        "Statements within academic policies, faculty handbooks, or senate resolutions addressing accessible course content",
+        "Documentation outlining expectations for selecting, authoring, and updating accessible materials (e.g., syllabi, documents, multimedia)",
+        "Alignment with Section 508, ADA Title II, and WCAG standards within policy language",
+        "Communication materials or guidance reinforcing faculty responsibilities",
+        "Cross-references to supporting processes (e.g., training, course review, remediation support)",
+        "Evidence of shared governance involvement (e.g., faculty senate approval)"
+      ],
+      "established_example": "- Position: Faculty roles formally include responsibility for selecting and authoring accessible instructional materials as defined in institutional policy or resolution\n- Budget: Resources are allocated to support faculty in meeting these responsibilities (e.g., training, instructional design support, accessibility tools)\n- Procedures: A formally documented policy or resolution clearly defines faculty responsibilities and is integrated into academic and instructional governance processes\n- Output: Faculty responsibilities for accessibility are consistently communicated and applied across the institution, with clear expectations for accessible instructional materials The policy, resolution or procedure itself and related documentation, plus records of shared governance",
+      "managed_example": null,
+      "optimizing_example": null
+    },
+    {
+      "key": "2.3-gov",
+      "sub_committee": "gov",
+      "goal_number": 2,
+      "number": 3,
+      "text": "The campus has formally documented (through Policy, Resolution, or Procedure) responsibility for accessible web/mobile and digital communications",
+      "examples_of_evidence": [
+        "Official campus policy, resolution, or procedure addressing accessibility requirements for web, mobile, and digital communications",
+        "Defined responsibilities for units such as IT, marketing/communications, departments, and content creators",
+        "Policy language referencing applicable standards (e.g., WCAG, Section 508, ADA Title II)",
+        "Documentation covering a broad scope of digital communications (e.g., websites, applications, social media, electronic documents, multimedia)",
+        "Governance or compliance documents assigning oversight and enforcement responsibilities",
+        "Communication materials or guidance reinforcing expectations for campus content creators",
+        "Cross-references to related processes (e.g., evaluation, remediation, training, development lifecycle)"
+      ],
+      "established_example": "- Position: Responsibility for accessible web/mobile and digital communications is formally defined and assigned through institutional policy across relevant roles and units\n- Budget: Resources are allocated to support implementation, including staff time, tools, and support services for accessibility compliance\n- Procedures: A formally documented policy or procedure defines responsibilities, scope, standards, and enforcement mechanisms for accessible digital communications\n- Output: Accessibility expectations for digital communications are consistently applied across campus, with clear accountability and alignment to institutional standards The policy, resolution or procedure itself and related documentation, plus records of oversight and enforcement",
+      "managed_example": null,
+      "optimizing_example": null
+    },
+    {
+      "key": "2.4-gov",
+      "sub_committee": "gov",
+      "goal_number": 2,
+      "number": 4,
+      "text": "The Campus has formally documented (through Policy, Resolution or Procedure) responsibility for procuring accessible ICT",
+      "examples_of_evidence": [
+        "Official campus policy, resolution, or procedure requiring accessibility in ICT procurement",
+        "Defined responsibilities for procurement offices, IT, accessibility teams, and requestors",
+        "Policy language referencing accessibility standards (e.g., Section 508, WCAG) and required documentation (e.g., VPAT/ACR)",
+        "Documentation outlining accessibility review requirements for different procurement types (e.g., competitive, non-competitive, purchase card)",
+        "Governance or compliance documents assigning oversight and enforcement responsibilities",
+        "Communication materials guiding campus units on accessible procurement expectations and processes",
+        "Cross-references to related processes (e.g., risk assessment, vendor engagement, exception handling such as TAAPs)"
+      ],
+      "established_example": "- Position: Responsibility for accessible ICT procurement is formally defined and assigned through institutional policy across procurement, IT, and related roles\n- Budget: Resources are allocated to support accessibility review activities, including staff time, tools, and vendor engagement efforts\n- Procedures: A formally documented policy or procedure defines requirements, roles, standards, and enforcement mechanisms for accessible ICT procurement\n- Output: Records or reports demonstrating that ICT procurements are consistently conducted under a formalized, accessibility-informed process with clear institutional accountability",
+      "managed_example": null,
+      "optimizing_example": null
+    },
+    {
+      "key": "3.1-gov",
+      "sub_committee": "gov",
+      "goal_number": 3,
+      "number": 1,
+      "text": "Develop a process for the ATI Steering Committee and subcommittees to review, revise and approve the updated Annual Campus Accessible Technology Plan.",
+      "examples_of_evidence": [
+        "Documented process outlining how and when the ATI Steering Committee and subcommittees review and approve plans",
+        "Defined review cycles aligned with annual planning timelines and strategic planning updates",
+        "Meeting agendas, minutes, or records demonstrating plan review, revisions, and approvals",
+        "Version-controlled planning documents reflecting accessibility goals, updates, and progress",
+        "Integration points between the ATI Plan, IT Strategic Plan, and broader campus strategic plan",
+        "Communication or reporting mechanisms to share approved plans with campus stakeholders"
+      ],
+      "established_example": "- Position: The ATI Steering Committee and subcommittees are formally assigned responsibility for reviewing, revising, and approving accessibility-related plans\n- Budget: Resources are allocated to support planning activities, including staff time, coordination, and tools for documentation and collaboration\n- Procedures: A documented, recurring process defines how plans are reviewed, updated, and approved, including timelines, roles, and decision-making protocols\n- Output: Accessibility is consistently incorporated into institutional planning documents, with formally reviewed and approved plans guiding campus efforts",
+      "managed_example": null,
+      "optimizing_example": null
+    }
+  ]
+}

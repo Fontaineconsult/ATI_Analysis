@@ -65,7 +65,7 @@ class IndicatorsAPI(MethodView):
                 indicator_data = {key: data.get(key) for key in required_keys}
                 # Optional companion-guide fields — forwarded only when present so older
                 # callers keep working (create_success_indicator defaults them to []/{}).
-                optional_keys = ["examples_of_evidence", "established_example", "managed_example", "optimizing_example"]
+                optional_keys = ["examples_of_evidence", "established_example", "managed_example", "optimizing_example", "introduced_in_year"]
                 indicator_data.update({key: data[key] for key in optional_keys if key in data})
                 if create_success_indicator(**indicator_data):
                     return make_response(status="Success Indicator created successfully."), 201

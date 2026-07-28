@@ -2,6 +2,8 @@ import {useNavigate} from "react-router-dom";
 // Status colors live in services/utils/statusColors.js (single source of
 // truth). Re-exported at the bottom for the older callers that import from tools.
 import { getStatusColor } from './statusColors';
+// Working-group code/slug/dataKey lookups come from the WG single-source-of-truth.
+import { CODE_TO_SLUG, SLUG_TO_CODE, DATAKEY_TO_SLUG } from '../../styles/workingGroupIdentity';
 
 
 function getUrlFromCompositeKey(compositeKey, campus) {
@@ -10,13 +12,7 @@ function getUrlFromCompositeKey(compositeKey, campus) {
     const [goalNumber, indicatorNumber] = numbers.split('.');
 
     // Map suffix to working group URL segment
-    const workingGroupMap = {
-        'web': 'web',
-        'pro': 'procurement',
-        'ins': 'instructional-materials'
-    };
-
-    const workingGroupSegment = workingGroupMap[suffix] || suffix;
+    const workingGroupSegment = CODE_TO_SLUG[suffix] || suffix;
 
     if (campus) {
         return `/${campus}/${workingGroupSegment}/${goalNumber}/${indicatorNumber}`;
@@ -26,25 +22,15 @@ function getUrlFromCompositeKey(compositeKey, campus) {
 }
 
 
+// Note: the parameter is a URL slug ('web'/'procurement'/'instructional-materials'); the
+// function name is historical. Slug -> 3-letter code.
 function workingGroupCodeFromName(workingGroupName) {
-    const workingGroupMap = {
-        'web': 'web',
-        'procurement': 'pro',
-        'instructional-materials': 'ins'
-    }
-
-    return workingGroupMap[workingGroupName] || workingGroupName;
+    return SLUG_TO_CODE[workingGroupName] || workingGroupName;
 }
 
+// Normalize a WG identifier (slug OR camelCase dataKey) to a URL-safe slug.
 function workingGroupWebSafe(workingGroupName) {
-    const workingGroupMap = {
-        'web': 'web',
-        'procurement': 'procurement',
-        'instructionalMaterials': 'instructional-materials',
-
-    }
-
-    return workingGroupMap[workingGroupName] || workingGroupName;
+    return DATAKEY_TO_SLUG[workingGroupName] || workingGroupName;
 }
 
 
@@ -77,13 +63,7 @@ const getGoalViewUrlFromCompositeKey = (compositeKey, campus) => {
     const [numbers, suffix] = compositeKey.split('-');
     const [goalNumber, indicatorNumber] = numbers.split('.');
 
-    const workingGroupMap = {
-        'web': 'web',
-        'pro': 'procurement',
-        'ins': 'instructional-materials'
-    };
-
-    const workingGroupSegment = workingGroupMap[suffix] || suffix;
+    const workingGroupSegment = CODE_TO_SLUG[suffix] || suffix;
     const campusPrefix = campus ? `/${campus}` : '';
     return `${campusPrefix}/dashboard/${workingGroupSegment}/goal/${goalNumber}/${indicatorNumber}`;
 };
@@ -115,13 +95,7 @@ const getReportUrlFromCompositeKey = (compositeKey, campus) => {
     const [numbers, suffix] = compositeKey.split('-');
     const [goalNumber, indicatorNumber] = numbers.split('.');
 
-    const workingGroupMap = {
-        'web': 'web',
-        'pro': 'procurement',
-        'ins': 'instructional-materials'
-    };
-
-    const workingGroupSegment = workingGroupMap[suffix] || suffix;
+    const workingGroupSegment = CODE_TO_SLUG[suffix] || suffix;
     const campusPrefix = campus ? `/${campus}` : '';
     return `${campusPrefix}/dashboard/reports/${workingGroupSegment}/${goalNumber}/${indicatorNumber}`;
 };

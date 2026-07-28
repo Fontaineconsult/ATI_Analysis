@@ -6,6 +6,7 @@ import { GenerateReportComponent } from '../../services/report_constructor';
 import StatusLevelDetails from "../graph_components/indicators/StatusLevelDetails";
 import { DataContext } from '../../context/DataContext';
 import { useSettings } from "../../context/SettingsContext";
+import { SLUG_TO_DATAKEY } from '../../styles/workingGroupIdentity';
 import SingleReportMasterContainer from "../dashboard_components/report_components/SingleReportMasterContainer";
 import AdminSummaryForm from "../dashboard_components/report_components/AdminSummaryForm";
 import AdminFeedbackForm from "../dashboard_components/report_components/AdminFeedbackForm";
@@ -35,16 +36,9 @@ function ApprovalMasterContainer({
         }
 
         const getWorkingGroupData = () => {
-            switch(propWorkingGroup) {
-                case 'web':
-                    return data.web;
-                case 'instructional-materials':
-                    return data.instructionalMaterials;
-                case 'procurement':
-                    return data.procurement;
-                default:
-                    return null;
-            }
+            // propWorkingGroup is a URL slug; resolve to its DataContext key via the SSOT.
+            const dataKey = SLUG_TO_DATAKEY[propWorkingGroup];
+            return dataKey ? data[dataKey] : null;
         };
 
         const workingGroupData = getWorkingGroupData();

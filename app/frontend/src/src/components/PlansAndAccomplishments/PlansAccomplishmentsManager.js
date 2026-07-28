@@ -1,5 +1,6 @@
 import React, { useContext, useState } from 'react';
 import { useParams } from 'react-router-dom';
+import { WORKING_GROUP_LIST } from '../../styles/workingGroupIdentity';
 import {
     Box,
     Heading,
@@ -109,7 +110,7 @@ function PlansAccomplishmentsManager() {
     // Get available YSE identifiers for dropdown
     const getAvailableYSEs = () => {
         const yses = [];
-        ['web', 'instructionalMaterials', 'procurement'].forEach(wg => {
+        WORKING_GROUP_LIST.map((w) => w.dataKey).forEach(wg => {
             if (data[wg]?.goals) {
                 data[wg].goals.forEach(goal => {
                     if (goal.indicators) {
@@ -221,7 +222,7 @@ function PlansAccomplishmentsManager() {
 
     const getAllPlans = () => {
         const plans = [];
-        ['web', 'instructionalMaterials', 'procurement'].forEach(wg => {
+        WORKING_GROUP_LIST.map((w) => w.dataKey).forEach(wg => {
             if (data[wg]?.goals) {
                 data[wg].goals.forEach(goal => {
                     // Goal-level plans with progress notes
@@ -326,7 +327,7 @@ function PlansAccomplishmentsManager() {
     // Extract all accomplishments from data
     const getAllAccomplishments = () => {
         const accomplishments = [];
-        ['web', 'instructionalMaterials', 'procurement'].forEach(wg => {
+        WORKING_GROUP_LIST.map((w) => w.dataKey).forEach(wg => {
             if (data[wg]?.goals) {
                 data[wg].goals.forEach(goal => {
                     // Goal-level accomplishments

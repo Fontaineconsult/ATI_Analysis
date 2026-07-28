@@ -1,6 +1,7 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { fetchCampuses, fetchSettings } from '../services/api/get';
 import { setVocab } from '../components/graph_components/assets/vocabRegistry';
+import { WORKING_GROUP_LIST } from '../styles/workingGroupIdentity';
 
 // Create the SettingsContext
 export const SettingsContext = createContext();
@@ -18,7 +19,7 @@ export const useSettings = () => {
 export const SettingsProvider = ({ children }) => {
     // Global settings state for current academic year and working group
     const [currentAcademicYear, setCurrentAcademicYear] = useState('2025-2026');  // Default year
-    const [currentWorkingGroup, setCurrentWorkingGroup] = useState('web');  // Default working group
+    const [currentWorkingGroup, setCurrentWorkingGroup] = useState(WORKING_GROUP_LIST[0].slug);  // Default working group
     const [currentCampus, setCurrentCampus] = useState(null);  // Campus abbreviation, set from URL
     const [campuses, setCampuses] = useState([]);  // List of {name, abbreviation}
     const [campusesLoading, setCampusesLoading] = useState(true);
