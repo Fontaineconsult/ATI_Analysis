@@ -31,8 +31,14 @@ def fetch_success_indicators_for_working_group(academic_year):
         // Collect evidence per indicator
         WITH wg, goal, indicator, collect(DISTINCT evidence) AS yearSuccessIndicators
         
-        // Create indicator map including its properties and evidence
-        WITH wg, goal, apoc.map.merge(indicator {.*}, {yearSuccessIndicators: yearSuccessIndicators}) AS ind
+        // Create indicator map including its properties and evidence.
+        // A goal whose indicators are all filtered out (e.g. year-gated) must produce an
+        // EMPTY successIndicators list — merging the null indicator would emit a phantom
+        // {yearSuccessIndicators: []} entry. CASE yields null so collect() drops it.
+        WITH wg, goal,
+             CASE WHEN indicator IS NULL THEN NULL
+                  ELSE apoc.map.merge(indicator {.*}, {yearSuccessIndicators: yearSuccessIndicators})
+             END AS ind
         
         // Collect indicators per goal
         WITH wg, goal, collect(ind) AS successIndicators

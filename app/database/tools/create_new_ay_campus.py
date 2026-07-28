@@ -4,7 +4,8 @@ Campus-aware academic year migration script.
 Creates a new AcademicYear node (if needed), then for each campus:
 1. Duplicates all YSE nodes from the old year to the new year
 2. Copies all relationships (tracks, status_is, evidence_at_campus, implements, etc.)
-   except evidence_in_year (which gets pointed to the new year)
+   except evidence_in_year (which gets pointed to the new year) and the episodic
+   edges advances_yse / about_yse / addresses_evidence (year-specific records)
 3. Resets the new year's YSE to fresh-year defaults (scalar workflow fields)
 4. Creates stub YSE nodes for any campuses that don't have YSE in the old year
 
@@ -37,7 +38,8 @@ def ensure_academic_year(year_name):
 def duplicate_year_success_evidence(old_year, new_year):
     """
     Duplicate all YSE nodes from old_year to new_year.
-    Copies all relationships except evidence_in_year.
+    Copies all relationships except evidence_in_year and the episodic edges
+    (advances_yse, about_yse, addresses_evidence — records of a specific year).
     This handles all campuses automatically since evidence_at_campus is copied.
     """
     print(f"\nDuplicating YSE nodes from {old_year} to {new_year}...")
@@ -85,11 +87,15 @@ def duplicate_year_success_evidence(old_year, new_year):
         }
         WITH e, e2
 
-        // Copy incoming relationships (except evidence_in_year)
+        // Copy incoming relationships, excluding evidence_in_year and the episodic
+        // record-of-a-year edges: an Accomplishment (advances_yse), ProgressUpdate
+        // (about_yse) or Query (addresses_evidence) belongs to the year it happened
+        // in and must not attach to the new year's copy. Standing context (implements,
+        // is_evidence_for, furthers_yse) carries forward.
         CALL {
             WITH e, e2
             MATCH (n)-[rel_in]->(e)
-            WHERE type(rel_in) <> 'evidence_in_year'
+            WHERE NOT type(rel_in) IN ['evidence_in_year', 'advances_yse', 'about_yse', 'addresses_evidence']
             WITH e2, type(rel_in) AS relType, properties(rel_in) AS relProps, n
             CALL apoc.create.relationship(n, relType, relProps, e2) YIELD rel
             RETURN count(*) AS incomingRelCount
