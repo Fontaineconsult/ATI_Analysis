@@ -9,8 +9,12 @@ server always agree on credentials and on what queries exist.
 ## Install
 
 ```bash
-pip install "mcp[cli]" neo4j pyyaml python-dotenv
+pip install "mcp[cli]<2" neo4j pyyaml python-dotenv
 ```
+
+> **Pin `mcp<2`.** The server is built on the 1.x SDK's `mcp.server.fastmcp.FastMCP`;
+> the 2.0 SDK removed that module (restructured to `mcp.server.mcpserver`), so an
+> unpinned install fails at startup with the generic "Missing dependency: mcp" exit.
 
 Credentials come from the same place as everything else — `app/.env.development`
 (`DATABASE_URL` + `NEO4J_DATABASE`). No separate config.
