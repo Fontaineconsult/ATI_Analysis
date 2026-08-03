@@ -62,7 +62,8 @@ rem -- 1. Optional dependency refresh ------------------------------------------
 if defined DO_DEPS (
     echo [1/4] Refreshing mcp-venv dependencies ...
     "%PYEXE%" -m pip install --quiet --upgrade pip
-    "%PYEXE%" -m pip install --quiet -r "%ATI_ROOT%\app\requirements.txt" mcp
+    rem mcp pinned ^<2: SDK 2.0.0 removed mcp.server.fastmcp (see setup_ati_mcp.cmd)
+    "%PYEXE%" -m pip install --quiet -r "%ATI_ROOT%\app\requirements.txt" "mcp<2"
     if errorlevel 1 (
         echo ERROR: pip install failed - NOT restarting on top of a broken venv.
         exit /b 1

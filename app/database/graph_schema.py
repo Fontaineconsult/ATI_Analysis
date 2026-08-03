@@ -1019,7 +1019,7 @@ class Procedure(StructuredNode):
     # Retirement lifecycle: an implementation that is no longer in use. Historical
     # evidence links remain valid; UIs badge and (by default) hide retired items.
     retired = BooleanProperty(default=False)
-    retired_date = DateProperty()
+    retired_date = DatePr[operty()
     retired_note = StringProperty()
 
     procedure_markdown = StringProperty()

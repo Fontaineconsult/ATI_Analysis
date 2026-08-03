@@ -132,7 +132,9 @@ if errorlevel 1 (
 :install_deps
 echo       Installing dependencies (app\requirements.txt + mcp SDK^) ...
 "%PYEXE%" -m pip install --quiet --upgrade pip
-"%PYEXE%" -m pip install --quiet -r "%ATI_ROOT%\app\requirements.txt" mcp
+rem mcp is pinned ^<2: SDK 2.0.0 (released late Jul 2026) removed mcp.server.fastmcp,
+rem which server.py imports. Migrating to the 2.x API is a tracked future task.
+"%PYEXE%" -m pip install --quiet -r "%ATI_ROOT%\app\requirements.txt" "mcp<2"
 if errorlevel 1 (
     echo ERROR: pip install failed. See output above.
     exit /b 1
