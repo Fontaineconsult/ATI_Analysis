@@ -10,7 +10,8 @@ humans:
     python -m app.database.cypher_runner.mcp --check-db    # also verify Neo4j connectivity
     python -m app.database.cypher_runner.mcp               # run the server (stdio)
 
-Dependencies: mcp, neo4j, pyyaml  ( pip install "mcp[cli]" neo4j pyyaml )
+Dependencies: mcp (<2 — SDK 2.0 removed mcp.server.fastmcp), neo4j, pyyaml
+( pip install "mcp[cli]<2" neo4j pyyaml )
 """
 
 import argparse
@@ -26,7 +27,8 @@ def _require_fastmcp():
     try:
         from mcp.server.fastmcp import FastMCP
     except ImportError:
-        sys.exit('Missing dependency: mcp  ->  pip install "mcp[cli]"')
+        sys.exit('Missing dependency or wrong major version: mcp  ->  '
+                 'pip install "mcp[cli]<2"  (SDK 2.0 removed mcp.server.fastmcp)')
     return FastMCP
 
 
