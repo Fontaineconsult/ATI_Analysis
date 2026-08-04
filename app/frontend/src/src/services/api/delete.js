@@ -121,35 +121,15 @@ export const deleteGovernance = async (governanceType, uniqueId) => {
     }
 };
 
-/**
- * Unassign a person as implementor from a Year Success Evidence
- * @param {string} personUniqueId - The unique ID of the person
- * @param {string} yearSuccessEvidence - The YSE identifier
- * @returns {Promise<Object>} Response object
- */
-export const unassignPersonAsImplementor = async (personUniqueId, yearSuccessEvidence) => {
+// Delete a community; membership edges go with it, members are untouched.
+export const deleteCommunity = async (uniqueId) => {
     try {
-        const response = await fetch(`${API_URL}/implementations`, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                action: 'unassign_person_as_implementor',
-                unique_id: personUniqueId,
-                year_success_evidence: yearSuccessEvidence,
-            }),
-        });
-
+        const response = await fetch(`${API_URL}/communities/${uniqueId}`, { method: 'DELETE' });
         const data = await response.json();
-
-        if (!response.ok) {
-            throw new Error(data.error || 'Failed to unassign person');
-        }
-
+        if (!response.ok) throw new Error(data.error || 'Failed to delete community');
         return data;
     } catch (error) {
-        console.error('Error unassigning person:', error);
+        console.error('Error deleting community:', error);
         throw error;
     }
 };

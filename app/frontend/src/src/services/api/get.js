@@ -132,6 +132,34 @@ export const fetchAllIndividuals = async () => {
     }
 }
 
+// Communities of practice — list carries member_count + campuses represented.
+export const fetchAllCommunities = async () => {
+    try {
+        const response = await axios.get(`${process.env.REACT_APP_API_URL}/communities`);
+        if (response.status === 200) {
+            return response.data;
+        }
+        throw new Error(`Failed to fetch communities: ${response.data?.error}`);
+    } catch (error) {
+        console.error('Error fetching communities:', error.message);
+        throw error;
+    }
+};
+
+// One community with its member roster (campus + membership note per member).
+export const fetchCommunity = async (uniqueId) => {
+    try {
+        const response = await axios.get(`${process.env.REACT_APP_API_URL}/communities/${uniqueId}`);
+        if (response.status === 200) {
+            return response.data;
+        }
+        throw new Error(`Failed to fetch community: ${response.data?.error}`);
+    } catch (error) {
+        console.error('Error fetching community:', error.message);
+        throw error;
+    }
+};
+
 export const fetchPersonImplementationDetails = async (employeeId) => {
     try {
         const response = await axios.get(`${process.env.REACT_APP_API_URL}/individuals`, {

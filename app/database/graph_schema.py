@@ -556,6 +556,12 @@ class ParticipationRel(StructuredRel):
     added_date = DateProperty()
 
 
+class CommunityMembershipRel(StructuredRel):
+    """A person's membership in a community of practice."""
+    note = StringProperty()             # optional: the person's stake in the area
+    added_date = DateProperty()
+
+
 def serialize_role_holdings(person):
     """Project a Person's holds_role edges → [{handle, name, in_position_description, pd_description}]."""
     rows = []
@@ -566,6 +572,19 @@ def serialize_role_holdings(person):
             "name": role.name,
             "in_position_description": rel.in_position_description if rel else False,
             "pd_description": rel.pd_description if rel else None,
+        })
+    return rows
+
+
+def serialize_community_memberships(person):
+    """Project a Person's in_communities edges → [{unique_id, name, note}]."""
+    rows = []
+    for community in person.in_communities.all():
+        rel = person.in_communities.relationship(community)
+        rows.append({
+            "unique_id": community.unique_id,
+            "name": community.name,
+            "note": rel.note if rel else None,
         })
     return rows
 
@@ -1026,7 +1045,7 @@ class Procedure(StructuredNode):
     # Retirement lifecycle: an implementation that is no longer in use. Historical
     # evidence links remain valid; UIs badge and (by default) hide retired items.
     retired = BooleanProperty(default=False)
-    retired_date = DatePr[operty()
+    retired_date = DateProperty()
     retired_note = StringProperty()
 
     procedure_markdown = StringProperty()
@@ -1618,6 +1637,36 @@ class Role(StructuredNode):
         }
 
 
+class CommunityOfPractice(StructuredNode):
+    """
+    A cross-campus grouping of people around a shared functional area or interest —
+    Library, Faculty Development, Disability Services, and so on. Complementary to the
+    existing people-grouping mechanisms and deliberately none of them: not an
+    ATIWorkingGroup (the three structural ATI pillars with workplans), not a Role
+    (a capacity someone provides), and not an OrgUnit (a campus-specific employer).
+
+    Campus-agnostic by design: one node per area, members from any campus. A campus
+    breakdown of a community emerges from its members' works_at_campus edges rather
+    than from an edge on the community itself. Freely creatable data (like Person or
+    Department), not a seeded vocabulary — the unique index on name is the dedupe
+    backstop.
+    """
+    unique_id = UniqueIdProperty()
+
+    name = StringProperty(unique_index=True, required=True)
+    description = StringProperty()
+
+    # Reverse of Person.in_communities; the membership edge carries an optional note.
+    members = RelationshipFrom("Person", "member_of_community", model=CommunityMembershipRel)
+
+    def serialize(self):
+        return {
+            "unique_id": self.unique_id,
+            "name": self.name,
+            "description": self.description,
+        }
+
+
 """
 Individuals
 
@@ -1658,6 +1707,7 @@ class Person(StructuredNode):
     implements_yse = RelationshipTo("YearSuccessEvidence", "implements")
     host_campus = RelationshipTo("Campus", "works_at_campus", cardinality=ZeroOrOne)
     holds_role = RelationshipTo("Role", "holds_role", model=RoleHoldingRel)  # capacities the person provides (PD tracking lives on the edge)
+    in_communities = RelationshipTo("CommunityOfPractice", "member_of_community", model=CommunityMembershipRel)  # cross-campus shared-interest groupings
     # Participatory "working team" edges to the four doing-implementations — the role
     # acted in is a property on the edge (ParticipationRel.role_handle); distinct from
     # owned_by (custodial). One shared rel-type "worked_on" across the four.
@@ -1681,6 +1731,7 @@ class Person(StructuredNode):
             "non_committee_member_active": self.non_committee_member_active,
             "host_campus": host_campus_node.abbreviation if host_campus_node else None,
             "roles": serialize_role_holdings(self),
+            "communities": serialize_community_memberships(self),
         }
 
 

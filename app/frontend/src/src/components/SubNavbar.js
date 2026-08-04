@@ -37,7 +37,7 @@ function SubNavbar() {
         subNavItems = [
             { label: 'Implementations', path: `${campusPrefix}/ati-explorer/implementations`, base: `${campusPrefix}/ati-explorer/implementations` },
             { label: 'Plans', path: `${campusPrefix}/ati-explorer/plans`, base: `${campusPrefix}/ati-explorer/plans` },
-            { label: 'People', path: `${campusPrefix}/ati-explorer/people` },
+            { label: 'People', path: `${campusPrefix}/ati-explorer/people`, base: `${campusPrefix}/ati-explorer/people` },
             { label: 'Governance', path: `${campusPrefix}/ati-explorer/governance`, base: `${campusPrefix}/ati-explorer/governance` },
             { label: 'Assets', path: `${campusPrefix}/ati-explorer/assets`, base: `${campusPrefix}/ati-explorer/assets` },
         ];

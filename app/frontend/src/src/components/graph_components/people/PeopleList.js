@@ -1,6 +1,8 @@
 import React, { useMemo, useState } from 'react';
 import {
     Box,
+    Button,
+    HStack,
     Input,
     InputGroup,
     InputLeftElement,
@@ -8,9 +10,13 @@ import {
     ListItem,
     Text,
     VStack,
+    Wrap,
+    WrapItem,
 } from '@chakra-ui/react';
-import { SearchIcon } from '@chakra-ui/icons';
+import { AddIcon, SearchIcon } from '@chakra-ui/icons';
 import useListboxNavigation from '../../../hooks/useListboxNavigation';
+import { personWorkingGroups } from './peopleConfig';
+import { WorkingGroupBadge, NoWorkingGroupBadge } from './PersonBadges';
 
 /**
  * Generic selectable people list. Caller supplies the people array and a
@@ -23,10 +29,11 @@ import useListboxNavigation from '../../../hooks/useListboxNavigation';
  *                     host_campus are rendered if present).
  *   selectedId        unique_id of the currently selected person, or null.
  *   onSelect(person)  Called with the full person object when a row is clicked.
+ *   onAdd()           Optional. Renders the canon Add button beside the search.
  *   emptyMessage      Optional override; default "No people to show."
  *   showSearch        Defaults to true. Renders an in-list name/title filter.
  */
-function PeopleList({ people = [], selectedId, onSelect, emptyMessage = 'No people to show.', showSearch = true }) {
+function PeopleList({ people = [], selectedId, onSelect, onAdd, emptyMessage = 'No people to show.', showSearch = true }) {
     const [query, setQuery] = useState('');
 
     const filtered = useMemo(() => {
@@ -45,18 +52,10 @@ function PeopleList({ people = [], selectedId, onSelect, emptyMessage = 'No peop
         onActivate: (i) => onSelect && onSelect(filtered[i]),
     });
 
-    if (!people || people.length === 0) {
-        return (
-            <Box p={4} color="gray.600" fontSize="sm" fontStyle="italic">
-                {emptyMessage}
-            </Box>
-        );
-    }
-
-    return (
-        <VStack align="stretch" spacing={2} h="100%">
+    const header = (showSearch || onAdd) && (
+        <HStack spacing={2}>
             {showSearch && (
-                <InputGroup size="sm">
+                <InputGroup size="sm" flex="1">
                     <InputLeftElement pointerEvents="none">
                         <SearchIcon color="gray.600" />
                     </InputLeftElement>
@@ -69,6 +68,35 @@ function PeopleList({ people = [], selectedId, onSelect, emptyMessage = 'No peop
                     />
                 </InputGroup>
             )}
+            {onAdd && (
+                <Button
+                    size="sm"
+                    colorScheme="teal"
+                    variant="outline"
+                    leftIcon={<AddIcon boxSize={2.5} />}
+                    onClick={onAdd}
+                    flexShrink={0}
+                >
+                    Add
+                </Button>
+            )}
+        </HStack>
+    );
+
+    if (!people || people.length === 0) {
+        return (
+            <VStack align="stretch" spacing={2}>
+                {header}
+                <Box p={4} color="gray.600" fontSize="sm" fontStyle="italic">
+                    {emptyMessage}
+                </Box>
+            </VStack>
+        );
+    }
+
+    return (
+        <VStack align="stretch" spacing={2} h="100%">
+            {header}
 
             {/* Scroll container needs no tabIndex of its own — the listbox options
                 inside are focusable (roving tabindex), which satisfies keyboard
@@ -87,6 +115,7 @@ function PeopleList({ people = [], selectedId, onSelect, emptyMessage = 'No peop
                       aria-label={filtered.length > 0 ? 'People' : undefined}>
                     {filtered.map((person, index) => {
                         const isSelected = person.unique_id === selectedId;
+                        const workingGroups = personWorkingGroups(person);
                         return (
                             <ListItem
                                 key={person.unique_id}
@@ -113,11 +142,25 @@ function PeopleList({ people = [], selectedId, onSelect, emptyMessage = 'No peop
                                         {person.title}
                                     </Text>
                                 )}
-                                {person.host_campus && (
-                                    <Text fontSize="2xs" color="teal.600" textTransform="uppercase" fontWeight="bold">
-                                        {person.host_campus}
-                                    </Text>
-                                )}
+                                <HStack spacing={2} mt={0.5} align="center">
+                                    {person.host_campus && (
+                                        <Text fontSize="2xs" color="teal.600" textTransform="uppercase" fontWeight="bold">
+                                            {person.host_campus}
+                                        </Text>
+                                    )}
+                                    <Wrap spacing={1}>
+                                        {workingGroups.map((wg) => (
+                                            <WrapItem key={wg}>
+                                                <WorkingGroupBadge name={wg} size="sm" abbreviated />
+                                            </WrapItem>
+                                        ))}
+                                        {workingGroups.length === 0 && (
+                                            <WrapItem>
+                                                <NoWorkingGroupBadge />
+                                            </WrapItem>
+                                        )}
+                                    </Wrap>
+                                </HStack>
                             </ListItem>
                         );
                     })}

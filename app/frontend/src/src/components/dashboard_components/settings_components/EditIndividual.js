@@ -16,13 +16,12 @@ import {
     VStack,
     useToast,
     CheckboxGroup,
-    HStack,
     Divider
 } from '@chakra-ui/react';
 import { updateIndividual } from '../../../services/api/put';
 import { createIndividual } from '../../../services/api/post';
 import { useSettings } from '../../../context/SettingsContext';
-import { WORKING_GROUP_LIST } from '../../../styles/workingGroupIdentity';
+import { WORKING_GROUPS, WORKING_GROUP_ORDER } from '../../graph_components/people/peopleConfig';
 
 const EditIndividual = ({ isOpen, onClose, individualData, onSave }) => {
     const [formData, setFormData] = useState({
@@ -294,17 +293,20 @@ const EditIndividual = ({ isOpen, onClose, individualData, onSave }) => {
                                 Working Groups
                             </FormLabel>
                             <VStack align="start" spacing={2}>
-                                {WORKING_GROUP_LIST.map((w) => (
-                                    <Checkbox
-                                        key={w.slug}
-                                        size="sm"
-                                        colorScheme="teal"
-                                        isChecked={formData.workingGroups?.some((wg) => wg.name === w.name)}
-                                        onChange={(e) => handleWorkingGroupChange(w.name, e.target.checked)}
-                                    >
-                                        {w.name}
-                                    </Checkbox>
-                                ))}
+                                {WORKING_GROUP_ORDER.map((key) => {
+                                    const wg = WORKING_GROUPS[key];
+                                    return (
+                                        <Checkbox
+                                            key={wg.key}
+                                            size="sm"
+                                            colorScheme="teal"
+                                            isChecked={formData.workingGroups?.some((w) => w.name === wg.name)}
+                                            onChange={(e) => handleWorkingGroupChange(wg.name, e.target.checked)}
+                                        >
+                                            {wg.name}
+                                        </Checkbox>
+                                    );
+                                })}
                             </VStack>
                         </CheckboxGroup>
                     </VStack>

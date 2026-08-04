@@ -16,6 +16,7 @@ import {
 import { AddIcon, CloseIcon } from '@chakra-ui/icons';
 import { fetchAllRoles } from '../../../services/api/get';
 import { setPersonRoleHoldings } from '../../../services/api/put';
+import { NotInPdBadge } from './PersonBadges';
 
 /**
  * The person's TOTAL roles — every role they HOLD or have PARTICIPATED in (via the
@@ -141,12 +142,7 @@ function RoleHoldingsEditor({ employeeId, roles = [], participatedRoleHandles = 
                                                 × {r.work_count} work{r.work_count === 1 ? '' : 's'}
                                             </Badge>
                                         )}
-                                        {doingNotInPd && (
-                                            <Badge colorScheme="orange" variant="subtle" fontSize="2xs"
-                                                   title="Does this role but it is not in their position description — invisible accessibility labor">
-                                                ⚠ not in PD
-                                            </Badge>
-                                        )}
+                                        {doingNotInPd && <NotInPdBadge size="sm" />}
                                     </HStack>
                                     <HStack spacing={3} flexShrink={0}>
                                         <HStack spacing={1}>

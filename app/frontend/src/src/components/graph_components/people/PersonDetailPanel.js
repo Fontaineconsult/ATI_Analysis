@@ -11,19 +11,22 @@ import {
     Wrap,
     WrapItem,
 } from '@chakra-ui/react';
-import { useSettings } from '../../../context/SettingsContext';
+import { useData } from '../../../hooks/useData';
 import Card from '../common/Card';
+import Section from '../common/Section';
 import PersonHeader from './PersonHeader';
 import PersonYseList from './PersonYseList';
 import RoleHoldingsEditor from './RoleHoldingsEditor';
 import YseAssignmentSelector from '../../functional_components/YseAssignmentSelector';
+import { personCommunities } from './peopleConfig';
+// Participation types ARE implementation types — reuse that domain's color map.
 import { typeColor } from '../implementation/implementationConfig';
 
 /**
  * Right-column composition for the People Explorer.
  *
  * Composes:
- *   - PersonHeader            — identity + working groups + approver + campus
+ *   - PersonHeader            — identity + working groups + approver + campus + Edit
  *   - Roles                   — RoleHoldingsEditor (held + worked, PD coverage)
  *   - Working Team            — the Process/Project/Procedure/Service nodes the
  *                               person is a participant of (worked_on edges)
@@ -34,10 +37,13 @@ import { typeColor } from '../implementation/implementationConfig';
  * Props:
  *   person       Rich detail from get_person_implementation_details.
  *   onChange()   Async; called after any assign/unassign so the container refetches.
+ *   onEdit()     Optional; opens the PersonForm edit modal (rendered by the container).
  *   placeholder  Optional ReactNode shown when no person is selected.
  */
-function PersonDetailPanel({ person, onChange, placeholder }) {
-    const { selectedYear } = useSettings();
+function PersonDetailPanel({ person, onChange, onEdit, placeholder }) {
+    // The active academic year lives on DataContext (it drives all year-scoped
+    // data loading) — SettingsContext has no selectedYear.
+    const { selectedYear } = useData();
     const [assignOpen, setAssignOpen] = useState(false);
 
     if (!person) {
@@ -73,7 +79,7 @@ function PersonDetailPanel({ person, onChange, placeholder }) {
 
     return (
         <VStack align="stretch" spacing={4}>
-            <PersonHeader person={person} />
+            <PersonHeader person={person} onEdit={onEdit} />
 
             <Card title="Roles" action={<Text fontSize="2xs" color="gray.600">held + worked · PD coverage</Text>}>
                 <RoleHoldingsEditor
@@ -86,7 +92,7 @@ function PersonDetailPanel({ person, onChange, placeholder }) {
 
             {/* Working Team — implementations the person is a participant of (worked_on) */}
             {participations.length > 0 && (
-                <Card title={`Working Team (${participations.length})`}>
+                <Section title={`Working Team (${participations.length})`}>
                     <VStack align="stretch" spacing={1}>
                         {participations.map((pt) => (
                             <HStack
@@ -106,7 +112,7 @@ function PersonDetailPanel({ person, onChange, placeholder }) {
                             </HStack>
                         ))}
                     </VStack>
-                </Card>
+                </Section>
             )}
 
             <Card
@@ -116,9 +122,27 @@ function PersonDetailPanel({ person, onChange, placeholder }) {
                 <PersonYseList yses={yses} personEmployeeId={person.employee_id} onChange={onChange} />
             </Card>
 
+            {/* Communities of practice — read-only here; membership is managed on
+                the Communities tab (or via the MCP set_communities action). */}
+            {personCommunities(person).length > 0 && (
+                <Section title="Communities of Practice">
+                    <VStack align="stretch" spacing={1}>
+                        {personCommunities(person).map((c) => (
+                            <HStack key={c.unique_id} spacing={2} px={2} py={1.5}
+                                    borderWidth="1px" borderColor="gray.200" borderRadius="md" align="start">
+                                <Badge colorScheme="teal" variant="subtle" fontSize="2xs" flexShrink={0}>
+                                    {c.name}
+                                </Badge>
+                                {c.note && <Text fontSize="xs" color="gray.600" minW={0}>{c.note}</Text>}
+                            </HStack>
+                        ))}
+                    </VStack>
+                </Section>
+            )}
+
             {/* Employed By — org units (Department / College) that employ the person */}
             {employers.length > 0 && (
-                <Card title="Employed By">
+                <Section title="Employed By">
                     <Wrap spacing={2}>
                         {employers.map((e, i) => (
                             <WrapItem key={`${e.name}-${i}`}>
@@ -128,7 +152,7 @@ function PersonDetailPanel({ person, onChange, placeholder }) {
                             </WrapItem>
                         ))}
                     </Wrap>
-                </Card>
+                </Section>
             )}
 
             <Card

@@ -28,6 +28,7 @@ const ROUTES = [
     { name: 'explorer: implementations', path: p('/ati-explorer/implementations') },
     { name: 'explorer: plans', path: p('/ati-explorer/plans') },
     { name: 'explorer: people', path: p('/ati-explorer/people') },
+    { name: 'explorer: people communities tab', path: p('/ati-explorer/people/communities') },
     { name: 'explorer: governance', path: p('/ati-explorer/governance') },
     { name: 'explorer: principles', path: p('/ati-explorer/principles') },
     { name: 'explorer: assets', path: p('/ati-explorer/assets') },

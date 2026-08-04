@@ -20,8 +20,8 @@ import { useTable } from 'react-table';
 import { DataContext } from '../../../context/DataContext';
 import { UserContext } from '../../../context/UserContext';
 import { updateIndividual } from '../../../services/api/put';
+import { WORKING_GROUPS } from '../../graph_components/people/peopleConfig';
 import EditIndividual from './EditIndividual';
-import { WORKING_GROUP_LIST, CODE_TO_NAME } from '../../../styles/workingGroupIdentity';
 
 // Memoized Table Component
 const MembersTable = React.memo(({ columns, data }) => {
@@ -133,9 +133,9 @@ function Members() {
                 );
 
                 updatedIndividual = { ...individual, [key]: newValue };
-            } else if (CODE_TO_NAME[key]) {
-                // For working groups — `key` is the WG code (web/ins/pro) from the column id.
-                const workingGroupName = CODE_TO_NAME[key];
+            } else if (key === 'web' || key === 'ins' || key === 'pro') {
+                // For working groups
+                const workingGroupName = WORKING_GROUPS[key]?.name || key;
                 const isMember = individual.workingGroups?.some((wg) => wg.name === workingGroupName);
 
                 let updatedWorkingGroups;
@@ -260,22 +260,49 @@ function Members() {
                     />
                 ),
             },
-            // One membership-checkbox column per dashboard working group, derived from the SSOT
-            // (short header, code id, name-based membership).
-            ...WORKING_GROUP_LIST.map((w) => ({
-                Header: w.shortLabel,
-                accessor: (row) => row.workingGroups?.some((wg) => wg.name === w.name),
-                id: w.code,
+            {
+                Header: 'Web',
+                accessor: (row) => row.workingGroups?.some((wg) => wg.name === 'Web'),
+                id: 'web',
                 Cell: ({ row: { original } }) => (
                     <Checkbox
                         size="sm"
                         colorScheme="teal"
-                        isChecked={original.workingGroups?.some((wg) => wg.name === w.name)}
-                        onChange={() => handleCheckboxChange(original, w.code)}
-                        aria-label={`${w.name} working group — ${original.name}`}
+                        isChecked={original.workingGroups?.some((wg) => wg.name === 'Web')}
+                        onChange={() => handleCheckboxChange(original, 'web')}
+                        aria-label={`Web working group — ${original.name}`}
                     />
                 ),
-            })),
+            },
+            {
+                Header: 'Ins',
+                accessor: (row) =>
+                    row.workingGroups?.some((wg) => wg.name === 'Instructional Materials'),
+                id: 'ins',
+                Cell: ({ row: { original } }) => (
+                    <Checkbox
+                        size="sm"
+                        colorScheme="teal"
+                        isChecked={original.workingGroups?.some((wg) => wg.name === 'Instructional Materials')}
+                        onChange={() => handleCheckboxChange(original, 'ins')}
+                        aria-label={`Instructional Materials working group — ${original.name}`}
+                    />
+                ),
+            },
+            {
+                Header: 'Pro',
+                accessor: (row) => row.workingGroups?.some((wg) => wg.name === 'Procurement'),
+                id: 'pro',
+                Cell: ({ row: { original } }) => (
+                    <Checkbox
+                        size="sm"
+                        colorScheme="teal"
+                        isChecked={original.workingGroups?.some((wg) => wg.name === 'Procurement')}
+                        onChange={() => handleCheckboxChange(original, 'pro')}
+                        aria-label={`Procurement working group — ${original.name}`}
+                    />
+                ),
+            },
             {
                 Header: 'Approver',
                 accessor: 'can_approve_yse',

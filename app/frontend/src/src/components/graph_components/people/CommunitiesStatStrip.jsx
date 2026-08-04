@@ -35,23 +35,20 @@ function StatCard({ label, value, help, accent, numberColor, active, clickable, 
 }
 
 /**
- * Diagnostic strip for the People area (design-sense §3.2). Counts come from
- * summarizePeople in the container; the last three tiles double as roster
- * filters — clicking toggles activeFilter, the active tile shows a teal ring,
- * and the neutral tile clears. Filter state lives in PeopleMasterContainer so
- * the counts always agree with the list.
+ * Diagnostic strip for the Communities tab (design-sense §3.2). The empty-
+ * communities tile doubles as a list filter; the membership-coverage tiles are
+ * informational (people are managed on the People tab and per community below).
  *
- *   Active People       — every active person (neutral; clears the filter).
- *   Approvers           — can sign off YSEs (governance capacity).
- *   ⚠ No working group  — on no ATI working group (unaffiliated).
- *   ⚠ Role not in PD    — holds a role missing from their position
- *                         description (the invisible-labor signal).
+ *   Communities          — every community of practice (neutral; clears filter).
+ *   In a community       — active people belonging to at least one.
+ *   ⚠ Empty communities  — no members yet — click to filter.
+ *   ⚠ People in none     — active people in no community (coverage gap).
  */
-function PeopleStatStrip({
+function CommunitiesStatStrip({
     total = 0,
-    approvers = 0,
-    noWorkingGroup = 0,
-    roleNotInPd = 0,
+    peopleInCommunity = 0,
+    emptyCommunities = 0,
+    peopleInNone = 0,
     loading = false,
     activeFilter = 'all',
     onFilterChange,
@@ -69,44 +66,38 @@ function PeopleStatStrip({
     return (
         <HStack spacing={4} mb={4} align="stretch">
             <StatCard
-                label="Active People"
+                label="Communities"
                 value={v(total)}
-                help="active in the ATI"
+                help="cross-campus practice areas"
                 accent="teal.400"
                 clickable
                 onClick={clearFilter}
             />
             <StatCard
-                label="Approvers"
-                value={v(approvers)}
-                help="can sign off YSEs — click to filter"
+                label="In a community"
+                value={v(peopleInCommunity)}
+                help="active people in ≥ 1"
                 accent="purple.400"
-                clickable
-                active={activeFilter === 'approvers'}
-                onClick={() => toggleFilter('approvers')}
             />
             <StatCard
-                label="⚠ No working group"
-                value={v(noWorkingGroup)}
-                help="not on any committee — click to filter"
+                label="⚠ Empty communities"
+                value={v(emptyCommunities)}
+                help="no members yet — click to filter"
                 accent="orange.400"
-                numberColor={!loading && noWorkingGroup > 0 ? 'red.600' : undefined}
+                numberColor={!loading && emptyCommunities > 0 ? 'red.600' : undefined}
                 clickable
-                active={activeFilter === 'noWorkingGroup'}
-                onClick={() => toggleFilter('noWorkingGroup')}
+                active={activeFilter === 'empty'}
+                onClick={() => toggleFilter('empty')}
             />
             <StatCard
-                label="⚠ Role not in PD"
-                value={v(roleNotInPd)}
-                help="invisible labor — click to filter"
+                label="⚠ People in none"
+                value={v(peopleInNone)}
+                help="active people unaffiliated"
                 accent="red.500"
-                numberColor={!loading && roleNotInPd > 0 ? 'red.600' : undefined}
-                clickable
-                active={activeFilter === 'roleNotInPd'}
-                onClick={() => toggleFilter('roleNotInPd')}
+                numberColor={!loading && peopleInNone > 0 ? 'red.600' : undefined}
             />
         </HStack>
     );
 }
 
-export default PeopleStatStrip;
+export default CommunitiesStatStrip;

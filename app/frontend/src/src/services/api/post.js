@@ -252,6 +252,21 @@ export const createIndividual = async (formData) => {
     }
 }
 
+// Create a CommunityOfPractice. name required (unique); description optional.
+export const createCommunity = async ({ name, description }) => {
+    try {
+        const response = await axios.post(`${process.env.REACT_APP_API_URL}/communities`, {
+            action: 'create_community',
+            name,
+            description,
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error creating community:', error);
+        throw error;
+    }
+};
+
 export const createPlan = async (formData) => {
     try {
         const response = await axios.post(`${process.env.REACT_APP_API_URL}/implementations/plans`, createPlanPayload(formData));

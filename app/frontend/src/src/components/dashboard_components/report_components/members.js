@@ -13,12 +13,7 @@ import {
 } from '@chakra-ui/react';
 import { DataContext } from '../../../context/DataContext';
 import {UserContext} from "../../../context/UserContext";
-import { getWorkingGroupIdentity } from '../../../styles/workingGroupIdentity';
-
-// Page-specific compact abbreviations for the roster's dense WG column, keyed by SSOT code.
-// These differ from the SSOT's shortLabel ('Ins'/'Pro'), so they stay local; identity
-// resolution (name/slug -> code) still comes from the SSOT.
-const ROSTER_WG_ABBREV = { web: 'Web', ins: 'Ins. M', pro: 'Proc' };
+import { getWorkingGroupAbbrev } from '../../graph_components/people/peopleConfig';
 
 function Members() {
     const { data, loading } = useContext(DataContext);
@@ -76,14 +71,7 @@ function Members() {
                                     </Td>
                                     <Td   px={2}  color="gray.600" fontSize="xs">
                                         {member.workingGroups
-                                            ?.map((group) => {
-                                                // Handle both string and object formats
-                                                const groupName = typeof group === 'string' ? group : group.name;
-                                                // Resolve identity (name OR slug) via the SSOT, then apply the
-                                                // roster's bespoke abbrev; unknown groups fall back to their name.
-                                                const { code } = getWorkingGroupIdentity(groupName);
-                                                return ROSTER_WG_ABBREV[code] || groupName;
-                                            })
+                                            ?.map((group) => getWorkingGroupAbbrev(typeof group === 'string' ? group : group.name))
                                             .join(', ') || 'None assigned'}
                                     </Td>
                                 </Tr>
