@@ -8,10 +8,12 @@ membership edges are managed on the individuals endpoint (PUT set_communities),
 mirroring how role holdings work; this endpoint owns the community nodes themselves.
 
 URL surface (mounted at /ati/data-api/v1):
-    GET    /communities               list (member counts + campuses represented)
-    GET    /communities/<unique_id>   one community with its member roster
+    GET    /communities               list (member counts + campuses + stake counts)
+    GET    /communities/<unique_id>   one community with its member roster + indicator stakes
     POST   /communities               {action: create_community, name, description?}
     PUT    /communities/<unique_id>   {action: update_community, name?, description?}
+                                      {action: add_stake, composite_key, note?}
+                                      {action: remove_stake, composite_key}
     DELETE /communities/<unique_id>   delete (membership edges only; people untouched)
 """
 import traceback
@@ -22,7 +24,11 @@ from flask.views import MethodView
 from app.database.queries.communities.create import create_community
 from app.database.queries.communities.delete import delete_community
 from app.database.queries.communities.read import get_all_communities, get_community
-from app.database.queries.communities.update import update_community
+from app.database.queries.communities.update import (
+    add_community_stake,
+    remove_community_stake,
+    update_community,
+)
 from app.endpoints.data_api.errors.custom_exceptions import CrudError, NotFoundError, ValidationError
 
 from . import data_api_endpoints
@@ -71,6 +77,22 @@ class CommunitiesAPI(MethodView):
                     raise ValidationError("Missing community unique_id in the URL.")
                 community = update_community(unique_id, data)
                 return make_response(status="success", data={"community": community.serialize()}), 200
+
+            if data.get("action") == "add_stake":
+                if not unique_id:
+                    raise ValidationError("Missing community unique_id in the URL.")
+                if not data.get("composite_key"):
+                    raise ValidationError("add_stake requires a composite_key.")
+                add_community_stake(unique_id, data["composite_key"], data.get("note"))
+                return make_response(status="success", data={"community": get_community(unique_id)}), 200
+
+            if data.get("action") == "remove_stake":
+                if not unique_id:
+                    raise ValidationError("Missing community unique_id in the URL.")
+                if not data.get("composite_key"):
+                    raise ValidationError("remove_stake requires a composite_key.")
+                remove_community_stake(unique_id, data["composite_key"])
+                return make_response(status="success", data={"community": get_community(unique_id)}), 200
 
             raise ValidationError(f"Unknown action {data.get('action')!r}.")
         except ValidationError as e:

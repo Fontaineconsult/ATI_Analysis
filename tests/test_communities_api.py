@@ -124,6 +124,76 @@ def test_communities_endpoint_crud(flask_client, cleanup_communities):
     assert flask_client.get(f"/ati/data-api/v1/communities/{community_id}").status_code == 404
 
 
+def test_community_stakes_round_trip(cleanup_communities):
+    """add_community_stake -> read-back -> idempotent re-add -> remove.
+
+    Uses a real SuccessIndicator (shared reference data, never modified) as the
+    stake target; the sentinel community and its edges are cleaned up by fixture.
+    """
+    from app.database.graph_schema import SuccessIndicator
+    from app.database.queries.communities.create import create_community
+    from app.database.queries.communities.read import get_all_communities, get_community
+    from app.database.queries.communities.update import add_community_stake, remove_community_stake
+    from app.endpoints.data_api.errors.custom_exceptions import NotFoundError
+
+    si = SuccessIndicator.nodes.filter(removed=False).first()
+    community = create_community({"name": COMMUNITY_NAME})
+
+    add_community_stake(community.unique_id, si.composite_key, note="test stake")
+    detail = get_community(community.unique_id)
+    assert [s["composite_key"] for s in detail["stakes"]] == [si.composite_key]
+    assert detail["stakes"][0]["note"] == "test stake"
+
+    # Idempotent re-add: still exactly one stake; note untouched when not provided.
+    add_community_stake(community.unique_id, si.composite_key)
+    detail = get_community(community.unique_id)
+    assert len(detail["stakes"]) == 1
+    assert detail["stakes"][0]["note"] == "test stake"
+
+    # The list view counts it.
+    mine = [c for c in get_all_communities() if c["unique_id"] == community.unique_id]
+    assert mine and mine[0]["stake_count"] == 1
+
+    with pytest.raises(NotFoundError):
+        add_community_stake(community.unique_id, "no-such-key")
+    with pytest.raises(NotFoundError):
+        add_community_stake("no-such-community", si.composite_key)
+
+    remove_community_stake(community.unique_id, si.composite_key)
+    assert get_community(community.unique_id)["stakes"] == []
+    # Removing an absent edge is a no-op.
+    remove_community_stake(community.unique_id, si.composite_key)
+
+
+def test_communities_stake_endpoint_actions(flask_client, cleanup_communities):
+    from app.database.graph_schema import SuccessIndicator
+    from app.database.queries.communities.create import create_community
+
+    si = SuccessIndicator.nodes.filter(removed=False).first()
+    community = create_community({"name": COMMUNITY_NAME})
+
+    added = flask_client.put(f"/ati/data-api/v1/communities/{community.unique_id}", json={
+        "action": "add_stake",
+        "composite_key": si.composite_key,
+        "note": "endpoint stake",
+    })
+    assert added.status_code == 200
+    stakes = added.get_json()["data"]["community"]["stakes"]
+    assert [s["composite_key"] for s in stakes] == [si.composite_key]
+
+    missing_key = flask_client.put(f"/ati/data-api/v1/communities/{community.unique_id}", json={
+        "action": "add_stake",
+    })
+    assert missing_key.status_code == 400
+
+    removed = flask_client.put(f"/ati/data-api/v1/communities/{community.unique_id}", json={
+        "action": "remove_stake",
+        "composite_key": si.composite_key,
+    })
+    assert removed.status_code == 200
+    assert removed.get_json()["data"]["community"]["stakes"] == []
+
+
 def test_individuals_set_communities_action(flask_client, test_person):
     from app.database.queries.communities.create import create_community
 

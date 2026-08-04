@@ -15,9 +15,11 @@ import {
     WrapItem,
 } from '@chakra-ui/react';
 import { DeleteIcon, EditIcon } from '@chakra-ui/icons';
+import { Input, Select } from '@chakra-ui/react';
 import { UserContext } from '../../../context/UserContext';
+import { DataContext } from '../../../context/DataContext';
 import { fetchCommunity } from '../../../services/api/get';
-import { setPersonCommunities } from '../../../services/api/put';
+import { addCommunityStake, removeCommunityStake, setPersonCommunities } from '../../../services/api/put';
 import { deleteCommunity } from '../../../services/api/delete';
 import Card from '../common/Card';
 import Section from '../common/Section';
@@ -44,10 +46,14 @@ import { personCommunities } from './peopleConfig';
  */
 function CommunityDetailPanel({ communityId, onAfterChange, onEdit, onDeleted }) {
     const { individuals, refreshAllIndividuals } = useContext(UserContext);
+    const { data } = useContext(DataContext);
     const [detail, setDetail] = useState(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [deleting, setDeleting] = useState(false);
+    const [stakeKey, setStakeKey] = useState('');
+    const [stakeNote, setStakeNote] = useState('');
+    const [stakeSaving, setStakeSaving] = useState(false);
     const toast = useToast();
 
     const loadDetail = useCallback(async () => {
@@ -105,6 +111,59 @@ function CommunityDetailPanel({ communityId, onAfterChange, onEdit, onDeleted })
         await Promise.all([loadDetail(), refreshAllIndividuals()]);
         if (onAfterChange) await onAfterChange();
     }, [loadDetail, refreshAllIndividuals, onAfterChange]);
+
+    // Indicator stakes (has_stake_in). The picker is fed from the indicators payload
+    // already in DataContext (WG -> goals -> SIs), flattened to composite_key + text;
+    // already-staked indicators are excluded from the options.
+    const stakes = useMemo(() => (Array.isArray(detail?.stakes) ? detail.stakes : []), [detail]);
+    const indicatorOptions = useMemo(() => {
+        const staked = new Set(stakes.map((s) => s.composite_key));
+        const flat = [];
+        (Array.isArray(data?.indicators) ? data.indicators : []).forEach((wg) => {
+            (wg.goals || []).forEach((goal) => {
+                (goal.successIndicators || []).forEach((si) => {
+                    if (si?.composite_key && !staked.has(si.composite_key)) {
+                        flat.push({ key: si.composite_key, text: si.success_indicator || '' });
+                    }
+                });
+            });
+        });
+        return flat.sort((a, b) => a.key.localeCompare(b.key, undefined, { numeric: true }));
+    }, [data, stakes]);
+
+    const handleAddStake = useCallback(async () => {
+        if (!stakeKey) return;
+        setStakeSaving(true);
+        try {
+            await addCommunityStake(communityId, stakeKey, stakeNote || null);
+            setStakeKey('');
+            setStakeNote('');
+            await loadDetail();
+            if (onAfterChange) await onAfterChange();
+        } catch (e) {
+            toast({
+                title: 'Failed to add stake.',
+                description: e?.response?.data?.error || e?.message,
+                status: 'error', duration: 3000, isClosable: true, position: 'top-right',
+            });
+        } finally {
+            setStakeSaving(false);
+        }
+    }, [communityId, stakeKey, stakeNote, loadDetail, onAfterChange, toast]);
+
+    const handleRemoveStake = useCallback(async (compositeKey) => {
+        try {
+            await removeCommunityStake(communityId, compositeKey);
+            await loadDetail();
+            if (onAfterChange) await onAfterChange();
+        } catch (e) {
+            toast({
+                title: 'Failed to remove stake.',
+                description: e?.response?.data?.error || e?.message,
+                status: 'error', duration: 3000, isClosable: true, position: 'top-right',
+            });
+        }
+    }, [communityId, loadDetail, onAfterChange, toast]);
 
     const handleDelete = async () => {
         if (!detail) return;
@@ -230,6 +289,71 @@ function CommunityDetailPanel({ communityId, onAfterChange, onEdit, onDeleted })
                     placeholder="Select person to add"
                     assignLabel="Add member"
                 />
+            </Card>
+
+            <Card
+                title={`Indicator Stakes (${stakes.length})`}
+                action={<Text fontSize="2xs" color="gray.600">indicators this community's practice area has a stake in</Text>}
+            >
+                <VStack align="stretch" spacing={2}>
+                    {stakes.length === 0 && (
+                        <Text fontSize="xs" color="gray.600">
+                            No indicator stakes yet — link the success indicators this community's members are the stakeholders for.
+                        </Text>
+                    )}
+                    {stakes.map((s) => (
+                        <HStack key={s.composite_key} spacing={2} px={2} py={1.5}
+                                borderWidth="1px" borderColor="gray.200" borderRadius="md" align="start">
+                            <Badge colorScheme="purple" variant="subtle" flexShrink={0}>{s.composite_key}</Badge>
+                            <Box minW={0} flex="1">
+                                <Text fontSize="xs" color="gray.800" noOfLines={2}>{s.success_indicator}</Text>
+                                {s.note && <Text fontSize="2xs" color="gray.600">{s.note}</Text>}
+                            </Box>
+                            <Button
+                                size="xs"
+                                variant="ghost"
+                                colorScheme="red"
+                                aria-label={`Remove stake in ${s.composite_key}`}
+                                onClick={() => handleRemoveStake(s.composite_key)}
+                            >
+                                Remove
+                            </Button>
+                        </HStack>
+                    ))}
+                    <HStack spacing={2} pt={1} align="start">
+                        <Select
+                            size="sm"
+                            placeholder="Select indicator"
+                            value={stakeKey}
+                            onChange={(e) => setStakeKey(e.target.value)}
+                            aria-label="Success indicator to add as a stake"
+                            maxW="220px"
+                        >
+                            {indicatorOptions.map((o) => (
+                                <option key={o.key} value={o.key}>
+                                    {o.key} — {o.text.slice(0, 70)}
+                                </option>
+                            ))}
+                        </Select>
+                        <Input
+                            size="sm"
+                            placeholder="Why this stake (optional)"
+                            value={stakeNote}
+                            onChange={(e) => setStakeNote(e.target.value)}
+                            aria-label="Stake note"
+                        />
+                        <Button
+                            size="sm"
+                            colorScheme="teal"
+                            onClick={handleAddStake}
+                            isDisabled={!stakeKey}
+                            isLoading={stakeSaving}
+                            flexShrink={0}
+                        >
+                            Add stake
+                        </Button>
+                    </HStack>
+                </VStack>
             </Card>
 
             {membersWithNotes.length > 0 && (

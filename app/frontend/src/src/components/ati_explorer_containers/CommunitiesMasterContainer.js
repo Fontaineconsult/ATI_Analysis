@@ -120,6 +120,7 @@ function CommunitiesMasterContainer() {
                 peopleInCommunity={stats.peopleInCommunity}
                 emptyCommunities={stats.emptyCommunities}
                 peopleInNone={stats.peopleInNone}
+                totalStakes={stats.totalStakes}
                 loading={loading || !individuals}
                 activeFilter={activeFilter}
                 onFilterChange={setActiveFilter}

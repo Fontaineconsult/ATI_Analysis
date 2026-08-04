@@ -87,6 +87,8 @@ degraded version of the same node.
 | **Asset** | steward known | A thing whose accessibility must be MAINTAINED. Usually already exists (canvas-lms-<campus>); rarely created from a transcript. Same product can be Tool and Asset. |
 | **Interface** | never from transcript alone | 4-coordinate identity is a deliberate modeling act. Link existing interfaces (`remediates_interface`); don't mint new ones mid-ingest. |
 | **Metric** | artifact in hand | Only when the actual file/number set exists as a deliverable. Numbers spoken in passing ("862 courses", "mid-high 80s") are Note/description content. A promised export is a Plan. |
+| **CommunityOfPractice / member_of_community** | S1 self-identification or roster | "I sit with the alt-media folks" / a stated roster wires `(p)-[:member_of_community]->(c)`. Communities MERGE freely by name (grown data, unlike Roles) — but check `list_communities` first; near-miss names (e.g. "AV team" vs "Multimedia & Video Production") resolve to the existing node, not a new one. |
+| **has_stake_in** (community → SI) | S1/S2 subject-matter | Wire when the meeting's content shows a community's practice area owns the indicator's ground (its members describe doing/owning that work). One or two best SIs — don't spray a community across a family. |
 | **Accomplishment** | S1 + completed | A finished, claimable outcome. Rare in conversational sources. |
 | **StatusLevel changes** | never | Never move a YSE's `status_is` from source ingest. Status changes go through the admin-review workflow. |
 

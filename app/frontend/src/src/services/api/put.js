@@ -1149,6 +1149,35 @@ export const updateCommunity = async (uniqueId, data) => {
     }
 };
 
+// Add (or refresh the note on) a community's stake in a success indicator.
+export const addCommunityStake = async (uniqueId, compositeKey, note) => {
+    try {
+        const response = await axios.put(`${process.env.REACT_APP_API_URL}/communities/${uniqueId}`, {
+            action: 'add_stake',
+            composite_key: compositeKey,
+            note: note || null,
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error adding community stake:', error);
+        throw error;
+    }
+};
+
+// Remove a community's stake in a success indicator.
+export const removeCommunityStake = async (uniqueId, compositeKey) => {
+    try {
+        const response = await axios.put(`${process.env.REACT_APP_API_URL}/communities/${uniqueId}`, {
+            action: 'remove_stake',
+            composite_key: compositeKey,
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error removing community stake:', error);
+        throw error;
+    }
+};
+
 // Replace a person's community-of-practice memberships. Keyed on employee_id.
 // memberships: [{ community_id, note }]
 export const setPersonCommunities = async (employeeId, memberships) => {

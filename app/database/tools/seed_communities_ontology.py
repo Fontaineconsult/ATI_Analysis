@@ -61,6 +61,18 @@ RELATIONSHIPS = {
         "memberships are replaced as a set via the individuals endpoint "
         "(set_communities), mirroring role holdings.",
     ),
+    "has_stake_in": (
+        "Has Stake In",
+        "Connects a CommunityOfPractice to a SuccessIndicator its practice area holds a "
+        "stake in — the agentive link between the people-grouping layer and the "
+        "indicator framework: the community's members are that indicator's stakeholders, "
+        "the people to interview and collect evidence from. Deliberately SI-level "
+        "(campus- and year-agnostic, like the community itself); per-campus per-year "
+        "views derive via the indicator's YearSuccessEvidence (tracks), never via edges "
+        "here. The edge carries an optional note (why the stake) and the date added; "
+        "managed incrementally (add_stake / remove_stake on the communities endpoint), "
+        "mirroring how working-group plans prioritize indicators.",
+    ),
 }
 
 

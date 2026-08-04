@@ -24,8 +24,13 @@ Recon, in order:
 1. **Anchor**: campus abbrev, working group(s) the topic maps to, current
    AcademicYear (latest with WGPs). These pre-fill the guide header.
 2. **People**: the stakeholder's Person node (title, roles, worked_on,
-   implements) + that campus's WG leads roster. Note anyone whose name came
-   from a transcript with an as-heard flag — verify live.
+   implements, communities) + that campus's WG leads roster. Note anyone whose
+   name came from a transcript with an as-heard flag — verify live.
+   **Stakeholder communities**: for each target SI, pull the communities that
+   hold a stake in it and their member rosters —
+   `(si)<-[:has_stake_in]-(c:CommunityOfPractice)<-[:member_of_community]-(p)`
+   (registry: `community_detail`). Those members are the interview candidates;
+   list them on the guide so the interviewer knows who else works this ground.
 3. **Last contact**: most recent MeetingMinutes involving this stakeholder or
    campus/WG; extract the action-items note. Unfinished items are follow-ups —
    the interview's opening business.
@@ -72,7 +77,9 @@ transcript separates S1 from S2 naturally instead of interleaving them.
 
 1. **Frame + identity round** (2 min). State for the recording: date, campus,
    topic. Have every participant say their FULL NAME, title, and department —
-   ask for spellings on anything unusual. When a third party comes up later,
+   ask for spellings on anything unusual. Also ask which functional community
+   they sit with (library, alt media, faculty development, …) — it wires
+   `member_of_community` at ingest and pre-fills future guides. When a third party comes up later,
    ask "full name? what's their role?" the first time. (Calibration: "Timothy"
    cost a DB hunt; "Zach Autry" was a mis-hearing of Oshri; "Kristen Denver"
    is still flagged as-heard.)

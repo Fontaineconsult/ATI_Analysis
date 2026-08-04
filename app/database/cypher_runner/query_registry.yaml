@@ -439,3 +439,37 @@
     DELETE r
     MERGE (yse)-[:status_is]->(sl)
     RETURN yse.year_identifier AS yse, sl.status_level AS status
+
+# ---------------------------------------------------------------------------
+# Communities of practice
+# ---------------------------------------------------------------------------
+- name: list_communities
+  category: individuals
+  description: All communities of practice with member counts, campuses represented, and indicator-stake counts. Use to resolve a community name before the communities_write tools.
+  mode: read
+  params: []
+  cypher: |
+    MATCH (c:CommunityOfPractice)
+    OPTIONAL MATCH (p:Person)-[:member_of_community]->(c)
+    OPTIONAL MATCH (p)-[:works_at_campus]->(campus:Campus)
+    WITH c, count(DISTINCT p) AS member_count,
+         [a IN collect(DISTINCT campus.abbreviation) WHERE a IS NOT NULL] AS campuses
+    RETURN c.name AS name, c.description AS description, member_count, campuses,
+           size([(c)-[:has_stake_in]->(:SuccessIndicator) | 1]) AS stake_count
+    ORDER BY toLower(c.name)
+
+- name: community_detail
+  category: individuals
+  description: One community of practice by exact name - its members (with campus + membership note) and its indicator stakes (has_stake_in, with note). The stakeholder map for those indicators.
+  mode: read
+  params: [community_name]
+  cypher: |
+    MATCH (c:CommunityOfPractice {name: $community_name})
+    RETURN c.name AS name, c.description AS description,
+           [(p:Person)-[m:member_of_community]->(c) |
+              {name: p.name, title: p.title, employee_id: p.employee_id,
+               campus: head([(p)-[:works_at_campus]->(ca) | ca.abbreviation]),
+               note: m.note}] AS members,
+           [(c)-[s:has_stake_in]->(si:SuccessIndicator) |
+              {composite_key: si.composite_key, indicator: si.success_indicator,
+               note: s.note}] AS stakes

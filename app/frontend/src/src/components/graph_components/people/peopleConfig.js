@@ -187,5 +187,7 @@ export function summarizeCommunities(communities, people) {
         emptyCommunities: list.filter(COMMUNITY_FILTERS.empty.predicate).length,
         peopleInCommunity: inCommunity,
         peopleInNone: roster.length - inCommunity,
+        // has_stake_in links to SuccessIndicators, summed across communities.
+        totalStakes: list.reduce((n, c) => n + (c.stake_count || 0), 0),
     };
 }

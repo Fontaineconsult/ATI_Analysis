@@ -28,7 +28,8 @@ def get_all_communities() -> list:
             OPTIONAL MATCH (p)-[:works_at_campus]->(campus:Campus)
             WITH c, count(DISTINCT p) AS member_count,
                  [a IN collect(DISTINCT campus.abbreviation) WHERE a IS NOT NULL] AS campuses
-            RETURN c.unique_id, c.name, c.description, member_count, campuses
+            RETURN c.unique_id, c.name, c.description, member_count, campuses,
+                   size([(c)-[:has_stake_in]->(:SuccessIndicator) | 1]) AS stake_count
             ORDER BY toLower(c.name)
             """
         )
@@ -39,6 +40,7 @@ def get_all_communities() -> list:
                 "description": r[2],
                 "member_count": r[3],
                 "campuses": sorted(r[4]),
+                "stake_count": r[5],
             }
             for r in rows
         ]
@@ -47,7 +49,8 @@ def get_all_communities() -> list:
 
 
 def get_community(unique_id: str) -> dict:
-    """One community with its member roster (campus + membership note per member)."""
+    """One community with its member roster (campus + membership note per member)
+    and its indicator stakes (the has_stake_in edges, note included)."""
     community = get_community_node(unique_id)
     try:
         members = []
@@ -64,6 +67,19 @@ def get_community(unique_id: str) -> dict:
                 "note": rel.note if rel else None,
             })
         members.sort(key=lambda m: (m["name"] or "").lower())
-        return {**community.serialize(), "members": members}
+
+        stake_rows, _ = db.cypher_query(
+            """
+            MATCH (c:CommunityOfPractice {unique_id: $uid})-[r:has_stake_in]->(si:SuccessIndicator)
+            RETURN si.composite_key, si.success_indicator, r.note
+            ORDER BY si.composite_key
+            """,
+            {"uid": community.unique_id},
+        )
+        stakes = [
+            {"composite_key": r[0], "success_indicator": r[1], "note": r[2]}
+            for r in stake_rows
+        ]
+        return {**community.serialize(), "members": members, "stakes": stakes}
     except Exception as e:
         raise CrudError(f"Failed to retrieve community {unique_id!r}: {e}")

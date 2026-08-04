@@ -134,6 +134,10 @@ describe('communities', () => {
             emptyCommunities: 1,
             peopleInCommunity: 1,
             peopleInNone: 2,
+            totalStakes: 0,
         });
+        expect(summarizeCommunities(
+            [{ unique_id: 'c3', stake_count: 2 }, { unique_id: 'c4', stake_count: 3 }], [],
+        ).totalStakes).toBe(5);
     });
 });

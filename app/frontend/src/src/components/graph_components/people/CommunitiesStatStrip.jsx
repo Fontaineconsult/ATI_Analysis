@@ -49,6 +49,7 @@ function CommunitiesStatStrip({
     peopleInCommunity = 0,
     emptyCommunities = 0,
     peopleInNone = 0,
+    totalStakes = 0,
     loading = false,
     activeFilter = 'all',
     onFilterChange,
@@ -78,6 +79,12 @@ function CommunitiesStatStrip({
                 value={v(peopleInCommunity)}
                 help="active people in ≥ 1"
                 accent="purple.400"
+            />
+            <StatCard
+                label="Indicator stakes"
+                value={v(totalStakes)}
+                help="links to success indicators"
+                accent="blue.400"
             />
             <StatCard
                 label="⚠ Empty communities"

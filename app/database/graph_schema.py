@@ -562,6 +562,19 @@ class CommunityMembershipRel(StructuredRel):
     added_date = DateProperty()
 
 
+class CommunityStakeRel(StructuredRel):
+    """A community of practice's stake in a SuccessIndicator (has_stake_in).
+
+    The agentive link between the people-grouping layer and the indicator
+    framework: the community holds the practice the indicator measures, so its
+    members are the stakeholders to interview / collect evidence from. SI-level
+    by design (campus- and year-agnostic, like the community itself) — per-campus
+    per-year views derive via (si)<-[:tracks]-(yse), never via edges here.
+    """
+    note = StringProperty()             # optional: why this community holds the stake
+    added_date = DateProperty()
+
+
 def serialize_role_holdings(person):
     """Project a Person's holds_role edges → [{handle, name, in_position_description, pd_description}]."""
     rows = []
@@ -1658,6 +1671,12 @@ class CommunityOfPractice(StructuredNode):
 
     # Reverse of Person.in_communities; the membership edge carries an optional note.
     members = RelationshipFrom("Person", "member_of_community", model=CommunityMembershipRel)
+
+    # The indicators this community's practice area has stakes in (agentive: its
+    # members are the stakeholders for that indicator's evidence). Declared here on
+    # the freely-created side; SuccessIndicator carries no reverse accessor, matching
+    # the other inbound SI edges (prioritizes_success_indicator, supported_by).
+    stakes = RelationshipTo("SuccessIndicator", "has_stake_in", model=CommunityStakeRel)
 
     def serialize(self):
         return {
