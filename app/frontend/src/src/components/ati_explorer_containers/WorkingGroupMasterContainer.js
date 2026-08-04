@@ -35,7 +35,9 @@ function WorkingGroupMasterContainer() {
                 <Route path="plans" element={<PlansAccomplishmentsManager />} />
                 <Route path="plans/:planId" element={<PlansAccomplishmentsManager />} />
 
+                {/* People (canon area; deep-link :personId = employee_id pre-selects) */}
                 <Route path="people" element={<PeopleMasterContainer />} />
+                <Route path="people/:personId" element={<PeopleMasterContainer />} />
 
                 {/* Governance area = Governance items + Principles (tabbed). URL-driven: the
                     route picks the active tab, and the optional selection param deep-links an

@@ -20,6 +20,7 @@ import { useTable } from 'react-table';
 import { DataContext } from '../../../context/DataContext';
 import { UserContext } from '../../../context/UserContext';
 import { updateIndividual } from '../../../services/api/put';
+import { WORKING_GROUPS } from '../../graph_components/people/peopleConfig';
 import EditIndividual from './EditIndividual';
 
 // Memoized Table Component
@@ -134,8 +135,7 @@ function Members() {
                 updatedIndividual = { ...individual, [key]: newValue };
             } else if (key === 'web' || key === 'ins' || key === 'pro') {
                 // For working groups
-                const workingGroupName =
-                    key === 'web' ? 'Web' : key === 'ins' ? 'Instructional Materials' : 'Procurement';
+                const workingGroupName = WORKING_GROUPS[key]?.name || key;
                 const isMember = individual.workingGroups?.some((wg) => wg.name === workingGroupName);
 
                 let updatedWorkingGroups;

@@ -1,16 +1,20 @@
 import React from 'react';
-import { Badge, Heading, HStack, Text, VStack, Wrap, WrapItem } from '@chakra-ui/react';
+import { Button, Heading, HStack, Text, VStack, Wrap, WrapItem } from '@chakra-ui/react';
+import { EditIcon } from '@chakra-ui/icons';
 import Card from '../common/Card';
+import { personWorkingGroups } from './peopleConfig';
+import { ApproverBadge, CampusBadge, NonCommitteeBadge, WorkingGroupBadge } from './PersonBadges';
 
 /**
  * Identity header for the People Explorer right panel. Pure presentational —
  * pass a person object (rich detail from get_person_implementation_details or
- * any equivalently-shaped object).
+ * any equivalently-shaped object). The identity card carries the Edit action
+ * when the container supplies onEdit (canon §3.3).
  */
-function PersonHeader({ person }) {
+function PersonHeader({ person, onEdit }) {
     if (!person) return null;
 
-    const workingGroups = Array.isArray(person.workingGroups) ? person.workingGroups : [];
+    const workingGroups = personWorkingGroups(person);
 
     return (
         <Card>
@@ -20,13 +24,18 @@ function PersonHeader({ person }) {
                         {person.name}
                     </Heading>
                     <HStack spacing={2} flexShrink={0}>
-                        {person.can_approve_yse && (
-                            <Badge colorScheme="teal" variant="solid" fontSize="2xs">Approver</Badge>
-                        )}
-                        {person.host_campus && (
-                            <Badge colorScheme="teal" variant="outline" textTransform="uppercase" fontSize="2xs">
-                                {person.host_campus}
-                            </Badge>
+                        {person.can_approve_yse && <ApproverBadge size="sm" />}
+                        <CampusBadge campus={person.host_campus} size="sm" />
+                        {onEdit && (
+                            <Button
+                                size="xs"
+                                variant="outline"
+                                colorScheme="teal"
+                                leftIcon={<EditIcon boxSize={2.5} />}
+                                onClick={onEdit}
+                            >
+                                Edit
+                            </Button>
                         )}
                     </HStack>
                 </HStack>
@@ -38,15 +47,13 @@ function PersonHeader({ person }) {
                 {(workingGroups.length > 0 || person.non_committee_member_active) && (
                     <Wrap spacing={2} pt={1}>
                         {workingGroups.map((wg) => (
-                            <WrapItem key={typeof wg === 'string' ? wg : wg.name}>
-                                <Badge colorScheme="purple" variant="subtle" fontSize="2xs">
-                                    {typeof wg === 'string' ? wg : wg.name}
-                                </Badge>
+                            <WrapItem key={wg}>
+                                <WorkingGroupBadge name={wg} size="sm" />
                             </WrapItem>
                         ))}
                         {workingGroups.length === 0 && person.non_committee_member_active && (
                             <WrapItem>
-                                <Badge colorScheme="gray" variant="subtle" fontSize="2xs">Non-committee active</Badge>
+                                <NonCommitteeBadge size="sm" />
                             </WrapItem>
                         )}
                     </Wrap>

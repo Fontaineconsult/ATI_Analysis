@@ -14,7 +14,8 @@ import {
 } from '@chakra-ui/react';
 import { CloseIcon } from '@chakra-ui/icons';
 import { unassignPersonAsImplementor } from '../../../services/api/put';
-import { getStatusColor, getStatusBackgroundColor } from '../../../services/utils/statusColors';
+import { getStatusTextColor, getStatusBackgroundColor } from '../../../services/utils/statusColors';
+import { workingGroupFromCompositeKey } from './peopleConfig';
 
 /**
  * Read + unassign view of the YSEs a person implements, grouped by campus →
@@ -95,7 +96,7 @@ function PersonYseList({ yses = [], personEmployeeId, onChange }) {
                                                     {yse.status_level && (
                                                         <Badge
                                                             bg={getStatusBackgroundColor(yse.status_level)}
-                                                            color={getStatusColor(yse.status_level)}
+                                                            color={getStatusTextColor(yse.status_level)}
                                                             fontSize="2xs"
                                                             px={2}
                                                             borderRadius="md"
@@ -146,17 +147,6 @@ function PersonYseList({ yses = [], personEmployeeId, onChange }) {
     );
 }
 
-// Composite key format observed elsewhere: "7.6-web" → working group = "web".
-// Falls back to "Other" when the suffix is missing or unrecognized.
-function inferWorkingGroupFromCompositeKey(compositeKey) {
-    if (!compositeKey) return 'Other';
-    const suffix = compositeKey.split('-').slice(1).join('-').trim().toLowerCase();
-    if (suffix === 'web') return 'Web';
-    if (suffix === 'ins' || suffix === 'instructional-materials' || suffix === 'instructional materials') return 'Instructional Materials';
-    if (suffix === 'pro' || suffix === 'procurement') return 'Procurement';
-    return suffix ? suffix.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()) : 'Other';
-}
-
 function groupByCampusWorkingGroup(yses) {
     const byCampus = new Map();
     for (const yse of yses) {
@@ -171,7 +161,7 @@ function groupByCampusWorkingGroup(yses) {
             });
         }
         const entry = byCampus.get(campusKey);
-        const wgName = inferWorkingGroupFromCompositeKey(yse.indicator_composite_key);
+        const wgName = workingGroupFromCompositeKey(yse.indicator_composite_key);
         if (!entry.workingGroupMap.has(wgName)) {
             entry.workingGroupMap.set(wgName, { name: wgName, yses: [] });
         }

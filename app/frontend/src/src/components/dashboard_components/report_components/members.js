@@ -13,6 +13,7 @@ import {
 } from '@chakra-ui/react';
 import { DataContext } from '../../../context/DataContext';
 import {UserContext} from "../../../context/UserContext";
+import { getWorkingGroupAbbrev } from '../../graph_components/people/peopleConfig';
 
 function Members() {
     const { data, loading } = useContext(DataContext);
@@ -70,21 +71,7 @@ function Members() {
                                     </Td>
                                     <Td   px={2}  color="gray.600" fontSize="xs">
                                         {member.workingGroups
-                                            ?.map((group) => {
-                                                // Handle both string and object formats
-                                                const groupName = typeof group === 'string' ? group : group.name;
-
-                                                // Map full names to abbreviations
-                                                if (groupName === 'Instructional Materials' || groupName === 'instructional-materials') {
-                                                    return 'Ins. M';
-                                                } else if (groupName === 'Procurement' || groupName === 'procurement') {
-                                                    return 'Proc';
-                                                } else if (groupName === 'Web' || groupName === 'web') {
-                                                    return 'Web';
-                                                } else {
-                                                    return groupName;
-                                                }
-                                            })
+                                            ?.map((group) => getWorkingGroupAbbrev(typeof group === 'string' ? group : group.name))
                                             .join(', ') || 'None assigned'}
                                     </Td>
                                 </Tr>
