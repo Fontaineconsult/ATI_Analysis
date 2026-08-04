@@ -125,9 +125,12 @@ Edges assert harder claims than nodes; grade them separately.
 
 ## Anchoring rules
 
-- **Year**: anchor to the latest AcademicYear whose WGPs exist (a July meeting still
-  anchors to the just-ended AY until the rollover has run). Confirm the WGP
-  `plan_identifier` (`<year>-<campus>-<wg>`) exists in recon.
+- **Year**: anchor to the CURRENT REPORTING year — the app's working default (the
+  SettingsContext default year, and where the user filed the MeetingMinutes), NOT
+  simply the latest rolled AcademicYear. A rollover can scaffold next year's WGPs
+  and stubs early while reporting continues in the current year (2026-2027 was
+  rolled 2026-07-28; reporting stayed 2025-2026 — user decision 2026-08-04).
+  Confirm the WGP `plan_identifier` (`<year>-<campus>-<wg>`) exists in recon.
 - **Campus**: each fact anchors to the campus whose program it describes — a
   multi-campus meeting splits into per-campus nodes (SSU process vs SFSU process),
   wired to that campus's YSE (`...-ins-ssu` vs `...-ins-sfsu`).
