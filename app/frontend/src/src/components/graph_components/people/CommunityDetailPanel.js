@@ -24,6 +24,7 @@ import { deleteCommunity } from '../../../services/api/delete';
 import Card from '../common/Card';
 import Section from '../common/Section';
 import PersonAssignmentSelector from '../../functional_components/PersonAssignmentSelector';
+import CopyCommunityReportButton from './CopyCommunityReportButton';
 import { personCommunities } from './peopleConfig';
 
 /**
@@ -236,6 +237,7 @@ function CommunityDetailPanel({ communityId, onAfterChange, onEdit, onDeleted })
                             {detail.name}
                         </Heading>
                         <HStack spacing={2} flexShrink={0}>
+                            <CopyCommunityReportButton detail={detail} />
                             {onEdit && (
                                 <Button
                                     size="xs"
