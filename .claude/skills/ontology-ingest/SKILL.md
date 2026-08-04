@@ -27,6 +27,13 @@ fall back to ad-hoc read-only Bolt queries for anything the registry lacks:
 3. **Dedup**: existing MeetingMinutes (by date/title), existing implementations
    evidencing the target YSE family, existing Plans/Notes/Queries near the topic,
    and — critically — **Person resolution** (see below).
+4. **Interview guide**: if `app/database/ontology/interviews/` holds a guide for
+   this meeting (see /stakeholder-interview), read it — its coverage targets and
+   open queries are pre-anchored routing hints. The decision manifest must then
+   report coverage against the guide: targets converted to evidence, targets
+   probed but empty, targets not reached (the not-reached list seeds the next
+   interview's guide), and guide-listed Queries settled live (settle them —
+   status/answer/date_settled — as part of this ingest).
 
 Everything against the live DB is read-only until the gate clears: **no Cypher is
 written or executed until the decision manifest (see "Verify before commit" below)

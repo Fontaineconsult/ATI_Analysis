@@ -13,6 +13,13 @@ lives there; this folder indexes the database-facing ones.
   is written or run. Invoke with `/ontology-ingest` or just ask to "ingest this
   transcript".
 
+- **stakeholder-interview** (`.claude/skills/stakeholder-interview/SKILL.md`) —
+  the upstream of the ingest: recons the graph before each stakeholder interview
+  and generates a one-page guide (`../../ontology/interviews/`) with follow-ups,
+  open Queries to settle live, and SI coverage gaps to probe, plus the standing
+  interview protocol and transcript-hygiene habits. Invoke with
+  `/stakeholder-interview` or "prep an interview with X".
+
 Ingest output is validated and executed only through the standalone runner
 `python -m app.database.cypher_runner.run_file <file> [--execute]`; curated
 single-query recon lives in `app/database/cypher_runner/run_query.py`.
