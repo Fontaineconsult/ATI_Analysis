@@ -18,6 +18,7 @@ import PersonHeader from './PersonHeader';
 import PersonYseList from './PersonYseList';
 import RoleHoldingsEditor from './RoleHoldingsEditor';
 import YseAssignmentSelector from '../../functional_components/YseAssignmentSelector';
+import { personCommunities } from './peopleConfig';
 // Participation types ARE implementation types — reuse that domain's color map.
 import { typeColor } from '../implementation/implementationConfig';
 
@@ -120,6 +121,24 @@ function PersonDetailPanel({ person, onChange, onEdit, placeholder }) {
             >
                 <PersonYseList yses={yses} personEmployeeId={person.employee_id} onChange={onChange} />
             </Card>
+
+            {/* Communities of practice — read-only here; membership is managed on
+                the Communities tab (or via the MCP set_communities action). */}
+            {personCommunities(person).length > 0 && (
+                <Section title="Communities of Practice">
+                    <VStack align="stretch" spacing={1}>
+                        {personCommunities(person).map((c) => (
+                            <HStack key={c.unique_id} spacing={2} px={2} py={1.5}
+                                    borderWidth="1px" borderColor="gray.200" borderRadius="md" align="start">
+                                <Badge colorScheme="teal" variant="subtle" fontSize="2xs" flexShrink={0}>
+                                    {c.name}
+                                </Badge>
+                                {c.note && <Text fontSize="xs" color="gray.600" minW={0}>{c.note}</Text>}
+                            </HStack>
+                        ))}
+                    </VStack>
+                </Section>
+            )}
 
             {/* Employed By — org units (Department / College) that employ the person */}
             {employers.length > 0 && (

@@ -5,7 +5,7 @@ import { DataContext } from "../../context/DataContext";
 import '../../styles/App.css';
 import ImplementationsArea from "../graph_components/implementation/ImplementationsArea";
 import PlansAccomplishmentsManager from "../PlansAndAccomplishments/PlansAccomplishmentsManager";
-import PeopleMasterContainer from "./PeopleMasterContainer";
+import PeopleArea from "./PeopleArea";
 import GovernanceArea from "./GovernanceArea";
 import AssetsMasterContainer from "./AssetsMasterContainer";
 
@@ -35,9 +35,13 @@ function WorkingGroupMasterContainer() {
                 <Route path="plans" element={<PlansAccomplishmentsManager />} />
                 <Route path="plans/:planId" element={<PlansAccomplishmentsManager />} />
 
-                {/* People (canon area; deep-link :personId = employee_id pre-selects) */}
-                <Route path="people" element={<PeopleMasterContainer />} />
-                <Route path="people/:personId" element={<PeopleMasterContainer />} />
+                {/* People area = roster + Communities of Practice (tabbed, like
+                    Governance). Static "communities" segment outranks the dynamic
+                    :personId, so both deep-link forms coexist. */}
+                <Route path="people" element={<PeopleArea activeTab="people" />} />
+                <Route path="people/communities" element={<PeopleArea activeTab="communities" />} />
+                <Route path="people/communities/:communityId" element={<PeopleArea activeTab="communities" />} />
+                <Route path="people/:personId" element={<PeopleArea activeTab="people" />} />
 
                 {/* Governance area = Governance items + Principles (tabbed). URL-driven: the
                     route picks the active tab, and the optional selection param deep-links an

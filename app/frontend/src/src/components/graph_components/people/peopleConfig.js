@@ -143,3 +143,49 @@ export const PERSON_STATUS_FIELDS = [
     { name: 'non_committee_member_active', label: 'Active Non-Committee Member' },
     { name: 'can_approve_yse', label: 'Can Approve YSE' },
 ];
+
+// ---------------------------------------------------------------------------
+// Communities of practice — the sibling tab of the People area. Cross-campus
+// groupings by shared functional area; freely creatable data, not a vocabulary.
+// ---------------------------------------------------------------------------
+
+/** Normalize person.communities ([{unique_id, name, note}]) to that array. */
+export function personCommunities(person) {
+    if (!person || !Array.isArray(person.communities)) return [];
+    return person.communities.filter(Boolean);
+}
+
+/**
+ * Community-list filters for the stat strip. Predicates run over list-shaped
+ * community objects ({unique_id, name, member_count, campuses}).
+ */
+export const COMMUNITY_FILTERS = {
+    all: { key: 'all', label: 'All communities', predicate: () => true },
+    empty: {
+        key: 'empty',
+        label: 'Empty communities',
+        predicate: (c) => !c.member_count,
+    },
+};
+
+export function filterCommunities(communities, filterKey) {
+    const filter = COMMUNITY_FILTERS[filterKey] || COMMUNITY_FILTERS.all;
+    return (communities || []).filter(filter.predicate);
+}
+
+/**
+ * Counts for the Communities stat strip. `communities` is the list payload;
+ * `people` is the active roster (used for the membership-coverage diagnostics —
+ * how many active people belong to at least one community, and how many to none).
+ */
+export function summarizeCommunities(communities, people) {
+    const list = communities || [];
+    const roster = people || [];
+    const inCommunity = roster.filter((p) => personCommunities(p).length > 0).length;
+    return {
+        total: list.length,
+        emptyCommunities: list.filter(COMMUNITY_FILTERS.empty.predicate).length,
+        peopleInCommunity: inCommunity,
+        peopleInNone: roster.length - inCommunity,
+    };
+}

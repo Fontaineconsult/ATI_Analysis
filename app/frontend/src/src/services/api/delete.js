@@ -121,6 +121,19 @@ export const deleteGovernance = async (governanceType, uniqueId) => {
     }
 };
 
+// Delete a community; membership edges go with it, members are untouched.
+export const deleteCommunity = async (uniqueId) => {
+    try {
+        const response = await fetch(`${API_URL}/communities/${uniqueId}`, { method: 'DELETE' });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Failed to delete community');
+        return data;
+    } catch (error) {
+        console.error('Error deleting community:', error);
+        throw error;
+    }
+};
+
 //
 // ASSETS / TAAPs — node deletes (edge unassigns live on PUT, in put.js)
 //

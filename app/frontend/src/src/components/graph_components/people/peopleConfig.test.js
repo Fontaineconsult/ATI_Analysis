@@ -9,9 +9,12 @@ import {
     getWorkingGroupAbbrev,
     workingGroupFromCompositeKey,
     personWorkingGroups,
+    personCommunities,
     hasRoleNotInPd,
     filterPeople,
+    filterCommunities,
     summarizePeople,
+    summarizeCommunities,
 } from './peopleConfig';
 
 const person = (overrides = {}) => ({
@@ -100,5 +103,37 @@ describe('filterPeople / summarizePeople', () => {
 
     it('falls back to all on an unknown filter key', () => {
         expect(filterPeople(roster, 'nonsense')).toHaveLength(3);
+    });
+});
+
+describe('communities', () => {
+    const communities = [
+        { unique_id: 'c1', name: 'Library', member_count: 2, campuses: ['SFSU'] },
+        { unique_id: 'c2', name: 'Alternative Media', member_count: 0, campuses: [] },
+    ];
+    const roster = [
+        person({ unique_id: 'a', communities: [{ unique_id: 'c1', name: 'Library', note: null }] }),
+        person({ unique_id: 'b', communities: [] }),
+        person({ unique_id: 'c' }),
+    ];
+
+    it('normalizes person.communities and tolerates its absence', () => {
+        expect(personCommunities(roster[0]).map((c) => c.name)).toEqual(['Library']);
+        expect(personCommunities(roster[2])).toEqual([]);
+        expect(personCommunities(null)).toEqual([]);
+    });
+
+    it('filters empty communities and passes everything for all', () => {
+        expect(filterCommunities(communities, 'empty').map((c) => c.unique_id)).toEqual(['c2']);
+        expect(filterCommunities(communities, 'all')).toHaveLength(2);
+    });
+
+    it('summarizes community + membership-coverage counts', () => {
+        expect(summarizeCommunities(communities, roster)).toEqual({
+            total: 2,
+            emptyCommunities: 1,
+            peopleInCommunity: 1,
+            peopleInNone: 2,
+        });
     });
 });

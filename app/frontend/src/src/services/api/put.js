@@ -1135,6 +1135,36 @@ export const setPersonRoleHoldings = async (employeeId, holdings) => {
     }
 };
 
+// Update a community's name and/or description.
+export const updateCommunity = async (uniqueId, data) => {
+    try {
+        const response = await axios.put(`${process.env.REACT_APP_API_URL}/communities/${uniqueId}`, {
+            action: 'update_community',
+            ...data,
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error updating community:', error);
+        throw error;
+    }
+};
+
+// Replace a person's community-of-practice memberships. Keyed on employee_id.
+// memberships: [{ community_id, note }]
+export const setPersonCommunities = async (employeeId, memberships) => {
+    try {
+        const response = await axios.put(`${process.env.REACT_APP_API_URL}/individuals`, {
+            action: 'set_communities',
+            employee_id: employeeId,
+            communities: memberships,
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error setting community memberships:', error);
+        throw error;
+    }
+};
+
 // Replace a doing-implementation's participants (the working team — people in their
 // roles), distinct from owner. participants: [{ person_unique_id, role_handle, note }]
 export const setImplementationParticipants = async (implementationType, implementationUniqueId, participants) => {

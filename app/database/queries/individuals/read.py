@@ -20,7 +20,9 @@ def get_all_persons() -> list:
           .*,
           workingGroups: [wg IN workingGroups | wg { .* }],
           yearSuccessEvidences: [yse IN yearSuccessEvidences | yse { .* }],
-          host_campus: host_campus
+          host_campus: host_campus,
+          roles: [(p)-[hr:holds_role]->(role:Role) | {handle: role.handle, name: role.name, in_position_description: hr.in_position_description, pd_description: hr.pd_description}],
+          communities: [(p)-[mc:member_of_community]->(cop:CommunityOfPractice) | {unique_id: cop.unique_id, name: cop.name, note: mc.note}]
         } AS personData
         RETURN apoc.convert.toJson(collect(personData)) AS jsonResult
             """
@@ -114,6 +116,7 @@ def get_person_implementation_details(employee_id: str) -> dict:
           participatedRoleHandles: [(p)-[w:worked_on]->() WHERE w.role_handle IS NOT NULL | w.role_handle],
           participations: [(p)-[w:worked_on]->(impl) | {type: head(labels(impl)), title: impl.title, unique_id: impl.unique_id, role_handle: w.role_handle}],
           employers: [(p)<-[:employs]-(u) | {name: u.name, type: head(labels(u))}],
+          communities: [(p)-[mc:member_of_community]->(cop:CommunityOfPractice) | {unique_id: cop.unique_id, name: cop.name, note: mc.note}],
           yearSuccessEvidences: yses
         }) AS jsonResult
     """
