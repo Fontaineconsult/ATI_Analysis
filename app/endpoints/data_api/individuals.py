@@ -11,6 +11,7 @@ from app.database.queries.individuals.read import (
     get_person_by_employee_id,
     get_person_implementation_details,
 )
+from app.database.queries.communities.update import set_person_communities
 from app.database.queries.individuals.update import update_person_by_employee_id, set_person_role_holdings
 from app.endpoints.data_api.util.response import make_response
 from app.endpoints.data_api.errors.custom_exceptions import NotFoundError, ValidationError, CrudError
@@ -99,6 +100,14 @@ class IndividualsAPI(MethodView):
                 if not employee_id:
                     raise ValidationError("Missing 'employee_id' in the request body.")
                 updated_person = set_person_role_holdings(employee_id, data.get('roles', []))
+                return make_response(status="success", data={'person': updated_person.serialize()}), 200
+
+            elif data['action'] == 'set_communities':
+                # Replace the person's community-of-practice memberships. Keyed on employee_id.
+                employee_id = data.get('employee_id')
+                if not employee_id:
+                    raise ValidationError("Missing 'employee_id' in the request body.")
+                updated_person = set_person_communities(employee_id, data.get('communities', []))
                 return make_response(status="success", data={'person': updated_person.serialize()}), 200
 
         except ValidationError as e:
