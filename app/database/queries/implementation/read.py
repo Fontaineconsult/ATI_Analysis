@@ -201,6 +201,7 @@ _IMPL_PROJECTION = """
         unique_id: d.unique_id, name: d.name, hash: d.hash, file_path: d.file_path, uri_path: d.uri_path,
         description: d.description, depreciated: d.depreciated, depreciated_date: d.depreciated_date,
         include_in_report: coalesce(d.include_in_report, true),
+        raw_text: d.raw_text, raw_text_captured: toString(d.raw_text_captured),
         is_administrative_review_documentation: d.is_administrative_review_documentation,
         is_milestone_and_measures_documentation: d.is_milestone_and_measures_documentation,
         maintained_by: head([ (d)-[:maintained_by]->(m:Person) |
@@ -221,6 +222,7 @@ _IMPL_PROJECTION = """
         unique_id: w.unique_id, url: w.url, name: w.name, description: w.description,
         no_longer_exists: w.no_longer_exists, depreciated: w.depreciated, depreciated_date: w.depreciated_date,
         include_in_report: coalesce(w.include_in_report, true),
+        raw_text: w.raw_text, raw_text_captured: toString(w.raw_text_captured),
         maintained_by: head([ (w)-[:maintained_by]->(m:Person) |
           { unique_id: m.unique_id, name: m.name, email: m.email, employee_id: m.employee_id, title: m.title } ]),
         relationship: {

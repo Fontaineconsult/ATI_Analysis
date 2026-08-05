@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import {
     Button,
     FormControl,
+    FormHelperText,
     FormLabel,
     HStack,
     Input,
@@ -59,10 +60,13 @@ function GovernanceForm({ isOpen, onClose, governanceType, existingItem, onSaved
 
     const handleSubmit = async () => {
         // Trim and drop empties so the backend doesn't store whitespace-only values.
+        // Exception: an emptied `raw_text` is sent through as '' so a bad paste can
+        // actually be cleared — dropping it here would silently keep the old text.
         const cleaned = {};
         for (const field of config.fields) {
             const v = (formData[field.name] || '').toString().trim();
             if (v) cleaned[field.name] = v;
+            else if (field.name === 'raw_text' && existingItem?.raw_text) cleaned.raw_text = '';
         }
         if (!cleaned.title) {
             toast({ title: 'Title is required.', status: 'error', duration: 2000, isClosable: true });
@@ -108,28 +112,43 @@ function GovernanceForm({ isOpen, onClose, governanceType, existingItem, onSaved
                 <ModalCloseButton />
                 <ModalBody>
                     <VStack align="stretch" spacing={3}>
-                        {config.fields.map((field) => (
-                            <FormControl key={field.name} isRequired={field.required}>
-                                <FormLabel fontSize="sm" color="gray.700" fontWeight="semibold">
-                                    {field.label}
-                                </FormLabel>
-                                {field.type === 'textarea' ? (
-                                    <Textarea
-                                        size="sm"
-                                        value={formData[field.name] || ''}
-                                        onChange={handleChange(field.name)}
-                                        rows={3}
-                                    />
-                                ) : (
-                                    <Input
-                                        size="sm"
-                                        type={field.type === 'date' ? 'date' : 'text'}
-                                        value={formData[field.name] || ''}
-                                        onChange={handleChange(field.name)}
-                                    />
-                                )}
-                            </FormControl>
-                        ))}
+                        {config.fields.map((field) => {
+                            const isMarkdown = field.type === 'markdown';
+                            const chars = (formData[field.name] || '').length;
+                            // Char count + capture date replace the static hint once
+                            // there's text, so the field reports its own staleness.
+                            const help = isMarkdown && chars
+                                ? `${chars.toLocaleString()} characters${existingItem?.raw_text_captured ? ` · last captured ${existingItem.raw_text_captured}` : ''}. Re-pasting updates the capture date; clearing the box removes it.`
+                                : field.helpText;
+                            return (
+                                <FormControl key={field.name} isRequired={field.required}>
+                                    <FormLabel fontSize="sm" color="gray.700" fontWeight="semibold">
+                                        {field.label}
+                                    </FormLabel>
+                                    {field.type === 'textarea' || isMarkdown ? (
+                                        <Textarea
+                                            size="sm"
+                                            value={formData[field.name] || ''}
+                                            onChange={handleChange(field.name)}
+                                            rows={isMarkdown ? 12 : 3}
+                                            fontFamily={isMarkdown ? 'mono' : undefined}
+                                            placeholder={isMarkdown ? 'Paste the full text of the instrument as Markdown…' : undefined}
+                                        />
+                                    ) : (
+                                        <Input
+                                            size="sm"
+                                            type={field.type === 'date' ? 'date' : 'text'}
+                                            value={formData[field.name] || ''}
+                                            onChange={handleChange(field.name)}
+                                        />
+                                    )}
+                                    {/* Inside the FormControl so Chakra wires aria-describedby. */}
+                                    {help && (
+                                        <FormHelperText fontSize="xs" color="gray.600">{help}</FormHelperText>
+                                    )}
+                                </FormControl>
+                            );
+                        })}
                     </VStack>
                 </ModalBody>
                 <ModalFooter>

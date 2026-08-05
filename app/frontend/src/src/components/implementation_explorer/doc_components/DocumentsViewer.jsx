@@ -7,7 +7,7 @@ import { useSettings } from '../../../context/SettingsContext';
 import { UserContext } from '../../../context/UserContext';
 import {
     AddRow, EmptyText, Field, FieldLabel, FileDownload, FormActions, FormShell,
-    ItemShell, MetaLine, PathLinks, ReportBadges, SwitchRow,
+    ItemShell, MetaLine, PathLinks, RawTextField, RawTextMeta, ReportBadges, SwitchRow,
 } from './docPrimitives';
 import FileUploadField from './FileUploadField';
 
@@ -30,6 +30,7 @@ function DocumentForm({ document, onSubmit, onCancel, isNewDocument }) {
         file_path: document?.file_path || '',
         uri_path: document?.uri_path || '',
         description: document?.description || '',
+        raw_text: document?.raw_text || '',
         is_administrative_review_documentation: document?.is_administrative_review_documentation || false,
         is_milestone_and_measures_documentation: document?.is_milestone_and_measures_documentation || false,
         include_in_report: document?.include_in_report ?? false,
@@ -91,6 +92,12 @@ function DocumentForm({ document, onSubmit, onCancel, isNewDocument }) {
                 value={documentData}
                 onUploaded={(f) => setDocumentData({ ...documentData, ...f })}
                 onClear={() => setDocumentData({ ...documentData, storage_key: '', original_filename: '', content_type: '', size: null })}
+            />
+            <RawTextField
+                value={documentData.raw_text}
+                onChange={handleChange}
+                captured={document?.raw_text_captured}
+                subject="document"
             />
             <Box>
                 <FieldLabel mb={2}>Flags</FieldLabel>
@@ -193,12 +200,14 @@ export default function DocumentsViewer({ documents = [], implementation_id, imp
                                     {doc.maintained_by && <MetaLine>Maintained by {doc.maintained_by.name || 'Unknown'}</MetaLine>}
                                     <PathLinks filePath={doc.file_path} uriPath={doc.uri_path} />
                                     <FileDownload file={doc.file} />
+                                    <RawTextMeta rawText={doc.raw_text} captured={doc.raw_text_captured} />
                                     <ReportBadges
                                         inYear={isIncludedInCurrentYear(doc)}
                                         year={currentAcademicYear}
                                         global={doc.include_in_report !== false}
                                         depreciated={doc.depreciated === true}
                                         extra={<>
+                                            {doc.raw_text && <WrapItem><Badge colorScheme="teal" fontSize="2xs">Source Text</Badge></WrapItem>}
                                             {truthy(doc.is_administrative_review_documentation) && <WrapItem><Badge colorScheme="purple" fontSize="2xs">Admin Review</Badge></WrapItem>}
                                             {truthy(doc.is_milestone_and_measures_documentation) && <WrapItem><Badge colorScheme="blue" fontSize="2xs">Milestones</Badge></WrapItem>}
                                         </>}

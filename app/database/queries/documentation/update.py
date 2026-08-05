@@ -351,6 +351,17 @@ def update_document(
                 setattr(document, field, document_dict[field])
                 updated_fields = True
 
+        # raw_text (the agent-readable mirror) is handled outside the loop above so
+        # the capture date moves ONLY when the text itself changes — otherwise an
+        # unrelated edit would make a stale mirror look freshly captured. Clearing
+        # the text clears the date with it.
+        if 'raw_text' in document_dict:
+            new_raw_text = document_dict['raw_text'] or None
+            if document.raw_text != new_raw_text:
+                document.raw_text = new_raw_text
+                document.raw_text_captured = date.today() if new_raw_text else None
+                updated_fields = True
+
         # Handle depreciated_date
         if 'depreciated_date' in document_dict:
             new_depreciated_date_str = document_dict['depreciated_date']
@@ -454,6 +465,15 @@ def update_webpage(
         ]:
             if field in webpage_dict and getattr(webpage, field) != webpage_dict[field]:
                 setattr(webpage, field, webpage_dict[field])
+                updated_fields = True
+
+        # raw_text (the agent-readable mirror) — same contract as Document: the
+        # capture date moves only when the snapshot itself changes.
+        if 'raw_text' in webpage_dict:
+            new_raw_text = webpage_dict['raw_text'] or None
+            if webpage.raw_text != new_raw_text:
+                webpage.raw_text = new_raw_text
+                webpage.raw_text_captured = date.today() if new_raw_text else None
                 updated_fields = True
 
         # Handle depreciated and depreciated_date

@@ -239,7 +239,8 @@ def add_document(
         original_filename=None,
         content_type=None,
         size=None,
-        uploaded_by=None           # Person employee_id / unique_id who uploaded it
+        uploaded_by=None,          # Person employee_id / unique_id who uploaded it
+        raw_text=None              # agent-readable Markdown/plain-text mirror of the source
 ) -> bool:
     """
     Adds a document node to the graph. A document references its bytes one of three ways:
@@ -266,7 +267,10 @@ def add_document(
             depreciated=depreciated,
             depreciated_date=datetime.strptime(depreciated_date, "%Y-%m-%d").date() if depreciated_date else None,
             is_administrative_review_documentation=is_administrative_review_documentation,
-            is_milestone_and_measures_documentation=is_milestone_and_measures_documentation
+            is_milestone_and_measures_documentation=is_milestone_and_measures_documentation,
+            raw_text=raw_text or None,
+            # Stamp the capture date only when there is text to date.
+            raw_text_captured=date.today() if raw_text else None
         )
         new_document.save()
 
@@ -314,7 +318,8 @@ def add_webpage(
         implementation_id=None,
         implementation_type=None,
         academic_year=None,  # Add this parameter
-        include_in_year=True  # Add this parameter
+        include_in_year=True,  # Add this parameter
+        raw_text=None  # agent-readable Markdown/plain-text mirror of the page
 ) -> bool:
     """
     Adds a webpage node to the graph. Optionally assigns the webpage to an implementation
@@ -359,7 +364,10 @@ def add_webpage(
             depreciated_date=datetime.strptime(depreciated_date, "%Y-%m-%d").date() if depreciated_date else None,
             no_longer_exists=no_longer_exists,
             description=description,
-            include_in_report=include_in_report
+            include_in_report=include_in_report,
+            raw_text=raw_text or None,
+            # Stamp the capture date only when there is text to date.
+            raw_text_captured=date.today() if raw_text else None
         )
         new_webpage.save()
 

@@ -152,6 +152,10 @@ class DocumentsAPI(MethodView):
                 content_type = document_dict.get('content_type')
                 size = document_dict.get('size')
 
+                # Agent-readable Markdown/plain-text mirror of the source, for
+                # documents behind SSO or in formats that cannot be opened.
+                raw_text = document_dict.get('raw_text')
+
                 # Now call add_document with the year parameters
                 if add_document(
                         name=name,
@@ -169,7 +173,8 @@ class DocumentsAPI(MethodView):
                         original_filename=original_filename,
                         content_type=content_type,
                         size=size,
-                        uploaded_by=created_by
+                        uploaded_by=created_by,
+                        raw_text=raw_text
                 ):
                     return make_response({"status": "success", "message": "Document created successfully."}), 201
 
@@ -188,6 +193,9 @@ class DocumentsAPI(MethodView):
                 depreciated_date = webpage_dict.get('depreciated_date')
                 description = webpage_dict.get('description', '')
                 include_in_report = webpage_dict.get('include_in_report', True)
+
+                # Agent-readable Markdown/plain-text snapshot, for pages behind SSO.
+                raw_text = webpage_dict.get('raw_text')
 
                 # Get these from the main data, not webpage_dict
                 implementation_id = data.get('implementation_id')
@@ -209,7 +217,8 @@ class DocumentsAPI(MethodView):
                         implementation_id=implementation_id,
                         implementation_type=implementation_type,
                         academic_year=academic_year,
-                        include_in_year=include_in_year
+                        include_in_year=include_in_year,
+                        raw_text=raw_text
                 ):
                     return make_response({"status": "success", "message": "Webpage created successfully."}), 201
 

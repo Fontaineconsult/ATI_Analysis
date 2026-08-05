@@ -232,6 +232,17 @@ class Law(StructuredNode):
     last_updated = DateProperty()
     relevant_sections = StringProperty()
     legislative_authority = StringProperty()
+
+    # Agent-readable mirror of the instrument itself, pasted as Markdown/plain
+    # text. Governance sources are long PDFs, sit behind a portal, or are only
+    # published as scanned images; holding the text here makes what the
+    # instrument ACTUALLY says queryable instead of only its summary. The
+    # published instrument stays authoritative — `raw_text_captured` dates the
+    # snapshot so drift from the real document stays visible. Every governance
+    # type carries this pair.
+    raw_text = StringProperty()
+    raw_text_captured = DateProperty()
+
     informed_goals = RelationshipTo("Goal", "informs")
     source_documents = RelationshipTo("Document", "is_sourced_from")
     source_webpages = RelationshipTo("Webpage", "is_sourced_from")
@@ -260,6 +271,11 @@ class Case(StructuredNode):
     effective_date = DateProperty()
     ruling = StringProperty()
     legislative_authority = StringProperty()
+
+    # Agent-readable Markdown mirror of the instrument — see Law.raw_text.
+    raw_text = StringProperty()
+    raw_text_captured = DateProperty()
+
     informed_goals = RelationshipTo("Goal", "informs")
     source_documents = RelationshipTo("Document", "is_sourced_from")
     source_webpages = RelationshipTo("Webpage", "is_sourced_from")
@@ -284,6 +300,11 @@ class Directive(StructuredNode):
     effective_date = DateProperty()
     last_updated = DateProperty()
     source_institution = StringProperty()
+
+    # Agent-readable Markdown mirror of the instrument — see Law.raw_text.
+    raw_text = StringProperty()
+    raw_text_captured = DateProperty()
+
     informed_goals = RelationshipTo("Goal", "informs")
     source_documents = RelationshipTo("Document", "is_sourced_from")
     source_webpages = RelationshipTo("Webpage", "is_sourced_from")
@@ -310,6 +331,11 @@ class ExternalPolicy(StructuredNode):
     description = StringProperty()
     effective_date = DateProperty()
     last_updated = DateProperty()
+
+    # Agent-readable Markdown mirror of the instrument — see Law.raw_text.
+    raw_text = StringProperty()
+    raw_text_captured = DateProperty()
+
     informed_goals = RelationshipTo("Goal", "informs")
     source_documents = RelationshipTo("Document", "is_sourced_from")
     source_webpages = RelationshipTo("Webpage", "is_sourced_from")
@@ -334,6 +360,11 @@ class Memo(StructuredNode):
     title = StringProperty(unique_index=True, required=True)
     description = StringProperty()
     authored_date = DateProperty()
+
+    # Agent-readable Markdown mirror of the instrument — see Law.raw_text.
+    raw_text = StringProperty()
+    raw_text_captured = DateProperty()
+
     informed_goals = RelationshipTo("Goal", "informs")
     source_documents = RelationshipTo("Document", "is_sourced_from")
     source_webpages = RelationshipTo("Webpage", "is_sourced_from")
@@ -360,6 +391,11 @@ class Guideline(StructuredNode):
     description = StringProperty()
     effective_date = DateProperty()
     last_updated = DateProperty()
+
+    # Agent-readable Markdown mirror of the instrument — see Law.raw_text.
+    raw_text = StringProperty()
+    raw_text_captured = DateProperty()
+
     informed_goals = RelationshipTo("Goal", "informs")
     source_documents = RelationshipTo("Document", "is_sourced_from")
     source_webpages = RelationshipTo("Webpage", "is_sourced_from")
@@ -1889,6 +1925,16 @@ class Document(StructuredNode):
     file_path = StringProperty()
     uri_path = StringProperty()
     description = StringProperty()
+
+    # Agent-readable mirror of the source. Many sources sit behind SSO, in a
+    # vendor portal, or in a format that cannot be opened programmatically; this
+    # holds the content pasted in as Markdown/plain text so an agent can read it
+    # without fetching the original. It is a MIRROR, never the record of truth —
+    # file_path / uri_path / has_file still point at the authoritative artifact.
+    # `raw_text_captured` is the staleness signal: the source may have moved on.
+    raw_text = StringProperty()
+    raw_text_captured = DateProperty()
+
     is_administrative_review_documentation = StringProperty()
     is_milestone_and_measures_documentation = StringProperty()
     depreciated = BooleanProperty()
@@ -1917,6 +1963,8 @@ class Document(StructuredNode):
             "is_milestone_and_measures_documentation": self.is_milestone_and_measures_documentation,
             "maintained_by": [{"unique_id": p.unique_id, "name": p.name} for p in self.maintained_by.all()],
             "file": serialize_has_file(self),
+            "raw_text": self.raw_text,
+            "raw_text_captured": str(self.raw_text_captured) if self.raw_text_captured else None,
             "unique_id": self.unique_id
 
         }
@@ -1936,6 +1984,14 @@ class Webpage(StructuredNode):
     url = StringProperty(unique_index=True)
     name = StringProperty()
     description = StringProperty()
+
+    # Agent-readable mirror of the page. Same contract as Document.raw_text: for
+    # pages behind SSO or otherwise not fetchable, paste the content as
+    # Markdown/plain text. `url` remains the record of truth; this is a snapshot,
+    # and `raw_text_captured` says when it was taken.
+    raw_text = StringProperty()
+    raw_text_captured = DateProperty()
+
     no_longer_exists = BooleanProperty()
     depreciated = BooleanProperty()
     depreciated_date = DateProperty()
@@ -1958,7 +2014,9 @@ class Webpage(StructuredNode):
             "depreciated_date": self.depreciated_date,
             "unique_id": self.unique_id,
             "maintained_by": [{"unique_id": p.unique_id, "name": p.name} for p in self.maintained_by.all()],
-            "include_in_report": self.include_in_report
+            "include_in_report": self.include_in_report,
+            "raw_text": self.raw_text,
+            "raw_text_captured": str(self.raw_text_captured) if self.raw_text_captured else None
 
         }
 

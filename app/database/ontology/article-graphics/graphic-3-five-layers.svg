@@ -1,0 +1,81 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" font-family="Roboto, 'Segoe UI', Helvetica, Arial, sans-serif" role="img" aria-labelledby="t d">
+  <title id="t">Five layers, one year-scoped</title>
+  <desc id="d">The five layers of the model, from mandates to things and people. Only the evidence layer belongs to an academic year; the layers change at different speeds.</desc>
+  <defs>
+    <marker id="ar" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0,0 L9,5 L0,10 z" fill="#4A5568"/></marker>
+    <style>
+      .h1   { fill:#202C4A; font-size:24px; font-weight:700; }
+      .sub  { fill:#4A5568; font-size:13px; }
+      .boxT { font-size:15px; font-weight:700; }
+      .boxS { font-size:11px; }
+      .rel  { fill:#4A5568; font-size:12px; font-style:italic; }
+      .relS { fill:#4A5568; font-size:10.5px; font-style:italic; }
+      .lab  { fill:#5A6B8C; font-size:11.5px; font-weight:600; letter-spacing:0.04em; }
+      .foot { fill:#718096; font-size:12.5px; }
+      .edge { stroke:#4A5568; stroke-width:1.8; fill:none; }
+</style>
+  </defs>
+  <rect width="1200" height="675" fill="#ffffff"/>
+  <text class="h1" x="32" y="46">Five layers, one year-scoped</text>
+  <rect x="32" y="58" width="80" height="4" rx="2" fill="#4966A4"/>
+  <rect x="112" y="58" width="40" height="4" rx="2" fill="#635098"/>
+  <rect x="152" y="58" width="40" height="4" rx="2" fill="#DB5850"/>
+  <text class="sub" x="32" y="84">The layers change at different speeds — only evidence belongs to a year</text>
+<rect x="36" y="112" width="856" height="78" rx="10" fill="#EBF2FA" stroke="#2B6CB0" stroke-width="1.6"/>
+<text x="54" y="138" font-size="15px" font-weight="700" fill="#1A4971">Mandates</text>
+<rect x="54" y="150" width="90" height="26" rx="13" fill="#ffffff" stroke="#2B6CB0" stroke-width="1.3"/>
+<text x="99" y="167" text-anchor="middle" font-size="11px" fill="#4A5568">Section 508</text>
+<rect x="156" y="150" width="70" height="26" rx="13" fill="#ffffff" stroke="#2B6CB0" stroke-width="1.3"/>
+<text x="190" y="167" text-anchor="middle" font-size="11px" fill="#4A5568">Title II</text>
+<rect x="238" y="150" width="83" height="26" rx="13" fill="#ffffff" stroke="#2B6CB0" stroke-width="1.3"/>
+<text x="279" y="167" text-anchor="middle" font-size="11px" fill="#4A5568">CSU policy</text>
+<text x="916" y="134" font-size="11.5px" fill="#718096">change rarely</text>
+<rect x="36" y="214" width="856" height="78" rx="10" fill="#E6F4EC" stroke="#38A169" stroke-width="1.6"/>
+<text x="54" y="240" font-size="15px" font-weight="700" fill="#22543D">Measures</text>
+<rect x="54" y="252" width="57" height="26" rx="13" fill="#ffffff" stroke="#38A169" stroke-width="1.3"/>
+<text x="82" y="269" text-anchor="middle" font-size="11px" fill="#4A5568">Goal 7</text>
+<rect x="123" y="252" width="109" height="26" rx="13" fill="#ffffff" stroke="#38A169" stroke-width="1.3"/>
+<text x="178" y="269" text-anchor="middle" font-size="11px" fill="#4A5568">Indicator 7.11</text>
+<rect x="244" y="252" width="180" height="26" rx="13" fill="#ffffff" stroke="#38A169" stroke-width="1.3"/>
+<text x="334" y="269" text-anchor="middle" font-size="11px" fill="#4A5568">122 indicators this cycle</text>
+<text x="916" y="236" font-size="11.5px" fill="#718096">shared reference — one record</text>
+<text x="916" y="251" font-size="11.5px" fill="#718096">serves every campus</text>
+<rect x="36" y="316" width="856" height="78" rx="10" fill="#FAF0DC" stroke="#B7791F" stroke-width="2.4" stroke-dasharray="9 6"/>
+<text x="54" y="342" font-size="15px" font-weight="700" fill="#744210">Evidence</text>
+<rect x="54" y="354" width="180" height="26" rx="13" fill="#ffffff" stroke="#B7791F" stroke-width="1.3"/>
+<text x="144" y="371" text-anchor="middle" font-size="11px" fill="#4A5568">7.11 · campus A · 2025–26</text>
+<rect x="246" y="354" width="180" height="26" rx="13" fill="#ffffff" stroke="#B7791F" stroke-width="1.3"/>
+<text x="337" y="371" text-anchor="middle" font-size="11px" fill="#4A5568">7.11 · campus B · 2025–26</text>
+<rect x="439" y="354" width="180" height="26" rx="13" fill="#ffffff" stroke="#B7791F" stroke-width="1.3"/>
+<text x="529" y="371" text-anchor="middle" font-size="11px" fill="#4A5568">7.11 · campus C · 2025–26</text>
+<text x="916" y="338" font-size="11.5px" font-weight="700" fill="#744210">one record per indicator,</text>
+<text x="916" y="353" font-size="11.5px" font-weight="700" fill="#744210">campus, and year — the only</text>
+<text x="916" y="368" font-size="11.5px" font-weight="700" fill="#744210">year-scoped layer</text>
+<rect x="36" y="418" width="856" height="78" rx="10" fill="#EFEAFB" stroke="#805AD5" stroke-width="1.6"/>
+<text x="54" y="444" font-size="15px" font-weight="700" fill="#44337A">Work</text>
+<rect x="54" y="456" width="226" height="26" rx="13" fill="#ffffff" stroke="#805AD5" stroke-width="1.3"/>
+<text x="167" y="473" text-anchor="middle" font-size="11px" fill="#4A5568">E-resource acquisition procedure</text>
+<rect x="292" y="456" width="161" height="26" rx="13" fill="#ffffff" stroke="#805AD5" stroke-width="1.3"/>
+<text x="372" y="473" text-anchor="middle" font-size="11px" fill="#4A5568">LMS course remediation</text>
+<text x="916" y="440" font-size="11.5px" fill="#718096">operates today; links to the</text>
+<text x="916" y="455" font-size="11.5px" fill="#718096">evidence it supports</text>
+<rect x="36" y="520" width="856" height="78" rx="10" fill="#E0F3F7" stroke="#0987A0" stroke-width="1.6"/>
+<text x="54" y="546" font-size="15px" font-weight="700" fill="#086F83">Things &amp; people</text>
+<rect x="54" y="558" width="154" height="26" rx="13" fill="#ffffff" stroke="#0987A0" stroke-width="1.3"/>
+<text x="131" y="575" text-anchor="middle" font-size="11px" fill="#4A5568">Alma (library system)</text>
+<rect x="220" y="558" width="122" height="26" rx="13" fill="#ffffff" stroke="#0987A0" stroke-width="1.3"/>
+<text x="282" y="575" text-anchor="middle" font-size="11px" fill="#4A5568">Dean R. Calloway</text>
+<rect x="354" y="558" width="128" height="26" rx="13" fill="#ffffff" stroke="#0987A0" stroke-width="1.3"/>
+<text x="419" y="575" text-anchor="middle" font-size="11px" fill="#4A5568">Library community</text>
+<text x="916" y="542" font-size="11.5px" fill="#718096">stewarded continuously — who</text>
+<text x="916" y="557" font-size="11.5px" fill="#718096">procured, maintains, uses</text>
+<path class="edge" d="M320 194 L320 206" marker-end="url(#ar)"/>
+<text x="330" y="204" text-anchor="start" font-size="9.5px" font-style="italic" fill="#4A5568">informs</text>
+<path class="edge" d="M470 296 L470 308" marker-end="url(#ar)"/>
+<text x="480" y="306" text-anchor="start" font-size="9.5px" font-style="italic" fill="#4A5568">supported_by · tracks</text>
+<path class="edge" d="M620 398 L620 410" marker-end="url(#ar)"/>
+<text x="630" y="408" text-anchor="start" font-size="9.5px" font-style="italic" fill="#4A5568">is_evidence_for</text>
+<path class="edge" d="M770 500 L770 512" marker-end="url(#ar)"/>
+<text x="780" y="510" text-anchor="start" font-size="9.5px" font-style="italic" fill="#4A5568">remediates · worked_on</text>
+<text class="foot" x="36" y="648">Mandates and measures are <tspan font-weight="700" fill="#22543D">shared &amp; stable</tspan>; evidence is <tspan font-weight="700" fill="#744210">re-recorded every year, per campus</tspan> — so history is never overwritten and year-over-year comparison is built in.</text>
+</svg>

@@ -4,6 +4,7 @@ import {
     Box,
     Button,
     FormControl,
+    FormHelperText,
     FormLabel,
     HStack,
     IconButton,
@@ -37,9 +38,11 @@ export function FieldLabel({ children, ...rest }) {
 }
 
 // Labeled input / textarea / select with the canon look. `as` picks the control.
+// `helpText` renders inside the FormControl so Chakra wires aria-describedby to
+// the control — never place hint text outside, or screen readers lose the link.
 export function Field({
     label, name, value, onChange, type = 'text', as = 'input',
-    options, rows, placeholder, isRequired, ...rest
+    options, rows, placeholder, isRequired, helpText, ...rest
 }) {
     const common = {
         size: 'sm', name, value, onChange, placeholder,
@@ -54,7 +57,48 @@ export function Field({
         <FormControl isRequired={isRequired}>
             <FieldLabel>{label}</FieldLabel>
             {control}
+            {helpText && (
+                <FormHelperText fontSize="2xs" color="gray.600" mt={1}>{helpText}</FormHelperText>
+            )}
         </FormControl>
+    );
+}
+
+/**
+ * Paste target for the agent-readable source mirror (Document.raw_text /
+ * Webpage.raw_text). Many sources sit behind SSO, in a vendor portal, or in a
+ * format nothing can open programmatically — pasting the text here makes the
+ * content readable without touching the original, which stays the record of
+ * truth. Deliberately tall: the expected paste is a whole document.
+ */
+export function RawTextField({ value, onChange, captured, subject = 'document' }) {
+    const chars = (value || '').length;
+    return (
+        <Field
+            as="textarea"
+            label="Source Text (Markdown)"
+            name="raw_text"
+            value={value}
+            onChange={onChange}
+            rows={10}
+            placeholder={`Paste the full text of the ${subject} here as Markdown or plain text…`}
+            helpText={
+                chars
+                    ? `${chars.toLocaleString()} characters${captured ? ` · last captured ${captured}` : ''}. Re-pasting updates the capture date.`
+                    : `Optional. For sources behind sign-on or in formats that can't be read directly. This is a copy — the original stays the record of truth.`
+            }
+        />
+    );
+}
+
+// Display counterpart to RawTextField: shows that a readable mirror exists and
+// how stale it may be. Size is surfaced because these can be very long.
+export function RawTextMeta({ rawText, captured }) {
+    if (!rawText) return null;
+    return (
+        <MetaLine>
+            Source text captured{captured ? ` ${captured}` : ''} · {rawText.length.toLocaleString()} characters
+        </MetaLine>
     );
 }
 

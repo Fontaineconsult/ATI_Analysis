@@ -44,6 +44,12 @@ _GOVERNANCE_TYPE_TO_CLASS = {
     "guideline": Guideline,
 }
 
+# Every governance type carries the agent-readable source mirror (graph_schema:
+# Law.raw_text et al). Injected into every whitelist rather than repeated in each
+# literal above, so a newly added type cannot forget it.
+for _type_fields in _GOVERNANCE_FIELD_WHITELIST.values():
+    _type_fields.add("raw_text")
+
 
 def create_governance_item(governance_type: str, data: dict):
     """
@@ -74,6 +80,11 @@ def create_governance_item(governance_type: str, data: dict):
             if field in _DATE_FIELDS:
                 value = _coerce_date(value)
             props[field] = value
+
+    # Date the source mirror at capture time, so a snapshot's age is always
+    # readable alongside it. Only stamped when there is text to date.
+    if props.get("raw_text"):
+        props["raw_text_captured"] = date.today()
 
     try:
         node = cls(**props)

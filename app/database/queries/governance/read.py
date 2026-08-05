@@ -51,6 +51,8 @@ def get_all_governance_items() -> list:
           legislative_authority: n.legislative_authority,
           ruling: n.ruling,
           source_institution: n.source_institution,
+          raw_text: n.raw_text,
+          raw_text_captured: toString(n.raw_text_captured),
           documents: [(n)-[:is_sourced_from]->(d:Document) |
             {unique_id: d.unique_id, name: d.name, uri_path: d.uri_path, file_path: d.file_path}
           ],

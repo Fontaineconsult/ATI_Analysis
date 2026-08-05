@@ -3,7 +3,7 @@ import { Alert, AlertIcon, List, ListItem, Box } from '@chakra-ui/react';
 import { Link as RouterLink, useParams } from 'react-router-dom';
 import { Link } from '@chakra-ui/react';
 import { AboutPage, Card, Section, Para, Figure } from './aboutPrimitives';
-import ontologyMapDiagram from '../../../assets/img/ontology-map.svg';
+import contextGraphDiagram from '../../../assets/img/sfbrn-ati-context-graph.svg';
 import annualRhythmDiagram from '../../../assets/img/annual-rhythm.svg';
 
 function OverviewTab() {
@@ -187,9 +187,9 @@ function OverviewTab() {
                     notice when a link in that chain is missing.
                 </Para>
                 <Figure
-                    src={ontologyMapDiagram}
-                    alt="The lay of the land: every node type sorted into eight role bands, top to bottom — Governance, Indicators, Implementation, Evidence and maturity, Assets and interfaces, People and org, Documentation, and a self-describing Meta layer. Reads as why, measured, done, recorded."
-                    caption="The lay of the land — every node type grouped by the role it plays, read top to bottom as why → measured → done → recorded."
+                    src={contextGraphDiagram}
+                    alt="SFBRN ATI Context Graph: every node type sorted into nine role bands, top to bottom — Governance, Indicators, Planning, Implementation, Evidence and maturity, Assets and interfaces, People and org, Documentation, and a self-describing Meta layer. A rail on the right chains the bands with the graph's own relationship names: governance informs indicators; plans prioritize indicators and further the year's evidence; implementations are evidence for it and remediate interfaces; assets are maintained by people; documentation is created by people."
+                    caption="SFBRN ATI Context Graph — every node type grouped by the role it plays, chained on the right by the graph's own relationships: informs → prioritizes → furthers → is evidence for → remediates → maintained by → created by."
                     maxW="980px"
                 />
                 <Para>Three framing ideas recur everywhere:</Para>

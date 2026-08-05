@@ -1,6 +1,8 @@
 #
 # GOVERNANCE UPDATE QUERIES
 #
+from datetime import date
+
 from app.database.graph_schema import Document, Webpage
 from app.database.queries.governance.create import _DATE_FIELDS, _coerce_date
 from app.database.queries.governance.read import GOVERNANCE_TYPE_TO_CLASS
@@ -29,6 +31,10 @@ _GOVERNANCE_UPDATABLE_FIELDS = {
     "guideline": {"title", "description", "effective_date", "last_updated"},
 }
 
+# See create.py — the source mirror applies to every governance type.
+for _type_fields in _GOVERNANCE_UPDATABLE_FIELDS.values():
+    _type_fields.add("raw_text")
+
 
 def update_governance_item(governance_type: str, unique_id: str, data: dict):
     """
@@ -48,10 +54,23 @@ def update_governance_item(governance_type: str, unique_id: str, data: dict):
 
     allowed = _GOVERNANCE_UPDATABLE_FIELDS[governance_type]
     for field, value in (data or {}).items():
+        if field == "raw_text":
+            continue  # handled below — it must be clearable, unlike the rest
         if field in allowed and value not in (None, ""):
             if field in _DATE_FIELDS:
                 value = _coerce_date(value)
             setattr(node, field, value)
+
+    # raw_text is handled outside the loop for two reasons. The loop skips empty
+    # values (a partial-update convention that makes every other field
+    # un-clearable), but a bad paste must be removable. And the capture date has
+    # to move ONLY when the text itself changes, or an unrelated edit would make
+    # a stale mirror look freshly captured. Clearing the text clears the date.
+    if "raw_text" in (data or {}):
+        new_raw_text = data["raw_text"] or None
+        if node.raw_text != new_raw_text:
+            node.raw_text = new_raw_text
+            node.raw_text_captured = date.today() if new_raw_text else None
 
     try:
         node.save()

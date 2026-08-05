@@ -7,9 +7,24 @@
  * Field schema:
  *   name      Backend property name (matches the neomodel attribute).
  *   label     Visible label.
- *   type      "text" | "textarea" | "date".
+ *   type      "text" | "textarea" | "date" | "markdown".
  *   required  Defaults to false.
+ *   helpText  Optional hint rendered inside the FormControl.
  */
+
+/**
+ * The agent-readable source mirror, carried by every governance type
+ * (graph_schema: Law.raw_text et al). Defined once and spread into each type's
+ * field list so the config stays the single source of truth without six copies
+ * drifting apart. Always last — it's the longest field on the form.
+ */
+const RAW_TEXT_FIELD = {
+    name: 'raw_text',
+    label: 'Source Text (Markdown)',
+    type: 'markdown',
+    helpText: 'Paste the full text of the instrument. For sources published as long PDFs, scans, or behind a portal — makes what the instrument actually says readable and searchable. The published instrument stays authoritative.',
+};
+
 export const GOVERNANCE_TYPES = {
     law: {
         key: 'law',
@@ -24,6 +39,7 @@ export const GOVERNANCE_TYPES = {
             { name: 'last_updated', label: 'Last Updated', type: 'date' },
             { name: 'relevant_sections', label: 'Relevant Sections', type: 'text' },
             { name: 'legislative_authority', label: 'Legislative Authority', type: 'text' },
+            RAW_TEXT_FIELD,
         ],
     },
     case: {
@@ -38,6 +54,7 @@ export const GOVERNANCE_TYPES = {
             { name: 'effective_date', label: 'Effective Date', type: 'date' },
             { name: 'ruling', label: 'Ruling', type: 'textarea' },
             { name: 'legislative_authority', label: 'Legislative Authority', type: 'text' },
+            RAW_TEXT_FIELD,
         ],
     },
     directive: {
@@ -52,6 +69,7 @@ export const GOVERNANCE_TYPES = {
             { name: 'effective_date', label: 'Effective Date', type: 'date' },
             { name: 'last_updated', label: 'Last Updated', type: 'date' },
             { name: 'source_institution', label: 'Source Institution', type: 'text' },
+            RAW_TEXT_FIELD,
         ],
     },
     external_policy: {
@@ -65,6 +83,7 @@ export const GOVERNANCE_TYPES = {
             { name: 'description', label: 'Description', type: 'textarea' },
             { name: 'effective_date', label: 'Effective Date', type: 'date' },
             { name: 'last_updated', label: 'Last Updated', type: 'date' },
+            RAW_TEXT_FIELD,
         ],
     },
     memo: {
@@ -77,6 +96,7 @@ export const GOVERNANCE_TYPES = {
             { name: 'title', label: 'Title', type: 'text', required: true },
             { name: 'description', label: 'Description', type: 'textarea' },
             { name: 'authored_date', label: 'Authored Date', type: 'date' },
+            RAW_TEXT_FIELD,
         ],
     },
     guideline: {
@@ -90,6 +110,7 @@ export const GOVERNANCE_TYPES = {
             { name: 'description', label: 'Description', type: 'textarea' },
             { name: 'effective_date', label: 'Effective Date', type: 'date' },
             { name: 'last_updated', label: 'Last Updated', type: 'date' },
+            RAW_TEXT_FIELD,
         ],
     },
 };

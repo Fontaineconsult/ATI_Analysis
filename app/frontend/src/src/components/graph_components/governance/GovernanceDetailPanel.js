@@ -2,6 +2,7 @@ import React, { useCallback, useContext, useEffect, useState } from 'react';
 import {
     Box,
     Button,
+    Collapse,
     Divider,
     Heading,
     HStack,
@@ -33,6 +34,48 @@ import {
     detachWebpageFromGovernance,
 } from '../../../services/api/put';
 import { UserContext } from '../../../context/UserContext';
+
+/**
+ * Display for a captured source mirror (`raw_text`). Collapsed by default —
+ * these run to tens of thousands of characters and would bury every other field
+ * on the panel. The summary line carries the capture date, which is the point:
+ * a mirror's usefulness depends on how stale it is.
+ */
+function RawTextBlock({ label, value, captured }) {
+    const [open, setOpen] = useState(false);
+    return (
+        <Box>
+            <Text fontSize="xs" color="gray.600" textTransform="uppercase" fontWeight="bold">
+                {label}
+            </Text>
+            <HStack spacing={2} mt={1}>
+                <Text fontSize="sm" color="gray.800">
+                    {value.length.toLocaleString()} characters
+                    {captured ? ` · captured ${captured}` : ''}
+                </Text>
+                <Button size="xs" variant="ghost" colorScheme="teal" onClick={() => setOpen((v) => !v)}>
+                    {open ? 'Hide' : 'Show'}
+                </Button>
+            </HStack>
+            <Collapse in={open} animateOpacity>
+                <Box
+                    mt={2}
+                    p={3}
+                    maxH="24rem"
+                    overflowY="auto"
+                    bg="gray.50"
+                    borderWidth="1px"
+                    borderColor="gray.200"
+                    borderRadius="md"
+                >
+                    <Text fontSize="xs" fontFamily="mono" color="gray.800" whiteSpace="pre-wrap">
+                        {value}
+                    </Text>
+                </Box>
+            </Collapse>
+        </Box>
+    );
+}
 
 // Local check that mirrors the EntityAttachmentSelector normalizer: would this
 // string survive normalizeHref? Used to choose which Webpage field holds the
@@ -224,6 +267,16 @@ function GovernanceDetailPanel({ item, onAfterEdit, onAfterDelete, placeholder }
                                             Not set
                                         </Text>
                                     </Box>
+                                );
+                            }
+                            if (field.type === 'markdown') {
+                                return (
+                                    <RawTextBlock
+                                        key={field.name}
+                                        label={field.label}
+                                        value={String(value)}
+                                        captured={item.raw_text_captured}
+                                    />
                                 );
                             }
                             return (

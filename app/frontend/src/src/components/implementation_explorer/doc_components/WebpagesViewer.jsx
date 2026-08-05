@@ -8,7 +8,7 @@ import { useSettings } from '../../../context/SettingsContext';
 import { UserContext } from '../../../context/UserContext';
 import {
     AddRow, EmptyText, Field, FieldLabel, FormActions, FormShell,
-    ItemShell, MetaLine, ReportBadges, SwitchRow,
+    ItemShell, MetaLine, RawTextField, RawTextMeta, ReportBadges, SwitchRow,
 } from './docPrimitives';
 
 function WebpageForm({ webpage, onSubmit, onCancel, isNewWebpage }) {
@@ -27,6 +27,7 @@ function WebpageForm({ webpage, onSubmit, onCancel, isNewWebpage }) {
         url: webpage?.url || '',
         name: webpage?.name || '',
         description: webpage?.description || '',
+        raw_text: webpage?.raw_text || '',
         no_longer_exists: webpage?.no_longer_exists || false,
         depreciated: webpage?.depreciated || false,
         depreciated_date: webpage?.depreciated_date || '',
@@ -75,6 +76,12 @@ function WebpageForm({ webpage, onSubmit, onCancel, isNewWebpage }) {
             <Field label="Name" name="name" value={webpageData.name} onChange={handleChange} isRequired />
             <Field as="textarea" label="Description" name="description" value={webpageData.description} onChange={handleChange} rows={2} />
             <Field as="select" label="Maintained By" name="maintainer_id" value={webpageData.maintainer_id} onChange={handleChange} placeholder="Select a maintainer" options={maintainerOptions} />
+            <RawTextField
+                value={webpageData.raw_text}
+                onChange={handleChange}
+                captured={webpage?.raw_text_captured}
+                subject="page"
+            />
             <Box>
                 <FieldLabel mb={2}>Flags</FieldLabel>
                 <VStack align="stretch" spacing={1.5}>
@@ -182,12 +189,16 @@ export default function WebpagesViewer({ webpages = [], implementation_id, imple
                                 >
                                     {wp.description && <Text fontSize="xs" color="gray.600" noOfLines={2}>{wp.description}</Text>}
                                     {wp.maintained_by && <MetaLine>Maintained by {wp.maintained_by.name || 'Unknown'}</MetaLine>}
+                                    <RawTextMeta rawText={wp.raw_text} captured={wp.raw_text_captured} />
                                     <ReportBadges
                                         inYear={isIncludedInCurrentYear(wp)}
                                         year={currentAcademicYear}
                                         global={wp.include_in_report !== false}
                                         depreciated={wp.depreciated === true}
-                                        extra={wp.no_longer_exists === true && <WrapItem><Badge colorScheme="red" fontSize="2xs">No Longer Exists</Badge></WrapItem>}
+                                        extra={<>
+                                            {wp.raw_text && <WrapItem><Badge colorScheme="teal" fontSize="2xs">Source Text</Badge></WrapItem>}
+                                            {wp.no_longer_exists === true && <WrapItem><Badge colorScheme="red" fontSize="2xs">No Longer Exists</Badge></WrapItem>}
+                                        </>}
                                     />
                                 </ItemShell>
                             </Collapse>

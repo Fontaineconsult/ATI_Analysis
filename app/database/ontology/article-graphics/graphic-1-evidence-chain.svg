@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 460" font-family="Roboto, 'Segoe UI', Helvetica, Arial, sans-serif" role="img" aria-labelledby="t d">
+  <title id="t">A compliance claim is a chain</title>
+  <desc id="d">Six linked records from Section 508 through a campus goal, success indicator, one year's evidence record, the procedure behind it, and the document that proves it.</desc>
+  <defs>
+    <marker id="ar" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0,0 L9,5 L0,10 z" fill="#4A5568"/></marker>
+    <style>
+      .h1   { fill:#202C4A; font-size:24px; font-weight:700; }
+      .sub  { fill:#4A5568; font-size:13px; }
+      .boxT { font-size:15px; font-weight:700; }
+      .boxS { font-size:11px; }
+      .rel  { fill:#4A5568; font-size:12px; font-style:italic; }
+      .relS { fill:#4A5568; font-size:10.5px; font-style:italic; }
+      .lab  { fill:#5A6B8C; font-size:11.5px; font-weight:600; letter-spacing:0.04em; }
+      .foot { fill:#718096; font-size:12.5px; }
+      .edge { stroke:#4A5568; stroke-width:1.8; fill:none; }
+</style>
+  </defs>
+  <rect width="1200" height="460" fill="#ffffff"/>
+  <text class="h1" x="32" y="46">A compliance claim is a chain</text>
+  <rect x="32" y="58" width="80" height="4" rx="2" fill="#4966A4"/>
+  <rect x="112" y="58" width="40" height="4" rx="2" fill="#635098"/>
+  <rect x="152" y="58" width="40" height="4" rx="2" fill="#DB5850"/>
+  <text class="sub" x="32" y="84">One real chain from the SFBRN graph — five links from federal mandate to the document that proves the work</text>
+<g transform="translate(0,-106)">
+<path d="M36 276 L36 268 L588 268 L588 276" stroke="#A7B7D7" stroke-width="1.4" fill="none"/><text class="lab" x="312" y="260" text-anchor="middle" fill="#5A6B8C">SHARED &amp; STABLE · every campus, every year</text>
+<path d="M618 276 L618 268 L782 268 L782 276" stroke="#B7791F" stroke-width="1.4" fill="none"/><text class="lab" x="700" y="260" text-anchor="middle" fill="#744210">THIS CAMPUS · THIS YEAR</text>
+<path d="M812 276 L812 268 L1170 268 L1170 276" stroke="#A7B7D7" stroke-width="1.4" fill="none"/><text class="lab" x="991" y="260" text-anchor="middle" fill="#5A6B8C">THE WORK &amp; ITS PROOF</text>
+<rect x="36" y="304.0" width="164" height="104" rx="10" fill="#EBF2FA" stroke="#2B6CB0" stroke-width="1.8"/><text x="118.0" y="346" text-anchor="middle" font-size="14px" font-weight="700" fill="#1A4971">Section 508</text><text x="118.0" y="364" text-anchor="middle" font-size="11px" fill="#54759E">Rehabilitation Act</text><text x="118.0" y="378" text-anchor="middle" font-size="11px" fill="#54759E">federal mandate</text>
+<rect x="230" y="304.0" width="164" height="104" rx="10" fill="#E6F4EC" stroke="#38A169" stroke-width="1.8"/><text x="312.0" y="346" text-anchor="middle" font-size="14px" font-weight="700" fill="#22543D">Campus goal</text><text x="312.0" y="364" text-anchor="middle" font-size="11px" fill="#4E8E6A">instructional</text><text x="312.0" y="378" text-anchor="middle" font-size="11px" fill="#4E8E6A">materials</text>
+<rect x="424" y="304.0" width="164" height="104" rx="10" fill="#E6F4EC" stroke="#38A169" stroke-width="1.8"/><text x="506.0" y="346" text-anchor="middle" font-size="14px" font-weight="700" fill="#22543D">Indicator 7.11</text><text x="506.0" y="364" text-anchor="middle" font-size="11px" fill="#4E8E6A">accessibility of</text><text x="506.0" y="378" text-anchor="middle" font-size="11px" fill="#4E8E6A">library assets</text>
+<rect x="618" y="304.0" width="164" height="104" rx="10" fill="#FAF0DC" stroke="#B7791F" stroke-width="1.8"/><text x="700.0" y="346" text-anchor="middle" font-size="14px" font-weight="700" fill="#744210">Evidence record</text><text x="700.0" y="364" text-anchor="middle" font-size="11px" fill="#9C7B3A">this campus</text><text x="700.0" y="378" text-anchor="middle" font-size="11px" fill="#9C7B3A">2025–2026</text>
+<rect x="812" y="304.0" width="164" height="104" rx="10" fill="#EFEAFB" stroke="#805AD5" stroke-width="1.8"/><text x="894.0" y="337" text-anchor="middle" font-size="14px" font-weight="700" fill="#44337A">E-resource</text><text x="894.0" y="356" text-anchor="middle" font-size="14px" font-weight="700" fill="#44337A">acquisition</text><text x="894.0" y="373" text-anchor="middle" font-size="11px" fill="#7A68B0">the library’s</text><text x="894.0" y="388" text-anchor="middle" font-size="11px" fill="#7A68B0">procedure</text>
+<rect x="1006" y="304.0" width="164" height="104" rx="10" fill="#E0F3F7" stroke="#0987A0" stroke-width="1.8"/><text x="1088.0" y="344" text-anchor="middle" font-size="14px" font-weight="700" fill="#086F83">Procedure</text><text x="1088.0" y="364" text-anchor="middle" font-size="14px" font-weight="700" fill="#086F83">document</text><text x="1088.0" y="380" text-anchor="middle" font-size="11px" fill="#4993A3">on file</text>
+<path class="edge" d="M202 356 L227 356" marker-end="url(#ar)"/><text class="rel" x="214" y="296.0" text-anchor="middle">informs</text>
+<path class="edge" d="M396 356 L421 356" marker-end="url(#ar)"/><text class="rel" x="408" y="296.0" text-anchor="middle">supported_by</text>
+<path class="edge" d="M616 356 L591 356" marker-end="url(#ar)"/><text class="rel" x="604" y="296.0" text-anchor="middle">tracks</text>
+<path class="edge" d="M810 356 L785 356" marker-end="url(#ar)"/><text class="rel" x="798" y="296.0" text-anchor="middle">is_evidence_for</text>
+<path class="edge" d="M978 356 L1003 356" marker-end="url(#ar)"/><text class="rel" x="990" y="296.0" text-anchor="middle">is_documented_by</text>
+</g>
+<text x="600" y="352" text-anchor="middle" font-size="14.5px" font-style="italic" fill="#4A5568">Five links. Remove any one and the claim fails — quietly.</text>
+<text class="foot" x="32" y="424">Edge names are the database’s own: <tspan font-style="italic">informs · supported_by · tracks · is_evidence_for · is_documented_by</tspan> — the query language follows them in one step.</text>
+</svg>

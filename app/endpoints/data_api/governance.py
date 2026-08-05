@@ -59,6 +59,8 @@ def _serialize_governance_node(governance_type, node):
         "legislative_authority": getattr(node, "legislative_authority", None),
         "ruling": getattr(node, "ruling", None),
         "source_institution": getattr(node, "source_institution", None),
+        "raw_text": getattr(node, "raw_text", None),
+        "raw_text_captured": _iso(getattr(node, "raw_text_captured", None)),
         "documents": documents,
         "webpages": webpages,
     }
