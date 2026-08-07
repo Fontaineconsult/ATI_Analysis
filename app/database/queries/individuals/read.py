@@ -115,7 +115,11 @@ def get_person_implementation_details(employee_id: str) -> dict:
           roles: [(p)-[hr:holds_role]->(role:Role) | {handle: role.handle, name: role.name, in_position_description: hr.in_position_description, pd_description: hr.pd_description}],
           participatedRoleHandles: [(p)-[w:worked_on]->() WHERE w.role_handle IS NOT NULL | w.role_handle],
           participations: [(p)-[w:worked_on]->(impl) | {type: head(labels(impl)), title: impl.title, unique_id: impl.unique_id, role_handle: w.role_handle}],
-          employers: [(p)<-[:employs]-(u) | {name: u.name, type: head(labels(u))}],
+          employers: [(p)<-[:employs]-(u) | {name: u.name, type:
+            CASE WHEN u:Department THEN 'Department'
+                 WHEN u:College    THEN 'College'
+                 WHEN u:Vendor     THEN 'Vendor'
+                 ELSE head(labels(u)) END}],
           communities: [(p)-[mc:member_of_community]->(cop:CommunityOfPractice) | {unique_id: cop.unique_id, name: cop.name, note: mc.note}],
           yearSuccessEvidences: yses
         }) AS jsonResult

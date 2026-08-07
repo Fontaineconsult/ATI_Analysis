@@ -113,3 +113,46 @@ def get_colleges_by_campus(campus_name: str) -> list:
         raise CrudError(f"Campus '{campus_name}' does not exist.")
     except Exception as e:
         raise CrudError(f"Failed to retrieve colleges for campus '{campus_name}': {e}")
+
+
+def get_local_org_units_overview(campus_abbreviation: str) -> list:
+    """
+    The settings-view read: every Department and College operating under the
+    campus (by abbreviation), each with its employee count. One Cypher round
+    trip; raises NotFoundError on an unknown campus.
+    """
+    from app.endpoints.data_api.errors.custom_exceptions import NotFoundError
+
+    rows, _ = db.cypher_query(
+        """
+        MATCH (c:Campus {abbreviation: $abbrev})
+        RETURN c.abbreviation
+        """,
+        {"abbrev": campus_abbreviation},
+    )
+    if not rows:
+        raise NotFoundError(f"Campus {campus_abbreviation!r} not found")
+
+    rows, _ = db.cypher_query(
+        """
+        MATCH (u)-[:operates_under_campus]->(:Campus {abbreviation: $abbrev})
+        WHERE u:Department OR u:College
+        RETURN u.name,
+               u.unique_id,
+               u.location,
+               CASE WHEN u:Department THEN 'Department' ELSE 'College' END,
+               size([(u)-[:employs]->(:Person) | 1])
+        ORDER BY CASE WHEN u:Department THEN 0 ELSE 1 END, toLower(u.name)
+        """,
+        {"abbrev": campus_abbreviation},
+    )
+    return [
+        {
+            "name": name,
+            "unique_id": unique_id,
+            "location": location,
+            "type": unit_type,
+            "employee_count": employee_count,
+        }
+        for name, unique_id, location, unit_type, employee_count in rows
+    ]

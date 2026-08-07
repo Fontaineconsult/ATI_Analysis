@@ -10,6 +10,7 @@ import {
 } from '@chakra-ui/react';
 import { Link as RouterLink, useParams } from 'react-router-dom';
 import Members from "./Members";
+import Organizations from "./Organizations";
 import SuccessIndicators from "./SuccessIndicators";
 import StatusLevels from "./StatusLevelsControls";
 import OntologyBrowser from "./OntologyBrowser";
@@ -30,6 +31,8 @@ function SettingsMasterContainer() {
                 return <SuccessIndicators />;
             case 'members':
                 return <Members />;
+            case 'organizations':
+                return <Organizations />;
             case 'ontology-browser':
                 return <OntologyBrowser />;
             default:
@@ -51,6 +54,7 @@ function SettingsMasterContainer() {
             heading: null,
             items: [
                 { id: 'members', label: 'Members' },
+                { id: 'organizations', label: 'Organizations' },
                 { id: 'status-levels', label: 'Status Levels' },
                 { id: 'success-indicators', label: 'Success Indicators' },
             ],

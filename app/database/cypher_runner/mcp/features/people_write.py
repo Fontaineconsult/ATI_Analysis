@@ -9,6 +9,7 @@ An agent resolves who/what it is talking about with those, then records changes 
   create_person / update_person                      -> Person node (+ host campus, working groups)
   assign_person_to_working_group                     -> Person -[:participates_in]-> ATIWorkingGroup
   assign_person_to_department / _college / _vendor   -> unit -[:employs]-> Person
+  unassign_person_from_org_unit                      -> removes an employs edge (any unit type)
   create_department / create_college                 -> node (+ optional operates_under_campus)
   create_vendor / update_vendor                      -> Vendor node
 
@@ -184,6 +185,19 @@ def register(mcp, ctx) -> None:
             assign_employee_to_vendor(vendor_name, employee_id)
         return {"ok": True, "vendor": vendor_name, "employee_id": employee_id}
 
+    def unassign_person_from_org_unit(unit_type: str, unit_name: str, employee_id: str) -> dict:
+        """Remove an employs edge: disconnect a Person from a Department, College, or Vendor.
+        `unit_type` is 'department' | 'college' | 'vendor'; `unit_name` is the exact unit name.
+        Idempotent (a missing edge is a no-op)."""
+        ensure_app()
+        from app.database.queries.individuals.read import get_person_by_employee_id
+        from app.database.queries.organizational_units.update import unassign_employee_from_org_unit
+
+        with _quiet():
+            person = get_person_by_employee_id(employee_id)
+            unassign_employee_from_org_unit(unit_type, unit_name, person.unique_id)
+        return {"ok": True, "unit_type": unit_type, "unit": unit_name, "employee_id": employee_id}
+
     # --- org units -------------------------------------------------------- #
     def create_department(
         name: str,
@@ -260,6 +274,9 @@ def register(mcp, ctx) -> None:
          "Connect a College to a Person it employs, by exact names/ids. Idempotent."),
         (assign_person_to_vendor, "assign_person_to_vendor",
          "Connect a Vendor to a Person it employs, by exact names/ids. Idempotent."),
+        (unassign_person_from_org_unit, "unassign_person_from_org_unit",
+         "Remove an employs edge: disconnect a Person from a Department, College, or "
+         "Vendor by unit_type + exact unit name. Idempotent."),
         (create_department, "create_department",
          "Create a Department, optionally connected to its campus (full Campus.name)."),
         (create_college, "create_college",

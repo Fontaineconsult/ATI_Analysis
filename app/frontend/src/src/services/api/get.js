@@ -514,6 +514,21 @@ export const fetchColleges = async (campus) => {
     }
 };
 
+// Settings → Organizations: every Department/College operating under the campus
+// (abbreviation), each with its employee count.
+export const fetchLocalOrgUnits = async (campusAbbrev) => {
+    try {
+        const response = await axios.get(`${process.env.REACT_APP_API_URL}/organizational-units`, {
+            params: { type: 'local-overview', campus: campusAbbrev },
+        });
+        if (response.status === 200) return response.data;
+        throw new Error(`Failed to fetch org units: ${response.data?.error}`);
+    } catch (error) {
+        console.error('Error fetching local org units:', error.message);
+        throw error;
+    }
+};
+
 // Vendor CRUD resource (/vendors) — richer than the org-units ?type=vendors
 // reference list (this one carries location + detail). fetchVendors above stays
 // for the asset supplier dropdowns.

@@ -186,6 +186,24 @@ export const deleteVendor = async (name) => {
     }
 };
 
+export const deleteOrgUnit = async (unitType, name) => {
+    // unitType: 'department' | 'college'. Deletion detaches employs edges with
+    // the node — callers confirm against the employee count first.
+    try {
+        const response = await fetch(`${API_URL}/organizational-units`, {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ unit_type: unitType, name }),
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Failed to delete org unit');
+        return data;
+    } catch (error) {
+        console.error('Error deleting org unit:', error);
+        throw error;
+    }
+};
+
 //
 // INTERFACES — node delete (edge unassigns live on PUT, in put.js)
 //

@@ -56,6 +56,65 @@ def assign_employee_to_vendor(vendor_name, employee_id):
         raise CrudError(f"Error assigning employee {employee_id} to vendor {vendor_name}: {e}")
 
 
+#
+# Org-unit employs edges (modern pair, keyed on Person.unique_id).
+# The generic functions back the /organizational-units PUT actions and the MCP
+# unassign tools; the older assign_employee_to_* helpers above stay for their
+# existing callers (employee_id-keyed).
+#
+
+_ORG_UNIT_TYPES = {
+    "department": Department,
+    "college": College,
+    "vendor": Vendor,
+}
+
+
+def _resolve_unit_and_person(unit_type: str, unit_name: str, person_unique_id: str):
+    unit_cls = _ORG_UNIT_TYPES.get((unit_type or "").strip().lower())
+    if unit_cls is None:
+        raise ValidationError(
+            f"Unknown unit_type {unit_type!r}. Valid types: {sorted(_ORG_UNIT_TYPES)}"
+        )
+    try:
+        unit = unit_cls.nodes.get(name=unit_name)
+    except unit_cls.DoesNotExist:
+        raise NotFoundError(f"{unit_cls.__name__} {unit_name!r} not found")
+    try:
+        person = Person.nodes.get(unique_id=person_unique_id)
+    except Person.DoesNotExist:
+        raise NotFoundError(f"Person {person_unique_id!r} not found")
+    return unit, person
+
+
+def assign_employee_to_org_unit(unit_type: str, unit_name: str, person_unique_id: str) -> bool:
+    """
+    Connect a Department / College / Vendor to a Person it employs
+    (unit -[:employs]-> Person). Idempotent.
+    """
+    unit, person = _resolve_unit_and_person(unit_type, unit_name, person_unique_id)
+    try:
+        if not unit.employs.is_connected(person):
+            unit.employs.connect(person)
+        return True
+    except Exception as e:
+        raise CrudError(f"Failed to assign person to {unit_type} {unit_name!r}: {e}")
+
+
+def unassign_employee_from_org_unit(unit_type: str, unit_name: str, person_unique_id: str) -> bool:
+    """
+    Disconnect a Person from a Department / College / Vendor `employs` edge.
+    Idempotent.
+    """
+    unit, person = _resolve_unit_and_person(unit_type, unit_name, person_unique_id)
+    try:
+        if unit.employs.is_connected(person):
+            unit.employs.disconnect(person)
+        return True
+    except Exception as e:
+        raise CrudError(f"Failed to unassign person from {unit_type} {unit_name!r}: {e}")
+
+
 def update_vendor(name: str, location=None, new_name: str = None) -> Vendor:
     """
     Patch a vendor's editable fields. `location` is set when provided; `new_name`

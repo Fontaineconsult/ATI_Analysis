@@ -730,6 +730,42 @@ export const unassignEmployeeFromVendor = async (name, personUniqueId) => {
 };
 
 //
+// ORG UNITS — employs-edge assign/unassign for Department / College / Vendor
+// (action-dispatch PUT on /organizational-units). unitType: 'department' |
+// 'college' | 'vendor'; name is the unit's unique name.
+//
+
+export const assignEmployeeToOrgUnit = async (unitType, name, personUniqueId) => {
+    try {
+        const response = await axios.put(`${process.env.REACT_APP_API_URL}/organizational-units`, {
+            action: 'assign_employee',
+            unit_type: unitType,
+            name,
+            person_unique_id: personUniqueId,
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error assigning employee to org unit:', error);
+        throw error;
+    }
+};
+
+export const unassignEmployeeFromOrgUnit = async (unitType, name, personUniqueId) => {
+    try {
+        const response = await axios.put(`${process.env.REACT_APP_API_URL}/organizational-units`, {
+            action: 'unassign_employee',
+            unit_type: unitType,
+            name,
+            person_unique_id: personUniqueId,
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error unassigning employee from org unit:', error);
+        throw error;
+    }
+};
+
+//
 // INTERFACES — update + backing-asset assign/unassign (action-dispatch PUT).
 // Both assign and unassign live on PUT; DELETE is reserved for node removal.
 //

@@ -3,7 +3,7 @@ Tests for the people & org-units MCP write capability (people_write feature).
 
 Two layers, mirroring test_mcp_notes_annotation:
 
-  unit         — the ten write tools register ONLY when ATI_MCP_ALLOW_WRITE is on. No database.
+  unit         — the eleven write tools register ONLY when ATI_MCP_ALLOW_WRITE is on. No database.
   integration  — a reversible live round-trip: create a sentinel-named Person / Vendor /
                  Department through the registered tools, exercise update + assignment tools,
                  assert the nodes and edges landed, then delete everything created.
@@ -26,6 +26,7 @@ PEOPLE_WRITE_TOOLS = (
     "assign_person_to_department",
     "assign_person_to_college",
     "assign_person_to_vendor",
+    "unassign_person_from_org_unit",
     "create_department",
     "create_college",
     "create_vendor",
@@ -143,6 +144,24 @@ def test_people_and_org_units_round_trip(monkeypatch):
             {"n": DEPARTMENT_NAME, "e": EMPLOYEE_ID},
         )
         assert rows, "assign_person_to_department should create the employs edge"
+
+        # --- unassign: remove the department edge, idempotent re-run ----------
+        asyncio.run(mcp.call_tool("unassign_person_from_org_unit", {
+            "unit_type": "department",
+            "unit_name": DEPARTMENT_NAME,
+            "employee_id": EMPLOYEE_ID,
+        }))
+        rows, _ = db.cypher_query(
+            "MATCH (d:Department {name:$n})-[:employs]->(p:Person {employee_id:$e}) RETURN d.name",
+            {"n": DEPARTMENT_NAME, "e": EMPLOYEE_ID},
+        )
+        assert not rows, "unassign_person_from_org_unit should remove the employs edge"
+        # A second call is a no-op, not an error.
+        asyncio.run(mcp.call_tool("unassign_person_from_org_unit", {
+            "unit_type": "department",
+            "unit_name": DEPARTMENT_NAME,
+            "employee_id": EMPLOYEE_ID,
+        }))
 
     finally:
         # Exact-key cleanup of everything this test can have created.

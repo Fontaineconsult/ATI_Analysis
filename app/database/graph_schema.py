@@ -1820,10 +1820,13 @@ class OrgUnit(StructuredNode):
     Vendor is deliberately NOT an OrgUnit: a vendor is external and relates to an
     Asset through `supplied_by`, not through institutional stewardship.
 
-    Non-destructive note: Department and College now inherit from OrgUnit. Existing
-    :Department / :College nodes keep working via their own labels; a back-label
-    migration (adding :OrgUnit to those existing nodes) is what lets OrgUnit-label
-    traversal find them, and is deferred.
+    Non-destructive note: Department and College now inherit from OrgUnit, so
+    neomodel resolves them by the FULL label set {OrgUnit, Department} /
+    {OrgUnit, College}. The back-label migration adding :OrgUnit to the legacy
+    single-label nodes ran 2026-08-09 (batch/migrate_orgunit_back_labels.cypher —
+    idempotent, safe to re-run). Any raw Cypher that mints a Department or
+    College MUST create it with both labels (e.g. MERGE (d:Department:OrgUnit
+    {name: ...})), or neomodel reads of that class will 500 on resolution.
     """
     unique_id = UniqueIdProperty()
 

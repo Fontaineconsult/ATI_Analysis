@@ -576,6 +576,23 @@ export const createVendor = async (payload) => {
     }
 };
 
+export const createOrgUnit = async (unitType, name, { location, campus } = {}) => {
+    // unitType: 'department' | 'college'; campus is the abbreviation — when given
+    // the unit is connected operates_under_campus so campus-scoped reads see it.
+    try {
+        const response = await axios.post(`${process.env.REACT_APP_API_URL}/organizational-units`, {
+            unit_type: unitType,
+            name,
+            location: location || null,
+            campus: campus || null,
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error creating org unit:', error);
+        throw error;
+    }
+};
+
 export const createInterface = async (payload) => {
     // payload: { title, locus, function, presented_by?, coverage_domains?[], audience?[], provenance?, description? }
     // title/locus/function (+ backing from presented_by) are the identity coordinates.

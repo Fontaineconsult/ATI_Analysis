@@ -93,6 +93,7 @@ def validate(session, statements: list[str]) -> bool:
 
 def execute(session, statements: list[str]) -> bool:
     total_nodes = total_rels = total_props = 0
+    total_labels = total_deleted_nodes = total_deleted_rels = 0
     for i, stmt in enumerate(statements, 1):
         try:
             counters = session.run(stmt).consume().counters
@@ -108,16 +109,22 @@ def execute(session, statements: list[str]) -> bool:
         total_nodes += counters.nodes_created
         total_rels += counters.relationships_created
         total_props += counters.properties_set
-        if counters.nodes_created or counters.relationships_created:
+        total_labels += counters.labels_added
+        total_deleted_nodes += counters.nodes_deleted
+        total_deleted_rels += counters.relationships_deleted
+        if counters.nodes_created or counters.relationships_created or counters.labels_added:
             print(
                 f"  #{i:03d} +{counters.nodes_created}n "
-                f"+{counters.relationships_created}r  [{first_line(stmt, 70)}]"
+                f"+{counters.relationships_created}r "
+                f"+{counters.labels_added}L  [{first_line(stmt, 70)}]"
             )
     print(
         f"Execution complete: nodes created={total_nodes}, "
-        f"relationships created={total_rels}, properties set={total_props}"
+        f"relationships created={total_rels}, properties set={total_props}, "
+        f"labels added={total_labels}, deleted={total_deleted_nodes}n/{total_deleted_rels}r"
     )
-    if total_nodes == 0 and total_rels == 0:
+    if not any((total_nodes, total_rels, total_props, total_labels,
+                total_deleted_nodes, total_deleted_rels)):
         print("  (no writes - every MERGE matched existing data; idempotent re-run)")
     return True
 

@@ -8,8 +8,6 @@ import {
     HStack,
     Text,
     VStack,
-    Wrap,
-    WrapItem,
 } from '@chakra-ui/react';
 import { useData } from '../../../hooks/useData';
 import Card from '../common/Card';
@@ -17,6 +15,7 @@ import Section from '../common/Section';
 import PersonHeader from './PersonHeader';
 import PersonYseList from './PersonYseList';
 import RoleHoldingsEditor from './RoleHoldingsEditor';
+import EmployersEditor from './EmployersEditor';
 import YseAssignmentSelector from '../../functional_components/YseAssignmentSelector';
 import { personCommunities } from './peopleConfig';
 // Participation types ARE implementation types — reuse that domain's color map.
@@ -140,20 +139,15 @@ function PersonDetailPanel({ person, onChange, onEdit, placeholder }) {
                 </Section>
             )}
 
-            {/* Employed By — org units (Department / College) that employ the person */}
-            {employers.length > 0 && (
-                <Section title="Employed By">
-                    <Wrap spacing={2}>
-                        {employers.map((e, i) => (
-                            <WrapItem key={`${e.name}-${i}`}>
-                                <Badge colorScheme="gray" variant="subtle" fontSize="2xs">
-                                    {e.name}{e.type ? ` · ${e.type}` : ''}
-                                </Badge>
-                            </WrapItem>
-                        ))}
-                    </Wrap>
-                </Section>
-            )}
+            {/* Employed By — org units (Department / College / Vendor) that employ
+                the person; the employs edges are editable here. */}
+            <Section title="Employed By">
+                <EmployersEditor
+                    personUniqueId={person.unique_id}
+                    employers={employers}
+                    onChange={onChange}
+                />
+            </Section>
 
             <Card
                 title="Assign to additional YSEs"

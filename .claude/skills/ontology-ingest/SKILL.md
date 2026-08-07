@@ -197,6 +197,10 @@ only the changed sections.
 - MERGE on each label's unique key: `Person.name`, impl `.title`, `Note.name`,
   `Tool.tool_identifier`, `Plan` by `name` (description is the indexed field but too
   long to key a MERGE; keep names unique and campus-prefixed: "SSU: ...").
+- Department / College MERGE with BOTH labels: `MERGE (d:Department:OrgUnit {name: ...})`
+  (same for `:College:OrgUnit`). neomodel resolves these classes by the full label set —
+  a single-label node 500s every neomodel read of that class (back-label drift, migrated
+  2026-08-09; do not reintroduce it).
 - Every `ON CREATE` sets `unique_id = randomUUID()` plus the neomodel defaults the
   API expects (`Person.active/can_approve_yse/non_committee_member_active`,
   `Note.include_in_report`, `Plan.is_key_plan/is_campus_plan/abandoned`,
