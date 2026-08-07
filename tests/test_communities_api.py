@@ -214,3 +214,60 @@ def test_individuals_set_communities_action(flask_client, test_person):
         "communities": [{"community_id": "no-such-community"}],
     })
     assert missing.status_code == 404
+
+
+def test_communities_by_working_group_derivation(flask_client, test_person):
+    """
+    The WG fit derives from where a community's stakes land
+    ((wg)-[:responsible_for]->(Goal)-[:supported_by]->(si)<-[:has_stake_in]-(c)):
+    a sentinel community staked on a real SI must appear under that SI's working
+    group with the sentinel member as its lead; a sentinel person joined to the
+    WG must appear in the derived working_group_members roster.
+    """
+    from app.database.graph_schema import ATIWorkingGroup, SuccessIndicator
+    from app.database.queries.communities.create import create_community
+    from app.database.queries.communities.read import get_communities_by_working_group
+    from app.database.queries.communities.update import add_community_stake, set_person_communities
+
+    si = SuccessIndicator.nodes.filter(removed=False).first()
+    rows, _ = db.cypher_query(
+        "MATCH (wg:ATIWorkingGroup)-[:responsible_for]->(:Goal)-[:supported_by]->"
+        "(si:SuccessIndicator {composite_key: $key}) RETURN wg.name",
+        {"key": si.composite_key},
+    )
+    assert rows, "every SI must resolve to a WG via responsible_for->supported_by"
+    wg_name = rows[0][0]
+
+    community = create_community({"name": COMMUNITY_NAME})
+    add_community_stake(community.unique_id, si.composite_key, note="wg-fit test")
+    set_person_communities(PERSON_EMPLOYEE_ID, [{"community_id": community.unique_id}])
+    # Sentinel person joins the real WG (edge vanishes with the person's cleanup).
+    wg = ATIWorkingGroup.nodes.get(name=wg_name)
+    person = test_person
+    person.active = True
+    person.save()
+    db.cypher_query(
+        "MATCH (p:Person {employee_id: $e}), (wg:ATIWorkingGroup {name: $w}) "
+        "MERGE (p)-[:participates_in]->(wg)",
+        {"e": PERSON_EMPLOYEE_ID, "w": wg_name},
+    )
+
+    results = get_communities_by_working_group()
+    by_wg = {r["working_group"]: r for r in results}
+    assert wg_name in by_wg
+    target = by_wg[wg_name]
+    ours = next((c for c in target["communities"] if c["name"] == COMMUNITY_NAME), None)
+    assert ours is not None, "staked community must appear under the SI's working group"
+    assert ours["stake_count"] == 1
+    assert PERSON_NAME in [l["name"] for l in ours["leads"]], "explicit member = lead"
+    assert PERSON_NAME in [m["name"] for m in target["working_group_members"]], \
+        "WG roster is the derived body of people"
+
+    # Endpoint view returns the same shape.
+    resp = flask_client.get("/ati/data-api/v1/communities?view=by_working_group")
+    assert resp.status_code == 200
+    items = resp.get_json()["data"]["items"]
+    assert any(
+        any(c["name"] == COMMUNITY_NAME for c in row["communities"])
+        for row in items if row["working_group"] == wg_name
+    )

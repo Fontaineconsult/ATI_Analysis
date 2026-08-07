@@ -458,6 +458,37 @@
            size([(c)-[:has_stake_in]->(:SuccessIndicator) | 1]) AS stake_count
     ORDER BY toLower(c.name)
 
+- name: communities_by_working_group
+  category: individuals
+  description: Which communities of practice fit each working group, derived from where their indicator stakes land (wg->responsible_for->Goal->supported_by->SI<-has_stake_in-community), strongest fit first. Each community lists its explicit members as leads (a handful); the broader people are the WG's own participates_in roster, returned once per group.
+  mode: read
+  params: []
+  cypher: |
+    MATCH (wg:ATIWorkingGroup)
+    OPTIONAL MATCH (wg)-[:responsible_for]->(:Goal)-[:supported_by]->
+                   (si:SuccessIndicator)<-[:has_stake_in]-(c:CommunityOfPractice)
+    WITH wg, c, count(DISTINCT si) AS stake_count
+    ORDER BY stake_count DESC, toLower(c.name)
+    WITH wg,
+         [x IN collect({
+            name: c.name,
+            stake_count: stake_count,
+            leads: [(lead:Person)-[m:member_of_community]->(c) |
+                      {name: lead.name, title: lead.title,
+                       campus: head([(lead)-[:works_at_campus]->(ca:Campus) | ca.abbreviation]),
+                       note: m.note}]
+         }) WHERE x.name IS NOT NULL] AS communities
+    OPTIONAL MATCH (p:Person)-[:participates_in]->(wg)
+    WHERE p.active OR p.non_committee_member_active
+    WITH wg, communities, p
+    ORDER BY toLower(p.name)
+    RETURN wg.name AS working_group,
+           communities,
+           [x IN collect(DISTINCT {name: p.name, title: p.title,
+                                   campus: head([(p)-[:works_at_campus]->(ca:Campus) | ca.abbreviation])})
+            WHERE x.name IS NOT NULL] AS working_group_members
+    ORDER BY working_group
+
 - name: community_detail
   category: individuals
   description: One community of practice by exact name - its members (with campus + membership note) and its indicator stakes (has_stake_in, with note). The stakeholder map for those indicators.

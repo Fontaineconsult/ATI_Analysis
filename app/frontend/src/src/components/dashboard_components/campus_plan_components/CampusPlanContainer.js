@@ -1,4 +1,4 @@
-import React, { useContext, useMemo, useState } from 'react';
+import React, { useContext, useEffect, useMemo, useState } from 'react';
 import {
     Alert,
     AlertIcon,
@@ -39,6 +39,7 @@ import {
     unassignExecutiveSponsor,
     updateCampusPlanSummary,
 } from '../../../services/api/post';
+import { fetchCommunitiesByWorkingGroup } from '../../../services/api/get';
 import PersonAssignmentSelector from '../../functional_components/PersonAssignmentSelector';
 import Card from '../../graph_components/common/Card';
 import CampusPlanStatStrip from './CampusPlanStatStrip';
@@ -95,6 +96,26 @@ function CampusPlanContainer() {
 
     // Peers explicitly loaded via the comparison selector. Primary is always loaded.
     const [peerCampusAbbrevs, setPeerCampusAbbrevs] = useState([]);
+
+    // Communities of practice per working group (derived from indicator stakes) —
+    // one fetch feeds every card's people band. A failure leaves the map empty;
+    // the cards render without the community stack.
+    const [communitiesByWg, setCommunitiesByWg] = useState({});
+    useEffect(() => {
+        let cancelled = false;
+        (async () => {
+            try {
+                const resp = await fetchCommunitiesByWorkingGroup();
+                if (cancelled) return;
+                const map = {};
+                for (const row of resp?.data?.items || []) {
+                    map[row.working_group] = row.communities || [];
+                }
+                setCommunitiesByWg(map);
+            } catch (_) { /* non-fatal: cards render without the community stack */ }
+        })();
+        return () => { cancelled = true; };
+    }, []);
 
     const allCampusAbbrevs = useMemo(() => {
         if (!currentCampus) return [];
@@ -366,6 +387,7 @@ function CampusPlanContainer() {
                         indicatorFilter={indicatorFilter}
                         currentUserUniqueId={currentUserUniqueId}
                         peerWorkingGroupPlans={peerWorkingGroupPlans}
+                        communities={communitiesByWg[wgp.working_group] || []}
                         onIndicatorAdded={handleReloadPrimary}
                         onProgressAdded={handleReloadPrimary}
                         onLeadsChanged={handleReloadPrimary}

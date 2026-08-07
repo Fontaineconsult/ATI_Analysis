@@ -31,6 +31,7 @@ jest.mock('axios', () => ({
 
 jest.mock('../../../services/api/get', () => ({
     fetchCampusPlan: jest.fn(),
+    fetchCommunitiesByWorkingGroup: jest.fn(),
 }));
 jest.mock('../../../services/api/post', () => ({
     createCampusPlan: jest.fn(),
@@ -56,7 +57,7 @@ jest.mock('../../../context/SettingsContext', () => ({
 jest.mock('./WgQueriesSection', () => ({ __esModule: true, default: () => null }));
 jest.mock('./WgMinutesSection', () => ({ __esModule: true, default: () => null }));
 
-import { fetchCampusPlan } from '../../../services/api/get';
+import { fetchCampusPlan, fetchCommunitiesByWorkingGroup } from '../../../services/api/get';
 import { createCampusPlan } from '../../../services/api/post';
 import CampusPlanContainer from './CampusPlanContainer';
 
@@ -117,6 +118,8 @@ const renderPage = () => render(
 beforeEach(() => {
     fetchCampusPlan.mockReset();
     createCampusPlan.mockReset();
+    fetchCommunitiesByWorkingGroup.mockReset();
+    fetchCommunitiesByWorkingGroup.mockResolvedValue({ status: 'success', data: { items: [] } });
 });
 
 
@@ -232,5 +235,48 @@ describe('CampusPlanContainer (v2 single-page shell)', () => {
         // The re-fetched plan renders — Steering (and every other) card is present.
         expect(await screen.findByText('Steering')).toBeInTheDocument();
         expect(fetchCampusPlan).toHaveBeenCalledTimes(2);
+    });
+
+    it('renders the community-of-practice stack in each card people band, leads area on top', async () => {
+        fetchCampusPlan.mockResolvedValueOnce({ status: 'success', data: PLAN_FIXTURE });
+        fetchCommunitiesByWorkingGroup.mockResolvedValue({
+            status: 'success',
+            data: {
+                items: [
+                    {
+                        working_group: 'Procurement',
+                        abbreviation: 'pro',
+                        communities: [
+                            {
+                                name: 'Procurement Community',
+                                stake_count: 15,
+                                leads: [
+                                    { name: 'Sam Steward', title: 'Buyer II', campus: 'sfsu', note: null },
+                                    { name: 'Kris Peer', title: 'Analyst', campus: 'csueb', note: null },
+                                ],
+                            },
+                            { name: 'Disability Services', stake_count: 2, leads: [] },
+                        ],
+                        working_group_members: [],
+                    },
+                ],
+            },
+        });
+
+        renderPage();
+        await screen.findByRole('heading', { name: /^campus plan$/i });
+
+        // The Procurement card's people band: COP boxes with stake chips + members.
+        expect(await screen.findByText('Procurement Community')).toBeInTheDocument();
+        expect(screen.getByText('15 stakes')).toBeInTheDocument();
+        expect(screen.getByText(/Sam Steward/)).toBeInTheDocument();
+        // Cross-campus member is tagged with their campus.
+        expect(screen.getByText('csueb')).toBeInTheDocument();
+        // Leaderless community shows the derive-via-working-group empty state.
+        expect(screen.getByText('Disability Services')).toBeInTheDocument();
+        expect(screen.getByText(/people derive from the working group/i)).toBeInTheDocument();
+        // The leads area is its own labeled region (one per card), still showing Lee Lead.
+        expect(screen.getAllByText('Leads')).toHaveLength(4);
+        expect(screen.getByText('Lee Lead')).toBeInTheDocument();
     });
 });

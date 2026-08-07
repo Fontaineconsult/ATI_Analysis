@@ -83,3 +83,72 @@ def get_community(unique_id: str) -> dict:
         return {**community.serialize(), "members": members, "stakes": stakes}
     except Exception as e:
         raise CrudError(f"Failed to retrieve community {unique_id!r}: {e}")
+
+
+def get_communities_by_working_group() -> list:
+    """
+    Which communities of practice fit each working group — derived entirely from
+    the graph, no mapping tables: a community fits a WG through where its
+    indicator stakes land,
+
+        (wg)-[:responsible_for]->(:Goal)-[:supported_by]->(si)<-[:has_stake_in]-(c)
+
+    weighted by stake_count (communities are ordered strongest-fit first within
+    each group; a community holding stakes in several groups appears under each).
+
+    People model: each community's explicit member_of_community roster is its
+    LEADS — deliberately a handful. The broader body of people is derived from
+    the working group itself (participates_in), returned once per WG as
+    working_group_members and shared by every community in that group.
+
+    WG order and abbreviations follow the registry (data_config.WORKING_GROUP_DEFS).
+    """
+    from app.data_config import WORKING_GROUP_DEFS
+
+    try:
+        rows, _ = db.cypher_query(
+            """
+            MATCH (wg:ATIWorkingGroup)
+            OPTIONAL MATCH (wg)-[:responsible_for]->(:Goal)-[:supported_by]->
+                           (si:SuccessIndicator)<-[:has_stake_in]-(c:CommunityOfPractice)
+            WITH wg, c, count(DISTINCT si) AS stake_count
+            ORDER BY stake_count DESC, toLower(c.name)
+            WITH wg,
+                 [x IN collect({
+                    name: c.name,
+                    unique_id: c.unique_id,
+                    stake_count: stake_count,
+                    leads: [(lead:Person)-[m:member_of_community]->(c) |
+                              {name: lead.name, title: lead.title,
+                               employee_id: lead.employee_id,
+                               campus: head([(lead)-[:works_at_campus]->(ca:Campus) | ca.abbreviation]),
+                               note: m.note}]
+                 }) WHERE x.name IS NOT NULL] AS communities
+            OPTIONAL MATCH (p:Person)-[:participates_in]->(wg)
+            WHERE p.active OR p.non_committee_member_active
+            WITH wg, communities, p
+            ORDER BY toLower(p.name)
+            RETURN wg.name AS working_group,
+                   communities,
+                   [x IN collect(DISTINCT {name: p.name, title: p.title,
+                                           employee_id: p.employee_id,
+                                           campus: head([(p)-[:works_at_campus]->(ca:Campus) | ca.abbreviation])})
+                    WHERE x.name IS NOT NULL] AS working_group_members
+            """
+        )
+    except Exception as e:
+        raise CrudError(f"Failed to derive communities by working group: {e}")
+
+    order = {d["name"]: i for i, d in enumerate(WORKING_GROUP_DEFS)}
+    abbrev = {d["name"]: d["abbrev"] for d in WORKING_GROUP_DEFS}
+    results = [
+        {
+            "working_group": r[0],
+            "abbreviation": abbrev.get(r[0]),
+            "communities": r[1],
+            "working_group_members": r[2],
+        }
+        for r in rows
+    ]
+    results.sort(key=lambda r: order.get(r["working_group"], len(order)))
+    return results

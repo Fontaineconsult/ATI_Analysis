@@ -9,6 +9,11 @@ mirroring how role holdings work; this endpoint owns the community nodes themsel
 
 URL surface (mounted at /ati/data-api/v1):
     GET    /communities               list (member counts + campuses + stake counts)
+    GET    /communities?view=by_working_group
+                                      communities per working group, derived via
+                                      stakes (wg->Goal->SI<-has_stake_in); each
+                                      community's explicit members are its leads,
+                                      the WG roster is the derived body of people
     GET    /communities/<unique_id>   one community with its member roster + indicator stakes
     POST   /communities               {action: create_community, name, description?}
     PUT    /communities/<unique_id>   {action: update_community, name?, description?}
@@ -23,7 +28,11 @@ from flask.views import MethodView
 
 from app.database.queries.communities.create import create_community
 from app.database.queries.communities.delete import delete_community
-from app.database.queries.communities.read import get_all_communities, get_community
+from app.database.queries.communities.read import (
+    get_all_communities,
+    get_communities_by_working_group,
+    get_community,
+)
 from app.database.queries.communities.update import (
     add_community_stake,
     remove_community_stake,
@@ -40,6 +49,8 @@ class CommunitiesAPI(MethodView):
         try:
             if unique_id:
                 return make_response(status="success", data={"community": get_community(unique_id)}), 200
+            if request.args.get("view") == "by_working_group":
+                return make_response(status="success", data={"items": get_communities_by_working_group()}), 200
             return make_response(status="success", data={"items": get_all_communities()}), 200
         except NotFoundError as e:
             return make_response(status="error", error=str(e)), 404

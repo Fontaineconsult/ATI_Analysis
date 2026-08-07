@@ -12,35 +12,8 @@ import ProgressUpdateModal from './ProgressUpdateModal';
 import IndicatorRow, { INDICATOR_GRID_COLUMNS } from './IndicatorRow';
 import WgQueriesSection from './WgQueriesSection';
 import WgMinutesSection from './WgMinutesSection';
+import WgCommunitiesSection from './WgCommunitiesSection';
 import { getWgAccent, isAtRisk, isStale } from './campusPlanConfig';
-
-function initials(name) {
-    if (!name) return '?';
-    const parts = name.trim().split(/\s+/);
-    const first = parts[0]?.[0] || '';
-    const last = parts.length > 1 ? parts[parts.length - 1][0] : '';
-    return (first + last).toUpperCase();
-}
-
-function Avatar({ name, size = '22px' }) {
-    return (
-        <Box
-            w={size}
-            h={size}
-            borderRadius="full"
-            bg="teal.50"
-            color="teal.800"
-            fontSize="10px"
-            fontWeight="bold"
-            display="flex"
-            alignItems="center"
-            justifyContent="center"
-            flexShrink={0}
-        >
-            {initials(name)}
-        </Box>
-    );
-}
 
 const MICRO = {
     fontSize: '10px',
@@ -53,8 +26,10 @@ const MICRO = {
 
 /**
  * One working-group card in the single-page campus plan (design handoff v2 §5).
- * Header (dot + name + id + leads + Manage) → prioritized-indicator table (rows
- * from IndicatorRow, filtered by the stat-strip filter, with cross-campus peer
+ * Header (dot + name + id) → people band (leads on top as their own area, then
+ * the vertical stack of community-of-practice boxes whose stakes land in this
+ * group — WgCommunitiesSection) → prioritized-indicator table (rows from
+ * IndicatorRow, filtered by the stat-strip filter, with cross-campus peer
  * chips) → footer (Queries + Meeting Minutes). Renders for all four groups
  * including Steering — an empty table is fine.
  */
@@ -65,6 +40,7 @@ function WorkingGroupCard({
     indicatorFilter = 'all',
     currentUserUniqueId,
     peerWorkingGroupPlans = [],
+    communities = [],
     onIndicatorAdded,
     onProgressAdded,
     onLeadsChanged,
@@ -131,20 +107,16 @@ function WorkingGroupCard({
                 <Box w="9px" h="9px" borderRadius="full" bg={accent} flexShrink={0} />
                 <Text fontSize="17px" fontWeight="bold" color="gray.800">{wgp.working_group}</Text>
                 <Text fontFamily="mono" fontSize="11px" color="gray.600" whiteSpace="nowrap">{wgp.plan_identifier}</Text>
-                <Box flex="1" minW="12px" />
-                <Text {...MICRO}>Leads</Text>
-                {leads.length === 0 ? (
-                    <Text fontSize="13px" color="gray.600" fontStyle="italic">none</Text>
-                ) : (
-                    leads.map((l) => (
-                        <HStack key={l.unique_id} spacing={1}>
-                            <Avatar name={l.name} />
-                            <Text fontSize="13px" color="gray.600" whiteSpace="nowrap">{l.name}</Text>
-                        </HStack>
-                    ))
-                )}
-                <Button size="xs" variant="outline" colorScheme="teal" onClick={leadsModal.onOpen}>Manage</Button>
             </HStack>
+
+            {/* People band: leads on top, then the community-of-practice stack */}
+            <WgCommunitiesSection
+                leads={leads}
+                onManageLeads={leadsModal.onOpen}
+                communities={communities}
+                accentColor={accent}
+                campusAbbrev={campusAbbrev}
+            />
 
             {/* Prioritized indicators */}
             <HStack px={5} pt={3} pb={1} spacing={3}>

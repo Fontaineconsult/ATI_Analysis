@@ -147,6 +147,23 @@ export const fetchAllCommunities = async () => {
 };
 
 // One community with its member roster (campus + membership note per member).
+// Communities per working group, derived from where their indicator stakes land
+// ((wg)-[:responsible_for]->(Goal)-[:supported_by]->(si)<-[:has_stake_in]-(c)).
+// Each community lists its explicit members as leads; working_group_members is
+// the WG's own roster — the derived body of people behind every community.
+export const fetchCommunitiesByWorkingGroup = async () => {
+    try {
+        const response = await axios.get(`${process.env.REACT_APP_API_URL}/communities`, {
+            params: { view: 'by_working_group' },
+        });
+        if (response.status === 200) return response.data;
+        throw new Error(`Failed to fetch communities by working group: ${response.data?.error}`);
+    } catch (error) {
+        console.error('Error fetching communities by working group:', error.message);
+        throw error;
+    }
+};
+
 export const fetchCommunity = async (uniqueId) => {
     try {
         const response = await axios.get(`${process.env.REACT_APP_API_URL}/communities/${uniqueId}`);
