@@ -192,6 +192,48 @@ def set_evidence_strength(year_success_identifier: str,
     return {'strength': strength}
 
 
+def set_evidence_control(year_success_identifier: str,
+                         implementation_type: str,
+                         implementation_unique_id: str,
+                         control):
+    """Set (or clear, with None) the control flag on an existing
+    is_evidence_for link: whether THIS evidence's owners operate the practice
+    ('internal') or rely on one they don't directly control ('external' —
+    another unit, SFBRN, the CO, a vendor). Relative to the link, not the
+    implementation — vocab in data_config.evidence_control_choices.
+
+    :return: {'control': 'internal' | 'external' | None} — the stored value.
+    """
+    from app.data_config import evidence_control_choices
+
+    if control is not None and control not in evidence_control_choices:
+        raise ValidationError(
+            f"Invalid evidence control (expected {sorted(evidence_control_choices)} or null): {control!r}"
+        )
+
+    if implementation_type not in implementation_classes:
+        raise ValidationError(f"Invalid implementation_type: {implementation_type}")
+    implementation_class = implementation_classes[implementation_type]
+    try:
+        implementation_node = implementation_class.nodes.get(unique_id=implementation_unique_id)
+    except implementation_class.DoesNotExist:
+        raise NotFoundError(f"No {implementation_type} found with unique_id: {implementation_unique_id}")
+    try:
+        year_success_evidence = YearSuccessEvidence.nodes.get(year_identifier=year_success_identifier)
+    except YearSuccessEvidence.DoesNotExist:
+        raise NotFoundError(f"No YearSuccessEvidence found with year_identifier: {year_success_identifier}")
+
+    rel = implementation_node.is_evidence_for.relationship(year_success_evidence)
+    if rel is None:
+        raise NotFoundError(
+            f"{implementation_type} {implementation_unique_id} is not evidence for {year_success_identifier}"
+        )
+
+    rel.control = control
+    rel.save()
+    return {'control': control}
+
+
 def update_status_level_node(unique_id, data):
     """
     Update an existing StatusLevel node's description fields.
@@ -520,3 +562,78 @@ def withdraw_approval(year_success_identifier: str, employee_id: str) -> bool:
         raise e
     except Exception as e:
         raise CrudError(f"Error withdrawing approval on {year_success_identifier}: {e}")
+
+
+def add_recommendation_to_yse(year_success_identifier: str, recommendation: str,
+                              detail: str = None, created_by_employee_id: str = None) -> dict:
+    """
+    Record an end-of-review-cycle improvement on a YSE: creates a Recommendation
+    (status 'open') and wires has_recommendation + created_by.
+    """
+    if not recommendation or not recommendation.strip():
+        raise ValidationError("'recommendation' is required.")
+    try:
+        try:
+            yse = YearSuccessEvidence.nodes.get(year_identifier=year_success_identifier)
+        except YearSuccessEvidence.DoesNotExist:
+            raise NotFoundError(f"YearSuccessEvidence with identifier '{year_success_identifier}' not found.")
+
+        person = None
+        if created_by_employee_id:
+            try:
+                person = Person.nodes.get(employee_id=created_by_employee_id)
+            except Person.DoesNotExist:
+                raise NotFoundError(f"Person with employee_id '{created_by_employee_id}' not found.")
+
+        rec = Recommendation(
+            recommendation=recommendation.strip(),
+            detail=(detail or None),
+            date_created=datetime.now().date(),
+        )
+        rec.save()
+        yse.recommendations.connect(rec)
+        if person is not None:
+            rec.created_by.connect(person)
+        return rec.serialize()
+
+    except (NotFoundError, ValidationError) as e:
+        raise e
+    except Exception as e:
+        raise CrudError(f"Error adding recommendation to {year_success_identifier}: {e}")
+
+
+def update_recommendation(unique_id: str, status: str = None, resolution: str = None,
+                          recommendation: str = None, detail: str = None) -> dict:
+    """
+    Update a Recommendation's lifecycle or text. Moving out of 'open' stamps
+    date_resolved; moving back to 'open' clears it. Recommendations are records
+    — there is deliberately no delete path.
+    """
+    from app.data_config import recommendation_statuses
+
+    if status is not None and status not in recommendation_statuses:
+        raise ValidationError(
+            f"Invalid status (expected {sorted(recommendation_statuses)}): {status!r}"
+        )
+    try:
+        try:
+            rec = Recommendation.nodes.get(unique_id=unique_id)
+        except Recommendation.DoesNotExist:
+            raise NotFoundError(f"Recommendation with unique_id '{unique_id}' not found.")
+
+        if recommendation is not None and recommendation.strip():
+            rec.recommendation = recommendation.strip()
+        if detail is not None:
+            rec.detail = detail or None
+        if resolution is not None:
+            rec.resolution = resolution or None
+        if status is not None and status != rec.status:
+            rec.status = status
+            rec.date_resolved = None if status == "open" else datetime.now().date()
+        rec.save()
+        return rec.serialize()
+
+    except (NotFoundError, ValidationError) as e:
+        raise e
+    except Exception as e:
+        raise CrudError(f"Error updating recommendation {unique_id}: {e}")

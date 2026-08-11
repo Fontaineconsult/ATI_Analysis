@@ -12,7 +12,8 @@ import os
 
 from app.data_config import (trajectory_choices, asset_classes, asset_scopes, taap_outcomes,
                              functions, component_kinds, coverage_domains, audiences, interface_provenances,
-                             descriptor_kinds, query_categories, query_statuses)
+                             descriptor_kinds, query_categories, query_statuses, evidence_control_choices,
+                             recommendation_statuses)
 
 # Configuration enters through the single gateway (app/config_gateway.py). Importing
 # it hydrates os.environ from web.config (production) / .env.<FLASK_ENV> (development),
@@ -559,15 +560,25 @@ class DocumentedByRel(StructuredRel):
 
 class IsEvidenceForRel(StructuredRel):
     """Implementation → YearSuccessEvidence evidence link, qualified by how
-    strongly the work addresses the indicator's requirements.
+    strongly the work addresses the indicator's requirements and by who
+    controls the practice relative to this evidence's owners.
 
     strength (0-3; absent/None = unrated — vocab in data_config.evidence_strength_levels):
       0  No Contribution — does not address any requirement of the indicator.
       1  Indirect Support — helps the indicator without directly addressing its requirements.
       2  Partial — directly addresses some, but not all, requirements.
       3  Full — directly and completely addresses the requirements.
+
+    control ('internal' | 'external'; absent/None = unspecified — vocab in
+    data_config.evidence_control_choices). RELATIVE to this link's YSE: the
+    same implementation can be internal evidence for the procurement group's
+    indicator and external for the Library's. External = the evidence owners
+    rely on a practice they don't directly control (another unit, SFBRN, the
+    CO, a vendor) — the formal statement that a duty is discharged elsewhere;
+    maturity reviews grade the owners' interface to it, not the practice.
     """
     strength = IntegerProperty()
+    control = StringProperty(choices=evidence_control_choices)
 
 
 
@@ -1406,6 +1417,44 @@ class DocumentationEvidenceRequirement(StructuredNode):
     requirement_description = StringProperty(unique_index=True)
 
 
+class Recommendation(StructuredNode):
+    """An improvement identified at the end of a review cycle for one YSE —
+    the durable home for "what we think needs to change" (the maturity
+    review's blocking gaps, an approver's conditions, a reviewer's asks).
+
+    Lifecycle (vocab in data_config.recommendation_statuses):
+    open → addressed | dismissed, with `resolution` recording how/why and
+    `date_resolved` stamping the transition. Recommendations are RECORDS —
+    they resolve, they are not deleted.
+
+    Rollover policy is deliberately open: the natural rule is that OPEN
+    recommendations carry forward to the next year's YSE (they are guidance
+    for the next cycle) while resolved ones stay with the reviewed year —
+    to be wired into create_new_ay_campus at the next rollover decision.
+    """
+    unique_id = UniqueIdProperty()
+
+    recommendation = StringProperty(required=True)  # short imperative statement
+    detail = StringProperty()                        # context; what closing it looks like
+    status = StringProperty(choices=recommendation_statuses, default="open")
+    resolution = StringProperty()                    # how addressed / why dismissed
+    date_created = DateProperty()
+    date_resolved = DateProperty()
+
+    created_by = RelationshipTo("Person", "created_by")
+
+    def serialize(self):
+        return {
+            "unique_id": self.unique_id,
+            "recommendation": self.recommendation,
+            "detail": self.detail,
+            "status": self.status,
+            "resolution": self.resolution,
+            "date_created": str(self.date_created) if self.date_created else None,
+            "date_resolved": str(self.date_resolved) if self.date_resolved else None,
+        }
+
+
 class YearSuccessEvidence(StructuredNode):
 
     """    Class representing a year success evidence node.
@@ -1445,6 +1494,8 @@ class YearSuccessEvidence(StructuredNode):
     notes = RelationshipTo("Note", "has_note")
     messages = RelationshipTo("Message", "has_message")
     metrics = RelationshipTo("Metric", "has_metric")
+    # End-of-review-cycle improvement tracking (see Recommendation docstring).
+    recommendations = RelationshipTo("Recommendation", "has_recommendation")
     worked_on_in_current_year = BooleanProperty(default=False)
     will_work_on_next_year = BooleanProperty(default=False)
 

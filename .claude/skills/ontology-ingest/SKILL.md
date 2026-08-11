@@ -111,7 +111,12 @@ Edges assert harder claims than nodes; grade them separately.
 - **`is_evidence_for`** (impl → YSE): requires the implementation at S1 AND an
   on-subject SI match (read the SI text pulled in recon; don't wire by vibes). If the
   mapping is plausible-but-uncertain, attach a `has_note` to the YSE instead — a note
-  is an observation, evidence is a claim.
+  is an observation, evidence is a claim. Set the rel's `control` flag when the source
+  attests it: `'external'` when the evidence owners rely on a practice they don't
+  directly control ("the CO handles that", "that's procurement's process", a
+  vendor-run service), `'internal'` when they operate it themselves; omit when
+  unattested. Relative to THIS YSE — the same implementation can be internal to its
+  home group's evidence and external elsewhere.
 - **`furthers_yse`** (Plan → YSE): the plan, if executed, would clearly advance that
   SI. One or two best matches; don't spray.
 - **`worked_on {role_handle, note, added_date}`** (Person → impl): only for people who

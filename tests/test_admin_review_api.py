@@ -39,6 +39,11 @@ def review_fixture(neo4j_connection):
     yse = YearSuccessEvidence(year_identifier=YSE_IDENTIFIER).save()
     yield approver, non_approver, yse
     db.cypher_query(
+        "MATCH (e:YearSuccessEvidence)-[:has_recommendation]->(r:Recommendation) "
+        "WHERE e.year_identifier STARTS WITH $prefix DETACH DELETE r",
+        {"prefix": SENTINEL},
+    )
+    db.cypher_query(
         "MATCH (e:YearSuccessEvidence) WHERE e.year_identifier STARTS WITH $prefix DETACH DELETE e",
         {"prefix": SENTINEL},
     )
@@ -259,3 +264,81 @@ def test_withdraw_requires_approver_flag(flask_client, review_fixture):
     complete, _date, approvers = _yse_state()
     assert complete is True, "a rejected withdrawal must not touch the record"
     assert approvers == [APPROVER_EMPLOYEE_ID]
+
+
+# --- Recommendations: end-of-cycle improvement tracking ------------------------
+
+def test_recommendation_lifecycle_round_trip(flask_client, review_fixture):
+    approver, _non, _yse = review_fixture
+
+    created = flask_client.post(API, json={
+        "action": "add_recommendation",
+        "year_success_evidence": YSE_IDENTIFIER,
+        "recommendation": "Document the intake triage routing",
+        "detail": "The four-outcome rule exists as practice; write it down and start counting requests.",
+        "created_by_employee_id": APPROVER_EMPLOYEE_ID,
+    })
+    assert created.status_code == 201, created.get_json()
+    rec = created.get_json()["data"]
+    assert rec["status"] == "open"
+    assert rec["date_created"] is not None
+    assert rec["date_resolved"] is None
+
+    # Wired to the YSE + creator.
+    rows, _ = db.cypher_query(
+        "MATCH (:YearSuccessEvidence {year_identifier: $yid})-[:has_recommendation]->"
+        "(r:Recommendation {unique_id: $uid})-[:created_by]->(p:Person) RETURN p.employee_id",
+        {"yid": YSE_IDENTIFIER, "uid": rec["unique_id"]},
+    )
+    assert rows and rows[0][0] == APPROVER_EMPLOYEE_ID
+
+    # Address it: resolution + stamped date.
+    addressed = flask_client.put(API, json={
+        "action": "update_recommendation",
+        "unique_id": rec["unique_id"],
+        "status": "addressed",
+        "resolution": "Triage procedure documented and Springshare tagging enabled.",
+    })
+    assert addressed.status_code == 200
+    body = addressed.get_json()["data"]
+    assert body["status"] == "addressed"
+    assert body["date_resolved"] is not None
+    assert "Springshare" in body["resolution"]
+
+    # Reopen clears the resolved date; the record survives (no delete path).
+    reopened = flask_client.put(API, json={
+        "action": "update_recommendation",
+        "unique_id": rec["unique_id"],
+        "status": "open",
+    })
+    assert reopened.status_code == 200
+    assert reopened.get_json()["data"]["date_resolved"] is None
+
+
+def test_recommendation_error_mapping(flask_client, review_fixture):
+    missing = flask_client.post(API, json={
+        "action": "add_recommendation",
+        "year_success_evidence": YSE_IDENTIFIER,
+    })
+    assert missing.status_code == 400
+
+    bad_yse = flask_client.post(API, json={
+        "action": "add_recommendation",
+        "year_success_evidence": f"{SENTINEL}-no-such",
+        "recommendation": "x",
+    })
+    assert bad_yse.status_code == 404
+
+    bad_status = flask_client.put(API, json={
+        "action": "update_recommendation",
+        "unique_id": "no-such",
+        "status": "deferred",
+    })
+    assert bad_status.status_code == 400
+
+    missing_rec = flask_client.put(API, json={
+        "action": "update_recommendation",
+        "unique_id": "no-such",
+        "status": "addressed",
+    })
+    assert missing_rec.status_code == 404

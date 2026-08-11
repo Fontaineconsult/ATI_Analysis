@@ -22,7 +22,7 @@ import {
 import {useNavigate, useParams} from "react-router-dom";
 import {navigateToIndicator} from "./utils/tools";
 import { getStatusBackgroundColor, getStatusTextColor } from "./utils/statusColors";
-import { strengthConfig } from "../components/graph_components/implementation/implementationConfig";
+import { strengthConfig, controlConfig } from "../components/graph_components/implementation/implementationConfig";
 import EvidenceQualityPanel from "../components/dashboard_components/report_components/EvidenceQualityPanel";
 
 let datas = {
@@ -655,6 +655,37 @@ function GenerateReportComponent({ evidenceItem, singleColumn = false }) {
                                     </Box>
                                 )}
 
+                            {/* Recommendations — end-of-cycle improvements (open first;
+                                dismissed items are working-surface records, not report content) */}
+                            {evidenceItem.recommendations?.some((w) => w.recommendation?.properties?.status !== 'dismissed') && (
+                                <Box p={3} bg="orange.50" borderRadius="md" borderLeft="4px solid" borderLeftColor="orange.300">
+                                    <Text fontSize="xs" fontWeight="semibold" color="orange.800" mb={1}>
+                                        Recommendations
+                                    </Text>
+                                    <VStack align="stretch" spacing={1}>
+                                        {[...evidenceItem.recommendations]
+                                            .map((w) => ({ ...(w.recommendation?.properties || {}), by: w.created_by?.properties?.name }))
+                                            .filter((r) => r.recommendation && r.status !== 'dismissed')
+                                            .sort((a, b) => (a.status === 'open' ? -1 : 1) - (b.status === 'open' ? -1 : 1))
+                                            .map((r) => (
+                                                <HStack key={r.unique_id} align="start" spacing={2}>
+                                                    <Badge
+                                                        colorScheme={r.status === 'open' ? 'orange' : r.status === 'addressed' ? 'green' : 'gray'}
+                                                        fontSize="10px"
+                                                        flexShrink={0}
+                                                    >
+                                                        {r.status}
+                                                    </Badge>
+                                                    <Text fontSize="xs" color="gray.700">
+                                                        {r.recommendation}
+                                                        {r.resolution ? ` — ${r.resolution}` : ''}
+                                                    </Text>
+                                                </HStack>
+                                            ))}
+                                    </VStack>
+                                </Box>
+                            )}
+
                             {/* Admin Review Notes */}
                             {evidenceItem.adminReviewNotes?.length > 0 && (
                                 <Box>
@@ -996,6 +1027,16 @@ function GenerateReportComponent({ evidenceItem, singleColumn = false }) {
                                                 title={strengthConfig(etype.strength).description}
                                             >
                                                 {strengthConfig(etype.strength).label}
+                                            </Badge>
+                                        )}
+                                        {etype.control === 'external' && (
+                                            <Badge
+                                                colorScheme="purple"
+                                                variant="subtle"
+                                                fontSize="xs"
+                                                title={controlConfig('external').description}
+                                            >
+                                                External
                                             </Badge>
                                         )}
                                         {etype.evidenceType?.properties?.retired && (

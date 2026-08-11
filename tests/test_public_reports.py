@@ -40,9 +40,24 @@ RAW = {
         "admin_review_completed_by": {"name": "Ann Approver", "email": "ann@sfsu.edu"},
     },
     "admin_review_notes": [{"name": "internal", "content": "INTERNAL note"}],
+    "recommendations": [
+        {
+            "recommendation": "Document the intake triage",
+            "detail": "Write it down.", "status": "open", "resolution": None,
+            "date_created": "2026-08-11", "date_resolved": None,
+            "created_by": {"unique_id": "p9", "name": "Rita Reviewer"},
+        },
+        {
+            "recommendation": "Buy a different platform",
+            "detail": None, "status": "dismissed",
+            "resolution": "Out of scope for this cycle.",
+            "date_created": "2026-08-11", "date_resolved": "2026-08-11",
+            "created_by": None,
+        },
+    ],
     "implementations": [{
         "type": "Process", "title": "Audit process", "description": "Quarterly.",
-        "strength": 3, "retired": True, "retired_date": "2026-06-30", "retired_note": "Superseded.",
+        "strength": 3, "control": "external", "retired": True, "retired_date": "2026-06-30", "retired_note": "Superseded.",
         "owner": {"name": "Owen Owner", "email": "owen@sfsu.edu"},
         "accountable_working_group": "Web",
         "dimensions": [{"handle": "d1", "name": "Governance"}],
@@ -82,12 +97,20 @@ def test_sanitizer_keeps_notes_messages_and_report_facts():
     assert impl["notes"][0]["content"] == "Kept note"
     assert impl["messages"][0]["content"] == "Kept message"
     assert impl["strength"] == 3 and impl["retired"] is True
+    assert impl["control"] == "external", "the control flag must survive sanitization"
     assert impl["documents"] == ["Audit Report"]
     assert impl["webpages"][0]["url"] == "https://example.org/x"
     assert clean["notes"][0]["content"] == "Year note"
     assert clean["review"] == {"complete": True, "completed_date": "2026-05-01",
                                "completed_by": "Ann Approver"}
     assert clean["vendors"] == [{"name": "Acme", "location": "SF"}]
+    assert len(clean["recommendations"]) == 1, "dismissed recommendations never reach a report"
+    rec = clean["recommendations"][0]
+    assert rec["recommendation"] == "Document the intake triage"
+    assert rec["status"] == "open"
+    assert "created_by" not in rec, "creator attribution stays off the public page"
+    assert "Rita Reviewer" not in str(clean)
+    assert "Buy a different platform" not in str(clean)
     assert clean["implementers"][0] == {"name": "Pat Person", "title": "Director",
                                         "ati_role": "Lead", "roles": ["Auditor"]}
 
@@ -134,7 +157,7 @@ def test_implementation_sanitizer_strips_emails_and_builds_cross_links():
                               "created_by": {"name": "Pat", "email": "pat@sfsu.edu"}}],
         "supporting_messages": [], "supporting_metrics": [],
         "is_evidence_for": [{
-            "year_identifier": "2025-2026-1.1-web-sfsu", "unique_id": "y1", "strength": 2,
+            "year_identifier": "2025-2026-1.1-web-sfsu", "unique_id": "y1", "strength": 2, "control": "internal",
             "success_indicator": "Assigned authority…", "indicator_composite_key": "1.1-web",
             "campus": {"abbreviation": "sfsu", "name": "SFSU"},
         }],
@@ -150,6 +173,7 @@ def test_implementation_sanitizer_strips_emails_and_builds_cross_links():
     ev = clean["evidence_for"][0]
     assert ev["public_url"] == "/ati/reports/public/sfsu/2025-2026/web/1/1"
     assert ev["strength"] == 2 and ev["year"] == "2025-2026"
+    assert ev["control"] == "internal"
 
 
 @pytest.mark.api

@@ -4,6 +4,7 @@ import NoteViewer from './NoteViewer';
 import MessageViewer from './MessageViewer';
 import MetricViewer from './MetricViewer';
 import PlanViewer from '../implementation/PlanViewer';
+import RecommendationsPanel from '../../dashboard_components/report_components/RecommendationsPanel';
 
 // Short helper per type (the old verbose paragraph is condensed to one line).
 const HELP = {
@@ -11,6 +12,7 @@ const HELP = {
     Message: 'Communications (e.g. emails) about the ATI — do not count toward implementation evidence.',
     Metric: 'Quantitative measures (counts, percentages, survey results) recorded for this indicator.',
     Plan: 'Specific actions, timelines, and responsibilities for this indicator.',
+    Recommendation: 'End-of-review-cycle improvements — what should change before the next cycle. Items resolve (addressed/dismissed), never delete.',
 };
 
 const TabLabel = ({ label, count }) => (
@@ -25,11 +27,12 @@ const TabLabel = ({ label, count }) => (
  * there at a glance and reach each in one click). Each tab renders its viewer, which handles
  * add/edit inline.
  */
-function YSEAnnotationMasterContainer({ hasNotes, hasMessages, hasMetrics, plans, year_identifier }) {
+function YSEAnnotationMasterContainer({ hasNotes, hasMessages, hasMetrics, plans, recommendations, year_identifier, onRecommendationsChange }) {
     const notes = hasNotes?.filter((item) => item.note?.labels?.includes('Note')) || [];
     const messages = hasMessages?.filter((item) => item.message?.labels?.includes('Message')) || [];
     const metrics = hasMetrics?.filter((item) => item.metric?.labels?.includes('Metric')) || [];
     const planItems = plans?.filter((item) => item.labels?.includes('Plan')) || [];
+    const recItems = recommendations?.filter((item) => item.recommendation) || [];
 
     return (
         <Box aria-label="Annotations">
@@ -39,6 +42,7 @@ function YSEAnnotationMasterContainer({ hasNotes, hasMessages, hasMetrics, plans
                     <Tab><TabLabel label="Messages" count={messages.length} /></Tab>
                     <Tab><TabLabel label="Metrics" count={metrics.length} /></Tab>
                     <Tab><TabLabel label="Plans" count={planItems.length} /></Tab>
+                    <Tab><TabLabel label="Recommendations" count={recItems.length} /></Tab>
                 </TabList>
                 <TabPanels>
                     <TabPanel px={0}>
@@ -56,6 +60,14 @@ function YSEAnnotationMasterContainer({ hasNotes, hasMessages, hasMetrics, plans
                     <TabPanel px={0}>
                         <Text fontSize="xs" color="gray.600" mb={2}>{HELP.Plan}</Text>
                         <PlanViewer plans={planItems} onSubmit={() => {}} yearSuccessEvidence={year_identifier} />
+                    </TabPanel>
+                    <TabPanel px={0}>
+                        <Text fontSize="xs" color="gray.600" mb={2}>{HELP.Recommendation}</Text>
+                        <RecommendationsPanel
+                            yearIdentifier={year_identifier}
+                            recommendations={recItems}
+                            onUpdate={onRecommendationsChange}
+                        />
                     </TabPanel>
                 </TabPanels>
             </Tabs>

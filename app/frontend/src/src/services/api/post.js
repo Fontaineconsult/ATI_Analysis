@@ -565,6 +565,24 @@ export const createTaap = async (payload) => {
     }
 };
 
+// End-of-review-cycle improvement: creates a Recommendation (status 'open')
+// wired to the YSE via has_recommendation.
+export const addRecommendation = async (yearSuccessEvidence, recommendation, detail, createdByEmployeeId) => {
+    try {
+        const response = await axios.post(`${process.env.REACT_APP_API_URL}/evidence`, {
+            action: 'add_recommendation',
+            year_success_evidence: yearSuccessEvidence,
+            recommendation,
+            detail: detail || null,
+            created_by_employee_id: createdByEmployeeId || null,
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error adding recommendation:', error);
+        throw error;
+    }
+};
+
 // Admin review feedback: creates a Note wired to the YSE via admin_review_note.
 export const addAdminReviewerNote = async (yearSuccessEvidence, noteContent, createdByEmployeeId) => {
     try {

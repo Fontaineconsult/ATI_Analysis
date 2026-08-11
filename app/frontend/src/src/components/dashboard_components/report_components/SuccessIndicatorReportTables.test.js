@@ -28,7 +28,7 @@ import { DataContext } from '../../../context/DataContext';
 import { setReadyForReview } from '../../../services/api/put';
 import SuccessIndicatorReportTables from './SuccessIndicatorReportTables';
 
-const indicatorWrapper = (key, evidenceProps) => ({
+const indicatorWrapper = (key, evidenceProps, evidenceTypes = []) => ({
     indicator: {
         id: `id-${key}`,
         properties: { composite_key: key, success_indicator: `Indicator ${key}` },
@@ -38,7 +38,7 @@ const indicatorWrapper = (key, evidenceProps) => ({
         statusLevel: { properties: { status_level: 'Defined', status_value: 2 } },
         adminReviewers: [],
         persons: [],
-        evidenceTypes: [],
+        evidenceTypes,
         has_notes: [], has_messages: [], has_metrics: [], plans: [],
     }],
 });
@@ -52,6 +52,10 @@ const DATA = {
                 indicatorWrapper('7.1-web', { ready_for_admin_review: false, administrative_review_complete: false }),
                 indicatorWrapper('7.2-web', { ready_for_admin_review: true, administrative_review_complete: false }),
                 indicatorWrapper('7.3-web', { ready_for_admin_review: true, administrative_review_complete: true }),
+                indicatorWrapper('7.4-web', {}, [
+                    { type: 'Procedure', control: 'external', evidenceType: { properties: { unique_id: 'x1', title: 'CSUBuy Review' } }, docs: [], webs: [], notes: [], msgs: [], metrics: [] },
+                    { type: 'Process', control: 'internal', evidenceType: { properties: { unique_id: 'x2', title: 'Local Process' } }, docs: [], webs: [], notes: [], msgs: [], metrics: [] },
+                ]),
             ],
         }],
     },
@@ -88,6 +92,12 @@ describe('SuccessIndicatorReportTables review flow', () => {
         expect(row('7.1-web').className).not.toContain('review-wash');
         expect(row('7.2-web').className).toContain('review-wash--ready');
         expect(row('7.3-web').className).toContain('review-wash--approved');
+    });
+
+    it('flags indicators whose evidence relies on externally controlled practices', () => {
+        renderTables();
+        expect(within(row('7.4-web')).getByText('External ×1')).toBeInTheDocument();
+        expect(within(row('7.1-web')).queryByText(/External ×/)).toBeNull();
     });
 
     it('offers Mark ready / Unmark ready per state, none once approved', () => {

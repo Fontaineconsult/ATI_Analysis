@@ -10,6 +10,7 @@ import { SLUG_TO_DATAKEY } from '../../styles/workingGroupIdentity';
 import SingleReportMasterContainer from "../dashboard_components/report_components/SingleReportMasterContainer";
 import AdminSummaryForm from "../dashboard_components/report_components/AdminSummaryForm";
 import AdminFeedbackForm from "../dashboard_components/report_components/AdminFeedbackForm";
+import RecommendationsPanel from "../dashboard_components/report_components/RecommendationsPanel";
 
 function ApprovalMasterContainer({
                                      evidenceData: propEvidenceData,
@@ -219,6 +220,13 @@ function ApprovalMasterContainer({
                         onUpdate={() => {
                             loadSingleWorkingGroupData(currentWorkingGroup);
                         }}
+                    />
+
+                    {/* End-of-cycle improvement tracking */}
+                    <RecommendationsPanel
+                        yearIdentifier={year_identifier}
+                        recommendations={evidenceData.recommendations || []}
+                        onUpdate={() => loadSingleWorkingGroupData(currentWorkingGroup)}
                     />
 
                     {/* Admin Review Status — complete > ready-awaiting-approval > not yet ready */}

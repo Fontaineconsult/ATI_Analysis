@@ -285,6 +285,18 @@ query_statuses = {
 
 
 # ---------------------------------------------------------------------------
+# Recommendation lifecycle — improvements identified at the end of a review
+# cycle for one YSE (graph_schema.Recommendation). Recommendations are records:
+# they resolve via status + resolution prose, never deletion.
+# ---------------------------------------------------------------------------
+recommendation_statuses = {
+    "open":      "Open",
+    "addressed": "Addressed",
+    "dismissed": "Dismissed",
+}
+
+
+# ---------------------------------------------------------------------------
 # Evidence strength — how strongly an implementation's is_evidence_for link
 # addresses the requirements of the success indicator it evidences. Stored as
 # an integer 0-3 on the relationship itself (graph_schema.IsEvidenceForRel);
@@ -295,6 +307,20 @@ evidence_strength_levels = {
     1: "Indirect Support",
     2: "Partial",
     3: "Full",
+}
+
+# ---------------------------------------------------------------------------
+# Evidence control — who operates the practice behind an evidence link,
+# RELATIVE to that evidence's owners (the same implementation can be internal
+# to one campus/WG's evidence and external to another's). Absent/None =
+# unspecified. External makes a dependency visible: the owners rely on a
+# practice they don't directly control (another unit, SFBRN-shared, the
+# Chancellor's Office, or a vendor) — maturity reviews grade their INTERFACE
+# to it, not the practice itself.
+# ---------------------------------------------------------------------------
+evidence_control_choices = {
+    "internal": "The evidence owners operate this practice themselves.",
+    "external": "The owners rely on a practice they don't directly control (another unit, SFBRN, the CO, a vendor).",
 }
 
 evidence_strength_descriptions = {
@@ -338,6 +364,7 @@ PUBLIC_VOCABULARIES = {
     "status_levels":         status_levels,
     "evidence_strength_levels":       evidence_strength_levels,
     "evidence_strength_descriptions": evidence_strength_descriptions,
+    "evidence_control_choices":       evidence_control_choices,
     "working_groups":        working_groups,
     "message_types":         message_types,
     "metric_types":          metric_types,
@@ -347,6 +374,7 @@ PUBLIC_VOCABULARIES = {
     # queries (pending questions)
     "query_categories":      query_categories,
     "query_statuses":        query_statuses,
+    "recommendation_statuses": recommendation_statuses,
 }
 
 yse_priority_level = {

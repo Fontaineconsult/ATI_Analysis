@@ -379,6 +379,8 @@ class ImplementationAPI(MethodView):
                 return self.handle_assign_implementation_to_yse(data)
             elif action == "set_evidence_strength":
                 return self.handle_set_evidence_strength(data)
+            elif action == "set_evidence_control":
+                return self.handle_set_evidence_control(data)
             elif action == "copy_evidence_to_campuses":
                 return self.handle_copy_evidence_to_campuses(data)
             elif action == "update_documentation_year":
@@ -518,6 +520,28 @@ class ImplementationAPI(MethodView):
             data.get('strength'),
         )
         return make_response("success", data=result, message="Evidence strength updated"), 200
+
+    def handle_set_evidence_control(self, data):
+        """Set or clear (null) the control flag on an existing evidence link —
+        whether this evidence's owners operate the practice ('internal') or
+        rely on one they don't directly control ('external').
+
+        Body: year_success_identifier, implementation_type, unique_id,
+        control ('internal' | 'external' | null).
+        """
+        from app.database.queries.evidence.update import set_evidence_control
+
+        required = ['year_success_identifier', 'implementation_type', 'unique_id']
+        if not all(field in data for field in required):
+            raise ValidationError(f"Missing required fields: {required}")
+
+        result = set_evidence_control(
+            data['year_success_identifier'],
+            data['implementation_type'],
+            data['unique_id'],
+            data.get('control'),
+        )
+        return make_response("success", data=result, message="Evidence control updated"), 200
 
     def handle_copy_evidence_to_campuses(self, data):
         """Copy this year's evidence links (and by default the source YSEs'

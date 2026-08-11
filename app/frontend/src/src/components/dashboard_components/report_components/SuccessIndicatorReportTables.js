@@ -337,6 +337,20 @@ const SuccessIndicatorReportTables = ({ data, campus, navigate, openApprovalModa
                                             <Td fontWeight="medium" color="gray.700" fontSize="xs">{indicatorNumber}</Td>
                                             <Td color="gray.700" fontSize="xs">
                                                 <Text fontSize="xs">{indicator.indicator?.properties?.success_indicator}</Text>
+                                                {diag.externalCount > 0 && (
+                                                    <Badge
+                                                        mt={1}
+                                                        mr={1}
+                                                        colorScheme="purple"
+                                                        variant="subtle"
+                                                        fontSize="2xs"
+                                                        borderRadius="full"
+                                                        px={2}
+                                                        title={`${diag.externalCount} evidence link${diag.externalCount === 1 ? '' : 's'} rel${diag.externalCount === 1 ? 'ies' : 'y'} on a practice the owners don't directly control (another unit, SFBRN, the CO, a vendor)`}
+                                                    >
+                                                        External ×{diag.externalCount}
+                                                    </Badge>
+                                                )}
                                                 {diag.allImplsRetired && (
                                                     <Badge
                                                         mt={1}

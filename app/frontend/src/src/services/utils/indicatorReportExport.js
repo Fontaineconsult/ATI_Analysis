@@ -144,6 +144,23 @@ function overviewHtml(report) {
         const meta = [n.created_by?.name, n.dateCreated].filter(Boolean).map(esc).join(' · ');
         h += `<p style="${FONT}font-size:12px;color:${TEXT};margin:0 0 4px 12px;">• ${esc(n.content)}${meta ? ` <span style="color:${MUTED};font-size:11px;">— ${meta}</span>` : ''}</p>`;
     });
+    // Dismissed recommendations are working-surface records, not report content.
+    const recs = (report.recommendations || []).filter((r) => r.status !== 'dismissed');
+    if (recs.length) {
+        h += `<p style="${FONT}font-size:12px;color:${TEXT};margin:6px 0 4px 0;"><b style="color:${NAVY};">Recommendations:</b></p>`;
+        const REC_STYLE = {
+            open: 'background:#FFFAF0;color:#9C4221;',
+            addressed: 'background:#E6F4EA;color:#276749;',
+        };
+        [...recs].sort((a, b) => (a.status === 'open' ? -1 : 1) - (b.status === 'open' ? -1 : 1)).forEach((r) => {
+            const meta = [r.created_by?.name, r.date_created].filter(Boolean).map(esc).join(' · ');
+            h += `<p style="${FONT}font-size:12px;color:${TEXT};margin:0 0 4px 12px;">`
+                + `<span style="${REC_STYLE[r.status] || REC_STYLE.open}border-radius:3px;padding:0 4px;font-size:11px;font-weight:600;">${esc((r.status || '').toUpperCase())}</span> `
+                + `${esc(r.recommendation)}${r.detail ? ` <span style="color:${MUTED};">${esc(r.detail)}</span>` : ''}`
+                + `${r.resolution ? `<br/><i style="color:${MUTED};font-size:11px;">${esc(r.resolution)}</i>` : ''}`
+                + `${meta ? ` <span style="color:${MUTED};font-size:11px;">— ${meta}</span>` : ''}</p>`;
+        });
+    }
     return h;
 }
 
@@ -176,6 +193,9 @@ function implementationsHtml(report, campus, origin) {
             const S = { 0: 'No Contribution', 1: 'Indirect Support', 2: 'Partial', 3: 'Full' };
             title += ` <span style="background:#EBF8FF;color:#2C5282;border-radius:3px;padding:0 4px;font-size:11px;font-weight:600;">STRENGTH ${im.strength} — ${S[im.strength] || ''}</span>`;
         }
+        if (im.control === 'external') {
+            title += ` <span style="background:#FAF5FF;color:#553C9A;border-radius:3px;padding:0 4px;font-size:11px;font-weight:600;">EXTERNAL</span>`;
+        }
         if (isTrue(im.retired)) {
             title += ` <span style="background:#EDF2F7;color:#4A5568;border-radius:3px;padding:0 4px;font-size:11px;font-weight:600;">RETIRED${im.retired_date ? ` ${esc(String(im.retired_date))}` : ''}</span>`;
         }
@@ -202,8 +222,24 @@ function implementationsHtml(report, campus, origin) {
 
 function ictHtml(report, origin) {
     const { assets = [], interfaces = [], tools = [], vendors = [] } = report;
-    if (!assets.length && !interfaces.length && !tools.length && !vendors.length) return emptyNote();
+    const footprint = report.ict_footprint || {};
+    const footprintAssets = footprint.assets || [];
+    if (!assets.length && !interfaces.length && !tools.length && !vendors.length
+        && !footprintAssets.length) return emptyNote();
     let h = '';
+    if (footprintAssets.length) {
+        const remediatedIds = new Set(assets.map((a) => a.asset_identifier));
+        const units = (footprint.units || []).map((u) => esc(u.name)).join(', ');
+        h += `<p style="${FONT}font-size:12px;color:${TEXT};margin:0 0 4px 0;"><b style="color:${NAVY};">Unit portfolio${units ? ` — ${units}` : ''}:</b> the §508 register of the responsible unit(s); “no work wired” = answered for, but untouched by this indicator's implementations.</p>`;
+        h += dataTable(['Asset', 'Scope', 'Stewarded by', 'Work here'], footprintAssets.map((a) => [
+            `${esc(a.title)}<div style="color:${MUTED};font-size:11px;font-family:monospace;">${esc(a.asset_identifier)}</div>`,
+            a.scope ? esc(a.scope) : '—',
+            (a.stewards || []).map((s) => `${esc(s.name)} · ${s.capacities.map(esc).join(', ')}`).join('<br/>') || '—',
+            remediatedIds.has(a.asset_identifier)
+                ? `<span style="background:#E6F4EA;color:#276749;border-radius:3px;padding:0 4px;font-size:11px;font-weight:600;">REMEDIATED</span>`
+                : `<span style="background:#FFFAF0;color:#9C4221;border-radius:3px;padding:0 4px;font-size:11px;font-weight:600;">NO WORK WIRED</span>`,
+        ]));
+    }
     if (assets.length) {
         h += dataTable(['Asset', 'Class', 'Scope', 'Reached via', 'Description'], assets.map((a) => [
             `${esc(a.title)}<div style="color:${MUTED};font-size:11px;font-family:monospace;">${esc(a.asset_identifier)}</div>`,
@@ -305,6 +341,11 @@ function plainText(report, campus, origin) {
     if (report.people?.admin_review_completed_by?.name) rev.push(`by ${report.people.admin_review_completed_by.name}`);
     L.push(`  ${rev.join(' · ')}`);
     (report.admin_review_notes || []).forEach((n) => L.push(`    • ${n.content}${n.created_by?.name ? ` — ${n.created_by.name}` : ''}`));
+    const recsTxt = (report.recommendations || []).filter((r) => r.status !== 'dismissed');
+    if (recsTxt.length) {
+        L.push(`  Recommendations (${recsTxt.length}):`);
+        recsTxt.forEach((r) => L.push(`    • [${(r.status || 'open').toUpperCase()}] ${r.recommendation}${r.resolution ? ` — ${r.resolution}` : ''}`));
+    }
 
     const people = report.people?.implementers || [];
     L.push('', `PEOPLE (${people.length})`);

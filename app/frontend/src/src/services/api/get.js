@@ -531,6 +531,22 @@ export const fetchColleges = async (campus) => {
     }
 };
 
+// The derived ICT footprint behind one YSE's internally-controlled evidence:
+// implementations' owners/participants → their employing units → the assets
+// those units/people steward under §508.
+export const fetchStewardedIct = async (yearIdentifier) => {
+    try {
+        const response = await axios.get(
+            `${process.env.REACT_APP_API_URL}/assets/stewarded-for-yse/${encodeURIComponent(yearIdentifier)}`
+        );
+        if (response.status === 200) return response.data;
+        throw new Error(`Failed to fetch stewarded ICT: ${response.data?.error}`);
+    } catch (error) {
+        console.error('Error fetching stewarded ICT:', error.message);
+        throw error;
+    }
+};
+
 // Settings → Organizations: every Department/College operating under the campus
 // (abbreviation), each with its employee count.
 export const fetchLocalOrgUnits = async (campusAbbrev) => {

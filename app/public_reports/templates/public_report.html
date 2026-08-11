@@ -56,6 +56,9 @@
         {% if im.strength is not none %}
           <span class="badge s{{ im.strength }}">{{ ['No Contribution','Indirect Support','Partial','Full'][im.strength] }}</span>
         {% endif %}
+        {% if im.control == 'external' %}
+          <span class="badge external" title="The evidence owners rely on this practice but don't directly control it">External</span>
+        {% endif %}
         {% if im.retired %}<span class="badge retired">Retired{% if im.retired_date %} {{ im.retired_date }}{% endif %}</span>{% endif %}
       </h3>
       {% if im.retired and im.retired_note %}<p class="muted">{{ im.retired_note }}</p>{% endif %}
@@ -112,6 +115,42 @@
   </table>
   {% endif %}
 
+  {% if r.recommendations %}
+  <h2>Recommendations</h2>
+  <p class="muted">Improvements identified during this cycle's review — open items are the work ahead.</p>
+  <table>
+    <thead><tr><th scope="col">Status</th><th scope="col">Recommendation</th><th scope="col">Raised</th><th scope="col">Resolution</th></tr></thead>
+    <tbody>
+    {% for rec in r.recommendations %}
+      <tr>
+        <td>{% if rec.status == 'open' %}<span class="badge s1">Open</span>{% else %}<span class="badge s3">Addressed</span>{% endif %}</td>
+        <td>{{ rec.recommendation }}{% if rec.detail %}<br/><span class="muted">{{ rec.detail }}</span>{% endif %}</td>
+        <td>{{ rec.date_created or '—' }}</td>
+        <td>{{ rec.resolution or '—' }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+
+  {% if r.ict_footprint and r.ict_footprint.assets %}
+  <h2>ICT Footprint — Unit Portfolio{% if r.ict_footprint.units %} ({{ r.ict_footprint.units | join(', ') }}){% endif %}</h2>
+  <p class="muted">The accessibility register of the responsible unit(s) behind this indicator's evidence. "No work wired" = answered for, but untouched by this indicator's implementations.</p>
+  <table>
+    <thead><tr><th scope="col">Asset</th><th scope="col">Scope</th><th scope="col">Stewarded by</th><th scope="col">Work here</th></tr></thead>
+    <tbody>
+    {% for a in r.ict_footprint.assets %}
+      <tr>
+        <td>{{ a.title }}<br/><span class="mono muted">{{ a.identifier }}</span></td>
+        <td>{{ a.scope or '—' }}</td>
+        <td>{% for st in a.stewards %}{{ st.name }} · {{ st.capacities | join(', ') }}{% if not loop.last %}<br/>{% endif %}{% endfor %}</td>
+        <td>{% if a.remediated_here %}<span class="badge s3">Remediated</span>{% else %}<span class="badge s1">No work wired</span>{% endif %}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+
   {% if r.assets or r.interfaces or r.tools or r.vendors %}
   <h2>ICT Touched by This Work</h2>
   {% if r.assets %}
@@ -156,11 +195,11 @@
   <h2>Annotations</h2>
   {% if r.notes %}
     <h3>Notes</h3>
-    <ul>{% for n in r.notes %}<li>{{ n.content or n.name }}{% if n.created_by or n.date %} <span class="muted">— {{ n.created_by or '' }}{% if n.date %} {{ n.date }}{% endif %}</span>{% endif %}</li>{% endfor %}</ul>
+    <ul class="annotations">{% for n in r.notes %}<li>{{ n.content or n.name }}{% if n.created_by or n.date %}<span class="meta">{{ n.created_by or '' }}{% if n.date %} · {{ n.date }}{% endif %}</span>{% endif %}</li>{% endfor %}</ul>
   {% endif %}
   {% if r.messages %}
     <h3>Messages</h3>
-    <ul>{% for m in r.messages %}<li>{{ m.content or m.name }}{% if m.created_by or m.date %} <span class="muted">— {{ m.created_by or '' }}{% if m.date %} {{ m.date }}{% endif %}</span>{% endif %}</li>{% endfor %}</ul>
+    <ul class="annotations">{% for m in r.messages %}<li>{{ m.content or m.name }}{% if m.created_by or m.date %}<span class="meta">{{ m.created_by or '' }}{% if m.date %} · {{ m.date }}{% endif %}</span>{% endif %}</li>{% endfor %}</ul>
   {% endif %}
   {% if r.metrics %}
     <h3>Metrics</h3>

@@ -297,6 +297,7 @@ function SuccessIndicatorDetailPanel({ wrapper }) {
                 assets={wrapper.assets}
                 interfaces={wrapper.interfaces}
                 tools={wrapper.tools}
+                yearIdentifier={yearIdentifier}
             />
 
             <Section title={<>Annotations <HelpTip field={['YearSuccessEvidence', 'annotations']} /></>}>
@@ -305,7 +306,9 @@ function SuccessIndicatorDetailPanel({ wrapper }) {
                     hasMessages={ev.has_messages}
                     hasMetrics={ev.has_metrics}
                     plans={ev.plans}
+                    recommendations={ev.recommendations}
                     year_identifier={yearIdentifier}
+                    onRecommendationsChange={() => loadSingleWorkingGroupData(currentWorkingGroup)}
                 />
             </Section>
 

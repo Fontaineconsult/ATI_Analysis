@@ -30,6 +30,7 @@ from app.database.graph_schema import (
     serialize_role_holdings,
 )
 from app.database.identifiers import previous_academic_year
+from app.database.queries.assets.read import get_stewarded_ict_for_yse
 from app.endpoints.data_api.errors.custom_exceptions import NotFoundError
 from neomodel import db
 
@@ -117,7 +118,7 @@ def _supporting(manager, academic_year):
     return out
 
 
-def _implementation_payload(impl, type_name, academic_year, strength=None):
+def _implementation_payload(impl, type_name, academic_year, strength=None, control=None):
     """Render-ready projection of one implementation node: its documentation (filtered),
     owner, AMM dimensions, and — for the doing-types — accountable working group,
     participant team, and the interfaces it remediates. `strength` is the 0-3
@@ -130,6 +131,7 @@ def _implementation_payload(impl, type_name, academic_year, strength=None):
         "title": impl.title,
         "description": impl.description,
         "strength": strength,
+        "control": control,
         "retired": bool(getattr(impl, "retired", False)),
         "retired_date": str(impl.retired_date) if getattr(impl, "retired_date", None) else None,
         "retired_note": getattr(impl, "retired_note", None),
@@ -320,6 +322,7 @@ def get_indicator_report(composite_key, academic_year, campus_abbreviation=None)
             implementations.append(_implementation_payload(
                 impl, type_name, academic_year,
                 strength=getattr(rel, "strength", None) if rel else None,
+                control=getattr(rel, "control", None) if rel else None,
             ))
 
     rollup = _rollup(year_identifier)
@@ -377,6 +380,12 @@ def get_indicator_report(composite_key, academic_year, campus_abbreviation=None)
             ],
             "admin_review_completed_by": _person_ref(completed_by) if completed_by else None,
         },
+        "recommendations": [
+            {**rec.serialize(), "created_by": (
+                lambda author: {"unique_id": author.unique_id, "name": author.name} if author else None
+            )(rec.created_by.single())}
+            for rec in yse.recommendations.all()
+        ],
         "admin_review_notes": [
             {**note.serialize(), "created_by": (
                 lambda author: {"unique_id": author.unique_id, "name": author.name} if author else None
@@ -386,6 +395,11 @@ def get_indicator_report(composite_key, academic_year, campus_abbreviation=None)
         "implementations": implementations,
         "taaps": [_taap_payload(t, academic_year) for t in yse.taaps_that_evidence.all()],
         "assets": rollup["assets"],
+        # DERIVED: the responsible unit's §508 register behind this YSE's
+        # internally-controlled evidence (owners/participants -> employing
+        # units -> stewarded assets). Distinct from "assets" above by
+        # RELATIONSHIP: who answers for it, vs what the work here remediates.
+        "ict_footprint": get_stewarded_ict_for_yse(year_identifier),
         "interfaces": rollup["interfaces"],
         "tools": rollup["tools"],
         "vendors": rollup["vendors"],

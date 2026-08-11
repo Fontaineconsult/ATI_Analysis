@@ -51,6 +51,13 @@
   .badge.review-done { background:#E6F4EA; color:#276749; }
   .badge.review-open { background:#EDF2F7; color:#4A5568; }
   .badge.unrated { background:#fff; color:#4A5568; border:1px solid #CBD5E0; font-weight:600; }
+  .badge.external { background:#FAF5FF; color:#553C9A; }
+  /* Annotation cards — one bordered card per note/message so entries read as
+     separate records instead of a run-on bullet list. */
+  ul.annotations { list-style:none; padding:0; margin:8px 0 16px; }
+  ul.annotations li { background:#fff; border:1px solid var(--line); border-left:3px solid #9B8CC4;
+                      border-radius:6px; padding:8px 12px; margin:0 0 8px; font-size:13px; }
+  ul.annotations li .meta { display:block; margin-top:4px; font-size:12px; color:var(--muted); }
   .s0 { background:#FFF5F5; color:#C53030; } .s1 { background:#FFFAF0; color:#9C4221; }
   .s2 { background:#EBF8FF; color:#2C5282; } .s3 { background:#E6F4EA; color:#276749; }
   .status { font-weight:700; }

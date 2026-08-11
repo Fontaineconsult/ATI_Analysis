@@ -92,6 +92,10 @@ export function getIndicatorSummary(wrapper) {
         .map(Number);
     const maxStrength = ratedStrengths.length ? Math.max(...ratedStrengths) : null;
 
+    // Evidence links flagged control='external': the owners rely on a practice
+    // they don't directly control (another unit, SFBRN, the CO, a vendor).
+    const externalCount = evidenceTypes.filter((et) => et.control === 'external').length;
+
     // Some indicators are not met through traditional implementation work; when the
     // SI settings flag is set we suppress the missing-implementation diagnostic.
     const overrideImplementationRequirement =
@@ -108,6 +112,7 @@ export function getIndicatorSummary(wrapper) {
         personCount: ev.persons?.length || 0,
         implCount,
         maxStrength,
+        externalCount,
         retiredImplCount,
         // Every linked implementation is retired — no active work this year.
         allImplsRetired,

@@ -295,6 +295,7 @@ def fetch_evidence_for_working_group(working_group, academic_year, campus_abbrev
            type: labels(evidenceType)[0],
            evidenceType: evidenceType,
            strength: head([ (evidence)<-[evRel:is_evidence_for]-(evidenceType) | evRel.strength ]),
+           control: head([ (evidence)<-[evRel2:is_evidence_for]-(evidenceType) | evRel2.control ]),
            docs: docs,
            webs: webs,
            notes: notes,
@@ -319,6 +320,10 @@ def fetch_evidence_for_working_group(working_group, academic_year, campus_abbrev
            persons: persons,
            adminReviewers: adminReviewers,
            adminReviewNotes: adminReviewNotes,
+           recommendations: [ (evidence)-[:has_recommendation]->(rec:Recommendation) | {
+             recommendation: rec,
+             created_by: head([ (rec)-[:created_by]->(rp:Person) | rp ])
+           } ],
            has_notes: evidenceNotes,
            has_messages: evidenceMessages,
            has_metrics: evidenceMetrics,

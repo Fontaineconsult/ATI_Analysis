@@ -120,6 +120,23 @@ export const assignApprover = async (employeeId, yearSuccessEvidence) => {
     }
 };
 
+// Update a recommendation's lifecycle/text. Leaving 'open' stamps
+// date_resolved; returning to 'open' clears it. No delete — records.
+export const updateRecommendation = async (uniqueId, fields) => {
+    // fields: { status?, resolution?, recommendation?, detail? }
+    try {
+        const response = await axios.put(`${process.env.REACT_APP_API_URL}/evidence`, {
+            action: 'update_recommendation',
+            unique_id: uniqueId,
+            ...fields,
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error updating recommendation:', error);
+        throw error;
+    }
+};
+
 // Withdraw a completed administrative review (Approver-flag gated, like
 // approving). The evidence returns to "ready — awaiting approval".
 export const withdrawApproval = async (employeeId, yearSuccessEvidence) => {
@@ -461,6 +478,25 @@ export const copyEvidenceToCampuses = async (implementationType, uniqueId, yearN
     }
 }
 
+
+// Set or clear (null) the control flag on an existing evidence link —
+// 'internal' (the evidence owners operate the practice) or 'external' (they
+// rely on a practice they don't directly control).
+export const setEvidenceControl = async (yearIdentifier, implementationType, uniqueId, control) => {
+    try {
+        const response = await axios.put(`${process.env.REACT_APP_API_URL}/implementations`, {
+            action: "set_evidence_control",
+            year_success_identifier: yearIdentifier,
+            implementation_type: implementationType,
+            unique_id: uniqueId,
+            control,
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error setting evidence control:', error);
+        throw error;
+    }
+}
 
 // Set or clear (null) the 0-3 strength rating on an existing evidence link.
 export const setEvidenceStrength = async (yearIdentifier, implementationType, uniqueId, strength) => {

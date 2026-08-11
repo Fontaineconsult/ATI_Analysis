@@ -58,6 +58,7 @@ def _implementation(im):
         ),
         'description': im.get('description'),
         'strength': im.get('strength'),
+        'control': im.get('control'),
         'retired': bool(im.get('retired')),
         'retired_date': _s(im.get('retired_date')),
         'retired_note': im.get('retired_note'),
@@ -118,6 +119,7 @@ def public_implementation_payload(impl):
             'campus_name': campus.get('name'),
             'year': year,
             'strength': link.get('strength'),
+            'control': link.get('control'),
             'public_url': _public_indicator_url(
                 link.get('indicator_composite_key'), campus.get('abbreviation'), year,
             ) if campus.get('abbreviation') and year else None,
@@ -233,6 +235,40 @@ def public_report_payload(report):
             {'title': a.get('title'), 'identifier': a.get('asset_identifier')}
             for a in (report.get('assets') or [])
         ],
+        # End-of-cycle improvements: text/status/dates only — creator attribution
+        # (a person) is deliberately dropped on the public page, and DISMISSED
+        # items are working-surface records that never reach a report.
+        'recommendations': [
+            {
+                'recommendation': r.get('recommendation'),
+                'detail': r.get('detail'),
+                'status': r.get('status'),
+                'resolution': r.get('resolution'),
+                'date_created': _s(r.get('date_created')),
+                'date_resolved': _s(r.get('date_resolved')),
+            }
+            for r in (report.get('recommendations') or [])
+            if r.get('status') != 'dismissed'
+        ],
+        # Derived unit portfolio (names/capacities only — no people emails).
+        'ict_footprint': {
+            'units': [u.get('name') for u in ((report.get('ict_footprint') or {}).get('units') or [])],
+            'assets': [
+                {
+                    'title': a.get('title'),
+                    'identifier': a.get('asset_identifier'),
+                    'scope': a.get('scope'),
+                    'stewards': [
+                        {'name': st.get('name'), 'capacities': st.get('capacities') or []}
+                        for st in (a.get('stewards') or [])
+                    ],
+                    'remediated_here': a.get('asset_identifier') in {
+                        r.get('asset_identifier') for r in (report.get('assets') or [])
+                    },
+                }
+                for a in ((report.get('ict_footprint') or {}).get('assets') or [])
+            ],
+        },
         'interfaces': [
             {'title': i.get('title'), 'identifier': i.get('interface_identifier')}
             for i in (report.get('interfaces') or [])
