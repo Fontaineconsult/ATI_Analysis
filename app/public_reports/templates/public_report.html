@@ -28,6 +28,8 @@
             {% if r.review.completed_by %} · {{ r.review.completed_by }}{% endif %}
           {% else %}<span class="badge review-open">Not yet complete</span>{% endif %}
         </td></tr>
+    {% if r.communities.accountable %}<tr><th scope="row">Accountable community</th><td>{{ r.communities.accountable | join(', ') }}</td></tr>{% endif %}
+    {% if r.communities.stakeholders %}<tr><th scope="row">Community of practice stakeholders</th><td>{{ r.communities.stakeholders | join(', ') }}</td></tr>{% endif %}
   </table>
 
   <h2>Responsible People</h2>
@@ -60,11 +62,14 @@
           <span class="badge external" title="The evidence owners rely on this practice but don't directly control it">External</span>
         {% endif %}
         {% if im.retired %}<span class="badge retired">Retired{% if im.retired_date %} {{ im.retired_date }}{% endif %}</span>{% endif %}
+        {% if im.no_active_documents %}<span class="badge warn" title="Every attached document is deprecated">No active documentation</span>{% endif %}
+        {% if im.undocumented %}<span class="badge warn" title="No documents or webpages attached at all">Undocumented</span>{% endif %}
       </h3>
       {% if im.retired and im.retired_note %}<p class="muted">{{ im.retired_note }}</p>{% endif %}
-      {% if im.description %}<p>{{ im.description }}</p>{% endif %}
+      {% if im.description %}<p class="prewrap">{{ im.description }}</p>{% endif %}
       <dl>
         {% if im.owner %}<dt>Owner</dt><dd>{{ im.owner }}</dd>{% endif %}
+        {% if im.accountable_communities %}<dt>Accountable community</dt><dd>{{ im.accountable_communities | join(', ') }}</dd>{% endif %}
         {% if im.accountable_working_group %}<dt>Accountable working group</dt><dd>{{ im.accountable_working_group }}</dd>{% endif %}
         {% if im.dimensions %}<dt>Dimensions</dt><dd>{{ im.dimensions | join(', ') }}</dd>{% endif %}
         {% if im.participants %}
@@ -108,7 +113,7 @@
     <thead><tr><th scope="col">Title</th><th scope="col">Outcome</th><th scope="col">Active</th><th scope="col">Review due</th></tr></thead>
     <tbody>
     {% for t in r.taaps %}
-      <tr><td>{{ t.title }}{% if t.description %}<div class="muted">{{ t.description }}</div>{% endif %}</td>
+      <tr><td>{{ t.title }}{% if t.description %}<div class="muted prewrap">{{ t.description }}</div>{% endif %}</td>
           <td>{{ t.outcome or '—' }}</td><td>{{ 'Yes' if t.active else 'No' }}</td><td>{{ t.review_due or '—' }}</td></tr>
     {% endfor %}
     </tbody>
@@ -124,9 +129,9 @@
     {% for rec in r.recommendations %}
       <tr>
         <td>{% if rec.status == 'open' %}<span class="badge s1">Open</span>{% else %}<span class="badge s3">Addressed</span>{% endif %}</td>
-        <td>{{ rec.recommendation }}{% if rec.detail %}<br/><span class="muted">{{ rec.detail }}</span>{% endif %}</td>
+        <td>{{ rec.recommendation }}{% if rec.detail %}<br/><span class="muted prewrap">{{ rec.detail }}</span>{% endif %}</td>
         <td>{{ rec.date_created or '—' }}</td>
-        <td>{{ rec.resolution or '—' }}</td>
+        <td class="prewrap">{{ rec.resolution or '—' }}</td>
       </tr>
     {% endfor %}
     </tbody>
@@ -187,7 +192,7 @@
   {% endif %}
   {% if r.accomplishments %}
     <h3>Accomplishments</h3>
-    <ul>{% for a in r.accomplishments %}<li>{{ a.name }}{% if a.description %} <span class="muted">— {{ a.description }}</span>{% endif %}</li>{% endfor %}</ul>
+    <ul>{% for a in r.accomplishments %}<li>{{ a.name }}{% if a.description %} <span class="muted prewrap">— {{ a.description }}</span>{% endif %}</li>{% endfor %}</ul>
   {% endif %}
   {% endif %}
 
@@ -195,11 +200,11 @@
   <h2>Annotations</h2>
   {% if r.notes %}
     <h3>Notes</h3>
-    <ul class="annotations">{% for n in r.notes %}<li>{{ n.content or n.name }}{% if n.created_by or n.date %}<span class="meta">{{ n.created_by or '' }}{% if n.date %} · {{ n.date }}{% endif %}</span>{% endif %}</li>{% endfor %}</ul>
+    <ul class="annotations">{% for n in r.notes %}<li><span class="prewrap">{{ n.content or n.name }}</span>{% if n.created_by or n.date %}<span class="meta">{{ n.created_by or '' }}{% if n.date %} · {{ n.date }}{% endif %}</span>{% endif %}</li>{% endfor %}</ul>
   {% endif %}
   {% if r.messages %}
     <h3>Messages</h3>
-    <ul class="annotations">{% for m in r.messages %}<li>{{ m.content or m.name }}{% if m.created_by or m.date %}<span class="meta">{{ m.created_by or '' }}{% if m.date %} · {{ m.date }}{% endif %}</span>{% endif %}</li>{% endfor %}</ul>
+    <ul class="annotations">{% for m in r.messages %}<li><span class="prewrap">{{ m.content or m.name }}</span>{% if m.created_by or m.date %}<span class="meta">{{ m.created_by or '' }}{% if m.date %} · {{ m.date }}{% endif %}</span>{% endif %}</li>{% endfor %}</ul>
   {% endif %}
   {% if r.metrics %}
     <h3>Metrics</h3>

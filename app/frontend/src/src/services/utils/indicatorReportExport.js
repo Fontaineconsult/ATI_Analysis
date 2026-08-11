@@ -17,6 +17,9 @@ const FONT = 'font-family:Arial,Helvetica,sans-serif;';
 const esc = (s) => String(s ?? '')
     .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
+// Authored prose keeps its line breaks in HTML (escape first, then break).
+const escNl = (s) => esc(s).replace(/\n/g, '<br/>');
+
 const isTrue = (v) => v === true || v === 'True';
 
 const CELL = `padding:6px 8px;border:1px solid ${BORDER};vertical-align:top;${FONT}font-size:12px;color:${TEXT};`;
@@ -97,10 +100,10 @@ function artifactsHtml(o, origin) {
             items.push(`<b>WEB</b> ${linkOrText(w.name || w.url, w.url)}${isTrue(w.depreciated) ? ` <span style="color:${MUTED};font-size:11px;">[deprecated]</span>` : ''}`);
         }
     });
-    (o.notes || []).forEach((n) => items.push(`<b>NOTE</b> ${esc(n.content)}${dateTail(n.dateCreated || n.date_created)}`));
+    (o.notes || []).forEach((n) => items.push(`<b>NOTE</b> ${escNl(n.content)}${dateTail(n.dateCreated || n.date_created)}`));
     (o.messages || []).forEach((m) => {
         const href = artifactHref(m, origin);
-        items.push(`<b>MSG</b> ${esc(m.content || m.name)}${href ? ` ${link(href, '[attachment]')}` : ''}${dateTail(m.date_created)}`);
+        items.push(`<b>MSG</b> ${escNl(m.content || m.name)}${href ? ` ${link(href, '[attachment]')}` : ''}${dateTail(m.date_created)}`);
     });
     (o.metrics || []).forEach((m) => {
         const extra = [m.comment, m.academic_year].filter(Boolean).map(esc).join(' · ');
@@ -131,6 +134,25 @@ function overviewHtml(report) {
         ['Exempt from implementation evidence', indicator.override_implementation_requirement ? 'Yes' : null],
     ]);
 
+    // Community of practice: who answers for the evidenced work (accountable
+    // communities on the non-retired implementations) and who holds a stake in
+    // the indicator (has_stake_in).
+    const accountableCommunities = [...new Set(
+        (report.implementations || [])
+            .filter((im) => !isTrue(im.retired))
+            .flatMap((im) => im.accountable_communities || [])
+    )].sort();
+    const stakeholderCommunities = (report.community_stakeholders || []).map((c) => c.name).filter(Boolean);
+    if (accountableCommunities.length || stakeholderCommunities.length) {
+        h += `<p style="${FONT}font-size:12px;color:${TEXT};margin:0 0 6px 0;"><b style="color:${NAVY};">Community of practice:</b></p>`;
+        if (accountableCommunities.length) {
+            h += `<p style="${FONT}font-size:12px;color:${TEXT};margin:0 0 4px 12px;">Accountable: ${accountableCommunities.map(esc).join(', ')}</p>`;
+        }
+        if (stakeholderCommunities.length) {
+            h += `<p style="${FONT}font-size:12px;color:${TEXT};margin:0 0 4px 12px;">Stakeholders: ${stakeholderCommunities.map(esc).join(', ')}</p>`;
+        }
+    }
+
     // Administrative review block.
     const people = report.people || {};
     const parts = [`<b>${yse?.administrative_review_complete ? 'Complete' : 'Pending'}</b>`];
@@ -138,11 +160,11 @@ function overviewHtml(report) {
     if (people.admin_review_completed_by?.name) parts.push(`by ${esc(people.admin_review_completed_by.name)}`);
     h += `<p style="${FONT}font-size:12px;color:${TEXT};margin:0 0 6px 0;"><b style="color:${NAVY};">Administrative review:</b> ${parts.join(' · ')}</p>`;
     if (yse?.admin_review_description && yse.admin_review_description !== 'No Review') {
-        h += `<p style="${FONT}font-size:12px;color:${TEXT};margin:0 0 6px 0;">${esc(yse.admin_review_description)}</p>`;
+        h += `<p style="${FONT}font-size:12px;color:${TEXT};margin:0 0 6px 0;">${escNl(yse.admin_review_description)}</p>`;
     }
     (report.admin_review_notes || []).forEach((n) => {
         const meta = [n.created_by?.name, n.dateCreated].filter(Boolean).map(esc).join(' · ');
-        h += `<p style="${FONT}font-size:12px;color:${TEXT};margin:0 0 4px 12px;">• ${esc(n.content)}${meta ? ` <span style="color:${MUTED};font-size:11px;">— ${meta}</span>` : ''}</p>`;
+        h += `<p style="${FONT}font-size:12px;color:${TEXT};margin:0 0 4px 12px;">• ${escNl(n.content)}${meta ? ` <span style="color:${MUTED};font-size:11px;">— ${meta}</span>` : ''}</p>`;
     });
     // Dismissed recommendations are working-surface records, not report content.
     const recs = (report.recommendations || []).filter((r) => r.status !== 'dismissed');
@@ -156,8 +178,8 @@ function overviewHtml(report) {
             const meta = [r.created_by?.name, r.date_created].filter(Boolean).map(esc).join(' · ');
             h += `<p style="${FONT}font-size:12px;color:${TEXT};margin:0 0 4px 12px;">`
                 + `<span style="${REC_STYLE[r.status] || REC_STYLE.open}border-radius:3px;padding:0 4px;font-size:11px;font-weight:600;">${esc((r.status || '').toUpperCase())}</span> `
-                + `${esc(r.recommendation)}${r.detail ? ` <span style="color:${MUTED};">${esc(r.detail)}</span>` : ''}`
-                + `${r.resolution ? `<br/><i style="color:${MUTED};font-size:11px;">${esc(r.resolution)}</i>` : ''}`
+                + `${esc(r.recommendation)}${r.detail ? ` <span style="color:${MUTED};">${escNl(r.detail)}</span>` : ''}`
+                + `${r.resolution ? `<br/><i style="color:${MUTED};font-size:11px;">${escNl(r.resolution)}</i>` : ''}`
                 + `${meta ? ` <span style="color:${MUTED};font-size:11px;">— ${meta}</span>` : ''}</p>`;
         });
     }
@@ -200,9 +222,10 @@ function implementationsHtml(report, campus, origin) {
             title += ` <span style="background:#EDF2F7;color:#4A5568;border-radius:3px;padding:0 4px;font-size:11px;font-weight:600;">RETIRED${im.retired_date ? ` ${esc(String(im.retired_date))}` : ''}</span>`;
         }
         if (isTrue(im.no_active_documents)) title += ` <span style="color:#C05621;font-size:11px;">⚠ no active docs</span>`;
+        if (isTrue(im.undocumented)) title += ` <span style="color:#C05621;font-size:11px;">⚠ undocumented</span>`;
         const dims = (im.dimensions || []).map((d) => esc(d.name)).join(', ');
         if (dims) title += `<div style="color:${MUTED};font-size:11px;">${dims}</div>`;
-        if (im.description) title += `<div style="font-size:11px;margin-top:3px;">${esc(im.description)}</div>`;
+        if (im.description) title += `<div style="font-size:11px;margin-top:3px;">${escNl(im.description)}</div>`;
         const team = (im.participants || []).map((p) => {
             const role = p.role_handle ? ` · ${esc(p.role_handle.replace(/^role:/, ''))}` : '';
             const note = p.note ? ` <span style="color:${MUTED};font-size:11px;">(${esc(p.note)})</span>` : '';
@@ -213,7 +236,9 @@ function implementationsHtml(report, campus, origin) {
         return [
             title,
             im.owner?.name ? esc(im.owner.name) : `<span style="color:${MUTED};">—</span>`,
-            im.accountable_working_group ? esc(im.accountable_working_group) : `<span style="color:${MUTED};">—</span>`,
+            (im.accountable_communities || []).length
+                ? (im.accountable_communities || []).map(esc).join(', ')
+                : (im.accountable_working_group ? esc(im.accountable_working_group) : `<span style="color:${MUTED};">—</span>`),
             team,
             evidence,
         ];
@@ -336,6 +361,14 @@ function plainText(report, campus, origin) {
         yse?.implementation_plan_status ? `Plan: ${yse.implementation_plan_status}` : null,
     ].filter(Boolean);
     if (flags.length) L.push(`  ${flags.join(' · ')}`);
+    const copAccountable = [...new Set(
+        (report.implementations || [])
+            .filter((im) => !isTrue(im.retired))
+            .flatMap((im) => im.accountable_communities || [])
+    )].sort();
+    const copStakeholders = (report.community_stakeholders || []).map((c) => c.name).filter(Boolean);
+    if (copAccountable.length) L.push(`  Community of practice (accountable): ${copAccountable.join(', ')}`);
+    if (copStakeholders.length) L.push(`  Community of practice (stakeholders): ${copStakeholders.join(', ')}`);
     const rev = [`Admin review: ${yse?.administrative_review_complete ? 'Complete' : 'Pending'}`];
     if (yse?.administrative_review_completed_date) rev.push(yse.administrative_review_completed_date);
     if (report.people?.admin_review_completed_by?.name) rev.push(`by ${report.people.admin_review_completed_by.name}`);
@@ -371,7 +404,10 @@ function plainText(report, campus, origin) {
             const strengthTag = im.strength !== null && im.strength !== undefined ? ` [Strength ${im.strength} — ${S[im.strength] || ''}]` : '';
             L.push(`  - [${im.type}] ${im.title}${strengthTag}${im.retired ? ` (RETIRED${im.retired_date ? ` ${im.retired_date}` : ''})` : ''}${implHref(im.type, im.unique_id, campus, origin) ? ` — ${implHref(im.type, im.unique_id, campus, origin)}` : ''}`);
             if (im.owner?.name) L.push(`      Owner: ${im.owner.name}`);
-            if (im.accountable_working_group) L.push(`      Accountable: ${im.accountable_working_group}`);
+            const accountable = (im.accountable_communities || []).length
+                ? im.accountable_communities.join(', ')
+                : im.accountable_working_group;
+            if (accountable) L.push(`      Accountable: ${accountable}`);
             (im.participants || []).forEach((p) => L.push(`      Team: ${p.person?.name}${p.role_handle ? ` · ${p.role_handle.replace(/^role:/, '')}` : ''}${p.note ? ` (${p.note})` : ''}`));
             artifactLines(im, '      ');
         });

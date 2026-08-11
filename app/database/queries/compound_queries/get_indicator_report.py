@@ -72,6 +72,14 @@ def _depreciated(node):
     return v is True or v == "True"
 
 
+def _undocumented(impl):
+    """True when the implementation has NO documentation at all — zero documents
+    AND zero webpages. Notes/messages are annotations, not documentation, and
+    deliberately don't count. The sibling gap to _no_active_documents (which
+    asks whether existing docs rotted, and is False on zero docs by design)."""
+    return len(list(impl.supporting_documents.all())) == 0         and len(list(impl.supporting_webpages.all())) == 0
+
+
 def _no_active_documents(impl):
     """True when the implementation has documents but every one is depreciated.
 
@@ -144,12 +152,14 @@ def _implementation_payload(impl, type_name, academic_year, strength=None, contr
         # Computed from ALL documents (not the filtered list above) so the report's
         # "no active documentation" flag agrees with the implementations view.
         "no_active_documents": _no_active_documents(impl),
+        "undocumented": _undocumented(impl),
         "webpages": _supporting(impl.supporting_webpages, academic_year),
         "notes": _supporting(impl.supporting_notes, academic_year),
         "messages": _supporting(impl.supporting_messages, academic_year),
         "metrics": [m.serialize() for m in impl.supporting_metrics.all() if _included(m)],
         # Doing-type-only enrichments (empty/None for reference types).
         "accountable_working_group": None,
+        "accountable_communities": [],
         "participants": [],
         "remediates_interfaces": [],
     }
@@ -157,6 +167,7 @@ def _implementation_payload(impl, type_name, academic_year, strength=None, contr
     if type_name in _DOING_TYPES:
         awg = impl.accountable_working_group.single()
         payload["accountable_working_group"] = awg.name if awg else None
+        payload["accountable_communities"] = sorted(c.name for c in impl.accountable_community.all())
         payload["participants"] = serialize_participants(impl)
         payload["remediates_interfaces"] = [
             {
@@ -391,6 +402,19 @@ def get_indicator_report(composite_key, academic_year, campus_abbreviation=None)
                 lambda author: {"unique_id": author.unique_id, "name": author.name} if author else None
             )(note.created_by.single())}
             for note in yse.admin_reviewer_note.all()
+        ],
+        # Communities of practice holding a stake in this indicator (has_stake_in,
+        # SI-level by design — campus/year views derive via tracks). Complements the
+        # per-implementation accountable_communities: stakeholders answer "who to
+        # talk to", accountability answers "who answers for the evidenced work".
+        "community_stakeholders": [
+            {"name": row[0], "note": row[1]}
+            for row in db.cypher_query(
+                "MATCH (c:CommunityOfPractice)-[s:has_stake_in]->"
+                "(:SuccessIndicator {composite_key: $ck}) "
+                "RETURN c.name, s.note ORDER BY c.name",
+                {"ck": composite_key},
+            )[0]
         ],
         "implementations": implementations,
         "taaps": [_taap_payload(t, academic_year) for t in yse.taaps_that_evidence.all()],

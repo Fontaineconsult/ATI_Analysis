@@ -59,11 +59,17 @@ def _implementation(im):
         'description': im.get('description'),
         'strength': im.get('strength'),
         'control': im.get('control'),
+        'no_active_documents': bool(im.get('no_active_documents')),
+        'undocumented': bool(im.get('undocumented')),
         'retired': bool(im.get('retired')),
         'retired_date': _s(im.get('retired_date')),
         'retired_note': im.get('retired_note'),
         'owner': (im.get('owner') or {}).get('name'),
         'accountable_working_group': im.get('accountable_working_group'),
+        'accountable_communities': [
+            c.get('name') if isinstance(c, dict) else c
+            for c in (im.get('accountable_communities') or [])
+        ],
         'dimensions': [d.get('name') for d in (im.get('dimensions') or []) if d.get('name')],
         'participants': [
             {
@@ -126,15 +132,35 @@ def public_implementation_payload(impl):
         })
     evidence_for.sort(key=lambda e: (e['year'] or '', e['composite_key'] or ''), reverse=True)
 
+    # Documentation health, same rules as the app views: the pool is documents +
+    # webpages (notes/messages are annotations and don't count); a document is
+    # dead when depreciated, a webpage when depreciated or gone. Legacy string
+    # booleans ('True') still exist until the Document-flags migration runs.
+    def _dead(v):
+        return v is True or v == 'True'
+    _docs = [d for d in (impl.get('supporting_documents') or []) if d.get('name')]
+    _webs = list(impl.get('supporting_webpages') or [])
+    _doc_total = len(_docs) + len(_webs)
+    _doc_active = (
+        sum(1 for d in _docs if not _dead(d.get('depreciated')))
+        + sum(1 for w in _webs
+              if not _dead(w.get('depreciated')) and not _dead(w.get('no_longer_exists')))
+    )
+
     return {
         'type': impl.get('type'),
         'unique_id': impl.get('unique_id'),
         'title': impl.get('title'),
         'description': impl.get('description'),
+        'no_active_documents': _doc_total > 0 and _doc_active == 0,
+        'undocumented': _doc_total == 0,
         'retired': bool(impl.get('retired')),
         'retired_date': _s(impl.get('retired_date')),
         'retired_note': impl.get('retired_note'),
         'owners': [p.get('name') for p in (impl.get('owned_by') or []) if p.get('name')],
+        'accountable_communities': [
+            c.get('name') for c in (impl.get('accountable_communities') or []) if c.get('name')
+        ],
         'dimensions': [d.get('name') for d in (impl.get('dimensions') or []) if d.get('name')],
         'participants': [
             {
@@ -238,6 +264,19 @@ def public_report_payload(report):
         # End-of-cycle improvements: text/status/dates only — creator attribution
         # (a person) is deliberately dropped on the public page, and DISMISSED
         # items are working-surface records that never reach a report.
+        # Names only: stake notes are working-surface prose and stay internal.
+        'communities': {
+            'accountable': sorted({
+                name
+                for im in (report.get('implementations') or [])
+                if not im.get('retired')
+                for name in (im.get('accountable_communities') or [])
+            }),
+            'stakeholders': [
+                c.get('name') for c in (report.get('community_stakeholders') or [])
+                if c.get('name')
+            ],
+        },
         'recommendations': [
             {
                 'recommendation': r.get('recommendation'),

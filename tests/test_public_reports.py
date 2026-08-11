@@ -55,11 +55,15 @@ RAW = {
             "created_by": None,
         },
     ],
+    "community_stakeholders": [
+        {"name": "9999 Library Community", "note": "INTERNAL stake reasoning"},
+    ],
     "implementations": [{
         "type": "Process", "title": "Audit process", "description": "Quarterly.",
         "strength": 3, "control": "external", "retired": True, "retired_date": "2026-06-30", "retired_note": "Superseded.",
         "owner": {"name": "Owen Owner", "email": "owen@sfsu.edu"},
         "accountable_working_group": "Web",
+        "accountable_communities": ["9999 Library Community"],
         "dimensions": [{"handle": "d1", "name": "Governance"}],
         "participants": [{"person": {"name": "Team Member"}, "role_handle": "role:tester"}],
         "documents": [{"name": "Audit Report",
@@ -98,6 +102,11 @@ def test_sanitizer_keeps_notes_messages_and_report_facts():
     assert impl["messages"][0]["content"] == "Kept message"
     assert impl["strength"] == 3 and impl["retired"] is True
     assert impl["control"] == "external", "the control flag must survive sanitization"
+    assert impl["accountable_communities"] == ["9999 Library Community"]
+    # Stakeholders survive as names only; the fixture's sole impl is retired, so
+    # no community is accountable for evidenced work.
+    assert clean["communities"] == {"accountable": [],
+                                    "stakeholders": ["9999 Library Community"]}
     assert impl["documents"] == ["Audit Report"]
     assert impl["webpages"][0]["url"] == "https://example.org/x"
     assert clean["notes"][0]["content"] == "Year note"
