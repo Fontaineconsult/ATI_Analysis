@@ -347,9 +347,11 @@ def assign_approver_to_yse(year_success_identifier: str, employee_id: str) -> bo
                 "(can_approve_yse) is not set."
             )
 
-        # Check if the person is already assigned as an approver
-        if year_success_evidence.administrative_review_completed_by.is_connected(person):
-            raise CrudError(f"Approver {employee_id} is already assigned to success indicator {year_success_identifier}")
+        # Idempotent: a review that is already complete stays as recorded (first
+        # completion wins — a stale second click, by anyone, is a no-op, never a
+        # rewire and never an error). Withdraw first to change the approver.
+        if year_success_evidence.administrative_review_complete:
+            return True
 
         # Assign the approver
         year_success_evidence.administrative_review_completed_by.connect(person)
@@ -477,3 +479,44 @@ def set_ready_for_admin_review(year_success_identifier: str, ready: bool) -> boo
         raise e
     except Exception as e:
         raise CrudError(f"Error setting ready_for_admin_review on {year_success_identifier}: {e}")
+
+
+def withdraw_approval(year_success_identifier: str, employee_id: str) -> bool:
+    """
+    Withdraw a completed administrative review: clears the complete flag and
+    date and removes the admin_review_completed_by edge. Gated on the same
+    Approver flag as approving (any flagged approver may withdraw — the record
+    is a state, not a signature). Idempotent: withdrawing an incomplete review
+    is a no-op. The ready_for_admin_review flag is left untouched, so the
+    evidence drops back to "ready — awaiting approval".
+    """
+    try:
+        try:
+            yse = YearSuccessEvidence.nodes.get(year_identifier=year_success_identifier)
+        except YearSuccessEvidence.DoesNotExist:
+            raise NotFoundError(f"YearSuccessEvidence with identifier '{year_success_identifier}' not found.")
+
+        try:
+            person = Person.nodes.get(employee_id=employee_id)
+        except Person.DoesNotExist:
+            raise NotFoundError(f"Person with employee_id '{employee_id}' not found.")
+
+        if not person.can_approve_yse:
+            raise AuthorizationError(
+                f"Person {employee_id} cannot withdraw an approval: the Approver flag "
+                "(can_approve_yse) is not set."
+            )
+
+        if not yse.administrative_review_complete:
+            return True
+
+        yse.administrative_review_completed_by.disconnect_all()
+        yse.administrative_review_complete = False
+        yse.administrative_review_completed_date = None
+        yse.save()
+        return True
+
+    except (NotFoundError, AuthorizationError) as e:
+        raise e
+    except Exception as e:
+        raise CrudError(f"Error withdrawing approval on {year_success_identifier}: {e}")

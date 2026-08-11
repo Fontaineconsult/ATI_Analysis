@@ -8,7 +8,8 @@ from app.database.queries.evidence.update import (assign_status_to_yse,
                                                    assign_approver_to_yse,
                                                    set_ready_for_admin_review,
                                                    update_admin_reviewer_description,
-                                                   add_admin_reviewer_note)
+                                                   add_admin_reviewer_note,
+                                                   withdraw_approval)
 from . import data_api_endpoints
 from ...database.class_factory import working_group_names_web_query, status_levels
 from app.endpoints.data_api.util.response import make_response
@@ -81,6 +82,8 @@ class EvidenceAPI(MethodView):
         # Handle the assign_approver action
         if action == "assign_approver":
             return self.handle_assign_approver(data)
+        elif action == "withdraw_approval":
+            return self.handle_withdraw_approval(data)
         elif action == "set_ready_for_review":
             return self.handle_set_ready_for_review(data)
         elif action == "update_admin_reviewer_description":
@@ -89,6 +92,24 @@ class EvidenceAPI(MethodView):
             return self.handle_unassign_implementation(data)
         else:
             return make_response(status="error", error=f"Unknown action '{action}' in request."), 400
+
+    def handle_withdraw_approval(self, data):
+        """Withdraw a completed review (see evidence_campus.py — the live module)."""
+        yse = data.get('year_success_evidence')
+        employee_id = data.get('employee_id')
+
+        if not yse or not employee_id:
+            return make_response(status="error", error="Missing 'year_success_evidence' or 'employee_id' in request."), 400
+
+        try:
+            withdraw_approval(yse, employee_id)
+            return make_response(status="success", data="Approval withdrawn."), 200
+        except AuthorizationError as e:
+            return make_response(status="error", error=str(e)), 403
+        except NotFoundError as e:
+            return make_response(status="error", error=str(e)), 404
+        except CrudError as e:
+            return make_response(status="error", error=str(e)), 500
 
     def handle_set_ready_for_review(self, data):
         """Toggle ready_for_admin_review on a YSE (see evidence_campus.py — the live module)."""

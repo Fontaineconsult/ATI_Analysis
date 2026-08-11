@@ -565,6 +565,22 @@ export const createTaap = async (payload) => {
     }
 };
 
+// Admin review feedback: creates a Note wired to the YSE via admin_review_note.
+export const addAdminReviewerNote = async (yearSuccessEvidence, noteContent, createdByEmployeeId) => {
+    try {
+        const response = await axios.post(`${process.env.REACT_APP_API_URL}/evidence`, {
+            action: 'add_admin_reviewer_note',
+            year_success_evidence: yearSuccessEvidence,
+            note_content: noteContent,
+            created_by_employee_id: createdByEmployeeId,
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error adding admin reviewer note:', error);
+        throw error;
+    }
+};
+
 export const createVendor = async (payload) => {
     // payload: { name, location? }
     try {

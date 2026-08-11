@@ -120,6 +120,22 @@ export const assignApprover = async (employeeId, yearSuccessEvidence) => {
     }
 };
 
+// Withdraw a completed administrative review (Approver-flag gated, like
+// approving). The evidence returns to "ready — awaiting approval".
+export const withdrawApproval = async (employeeId, yearSuccessEvidence) => {
+    try {
+        const response = await axios.put(`${process.env.REACT_APP_API_URL}/evidence`, {
+            action: 'withdraw_approval',
+            year_success_evidence: yearSuccessEvidence,
+            employee_id: employeeId,
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error withdrawing approval:', error);
+        throw error;
+    }
+};
+
 // Step one of the review workflow: mark (or un-mark) a YSE ready for
 // administrative review. A flagged approver then completes it via assignApprover.
 export const setReadyForReview = async (yearSuccessEvidence, ready) => {

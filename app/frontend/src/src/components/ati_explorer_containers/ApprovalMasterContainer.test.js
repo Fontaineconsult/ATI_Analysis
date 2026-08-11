@@ -13,6 +13,7 @@ jest.mock('axios', () => ({
 }));
 jest.mock('../../services/api/put', () => ({
     assignApprover: jest.fn(),
+    withdrawApproval: jest.fn(),
 }));
 jest.mock('../../services/report_constructor', () => ({
     GenerateReportComponent: () => <div data-testid="report" />,
@@ -30,7 +31,7 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { UserContext } from '../../context/UserContext';
 import { DataContext } from '../../context/DataContext';
-import { assignApprover } from '../../services/api/put';
+import { assignApprover, withdrawApproval } from '../../services/api/put';
 import ApprovalMasterContainer from './ApprovalMasterContainer';
 
 const evidenceData = (overrides = {}) => ({
@@ -84,7 +85,30 @@ describe('ApprovalMasterContainer approver gating', () => {
             evidenceData({ administrative_review_complete: true })
         );
 
-        const button = screen.getByRole('button', { name: /approved/i });
+        const button = screen.getByRole('button', { name: /^approved/i });
         expect(button).toBeDisabled();
+    });
+
+    it('offers Withdraw Approval to a flagged approver on a completed review', async () => {
+        withdrawApproval.mockResolvedValue({ status: 'success' });
+        renderWithUser(
+            { employee_id: 'e2', name: 'Has Flag', can_approve_yse: true },
+            evidenceData({ administrative_review_complete: true })
+        );
+
+        const withdraw = screen.getByRole('button', { name: /withdraw approval/i });
+        await userEvent.click(withdraw);
+        await waitFor(() =>
+            expect(withdrawApproval).toHaveBeenCalledWith('e2', '2025-2026-7.11-ins-sfsu')
+        );
+    });
+
+    it('hides Withdraw Approval from non-approvers', () => {
+        renderWithUser(
+            { employee_id: 'e1', name: 'No Flag', can_approve_yse: false },
+            evidenceData({ administrative_review_complete: true })
+        );
+
+        expect(screen.queryByRole('button', { name: /withdraw approval/i })).toBeNull();
     });
 });

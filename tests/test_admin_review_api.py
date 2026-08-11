@@ -166,3 +166,96 @@ def test_ready_error_mapping(flask_client, review_fixture):
         "ready": True,
     })
     assert missing_yse.status_code == 404
+
+
+# --- Re-approve idempotence + withdraw ----------------------------------------
+
+def test_reapprove_is_idempotent(flask_client, review_fixture):
+    for _ in range(2):
+        resp = flask_client.put(API, json={
+            "action": "assign_approver",
+            "year_success_evidence": YSE_IDENTIFIER,
+            "employee_id": APPROVER_EMPLOYEE_ID,
+        })
+        assert resp.status_code == 200
+
+    complete, _date, approvers = _yse_state()
+    assert complete is True
+    assert approvers == [APPROVER_EMPLOYEE_ID], "re-approve must not duplicate the edge"
+
+
+def test_second_approver_does_not_rewire(flask_client, review_fixture):
+    from app.database.graph_schema import Person
+
+    second = Person(
+        name=f"{SENTINEL} Test Second Approver",
+        employee_id=f"{SENTINEL}-emp-approver-2",
+        can_approve_yse=True,
+    ).save()
+
+    flask_client.put(API, json={
+        "action": "assign_approver",
+        "year_success_evidence": YSE_IDENTIFIER,
+        "employee_id": APPROVER_EMPLOYEE_ID,
+    })
+    resp = flask_client.put(API, json={
+        "action": "assign_approver",
+        "year_success_evidence": YSE_IDENTIFIER,
+        "employee_id": second.employee_id,
+    })
+    assert resp.status_code == 200
+
+    _complete, _date, approvers = _yse_state()
+    assert approvers == [APPROVER_EMPLOYEE_ID], "first completion wins; no silent rewire"
+
+
+def test_withdraw_approval_round_trip(flask_client, review_fixture):
+    flask_client.put(API, json={
+        "action": "assign_approver",
+        "year_success_evidence": YSE_IDENTIFIER,
+        "employee_id": APPROVER_EMPLOYEE_ID,
+    })
+    flask_client.put(API, json={
+        "action": "set_ready_for_review",
+        "year_success_evidence": YSE_IDENTIFIER,
+        "ready": True,
+    })
+
+    withdrawn = flask_client.put(API, json={
+        "action": "withdraw_approval",
+        "year_success_evidence": YSE_IDENTIFIER,
+        "employee_id": APPROVER_EMPLOYEE_ID,
+    })
+    assert withdrawn.status_code == 200
+
+    complete, completed_date, approvers = _yse_state()
+    assert complete is False
+    assert completed_date is None
+    assert approvers == []
+    assert _ready_state() is True, "withdraw returns the evidence to ready-awaiting-approval"
+
+    # Idempotent: withdrawing an incomplete review is a no-op.
+    again = flask_client.put(API, json={
+        "action": "withdraw_approval",
+        "year_success_evidence": YSE_IDENTIFIER,
+        "employee_id": APPROVER_EMPLOYEE_ID,
+    })
+    assert again.status_code == 200
+
+
+def test_withdraw_requires_approver_flag(flask_client, review_fixture):
+    flask_client.put(API, json={
+        "action": "assign_approver",
+        "year_success_evidence": YSE_IDENTIFIER,
+        "employee_id": APPROVER_EMPLOYEE_ID,
+    })
+    resp = flask_client.put(API, json={
+        "action": "withdraw_approval",
+        "year_success_evidence": YSE_IDENTIFIER,
+        "employee_id": NON_APPROVER_EMPLOYEE_ID,
+    })
+    assert resp.status_code == 403
+
+    complete, _date, approvers = _yse_state()
+    assert complete is True, "a rejected withdrawal must not touch the record"
+    assert approvers == [APPROVER_EMPLOYEE_ID]

@@ -1948,8 +1948,12 @@ class Document(StructuredNode):
     raw_text = StringProperty()
     raw_text_captured = DateProperty()
 
-    is_administrative_review_documentation = StringProperty()
-    is_milestone_and_measures_documentation = StringProperty()
+    # Booleans (were StringProperty, which stored the FE switch's booleans as
+    # 'True'/'False' strings — and 'False' is truthy in JS, so the form showed
+    # phantom ON switches). Migrated 2026-08-11 via
+    # batch/migrate_document_flag_booleans.cypher (idempotent).
+    is_administrative_review_documentation = BooleanProperty(default=False)
+    is_milestone_and_measures_documentation = BooleanProperty(default=False)
     depreciated = BooleanProperty()
     depreciated_date = DateProperty()
     include_in_report = BooleanProperty(default=True)

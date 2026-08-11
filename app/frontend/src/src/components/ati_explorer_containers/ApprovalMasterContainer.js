@@ -1,7 +1,7 @@
 import React, { useContext, useState } from 'react';
 import { Box, Button, Text, Spinner, useToast, Heading, Alert, AlertIcon, VStack, HStack, Divider, Tooltip } from '@chakra-ui/react';
 import { UserContext } from '../../context/UserContext';
-import { assignApprover } from '../../services/api/put';
+import { assignApprover, withdrawApproval } from '../../services/api/put';
 import { GenerateReportComponent } from '../../services/report_constructor';
 import StatusLevelDetails from "../graph_components/indicators/StatusLevelDetails";
 import { DataContext } from '../../context/DataContext';
@@ -120,6 +120,35 @@ function ApprovalMasterContainer({
                 title: "Approval Failed",
                 description: error?.response?.data?.error
                     || "There was an issue with approving the success indicator.",
+                status: "error",
+                duration: 5000,
+                isClosable: true,
+            });
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleWithdraw = async () => {
+        if (!currentUserId || !canApprove || !isApproved) return;
+
+        setLoading(true);
+        try {
+            await withdrawApproval(currentUserId, year_identifier);
+            await loadSingleWorkingGroupData(currentWorkingGroup);
+            toast({
+                title: "Approval Withdrawn",
+                description: "The evidence has returned to awaiting approval",
+                status: "info",
+                duration: 5000,
+                isClosable: true,
+            });
+        } catch (error) {
+            console.error('Withdraw failed:', error);
+            toast({
+                title: "Withdraw Failed",
+                description: error?.response?.data?.error
+                    || "There was an issue withdrawing the approval.",
                 status: "error",
                 duration: 5000,
                 isClosable: true,
@@ -253,6 +282,17 @@ function ApprovalMasterContainer({
                 {loading ? (
                     <Spinner size="lg" color="teal.500" thickness="3px" />
                 ) : (
+                    <>
+                    {isApproved && canApprove && (
+                        <Button
+                            variant="outline"
+                            colorScheme="red"
+                            size="md"
+                            onClick={handleWithdraw}
+                        >
+                            Withdraw Approval
+                        </Button>
+                    )}
                     <Tooltip
                         label={
                             !currentUserId
@@ -279,6 +319,7 @@ function ApprovalMasterContainer({
                             {isApproved ? "Approved" : "Approve Indicator"}
                         </Button>
                     </Tooltip>
+                    </>
                 )}
             </HStack>
         </Box>
