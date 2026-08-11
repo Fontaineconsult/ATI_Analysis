@@ -44,14 +44,16 @@ import {
     typeLabel,
 } from './implementationConfig';
 import {
+    assignAccountableCommunity,
     assignPersonAsOwner,
     copyEvidenceToCampuses,
     retireImplementation,
     setImplementationDimensions,
+    unassignAccountableCommunity,
     unassignPersonAsOwner,
     updateImplementation,
 } from '../../../services/api/put';
-import { fetchAllDimensions } from '../../../services/api/get';
+import { fetchAllCommunities, fetchAllDimensions } from '../../../services/api/get';
 import { unassignImplementationFromYSE } from '../../../services/api/delete';
 import { navigateToIndicator } from '../../../services/utils/tools';
 import { useDescriptors } from '../../../hooks/useDescriptors';
@@ -59,6 +61,7 @@ import { SettingsContext } from '../../../context/SettingsContext';
 import { UserContext } from '../../../context/UserContext';
 import { HelpTip } from '../../functional_components/DescriptorHelp';
 import PersonAssignmentSelector from '../../functional_components/PersonAssignmentSelector';
+import EntityAttachmentSelector from '../../functional_components/EntityAttachmentSelector';
 import YseAssignmentSelector from '../../functional_components/YseAssignmentSelector';
 import ImplementationRemediationManager from './ImplementationRemediationManager';
 import ParticipantsEditor from '../../implementation_explorer/ParticipantsEditor';
@@ -130,6 +133,20 @@ function ImplementationDetailPanel({ implementation, onAfterChange }) {
         })();
         return () => { cancelled = true; };
     }, [dimensioned]);
+
+    // Community options for the accountable-community picker (doing types only).
+    const [communityOptions, setCommunityOptions] = useState([]);
+    useEffect(() => {
+        if (!participantType) return;
+        let cancelled = false;
+        (async () => {
+            try {
+                const resp = await fetchAllCommunities();
+                if (!cancelled) setCommunityOptions(resp?.data?.items || resp?.items || []);
+            } catch (_) { /* non-fatal: picker just shows no options */ }
+        })();
+        return () => { cancelled = true; };
+    }, [participantType]);
 
     // Drop out of edit mode whenever the selection changes.
     useEffect(() => { setIsEditing(false); }, [implementation?.unique_id]);
@@ -276,6 +293,9 @@ function ImplementationDetailPanel({ implementation, onAfterChange }) {
         (implementation.supporting_documents?.length || 0) +
         (implementation.supporting_webpages?.length || 0);
     const docsAllDeprecated = allDocumentsDepreciated(implementation);
+    // Zero documents AND zero webpages — never documented at all (notes/messages
+    // are annotations and deliberately don't count).
+    const undocumented = documentationCount === 0;
 
     const dimensionLabel = describeField?.('Implementation', 'dimensions')?.title || 'AMM Dimensions';
 
@@ -441,6 +461,14 @@ function ImplementationDetailPanel({ implementation, onAfterChange }) {
                 <Alert status="warning" borderRadius="lg" fontSize="sm">
                     <AlertIcon />
                     All {documentationCount} attached documentation item{documentationCount === 1 ? ' is' : 's are'} deprecated or no longer available — this implementation has no active documentation.
+                </Alert>
+            )}
+
+            {/* Warning: no documentation was ever attached (docs + webpages only) */}
+            {undocumented && (
+                <Alert status="warning" borderRadius="lg" fontSize="sm">
+                    <AlertIcon />
+                    No documents or webpages are attached to this implementation — the practice is undocumented. Notes and messages don&apos;t count as documentation.
                 </Alert>
             )}
 
@@ -782,6 +810,30 @@ function ImplementationDetailPanel({ implementation, onAfterChange }) {
                     assignLabel="Assign as Owner"
                 />
             </Card>
+
+            {/* Accountable community — the operating community that answers for this
+                work (doing types only). Preferred accountability seat; distinct from
+                Owners (custodial Person) and from working-group committee accountability. */}
+            {participantType && (
+                <Card title={<>Accountable community <HelpTip field={['Implementation', 'accountable_community']} /></>}>
+                    <Divider mb={4} borderColor="gray.200" />
+                    <Text fontSize="xs" color="gray.600" mb={2}>
+                        The community of practice that answers for this work — distinct from the
+                        <strong> owner</strong> (who maintains the record). Shown in the report&apos;s
+                        Accountable column.
+                    </Text>
+                    <EntityAttachmentSelector
+                        entityLabel="Community"
+                        placeholder="Select a community of practice…"
+                        attached={(implementation.accountable_communities || []).map((c) => ({ unique_id: c.unique_id, label: c.name }))}
+                        candidates={(communityOptions || []).map((c) => ({ unique_id: c.unique_id, label: c.name }))}
+                        onAttach={(uid) => assignAccountableCommunity(type, implementation.unique_id, uid)}
+                        onDetach={(uid) => unassignAccountableCommunity(type, implementation.unique_id, uid)}
+                        afterChange={refresh}
+                        emptyLabel="No accountable community set."
+                    />
+                </Card>
+            )}
 
             {/* Participants — the working team (doing types only) */}
             {participantType && (

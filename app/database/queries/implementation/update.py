@@ -381,6 +381,37 @@ def unassign_accountable_working_group(implementation_unique_id, implementation_
     return True
 
 
+def _resolve_community(name_or_uid):
+    """Resolve a CommunityOfPractice by unique_id first, then by (unique-indexed) name."""
+    node = CommunityOfPractice.nodes.get_or_none(unique_id=name_or_uid)
+    if node is None:
+        node = CommunityOfPractice.nodes.get_or_none(name=name_or_uid)
+    if node is None:
+        raise NotFoundError(f"CommunityOfPractice {name_or_uid!r} not found")
+    return node
+
+
+def assign_accountable_community(implementation_unique_id, implementation_type, community):
+    """Connect an accountable CommunityOfPractice to an implementation (accountable_community).
+    The operating community that answers for this work — distinct from owned_by (the Person)
+    and from accountable_working_group (the committee). Same doing-type guard as the
+    working-group edge."""
+    impl_node = _resolve_accountable_implementation(implementation_unique_id, implementation_type)
+    cop = _resolve_community(community)
+    if not impl_node.accountable_community.is_connected(cop):
+        impl_node.accountable_community.connect(cop)
+    return True
+
+
+def unassign_accountable_community(implementation_unique_id, implementation_type, community):
+    """Disconnect an accountable CommunityOfPractice from an implementation. Inverse of the assign."""
+    impl_node = _resolve_accountable_implementation(implementation_unique_id, implementation_type)
+    cop = _resolve_community(community)
+    if impl_node.accountable_community.is_connected(cop):
+        impl_node.accountable_community.disconnect(cop)
+    return True
+
+
 def set_implementation_dimensions(implementation_type, implementation_unique_id, dimension_handles):
     """
     Replace an implementation's AMM-dimension classification (classified_under) with

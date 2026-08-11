@@ -1015,6 +1015,7 @@ class Process(StructuredNode):
     includes_procedures = RelationshipTo("Procedure", "includes_procedure")
     remediates_interface = RelationshipTo("Interface", "remediates_interface")
     accountable_working_group = RelationshipTo("ATIWorkingGroup", "accountable_working_group")  # committee accountable for this work (distinct from owned_by Person)
+    accountable_community = RelationshipTo("CommunityOfPractice", "accountable_community")  # community of practice accountable for this work — the operating community that answers for it (preferred over the committee edge)
     classified_under = RelationshipTo("Dimension", "classified_under")  # cross-cutting AMM dimension(s) of the work
     participants = RelationshipFrom("Person", "worked_on", model=ParticipationRel)  # the working team (people in their roles); distinct from owned_by
 
@@ -1067,6 +1068,7 @@ class Project(StructuredNode):
     includes_procedures = RelationshipTo("Procedure", "includes_procedure")
     remediates_interface = RelationshipTo("Interface", "remediates_interface")
     accountable_working_group = RelationshipTo("ATIWorkingGroup", "accountable_working_group")  # committee accountable for this work (distinct from owned_by Person)
+    accountable_community = RelationshipTo("CommunityOfPractice", "accountable_community")  # community of practice accountable for this work — the operating community that answers for it (preferred over the committee edge)
     classified_under = RelationshipTo("Dimension", "classified_under")  # cross-cutting AMM dimension(s) of the work
     participants = RelationshipFrom("Person", "worked_on", model=ParticipationRel)  # the working team (people in their roles); distinct from owned_by
     start_date = DateProperty()
@@ -1118,6 +1120,7 @@ class Procedure(StructuredNode):
     owned_by = RelationshipTo("Person", "owned_by")
     remediates_interface = RelationshipTo("Interface", "remediates_interface")
     accountable_working_group = RelationshipTo("ATIWorkingGroup", "accountable_working_group")  # committee accountable for this work (distinct from owned_by Person)
+    accountable_community = RelationshipTo("CommunityOfPractice", "accountable_community")  # community of practice accountable for this work — the operating community that answers for it (preferred over the committee edge)
     classified_under = RelationshipTo("Dimension", "classified_under")  # cross-cutting AMM dimension(s) of the work
     participants = RelationshipFrom("Person", "worked_on", model=ParticipationRel)  # the working team (people in their roles); distinct from owned_by
 
@@ -1167,6 +1170,7 @@ class Service(StructuredNode):
     includes_procedures = RelationshipTo("Procedure", "includes_procedure")
     remediates_interface = RelationshipTo("Interface", "remediates_interface")
     accountable_working_group = RelationshipTo("ATIWorkingGroup", "accountable_working_group")  # committee accountable for this work (distinct from owned_by Person)
+    accountable_community = RelationshipTo("CommunityOfPractice", "accountable_community")  # community of practice accountable for this work — the operating community that answers for it (preferred over the committee edge)
     classified_under = RelationshipTo("Dimension", "classified_under")  # cross-cutting AMM dimension(s) of the work
     participants = RelationshipFrom("Person", "worked_on", model=ParticipationRel)  # the working team (people in their roles); distinct from owned_by
 

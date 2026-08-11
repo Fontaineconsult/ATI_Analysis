@@ -8,6 +8,7 @@ from ...database.queries.implementation.update import update_plan, assign_person
     assign_documentation_to_implementation, add_progress_note_to_plan, \
     assign_person_as_owner, unassign_person_as_owner, \
     assign_accountable_working_group, unassign_accountable_working_group, \
+    assign_accountable_community, unassign_accountable_community, \
     set_implementation_dimensions, set_implementation_participants, \
     assign_plan_to_campus, unassign_plan_from_campus, \
     attach_plan_to_yse, detach_plan_from_yse
@@ -365,6 +366,10 @@ class ImplementationAPI(MethodView):
                 return self.handle_assign_accountable_working_group(data)
             elif action == "unassign_accountable_working_group":
                 return self.handle_unassign_accountable_working_group(data)
+            elif action == "assign_accountable_community":
+                return self.handle_assign_accountable_community(data)
+            elif action == "unassign_accountable_community":
+                return self.handle_unassign_accountable_community(data)
             elif action == "set_dimensions":
                 return self.handle_set_dimensions(data)
             elif action == "set_participants":
@@ -710,6 +715,37 @@ class ImplementationAPI(MethodView):
             working_group=data['working_group'],
         )
         return make_response({"status": "success", "message": "Accountable working group unassigned successfully"}), 200
+
+    def handle_assign_accountable_community(self, data):
+        """
+        Connect an accountable CommunityOfPractice to a doing-implementation
+        (Process/Project/Procedure/Service) via accountable_community.
+
+        Body: { action: "assign_accountable_community",
+                implementation_type, implementation_unique_id, community }
+        where community is a unique_id or the community's (unique-indexed) name.
+        """
+        required = ['implementation_type', 'implementation_unique_id', 'community']
+        if not all(field in data for field in required):
+            raise ValidationError(f"Missing required fields: {required}")
+        assign_accountable_community(
+            implementation_unique_id=data['implementation_unique_id'],
+            implementation_type=data['implementation_type'],
+            community=data['community'],
+        )
+        return make_response({"status": "success", "message": "Accountable community assigned successfully"}), 200
+
+    def handle_unassign_accountable_community(self, data):
+        """Inverse of handle_assign_accountable_community."""
+        required = ['implementation_type', 'implementation_unique_id', 'community']
+        if not all(field in data for field in required):
+            raise ValidationError(f"Missing required fields: {required}")
+        unassign_accountable_community(
+            implementation_unique_id=data['implementation_unique_id'],
+            implementation_type=data['implementation_type'],
+            community=data['community'],
+        )
+        return make_response({"status": "success", "message": "Accountable community unassigned successfully"}), 200
 
     def handle_set_dimensions(self, data):
         """

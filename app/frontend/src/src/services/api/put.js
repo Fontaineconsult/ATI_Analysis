@@ -412,6 +412,38 @@ export const unassignAccountableWorkingGroup = async (implementationType, implem
     }
 };
 
+// Accountable community of practice — the operating community that answers for a
+// doing-implementation's work (preferred accountability seat over the WG edge).
+export const assignAccountableCommunity = async (implementationType, implementationUniqueId, community) => {
+    try {
+        const response = await axios.put(`${process.env.REACT_APP_API_URL}/implementations`, {
+            action: 'assign_accountable_community',
+            implementation_type: implementationType,
+            implementation_unique_id: implementationUniqueId,
+            community,
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error assigning accountable community:', error);
+        throw error;
+    }
+};
+
+export const unassignAccountableCommunity = async (implementationType, implementationUniqueId, community) => {
+    try {
+        const response = await axios.put(`${process.env.REACT_APP_API_URL}/implementations`, {
+            action: 'unassign_accountable_community',
+            implementation_type: implementationType,
+            implementation_unique_id: implementationUniqueId,
+            community,
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error unassigning accountable community:', error);
+        throw error;
+    }
+};
+
 export const unassignPersonAsImplementor = async (employeeId, year_success_indicator) => {
     try {
         await axios.put(`${process.env.REACT_APP_API_URL}/implementations`, unassignResponsiblePersonPayload(employeeId, year_success_indicator));

@@ -9,15 +9,18 @@
   <span class="badge type">{{ im.type }}</span>
   {{ im.title }}
   {% if im.retired %}<span class="badge retired">Retired{% if im.retired_date %} {{ im.retired_date }}{% endif %}</span>{% endif %}
+  {% if im.no_active_documents %}<span class="badge warn" title="Every attached document is deprecated">No active documentation</span>{% endif %}
+  {% if im.undocumented %}<span class="badge warn" title="No documents or webpages attached at all">Undocumented</span>{% endif %}
 </h1>
 {% if im.retired and im.retired_note %}<p class="lede">{{ im.retired_note }}</p>{% endif %}
-{% if im.description %}<p class="lede">{{ im.description }}</p>{% endif %}
+{% if im.description %}<p class="lede prewrap">{{ im.description }}</p>{% endif %}
 
 <h2>Overview</h2>
 <table>
   <caption>Implementation identity and stewardship</caption>
   <tr><th scope="row">Type</th><td>{{ im.type }}</td></tr>
   {% if im.owners %}<tr><th scope="row">Owner{{ 's' if im.owners | length > 1 }}</th><td>{{ im.owners | join(', ') }}</td></tr>{% endif %}
+  {% if im.accountable_communities %}<tr><th scope="row">Accountable community</th><td>{{ im.accountable_communities | join(', ') }}</td></tr>{% endif %}
   {% if im.dimensions %}<tr><th scope="row">Dimensions</th><td>{{ im.dimensions | join(', ') }}</td></tr>{% endif %}
   {% if im.campuses %}<tr><th scope="row">Campuses</th><td>{{ im.campuses | map('upper') | join(', ') }}</td></tr>{% endif %}
   <tr><th scope="row">Status</th>
@@ -81,11 +84,11 @@
 <h2>Annotations</h2>
 {% if im.notes %}
   <h3>Notes</h3>
-  <ul>{% for n in im.notes %}<li>{{ n.content or n.name }}{% if n.created_by or n.date %} <span class="muted">— {{ n.created_by or '' }}{% if n.date %} {{ n.date }}{% endif %}</span>{% endif %}</li>{% endfor %}</ul>
+  <ul class="annotations">{% for n in im.notes %}<li><span class="prewrap">{{ n.content or n.name }}</span>{% if n.created_by or n.date %}<span class="meta">{{ n.created_by or '' }}{% if n.date %} · {{ n.date }}{% endif %}</span>{% endif %}</li>{% endfor %}</ul>
 {% endif %}
 {% if im.messages %}
   <h3>Messages</h3>
-  <ul>{% for m in im.messages %}<li>{{ m.content or m.name }}{% if m.created_by or m.date %} <span class="muted">— {{ m.created_by or '' }}{% if m.date %} {{ m.date }}{% endif %}</span>{% endif %}</li>{% endfor %}</ul>
+  <ul class="annotations">{% for m in im.messages %}<li><span class="prewrap">{{ m.content or m.name }}</span>{% if m.created_by or m.date %}<span class="meta">{{ m.created_by or '' }}{% if m.date %} · {{ m.date }}{% endif %}</span>{% endif %}</li>{% endfor %}</ul>
 {% endif %}
 {% if im.metrics %}
   <h3>Metrics</h3>

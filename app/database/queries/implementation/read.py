@@ -284,6 +284,7 @@ _IMPL_PROJECTION = """
           { unique_id: c.unique_id, name: c.name, abbreviation: c.abbreviation } ])
       } ],
       dimensions: [ (impl)-[:classified_under]->(dim:Dimension) | { handle: dim.handle, name: dim.name } ],
+      accountable_communities: [ (impl)-[:accountable_community]->(cop:CommunityOfPractice) | { unique_id: cop.unique_id, name: cop.name } ],
       participants: [ (impl)<-[w:worked_on]-(p:Person) |
         { person: { unique_id: p.unique_id, name: p.name }, role_handle: w.role_handle, note: w.note } ],
       assets_raw:

@@ -34,6 +34,7 @@ IMPLEMENTATION_FIELDS = {
     "owned_by": ("Owner", "The person custodially responsible for maintaining this implementation's evidence record — distinct from the people who did the work."),
     "participants": ("Participants (working team)", "The people who actually performed the work, each acting in a role — distinct from the custodial owner."),
     "accountable_working_group": ("Accountable Working Group", "The ATI working group (committee) accountable for this work — who answers for it, distinct from who owns the record."),
+    "accountable_community": ("Accountable Community", "The community of practice that answers for this work — the operating community accountable for it, distinct from the custodial owner and from committee-level working-group accountability."),
 }
 
 # rel_type -> (title, description_short). is_evidence_for IS a real schema relationship, so this
