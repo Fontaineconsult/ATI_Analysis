@@ -16,7 +16,9 @@ jest.mock('../../services/api/put', () => ({
     withdrawApproval: jest.fn(),
 }));
 jest.mock('../../services/report_constructor', () => ({
-    GenerateReportComponent: () => <div data-testid="report" />,
+    GenerateReportComponent: ({ singleColumn }) => (
+        <div data-testid="report" data-single-column={String(!!singleColumn)} />
+    ),
 }));
 jest.mock('../graph_components/indicators/StatusLevelDetails', () => ({ __esModule: true, default: () => null }));
 jest.mock('../dashboard_components/report_components/SingleReportMasterContainer', () => ({ __esModule: true, default: () => null }));
@@ -64,6 +66,12 @@ describe('ApprovalMasterContainer approver gating', () => {
 
         const button = screen.getByRole('button', { name: /approve indicator/i });
         expect(button).toBeDisabled();
+    });
+
+    it('embeds the report in single-column mode (viewport-responsive row crushes in the modal)', () => {
+        renderWithUser({ employee_id: 'e1', name: 'No Flag', can_approve_yse: false });
+
+        expect(screen.getByTestId('report')).toHaveAttribute('data-single-column', 'true');
     });
 
     it('enables Approve for a flagged approver and submits as them', async () => {

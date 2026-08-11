@@ -34,6 +34,7 @@ import { useSettings } from '../../../context/SettingsContext';
 import { DataContext } from '../../../context/DataContext';
 import { updateStatusLevel, assignPersonAsImplementor, unassignPersonAsImplementor, setReadyForReview } from '../../../services/api/put';
 import { getIndicatorSummary, getStatusColor, PRIORITY_COLORS } from './indicatorHelpers';
+import { reviewWashClass } from '../../../styles/reviewWash';
 import IndicatorAssetsPanel from './IndicatorAssetsPanel';
 import { HelpTip } from '../../functional_components/DescriptorHelp';
 
@@ -146,8 +147,18 @@ function SuccessIndicatorDetailPanel({ wrapper }) {
 
     return (
         <VStack as="section" aria-label={`Success indicator ${s.compositeKey}`} align="stretch" spacing={3}>
-            {/* Header card — SI description is the headline; controls + badges below it */}
-            <Box bg="white" borderWidth="1px" borderColor="gray.200" borderRadius="lg" boxShadow="sm" p={4}>
+            {/* Header card — SI description is the headline; controls + badges below it.
+                The review-state wash rises from the bottom edge (bgColor, not bg,
+                so the gradient background-image survives). */}
+            <Box
+                className={reviewWashClass('bottom', s)}
+                bgColor="white"
+                borderWidth="1px"
+                borderColor="gray.200"
+                borderRadius="lg"
+                boxShadow="sm"
+                p={4}
+            >
                 <Heading as="h5" fontSize="lg" fontWeight="semibold" color="gray.800" lineHeight="short" mb={3}>
                     {s.description || '(no description)'}
                 </Heading>
@@ -299,7 +310,9 @@ function SuccessIndicatorDetailPanel({ wrapper }) {
             </Section>
 
             {/* Review stays behind a button (action-gated). */}
-            <Modal isOpen={approval.isOpen} onClose={approval.onClose} size="2xl">
+            {/* Wide review workspace: the container lays out review + report side
+                by side, and the report needs a real viewport to render. */}
+            <Modal isOpen={approval.isOpen} onClose={approval.onClose} size="6xl" scrollBehavior="inside">
                 <ModalOverlay />
                 <ModalContent>
                     <ModalHeader fontSize="lg" color="teal.700">Approval Process — {s.compositeKey}</ModalHeader>

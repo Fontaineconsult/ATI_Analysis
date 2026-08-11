@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useContext, useEffect, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import {
     Box,
@@ -27,6 +27,9 @@ import { getIndicatorSummary } from '../../graph_components/indicators/indicator
 import ViewReportButton from '../../functional_components/ViewReportButton';
 import { findTrendForIndicator } from './reportMetrics';
 import { CODE_TO_SLUG, WORKING_GROUP_LIST, getWorkingGroupIdentity } from '../../../styles/workingGroupIdentity';
+import { DataContext } from '../../../context/DataContext';
+import { setReadyForReview } from '../../../services/api/put';
+import { reviewWashClass } from '../../../styles/reviewWash';
 
 /*
  * The "ATI Success Indicators Report" tables — the per-working-group goal tables that make
@@ -44,9 +47,35 @@ import { CODE_TO_SLUG, WORKING_GROUP_LIST, getWorkingGroupIdentity } from '../..
 const SuccessIndicatorReportTables = ({ data, campus, navigate, openApprovalModal }) => {
     const location = useLocation();
     const toast = useToast();
+    const { loadSingleWorkingGroupData } = useContext(DataContext);
 
     // Ref to store table row elements for hash-based deep linking.
     const rowRefs = useRef({});
+
+    // Composite key of the row whose ready-toggle is in flight (spinner target).
+    const [readyBusyKey, setReadyBusyKey] = useState(null);
+
+    // Step one of the review workflow, inline from the table (step two — approve —
+    // opens the full review modal as before).
+    const handleReadyToggle = async (diag, workingGroupName) => {
+        setReadyBusyKey(diag.compositeKey);
+        try {
+            await setReadyForReview(diag.yearIdentifier, !diag.readyForReview);
+            toast({
+                title: diag.readyForReview ? 'Ready mark withdrawn' : 'Marked ready for review',
+                status: 'success', duration: 2000, isClosable: true, position: 'top-right',
+            });
+            await loadSingleWorkingGroupData(workingGroupName);
+        } catch (e) {
+            toast({
+                title: 'Failed to update review readiness',
+                description: e?.response?.data?.error || e?.message,
+                status: 'error', duration: 4000, isClosable: true, position: 'top-right',
+            });
+        } finally {
+            setReadyBusyKey(null);
+        }
+    };
 
     // Hash-based navigation: scroll to and briefly highlight the targeted indicator row.
     useEffect(() => {
@@ -279,23 +308,25 @@ const SuccessIndicatorReportTables = ({ data, campus, navigate, openApprovalModa
                                     // Documentation/implementation diagnostics (same source as the SI list).
                                     const diag = getIndicatorSummary(indicator);
 
-                                    const adminReviewers = indicator.evidences?.[0]?.adminReviewers || [];
-                                    const hasReviewers = adminReviewers.length > 0;
-
                                     const evidenceSummary = indicator.evidences?.[0]?.evidence?.properties?.admin_review_description;
                                     const hasSummary = evidenceSummary &&
                                         evidenceSummary !== "No Review" &&
                                         evidenceSummary !== "None" &&
                                         evidenceSummary.trim() !== "";
 
-                                    const approveButtonText = hasReviewers ? 'Approved' : 'Approve';
-                                    const approveButtonColor = hasReviewers ? 'gray' : (hasSummary ? 'green' : 'yellow');
-                                    const isButtonDisabled = hasReviewers;
+                                    // Review state from the shared summary (adminReviewers OR the
+                                    // complete flag) — the same source as the SI list and washes.
+                                    const approveButtonText = diag.approved ? 'Approved' : 'Approve';
+                                    const approveButtonColor = diag.approved ? 'gray' : (hasSummary ? 'green' : 'yellow');
+                                    const isButtonDisabled = diag.approved;
 
                                     return (
                                         <Tr
                                             key={indicator.indicator?.id}
-                                            _hover={{ bg: "gray.50" }}
+                                            /* Review-state wash from the right edge (bgColor on
+                                               hover, not bg — the shorthand would erase it). */
+                                            className={reviewWashClass('right', diag)}
+                                            _hover={{ bgColor: "gray.50" }}
                                             ref={(el) => {
                                                 if (el && compositeKey) {
                                                     rowRefs.current[compositeKey] = el;
@@ -368,8 +399,29 @@ const SuccessIndicatorReportTables = ({ data, campus, navigate, openApprovalModa
                                                     >
                                                         Edit
                                                     </Button>
+                                                    {/* Step one: mark/un-mark ready, inline. Hidden
+                                                        once approved (or with no evidence this year). */}
+                                                    {!diag.approved && diag.yearIdentifier && (
+                                                        <Tooltip
+                                                            label={diag.readyForReview
+                                                                ? 'Withdraw the ready-for-review mark'
+                                                                : 'Mark this evidence ready for administrative review'}
+                                                            placement="top"
+                                                            hasArrow
+                                                        >
+                                                            <Button
+                                                                size="xs"
+                                                                colorScheme="yellow"
+                                                                variant={diag.readyForReview ? 'ghost' : 'outline'}
+                                                                isLoading={readyBusyKey === diag.compositeKey}
+                                                                onClick={() => handleReadyToggle(diag, workingGroupName)}
+                                                            >
+                                                                {diag.readyForReview ? 'Unmark ready' : 'Mark ready'}
+                                                            </Button>
+                                                        </Tooltip>
+                                                    )}
                                                     <Tooltip
-                                                        label={!hasReviewers && !hasSummary ? "Summary Needed" : ""}
+                                                        label={!diag.approved && !hasSummary ? "Summary Needed" : ""}
                                                         placement="top"
                                                         hasArrow
                                                     >

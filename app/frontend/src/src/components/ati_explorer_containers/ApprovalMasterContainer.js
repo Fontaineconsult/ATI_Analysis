@@ -251,7 +251,9 @@ function ApprovalMasterContainer({
 
             <Divider borderColor="gray.200" my={6} />
 
-            {/* Report Output Section */}
+            {/* Report Output — the full report the approver signs off on, forced
+                into its embedded single-column mode (the report's own responsive
+                row layout keys off the viewport, not this container). */}
             <Box mb={6}>
                 <Heading as="h4" size="md" color="teal.700" mb={4}>
                     Report Output
@@ -262,11 +264,11 @@ function ApprovalMasterContainer({
                     borderWidth="1px"
                     borderColor="teal.300"
                     borderRadius="lg"
-                    maxHeight="500px"
+                    maxHeight="60vh"
                     overflowY="auto"
                 >
                     {propEvidenceData ? (
-                        <GenerateReportComponent evidenceItem={evidenceData} />
+                        <GenerateReportComponent evidenceItem={evidenceData} singleColumn />
                     ) : (
                         <SingleReportMasterContainer
                             workingGroup={propWorkingGroup}

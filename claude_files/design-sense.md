@@ -267,6 +267,24 @@ Status is a six-rung CMM ladder (`Not Started → Initiated → Defined → Esta
   `STATUS_LEVELS_ORDER`; the numeric `getStatusColor(0..5)` colorScheme map lives in
   `indicators/indicatorHelpers.js`.
 
+### 4.7 Review-state washes (edge gradients)
+
+Administrative-review state gets an ambient signal beyond badges: a subtle edge
+gradient ("wash") on the indicator selectors and the detail heading. The system is
+`styles/reviewWash.css` + the `reviewWashClass(placement, state)` helper
+(`styles/reviewWash.js`) — placement × state, tunable depth:
+
+- Placements: `right` (tint enters from the right edge — list selector rows, 15% deep)
+  and `bottom` (tint rises from the bottom edge — heading cards, 5% deep). Depth
+  overridable per element via `--review-wash-depth`.
+- States: yellow = `readyForReview` (`yellow.400` @ 0.3 — brighter than green because the
+  lighter hue needs more alpha to register on white), green = `approved` (`green.500` @ 0.16;
+  approved wins). No state → no wash.
+- The wash is `background-image` only, so it layers over the element's own color —
+  **Chakra callers must use `bgColor`, never `bg`** (the `bg` shorthand resets
+  background-image). Washes are supplementary: the badge/icon still carries the
+  state for accessibility; never make the wash the only signal.
+
 ---
 
 ## 5. States

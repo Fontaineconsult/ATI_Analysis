@@ -1,0 +1,45 @@
+/*
+ * Review-state washes — subtle edge gradients signaling where a success
+ * indicator's evidence sits in the administrative-review workflow, beyond the
+ * badges: yellow = marked ready for review, green = review complete.
+ *
+ * The system is placement x state, with a tunable depth:
+ *   placement  .review-wash-right   tint enters from the RIGHT edge
+ *              .review-wash-bottom  tint rises from the BOTTOM edge
+ *   state      .review-wash--ready / .review-wash--approved  (sets the color)
+ *   depth      --review-wash-depth  how far the tint reaches before fading
+ *              (defaults: 15% for right, 5% for bottom; override inline)
+ *
+ * background-image only — NEVER the background shorthand — so the wash
+ * composes with the element's own background color. Chakra callers must use
+ * bgColor (not bg) for the same reason: bg emits the shorthand and resets
+ * background-image.
+ */
+.review-wash-right {
+    background-image: linear-gradient(
+        to left,
+        var(--review-wash-color, transparent),
+        transparent var(--review-wash-depth, 15%)
+    );
+    background-repeat: no-repeat;
+}
+
+.review-wash-bottom {
+    background-image: linear-gradient(
+        to top,
+        var(--review-wash-color, transparent),
+        transparent var(--review-wash-depth, 5%)
+    );
+    background-repeat: no-repeat;
+}
+
+/* State colors: Chakra yellow.400 / green.500 at a light-tint alpha.
+   (Yellow runs brighter than green — the lighter hue needs more alpha to
+   register on white at all.) */
+.review-wash--ready {
+    --review-wash-color: rgba(236, 201, 75, 0.3);
+}
+
+.review-wash--approved {
+    --review-wash-color: rgba(56, 161, 105, 0.16);
+}

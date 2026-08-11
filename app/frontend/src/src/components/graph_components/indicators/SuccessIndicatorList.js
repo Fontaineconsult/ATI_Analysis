@@ -3,6 +3,7 @@ import { Box, VStack, HStack, Text, Badge, Icon, Tooltip } from '@chakra-ui/reac
 import { FaUser, FaListUl, FaRegComment, FaCheckCircle } from 'react-icons/fa';
 import { getIndicatorSummary, getStatusColor } from './indicatorHelpers';
 import { strengthConfig } from '../implementation/implementationConfig';
+import { reviewWashClass } from '../../../styles/reviewWash';
 import StatusLevelLadder from '../../functional_components/StatusLevelLadder';
 import useListboxNavigation from '../../../hooks/useListboxNavigation';
 
@@ -60,7 +61,10 @@ function SuccessIndicatorList({ indicators = [], selectedKey, onSelect }) {
                         aria-label={`Indicator ${s.compositeKey}, ${s.statusLevel || 'no evidence'}${s.implCount > 0 ? `, evidence strength ${strengthConfig(s.maxStrength)?.label || 'unrated'}` : ''}${s.description ? `: ${s.description}` : ''}`}
                         onClick={() => { if (onSelect) onSelect(s.compositeKey); }}
                         cursor="pointer"
-                        bg="white"
+                        /* Review-state wash from the right edge (bgColor, not bg,
+                           so the gradient background-image survives). */
+                        className={reviewWashClass('right', s)}
+                        bgColor="white"
                         borderWidth="1px"
                         borderColor={isSelected ? 'teal.400' : 'gray.200'}
                         borderLeftWidth="3px"

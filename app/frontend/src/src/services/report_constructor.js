@@ -425,7 +425,12 @@ function generateReport(evidenceItem) {
     return report;
 }
 
-function GenerateReportComponent({ evidenceItem }) {
+// singleColumn: embedded hosts (e.g. the Administrative Review window) force a
+// stacked layout. The default responsive row keys off the VIEWPORT breakpoint,
+// not the container, so inside a modal on a wide window it still renders
+// two-up and crushes — pass singleColumn wherever the report is imported into
+// a constrained box.
+function GenerateReportComponent({ evidenceItem, singleColumn = false }) {
 
 
     const navigate = useNavigate();
@@ -535,11 +540,11 @@ function GenerateReportComponent({ evidenceItem }) {
     return (
         <Box p={6} bg="gray.50" fontSize="sm" textAlign="left">
             <Flex
-                direction={{ base: 'column', lg: 'row' }}
+                direction={singleColumn ? 'column' : { base: 'column', lg: 'row' }}
                 gap={6}
                 align="flex-start"
             >
-                <Box flex={{ base: 'none', lg: 3 }} w="100%" minW="0">
+                <Box flex={singleColumn ? 'none' : { base: 'none', lg: 3 }} w="100%" minW="0">
                     <VStack align="stretch" spacing={6}>
 
                 {/* Indicator Information - Header Section */}
@@ -1170,14 +1175,15 @@ function GenerateReportComponent({ evidenceItem }) {
                     </VStack>
                 </Box>
 
-                {/* Right column: Evidence Quality Criteria (sticky on lg+) */}
+                {/* Right column: Evidence Quality Criteria (sticky on lg+; in
+                    singleColumn mode it stacks below the report instead). */}
                 <Box
-                    flex={{ base: 'none', lg: 1 }}
-                    w={{ base: '100%', lg: 'auto' }}
-                    minW={{ lg: '280px' }}
-                    position={{ lg: 'sticky' }}
-                    top={{ lg: 6 }}
-                    alignSelf={{ lg: 'flex-start' }}
+                    flex={singleColumn ? 'none' : { base: 'none', lg: 1 }}
+                    w={singleColumn ? '100%' : { base: '100%', lg: 'auto' }}
+                    minW={singleColumn ? undefined : { lg: '280px' }}
+                    position={singleColumn ? 'static' : { lg: 'sticky' }}
+                    top={singleColumn ? undefined : { lg: 6 }}
+                    alignSelf={singleColumn ? 'auto' : { lg: 'flex-start' }}
                 >
                     {evidenceItem.statusLevel?.properties?.status_level && (
                         <EvidenceQualityPanel
