@@ -42,6 +42,31 @@ def update_meeting_minutes(unique_id: str, title=_UNSET, content=_UNSET, meeting
     return get_meeting_minutes(unique_id)
 
 
+def set_ontology_ingested(unique_id: str, ingested: bool = True, note=_UNSET) -> dict:
+    """
+    Mark a record as processed by the ontology-ingest skill (or revert the mark).
+
+    Setting stamps today's date; the optional note should summarize what the
+    ingest created/enriched so the record answers "did new nodes come out of
+    this meeting?" at a glance. Reverting (ingested=False) clears the date and
+    note. Returns the refreshed record.
+    """
+    m = _get(unique_id)
+    m.ontology_ingested = bool(ingested)
+    if ingested:
+        m.ontology_ingest_date = date.today()
+        if note is not _UNSET:
+            m.ontology_ingest_note = (note.strip() if isinstance(note, str) else note) or None
+    else:
+        m.ontology_ingest_date = None
+        m.ontology_ingest_note = None
+    try:
+        m.save()
+    except Exception as e:
+        raise CrudError(f"Failed to set ontology-ingest flag on MeetingMinutes {unique_id!r}: {e}")
+    return get_meeting_minutes(unique_id)
+
+
 def _rel_data():
     return {
         "added_date": date.today(),

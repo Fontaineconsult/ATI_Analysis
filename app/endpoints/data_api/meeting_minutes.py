@@ -28,6 +28,7 @@ from app.database.queries.meeting_minutes.update import (
     detach_document,
     detach_webpage,
     add_minutes_note,
+    set_ontology_ingested,
 )
 from app.database.queries.meeting_minutes.delete import delete_meeting_minutes
 from app.endpoints.data_api.errors.custom_exceptions import (
@@ -132,6 +133,15 @@ class MeetingMinutesAPI(MethodView):
                     return make_response(status="error", error="Missing required field: 'webpage_unique_id'"), 400
                 result = detach_webpage(unique_id, data["webpage_unique_id"])
                 return make_response(status="success", data=result, message="Webpage detached."), 200
+
+            if action == "set_ontology_ingested":
+                # Mark (or revert) the record as processed by the ontology-ingest
+                # skill. ingested defaults to True; note summarizes what was created.
+                kwargs = {"ingested": bool(data.get("ingested", True))}
+                if "note" in data:
+                    kwargs["note"] = data["note"]
+                result = set_ontology_ingested(unique_id, **kwargs)
+                return make_response(status="success", data=result, message="Ontology-ingest flag updated."), 200
 
             if action == "add_minutes_note":
                 if not data.get("content"):

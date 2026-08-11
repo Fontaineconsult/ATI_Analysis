@@ -214,6 +214,13 @@ only the changed sections.
   — ALL Cypher produced by this skill saves to that folder, nowhere else — with a
   header documenting: source path, recon findings, identity mappings, as-heard
   flags, and every judgment call from the approved manifest.
+- **Stamp the source minutes as ingested**: the batch file's LAST statement sets
+  the tracking flag on every MeetingMinutes node the ingest anchored to —
+  `SET mm.ontology_ingested = true, mm.ontology_ingest_date = date(),
+  mm.ontology_ingest_note = "<counts summary, e.g. created 2 Processes, 3 Notes; enriched 1 Plan>"`.
+  Un-ingested minutes are the app's untapped-source signal; a re-ingest overwrites
+  the stamp (that's fine — latest run wins). Recon (Step 0 dedup) should also read
+  the flag: an already-`ontology_ingested` MeetingMinutes means enrich, not re-create.
 - Validate and execute ONLY through the standalone runner (never ad-hoc scripts):
   `python -m app.database.cypher_runner.run_file <file>` (EXPLAIN-validates all
   statements, read-only), then `... run_file <file> --execute` to run. The runner
@@ -225,4 +232,6 @@ only the changed sections.
 After execution: counts created vs enriched per category (verified by read-back
 query, not assumed), any statements that merged onto existing nodes unexpectedly,
 unresolved identities still needing verification, and a pointer to the saved
-.cypher file and its manifest.
+.cypher file and its manifest. Confirm by read-back that the source
+MeetingMinutes now carries `ontology_ingested = true` with the counts summary
+in `ontology_ingest_note` — the stamp is part of the ingest, not optional.

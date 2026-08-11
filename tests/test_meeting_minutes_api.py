@@ -27,6 +27,7 @@ from app.database.queries.meeting_minutes.update import (
     attach_webpage,
     detach_document,
     add_minutes_note,
+    set_ontology_ingested,
 )
 from app.database.queries.meeting_minutes.delete import delete_meeting_minutes
 from app.endpoints.data_api.errors.custom_exceptions import NotFoundError, ValidationError
@@ -169,6 +170,28 @@ def test_panel_missing_plan_empty():
     assert panel["minutes"] == []
 
 
+def test_ontology_ingest_flag(sentinel_web_plan, cleanup_minutes):
+    m = create_meeting_minutes(title="ingest me", working_group_plan_identifier=sentinel_web_plan["wgp_identifier"])
+    cleanup_minutes.append(m.unique_id)
+
+    # Fresh records start un-ingested.
+    fresh = get_meeting_minutes(m.unique_id)
+    assert fresh["ontology_ingested"] is False
+    assert fresh["ontology_ingest_date"] is None
+
+    # Marking stamps date + note.
+    marked = set_ontology_ingested(m.unique_id, note="created 2 Processes, 1 Note")
+    assert marked["ontology_ingested"] is True
+    assert marked["ontology_ingest_date"]
+    assert marked["ontology_ingest_note"] == "created 2 Processes, 1 Note"
+
+    # Reverting clears date + note.
+    reverted = set_ontology_ingested(m.unique_id, ingested=False)
+    assert reverted["ontology_ingested"] is False
+    assert reverted["ontology_ingest_date"] is None
+    assert reverted["ontology_ingest_note"] is None
+
+
 def test_delete(sentinel_web_plan, cleanup_minutes):
     m = create_meeting_minutes(title="del", working_group_plan_identifier=sentinel_web_plan["wgp_identifier"])
     cleanup_minutes.append(m.unique_id)
@@ -202,6 +225,14 @@ def test_endpoint_flow(flask_client, sentinel_web_plan, cleanup_minutes):
         "action": "attach_webpage", "unique_id": uid, "url": "https://example.edu/rec", "name": "Rec",
     })
     assert resp.status_code == 201
+
+    resp = flask_client.put(base, json={
+        "action": "set_ontology_ingested", "unique_id": uid, "note": "created 1 Plan",
+    })
+    assert resp.status_code == 200
+    flagged = resp.get_json()["data"]
+    assert flagged["ontology_ingested"] is True
+    assert flagged["ontology_ingest_note"] == "created 1 Plan"
 
     resp = flask_client.delete(f"{base}/{uid}")
     assert resp.status_code == 200

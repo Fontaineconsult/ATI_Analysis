@@ -1544,6 +1544,14 @@ class MeetingMinutes(StructuredNode):
     content      = StringProperty()          # the minutes body, as Markdown
     date_created = DateProperty()            # set in create_meeting_minutes
 
+    # Ontology-ingest tracking: flipped once the ontology-ingest skill has been
+    # run over this record, so un-ingested minutes are findable as untapped
+    # source material. The note summarizes what the ingest created/enriched
+    # (e.g. "created 2 Processes, 3 Notes; enriched 1 Plan").
+    ontology_ingested    = BooleanProperty(default=False)
+    ontology_ingest_date = DateProperty()
+    ontology_ingest_note = StringProperty()
+
     # Required anchor — encodes campus + academic year + working group. Enforced in
     # queries/meeting_minutes/create.py (neomodel can't require edges at save time).
     working_group_plan = RelationshipTo("WorkingGroupPlan", "minutes_under_plan")
@@ -1561,6 +1569,9 @@ class MeetingMinutes(StructuredNode):
             "meeting_date": self.meeting_date.isoformat() if self.meeting_date else None,
             "content": self.content,
             "date_created": self.date_created.isoformat() if self.date_created else None,
+            "ontology_ingested": bool(self.ontology_ingested),
+            "ontology_ingest_date": self.ontology_ingest_date.isoformat() if self.ontology_ingest_date else None,
+            "ontology_ingest_note": self.ontology_ingest_note,
         }
 
 

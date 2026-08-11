@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import {
-    Box, Button, Collapse, Flex, HStack, IconButton, Spinner, Text, Tooltip, VStack,
+    Badge, Box, Button, Collapse, Flex, HStack, IconButton, Spinner, Text, Tooltip, VStack,
     useDisclosure, useToast,
 } from '@chakra-ui/react';
 import { AddIcon, ChevronDownIcon, ChevronUpIcon, DeleteIcon, EditIcon } from '@chakra-ui/icons';
@@ -40,6 +40,24 @@ function MinutesRow({ minutes, onChanged, onEdit }) {
                         {minutes.meeting_date && <Text fontSize="2xs" color="gray.600" fontFamily="mono">{minutes.meeting_date}</Text>}
                         {minutes.recorded_by && <Text fontSize="2xs" color="gray.600">{minutes.recorded_by.name}</Text>}
                         {attachedCount > 0 && <Text fontSize="2xs" color="teal.600">{attachedCount} attached</Text>}
+                        {minutes.ontology_ingested ? (
+                            <Tooltip
+                                label={[minutes.ontology_ingest_date, minutes.ontology_ingest_note].filter(Boolean).join(' — ')
+                                    || 'Processed by the ontology-ingest skill'}
+                                openDelay={400}
+                            >
+                                <Badge colorScheme="teal" variant="subtle" fontSize="2xs">ingested</Badge>
+                            </Tooltip>
+                        ) : (
+                            <Badge
+                                colorScheme="orange"
+                                variant="subtle"
+                                fontSize="2xs"
+                                title="Not yet processed by the ontology-ingest skill — untapped source material"
+                            >
+                                not ingested
+                            </Badge>
+                        )}
                     </HStack>
                 </VStack>
                 <Tooltip label="Edit" openDelay={400}>
