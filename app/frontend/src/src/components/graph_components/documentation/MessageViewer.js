@@ -17,7 +17,8 @@ import {
     IconButton,
     Grid,
     GridItem,
-    Link
+    Link,
+    useToast
 } from '@chakra-ui/react';
 import { EditIcon, ExternalLinkIcon } from '@chakra-ui/icons';
 import { updateMessage } from '../../../services/api/put';
@@ -57,6 +58,7 @@ function MessageViewer({ messages, onSubmit, yearSuccessEvidence, createdBy, imp
     const { loadSingleWorkingGroupData } = useContext(DataContext);
     const { currentWorkingGroup } = useSettings();
     const { user } = useContext(UserContext);
+    const toast = useToast();
 
     useEffect(() => {
         setIsYearSuccessEvidence(!!yearSuccessEvidence);
@@ -90,8 +92,19 @@ function MessageViewer({ messages, onSubmit, yearSuccessEvidence, createdBy, imp
             await loadSingleWorkingGroupData(currentWorkingGroup);
             setExpandedIndex(null);
             setIsAddingNewMessage(false);
+            toast({ title: isNew ? 'Message added' : 'Message updated', status: 'success', duration: 2000, isClosable: true, position: 'top-right' });
         } catch (error) {
+            // Surface the failure — a silent console.error made a broken save
+            // look like a stuck toggle. The form stays open so nothing is lost.
             console.error('Error submitting message:', error);
+            toast({
+                title: isNew ? 'Failed to add message' : 'Failed to update message',
+                description: error?.response?.data?.error || error?.message,
+                status: 'error',
+                duration: 4000,
+                isClosable: true,
+                position: 'top-right',
+            });
         }
     };
 
@@ -149,10 +162,10 @@ function MessageViewer({ messages, onSubmit, yearSuccessEvidence, createdBy, imp
                                                 {message.properties?.name || 'Untitled Message'}
                                             </Text>
                                             <Badge
-                                                colorScheme={messageTypeColors[message.properties?.message_type] || 'gray'}
+                                                colorScheme={messageTypeColors[message.properties?.type || message.properties?.message_type] || 'gray'}
                                                 fontSize="10px"
                                             >
-                                                {message.properties?.message_type || 'unknown'}
+                                                {message.properties?.type || message.properties?.message_type || 'unknown'}
                                             </Badge>
                                             {message.properties?.include_in_report && (
                                                 <Badge colorScheme="green" fontSize="10px">In Report</Badge>
@@ -246,7 +259,9 @@ function MessageForm({ message, onSubmit, createdBy, onCancel }) {
         original_filename: message?.properties?.file?.original_filename || '',
         content_type: message?.properties?.file?.content_type || '',
         size: message?.properties?.file?.size ?? null,
-        message_type: message?.properties?.message_type || messageTypes[0],
+        // The graph property is `type` (read path returns raw nodes); older
+        // serializations may carry `message_type`.
+        message_type: message?.properties?.type || message?.properties?.message_type || messageTypes[0],
         depreciated: message?.properties?.depreciated || false,
         depreciated_date: message?.properties?.depreciated_date || '',
         include_in_report: message?.properties?.include_in_report ?? true,

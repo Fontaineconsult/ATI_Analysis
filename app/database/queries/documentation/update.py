@@ -205,6 +205,13 @@ def update_message(
                 setattr(message, field, message_dict[field])
                 updated_fields = True
 
+        # The FE (and the create path) speak `message_type`; the graph property
+        # is `type`. Accept both here so edits actually persist the type.
+        if 'type' not in message_dict and 'message_type' in message_dict \
+                and message.type != message_dict['message_type']:
+            message.type = message_dict['message_type']
+            updated_fields = True
+
         # Handle depreciated and depreciated_date
         if 'depreciated' in message_dict and message.depreciated != message_dict['depreciated']:
             message.depreciated = message_dict['depreciated']
@@ -225,6 +232,13 @@ def update_message(
 
         # Update the created_by relationship
         if created_by:
+            if not isinstance(created_by, str):
+                # A node wrapper/dict here means a caller wired the wrong field —
+                # fail loudly instead of a misleading "Person not found".
+                raise ValidationError(
+                    "created_by must be an employee_id string, "
+                    f"got {type(created_by).__name__}."
+                )
             try:
                 person = Person.nodes.get(employee_id=created_by)
                 if not message.created_by.is_connected(person):

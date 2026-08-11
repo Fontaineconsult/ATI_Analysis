@@ -334,12 +334,17 @@ class DocumentsAPI(MethodView):
                 year_success_evidence = data.get('year_success_evidence')
 
                 try:
+                    # created_by comes from the payload's TOP-LEVEL field (an
+                    # employee_id string, mirroring the note branch). The FE edit
+                    # form also packs the read-path node wrapper (a dict) inside
+                    # message_dict.created_by — feeding that to a Person lookup
+                    # 404'd every update of a creator-bearing message.
                     if update_message(
                             message_dict,
                             year_success_evidence=year_success_evidence,
                             implementation_id=implementation_id,
                             implementation_type=implementation_type,
-                            created_by=message_dict.get('created_by'),
+                            created_by=data.get('created_by') or None,
                             academic_year=academic_year,
                             include_in_year=include_in_year
                     ):
