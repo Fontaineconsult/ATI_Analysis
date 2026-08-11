@@ -7,7 +7,12 @@ from neomodel import db
 
 from app.database.class_factory import implementation_classes
 from app.database.graph_schema import *
-from app.endpoints.data_api.errors.custom_exceptions import NotFoundError, CrudError, ValidationError
+from app.endpoints.data_api.errors.custom_exceptions import (
+    AuthorizationError,
+    CrudError,
+    NotFoundError,
+    ValidationError,
+)
 
 def _validate_evidence_strength(strength):
     """Normalize/validate an evidence-strength value: int 0-3 or None (unrated)."""
@@ -333,6 +338,15 @@ def assign_approver_to_yse(year_success_identifier: str, employee_id: str) -> bo
         except Person.DoesNotExist:
             raise NotFoundError(f"Person with employee_id '{employee_id}' not found.")
 
+        # Approving is gated on the Approver flag (Settings -> Members). The flag
+        # is data-entry on Person; this is the enforcement point every caller
+        # (endpoint, MCP, script) funnels through.
+        if not person.can_approve_yse:
+            raise AuthorizationError(
+                f"Person {employee_id} cannot approve evidence: the Approver flag "
+                "(can_approve_yse) is not set."
+            )
+
         # Check if the person is already assigned as an approver
         if year_success_evidence.administrative_review_completed_by.is_connected(person):
             raise CrudError(f"Approver {employee_id} is already assigned to success indicator {year_success_identifier}")
@@ -346,8 +360,8 @@ def assign_approver_to_yse(year_success_identifier: str, employee_id: str) -> bo
         print(f"Approver {employee_id} assigned to success indicator {year_success_identifier}")
         return True
 
-    except NotFoundError as e:
-        # Reraise NotFoundError to be caught by the calling function for proper error handling
+    except (NotFoundError, AuthorizationError) as e:
+        # Reraise for the endpoint's 404/403 mapping.
         raise e
 
     except Exception as e:
@@ -436,3 +450,30 @@ def add_admin_reviewer_note(year_success_identifier: str, note_content: str, cre
     except Exception as e:
         raise CrudError(f"Error adding admin reviewer note for {year_success_identifier}: {e}")
 
+
+
+def set_ready_for_admin_review(year_success_identifier: str, ready: bool) -> bool:
+    """
+    Toggle the ready_for_admin_review flag on a YearSuccessEvidence — step one
+    of the two-step review workflow (implementor marks ready; a flagged approver
+    then completes the review via assign_approver_to_yse). Pre-approval state,
+    so un-marking is allowed; approval itself leaves the flag untouched (the UI
+    gives Approved precedence). Rollover resets it each year.
+    """
+    if not isinstance(ready, bool):
+        raise ValidationError("'ready' must be a boolean.")
+    try:
+        try:
+            yse = YearSuccessEvidence.nodes.get(year_identifier=year_success_identifier)
+        except YearSuccessEvidence.DoesNotExist:
+            raise NotFoundError(f"YearSuccessEvidence with identifier '{year_success_identifier}' not found.")
+
+        if yse.ready_for_admin_review != ready:
+            yse.ready_for_admin_review = ready
+            yse.save()
+        return True
+
+    except (NotFoundError, ValidationError) as e:
+        raise e
+    except Exception as e:
+        raise CrudError(f"Error setting ready_for_admin_review on {year_success_identifier}: {e}")

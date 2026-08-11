@@ -465,9 +465,6 @@ const IndicatorReportView = ({ report }) => {
                                     {completedBy ? ` by ${completedBy.name}` : ''}
                                 </Text>
                             )}
-                            {(people?.admin_reviewers || []).map((r) => (
-                                <Tag key={r.unique_id} size="sm" variant="subtle" colorScheme="gray">{r.name}</Tag>
-                            ))}
                         </HStack>
                         {yse?.admin_review_description && yse.admin_review_description !== 'No Review' && (
                             <Box mt={2} p={3} bg="blue.50" borderRadius="md" borderLeftWidth="4px" borderLeftColor="blue.400">

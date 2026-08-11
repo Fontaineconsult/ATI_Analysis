@@ -136,7 +136,6 @@ function overviewHtml(report) {
     const parts = [`<b>${yse?.administrative_review_complete ? 'Complete' : 'Pending'}</b>`];
     if (yse?.administrative_review_completed_date) parts.push(esc(yse.administrative_review_completed_date));
     if (people.admin_review_completed_by?.name) parts.push(`by ${esc(people.admin_review_completed_by.name)}`);
-    if ((people.admin_reviewers || []).length) parts.push(`reviewers: ${people.admin_reviewers.map((r) => esc(r.name)).join(', ')}`);
     h += `<p style="${FONT}font-size:12px;color:${TEXT};margin:0 0 6px 0;"><b style="color:${NAVY};">Administrative review:</b> ${parts.join(' · ')}</p>`;
     if (yse?.admin_review_description && yse.admin_review_description !== 'No Review') {
         h += `<p style="${FONT}font-size:12px;color:${TEXT};margin:0 0 6px 0;">${esc(yse.admin_review_description)}</p>`;

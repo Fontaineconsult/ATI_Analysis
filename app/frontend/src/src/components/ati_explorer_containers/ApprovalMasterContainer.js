@@ -95,9 +95,12 @@ function ApprovalMasterContainer({
     const { year_identifier, administrative_review_complete } = evidenceData.evidence.properties;
     const currentUserId = user?.employee_id;
     const isApproved = administrative_review_complete === true;
+    // Approving requires the Approver flag (Settings -> Members). The backend
+    // enforces this (403); the disabled button just explains it up front.
+    const canApprove = Boolean(user?.can_approve_yse);
 
     const handleApprove = async () => {
-        if (!currentUserId || isApproved) return;
+        if (!currentUserId || !canApprove || isApproved) return;
 
         setLoading(true);
         try {
@@ -115,7 +118,8 @@ function ApprovalMasterContainer({
             console.error('Approval failed:', error);
             toast({
                 title: "Approval Failed",
-                description: "There was an issue with approving the success indicator.",
+                description: error?.response?.data?.error
+                    || "There was an issue with approving the success indicator.",
                 status: "error",
                 duration: 5000,
                 isClosable: true,
@@ -188,13 +192,13 @@ function ApprovalMasterContainer({
                         }}
                     />
 
-                    {/* Admin Review Status */}
+                    {/* Admin Review Status — complete > ready-awaiting-approval > not yet ready */}
                     <Box
                         p={4}
-                        bg={evidenceData.evidence?.properties?.administrative_review_complete ? "green.50" : "orange.50"}
+                        bg={isApproved ? "green.50" : "orange.50"}
                         borderRadius="lg"
                         borderWidth="1px"
-                        borderColor={evidenceData.evidence?.properties?.administrative_review_complete ? "green.200" : "orange.200"}
+                        borderColor={isApproved ? "green.200" : "orange.200"}
                     >
                         <Text fontSize="xs" fontWeight="semibold" color="gray.600" textTransform="uppercase" mb={2}>
                             Review Status
@@ -203,9 +207,13 @@ function ApprovalMasterContainer({
                             <Text
                                 fontSize="sm"
                                 fontWeight="bold"
-                                color={evidenceData.evidence?.properties?.administrative_review_complete ? "green.600" : "orange.600"}
+                                color={isApproved ? "green.600" : "orange.600"}
                             >
-                                {evidenceData.evidence?.properties?.administrative_review_complete ? "✓ Review Complete" : "⏳ Review Pending"}
+                                {isApproved
+                                    ? "✓ Review Complete"
+                                    : evidenceData.evidence?.properties?.ready_for_admin_review
+                                        ? "⏳ Ready for review — awaiting approval"
+                                        : "Not yet marked ready for review"}
                             </Text>
                         </HStack>
                     </Box>
@@ -251,7 +259,9 @@ function ApprovalMasterContainer({
                                 ? "Please select a user to approve this indicator"
                                 : isApproved
                                     ? "This indicator has already been approved"
-                                    : "Click to approve this indicator"
+                                    : !canApprove
+                                        ? "Your account does not have the Approver flag — an administrator can grant it under Settings → Members"
+                                        : "Click to approve this indicator"
                         }
                         placement="top"
                         hasArrow
@@ -260,9 +270,9 @@ function ApprovalMasterContainer({
                             colorScheme={isApproved ? "green" : "teal"}
                             size="md"
                             onClick={handleApprove}
-                            isDisabled={isApproved || !currentUserId}
+                            isDisabled={isApproved || !currentUserId || !canApprove}
                             boxShadow="sm"
-                            _hover={!isApproved && currentUserId ? { boxShadow: "md" } : {}}
+                            _hover={!isApproved && currentUserId && canApprove ? { boxShadow: "md" } : {}}
                             transition="box-shadow 0.2s"
                             leftIcon={isApproved ? <Text>✓</Text> : null}
                         >

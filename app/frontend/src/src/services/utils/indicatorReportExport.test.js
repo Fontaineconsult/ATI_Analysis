@@ -14,7 +14,6 @@ const REPORT = {
     yse: { administrative_review_complete: true, administrative_review_completed_date: '2026-03-01', priority_level: 'High', worked_on_in_current_year: true },
     people: {
         implementers: [{ unique_id: 'p1', name: 'Ivy Implementer', title: 'Web Lead', email: 'ivy@example.edu', roles: [{ handle: 'role:lead', name: 'Lead' }] }],
-        admin_reviewers: [{ unique_id: 'r1', name: 'Rob Reviewer' }],
         admin_review_completed_by: { unique_id: 'r2', name: 'Reviewer Rita' },
     },
     admin_review_notes: [{ unique_id: 'an1', content: 'Needs more evidence.', dateCreated: '2026-02-01', created_by: { name: 'Ann Admin' } }],

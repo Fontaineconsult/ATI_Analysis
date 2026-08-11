@@ -32,7 +32,7 @@ import { useStatusLevels } from '../../../hooks/useStatusLevels';
 import { UserContext } from '../../../context/UserContext';
 import { useSettings } from '../../../context/SettingsContext';
 import { DataContext } from '../../../context/DataContext';
-import { updateStatusLevel, assignPersonAsImplementor, unassignPersonAsImplementor } from '../../../services/api/put';
+import { updateStatusLevel, assignPersonAsImplementor, unassignPersonAsImplementor, setReadyForReview } from '../../../services/api/put';
 import { getIndicatorSummary, getStatusColor, PRIORITY_COLORS } from './indicatorHelpers';
 import IndicatorAssetsPanel from './IndicatorAssetsPanel';
 import { HelpTip } from '../../functional_components/DescriptorHelp';
@@ -80,6 +80,29 @@ function SuccessIndicatorDetailPanel({ wrapper }) {
         } catch (e) {
             setLocalStatus(previous);
             toast({ title: 'Error updating status', description: 'Please try again.', status: 'error', duration: 3000, isClosable: true, position: 'top-right' });
+        }
+    };
+
+    // Step one of the review workflow: mark/un-mark this year's evidence ready
+    // for administrative review (an approver then completes it in the modal).
+    const [readyBusy, setReadyBusy] = useState(false);
+    const handleReadyToggle = async (ready) => {
+        setReadyBusy(true);
+        try {
+            await setReadyForReview(yearIdentifier, ready);
+            toast({
+                title: ready ? 'Marked ready for review' : 'Ready mark withdrawn',
+                status: 'success', duration: 2000, isClosable: true, position: 'top-right',
+            });
+            await loadSingleWorkingGroupData(currentWorkingGroup);
+        } catch (e) {
+            toast({
+                title: 'Failed to update review readiness',
+                description: e?.response?.data?.error || e?.message,
+                status: 'error', duration: 4000, isClosable: true, position: 'top-right',
+            });
+        } finally {
+            setReadyBusy(false);
         }
     };
 
@@ -158,6 +181,17 @@ function SuccessIndicatorDetailPanel({ wrapper }) {
                             />
                         </Box>
                         <ViewReportButton compositeKey={s.compositeKey} size="sm" />
+                        {!s.approved && (
+                            <Button
+                                size="sm"
+                                colorScheme="yellow"
+                                variant={s.readyForReview ? 'ghost' : 'outline'}
+                                onClick={() => handleReadyToggle(!s.readyForReview)}
+                                isLoading={readyBusy}
+                            >
+                                {s.readyForReview ? 'Unmark ready' : 'Mark ready for review'}
+                            </Button>
+                        )}
                         <Button
                             size="sm"
                             colorScheme={s.approved ? 'green' : 'yellow'}

@@ -166,8 +166,8 @@ InternalPolicy / Guidance / Tracking / TAAP  ──is_evidence_for──▶  Yea
                         When the record is complete, it is marked <b>ready for admin review</b>.
                     </ListItem>
                     <ListItem>
-                        A designated reviewer (a person with approval rights, assigned via{' '}
-                        <i>can_be_reviewed_by</i>) examines the evidence against the status-level
+                        A person with approval rights (the Approver flag, granted under
+                        Settings → Members) examines the evidence against the status-level
                         rubric, writes a review description, and marks{' '}
                         <b>administrative review complete</b> — recording who reviewed and when.
                     </ListItem>

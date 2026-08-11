@@ -375,7 +375,6 @@ def get_indicator_report(composite_key, academic_year, campus_abbreviation=None)
                 {**_person_ref(p), "roles": serialize_role_holdings(p)}
                 for p in yse.persons_that_implement.all()
             ],
-            "admin_reviewers": [_person_ref(p) for p in yse.assigned_reviewers.all()],
             "admin_review_completed_by": _person_ref(completed_by) if completed_by else None,
         },
         "admin_review_notes": [

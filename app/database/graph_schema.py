@@ -1437,7 +1437,6 @@ class YearSuccessEvidence(StructuredNode):
     administrative_review_complete = BooleanProperty(default=False)
     administrative_review_completed_date = DateProperty()
     administrative_review_completed_by = RelationshipTo("Person", "admin_review_completed_by")
-    assigned_reviewers = RelationshipTo("Person", "can_be_reviewed_by")
     admin_review_description = StringProperty()
     admin_reviewer_note = RelationshipTo("Note", "admin_review_note")
     ready_for_admin_review = BooleanProperty(default=False)

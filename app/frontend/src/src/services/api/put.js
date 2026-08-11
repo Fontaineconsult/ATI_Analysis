@@ -120,6 +120,22 @@ export const assignApprover = async (employeeId, yearSuccessEvidence) => {
     }
 };
 
+// Step one of the review workflow: mark (or un-mark) a YSE ready for
+// administrative review. A flagged approver then completes it via assignApprover.
+export const setReadyForReview = async (yearSuccessEvidence, ready) => {
+    try {
+        const response = await axios.put(`${process.env.REACT_APP_API_URL}/evidence`, {
+            action: 'set_ready_for_review',
+            year_success_evidence: yearSuccessEvidence,
+            ready,
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error setting ready-for-review:', error);
+        throw error;
+    }
+};
+
 
 export const updateNote = async (year_success_evidence, note_dict, created_by) => {
     try {

@@ -7,6 +7,7 @@ from app.database.queries.evidence.read_campus import get_all_status_level_nodes
     get_evidence_trends
 from app.database.queries.evidence.update import (assign_status_to_yse,
                                                    assign_approver_to_yse,
+                                                   set_ready_for_admin_review,
                                                    update_admin_reviewer_description,
                                                    add_admin_reviewer_note)
 from . import data_api_endpoints
@@ -14,6 +15,7 @@ from ...database.class_factory import working_group_names_web_query, status_leve
 from app.endpoints.data_api.util.response import make_response
 from app.endpoints.data_api.errors.custom_exceptions import (
     ApiError,
+    AuthorizationError,
     NotFoundError,
     ValidationError,
     CrudError
@@ -85,12 +87,40 @@ class EvidenceAPI(MethodView):
         # Handle the assign_approver action
         if action == "assign_approver":
             return self.handle_assign_approver(data)
+        elif action == "set_ready_for_review":
+            return self.handle_set_ready_for_review(data)
         elif action == "update_admin_reviewer_description":
             return self.handle_update_admin_reviewer_description(data)
         elif action == "unassign_implementation":
             return self.handle_unassign_implementation(data)
         else:
             return make_response(status="error", error=f"Unknown action '{action}' in request."), 400
+
+    def handle_set_ready_for_review(self, data):
+        """
+        Toggle ready_for_admin_review on a YSE — step one of the review workflow
+        (an approver then completes it via assign_approver).
+
+            {"action": "set_ready_for_review",
+             "year_success_evidence": "2025-2026-7.11-ins-sfsu",
+             "ready": true}
+        """
+        yse = data.get('year_success_evidence')
+        ready = data.get('ready')
+
+        if not yse or not isinstance(ready, bool):
+            return make_response(status="error", error="Requires 'year_success_evidence' and a boolean 'ready'."), 400
+
+        try:
+            set_ready_for_admin_review(yse, ready)
+            verb = "marked ready for" if ready else "withdrawn from"
+            return make_response(status="success", data=f"Evidence {verb} administrative review."), 200
+        except ValidationError as e:
+            return make_response(status="error", error=str(e)), 400
+        except NotFoundError as e:
+            return make_response(status="error", error=str(e)), 404
+        except CrudError as e:
+            return make_response(status="error", error=str(e)), 500
 
     def handle_assign_approver(self, data):
         """
@@ -105,6 +135,8 @@ class EvidenceAPI(MethodView):
         try:
             assign_approver_to_yse(yse, employee_id)
             return make_response(status="success", data="Approver assigned successfully."), 200
+        except AuthorizationError as e:
+            return make_response(status="error", error=str(e)), 403
         except NotFoundError as e:
             return make_response(status="error", error=str(e)), 404
         except CrudError as e:
