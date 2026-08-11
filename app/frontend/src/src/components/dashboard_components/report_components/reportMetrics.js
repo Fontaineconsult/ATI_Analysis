@@ -125,6 +125,7 @@ function summarize(summaries) {
         readyForReviewCount: summaries.filter((s) => s.hasEvidence && s.readyForReview && !s.approved).length,
         unassignedCount: summaries.filter((s) => s.hasEvidence && s.personCount === 0 && !s.overrideImplementationRequirement).length,
         noActiveDocsCount: summaries.filter((s) => s.hasEvidence && s.noActiveDocs).length,
+        undocumentedCount: summaries.filter((s) => s.hasEvidence && s.undocumentedImplCount > 0).length,
         missingImplCount: summaries.filter((s) => s.hasEvidence && s.flagMissingImplementation).length,
     };
 }

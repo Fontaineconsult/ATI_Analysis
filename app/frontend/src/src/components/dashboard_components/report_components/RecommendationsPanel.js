@@ -132,14 +132,14 @@ function RecommendationsPanel({ yearIdentifier, recommendations = [], onUpdate }
                                 </Badge>
                                 <Box flex="1" minW={0}>
                                     <Text fontSize="sm" color="gray.800" fontWeight="medium">{rec.recommendation}</Text>
-                                    {rec.detail && <Text fontSize="xs" color="gray.600" mt={0.5}>{rec.detail}</Text>}
+                                    {rec.detail && <Text fontSize="xs" color="gray.600" mt={0.5} whiteSpace="pre-wrap">{rec.detail}</Text>}
                                     <HStack spacing={2} mt={1} fontSize="2xs" color="gray.600">
                                         {rec.date_created && <Text>Raised {String(rec.date_created)}</Text>}
                                         {rec.created_by && <Text>by {rec.created_by}</Text>}
                                         {rec.date_resolved && <Text>· resolved {String(rec.date_resolved)}</Text>}
                                     </HStack>
                                     {rec.status !== 'open' && rec.resolution && (
-                                        <Text fontSize="xs" color="gray.700" mt={1} fontStyle="italic">{rec.resolution}</Text>
+                                        <Text fontSize="xs" color="gray.700" mt={1} fontStyle="italic" whiteSpace="pre-wrap">{rec.resolution}</Text>
                                     )}
                                 </Box>
                             </HStack>

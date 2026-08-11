@@ -107,7 +107,7 @@ function SuccessIndicatorList({ indicators = [], selectedKey, onSelect }) {
                             <Text fontSize="xs" color="gray.600" noOfLines={2} mb={2}>{s.description}</Text>
                         )}
 
-                        {(s.flagMissingImplementation || s.noActiveDocs || s.allImplsRetired) && (
+                        {(s.flagMissingImplementation || s.noActiveDocs || s.allImplsRetired || s.undocumentedImplCount > 0) && (
                             <HStack spacing={1.5} mb={2} flexWrap="wrap">
                                 {s.flagMissingImplementation && (
                                     <Badge
@@ -131,6 +131,18 @@ function SuccessIndicatorList({ indicators = [], selectedKey, onSelect }) {
                                         title="Every implementation linked to this indicator is retired — no active work addresses it"
                                     >
                                         ⚠ Imps retired
+                                    </Badge>
+                                )}
+                                {s.undocumentedImplCount > 0 && (
+                                    <Badge
+                                        colorScheme="orange"
+                                        variant="outline"
+                                        fontSize="2xs"
+                                        borderRadius="full"
+                                        px={2}
+                                        title={`${s.undocumentedImplCount} implementation${s.undocumentedImplCount === 1 ? ' has' : 's have'} no documents or webpages attached at all`}
+                                    >
+                                        ⚠ Undocumented ×{s.undocumentedImplCount}
                                     </Badge>
                                 )}
                                 {s.noActiveDocs && (

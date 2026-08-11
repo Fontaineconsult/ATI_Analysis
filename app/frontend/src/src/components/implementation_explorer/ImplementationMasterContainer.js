@@ -131,6 +131,7 @@ function ImplementationExplorer() {
                             color="gray.700"
                             fontSize="sm"
                             lineHeight="tall"
+                            whiteSpace="pre-wrap"
                         >
                             {selectedDefinition.description}
                         </Text>

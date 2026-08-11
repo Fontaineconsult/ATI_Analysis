@@ -105,6 +105,13 @@ export const allDocumentsDepreciated = (impl) => {
     return total > 0 && activeDocumentCount(impl) === 0;
 };
 
+// The sibling gap: NO documentation at all (zero documents AND zero webpages).
+// Notes/messages are annotations, not documentation, and deliberately don't count.
+export const isUndocumented = (impl) => (
+    ((impl?.supporting_documents?.length || 0) +
+     (impl?.supporting_webpages?.length || 0)) === 0
+);
+
 // Campus scoping: an implementation belongs to a campus if it's wired to that campus,
 // or not yet assigned to any (orphans stay visible — matching the list's default).
 // Shared by ImplementationList's filter AND the parent's category/stat counts so the

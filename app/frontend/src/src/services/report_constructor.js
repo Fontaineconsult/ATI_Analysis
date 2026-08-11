@@ -649,7 +649,7 @@ function GenerateReportComponent({ evidenceItem, singleColumn = false }) {
                                         <Text fontSize="xs" fontWeight="semibold" color="blue.800" mb={1}>
                                             Evidence Summary
                                         </Text>
-                                        <Text fontSize="xs" color="gray.700">
+                                        <Text fontSize="xs" color="gray.700" whiteSpace="pre-wrap">
                                             {evidenceItem.evidence.properties.admin_review_description}
                                         </Text>
                                     </Box>
@@ -813,7 +813,7 @@ function GenerateReportComponent({ evidenceItem, singleColumn = false }) {
                                                         <Badge colorScheme="green" fontSize="10px">Campus Plan</Badge>
                                                     )}
                                                 </HStack>
-                                                <Text fontSize="xs" color="gray.700">
+                                                <Text fontSize="xs" color="gray.700" whiteSpace="pre-wrap">
                                                     {plan.properties.description}
                                                 </Text>
                                                 {plan.properties.abandoned && plan.properties.abandoned_notes && (
@@ -852,7 +852,7 @@ function GenerateReportComponent({ evidenceItem, singleColumn = false }) {
                                                         Completed
                                                     </Badge>
                                                 </HStack>
-                                                <Text fontSize="xs" color="gray.700">
+                                                <Text fontSize="xs" color="gray.700" whiteSpace="pre-wrap">
                                                     {accomplishment.properties.description}
                                                 </Text>
                                             </Box>
@@ -1039,6 +1039,17 @@ function GenerateReportComponent({ evidenceItem, singleColumn = false }) {
                                                 External
                                             </Badge>
                                         )}
+                                        {((etype.docs || []).filter((d) => d && d.document).length
+                                            + (etype.webs || []).filter((w) => w && w.webpage).length) === 0 && (
+                                            <Badge
+                                                colorScheme="orange"
+                                                variant="outline"
+                                                fontSize="xs"
+                                                title="No documents or webpages are attached at all (notes and messages don't count as documentation)"
+                                            >
+                                                ⚠ Undocumented
+                                            </Badge>
+                                        )}
                                         {etype.evidenceType?.properties?.retired && (
                                             <Badge
                                                 colorScheme="gray"
@@ -1067,7 +1078,7 @@ function GenerateReportComponent({ evidenceItem, singleColumn = false }) {
                                     </HStack>
 
                                     {etype.evidenceType?.properties?.description && (
-                                        <Text fontSize="xs" color="gray.700" mb={3}>
+                                        <Text fontSize="xs" color="gray.700" mb={3} whiteSpace="pre-wrap">
                                             {etype.evidenceType.properties.description}
                                         </Text>
                                     )}

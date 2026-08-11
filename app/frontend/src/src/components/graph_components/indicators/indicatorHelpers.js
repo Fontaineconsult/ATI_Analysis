@@ -54,6 +54,11 @@ export function getIndicatorSummary(wrapper) {
     let totalDocCount = 0;
     let activeDocCount = 0;
     let anyImplAllDepreciated = false;
+    // Implementations with NO documentation at all (zero documents AND zero
+    // webpages — notes/messages are annotations and deliberately don't count).
+    // The sibling gap to noActiveDocs: that one asks "did the docs rot?", this
+    // one asks "was there ever any documentation?".
+    let undocumentedImplCount = 0;
     for (const et of evidenceTypes) {
         const etDocs = (et.docs || []).filter((d) => d && d.document);
         const etWebs = (et.webs || []).filter((w) => w && w.webpage);
@@ -71,6 +76,7 @@ export function getIndicatorSummary(wrapper) {
         totalDocCount += etTotal;
         activeDocCount += etActive;
         if (etTotal > 0 && etActive === 0) anyImplAllDepreciated = true;
+        if (etTotal === 0) undocumentedImplCount += 1;
     }
     const implCount = evidenceTypes.length;
 
@@ -124,6 +130,8 @@ export function getIndicatorSummary(wrapper) {
         activeDocCount,
         // At least one implementation has documents but every one is depreciated.
         noActiveDocs: anyImplAllDepreciated,
+        // Implementations with no documents/webpages at all.
+        undocumentedImplCount,
         annotationCount,
         approved: (ev.adminReviewers?.length || 0) > 0 || Boolean(evProps.administrative_review_complete),
         readyForReview: Boolean(evProps.ready_for_admin_review),

@@ -138,7 +138,8 @@ function WorkingGroupCard({ wg }) {
             <Flex gap={2} flexWrap="wrap">
                 <AttentionBadge count={wg.reviewPending} label="pending" scheme="orange" />
                 <AttentionBadge count={wg.unassignedCount} label="unassigned" scheme="red" />
-                <AttentionBadge count={wg.noActiveDocsCount} label="no docs" scheme="red" />
+                <AttentionBadge count={wg.noActiveDocsCount} label="docs deprecated" scheme="red" />
+                <AttentionBadge count={wg.undocumentedCount} label="undocumented" scheme="orange" />
                 <AttentionBadge count={wg.missingImplCount} label="no impl." scheme="orange" />
             </Flex>
         </Card>
@@ -152,10 +153,11 @@ function ReportMetricsOverview({ metrics, loading = false }) {
     return (
         <VStack align="stretch" spacing={4} mb={6}>
             {/* Row A — attention stat strip */}
-            <SimpleGrid columns={{ base: 1, sm: 2, md: 3, xl: 5 }} spacing={4}>
+            <SimpleGrid columns={{ base: 1, sm: 2, md: 3, xl: 6 }} spacing={4}>
                 <StatCard label="⚠ Pending Review" value={campus.reviewPending} help="awaiting admin review" accent="orange.400" warn loading={loading} />
                 <StatCard label="⚠ Unassigned" value={campus.unassignedCount} help="no person assigned" accent="red.400" warn loading={loading} />
-                <StatCard label="⚠ No Active Docs" value={campus.noActiveDocsCount} help="all docs deprecated" accent="red.400" warn loading={loading} />
+                <StatCard label="⚠ Docs Deprecated" value={campus.noActiveDocsCount} help="all docs deprecated" accent="red.400" warn loading={loading} />
+                <StatCard label="⚠ Undocumented" value={campus.undocumentedCount} help="impls with no docs/webpages" accent="orange.400" warn loading={loading} />
                 <StatCard label="⚠ Missing Implementation" value={campus.missingImplCount} help="no implementations" accent="orange.400" warn loading={loading} />
                 <StatCard label="Ready for Review" value={campus.readyForReviewCount} help="queued for sign-off" accent="teal.400" loading={loading} />
             </SimpleGrid>

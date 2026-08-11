@@ -100,6 +100,14 @@ describe('SuccessIndicatorReportTables review flow', () => {
         expect(within(row('7.1-web')).queryByText(/External ×/)).toBeNull();
     });
 
+    it('flags implementations with no documentation at all (docs+webpages only)', () => {
+        renderTables();
+        // 7.4's two evidenceTypes carry zero docs/webpages -> undocumented ×2.
+        expect(within(row('7.4-web')).getByText('⚠ Undocumented ×2')).toBeInTheDocument();
+        // Rows with no implementations at all get the missing-impl state, not this flag.
+        expect(within(row('7.1-web')).queryByText(/Undocumented ×/)).toBeNull();
+    });
+
     it('offers Mark ready / Unmark ready per state, none once approved', () => {
         renderTables();
         expect(within(row('7.1-web')).getByRole('button', { name: /mark ready/i })).toBeInTheDocument();

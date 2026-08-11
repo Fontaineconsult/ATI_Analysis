@@ -34,8 +34,10 @@ function StatCard({ label, value, help, accent }) {
  *   ⚠ No owner         — implementations with no owned_by Person (unaccountable).
  *   ⚠ Docs deprecated  — implementations with documents but every one marked
  *                        depreciated (no active/live documentation).
+ *   ⚠ Undocumented     — implementations with NO documents or webpages attached
+ *                        at all (notes/messages don't count as documentation).
  */
-function ImplementationStatStrip({ total = 0, noEvidenceCount = 0, noOwnerCount = 0, noActiveDocsCount = 0, retiredCount = 0, loading = false }) {
+function ImplementationStatStrip({ total = 0, noEvidenceCount = 0, noOwnerCount = 0, noActiveDocsCount = 0, undocumentedCount = 0, retiredCount = 0, loading = false }) {
     const v = (n) => (loading ? '…' : n);
     return (
         <HStack spacing={4} mb={4} align="stretch">
@@ -43,6 +45,7 @@ function ImplementationStatStrip({ total = 0, noEvidenceCount = 0, noOwnerCount 
             <StatCard label="⚠ No evidence link" value={v(noEvidenceCount)} help="not tied to any indicator" accent="red.400" />
             <StatCard label="⚠ No owner" value={v(noOwnerCount)} help="no accountable person" accent="orange.400" />
             <StatCard label="⚠ Docs deprecated" value={v(noActiveDocsCount)} help="no active documentation" accent="orange.400" />
+            <StatCard label="⚠ Undocumented" value={v(undocumentedCount)} help="no docs or webpages attached" accent="orange.400" />
             <StatCard label="Retired" value={v(retiredCount)} help="hidden by default" accent="gray.400" />
         </HStack>
     );

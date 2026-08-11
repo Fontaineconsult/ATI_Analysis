@@ -365,6 +365,20 @@ const SuccessIndicatorReportTables = ({ data, campus, navigate, openApprovalModa
                                                         ⚠ Imps retired
                                                     </Badge>
                                                 )}
+                                                {diag.undocumentedImplCount > 0 && (
+                                                    <Badge
+                                                        mt={1}
+                                                        mr={1}
+                                                        colorScheme="orange"
+                                                        variant="outline"
+                                                        fontSize="2xs"
+                                                        borderRadius="full"
+                                                        px={2}
+                                                        title={`${diag.undocumentedImplCount} implementation(s) have no documents or webpages attached at all`}
+                                                    >
+                                                        ⚠ Undocumented ×{diag.undocumentedImplCount}
+                                                    </Badge>
+                                                )}
                                                 {diag.noActiveDocs && (
                                                     <Badge
                                                         mt={1}
