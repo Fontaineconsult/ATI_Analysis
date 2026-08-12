@@ -2,6 +2,7 @@ import React from 'react';
 import {
     Box,
     Flex,
+    Heading,
     HStack,
     Icon,
     SimpleGrid,
@@ -10,6 +11,7 @@ import {
     StatLabel,
     StatNumber,
     Text,
+    VisuallyHidden,
     VStack,
 } from '@chakra-ui/react';
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
@@ -66,9 +68,10 @@ function DistributionRow({ level, count, pct }) {
     const isNone = level === NO_EVIDENCE;
     const barColor = isNone ? 'gray.300' : getStatusColor(level);
     return (
-        <HStack spacing={3} align="center">
+        <HStack as="li" spacing={3} align="center">
             <Text fontSize="xs" color="gray.600" w="92px" flexShrink={0} textAlign="right">{level}</Text>
-            <Box flex="1" bg="gray.100" borderRadius="full" h="14px" overflow="hidden">
+            {/* Decorative: the adjacent text carries level, count, and percent. */}
+            <Box aria-hidden="true" flex="1" bg="gray.100" borderRadius="full" h="14px" overflow="hidden">
                 <Box h="100%" w={`${pct}%`} bg={barColor} borderRadius="full" transition="width 0.2s" />
             </Box>
             <Text fontSize="xs" color="gray.700" w="74px" flexShrink={0}>
@@ -88,7 +91,7 @@ function TrendChip({ kind, value }) {
     const m = TREND_META[kind];
     return (
         <HStack spacing={1} align="center">
-            <Icon as={m.icon} color={m.color} boxSize={4} />
+            <Icon as={m.icon} color={m.color} boxSize={4} aria-hidden="true" />
             <Text fontSize="sm" fontWeight="semibold" color="gray.700">{value}</Text>
             <Text fontSize="2xs" color="gray.600">{m.label}</Text>
         </HStack>
@@ -115,8 +118,12 @@ function WorkingGroupCard({ wg }) {
     return (
         <Card>
             <HStack spacing={2} mb={3} align="center">
-                <Box w="10px" h="10px" borderRadius="full" bg={wg.accent} flexShrink={0} />
-                <Text fontSize="sm" fontWeight="semibold" color="gray.800">{wg.name}</Text>
+                <Box aria-hidden="true" w="10px" h="10px" borderRadius="full" bg={wg.accent} flexShrink={0} />
+                {/* Real h3 so each group's card is reachable from the headings
+                    list; fontFamily pinned so the look doesn't change. */}
+                <Heading as="h3" fontSize="sm" fontFamily="body" fontWeight="semibold" color="gray.800" m={0}>
+                    {wg.name}
+                </Heading>
             </HStack>
 
             <Box mb={3}>
@@ -151,7 +158,12 @@ function ReportMetricsOverview({ metrics, loading = false }) {
     const { campus, byWorkingGroup } = metrics;
 
     return (
-        <VStack align="stretch" spacing={4} mb={6}>
+        <VStack as="section" aria-labelledby="status-overview-heading" align="stretch" spacing={4} mb={6}>
+            {/* Landmark + heading identity for the whole zone: SR users reach it
+                from the landmarks/headings lists; sighted layout is unchanged. */}
+            <VisuallyHidden>
+                <Heading as="h2" id="status-overview-heading">Status Overview</Heading>
+            </VisuallyHidden>
             {/* Row A — attention stat strip */}
             <SimpleGrid columns={{ base: 1, sm: 2, md: 3, xl: 6 }} spacing={4}>
                 <StatCard label="⚠ Pending Review" value={campus.reviewPending} help="awaiting admin review" accent="orange.400" warn loading={loading} />
@@ -173,7 +185,7 @@ function ReportMetricsOverview({ metrics, loading = false }) {
                         <StatusLevelLadder level={avgToLevel(campus.avgStatusValue)} variant="full" />
                     </HStack>
                 </HStack>
-                <VStack align="stretch" spacing={2}>
+                <VStack as="ul" listStyleType="none" m={0} p={0} align="stretch" spacing={2}>
                     {campus.statusDistribution.map((d) => (
                         <DistributionRow key={d.level} level={d.level} count={d.count} pct={d.pct} />
                     ))}
