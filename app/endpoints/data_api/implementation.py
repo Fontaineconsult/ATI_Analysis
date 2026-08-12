@@ -1,3 +1,5 @@
+import traceback
+
 from flask import request
 from flask.views import MethodView
 from app.database.queries.implementation.create import add_plan
@@ -1003,7 +1005,7 @@ class ImplementationPlanAPI(MethodView):
             # Retrieve action from data
             action = data.get('action')
             if not action:
-                return make_response({"status": "error", "error": "Missing 'action' field in request."}), 400
+                return make_response(status="error", error="Missing 'action' field in request."), 400
 
             # Handle different actions
             if action == "update_plan":
@@ -1034,16 +1036,24 @@ class ImplementationPlanAPI(MethodView):
                 except CrudError as e:
                     return make_response(status="error", error=str(e)), 500
             else:
-                return make_response({"status": "error", "error": f"Unknown action '{action}' in request."}), 400
+                return make_response(status="error", error=f"Unknown action '{action}' in request."), 400
 
+        # Keyword form, not a positional dict. make_response's signature is
+        # (status, data, error, message), so make_response({"status": ..., "error": ...})
+        # nests the whole envelope inside `status` and leaves the top-level `error` null —
+        # the client gets a failure it cannot explain. Same fix the campus-assignment
+        # branch above already applies locally.
         except ValidationError as e:
-            return make_response({"status": "error", "error": str(e)}), 400
+            return make_response(status="error", error=str(e)), 400
         except NotFoundError as e:
-            return make_response({"status": "error", "error": str(e)}), 404
+            return make_response(status="error", error=str(e)), 404
         except CrudError as e:
-            return make_response({"status": "error", "error": str(e)}), 500
+            return make_response(status="error", error=str(e)), 500
         except Exception as e:
-            return make_response({"status": "error", "error": "Failed to process request"}), 500
+            # Never swallow the cause: without the traceback an unexpected failure here
+            # is a 500 with nothing in the log to diagnose it from.
+            traceback.print_exc()
+            return make_response(status="error", error=f"Failed to process request: {e}"), 500
 
     def handle_update_plan(self, data):
         """

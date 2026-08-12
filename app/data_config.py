@@ -137,10 +137,19 @@ working_group_names_web_query = {d["url_slug"]: d["name"] for d in _INDICATOR_DE
 # report/export vocabulary iterated across the app. Derived.
 working_groups = [d["name"] for d in _INDICATOR_DEFS]
 
+# Plan lifecycle status. THE single source of truth — the write-path validator in
+# queries/implementation/update.py and the frontend's planStatus.js both derive from
+# this list, and nothing should re-declare it.
+#
+# "Completed" (not "Complete"): that is what every Plan in the graph carries, what the
+# accomplishment auto-create branch in update_plan keys on, and what the campus-plan
+# and Plans/Accomplishments views order by. The list said "Complete" while the
+# validator said "Completed", so the Annotations-tab Plan form — which built its
+# options from the wrong spelling — 500'd on every save at that status.
 plan_statuses = [
     "Not Started",
     "In Progress",
-    "Complete",
+    "Completed",
     "On Hold",
     "Abandoned",
 ]

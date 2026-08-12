@@ -603,8 +603,9 @@ def update_plan(data: dict) -> bool:
     - Validation ensures data integrity with existing nodes
     """
 
-    VALID_PLAN_STATUSES = ["Not Started", "In Progress", "Completed", "On Hold", "Abandoned"]
-
+    # Vocabulary comes from data_config, never a literal here — a local copy is how
+    # this validator and the UI's option list drifted apart in the first place.
+    from app.data_config import plan_statuses as VALID_PLAN_STATUSES
 
     try:
         unique_id = data.get('unique_id')
@@ -715,14 +716,21 @@ def update_plan(data: dict) -> bool:
                 plan.furthered_goals.disconnect_all()
                 plan.furthered_goals.connect(furthered_goal)
 
-        # Update furthered YearSuccessEvidence relationship
+        # Ensure the plan furthers this YearSuccessEvidence.
+        #
+        # ADDITIVE, deliberately. This used to disconnect_all() first, which made the
+        # edit destructive: a plan furthers many YSEs (53 of 60 do; one furthers 27),
+        # but every caller sends exactly ONE identifier — the indicator whose page the
+        # editor is on — so saving a plan from one indicator silently unlinked it from
+        # every other. Editing a plan's fields is not a statement about which
+        # indicators it serves; the endpoint's `attach_yse` / `detach_yse` actions are
+        # where that link is managed deliberately.
         furthered_yse_identifier = data.get('furthered_yse_identifier')
         if furthered_yse_identifier:
             furthered_yse = YearSuccessEvidence.nodes.get_or_none(
                 year_identifier=furthered_yse_identifier
             )
-            if furthered_yse:
-                plan.furthered_year_success_indicators.disconnect_all()
+            if furthered_yse and not plan.furthered_year_success_indicators.is_connected(furthered_yse):
                 plan.furthered_year_success_indicators.connect(furthered_yse)
 
         print(f"Plan '{plan.name}' updated successfully")
@@ -730,6 +738,12 @@ def update_plan(data: dict) -> bool:
 
     except Plan.DoesNotExist:
         raise NotFoundError(f"Plan with unique_id '{unique_id}' not found.")
+    except (ValidationError, NotFoundError):
+        # Re-raise as-is so the endpoint maps them to 400/404. Without this the
+        # blanket handler below rewrapped a bad plan_status — a client mistake with
+        # an actionable message — as a CrudError, which the API reports as a 500
+        # "Failed to process request" and the UI cannot explain to the user.
+        raise
     except Exception as e:
         raise CrudError(f"Failed to update plan: {e}")
 

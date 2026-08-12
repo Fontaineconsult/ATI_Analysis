@@ -11,12 +11,14 @@ import {
     Flex,
     Collapse,
     Select,
+    useToast,
 } from '@chakra-ui/react';
 import { updatePlan } from '../../../services/api/put'; // Replace with the actual function
 import { createPlan } from '../../../services/api/post'; // Replace with the actual function
 import { DataContext } from '../../../context/DataContext';
 import { SettingsContext, useSettings } from '../../../context/SettingsContext';
 import { UserContext } from '../../../context/UserContext'; // Import the UserContext
+import { PLAN_STATUSES, DEFAULT_PLAN_STATUS } from '../../../services/utils/planStatus';
 
 function PlanViewer({ plans, onSubmit, yearSuccessEvidence, createdBy }) {
     const [expandedIndex, setExpandedIndex] = useState(null);
@@ -25,6 +27,7 @@ function PlanViewer({ plans, onSubmit, yearSuccessEvidence, createdBy }) {
     const { currentWorkingGroup } = useSettings();
     const { user } = useContext(UserContext); // Get the current user from UserContext
     const { currentAcademicYear } = useContext(SettingsContext);
+    const toast = useToast();
 
     // Toggle expanded/collapsed state
     const toggleCollapse = (index) => {
@@ -48,10 +51,23 @@ function PlanViewer({ plans, onSubmit, yearSuccessEvidence, createdBy }) {
                 });
             }
             await loadSingleWorkingGroupData(currentWorkingGroup); // Refresh data
+            toast({
+                title: isNew ? 'Plan created' : 'Plan updated',
+                status: 'success', duration: 2000, isClosable: true, position: 'top-right',
+            });
             setExpandedIndex(null);
             setIsAddingNewPlan(false);
         } catch (error) {
+            // A failed save must NOT look like a successful one. This previously only
+            // logged to the console and still fell through to closing the form, so a
+            // rejected update was indistinguishable from a saved one. Keep the form
+            // open with the user's input intact, and say what went wrong.
             console.error('Error submitting plan:', error);
+            toast({
+                title: isNew ? 'Failed to create plan' : 'Failed to update plan',
+                description: error?.response?.data?.error || error?.message || 'Please try again.',
+                status: 'error', duration: 6000, isClosable: true, position: 'top-right',
+            });
         }
     };
 
@@ -140,7 +156,7 @@ function PlanForm({ plan, onSubmit, createdBy }) {
         is_campus_plan: plan?.properties?.is_campus_plan || false,
         abandoned: plan?.properties?.abandoned || false,
         abandoned_notes: plan?.properties?.abandoned_notes || '',
-        plan_status: plan?.properties?.plan_status || 'Not Started', // Default to "Not Started"
+        plan_status: plan?.properties?.plan_status || DEFAULT_PLAN_STATUS,
         created_by: createdBy || {}, // Use the passed createdBy data or fallback to an empty object
     });
 
@@ -157,7 +173,7 @@ function PlanForm({ plan, onSubmit, createdBy }) {
             is_campus_plan: plan?.properties?.is_campus_plan || false,
             abandoned: plan?.properties?.abandoned || false,
             abandoned_notes: plan?.properties?.abandoned_notes || '',
-            plan_status: plan?.properties?.plan_status || 'Not Started', // Default to "Not Started"
+            plan_status: plan?.properties?.plan_status || DEFAULT_PLAN_STATUS,
             created_by: createdBy || {},
         });
     }, [plan, createdBy]);
@@ -227,12 +243,13 @@ function PlanForm({ plan, onSubmit, createdBy }) {
                 <Box flex="1">
                     <FormControl mb={4}>
                         <FormLabel>Plan Status</FormLabel>
+                        {/* Options come from the shared vocabulary, not a literal list —
+                            hardcoding them here is what let "Complete" drift away from
+                            the write path's "Completed". */}
                         <Select name="plan_status" value={planData.plan_status} onChange={handleChange}>
-                            <option value="Not Started">Not Started</option>
-                            <option value="In Progress">In Progress</option>
-                            <option value="Complete">Complete</option>
-                            <option value="On Hold">On Hold</option>
-                            <option value="Abandoned">Abandoned</option>
+                            {PLAN_STATUSES.map((status) => (
+                                <option key={status} value={status}>{status}</option>
+                            ))}
                         </Select>
                     </FormControl>
                     <FormControl mb={4}>
