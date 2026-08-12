@@ -557,12 +557,22 @@ const IndicatorReportView = ({ report }) => {
                                 )}
                             </HStack>
                             {yse?.admin_review_description && yse.admin_review_description !== 'No Review' && (
-                                <Box mt={3} p={3} bg="blue.50" borderRadius="md" borderLeftWidth="4px" borderLeftColor="blue.400">
-                                    <Text fontSize="xs" color="gray.700" whiteSpace="pre-wrap">{yse.admin_review_description}</Text>
+                                <Box mt={3}>
+                                    <SubLabel>Evidence summary</SubLabel>
+                                    <Text fontSize="2xs" color="gray.600" mt={0.5}>
+                                        The ATI coordinator&apos;s account of the year&apos;s evidence.
+                                    </Text>
+                                    <Box mt={1} p={3} bg="blue.50" borderRadius="md" borderLeftWidth="4px" borderLeftColor="blue.400">
+                                        <Text fontSize="xs" color="gray.700" whiteSpace="pre-wrap">{yse.admin_review_description}</Text>
+                                    </Box>
                                 </Box>
                             )}
                             {adminReviewNotes.length > 0 && (
                                 <Box mt={3}>
+                                    <SubLabel>Administrative review notes</SubLabel>
+                                    <Text fontSize="2xs" color="gray.600" mt={0.5} mb={1}>
+                                        Management-level observations recorded during review.
+                                    </Text>
                                     <DataTable
                                         columns={['Review note', 'Author', 'Date']}
                                         rows={adminReviewNotes.map((n) => [

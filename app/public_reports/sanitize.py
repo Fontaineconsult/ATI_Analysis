@@ -240,8 +240,23 @@ def public_report_payload(report):
         },
         'review': {
             'complete': bool(yse.get('administrative_review_complete')),
+            'ready': bool(yse.get('ready_for_admin_review')),
             'completed_date': _s(yse.get('administrative_review_completed_date')),
             'completed_by': completed_by.get('name'),
+            # The reviewer's evidence summary and review notes are public report
+            # content (decision 2026-08-12). Note authors are dropped, matching
+            # the no-attribution rule for public recommendations.
+            'evidence_summary': (
+                yse.get('admin_review_description')
+                if yse.get('admin_review_description')
+                and yse.get('admin_review_description') != 'No Review'
+                else None
+            ),
+            'notes': [
+                {'content': n.get('content'), 'date': _s(n.get('dateCreated'))}
+                for n in (report.get('admin_review_notes') or [])
+                if n.get('content')
+            ],
         },
         'implementers': [_person(p) for p in (people.get('implementers') or [])],
         'implementations': [_implementation(im) for im in (report.get('implementations') or [])],
@@ -258,7 +273,14 @@ def public_report_payload(report):
             for t in (report.get('taaps') or [])
         ],
         'assets': [
-            {'title': a.get('title'), 'identifier': a.get('asset_identifier')}
+            {
+                'title': a.get('title'),
+                'identifier': a.get('asset_identifier'),
+                'asset_class': a.get('asset_class'),
+                'scope': a.get('scope'),
+                'reached_via': a.get('reached_via') or [],
+                'description': a.get('description'),
+            }
             for a in (report.get('assets') or [])
         ],
         # End-of-cycle improvements: text/status/dates only — creator attribution
@@ -309,11 +331,22 @@ def public_report_payload(report):
             ],
         },
         'interfaces': [
-            {'title': i.get('title'), 'identifier': i.get('interface_identifier')}
+            {
+                'title': i.get('title'),
+                'identifier': i.get('interface_identifier'),
+                'function': i.get('function'),
+                'coverage_domains': i.get('coverage_domains') or [],
+                'audience': i.get('audience') or [],
+                'description': i.get('description'),
+            }
             for i in (report.get('interfaces') or [])
         ],
         'tools': [
-            {'title': t.get('title'), 'identifier': t.get('tool_identifier')}
+            {
+                'title': t.get('title'),
+                'identifier': t.get('tool_identifier'),
+                'description': t.get('description'),
+            }
             for t in (report.get('tools') or [])
         ],
         'vendors': [

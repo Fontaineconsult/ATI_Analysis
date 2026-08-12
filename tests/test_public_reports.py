@@ -27,7 +27,7 @@ RAW = {
     "yse": {
         "administrative_review_complete": True,
         "administrative_review_completed_date": "2026-05-01",
-        "admin_review_description": "INTERNAL review summary",
+        "admin_review_description": "Reviewer evidence summary for the cycle",
         "ready_for_admin_review": True,
     },
     "people": {
@@ -39,7 +39,10 @@ RAW = {
         "admin_reviewers": [{"name": "Rev Iewer", "email": "rev@sfsu.edu"}],
         "admin_review_completed_by": {"name": "Ann Approver", "email": "ann@sfsu.edu"},
     },
-    "admin_review_notes": [{"name": "internal", "content": "INTERNAL note"}],
+    "admin_review_notes": [{
+        "name": "rn1", "content": "Kept review note", "dateCreated": "2026-04-01",
+        "created_by": {"name": "Ann Approver", "email": "ann@sfsu.edu"},
+    }],
     "recommendations": [
         {
             "recommendation": "Document the intake triage",
@@ -74,7 +77,20 @@ RAW = {
         "messages": [{"name": "impl msg", "content": "Kept message", "date_created": "2026-01-02"}],
         "metrics": [{"name": "Pages audited", "single_value": "40", "comment": "manual"}],
     }],
-    "taaps": [], "assets": [], "interfaces": [], "tools": [],
+    "taaps": [],
+    "assets": [{
+        "title": "Quartex", "asset_identifier": "quartex-sfsu", "unique_id": "a1",
+        "asset_class": "vendor_hosted", "scope": "campus",
+        "reached_via": ["remediated", "tool"], "description": "Digital collections\nplatform.",
+    }],
+    "interfaces": [{
+        "title": "Primo Discovery", "interface_identifier": "alma--web--search--primo",
+        "unique_id": "i1", "function": "search",
+        "coverage_domains": ["library"], "audience": ["students"],
+        "description": "Catalog search UI.",
+    }],
+    "tools": [{"title": "Pope Tech", "tool_identifier": "pope-tech", "unique_id": "t1",
+               "description": "Automated scanning."}],
     "vendors": [{"name": "Acme", "location": "SF",
                  "sales_contact_name": "S", "sales_contact_email": "sales@acme.test",
                  "technical_contact_name": "T", "technical_contact_email": "tech@acme.test"}],
@@ -89,7 +105,7 @@ def test_sanitizer_strips_all_emails_and_internal_review_content():
     clean = public_report_payload(RAW)
     flat = str(clean)
     assert "@" not in flat, "no email address may survive the sanitizer"
-    assert "INTERNAL" not in flat, "admin review notes/description must not survive"
+    assert "INTERNAL" not in flat, "community stake notes must not survive"
     assert "secret" not in flat, "file download URLs must not survive"
     assert "admin_reviewers" not in clean.get("review", {})
 
@@ -110,9 +126,26 @@ def test_sanitizer_keeps_notes_messages_and_report_facts():
     assert impl["documents"] == ["Audit Report"]
     assert impl["webpages"][0]["url"] == "https://example.org/x"
     assert clean["notes"][0]["content"] == "Year note"
-    assert clean["review"] == {"complete": True, "completed_date": "2026-05-01",
-                               "completed_by": "Ann Approver"}
+    assert clean["review"] == {
+        "complete": True, "ready": True,
+        "completed_date": "2026-05-01", "completed_by": "Ann Approver",
+        "evidence_summary": "Reviewer evidence summary for the cycle",
+        "notes": [{"content": "Kept review note", "date": "2026-04-01"}],
+    }
     assert clean["vendors"] == [{"name": "Acme", "location": "SF"}]
+    # ICT Touched by This Work mirrors the internal report's table columns.
+    assert clean["assets"] == [{
+        "title": "Quartex", "identifier": "quartex-sfsu", "asset_class": "vendor_hosted",
+        "scope": "campus", "reached_via": ["remediated", "tool"],
+        "description": "Digital collections\nplatform.",
+    }]
+    assert clean["interfaces"] == [{
+        "title": "Primo Discovery", "identifier": "alma--web--search--primo",
+        "function": "search", "coverage_domains": ["library"], "audience": ["students"],
+        "description": "Catalog search UI.",
+    }]
+    assert clean["tools"] == [{"title": "Pope Tech", "identifier": "pope-tech",
+                               "description": "Automated scanning."}]
     assert len(clean["recommendations"]) == 1, "dismissed recommendations never reach a report"
     rec = clean["recommendations"][0]
     assert rec["recommendation"] == "Document the intake triage"
