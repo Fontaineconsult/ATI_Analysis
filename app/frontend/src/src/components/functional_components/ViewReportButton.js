@@ -22,12 +22,18 @@ function ViewReportButton({ compositeKey, campus, children, ...rest }) {
 
     if (!compositeKey) return null;
 
+    // Unique accessible name per indicator (many of these repeat on one page).
+    // Starts with the visible label so voice-control users can still match it
+    // (WCAG 2.5.3 Label in Name); rest can override via its own aria-label.
+    const visibleLabel = typeof children === 'string' ? children : 'View';
+
     return (
         <Button
             size="xs"
             colorScheme="teal"
             variant="solid"
             _hover={{ bg: 'teal.600' }}
+            aria-label={`${visibleLabel} ${compositeKey}`}
             onClick={() => navigate(getReportUrlFromCompositeKey(compositeKey, resolvedCampus))}
             {...rest}
         >

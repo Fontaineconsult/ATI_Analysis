@@ -65,7 +65,9 @@ const SuccessIndicatorReportTables = ({ data, campus, navigate, openApprovalModa
                 title: diag.readyForReview ? 'Ready mark withdrawn' : 'Marked ready for review',
                 status: 'success', duration: 2000, isClosable: true, position: 'top-right',
             });
-            await loadSingleWorkingGroupData(workingGroupName);
+            // The evidence endpoint takes the WG slug, not the display name
+            // ('instructional-materials', not 'Instructional Materials').
+            await loadSingleWorkingGroupData(getWorkingGroupIdentity(workingGroupName).slug);
         } catch (e) {
             toast({
                 title: 'Failed to update review readiness',
@@ -422,6 +424,7 @@ const SuccessIndicatorReportTables = ({ data, campus, navigate, openApprovalModa
                                                         size="xs"
                                                         colorScheme="gray"
                                                         variant="outline"
+                                                        aria-label={`Edit ${compositeKey}`}
                                                         onClick={() => navigateToIndicator(navigate, compositeKey, campus)}
                                                         _hover={{ bg: "gray.50" }}
                                                     >
@@ -442,6 +445,7 @@ const SuccessIndicatorReportTables = ({ data, campus, navigate, openApprovalModa
                                                                 colorScheme="yellow"
                                                                 variant={diag.readyForReview ? 'ghost' : 'outline'}
                                                                 isLoading={readyBusyKey === diag.compositeKey}
+                                                                aria-label={`${diag.readyForReview ? 'Unmark ready' : 'Mark ready'} ${compositeKey}`}
                                                                 onClick={() => handleReadyToggle(diag, workingGroupName)}
                                                             >
                                                                 {diag.readyForReview ? 'Unmark ready' : 'Mark ready'}
@@ -458,6 +462,7 @@ const SuccessIndicatorReportTables = ({ data, campus, navigate, openApprovalModa
                                                             colorScheme={approveButtonColor}
                                                             variant="solid"
                                                             isDisabled={isButtonDisabled}
+                                                            aria-label={`${approveButtonText} ${compositeKey}`}
                                                             onClick={() => {
                                                                 if (!isButtonDisabled) {
                                                                     const workingGroupKey = getWorkingGroupIdentity(workingGroupName).slug;

@@ -94,6 +94,19 @@ describe('SuccessIndicatorReportTables review flow', () => {
         expect(row('7.3-web').className).toContain('review-wash--approved');
     });
 
+    it('gives every action button a unique per-indicator accessible name', () => {
+        renderTables();
+        // Visible label first (WCAG 2.5.3 Label in Name), then the composite key,
+        // so the dozens of View/Edit/Mark ready/Approve buttons on the page each
+        // announce their target indicator. (ViewReportButton is mocked here; its
+        // aria-label is set inside that component.)
+        expect(screen.getByRole('button', { name: 'Edit 7.1-web' })).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: 'Mark ready 7.1-web' })).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: 'Unmark ready 7.2-web' })).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: 'Approve 7.1-web' })).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: 'Approved 7.3-web' })).toBeInTheDocument();
+    });
+
     it('flags indicators whose evidence relies on externally controlled practices', () => {
         renderTables();
         expect(within(row('7.4-web')).getByText('External ×1')).toBeInTheDocument();
@@ -126,7 +139,8 @@ describe('SuccessIndicatorReportTables review flow', () => {
         await waitFor(() =>
             expect(setReadyForReview).toHaveBeenCalledWith('2025-2026-7.1-web-sfsu', true)
         );
-        await waitFor(() => expect(loadSingleWorkingGroupData).toHaveBeenCalledWith('Web'));
+        // The refresh must use the WG slug — the display name 400s on /evidence.
+        await waitFor(() => expect(loadSingleWorkingGroupData).toHaveBeenCalledWith('web'));
     });
 
     it('withdraws the ready mark inline', async () => {
