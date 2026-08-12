@@ -20,7 +20,7 @@ jest.mock('../../functional_components/ViewReportButton', () => ({
 }));
 
 import React from 'react';
-import { render, screen, waitFor, within } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { ChakraProvider } from '@chakra-ui/react';
 import { MemoryRouter } from 'react-router-dom';
@@ -92,6 +92,43 @@ describe('SuccessIndicatorReportTables review flow', () => {
         expect(row('7.1-web').className).not.toContain('review-wash');
         expect(row('7.2-web').className).toContain('review-wash--ready');
         expect(row('7.3-web').className).toContain('review-wash--approved');
+    });
+
+    it('exposes each indicator row as an h5 row header named by composite key', () => {
+        renderTables();
+        // Headings-list path to a row: h5 named by the composite key (visible
+        // cell shows only the goal-local number, aria-hidden).
+        const h5 = within(row('7.1-web')).getByRole('heading', { level: 5, name: '7.1-web' });
+        expect(h5).toBeInTheDocument();
+        // The cell is a row header, so table navigation announces it per cell.
+        expect(within(row('7.1-web')).getByRole('rowheader')).toContainElement(h5);
+        // Every row gets its own uniquely named heading.
+        expect(within(row('7.4-web')).getByRole('heading', { level: 5, name: '7.4-web' })).toBeInTheDocument();
+    });
+
+    it('supports arrow-key navigation between and within rows', () => {
+        renderTables();
+        const first = row('7.1-web');
+        expect(first).toHaveAttribute('tabindex', '-1');
+
+        first.focus();
+        fireEvent.keyDown(first, { key: 'ArrowDown' });
+        expect(row('7.2-web')).toHaveFocus();
+
+        fireEvent.keyDown(row('7.2-web'), { key: 'ArrowUp' });
+        expect(first).toHaveFocus();
+
+        fireEvent.keyDown(first, { key: 'End' });
+        expect(row('7.4-web')).toHaveFocus();
+        fireEvent.keyDown(row('7.4-web'), { key: 'Home' });
+        expect(first).toHaveFocus();
+
+        // Right from the row enters its first action button; Left walks back out.
+        fireEvent.keyDown(first, { key: 'ArrowRight' });
+        const firstButton = within(first).getAllByRole('button')[0];
+        expect(firstButton).toHaveFocus();
+        fireEvent.keyDown(firstButton, { key: 'ArrowLeft' });
+        expect(first).toHaveFocus();
     });
 
     it('gives every action button a unique per-indicator accessible name', () => {
