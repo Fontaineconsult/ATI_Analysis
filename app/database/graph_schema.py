@@ -205,12 +205,80 @@ and institutional mandates.
 
 Relationships:
 
-- Governance informs Indicators
+- Governance informs Goals            (broad, non-committal — see `informs` below)
+- Governance drives SuccessIndicators (exact, requirement-level — see `drives` below)
 - Governance is documented by Documents, Webpages, Notes, and Messages
 
 
+TWO EDGES, TWO STRENGTHS OF CLAIM
+---------------------------------
+An instrument's bearing on the indicator framework is asserted at one of two
+strengths, and the strength lives in the EDGE TYPE rather than in a property or
+in the grain alone.
+
+  (Governance)-[:informs]->(Goal)
+      Broad and non-committal: this instrument is part of the authority
+      landscape behind the goal. ADA Title II informs many goals without any one
+      of them being *about* ADA Title II. Low bar — a `description` summary can
+      support it. Many instruments may inform one goal.
+
+  (Governance)-[:drives]->(SuccessIndicator)
+      Exact: this instrument states the requirement the indicator measures.
+      High bar, sparse by construction — most instruments drive nothing. Because
+      the claim is one of exactness it cannot be made from a summary: authoring a
+      `drives` edge means reading the instrument's `raw_text` and quoting the
+      operative provision onto the edge (see DrivesRel). An unqualified `drives`
+      edge decays into `informs` with extra steps, which is the failure this
+      distinction exists to prevent.
+
+Grain follows from strength, not the other way round: `informs` lands on the Goal
+because a goal is the unit a broad mandate underwrites, and `drives` lands on the
+SuccessIndicator because the indicator is the unit that carries a requirement, a
+maturity status, and evidence.
+
+Goal -[:supported_by]-> SuccessIndicator is a strict tree (every SI hangs off
+exactly one Goal), so the two layers compose without ambiguity: an indicator's
+authorities are its own `drives` edges plus its goal's `informs` edges. That
+union is DERIVED in the read layer — a `drives` edge is deliberately not
+materialized as an `informs` edge on the parent goal, which would put two
+sources of truth on one claim.
+
+Both edges are heterogeneous on the source side (six governance labels), so
+the reverse direction is read via Cypher rather than a typed neomodel manager —
+the same treatment Principle.derives_from gets.
+
+The descending cascade of specificity across the whole model:
+
+    Governance -[:informs]-> Goal                      the authority landscape
+    Governance -[:drives]--> SuccessIndicator          the stated requirement
+    SuccessIndicator -[:directs]-> Plan/Process/...    the work that answers it
+
 """
 
+
+class DrivesRel(StructuredRel):
+    """Governance → SuccessIndicator, qualifying WHERE in the instrument the
+    indicator's requirement is stated.
+
+    `drives` claims the instrument speaks exactly to the requirement. Without a
+    citation that claim is unfalsifiable, so the qualifying properties are the
+    point of the edge rather than decoration on it:
+
+      provision : the specific locus within the instrument — a section, criterion,
+                  or paragraph ("E202.7.2", "WCAG 2.1 SC 1.2.4", "§7405(d)(1)",
+                  "AA-2015-22 ¶3"). Optional only because a minority of instruments
+                  carry no internal numbering; prefer a quote when it is absent.
+      quote     : the operative sentence(s), verbatim from the instrument's
+                  `raw_text`. Grounds the claim in what the instrument ACTUALLY
+                  says — the same reason raw_text exists on every governance type.
+      note      : why this provision maps to this indicator's requirement, when
+                  the mapping is not self-evident from the quote alone.
+      added_date: when the assertion was made.
+    """
+    provision = StringProperty()
+    quote = StringProperty()
+    note = StringProperty()
+    added_date = DateProperty()
 
 
 class Law(StructuredNode):
@@ -244,7 +312,10 @@ class Law(StructuredNode):
     raw_text = StringProperty()
     raw_text_captured = DateProperty()
 
-    informed_goals = RelationshipTo("Goal", "informs")
+    # The two strengths of claim — see the Governance section docstring above.
+    informed_goals = RelationshipTo("Goal", "informs")                                            # broad
+    driven_success_indicators = RelationshipTo("SuccessIndicator", "drives", model=DrivesRel)     # exact
+
     source_documents = RelationshipTo("Document", "is_sourced_from")
     source_webpages = RelationshipTo("Webpage", "is_sourced_from")
     supporting_notes = RelationshipTo("Note", "is_documented_by")
@@ -277,7 +348,10 @@ class Case(StructuredNode):
     raw_text = StringProperty()
     raw_text_captured = DateProperty()
 
-    informed_goals = RelationshipTo("Goal", "informs")
+    # The two strengths of claim — see the Governance section docstring above.
+    informed_goals = RelationshipTo("Goal", "informs")                                            # broad
+    driven_success_indicators = RelationshipTo("SuccessIndicator", "drives", model=DrivesRel)     # exact
+
     source_documents = RelationshipTo("Document", "is_sourced_from")
     source_webpages = RelationshipTo("Webpage", "is_sourced_from")
     supporting_notes = RelationshipTo("Note", "is_documented_by")
@@ -306,7 +380,10 @@ class Directive(StructuredNode):
     raw_text = StringProperty()
     raw_text_captured = DateProperty()
 
-    informed_goals = RelationshipTo("Goal", "informs")
+    # The two strengths of claim — see the Governance section docstring above.
+    informed_goals = RelationshipTo("Goal", "informs")                                            # broad
+    driven_success_indicators = RelationshipTo("SuccessIndicator", "drives", model=DrivesRel)     # exact
+
     source_documents = RelationshipTo("Document", "is_sourced_from")
     source_webpages = RelationshipTo("Webpage", "is_sourced_from")
     supporting_notes = RelationshipTo("Note", "is_documented_by")
@@ -337,7 +414,10 @@ class ExternalPolicy(StructuredNode):
     raw_text = StringProperty()
     raw_text_captured = DateProperty()
 
-    informed_goals = RelationshipTo("Goal", "informs")
+    # The two strengths of claim — see the Governance section docstring above.
+    informed_goals = RelationshipTo("Goal", "informs")                                            # broad
+    driven_success_indicators = RelationshipTo("SuccessIndicator", "drives", model=DrivesRel)     # exact
+
     source_documents = RelationshipTo("Document", "is_sourced_from")
     source_webpages = RelationshipTo("Webpage", "is_sourced_from")
     supporting_notes = RelationshipTo("Note", "is_documented_by")
@@ -366,7 +446,10 @@ class Memo(StructuredNode):
     raw_text = StringProperty()
     raw_text_captured = DateProperty()
 
-    informed_goals = RelationshipTo("Goal", "informs")
+    # The two strengths of claim — see the Governance section docstring above.
+    informed_goals = RelationshipTo("Goal", "informs")                                            # broad
+    driven_success_indicators = RelationshipTo("SuccessIndicator", "drives", model=DrivesRel)     # exact
+
     source_documents = RelationshipTo("Document", "is_sourced_from")
     source_webpages = RelationshipTo("Webpage", "is_sourced_from")
     supporting_notes = RelationshipTo("Note", "is_documented_by")
@@ -397,7 +480,10 @@ class Guideline(StructuredNode):
     raw_text = StringProperty()
     raw_text_captured = DateProperty()
 
-    informed_goals = RelationshipTo("Goal", "informs")
+    # The two strengths of claim — see the Governance section docstring above.
+    informed_goals = RelationshipTo("Goal", "informs")                                            # broad
+    driven_success_indicators = RelationshipTo("SuccessIndicator", "drives", model=DrivesRel)     # exact
+
     source_documents = RelationshipTo("Document", "is_sourced_from")
     source_webpages = RelationshipTo("Webpage", "is_sourced_from")
     supporting_notes = RelationshipTo("Note", "is_documented_by")

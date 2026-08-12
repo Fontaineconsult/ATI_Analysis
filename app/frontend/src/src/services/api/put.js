@@ -108,6 +108,48 @@ export const attachWebpageToGovernance = (governanceType, governanceUniqueId, we
 export const detachWebpageFromGovernance = (governanceType, governanceUniqueId, webpageUniqueId) =>
     _governanceAttachDetach('detach_webpage', governanceType, governanceUniqueId, 'webpage_unique_id', webpageUniqueId);
 
+// GOVERNANCE -> INDICATOR FRAMEWORK
+// Two edges, two strengths of claim (see the Governance docstring in graph_schema.py).
+//
+// informs -> Goal: broad and non-committal, property-free, so it rides the same
+// simple attach/detach helper as documents and webpages.
+export const attachGoalToGovernance = (governanceType, governanceUniqueId, goalUniqueId) =>
+    _governanceAttachDetach('attach_goal', governanceType, governanceUniqueId, 'goal_unique_id', goalUniqueId);
+
+export const detachGoalFromGovernance = (governanceType, governanceUniqueId, goalUniqueId) =>
+    _governanceAttachDetach('detach_goal', governanceType, governanceUniqueId, 'goal_unique_id', goalUniqueId);
+
+export const detachIndicatorFromGovernance = (governanceType, governanceUniqueId, indicatorUniqueId) =>
+    _governanceAttachDetach('detach_indicator', governanceType, governanceUniqueId, 'indicator_unique_id', indicatorUniqueId);
+
+// drives -> SuccessIndicator: carries the citation that makes the claim checkable.
+// `citation` keys are forwarded as-is so present-but-empty (clear this field) stays
+// distinguishable from absent (leave it alone) — pass only what you mean to change.
+const _governanceDrives = async (action, governanceType, governanceUniqueId, indicatorUniqueId, citation = {}) => {
+    try {
+        const response = await axios.put(
+            `${process.env.REACT_APP_API_URL}/governance`,
+            {
+                action,
+                type: governanceType,
+                governance_unique_id: governanceUniqueId,
+                indicator_unique_id: indicatorUniqueId,
+                ...citation,
+            },
+        );
+        return response.data;
+    } catch (error) {
+        console.error(`Error on ${action}:`, error);
+        throw error;
+    }
+};
+
+export const attachIndicatorToGovernance = (governanceType, governanceUniqueId, indicatorUniqueId, citation = {}) =>
+    _governanceDrives('attach_indicator', governanceType, governanceUniqueId, indicatorUniqueId, citation);
+
+export const updateGovernanceIndicatorCitation = (governanceType, governanceUniqueId, indicatorUniqueId, citation = {}) =>
+    _governanceDrives('update_indicator_citation', governanceType, governanceUniqueId, indicatorUniqueId, citation);
+
 export const assignApprover = async (employeeId, yearSuccessEvidence) => {
     try {
         const response = await axios.put(`${process.env.REACT_APP_API_URL}/evidence`,

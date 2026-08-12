@@ -25,7 +25,8 @@ import { deleteGovernance } from '../../../services/api/delete';
 import EntityAttachmentSelector from '../../functional_components/EntityAttachmentSelector';
 import DocumentForm from '../documentation/DocumentForm';
 import WebsiteForm from '../documentation/WebsiteForm';
-import { fetchAllDocuments, fetchAllWebpages } from '../../../services/api/get';
+import GovernanceIndicatorLinks from './GovernanceIndicatorLinks';
+import { fetchAllDocuments, fetchAllWebpages, fetchGovernanceLinkTargets } from '../../../services/api/get';
 import { createStandaloneDocument, createStandaloneWebpage } from '../../../services/api/post';
 import {
     attachDocumentToGovernance,
@@ -113,13 +114,26 @@ function GovernanceDetailPanel({ item, onAfterEdit, onAfterDelete, placeholder }
     // Candidate caches — fetched once on first use, not per selection.
     const [documentCandidates, setDocumentCandidates] = useState([]);
     const [webpageCandidates, setWebpageCandidates] = useState([]);
+    const [linkTargets, setLinkTargets] = useState({ goals: [], success_indicators: [] });
     const [candidatesLoaded, setCandidatesLoaded] = useState(false);
 
     const refetchCandidates = useCallback(async () => {
         try {
-            const [docResp, pageResp] = await Promise.all([fetchAllDocuments(), fetchAllWebpages()]);
+            const [docResp, pageResp, targetResp] = await Promise.all([
+                fetchAllDocuments(),
+                fetchAllWebpages(),
+                fetchGovernanceLinkTargets(),
+            ]);
             setDocumentCandidates(Array.isArray(docResp?.data) ? docResp.data : []);
             setWebpageCandidates(Array.isArray(pageResp?.data) ? pageResp.data : []);
+            // Goals and indicators are shared reference data — the same pool for every
+            // instrument — so this rides the existing fetch-once-on-first-selection cache.
+            setLinkTargets({
+                goals: Array.isArray(targetResp?.data?.goals) ? targetResp.data.goals : [],
+                success_indicators: Array.isArray(targetResp?.data?.success_indicators)
+                    ? targetResp.data.success_indicators
+                    : [],
+            });
             return {
                 documents: Array.isArray(docResp?.data) ? docResp.data : [],
                 webpages: Array.isArray(pageResp?.data) ? pageResp.data : [],
@@ -292,6 +306,12 @@ function GovernanceDetailPanel({ item, onAfterEdit, onAfterDelete, placeholder }
                         })}
                 </VStack>
             </Box>
+
+            <GovernanceIndicatorLinks
+                item={item}
+                targets={linkTargets}
+                onChanged={refreshAfterAttach}
+            />
 
             <Box bg="white" borderWidth="1px" borderColor="gray.200" borderRadius="lg" boxShadow="sm" p={5}>
                 <Heading as="h3" size="sm" color="teal.700" mb={3}>

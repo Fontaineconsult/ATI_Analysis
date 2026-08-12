@@ -36,6 +36,7 @@ import { updateStatusLevel, assignPersonAsImplementor, unassignPersonAsImplement
 import { getIndicatorSummary, getStatusColor, PRIORITY_COLORS } from './indicatorHelpers';
 import { reviewWashClass } from '../../../styles/reviewWash';
 import IndicatorAssetsPanel from './IndicatorAssetsPanel';
+import IndicatorGovernancePanel from './IndicatorGovernancePanel';
 import { HelpTip } from '../../functional_components/DescriptorHelp';
 
 // A flat, titled section card. Everything for the selected indicator is rendered inline as
@@ -283,6 +284,10 @@ function SuccessIndicatorDetailPanel({ wrapper }) {
                     }}
                 />
             </Section>
+
+            {/* What authority requires this indicator, before what the campus does about
+                it. Renders its own card and loads its own data, keyed on compositeKey. */}
+            <IndicatorGovernancePanel compositeKey={s.compositeKey} />
 
             {/* ImplementationMasterContainer renders its own "Implementation Details" card. */}
             <ImplementationMasterContainer
