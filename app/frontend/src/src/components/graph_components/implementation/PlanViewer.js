@@ -6,6 +6,7 @@ import {
     Collapse,
     Flex,
     FormControl,
+    FormHelperText,
     FormLabel,
     HStack,
     Input,
@@ -48,6 +49,9 @@ function PlanBadges({ plan }) {
             <WrapItem>
                 <Badge colorScheme={getPlanStatusColorScheme(plan)} fontSize="2xs">
                     {getPlanStatusLabel(plan)}
+                    {/* Folded into the status badge rather than given its own: the date
+                        only means anything as a qualifier on "Completed". */}
+                    {plan.completed_date && !plan.abandoned ? ` · ${plan.completed_date}` : ''}
                 </Badge>
             </WrapItem>
 
@@ -253,6 +257,7 @@ function PlanForm({ plan, onSubmit, onCancel, createdBy }) {
         abandoned: plan?.properties?.abandoned || false,
         abandoned_notes: plan?.properties?.abandoned_notes || '',
         plan_status: plan?.properties?.plan_status || DEFAULT_PLAN_STATUS,
+        completed_date: plan?.properties?.completed_date || '',
         created_by: createdBy || {},
     });
 
@@ -355,6 +360,30 @@ function PlanForm({ plan, onSubmit, onCancel, createdBy }) {
                         </FormControl>
                     </VStack>
                 </Flex>
+
+                {/* Only asked for once the plan is Completed. Left blank, the write path
+                    stamps today on the transition; filled in, it records a completion
+                    that actually happened earlier — this register is kept
+                    retrospectively, so "today" is often the wrong answer. */}
+                {planData.plan_status === 'Completed' && !planData.abandoned ? (
+                    <FormControl>
+                        <FormLabel htmlFor={`plan-completed-${planData.unique_id || 'new'}`} fontSize="sm" color="gray.700" fontWeight="semibold" mb={1}>
+                            Completed Date
+                        </FormLabel>
+                        <Input
+                            id={`plan-completed-${planData.unique_id || 'new'}`}
+                            type="date"
+                            size="sm"
+                            maxW="200px"
+                            name="completed_date"
+                            value={planData.completed_date}
+                            onChange={handleChange}
+                        />
+                        <FormHelperText fontSize="xs" color="gray.600">
+                            Leave blank to record today.
+                        </FormHelperText>
+                    </FormControl>
+                ) : null}
 
                 {/* Only relevant once the plan is abandoned — an always-visible field here
                     invited notes on plans that were never abandoned. */}

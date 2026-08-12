@@ -165,3 +165,88 @@ def test_missing_unique_id_is_400(flask_client):
                             json={"action": "update_plan", "name": "x"})
     assert resp.status_code == 400
     assert "unique_id" in (resp.get_json()["error"] or "")
+
+
+# --- completed_date ----------------------------------------------------------
+
+def test_completed_date_stamps_on_entering_and_clears_on_leaving(flask_client, plan_with_yses):
+    """The date must never outlive the state it dates."""
+    from datetime import date
+
+    plan, yses = plan_with_yses
+
+    def stored():
+        rows, _ = db.cypher_query(
+            "MATCH (p:Plan {unique_id: $u}) RETURN toString(p.completed_date)",
+            {"u": plan.unique_id})
+        return rows[0][0]
+
+    assert stored() is None
+
+    flask_client.put(f"{API}/implementations/plans",
+                     json=_form_payload(plan, yses[0], "Completed"))
+    assert stored() == date.today().isoformat()
+
+    flask_client.put(f"{API}/implementations/plans",
+                     json=_form_payload(plan, yses[0], "In Progress"))
+    assert stored() is None, "a plan that is no longer Completed has no completion date"
+
+
+def test_editing_an_already_completed_plan_does_not_restamp(flask_client, plan_with_yses):
+    """Renaming a plan finished last March must not move its completion to today."""
+    plan, yses = plan_with_yses
+    payload = _form_payload(plan, yses[0], "Completed")
+    payload["completed_date"] = "2026-03-14"
+    flask_client.put(f"{API}/implementations/plans", json=payload)
+
+    # A later edit that says nothing about the date leaves it alone.
+    edit = _form_payload(plan, yses[0], "Completed")
+    edit["name"] = f"{SENTINEL} renamed"
+    edit.pop("completed_date", None)
+    flask_client.put(f"{API}/implementations/plans", json=edit)
+
+    rows, _ = db.cypher_query(
+        "MATCH (p:Plan {unique_id: $u}) RETURN toString(p.completed_date)",
+        {"u": plan.unique_id})
+    assert rows[0][0] == "2026-03-14"
+
+
+def test_explicit_completed_date_wins_and_empty_clears(flask_client, plan_with_yses):
+    """This register is kept retrospectively, so an author must be able to say when."""
+    plan, yses = plan_with_yses
+
+    payload = _form_payload(plan, yses[0], "Completed")
+    payload["completed_date"] = "2025-11-02"
+    assert flask_client.put(f"{API}/implementations/plans", json=payload).status_code == 200
+
+    rows, _ = db.cypher_query(
+        "MATCH (p:Plan {unique_id: $u}) RETURN toString(p.completed_date)", {"u": plan.unique_id})
+    assert rows[0][0] == "2025-11-02", "an explicit date must beat the auto-stamp"
+
+    payload["completed_date"] = ""
+    flask_client.put(f"{API}/implementations/plans", json=payload)
+    rows, _ = db.cypher_query(
+        "MATCH (p:Plan {unique_id: $u}) RETURN toString(p.completed_date)", {"u": plan.unique_id})
+    assert rows[0][0] is None, "present-but-empty clears, so a wrong date is removable"
+
+
+def test_malformed_completed_date_is_400_not_500(flask_client, plan_with_yses):
+    """A client typo is not a server fault."""
+    plan, yses = plan_with_yses
+    payload = _form_payload(plan, yses[0], "Completed")
+    payload["completed_date"] = "14/03/2026"
+
+    resp = flask_client.put(f"{API}/implementations/plans", json=payload)
+    assert resp.status_code == 400
+    assert "ISO date" in (resp.get_json()["error"] or "")
+
+
+def test_completed_date_serializes(flask_client, plan_with_yses):
+    from app.database.graph_schema import Plan
+
+    plan, yses = plan_with_yses
+    payload = _form_payload(plan, yses[0], "Completed")
+    payload["completed_date"] = "2026-03-14"
+    flask_client.put(f"{API}/implementations/plans", json=payload)
+
+    assert Plan.nodes.get(unique_id=plan.unique_id).serialize()["completed_date"] == "2026-03-14"

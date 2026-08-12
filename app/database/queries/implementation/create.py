@@ -1,7 +1,7 @@
 #
 # IMPLEMENTATION CREATE QUERIES
 #
-from datetime import datetime
+from datetime import date, datetime
 
 from app.database.graph_schema import *
 from app.database.graph_schema import Process
@@ -269,7 +269,10 @@ def add_plan(plan_data: dict) -> bool:
     - Use academic year names exactly as they exist in the database
     """
 
-    VALID_PLAN_STATUSES = ["Not Started", "In Progress", "Completed", "On Hold", "Abandoned"]
+    # Same source of truth the update path validates against — a local copy here is
+    # how the UI's option list drifted from the validator once already.
+    from app.data_config import plan_statuses as VALID_PLAN_STATUSES
+    from app.database.queries.governance.create import _coerce_date
 
     try:
         # Unpack dictionary values with default fallbacks
@@ -282,6 +285,11 @@ def add_plan(plan_data: dict) -> bool:
         abandoned = plan_data.get('abandoned', False)
         abandoned_notes = plan_data.get('abandoned_notes', None)
         completion_notes = plan_data.get('completion_notes', None)
+        # A plan can be entered already finished (this record is kept retrospectively),
+        # so honour an explicit date and otherwise stamp today only when it is created
+        # in the Completed state.
+        raw_completed_date = plan_data.get('completed_date', None)
+        completed_date = _coerce_date(raw_completed_date) if raw_completed_date else None
         completed_year_name = plan_data.get('completed_year_name', None)
         abandoned_year_name = plan_data.get('abandoned_year_name', None)
         furthered_goal_number = plan_data.get('furthered_goal_number', None)
@@ -319,6 +327,10 @@ def add_plan(plan_data: dict) -> bool:
             abandoned=abandoned,                 # Optional abandoned status
             abandoned_notes=abandoned_notes,      # Optional abandoned notes
             completion_notes=completion_notes,    # Optional completion notes
+            completed_date=(
+                completed_date if completed_date
+                else (date.today() if plan_status == "Completed" else None)
+            ),
         ).save()
 
         # Connect the plan to the academic year

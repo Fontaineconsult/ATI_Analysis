@@ -200,3 +200,45 @@ describe('editing', () => {
         expect(screen.getByDisplayValue('Bravo')).toBeInTheDocument();
     });
 });
+
+describe('completed date', () => {
+    it('qualifies the Completed badge with the date', () => {
+        renderViewer([plan({ plan_status: 'Completed', completed_date: '2026-03-14' })]);
+        expect(screen.getByText(/Completed · 2026-03-14/)).toBeInTheDocument();
+    });
+
+    it('does not show a completion date on an abandoned plan', () => {
+        renderViewer([plan({ abandoned: true, completed_date: '2026-03-14' })]);
+        expect(screen.getByText('Abandoned')).toBeInTheDocument();
+        expect(screen.queryByText(/2026-03-14/)).not.toBeInTheDocument();
+    });
+
+    it('asks for the date only once the status is Completed', async () => {
+        renderViewer();
+        await userEvent.click(screen.getByRole('button', { name: 'Edit' }));
+        await screen.findByLabelText(/Plan Name/);
+
+        expect(screen.queryByLabelText('Completed Date')).not.toBeInTheDocument();
+        await userEvent.selectOptions(screen.getByLabelText('Plan Status'), 'Completed');
+        expect(screen.getByLabelText('Completed Date')).toBeInTheDocument();
+    });
+
+    it('sends an explicit date so a past completion can be recorded', async () => {
+        updatePlan.mockResolvedValue({});
+        renderViewer([plan({ plan_status: 'Completed', completed_date: '' })]);
+
+        await userEvent.click(screen.getByRole('button', { name: 'Edit' }));
+        const field = await screen.findByLabelText('Completed Date');
+        await userEvent.type(field, '2025-11-02');
+        await userEvent.click(screen.getByRole('button', { name: 'Update Plan' }));
+
+        await waitFor(() => expect(updatePlan).toHaveBeenCalledWith(
+            expect.objectContaining({ plan_status: 'Completed', completed_date: '2025-11-02' })));
+    });
+
+    it('seeds the field from the stored date', async () => {
+        renderViewer([plan({ plan_status: 'Completed', completed_date: '2026-03-14' })]);
+        await userEvent.click(screen.getByRole('button', { name: 'Edit' }));
+        expect(await screen.findByLabelText('Completed Date')).toHaveValue('2026-03-14');
+    });
+});

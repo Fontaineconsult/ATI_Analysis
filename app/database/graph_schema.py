@@ -855,6 +855,19 @@ class Plan(StructuredNode):
     abandoned = BooleanProperty(default=False)
     abandoned_notes = StringProperty()
     completion_notes = StringProperty()
+
+    # When the plan actually closed. Distinct from `completed_year`, which is the
+    # AcademicYear edge year-scoped views filter on — this is the specific day, the
+    # same way `retired_date` sits alongside the `retired` flag on the implementation
+    # types.
+    #
+    # Stamped by queries/implementation/update.py when plan_status transitions TO
+    # "Completed", and cleared when it leaves — the date must never outlive the state
+    # it dates. An explicitly supplied completed_date wins, because this record is
+    # kept retrospectively: a plan finished in March is often only entered in August,
+    # and stamping "today" would be a lie the graph then treats as fact.
+    completed_date = DateProperty()
+
     plan_status = StringProperty()
     progress_updates = RelationshipTo("Note", "progress_documented_by")
     abandoned_year = RelationshipTo("AcademicYear", "abandoned_in_year")
@@ -879,6 +892,7 @@ class Plan(StructuredNode):
             'abandoned': self.abandoned,
             'abandoned_notes': self.abandoned_notes,
             'completion_notes': self.completion_notes,
+            'completed_date': str(self.completed_date) if self.completed_date else None,
             'plan_status': self.plan_status,
             'asana_task_gid': self.asana_task_gid,
             "unique_id": self.unique_id

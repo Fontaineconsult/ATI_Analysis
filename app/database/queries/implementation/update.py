@@ -558,6 +558,9 @@ def update_plan(data: dict) -> bool:
         - plan_status : str - New status (e.g., "Completed", "In Progress")
         - abandoned : bool - Mark as abandoned or not
         - abandoned_notes : str - Notes about abandonment
+        - completed_date : str - ISO date the plan closed. Omit and it is stamped
+          automatically on entering "Completed" and cleared on leaving; pass an
+          explicit value to record a completion that happened earlier, or "" to clear.
         - completed_year_name : str - Academic year of completion
         - furthered_goal_number : int - Goal number (use with furthered_working_group)
         - furthered_working_group : str - Working group (use with furthered_goal_number)
@@ -606,6 +609,7 @@ def update_plan(data: dict) -> bool:
     # Vocabulary comes from data_config, never a literal here — a local copy is how
     # this validator and the UI's option list drifted apart in the first place.
     from app.data_config import plan_statuses as VALID_PLAN_STATUSES
+    from app.database.queries.governance.create import _coerce_date
 
     try:
         unique_id = data.get('unique_id')
@@ -633,6 +637,24 @@ def update_plan(data: dict) -> bool:
         plan.abandoned_notes = data.get('abandoned_notes', plan.abandoned_notes)
         plan.completion_notes = data.get('completion_notes', plan.completion_notes)
         plan.name = data.get('name', plan.name)
+
+        # completed_date follows the Completed state rather than floating free.
+        #
+        #   - an explicit value always wins (present-but-empty clears it), because the
+        #     record is retrospective: a plan finished in March is often entered in
+        #     August, and "today" would be a lie the graph then treats as fact;
+        #   - otherwise entering Completed stamps today, and leaving Completed clears
+        #     the date, so it can never outlive the state it dates.
+        #
+        # `previous_status` is captured above, before plan_status is reassigned.
+        new_plan_status = data.get('plan_status')
+        if 'completed_date' in data:
+            raw = data.get('completed_date')
+            plan.completed_date = _coerce_date(raw) if raw else None
+        elif new_plan_status == "Completed" and previous_status != "Completed":
+            plan.completed_date = date.today()
+        elif new_plan_status is not None and new_plan_status != "Completed":
+            plan.completed_date = None
 
         plan.save()
 
@@ -668,8 +690,8 @@ def update_plan(data: dict) -> bool:
         # When the plan newly becomes Completed, mirror it into an
         # Accomplishment via :achieved_through (idempotent — skip if one
         # already exists). When it leaves Completed, drop the linked
-        # accomplishment so the records stay in sync.
-        new_plan_status = data.get('plan_status')
+        # accomplishment so the records stay in sync. `new_plan_status` is read above,
+        # where completed_date is stamped off the same transition.
         if new_plan_status == "Completed" and previous_status != "Completed":
             existing_acc, _ = db.cypher_query(
                 """
