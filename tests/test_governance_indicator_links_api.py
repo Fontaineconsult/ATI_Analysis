@@ -230,6 +230,49 @@ def test_for_indicator_read_is_the_inverse_direction(flask_client, test_law, lin
     assert len(inherited) == 1
     assert not any(k in inherited[0] for k in ("provision", "quote"))
 
+    # Both sides carry the instrument's source artifacts: a cited instrument is only
+    # as checkable as the artifact behind it is reachable.
+    for row in (driving[0], inherited[0]):
+        assert row["documents"] == [] and row["webpages"] == []
+
+
+def test_for_indicator_surfaces_source_documents_and_files(flask_client, test_law, link_targets):
+    """A Document attached to the instrument reaches the indicator panel, with a
+    download URL when the document has an uploaded file."""
+    from app.database.graph_schema import Document, StoredFile
+    from app.database.queries.governance.update import (
+        attach_document_to_governance,
+        attach_indicator_to_governance,
+    )
+
+    _goal, si = link_targets
+    doc = Document(name=f"{SENTINEL} Source Doc", uri_path="www.example.org/spec").save()
+    stored = StoredFile(storage_key=f"{SENTINEL}-key", original_filename="spec.pdf", size=4096).save()
+    try:
+        doc.has_file.connect(stored)
+        attach_document_to_governance("law", test_law.unique_id, doc.unique_id)
+        attach_indicator_to_governance("law", test_law.unique_id, si["unique_id"], {"provision": "§1"})
+
+        data = flask_client.get(
+            f"{API}/governance/for-indicator/{si['composite_key']}"
+        ).get_json()["data"]
+        row = next(d for d in data["driving"] if d["unique_id"] == test_law.unique_id)
+
+        assert len(row["documents"]) == 1
+        projected = row["documents"][0]
+        assert projected["name"] == f"{SENTINEL} Source Doc"
+        assert projected["uri_path"] == "www.example.org/spec"
+        assert projected["file"]["download_url"] == \
+            f"/ati/data-api/v1/files/{SENTINEL}-key?name=spec.pdf"
+        assert projected["file"]["size"] == 4096
+        # raw_text is what makes a quote possible; the panel reports whether it exists.
+        assert row["has_raw_text"] is False
+    finally:
+        db.cypher_query(
+            "MATCH (d:Document) WHERE d.name STARTS WITH $p DETACH DELETE d", {"p": SENTINEL})
+        db.cypher_query(
+            "MATCH (s:StoredFile) WHERE s.storage_key STARTS WITH $p DETACH DELETE s", {"p": SENTINEL})
+
 
 def test_for_indicator_omits_candidates_by_default(flask_client, link_targets):
     """The picker pool is the bulk of the payload and is only needed once the panel is

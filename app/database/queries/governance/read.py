@@ -182,6 +182,13 @@ def get_governance_for_indicator(composite_key: str, include_candidates: bool = 
                      the union the Governance docstring describes ("an indicator's
                      authorities are its own drives edges plus its goal's informs
                      edges"), derived here rather than materialized.
+
+    Both carry the instrument's SOURCE ARTIFACTS — its `is_sourced_from` Documents
+    (with any uploaded file, projected the same way implementation/read.py does it)
+    and Webpages. An instrument cited on an indicator is only as checkable as the
+    artifact behind it is reachable, so the reviewer needs the document in hand
+    without leaving the indicator. `has_raw_text` reports whether the instrument's
+    text has been captured at all, which is what makes a quote possible.
       candidates     every governance node, for the picker. ONLY when
                      include_candidates is set.
 
@@ -213,12 +220,41 @@ def get_governance_for_indicator(composite_key: str, include_candidates: bool = 
               ['Law','Case','Directive','ExternalPolicy','Memo','Guideline'])
             | {label: labels(n)[0], unique_id: n.unique_id, title: n.title,
                provision: r.provision, quote: r.quote, note: r.note,
-               added_date: toString(r.added_date)}
+               added_date: toString(r.added_date),
+               has_raw_text: n.raw_text IS NOT NULL AND n.raw_text <> '',
+               documents: [(n)-[:is_sourced_from]->(d:Document) | {
+                 unique_id: d.unique_id, name: d.name,
+                 uri_path: d.uri_path, file_path: d.file_path,
+                 file: head([ (d)-[:has_file]->(sf:StoredFile) | {
+                   storage_key: sf.storage_key, original_filename: sf.original_filename,
+                   content_type: sf.content_type, size: sf.size,
+                   download_url: '/ati/data-api/v1/files/' + sf.storage_key +
+                     CASE WHEN sf.original_filename IS NULL THEN ''
+                          ELSE '?name=' + apoc.text.urlencode(sf.original_filename) END
+                 } ])
+               }],
+               webpages: [(n)-[:is_sourced_from]->(w:Webpage) |
+                 {unique_id: w.unique_id, name: w.name, url: w.url}]
+              }
           ],
           informing_goal: [(n)-[:informs]->(goal)
             WHERE any(lbl IN labels(n) WHERE lbl IN
               ['Law','Case','Directive','ExternalPolicy','Memo','Guideline'])
-            | {label: labels(n)[0], unique_id: n.unique_id, title: n.title}
+            | {label: labels(n)[0], unique_id: n.unique_id, title: n.title,
+               documents: [(n)-[:is_sourced_from]->(d:Document) | {
+                 unique_id: d.unique_id, name: d.name,
+                 uri_path: d.uri_path, file_path: d.file_path,
+                 file: head([ (d)-[:has_file]->(sf:StoredFile) | {
+                   storage_key: sf.storage_key, original_filename: sf.original_filename,
+                   content_type: sf.content_type, size: sf.size,
+                   download_url: '/ati/data-api/v1/files/' + sf.storage_key +
+                     CASE WHEN sf.original_filename IS NULL THEN ''
+                          ELSE '?name=' + apoc.text.urlencode(sf.original_filename) END
+                 } ])
+               }],
+               webpages: [(n)-[:is_sourced_from]->(w:Webpage) |
+                 {unique_id: w.unique_id, name: w.name, url: w.url}]
+              }
           ]
         }) AS jsonResult
     """

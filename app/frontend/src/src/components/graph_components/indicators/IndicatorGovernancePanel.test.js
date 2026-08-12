@@ -40,10 +40,20 @@ const PAYLOAD = {
         goal: { unique_id: 'goal-1', goal_number: 1, name: 'Web Accessibility Evaluation Process' },
         driving: [
             { label: 'Guideline', type: 'guideline', unique_id: 'gov-9', title: 'WCAG 2.1',
-              provision: 'SC 1.2.4', quote: 'Captions are provided.', note: null, added_date: '2026-08-12' },
+              provision: 'SC 1.2.4', quote: 'Captions are provided.', note: null, added_date: '2026-08-12',
+              has_raw_text: true,
+              documents: [
+                  { unique_id: 'd1', name: 'WCAG 2.1 Spec', uri_path: null, file_path: null,
+                    file: { storage_key: 'abc', original_filename: 'wcag21.pdf', size: 2048,
+                            download_url: '/ati/data-api/v1/files/abc?name=wcag21.pdf' } },
+                  { unique_id: 'd2', name: 'Quick Reference', uri_path: 'www.w3.org/WAI/WCAG21/quickref',
+                    file_path: null, file: null },
+              ],
+              webpages: [{ unique_id: 'w1', name: 'W3C WCAG landing', url: 'https://www.w3.org/WAI/' }] },
         ],
         informing_goal: [
-            { label: 'ExternalPolicy', type: 'external_policy', unique_id: 'gov-3', title: 'CSU Systemwide ATI Policy' },
+            { label: 'ExternalPolicy', type: 'external_policy', unique_id: 'gov-3', title: 'CSU Systemwide ATI Policy',
+              documents: [], webpages: [{ unique_id: 'w2', name: 'https://calstate.edu/ati', url: 'CSU ATI' }] },
         ],
         candidates: [
             { label: 'Guideline', type: 'guideline', unique_id: 'gov-9', title: 'WCAG 2.1' },
@@ -218,4 +228,66 @@ it('surfaces a load failure instead of rendering an empty panel', async () => {
     renderPanel();
 
     expect(await screen.findByText('backend down')).toBeInTheDocument();
+});
+
+
+describe('source artifacts', () => {
+    it('links an uploaded file by its download url, with size', async () => {
+        renderPanel();
+        await expand();
+
+        const link = await screen.findByRole('link', { name: /wcag21\.pdf/ });
+        expect(link).toHaveAttribute('href', '/ati/data-api/v1/files/abc?name=wcag21.pdf');
+        expect(screen.getByText('(2 KB)')).toBeInTheDocument();
+    });
+
+    it('falls back to the uri when a document has no uploaded file', async () => {
+        renderPanel();
+        await expand();
+
+        // Bare domains must be promoted to https, or the browser resolves them
+        // relative to the current route.
+        expect(await screen.findByRole('link', { name: /Quick Reference/ }))
+            .toHaveAttribute('href', 'https://www.w3.org/WAI/WCAG21/quickref');
+    });
+
+    it('handles webpages whose name and url fields are swapped', async () => {
+        renderPanel();
+        await expand();
+
+        // Context row: name holds the URL, url holds the title.
+        const link = await screen.findByRole('link', { name: /calstate\.edu\/ati/ });
+        expect(link).toHaveAttribute('href', 'https://calstate.edu/ati');
+    });
+
+    it('says so when a cited instrument has no source artifact', async () => {
+        fetchGovernanceForIndicator.mockResolvedValue({
+            ...PAYLOAD,
+            data: {
+                ...PAYLOAD.data,
+                driving: [{ ...PAYLOAD.data.driving[0], documents: [], webpages: [], has_raw_text: false }],
+            },
+        });
+        renderPanel();
+        await expand();
+
+        expect(await screen.findByText(/No source document attached — and its text has not been captured/))
+            .toBeInTheDocument();
+    });
+
+    it('does not nag about missing sources on inherited goal-level rows', async () => {
+        fetchGovernanceForIndicator.mockResolvedValue({
+            ...PAYLOAD,
+            data: {
+                ...PAYLOAD.data,
+                informing_goal: [{ ...PAYLOAD.data.informing_goal[0], documents: [], webpages: [] }],
+            },
+        });
+        renderPanel();
+        await expand();
+
+        await screen.findByText('CSU Systemwide ATI Policy');
+        // The driving row still nags if it lacks sources; the context row never does.
+        expect(screen.queryByText(/No source document attached/)).not.toBeInTheDocument();
+    });
 });

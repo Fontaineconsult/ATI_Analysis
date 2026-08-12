@@ -48,6 +48,10 @@ import {
  *   flag         { when(item) -> bool, label, colorScheme, tooltip } — surfaces a
  *                per-row condition (e.g. an edge asserting more than it evidences)
  *                as a TEXT badge, never colour alone.
+ *   renderExtra(item) -> ReactNode — optional slot under a row's annotation, for
+ *                content belonging to the TARGET rather than to the edge (e.g. the
+ *                source documents behind a cited instrument). Hidden while editing,
+ *                so the editor stays the only thing on screen.
  */
 
 const emptyValues = (fields) => Object.fromEntries(fields.map((f) => [f.name, '']));
@@ -84,7 +88,7 @@ function AnnotationFields({ fields, value, onChange, idPrefix }) {
 }
 
 /** One attached row: read view, with an inline editor toggled per row. */
-function AttachedRow({ item, fields, flag, onUpdate, onDetach, busy, entityLabel }) {
+function AttachedRow({ item, fields, flag, onUpdate, onDetach, busy, entityLabel, renderExtra }) {
     const [editing, setEditing] = useState(false);
     const [draft, setDraft] = useState(() => valuesFrom(item, fields));
     const [saving, setSaving] = useState(false);
@@ -188,6 +192,8 @@ function AttachedRow({ item, fields, flag, onUpdate, onDetach, busy, entityLabel
                 </Text>
             ))}
 
+            {!editing && renderExtra ? renderExtra(item) : null}
+
             {editing ? (
                 <Box mt={2}>
                     <AnnotationFields
@@ -212,6 +218,7 @@ function AnnotatedAttachmentSelector({
     candidates = [],
     fields = [],
     flag,
+    renderExtra,
     onAttach,
     onUpdate,
     onDetach,
@@ -327,6 +334,7 @@ function AnnotatedAttachmentSelector({
                             item={item}
                             fields={fields}
                             flag={flag}
+                            renderExtra={renderExtra}
                             onUpdate={handleUpdate}
                             onDetach={handleDetach}
                             busy={busy}

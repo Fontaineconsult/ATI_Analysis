@@ -23,6 +23,7 @@ import {
 } from '../../../services/api/put';
 import { getGovernanceTypeLabel } from '../governance/governanceTypes';
 import { CITATION_FIELDS, UNCITED_FLAG, isUncited } from '../governance/drivesCitation';
+import GovernanceSources from '../governance/GovernanceSources';
 
 /**
  * The authority behind this indicator, on the dashboard's indicator view.
@@ -167,6 +168,15 @@ function IndicatorGovernancePanel({ compositeKey }) {
                             onUpdate={handleUpdate}
                             onDetach={handleDetach}
                             afterChange={load}
+                            // The instrument's own source artifacts, so the cited
+                            // document can be opened without leaving the indicator.
+                            renderExtra={(row) => (
+                                <GovernanceSources
+                                    documents={row.documents}
+                                    webpages={row.webpages}
+                                    hasRawText={row.has_raw_text}
+                                />
+                            )}
                         />
                     </Box>
 
@@ -187,14 +197,24 @@ function IndicatorGovernancePanel({ compositeKey }) {
                                     {data?.goal?.name ? `: ${data.goal.name}` : ''}
                                 </Text>
                             </Tooltip>
-                            <VStack align="stretch" spacing={1}>
+                            <VStack align="stretch" spacing={2}>
                                 {inherited.map((g) => (
-                                    <HStack key={g.unique_id} spacing={2} align="baseline">
-                                        <Badge colorScheme="gray" variant="subtle" fontSize="0.6rem">
-                                            {getGovernanceTypeLabel(g.type) || g.label}
-                                        </Badge>
-                                        <Text fontSize="sm" color="gray.700">{g.title || '(untitled)'}</Text>
-                                    </HStack>
+                                    <Box key={g.unique_id}>
+                                        <HStack spacing={2} align="baseline">
+                                            <Badge colorScheme="gray" variant="subtle" fontSize="0.6rem">
+                                                {getGovernanceTypeLabel(g.type) || g.label}
+                                            </Badge>
+                                            <Text fontSize="sm" color="gray.700">{g.title || '(untitled)'}</Text>
+                                        </HStack>
+                                        {/* Context rows get their sources too, but no
+                                            missing-source nag — the gap belongs to the
+                                            goal-level edge, not to this indicator. */}
+                                        <GovernanceSources
+                                            documents={g.documents}
+                                            webpages={g.webpages}
+                                            emptyHint={false}
+                                        />
+                                    </Box>
                                 ))}
                             </VStack>
                         </Box>
