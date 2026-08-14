@@ -6,7 +6,9 @@
 import React from 'react';
 import { render, screen, within } from '@testing-library/react';
 import { ChakraProvider } from '@chakra-ui/react';
+import userEvent from '@testing-library/user-event';
 import ReportMetricsOverview from './ReportMetricsOverview';
+import { FILTER_LIST } from './reportFilters';
 
 const METRICS = {
     campus: {
@@ -70,5 +72,50 @@ describe('ReportMetricsOverview accessibility structure', () => {
         renderOverview();
         // Campus average (full) + one compact ladder per WG card.
         expect(screen.getAllByRole('meter').length).toBeGreaterThanOrEqual(3);
+    });
+});
+
+describe('attention tiles as filter toggles', () => {
+    const renderWithFilters = (props = {}) =>
+        render(
+            <ChakraProvider>
+                <ReportMetricsOverview metrics={METRICS} activeFilters={[]} {...props} />
+            </ChakraProvider>
+        );
+
+    it('stays non-interactive when no toggle handler is supplied', () => {
+        renderOverview();
+        expect(screen.queryByRole('button', { name: /Pending Review/ })).not.toBeInTheDocument();
+    });
+
+    it('renders each tile as a toggle button naming its count and meaning', () => {
+        renderWithFilters({ onToggleFilter: jest.fn() });
+        const tile = screen.getByRole('button', { name: /Ready for Review: 5 queued for sign-off/ });
+        expect(tile).toHaveAttribute('aria-pressed', 'false');
+    });
+
+    it('marks an active tile pressed and offers to remove it', () => {
+        renderWithFilters({ onToggleFilter: jest.fn(), activeFilters: ['ready-for-review'] });
+        const tile = screen.getByRole('button', { name: /Ready for Review/ });
+        expect(tile).toHaveAttribute('aria-pressed', 'true');
+        expect(tile).toHaveAccessibleName(/Activate to remove/);
+    });
+
+    it('reports the filter key it was clicked for', async () => {
+        const onToggleFilter = jest.fn();
+        renderWithFilters({ onToggleFilter });
+        await userEvent.click(screen.getByRole('button', { name: /Ready for Review/ }));
+        expect(onToggleFilter).toHaveBeenCalledWith('ready-for-review');
+    });
+
+    it('does not double-announce the numbers it already reads in its label', () => {
+        renderWithFilters({ onToggleFilter: jest.fn() });
+        // The visible spans are aria-hidden; the button's own label carries the values.
+        expect(screen.getAllByRole('button', { name: /⚠ Unassigned: 2 no person assigned/ })).toHaveLength(1);
+    });
+
+    it('renders one tile per registered filter', () => {
+        renderWithFilters({ onToggleFilter: jest.fn() });
+        expect(screen.getAllByRole('button')).toHaveLength(FILTER_LIST.length);
     });
 });

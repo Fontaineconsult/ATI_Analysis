@@ -27,6 +27,11 @@ import CopyStatusReportButton from './CopyStatusReportButton';
 import { STATUS_REPORT_WORKING_GROUPS } from '../../../services/utils/workingGroupStatusReport';
 import ReportReferenceRow from './ReportReferenceRow';
 import SuccessIndicatorReportTables from './SuccessIndicatorReportTables';
+import ReportFilterBar from './ReportFilterBar';
+import useReportFilters from './useReportFilters';
+import { filterReportData, countFiltered } from './reportFilters';
+import { getIndicatorSummary } from '../../graph_components/indicators/indicatorHelpers';
+import { WORKING_GROUP_LIST } from '../../../styles/workingGroupIdentity';
 import ApprovalMasterContainer from '../../ati_explorer_containers/ApprovalMasterContainer';
 
 /*
@@ -60,6 +65,28 @@ const ReportMasterList = () => {
     // enough; not dataVersion, which churns on unrelated background refreshes). Single pass
     // over a small dataset.
     const metrics = useMemo(() => computeReportMetrics(data, selectedYear), [data, selectedYear]);
+
+    // Attention filters live in the URL (?attention=ready-for-review), so a narrowed
+    // report is shareable. See useReportFilters.
+    const { active: activeFilters, toggle, clear } = useReportFilters();
+
+    // The DataContext keys holding working-group trees — the same list the tables
+    // iterate, so filtering and rendering can never disagree about what exists.
+    const wgDataKeys = useMemo(() => WORKING_GROUP_LIST.map((w) => w.dataKey), []);
+
+    // The tables receive an already-narrowed tree rather than a filter predicate. The
+    // metrics above stay computed from the FULL data on purpose: the tiles are the
+    // filter control, so recomputing them from filtered data would make each tile's
+    // count collapse to the selection and the strip would stop being a way back out.
+    const filteredData = useMemo(
+        () => filterReportData(data, activeFilters, wgDataKeys, getIndicatorSummary),
+        [data, activeFilters, wgDataKeys],
+    );
+
+    const { shown, total } = useMemo(
+        () => countFiltered(data, activeFilters, wgDataKeys, getIndicatorSummary),
+        [data, activeFilters, wgDataKeys],
+    );
 
     return (
         <Box w="100%" maxW="1400px" mx="auto" p={4} textAlign="left">
@@ -116,7 +143,12 @@ const ReportMasterList = () => {
 
                     {/* TOP — campus-wide metrics overview. The "no Year Success Evidence"
                         empty state is handled globally by <YseAvailabilityBanner/> (App.js). */}
-                    <ReportMetricsOverview metrics={metrics} loading={loading} />
+                    <ReportMetricsOverview
+                        metrics={metrics}
+                        loading={loading}
+                        activeFilters={activeFilters}
+                        onToggleFilter={toggle}
+                    />
 
                     {/* Reference material (legend + committee), collapsed by default */}
                     <ReportReferenceRow />
@@ -128,8 +160,18 @@ const ReportMasterList = () => {
                         <Heading as="h2" size="lg" color="gray.800" mb={6}>
                             ATI Success Indicators Report
                         </Heading>
+                        {/* Sits inside the card, directly above the tables it describes —
+                            the tiles are far enough up the page to be off-screen by the
+                            time the narrowed tables are read. */}
+                        <ReportFilterBar
+                            activeFilters={activeFilters}
+                            onRemove={toggle}
+                            onClear={clear}
+                            shown={shown}
+                            total={total}
+                        />
                         <SuccessIndicatorReportTables
-                            data={data}
+                            data={filteredData}
                             campus={campus}
                             navigate={navigate}
                             openApprovalModal={openApprovalModal}

@@ -12,6 +12,7 @@
 import { getIndicatorSummary } from '../../graph_components/indicators/indicatorHelpers';
 import { STATUS_LEVELS_ORDER } from '../../../services/utils/statusColors';
 import { WG_DEFS } from '../../../styles/workingGroupIdentity';
+import { FILTER_LIST } from './reportFilters';
 
 // The trailing status-distribution bucket: indicators with no evidence for the year (or,
 // rarely, evidence with no status assigned) — i.e. "not yet on the maturity ladder".
@@ -113,6 +114,16 @@ function summarize(summaries) {
 
     const reviewComplete = summaries.filter((s) => s.hasEvidence && s.approved).length;
 
+    // Attention counts are derived from the SAME predicates the tables filter on, so a
+    // tile reading "91" is by construction the number of rows selecting it produces.
+    // These used to be inline `.filter()` calls here, duplicating the logic that the
+    // filter would have needed — a tile and its own filter disagreeing is the failure
+    // mode this indirection exists to prevent.
+    const attention = {};
+    for (const f of FILTER_LIST) {
+        attention[f.metric] = summaries.filter((s) => f.match(s)).length;
+    }
+
     return {
         totalIndicators,
         withEvidence,
@@ -121,12 +132,7 @@ function summarize(summaries) {
         statusDistribution,
         avgStatusValue,
         reviewComplete,
-        reviewPending: withEvidence - reviewComplete,
-        readyForReviewCount: summaries.filter((s) => s.hasEvidence && s.readyForReview && !s.approved).length,
-        unassignedCount: summaries.filter((s) => s.hasEvidence && s.personCount === 0 && !s.overrideImplementationRequirement).length,
-        noActiveDocsCount: summaries.filter((s) => s.hasEvidence && s.noActiveDocs).length,
-        undocumentedCount: summaries.filter((s) => s.hasEvidence && s.undocumentedImplCount > 0).length,
-        missingImplCount: summaries.filter((s) => s.hasEvidence && s.flagMissingImplementation).length,
+        ...attention,
     };
 }
 

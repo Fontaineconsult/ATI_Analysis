@@ -571,11 +571,34 @@ const SuccessIndicatorReportTables = ({ data, campus, navigate, openApprovalModa
 
     if (!data) return null;
 
+    const presentGroups = WORKING_GROUP_LIST.filter((w) => data[w.dataKey]);
+
+    // Every group filtered away. Without this the card renders as blank space, which
+    // reads as a loading failure rather than as "nothing matches" — and the filter bar
+    // sitting above already says which filters produced it, so this stays short.
+    if (presentGroups.length === 0) {
+        return (
+            <Box
+                p={8}
+                borderWidth="1px"
+                borderStyle="dashed"
+                borderColor="gray.300"
+                borderRadius="lg"
+                bg="gray.50"
+                textAlign="center"
+            >
+                <Text color="gray.600" fontSize="sm">
+                    No indicators match the active filters. Remove one above to widen the report.
+                </Text>
+            </Box>
+        );
+    }
+
     return (
         <Box>
             {/* One section per dashboard working group (in canonical SSOT order), with a
                 divider between consecutive present groups — same divider behavior as before. */}
-            {WORKING_GROUP_LIST.filter((w) => data[w.dataKey]).map((w, i) => (
+            {presentGroups.map((w, i) => (
                 <React.Fragment key={w.dataKey}>
                     {i > 0 && <Divider my={6} borderColor="gray.200" />}
                     {renderWorkingGroup(data[w.dataKey], w.name)}
