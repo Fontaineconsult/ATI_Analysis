@@ -34,11 +34,17 @@ export function buildChips(state, handlers) {
     (state.trend || []).forEach((value) => {
         chips.push({ id: `t:${value}`, label: `Trend: ${trendLabel(value)}`, remove: () => handlers.onToggleTrend(value) });
     });
+    (state.community || []).forEach((value) => {
+        chips.push({ id: `c:${value}`, label: `Community: ${value}`, remove: () => handlers.onToggleCommunity(value) });
+    });
     return chips;
 }
 
-function ReportFilterBar({ state, onToggleAttention, onToggleStatus, onToggleTrend, onSearch, onClear, shown, total }) {
-    const chips = buildChips(state, { onToggleAttention, onToggleStatus, onToggleTrend, onSearch });
+function ReportFilterBar({
+    state, onToggleAttention, onToggleStatus, onToggleTrend, onToggleCommunity,
+    onSearch, onClear, shown, total,
+}) {
+    const chips = buildChips(state, { onToggleAttention, onToggleStatus, onToggleTrend, onToggleCommunity, onSearch });
     if (chips.length === 0) return null;
 
     const none = shown === 0;
@@ -97,8 +103,9 @@ function ReportFilterBar({ state, onToggleAttention, onToggleStatus, onToggleTre
 
             {chips.length > 1 ? (
                 <Text fontSize="2xs" color="gray.600" mt={2}>
-                    Indicators must match every filter shown. Within Status or Trend, any of the
-                    chosen values counts.
+                    Indicators must match every filter shown. Within Status or Trend any of the
+                    chosen values counts; an indicator must hold a stake from every chosen
+                    community.
                 </Text>
             ) : null}
         </Box>

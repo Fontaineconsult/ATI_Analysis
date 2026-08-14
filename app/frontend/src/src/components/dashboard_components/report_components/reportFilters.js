@@ -93,7 +93,42 @@ export const FILTER_LIST = FILTER_ORDER.map((k) => INDICATOR_FILTERS[k]);
 export const FILTER_PARAM = 'attention';
 export const STATUS_PARAM = 'status';
 export const TREND_PARAM = 'trend';
+export const COMMUNITY_PARAM = 'community';
 export const SEARCH_PARAM = 'q';
+
+/**
+ * Communities of practice holding a stake in an indicator, ANDed.
+ *
+ * Unlike Status and Trend — where the values are alternatives and OR is the only
+ * useful reading — communities are independent claimants, and the question worth
+ * asking is which indicators BOTH hold. 20 of the 122 live indicators are shared
+ * between two communities; an OR would bury exactly those in the union of two large
+ * single-community lists.
+ *
+ * Matched by name: the URL is meant to be read and pasted by people, and an unknown
+ * name is dropped by the parser, so a renamed community degrades to "filter ignored"
+ * rather than a broken link.
+ */
+export function matchesCommunities(summary, selectedNames) {
+    if (!selectedNames || selectedNames.length === 0) return true;
+    const held = new Set((summary.communities || []).map((c) => c?.name).filter(Boolean));
+    return selectedNames.every((name) => held.has(name));
+}
+
+/** Every community name present in the loaded data, name-sorted — the picker's options. */
+export function availableCommunities(data, wgDataKeys) {
+    const names = new Set();
+    for (const dataKey of wgDataKeys || []) {
+        for (const goal of data?.[dataKey]?.goals || []) {
+            for (const ind of goal.indicators || []) {
+                for (const c of ind?.indicator?.properties?.communities || []) {
+                    if (c?.name) names.add(c.name);
+                }
+            }
+        }
+    }
+    return [...names].sort();
+}
 
 // The trailing status bucket: no evidence for the year, or evidence carrying no
 // status — "not yet on the maturity ladder". Defined HERE rather than in
@@ -184,21 +219,23 @@ export function matchesFilters(summary, activeKeys) {
 }
 
 /** The whole filter state. Every field optional; this is the "nothing selected" value. */
-export const EMPTY_FILTER_STATE = { attention: [], status: [], trend: [], q: '' };
+export const EMPTY_FILTER_STATE = { attention: [], status: [], trend: [], community: [], q: '' };
 
 export function isFilterStateEmpty(state) {
     return !state
-        || (!state.attention?.length && !state.status?.length && !state.trend?.length && !(state.q || '').trim());
+        || (!state.attention?.length && !state.status?.length && !state.trend?.length
+            && !state.community?.length && !(state.q || '').trim());
 }
 
 /**
  * Does one indicator survive the whole filter state?
  *
- * Facets combine with AND (each narrows), but WITHIN a facet the selected values are
- * OR — picking Defined and Established means "either", which is the only reading that
- * makes a multi-select useful. Attention filters are the exception: they AND within
- * the facet too, because they are independent defects rather than alternatives, and
- * "ready for review AND undocumented" is the question worth asking.
+ * Facets combine with AND (each narrows). WITHIN a facet the rule depends on whether
+ * the values are alternatives or independent claims:
+ *   Status, Trend        OR  — an indicator sits on one rung and has one direction, so
+ *                              picking two can only mean "either"
+ *   Attention, Community AND — independent defects / independent claimants, where the
+ *                              conjunction is the question worth asking
  */
 export function matchesFilterState(summary, trendRow, state, statusOrder) {
     if (!state) return true;
@@ -206,6 +243,7 @@ export function matchesFilterState(summary, trendRow, state, statusOrder) {
     if (!matchesSearch(summary, state.q)) return false;
     if (state.status?.length && !state.status.includes(statusBucket(summary, statusOrder))) return false;
     if (state.trend?.length && !state.trend.includes(trendBucket(trendRow))) return false;
+    if (!matchesCommunities(summary, state.community)) return false;
     return true;
 }
 

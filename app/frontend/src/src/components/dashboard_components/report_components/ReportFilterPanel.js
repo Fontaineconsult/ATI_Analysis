@@ -98,7 +98,10 @@ function MultiSelectMenu({ label, options, selected, onToggle }) {
 
 const STATUS_OPTIONS = [...STATUS_LEVELS_ORDER, NO_EVIDENCE].map((s) => ({ key: s, label: s }));
 
-function ReportFilterPanel({ state, onToggleStatus, onToggleTrend, onSearch, onClear, hasAnyFilter }) {
+function ReportFilterPanel({
+    state, communityOptions = [], onToggleStatus, onToggleTrend, onToggleCommunity,
+    onSearch, onClear, hasAnyFilter,
+}) {
     const [draft, setDraft] = useDebouncedSearch(state.q, onSearch);
 
     return (
@@ -139,6 +142,16 @@ function ReportFilterPanel({ state, onToggleStatus, onToggleTrend, onSearch, onC
                 selected={state.trend}
                 onToggle={onToggleTrend}
             />
+            {/* Options come from the loaded data, not a fixed vocabulary — only
+                communities that actually hold a stake somewhere are offerable. */}
+            {communityOptions.length > 0 ? (
+                <MultiSelectMenu
+                    label="Community"
+                    options={communityOptions.map((name) => ({ key: name, label: name }))}
+                    selected={state.community}
+                    onToggle={onToggleCommunity}
+                />
+            ) : null}
 
             {hasAnyFilter ? (
                 <Button size="sm" variant="ghost" colorScheme="teal" onClick={onClear} ml="auto">

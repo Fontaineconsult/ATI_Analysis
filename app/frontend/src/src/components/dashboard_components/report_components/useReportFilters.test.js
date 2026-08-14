@@ -107,16 +107,21 @@ it('pushes history, so Back undoes one filter at a time', async () => {
 
 describe('status, trend and search facets in the URL', () => {
     function FacetProbe() {
-        const { state, toggleStatus, toggleTrend, setSearch, clear } = useReportFilters(['Defined', 'Managed']);
+        const { state, toggleStatus, toggleTrend, toggleCommunity, setSearch, clear } = useReportFilters({
+            statusOrder: ['Defined', 'Managed'],
+            communityNames: ['Library', 'Procurement'],
+        });
         const location = useLocation();
         return (
             <div>
                 <span data-testid="status">{state.status.join('|')}</span>
                 <span data-testid="trend">{state.trend.join('|')}</span>
+                <span data-testid="community">{state.community.join('|')}</span>
                 <span data-testid="q">{state.q}</span>
                 <span data-testid="search">{location.search}</span>
                 <button onClick={() => toggleStatus('Defined')}>toggle Defined</button>
                 <button onClick={() => toggleTrend('declining')}>toggle declining</button>
+                <button onClick={() => toggleCommunity('Library')}>toggle Library</button>
                 <button onClick={() => setSearch('captioning')}>search</button>
                 <button onClick={clear}>clear all</button>
             </div>
@@ -177,5 +182,74 @@ describe('status, trend and search facets in the URL', () => {
         renderFacets('/reports?campus=sfsu&status=Defined');
         await userEvent.click(screen.getByRole('button', { name: 'clear all' }));
         expect(screen.getByTestId('search').textContent).toBe('?campus=sfsu');
+    });
+});
+
+describe('community facet in the URL', () => {
+    function CommunityProbe() {
+        const { state, toggleCommunity, clear } = useReportFilters({
+            communityNames: ['Library', 'Procurement', 'Web & Mobile Development'],
+        });
+        const location = useLocation();
+        return (
+            <div>
+                <span data-testid="community">{state.community.join('|')}</span>
+                <span data-testid="search">{location.search}</span>
+                <button onClick={() => toggleCommunity('Library')}>toggle Library</button>
+                <button onClick={() => toggleCommunity('Web & Mobile Development')}>toggle Web</button>
+                <button onClick={clear}>clear all</button>
+            </div>
+        );
+    }
+
+    const renderCommunities = (entry) =>
+        render(
+            <MemoryRouter initialEntries={[entry]}>
+                <Routes><Route path="/reports" element={<CommunityProbe />} /></Routes>
+            </MemoryRouter>,
+        );
+
+    const community = () => screen.getByTestId('community').textContent;
+    const url = () => screen.getByTestId('search').textContent;
+
+    it('reads communities from a shared link', () => {
+        renderCommunities('/reports?community=Library,Procurement');
+        expect(community()).toBe('Library|Procurement');
+    });
+
+    it('drops a community that no longer exists, rather than breaking the link', () => {
+        renderCommunities('/reports?community=Library,Disbanded%20Team');
+        expect(community()).toBe('Library');
+    });
+
+    it('writes the community param on toggle', async () => {
+        renderCommunities('/reports');
+        await userEvent.click(screen.getByRole('button', { name: 'toggle Library' }));
+        expect(url()).toContain('community=Library');
+    });
+
+    it('survives a name containing an ampersand', async () => {
+        renderCommunities('/reports');
+        await userEvent.click(screen.getByRole('button', { name: 'toggle Web' }));
+        expect(community()).toBe('Web & Mobile Development');
+        // URLSearchParams encodes the & so it cannot be read as a param separator.
+        expect(url()).toContain('community=Web+%26+Mobile+Development');
+    });
+
+    it('round-trips an ampersand name through the URL', () => {
+        renderCommunities('/reports?community=Web+%26+Mobile+Development');
+        expect(community()).toBe('Web & Mobile Development');
+    });
+
+    it('toggles back off and drops the param', async () => {
+        renderCommunities('/reports?community=Library');
+        await userEvent.click(screen.getByRole('button', { name: 'toggle Library' }));
+        expect(url()).not.toContain('community');
+    });
+
+    it('is removed by clear all', async () => {
+        renderCommunities('/reports?community=Library&q=x');
+        await userEvent.click(screen.getByRole('button', { name: 'clear all' }));
+        expect(url()).toBe('');
     });
 });

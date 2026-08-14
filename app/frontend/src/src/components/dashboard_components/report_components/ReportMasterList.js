@@ -30,7 +30,7 @@ import SuccessIndicatorReportTables from './SuccessIndicatorReportTables';
 import ReportFilterBar from './ReportFilterBar';
 import ReportFilterPanel from './ReportFilterPanel';
 import useReportFilters from './useReportFilters';
-import { filterReportData, countFiltered, isFilterStateEmpty } from './reportFilters';
+import { filterReportData, countFiltered, isFilterStateEmpty, availableCommunities } from './reportFilters';
 import { findTrendForIndicator } from './reportMetrics';
 import { getIndicatorSummary } from '../../graph_components/indicators/indicatorHelpers';
 import { WORKING_GROUP_LIST } from '../../../styles/workingGroupIdentity';
@@ -71,18 +71,27 @@ const ReportMasterList = () => {
 
     // All filter state lives in the URL (?attention=…&status=…&trend=…&q=…), so a
     // narrowed report is shareable. See useReportFilters.
+    // The DataContext keys holding working-group trees — the same list the tables
+    // iterate, so filtering and rendering can never disagree about what exists.
+    const wgDataKeys = useMemo(() => WORKING_GROUP_LIST.map((w) => w.dataKey), []);
+
+    // Community options come from the loaded data rather than a fixed vocabulary: only
+    // communities that actually hold a stake in a visible indicator are offerable, and
+    // that set changes with the campus/year selection.
+    const communityNames = useMemo(
+        () => availableCommunities(data, wgDataKeys),
+        [data, wgDataKeys],
+    );
+
     const {
         state: filterState,
         toggleAttention,
         toggleStatus,
         toggleTrend,
+        toggleCommunity,
         setSearch,
         clear,
-    } = useReportFilters(STATUS_LEVELS_ORDER);
-
-    // The DataContext keys holding working-group trees — the same list the tables
-    // iterate, so filtering and rendering can never disagree about what exists.
-    const wgDataKeys = useMemo(() => WORKING_GROUP_LIST.map((w) => w.dataKey), []);
+    } = useReportFilters({ statusOrder: STATUS_LEVELS_ORDER, communityNames });
 
     const filterCtx = useMemo(() => ({
         wgDataKeys,
@@ -184,8 +193,10 @@ const ReportMasterList = () => {
                             by the time the narrowed tables are read. */}
                         <ReportFilterPanel
                             state={filterState}
+                            communityOptions={communityNames}
                             onToggleStatus={toggleStatus}
                             onToggleTrend={toggleTrend}
+                            onToggleCommunity={toggleCommunity}
                             onSearch={setSearch}
                             onClear={clear}
                             hasAnyFilter={hasAnyFilter}
@@ -195,6 +206,7 @@ const ReportMasterList = () => {
                             onToggleAttention={toggleAttention}
                             onToggleStatus={toggleStatus}
                             onToggleTrend={toggleTrend}
+                            onToggleCommunity={toggleCommunity}
                             onSearch={setSearch}
                             onClear={clear}
                             shown={shown}

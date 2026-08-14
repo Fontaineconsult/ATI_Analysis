@@ -110,6 +110,10 @@ export function getIndicatorSummary(wrapper) {
 
     return {
         compositeKey: indicator.composite_key,
+        // Communities of practice holding a stake in this indicator — the people who
+        // hold the practice it measures. SI-level and year-agnostic, injected by the
+        // evidence read (_inject_indicator_communities). [] when nothing claims it.
+        communities: indicator.communities || [],
         description: indicator.success_indicator,
         hasEvidence: Boolean(ev?.evidence),
         yearIdentifier: evProps.year_identifier || null,

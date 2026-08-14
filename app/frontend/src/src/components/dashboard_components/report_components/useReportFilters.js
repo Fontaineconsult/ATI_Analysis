@@ -1,6 +1,7 @@
 import { useCallback, useMemo } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
+    COMMUNITY_PARAM,
     FILTER_PARAM,
     SEARCH_PARAM,
     STATUS_PARAM,
@@ -21,6 +22,7 @@ import {
  *   ?attention=ready-for-review   the diagnostic tiles
  *   ?status=Defined,Established   maturity buckets
  *   ?trend=declining              year-over-year direction
+ *   ?community=Library,Procurement  communities of practice holding a stake
  *   ?q=captioning                 free text over description + composite key
  *
  * Changes PUSH a history entry so Back undoes one step, EXCEPT the search box, which
@@ -44,13 +46,16 @@ function serializeList(values, allowed) {
     return allowed.filter((v) => seen.has(v)).join(',');
 }
 
-export function useReportFilters(statusOrder = []) {
+export function useReportFilters({ statusOrder = [], communityNames = [] } = {}) {
     const navigate = useNavigate();
     const location = useLocation();
 
     // Status values are the maturity level names themselves, so the allowed set is the
     // caller's status order plus the off-ladder bucket.
     const statusAllowed = useMemo(() => [...statusOrder, 'No evidence'], [statusOrder]);
+    // Community names come from the loaded data, not a fixed vocabulary — a community
+    // renamed or removed since a link was shared simply drops out of the filter.
+    const communityAllowed = useMemo(() => [...communityNames], [communityNames]);
 
     const state = useMemo(() => {
         const p = new URLSearchParams(location.search);
@@ -58,9 +63,10 @@ export function useReportFilters(statusOrder = []) {
             attention: parseFilterParam(p.get(FILTER_PARAM)),
             status: parseList(p.get(STATUS_PARAM), statusAllowed),
             trend: parseList(p.get(TREND_PARAM), TREND_KEYS),
+            community: parseList(p.get(COMMUNITY_PARAM), communityAllowed),
             q: p.get(SEARCH_PARAM) || '',
         };
-    }, [location.search, statusAllowed]);
+    }, [location.search, statusAllowed, communityAllowed]);
 
     const write = useCallback((mutate, { replace = false } = {}) => {
         // Copy rather than mutate: other params on the URL are none of our business.
@@ -89,6 +95,10 @@ export function useReportFilters(statusOrder = []) {
         (values) => setParam(TREND_PARAM, serializeList(values, TREND_KEYS)),
         [setParam],
     );
+    const setCommunity = useCallback(
+        (values) => setParam(COMMUNITY_PARAM, serializeList(values, communityAllowed)),
+        [setParam, communityAllowed],
+    );
     // Replace, not push: one history entry per keystroke would make Back unusable.
     const setSearch = useCallback(
         (q) => setParam(SEARCH_PARAM, (q || '').trim(), { replace: true }),
@@ -110,10 +120,15 @@ export function useReportFilters(statusOrder = []) {
         (value) => setTrend(toggleIn(state.trend, value)),
         [state.trend, setTrend],
     );
+    const toggleCommunity = useCallback(
+        (value) => setCommunity(toggleIn(state.community, value)),
+        [state.community, setCommunity],
+    );
 
     const clear = useCallback(() => {
         write((p) => {
-            [FILTER_PARAM, STATUS_PARAM, TREND_PARAM, SEARCH_PARAM].forEach((k) => p.delete(k));
+            [FILTER_PARAM, STATUS_PARAM, TREND_PARAM, COMMUNITY_PARAM, SEARCH_PARAM]
+                .forEach((k) => p.delete(k));
         });
     }, [write]);
 
@@ -128,10 +143,12 @@ export function useReportFilters(statusOrder = []) {
         toggleAttention,
         toggleStatus,
         toggleTrend,
+        toggleCommunity,
         setSearch,
         setAttention,
         setStatus,
         setTrend,
+        setCommunity,
         clear,
     };
 }

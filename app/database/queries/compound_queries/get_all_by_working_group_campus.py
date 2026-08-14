@@ -61,6 +61,64 @@ def _walk_plan_nodes(data):
                         yield plan
 
 
+def _walk_indicator_nodes(data):
+    """Yield every indicator wrapper in one working group's response tree."""
+    for goal in data.get('goals') or []:
+        for indicator in goal.get('indicators') or []:
+            if indicator:
+                yield indicator
+
+
+def _get_communities_per_indicator(composite_keys):
+    """
+    For each SuccessIndicator composite_key, the communities of practice holding a
+    stake in it:  (CommunityOfPractice)-[:has_stake_in]->(SuccessIndicator)
+
+    This is the agentive link between the people layer and the indicator framework —
+    the community holds the practice the indicator measures. It is SI-level by design
+    (campus- and year-agnostic), so it needs no year or campus argument and the same
+    answer serves every view.
+
+    One bulk query rather than the per-community traversal in queries/communities/read,
+    because the report needs the whole map at once.
+
+    Returns {composite_key: [{name, unique_id}, ...]}, each list name-sorted.
+    """
+    if not composite_keys:
+        return {}
+    query = """
+    MATCH (c:CommunityOfPractice)-[:has_stake_in]->(si:SuccessIndicator)
+    WHERE si.composite_key IN $keys
+    RETURN si.composite_key AS key,
+           collect({name: c.name, unique_id: c.unique_id}) AS communities
+    """
+    results, _ = db.cypher_query(query, {'keys': list(composite_keys)})
+    return {
+        row[0]: sorted(row[1], key=lambda c: (c.get('name') or ''))
+        for row in results
+    }
+
+
+def _inject_indicator_communities(data):
+    """Mutate each indicator to add `indicator.properties.communities`.
+
+    Injected after the main query rather than joined inside it: the compound query is
+    already several hundred lines and this is a flat SI-level lookup that fans out no
+    rows. Same treatment plan scope gets.
+    """
+    keys = {
+        ((ind.get('indicator') or {}).get('properties') or {}).get('composite_key')
+        for ind in _walk_indicator_nodes(data)
+    }
+    keys.discard(None)
+    by_key = _get_communities_per_indicator(keys)
+    for ind in _walk_indicator_nodes(data):
+        props = (ind.get('indicator') or {}).get('properties')
+        if props is None:
+            continue
+        props['communities'] = by_key.get(props.get('composite_key'), [])
+
+
 def _inject_plan_scope(data):
     """Mutate each plan node to add `properties.campuses` and
     `properties.indicator_count` — see _get_plan_scope."""
@@ -494,6 +552,7 @@ def fetch_evidence_for_working_group(working_group, academic_year, campus_abbrev
 
     data = json.loads(results[0][0])
     _inject_plan_scope(data)
+    _inject_indicator_communities(data)
     return data
 
 if __name__=='__main__':

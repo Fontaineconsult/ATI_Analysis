@@ -9,12 +9,13 @@ import userEvent from '@testing-library/user-event';
 import { ChakraProvider } from '@chakra-ui/react';
 import ReportFilterPanel from './ReportFilterPanel';
 
-const EMPTY = { attention: [], status: [], trend: [], q: '' };
+const EMPTY = { attention: [], status: [], trend: [], community: [], q: '' };
 
 const setup = (state = {}, props = {}) => {
     const handlers = {
         onToggleStatus: jest.fn(),
         onToggleTrend: jest.fn(),
+        onToggleCommunity: jest.fn(),
         onSearch: jest.fn(),
         onClear: jest.fn(),
     };
@@ -137,5 +138,34 @@ describe('clear', () => {
         const { onClear } = setup({ status: ['Defined'] }, { hasAnyFilter: true });
         await userEvent.click(screen.getByRole('button', { name: /Clear all filters/ }));
         expect(onClear).toHaveBeenCalled();
+    });
+});
+
+describe('community menu', () => {
+    it('is absent when the data carries no communities', () => {
+        setup();
+        expect(screen.queryByRole('button', { name: /^Community/ })).not.toBeInTheDocument();
+    });
+
+    it('offers the communities present in the data', async () => {
+        const { onToggleStatus } = setup({}, { communityOptions: ['Library', 'Procurement'] });
+        await userEvent.click(screen.getByRole('button', { name: /^Community/ }));
+        const menu = await screen.findByRole('menu');
+        expect(within(menu).getAllByRole('menuitemcheckbox').map((i) => i.textContent))
+            .toEqual(['Library', 'Procurement']);
+        expect(onToggleStatus).not.toHaveBeenCalled();
+    });
+
+    it('reports the community it was clicked for', async () => {
+        const onToggleCommunity = jest.fn();
+        setup({}, { communityOptions: ['Library'], onToggleCommunity });
+        await userEvent.click(screen.getByRole('button', { name: /^Community/ }));
+        await userEvent.click(await screen.findByRole('menuitemcheckbox', { name: 'Library' }));
+        expect(onToggleCommunity).toHaveBeenCalledWith('Library');
+    });
+
+    it('counts the selection on the trigger', () => {
+        setup({ community: ['Library', 'Procurement'] }, { communityOptions: ['Library', 'Procurement'] });
+        expect(screen.getByRole('button', { name: 'Community (2)' })).toBeInTheDocument();
     });
 });

@@ -17,6 +17,8 @@ import {
     countFiltered,
     filterReportData,
     isFilterStateEmpty,
+    availableCommunities,
+    matchesCommunities,
     matchesFilterState,
     matchesFilters,
     matchesSearch,
@@ -37,6 +39,7 @@ const ind = (composite_key, opts = {}) => {
     const {
         status = null, value = null, persons = 1, approved = false,
         ready = false, override = false, evidence = true, docs = ['false'], webs = null,
+        communities = [],
     } = opts;
     const wrapper = {
         indicator: {
@@ -45,6 +48,7 @@ const ind = (composite_key, opts = {}) => {
                 composite_key,
                 success_indicator: `SI ${composite_key}`,
                 override_implementation_requirement: override,
+                communities: communities.map((name) => ({ name, unique_id: name })),
             },
         },
     };
@@ -386,5 +390,79 @@ describe('isFilterStateEmpty', () => {
         ['q', { q: 'web' }],
     ])('is false when %s is set', (_name, partial) => {
         expect(isFilterStateEmpty({ ...EMPTY_FILTER_STATE, ...partial })).toBe(false);
+    });
+});
+
+describe('community facet', () => {
+    const lib = summarize(ind('1.1-web', { communities: ['Library'] }));
+    const both = summarize(ind('1.2-web', { communities: ['Library', 'Procurement'] }));
+    const none = summarize(ind('1.3-web'));
+
+    it('matches everything when nothing is selected', () => {
+        expect(matchesCommunities(lib, [])).toBe(true);
+        expect(matchesCommunities(none, [])).toBe(true);
+    });
+
+    it('matches an indicator the community holds a stake in', () => {
+        expect(matchesCommunities(lib, ['Library'])).toBe(true);
+    });
+
+    it('ANDs: an indicator must be held by EVERY selected community', () => {
+        // This is the point of the facet — finding the genuinely shared indicators.
+        expect(matchesCommunities(both, ['Library', 'Procurement'])).toBe(true);
+        expect(matchesCommunities(lib, ['Library', 'Procurement'])).toBe(false);
+    });
+
+    it('never matches an indicator no community claims', () => {
+        expect(matchesCommunities(none, ['Library'])).toBe(false);
+    });
+
+    it('is unaffected by an indicator carrying no communities key at all', () => {
+        expect(matchesCommunities({}, ['Library'])).toBe(false);
+        expect(matchesCommunities({}, [])).toBe(true);
+    });
+
+    it('narrows through the whole filter state', () => {
+        const data = {
+            web: tree([
+                ind('1.1-web', { communities: ['Library'] }),
+                ind('1.2-web', { communities: ['Library', 'Procurement'] }),
+                ind('1.3-web', { communities: ['Procurement'] }),
+            ]),
+        };
+        const withC = (names) => ({ ...EMPTY_FILTER_STATE, community: names });
+        expect(countFiltered(data, withC(['Library']), CTX).shown).toBe(2);
+        expect(countFiltered(data, withC(['Library', 'Procurement']), CTX).shown).toBe(1);
+        expect(countFiltered(data, withC(['Nobody']), CTX).shown).toBe(0);
+    });
+
+    it('combines with the other facets', () => {
+        const data = {
+            web: tree([
+                ind('1.1-web', { communities: ['Library'], ready: true }),
+                ind('1.2-web', { communities: ['Library'] }),
+            ]),
+        };
+        expect(countFiltered(data, {
+            ...EMPTY_FILTER_STATE, community: ['Library'], attention: ['ready-for-review'],
+        }, CTX).shown).toBe(1);
+    });
+});
+
+describe('availableCommunities', () => {
+    it('collects every distinct name in the loaded data, sorted', () => {
+        const data = {
+            web: tree([
+                ind('1.1-web', { communities: ['Procurement', 'Library'] }),
+                ind('1.2-web', { communities: ['Library'] }),
+                ind('1.3-web'),
+            ]),
+        };
+        expect(availableCommunities(data, WG_KEYS)).toEqual(['Library', 'Procurement']);
+    });
+
+    it('is empty when nothing carries a community', () => {
+        expect(availableCommunities({ web: tree([ind('1.1-web')]) }, WG_KEYS)).toEqual([]);
+        expect(availableCommunities(null, WG_KEYS)).toEqual([]);
     });
 });

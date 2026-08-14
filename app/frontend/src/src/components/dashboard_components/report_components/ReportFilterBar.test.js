@@ -9,13 +9,14 @@ import userEvent from '@testing-library/user-event';
 import { ChakraProvider } from '@chakra-ui/react';
 import ReportFilterBar from './ReportFilterBar';
 
-const EMPTY = { attention: [], status: [], trend: [], q: '' };
+const EMPTY = { attention: [], status: [], trend: [], community: [], q: '' };
 
 const setup = (state = {}, props = {}) => {
     const handlers = {
         onToggleAttention: jest.fn(),
         onToggleStatus: jest.fn(),
         onToggleTrend: jest.fn(),
+        onToggleCommunity: jest.fn(),
         onSearch: jest.fn(),
         onClear: jest.fn(),
     };
@@ -106,6 +107,24 @@ it('explains the combination rule only when more than one filter is active', () 
 it('names both rules when several filters are combined', () => {
     setup({ status: ['Defined', 'Managed'] }, { shown: 0 });
     expect(screen.getByText(/must match every filter shown/)).toBeInTheDocument();
-    expect(screen.getByText(/Within Status or Trend, any of the chosen values counts/)).toBeInTheDocument();
+    expect(screen.getByText(/Within Status or Trend any of the chosen values counts/)).toBeInTheDocument();
     expect(screen.getByText(/No indicators match all of these filters/)).toBeInTheDocument();
+});
+
+describe('community chips', () => {
+    it('shows a community filter, labelled as such', async () => {
+        const { onToggleCommunity } = setup({ community: ['Library'] });
+        await userEvent.click(screen.getByRole('button', { name: 'Remove filter: Community: Library' }));
+        expect(onToggleCommunity).toHaveBeenCalledWith('Library');
+    });
+
+    it('shows one chip per selected community', () => {
+        setup({ community: ['Library', 'Procurement'] });
+        expect(screen.getAllByRole('button', { name: /Remove filter: Community/ })).toHaveLength(2);
+    });
+
+    it('spells out that community is ANDed, unlike status and trend', () => {
+        setup({ community: ['Library', 'Procurement'] }, { shown: 1 });
+        expect(screen.getByText(/must hold a stake from every chosen community/)).toBeInTheDocument();
+    });
 });
