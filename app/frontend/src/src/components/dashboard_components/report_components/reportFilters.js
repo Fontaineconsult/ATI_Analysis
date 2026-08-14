@@ -89,8 +89,59 @@ export const FILTER_ORDER = [
 
 export const FILTER_LIST = FILTER_ORDER.map((k) => INDICATOR_FILTERS[k]);
 
-/** The query-string key. Namespaced so status/working-group facets can be added later. */
+/** Query-string keys, one per facet. */
 export const FILTER_PARAM = 'attention';
+export const STATUS_PARAM = 'status';
+export const TREND_PARAM = 'trend';
+export const SEARCH_PARAM = 'q';
+
+// The trailing status bucket: no evidence for the year, or evidence carrying no
+// status — "not yet on the maturity ladder". Defined HERE rather than in
+// reportMetrics because the status filter and the distribution chart must bucket
+// identically; reportMetrics re-exports it for its existing importers.
+export const NO_EVIDENCE = 'No evidence';
+
+/**
+ * Which status bucket an indicator falls in — the same rule the distribution chart
+ * counts by, so filtering to "Defined" yields exactly the rows the Defined bar
+ * measures. Anything off the ladder (no evidence, or a status the vocabulary does
+ * not know) lands in NO_EVIDENCE rather than being silently dropped.
+ */
+export function statusBucket(summary, statusOrder) {
+    const onLadder = summary.hasEvidence
+        && summary.statusLevel
+        && statusOrder.includes(summary.statusLevel);
+    return onLadder ? summary.statusLevel : NO_EVIDENCE;
+}
+
+// Year-over-year trend buckets, mirroring reportMetrics.tallyTrends — an indicator
+// with no comparable prior year is 'unknown', not omitted.
+export const TREND_OPTIONS = [
+    { key: 'improving', label: 'Improving' },
+    { key: 'static', label: 'Static' },
+    { key: 'declining', label: 'Declining' },
+    { key: 'unknown', label: 'No trend data' },
+];
+
+export const TREND_KEYS = TREND_OPTIONS.map((t) => t.key);
+
+export function trendBucket(trendRow) {
+    const t = trendRow?.trend;
+    return (t === 'improving' || t === 'declining' || t === 'static') ? t : 'unknown';
+}
+
+/**
+ * Free-text match over an indicator. Matches the DESCRIPTION (the success-indicator
+ * text) and also the composite key, so typing "1.1-web" finds the row by its ID —
+ * a strict superset of description search that never surprises.
+ * Case- and whitespace-insensitive; an empty query matches everything.
+ */
+export function matchesSearch(summary, q) {
+    const needle = (q || '').trim().toLowerCase();
+    if (!needle) return true;
+    const haystack = `${summary.description || ''} ${summary.compositeKey || ''}`.toLowerCase();
+    return haystack.includes(needle);
+}
 
 export function isValidFilterKey(key) {
     return Object.prototype.hasOwnProperty.call(INDICATOR_FILTERS, key);
@@ -132,6 +183,32 @@ export function matchesFilters(summary, activeKeys) {
     return activeKeys.every((k) => INDICATOR_FILTERS[k]?.match(summary));
 }
 
+/** The whole filter state. Every field optional; this is the "nothing selected" value. */
+export const EMPTY_FILTER_STATE = { attention: [], status: [], trend: [], q: '' };
+
+export function isFilterStateEmpty(state) {
+    return !state
+        || (!state.attention?.length && !state.status?.length && !state.trend?.length && !(state.q || '').trim());
+}
+
+/**
+ * Does one indicator survive the whole filter state?
+ *
+ * Facets combine with AND (each narrows), but WITHIN a facet the selected values are
+ * OR — picking Defined and Established means "either", which is the only reading that
+ * makes a multi-select useful. Attention filters are the exception: they AND within
+ * the facet too, because they are independent defects rather than alternatives, and
+ * "ready for review AND undocumented" is the question worth asking.
+ */
+export function matchesFilterState(summary, trendRow, state, statusOrder) {
+    if (!state) return true;
+    if (!matchesFilters(summary, state.attention)) return false;
+    if (!matchesSearch(summary, state.q)) return false;
+    if (state.status?.length && !state.status.includes(statusBucket(summary, statusOrder))) return false;
+    if (state.trend?.length && !state.trend.includes(trendBucket(trendRow))) return false;
+    return true;
+}
+
 /**
  * Narrow a DataContext tree to the indicators matching `activeKeys`, dropping goals
  * and working groups left with nothing.
@@ -150,8 +227,16 @@ export function matchesFilters(summary, activeKeys) {
  * @param {string[]} wgDataKeys the DataContext keys holding working-group trees
  * @param {function} summarize (indicatorWrapper) => summary
  */
-export function filterReportData(data, activeKeys, wgDataKeys, summarize) {
-    if (!data || !activeKeys || activeKeys.length === 0) return data;
+export function filterReportData(data, state, ctx) {
+    if (!data || isFilterStateEmpty(state)) return data;
+    const { wgDataKeys, summarize, findTrend, statusOrder } = ctx;
+
+    const keep = (ind) => matchesFilterState(
+        summarize(ind),
+        findTrend(data.yoyTrends, ind?.indicator?.properties?.composite_key),
+        state,
+        statusOrder,
+    );
 
     const out = { ...data };
     for (const dataKey of wgDataKeys) {
@@ -159,10 +244,7 @@ export function filterReportData(data, activeKeys, wgDataKeys, summarize) {
         if (!tree) continue;
 
         const goals = (tree.goals || [])
-            .map((goal) => ({
-                ...goal,
-                indicators: (goal.indicators || []).filter((ind) => matchesFilters(summarize(ind), activeKeys)),
-            }))
+            .map((goal) => ({ ...goal, indicators: (goal.indicators || []).filter(keep) }))
             .filter((goal) => goal.indicators.length > 0);
 
         // A group with no surviving goal is dropped entirely rather than rendered as an
@@ -173,14 +255,21 @@ export function filterReportData(data, activeKeys, wgDataKeys, summarize) {
 }
 
 /** How many indicators survive the active filters, and how many there were. */
-export function countFiltered(data, activeKeys, wgDataKeys, summarize) {
+export function countFiltered(data, state, ctx) {
+    const { wgDataKeys, summarize, findTrend, statusOrder } = ctx;
     let total = 0;
     let shown = 0;
     for (const dataKey of wgDataKeys) {
         for (const goal of data?.[dataKey]?.goals || []) {
             for (const ind of goal.indicators || []) {
                 total += 1;
-                if (matchesFilters(summarize(ind), activeKeys)) shown += 1;
+                const ok = matchesFilterState(
+                    summarize(ind),
+                    findTrend(data?.yoyTrends, ind?.indicator?.properties?.composite_key),
+                    state,
+                    statusOrder,
+                );
+                if (ok) shown += 1;
             }
         }
     }

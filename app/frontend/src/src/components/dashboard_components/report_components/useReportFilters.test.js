@@ -104,3 +104,78 @@ it('pushes history, so Back undoes one filter at a time', async () => {
     await userEvent.click(screen.getByRole('button', { name: 'back' }));
     expect(active()).toBe('ready-for-review');
 });
+
+describe('status, trend and search facets in the URL', () => {
+    function FacetProbe() {
+        const { state, toggleStatus, toggleTrend, setSearch, clear } = useReportFilters(['Defined', 'Managed']);
+        const location = useLocation();
+        return (
+            <div>
+                <span data-testid="status">{state.status.join('|')}</span>
+                <span data-testid="trend">{state.trend.join('|')}</span>
+                <span data-testid="q">{state.q}</span>
+                <span data-testid="search">{location.search}</span>
+                <button onClick={() => toggleStatus('Defined')}>toggle Defined</button>
+                <button onClick={() => toggleTrend('declining')}>toggle declining</button>
+                <button onClick={() => setSearch('captioning')}>search</button>
+                <button onClick={clear}>clear all</button>
+            </div>
+        );
+    }
+
+    const renderFacets = (entry) =>
+        render(
+            <MemoryRouter initialEntries={[entry]}>
+                <Routes><Route path="/reports" element={<FacetProbe />} /></Routes>
+            </MemoryRouter>,
+        );
+
+    it('reads all four facets from a shared link', () => {
+        renderFacets('/reports?attention=unassigned&status=Defined&trend=declining&q=captioning');
+        expect(screen.getByTestId('status')).toHaveTextContent('Defined');
+        expect(screen.getByTestId('trend')).toHaveTextContent('declining');
+        expect(screen.getByTestId('q')).toHaveTextContent('captioning');
+    });
+
+    it('drops a status value outside the supplied vocabulary', () => {
+        renderFacets('/reports?status=Defined,Ascended');
+        expect(screen.getByTestId('status')).toHaveTextContent('Defined');
+    });
+
+    it('drops an unknown trend key', () => {
+        renderFacets('/reports?trend=sideways');
+        expect(screen.getByTestId('trend').textContent).toBe('');
+    });
+
+    it('writes status and trend as their own params', async () => {
+        renderFacets('/reports');
+        await userEvent.click(screen.getByRole('button', { name: 'toggle Defined' }));
+        await userEvent.click(screen.getByRole('button', { name: 'toggle declining' }));
+        expect(screen.getByTestId('search').textContent).toContain('status=Defined');
+        expect(screen.getByTestId('search').textContent).toContain('trend=declining');
+    });
+
+    it('toggles a value back off', async () => {
+        renderFacets('/reports?status=Defined');
+        await userEvent.click(screen.getByRole('button', { name: 'toggle Defined' }));
+        expect(screen.getByTestId('search').textContent).not.toContain('status');
+    });
+
+    it('trims the search term and drops the param when it is blank', async () => {
+        renderFacets('/reports?q=old');
+        await userEvent.click(screen.getByRole('button', { name: 'search' }));
+        expect(screen.getByTestId('search').textContent).toContain('q=captioning');
+    });
+
+    it('clear all removes every facet at once', async () => {
+        renderFacets('/reports?attention=unassigned&status=Defined&trend=declining&q=captioning');
+        await userEvent.click(screen.getByRole('button', { name: 'clear all' }));
+        expect(screen.getByTestId('search').textContent).toBe('');
+    });
+
+    it('clear all leaves unrelated params alone', async () => {
+        renderFacets('/reports?campus=sfsu&status=Defined');
+        await userEvent.click(screen.getByRole('button', { name: 'clear all' }));
+        expect(screen.getByTestId('search').textContent).toBe('?campus=sfsu');
+    });
+});

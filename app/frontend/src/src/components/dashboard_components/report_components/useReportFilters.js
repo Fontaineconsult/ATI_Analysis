@@ -1,60 +1,139 @@
 import { useCallback, useMemo } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { FILTER_PARAM, parseFilterParam, serializeFilterParam } from './reportFilters';
+import {
+    FILTER_PARAM,
+    SEARCH_PARAM,
+    STATUS_PARAM,
+    TREND_PARAM,
+    TREND_KEYS,
+    parseFilterParam,
+    serializeFilterParam,
+} from './reportFilters';
 
 /**
- * Attention-filter state, held in the URL rather than in component state.
+ * Report filter state, held in the URL rather than in component state.
  *
  * The URL is the only place this can live if a filtered report is to be shareable —
  * "here are the 12 indicators still missing implementations" has to survive being
- * pasted into an email, and component state does not. `?attention=ready-for-review`
- * on the existing /dashboard/reports route is enough; no new route is needed.
+ * pasted into an email, and component state does not. Four facets on the existing
+ * /dashboard/reports route:
  *
- * Changes PUSH a history entry, so Back undoes one filter at a time. Filters are the
- * kind of state people expect Back to reverse, and a replace would silently strand
- * them on a narrowed report with no way to step out of it.
+ *   ?attention=ready-for-review   the diagnostic tiles
+ *   ?status=Defined,Established   maturity buckets
+ *   ?trend=declining              year-over-year direction
+ *   ?q=captioning                 free text over description + composite key
  *
- * The hash is untouched — `#1.1-web` row deep links keep working alongside a filter,
- * so `?attention=unassigned#1.1-web` is a valid, shareable "this row, in this view".
+ * Changes PUSH a history entry so Back undoes one step, EXCEPT the search box, which
+ * replaces — a pushed entry per keystroke would bury the page in history and make Back
+ * useless for anything else.
+ *
+ * The hash is preserved explicitly: setSearchParams navigates search-only and drops it,
+ * which would kill the `#1.1-web` row deep links this page already supports.
  */
-export function useReportFilters() {
+
+// Generic comma-list param, validated against an allowed set. Same forgiving contract
+// as the attention param: unknown tokens are dropped, never fatal.
+function parseList(raw, allowed) {
+    if (!raw) return [];
+    const seen = new Set(String(raw).split(',').map((t) => t.trim()).filter(Boolean));
+    return allowed.filter((v) => seen.has(v));
+}
+
+function serializeList(values, allowed) {
+    const seen = new Set(values || []);
+    return allowed.filter((v) => seen.has(v)).join(',');
+}
+
+export function useReportFilters(statusOrder = []) {
     const navigate = useNavigate();
     const location = useLocation();
 
-    // Unknown tokens are dropped by the parser, so a stale link degrades to the
-    // filters it still understands instead of rendering nothing.
-    const active = useMemo(
-        () => parseFilterParam(new URLSearchParams(location.search).get(FILTER_PARAM)),
-        [location.search],
-    );
+    // Status values are the maturity level names themselves, so the allowed set is the
+    // caller's status order plus the off-ladder bucket.
+    const statusAllowed = useMemo(() => [...statusOrder, 'No evidence'], [statusOrder]);
 
-    // navigate() with an explicit location rather than setSearchParams: the latter
-    // navigates search-only, which DROPS the hash — and the hash is how a row deep
-    // link (`#1.1-web`) is addressed. Filtering a report must not throw away the row
-    // someone linked to.
-    const setActive = useCallback((keys) => {
+    const state = useMemo(() => {
+        const p = new URLSearchParams(location.search);
+        return {
+            attention: parseFilterParam(p.get(FILTER_PARAM)),
+            status: parseList(p.get(STATUS_PARAM), statusAllowed),
+            trend: parseList(p.get(TREND_PARAM), TREND_KEYS),
+            q: p.get(SEARCH_PARAM) || '',
+        };
+    }, [location.search, statusAllowed]);
+
+    const write = useCallback((mutate, { replace = false } = {}) => {
         // Copy rather than mutate: other params on the URL are none of our business.
         const next = new URLSearchParams(location.search);
-        const value = serializeFilterParam(keys);
-        if (value) next.set(FILTER_PARAM, value);
-        else next.delete(FILTER_PARAM);
+        mutate(next);
         const qs = next.toString();
-        navigate({
-            pathname: location.pathname,
-            search: qs ? `?${qs}` : '',
-            hash: location.hash,
-        });
+        navigate(
+            { pathname: location.pathname, search: qs ? `?${qs}` : '', hash: location.hash },
+            { replace },
+        );
     }, [navigate, location.pathname, location.search, location.hash]);
 
-    const toggle = useCallback((key) => {
-        setActive(active.includes(key) ? active.filter((k) => k !== key) : [...active, key]);
-    }, [active, setActive]);
+    const setParam = useCallback((key, value, opts) => {
+        write((p) => { if (value) p.set(key, value); else p.delete(key); }, opts);
+    }, [write]);
 
-    const clear = useCallback(() => setActive([]), [setActive]);
+    const setAttention = useCallback(
+        (keys) => setParam(FILTER_PARAM, serializeFilterParam(keys)),
+        [setParam],
+    );
+    const setStatus = useCallback(
+        (values) => setParam(STATUS_PARAM, serializeList(values, statusAllowed)),
+        [setParam, statusAllowed],
+    );
+    const setTrend = useCallback(
+        (values) => setParam(TREND_PARAM, serializeList(values, TREND_KEYS)),
+        [setParam],
+    );
+    // Replace, not push: one history entry per keystroke would make Back unusable.
+    const setSearch = useCallback(
+        (q) => setParam(SEARCH_PARAM, (q || '').trim(), { replace: true }),
+        [setParam],
+    );
 
-    const isActive = useCallback((key) => active.includes(key), [active]);
+    const toggleIn = (values, value) =>
+        (values.includes(value) ? values.filter((v) => v !== value) : [...values, value]);
 
-    return { active, isActive, toggle, clear, setActive };
+    const toggleAttention = useCallback(
+        (key) => setAttention(toggleIn(state.attention, key)),
+        [state.attention, setAttention],
+    );
+    const toggleStatus = useCallback(
+        (value) => setStatus(toggleIn(state.status, value)),
+        [state.status, setStatus],
+    );
+    const toggleTrend = useCallback(
+        (value) => setTrend(toggleIn(state.trend, value)),
+        [state.trend, setTrend],
+    );
+
+    const clear = useCallback(() => {
+        write((p) => {
+            [FILTER_PARAM, STATUS_PARAM, TREND_PARAM, SEARCH_PARAM].forEach((k) => p.delete(k));
+        });
+    }, [write]);
+
+    const isActive = useCallback((key) => state.attention.includes(key), [state.attention]);
+
+    return {
+        state,
+        // Back-compat alias: the attention tiles were the first consumer.
+        active: state.attention,
+        isActive,
+        toggle: toggleAttention,
+        toggleAttention,
+        toggleStatus,
+        toggleTrend,
+        setSearch,
+        setAttention,
+        setStatus,
+        setTrend,
+        clear,
+    };
 }
 
 export default useReportFilters;

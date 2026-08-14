@@ -28,10 +28,13 @@ import { STATUS_REPORT_WORKING_GROUPS } from '../../../services/utils/workingGro
 import ReportReferenceRow from './ReportReferenceRow';
 import SuccessIndicatorReportTables from './SuccessIndicatorReportTables';
 import ReportFilterBar from './ReportFilterBar';
+import ReportFilterPanel from './ReportFilterPanel';
 import useReportFilters from './useReportFilters';
-import { filterReportData, countFiltered } from './reportFilters';
+import { filterReportData, countFiltered, isFilterStateEmpty } from './reportFilters';
+import { findTrendForIndicator } from './reportMetrics';
 import { getIndicatorSummary } from '../../graph_components/indicators/indicatorHelpers';
 import { WORKING_GROUP_LIST } from '../../../styles/workingGroupIdentity';
+import { STATUS_LEVELS_ORDER } from '../../../services/utils/statusColors';
 import ApprovalMasterContainer from '../../ati_explorer_containers/ApprovalMasterContainer';
 
 /*
@@ -66,27 +69,43 @@ const ReportMasterList = () => {
     // over a small dataset.
     const metrics = useMemo(() => computeReportMetrics(data, selectedYear), [data, selectedYear]);
 
-    // Attention filters live in the URL (?attention=ready-for-review), so a narrowed
-    // report is shareable. See useReportFilters.
-    const { active: activeFilters, toggle, clear } = useReportFilters();
+    // All filter state lives in the URL (?attention=…&status=…&trend=…&q=…), so a
+    // narrowed report is shareable. See useReportFilters.
+    const {
+        state: filterState,
+        toggleAttention,
+        toggleStatus,
+        toggleTrend,
+        setSearch,
+        clear,
+    } = useReportFilters(STATUS_LEVELS_ORDER);
 
     // The DataContext keys holding working-group trees — the same list the tables
     // iterate, so filtering and rendering can never disagree about what exists.
     const wgDataKeys = useMemo(() => WORKING_GROUP_LIST.map((w) => w.dataKey), []);
+
+    const filterCtx = useMemo(() => ({
+        wgDataKeys,
+        summarize: getIndicatorSummary,
+        findTrend: findTrendForIndicator,
+        statusOrder: STATUS_LEVELS_ORDER,
+    }), [wgDataKeys]);
 
     // The tables receive an already-narrowed tree rather than a filter predicate. The
     // metrics above stay computed from the FULL data on purpose: the tiles are the
     // filter control, so recomputing them from filtered data would make each tile's
     // count collapse to the selection and the strip would stop being a way back out.
     const filteredData = useMemo(
-        () => filterReportData(data, activeFilters, wgDataKeys, getIndicatorSummary),
-        [data, activeFilters, wgDataKeys],
+        () => filterReportData(data, filterState, filterCtx),
+        [data, filterState, filterCtx],
     );
 
     const { shown, total } = useMemo(
-        () => countFiltered(data, activeFilters, wgDataKeys, getIndicatorSummary),
-        [data, activeFilters, wgDataKeys],
+        () => countFiltered(data, filterState, filterCtx),
+        [data, filterState, filterCtx],
     );
+
+    const hasAnyFilter = !isFilterStateEmpty(filterState);
 
     return (
         <Box w="100%" maxW="1400px" mx="auto" p={4} textAlign="left">
@@ -146,8 +165,8 @@ const ReportMasterList = () => {
                     <ReportMetricsOverview
                         metrics={metrics}
                         loading={loading}
-                        activeFilters={activeFilters}
-                        onToggleFilter={toggle}
+                        activeFilters={filterState.attention}
+                        onToggleFilter={toggleAttention}
                     />
 
                     {/* Reference material (legend + committee), collapsed by default */}
@@ -160,12 +179,23 @@ const ReportMasterList = () => {
                         <Heading as="h2" size="lg" color="gray.800" mb={6}>
                             ATI Success Indicators Report
                         </Heading>
-                        {/* Sits inside the card, directly above the tables it describes —
-                            the tiles are far enough up the page to be off-screen by the
-                            time the narrowed tables are read. */}
+                        {/* Controls first, then the active-state summary. Both sit inside
+                            the card: the tiles are far enough up the page to be off-screen
+                            by the time the narrowed tables are read. */}
+                        <ReportFilterPanel
+                            state={filterState}
+                            onToggleStatus={toggleStatus}
+                            onToggleTrend={toggleTrend}
+                            onSearch={setSearch}
+                            onClear={clear}
+                            hasAnyFilter={hasAnyFilter}
+                        />
                         <ReportFilterBar
-                            activeFilters={activeFilters}
-                            onRemove={toggle}
+                            state={filterState}
+                            onToggleAttention={toggleAttention}
+                            onToggleStatus={toggleStatus}
+                            onToggleTrend={toggleTrend}
+                            onSearch={setSearch}
                             onClear={clear}
                             shown={shown}
                             total={total}
