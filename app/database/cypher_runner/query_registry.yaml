@@ -180,6 +180,33 @@
     RETURN labels(n)[0] AS type, coalesce(n.title, n.name) AS title
     ORDER BY type, title
 
+- name: implementations_for_campus
+  category: implementation
+  description: >-
+    Every implementation node (Process/Project/Procedure/Service/Guidance/Tracking/
+    InternalPolicy/TAAP) evidencing at least one YSE at a campus, with description,
+    retired flag, the indicators/years it evidences there, and supporting webpage URLs.
+    The campus-level implementation inventory — use to audit a campus's graph against
+    external sources (e.g. its public ATI website).
+  mode: read
+  params: [campus_abbreviation]   # e.g. "sfsu"
+  cypher: |
+    MATCH (n)-[:is_evidence_for]->(yse:YearSuccessEvidence)-[:evidence_at_campus]->(:Campus {abbreviation: $campus_abbreviation})
+    WHERE any(l IN labels(n) WHERE l IN
+      ['Process','Project','Procedure','Service','Guidance','Tracking','InternalPolicy','TAAP'])
+    MATCH (yse)-[:tracks]->(si:SuccessIndicator)
+    OPTIONAL MATCH (yse)-[:evidence_in_year]->(ay:AcademicYear)
+    OPTIONAL MATCH (n)-[:is_documented_by]->(w:Webpage)
+    RETURN labels(n)[0] AS type,
+           coalesce(n.title, n.name) AS title,
+           n.description AS description,
+           coalesce(n.retired, false) AS retired,
+           n.unique_id AS id,
+           collect(DISTINCT si.composite_key) AS indicators,
+           collect(DISTINCT ay.name) AS years,
+           collect(DISTINCT w.url) AS webpages
+    ORDER BY type, title
+
 # ---------------------------------------------------------------------------
 # INDIVIDUALS  (Person -[:participates_in]-> ATIWorkingGroup; -[:works_at_campus]-> Campus;
 #               -[:implements]-> YSE)

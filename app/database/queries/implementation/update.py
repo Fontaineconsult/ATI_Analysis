@@ -113,6 +113,33 @@ def assign_documentation_to_implementation(
     return True
 
 
+def update_implementation_fields(implementation_type: str,
+                                 implementation_unique_id: str,
+                                 title: str = None,
+                                 description: str = None) -> dict:
+    """Update an implementation's scalar identity fields (title and/or description).
+
+    Only the provided fields change; a None leaves that field untouched. Title
+    remains subject to its unique index — a collision surfaces as a CrudError.
+
+    :return: the node's serialized dict after the update.
+    """
+    if title is None and description is None:
+        raise ValidationError("Nothing to update: pass title and/or description")
+
+    impl_node = _resolve_implementation(implementation_unique_id, implementation_type)
+
+    if title is not None:
+        impl_node.title = title
+    if description is not None:
+        impl_node.description = description
+    try:
+        impl_node.save()
+    except Exception as e:
+        raise CrudError(f"Failed to update {implementation_type} {implementation_unique_id}: {e}")
+    return impl_node.serialize()
+
+
 def add_progress_note_to_plan(
         plan_id: str,
         note_name: str,

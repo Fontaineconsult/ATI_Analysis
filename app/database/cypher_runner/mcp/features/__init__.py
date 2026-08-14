@@ -12,8 +12,8 @@ skipped (see server.build_server) so one bad feature can't take down the server.
 """
 
 from . import (
-    catalog, communities_write, meeting_minutes, meeting_minutes_write, notes_write, ontology,
-    ontology_write, people_write, query, query_write, registry_queries, schema_notes,
+    catalog, implementations_write, meeting_minutes, meeting_minutes_write, notes_write,
+    ontology, ontology_write, people_write, query, query_write, registry_queries, schema_notes,
 )
 
 ALL_FEATURES = [
@@ -25,8 +25,8 @@ ALL_FEATURES = [
     meeting_minutes,        # working-group meeting records (MeetingMinutes): reads
     ontology_write,         # descriptive-layer edits (write-gated; ATI_MCP_ALLOW_WRITE)
     notes_write,            # transcript annotation: attach notes to YSE/implementations (write-gated)
+    implementations_write,  # implementation lifecycle: create/update/webpage/evidence/retire (write-gated)
     query_write,            # pending questions (Query): create/update/settle/link/delete (write-gated)
     meeting_minutes_write,  # meeting records: record/update/link/delete (write-gated)
     people_write,           # people & org units: create/update + assignments (write-gated)
-    communities_write,      # communities of practice: create/membership/indicator stakes (write-gated)
 ]
