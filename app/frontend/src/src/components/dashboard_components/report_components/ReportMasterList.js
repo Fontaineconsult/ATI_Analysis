@@ -194,6 +194,10 @@ const ReportMasterList = () => {
                         <ReportFilterPanel
                             state={filterState}
                             communityOptions={communityNames}
+                            /* Counts come from the FULL dataset, like the tiles — the
+                               menu is a way in, not a readout of the current selection. */
+                            attentionCounts={metrics?.campus}
+                            onToggleAttention={toggleAttention}
                             onToggleStatus={toggleStatus}
                             onToggleTrend={toggleTrend}
                             onToggleCommunity={toggleCommunity}

@@ -169,3 +169,62 @@ describe('community menu', () => {
         expect(screen.getByRole('button', { name: 'Community (2)' })).toBeInTheDocument();
     });
 });
+
+describe('attention menu — the tiles, as a dropdown', () => {
+    const COUNTS = {
+        reviewPending: 91, unassignedCount: 3, noActiveDocsCount: 8,
+        undocumentedCount: 7, missingImplCount: 12, readyForReviewCount: 1,
+    };
+
+    it('is absent unless a toggle handler is supplied', () => {
+        setup();
+        expect(screen.queryByRole('button', { name: /^Attention/ })).not.toBeInTheDocument();
+    });
+
+    it('offers one option per tile, in the same order and with the same labels', async () => {
+        setup({}, { onToggleAttention: jest.fn(), attentionCounts: COUNTS });
+        await userEvent.click(screen.getByRole('button', { name: /^Attention/ }));
+        const menu = await screen.findByRole('menu');
+        expect(within(menu).getAllByRole('menuitemcheckbox').map((i) => i.textContent)).toEqual([
+            '⚠ Pending Review(91)',
+            '⚠ Unassigned(3)',
+            '⚠ Docs Deprecated(8)',
+            '⚠ Undocumented(7)',
+            '⚠ Missing Implementation(12)',
+            'Ready for Review(1)',
+        ]);
+    });
+
+    it('carries the counts into the accessible name, not just the visible text', async () => {
+        setup({}, { onToggleAttention: jest.fn(), attentionCounts: COUNTS });
+        await userEvent.click(screen.getByRole('button', { name: /^Attention/ }));
+        // The count sits in its own span, so the accessible name joins it with a space.
+        expect(await screen.findByRole('menuitemcheckbox', { name: /Ready for Review\s*\(1\)/ }))
+            .toBeInTheDocument();
+    });
+
+    it('omits counts gracefully when metrics have not loaded', async () => {
+        setup({}, { onToggleAttention: jest.fn() });
+        await userEvent.click(screen.getByRole('button', { name: /^Attention/ }));
+        const menu = await screen.findByRole('menu');
+        expect(within(menu).getAllByRole('menuitemcheckbox')[0]).toHaveTextContent('⚠ Pending Review');
+        expect(within(menu).getAllByRole('menuitemcheckbox')[0]).not.toHaveTextContent('(');
+    });
+
+    it('reports the filter key it was clicked for — the same key a tile sends', async () => {
+        const onToggleAttention = jest.fn();
+        setup({}, { onToggleAttention, attentionCounts: COUNTS });
+        await userEvent.click(screen.getByRole('button', { name: /^Attention/ }));
+        await userEvent.click(await screen.findByRole('menuitemcheckbox', { name: /Ready for Review/ }));
+        expect(onToggleAttention).toHaveBeenCalledWith('ready-for-review');
+    });
+
+    it('reflects state set from a tile, so the two controls stay in step', async () => {
+        setup({ attention: ['ready-for-review'] }, { onToggleAttention: jest.fn(), attentionCounts: COUNTS });
+        expect(screen.getByRole('button', { name: 'Attention (1)' })).toBeInTheDocument();
+
+        await userEvent.click(screen.getByRole('button', { name: 'Attention (1)' }));
+        expect(await screen.findByRole('menuitemcheckbox', { name: /Ready for Review/ })).toBeChecked();
+        expect(screen.getByRole('menuitemcheckbox', { name: /Unassigned/ })).not.toBeChecked();
+    });
+});

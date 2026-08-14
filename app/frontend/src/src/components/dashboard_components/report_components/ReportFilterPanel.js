@@ -18,19 +18,24 @@ import {
 } from '@chakra-ui/react';
 import { ChevronDown, Search, X } from 'lucide-react';
 import { STATUS_LEVELS_ORDER } from '../../../services/utils/statusColors';
-import { NO_EVIDENCE, TREND_OPTIONS } from './reportFilters';
+import { FILTER_LIST, NO_EVIDENCE, TREND_OPTIONS } from './reportFilters';
 
 /**
- * The report's filter controls — search, maturity status, and year-over-year trend.
+ * The report's filter controls — attention, search, maturity status, year-over-year
+ * trend, and community of practice.
  *
- * Sits at the top of the SI report and complements the attention tiles above rather
- * than replacing them: the tiles answer "what needs work", these answer "which part of
- * the report am I looking at". Both write to the same URL state, so any combination is
- * one shareable link.
+ * Attention appears BOTH here and as the tiles at the top of the page. That is
+ * deliberate duplication, not an accident: the tiles are the diagnostic display and
+ * are scrolled past by the time anyone reads the narrowed tables, so the same filter
+ * needs a control that travels with the report. Both read and write the one piece of
+ * URL state, so pressing a tile checks the menu item and vice versa.
  *
- * Status and trend are multi-select menus (Chakra's Menu implements the APG pattern's
- * keyboard contract; hand-rolling it would mean owning that ourselves). Within a facet
- * the choices are OR — picking Defined and Established means either.
+ * Every menu is a Chakra Menu with checkbox options — it implements the APG pattern's
+ * keyboard contract, which hand-rolling would mean owning ourselves.
+ *
+ * Combination rules differ by facet and are stated in ReportFilterBar: Status and
+ * Trend are OR within themselves (an indicator sits on one rung, has one direction),
+ * while Attention and Community are AND (independent defects / independent claimants).
  */
 
 // The search box is uncontrolled-by-URL while you type. Writing every keystroke
@@ -64,7 +69,7 @@ function useDebouncedSearch(urlValue, onCommit) {
     return [draft, setDraft];
 }
 
-function MultiSelectMenu({ label, options, selected, onToggle }) {
+function MultiSelectMenu({ label, options, selected, onToggle }) {  // options: {key,label,count?}
     const count = selected.length;
     return (
         <Menu closeOnSelect={false}>
@@ -88,6 +93,12 @@ function MultiSelectMenu({ label, options, selected, onToggle }) {
                             onClick={() => onToggle(opt.key)}
                         >
                             {opt.label}
+                            {/* The count is what makes the menu usable without the
+                                tiles in view — it says which filters have anything
+                                behind them before you spend a click. */}
+                            {opt.count != null ? (
+                                <Text as="span" color="gray.600" ml={1}>({opt.count})</Text>
+                            ) : null}
                         </MenuItemOption>
                     ))}
                 </MenuOptionGroup>
@@ -99,10 +110,18 @@ function MultiSelectMenu({ label, options, selected, onToggle }) {
 const STATUS_OPTIONS = [...STATUS_LEVELS_ORDER, NO_EVIDENCE].map((s) => ({ key: s, label: s }));
 
 function ReportFilterPanel({
-    state, communityOptions = [], onToggleStatus, onToggleTrend, onToggleCommunity,
+    state, communityOptions = [], attentionCounts = null,
+    onToggleAttention, onToggleStatus, onToggleTrend, onToggleCommunity,
     onSearch, onClear, hasAnyFilter,
 }) {
     const [draft, setDraft] = useDebouncedSearch(state.q, onSearch);
+
+    // Same registry the tiles render from, so the two controls can never drift.
+    const attentionOptions = FILTER_LIST.map((f) => ({
+        key: f.key,
+        label: f.label,
+        count: attentionCounts ? attentionCounts[f.metric] : undefined,
+    }));
 
     return (
         <Flex gap={3} mb={4} align="center" wrap="wrap">
@@ -130,6 +149,14 @@ function ReportFilterPanel({
                 ) : null}
             </InputGroup>
 
+            {onToggleAttention ? (
+                <MultiSelectMenu
+                    label="Attention"
+                    options={attentionOptions}
+                    selected={state.attention}
+                    onToggle={onToggleAttention}
+                />
+            ) : null}
             <MultiSelectMenu
                 label="Status"
                 options={STATUS_OPTIONS}
