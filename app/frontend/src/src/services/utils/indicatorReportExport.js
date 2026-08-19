@@ -166,6 +166,25 @@ function overviewHtml(report) {
         const meta = [n.created_by?.name, n.dateCreated].filter(Boolean).map(esc).join(' · ');
         h += `<p style="${FONT}font-size:12px;color:${TEXT};margin:0 0 4px 12px;">• ${escNl(n.content)}${meta ? ` <span style="color:${MUTED};font-size:11px;">— ${meta}</span>` : ''}</p>`;
     });
+    // Dismissed concerns, like dismissed recommendations, are working-surface
+    // records and never reach a report. Converted ones publish with what they became.
+    const cons = (report.concerns || []).filter((c) => c.status !== 'dismissed');
+    if (cons.length) {
+        h += `<p style="${FONT}font-size:12px;color:${TEXT};margin:6px 0 4px 0;"><b style="color:${NAVY};">Concerns:</b></p>`;
+        const CON_STYLE = {
+            open: 'background:#FFF5F5;color:#9B2C2C;',
+            converted: 'background:#E6F4EA;color:#276749;',
+        };
+        [...cons].sort((a, b) => (a.status === 'open' ? -1 : 1) - (b.status === 'open' ? -1 : 1)).forEach((c) => {
+            const meta = [c.raised_by?.name, c.date_raised].filter(Boolean).map(esc).join(' · ');
+            const outcome = c.became ? `Became ${c.became.kind}: ${c.became.text}` : c.resolution;
+            h += `<p style="${FONT}font-size:12px;color:${TEXT};margin:0 0 4px 12px;">`
+                + `<span style="${CON_STYLE[c.status] || CON_STYLE.open}border-radius:3px;padding:0 4px;font-size:11px;font-weight:600;">${esc((c.status || '').toUpperCase())}</span> `
+                + `${esc(c.concern)}${c.detail ? ` <span style="color:${MUTED};">${escNl(c.detail)}</span>` : ''}`
+                + `${outcome ? `<br/><i style="color:${MUTED};font-size:11px;">${escNl(outcome)}</i>` : ''}`
+                + `${meta ? ` <span style="color:${MUTED};font-size:11px;">— ${meta}</span>` : ''}</p>`;
+        });
+    }
     // Dismissed recommendations are working-surface records, not report content.
     const recs = (report.recommendations || []).filter((r) => r.status !== 'dismissed');
     if (recs.length) {
@@ -374,6 +393,14 @@ function plainText(report, campus, origin) {
     if (report.people?.admin_review_completed_by?.name) rev.push(`by ${report.people.admin_review_completed_by.name}`);
     L.push(`  ${rev.join(' · ')}`);
     (report.admin_review_notes || []).forEach((n) => L.push(`    • ${n.content}${n.created_by?.name ? ` — ${n.created_by.name}` : ''}`));
+    const consTxt = (report.concerns || []).filter((c) => c.status !== 'dismissed');
+    if (consTxt.length) {
+        L.push(`  Concerns (${consTxt.length}):`);
+        consTxt.forEach((c) => {
+            const outcome = c.became ? `became ${c.became.kind}: ${c.became.text}` : c.resolution;
+            L.push(`    • [${(c.status || 'open').toUpperCase()}] ${c.concern}${outcome ? ` — ${outcome}` : ''}`);
+        });
+    }
     const recsTxt = (report.recommendations || []).filter((r) => r.status !== 'dismissed');
     if (recsTxt.length) {
         L.push(`  Recommendations (${recsTxt.length}):`);

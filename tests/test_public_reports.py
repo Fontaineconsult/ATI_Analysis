@@ -58,6 +58,31 @@ RAW = {
             "created_by": None,
         },
     ],
+    "concerns": [
+        {
+            "concern": "No designated 504 coordinator",
+            "detail": "Nobody holds the role.", "status": "open", "resolution": None,
+            "date_raised": "2026-08-19", "date_resolved": None,
+            "raised_by": {"unique_id": "p8", "name": "Carla Concerned"},
+            "became": None,
+        },
+        {
+            "concern": "Vendor portal is unusable",
+            "detail": None, "status": "converted",
+            "resolution": "Converted to a recommendation.",
+            "date_raised": "2026-08-19", "date_resolved": "2026-08-19",
+            "raised_by": None,
+            "became": {"kind": "recommendation", "text": "Replace the vendor portal"},
+        },
+        {
+            "concern": "Coffee machine is broken",
+            "detail": None, "status": "dismissed",
+            "resolution": "Not an accessibility matter.",
+            "date_raised": "2026-08-19", "date_resolved": "2026-08-19",
+            "raised_by": None,
+            "became": None,
+        },
+    ],
     "community_stakeholders": [
         {"name": "9999 Library Community", "note": "INTERNAL stake reasoning"},
     ],
@@ -153,6 +178,19 @@ def test_sanitizer_keeps_notes_messages_and_report_facts():
     assert "created_by" not in rec, "creator attribution stays off the public page"
     assert "Rita Reviewer" not in str(clean)
     assert "Buy a different platform" not in str(clean)
+
+    # Concerns follow the same public-surface rules as recommendations.
+    assert len(clean["concerns"]) == 2, "dismissed concerns never reach a report"
+    con = clean["concerns"][0]
+    assert con["concern"] == "No designated 504 coordinator"
+    assert con["status"] == "open"
+    assert "raised_by" not in con, "who raised it stays off the public page"
+    assert "Carla Concerned" not in str(clean)
+    assert "Coffee machine is broken" not in str(clean)
+    # A converted concern publishes what it became, so the disposition is legible.
+    converted = clean["concerns"][1]
+    assert converted["became"] == "Replace the vendor portal"
+    assert converted["became_kind"] == "recommendation"
     assert clean["implementers"][0] == {"name": "Pat Person", "title": "Director",
                                         "ati_role": "Lead", "roles": ["Auditor"]}
 

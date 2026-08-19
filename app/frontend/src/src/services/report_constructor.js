@@ -655,6 +655,41 @@ function GenerateReportComponent({ evidenceItem, singleColumn = false }) {
                                     </Box>
                                 )}
 
+                            {/* Concerns — issues with no resolution path defined (open first;
+                                dismissed items are working-surface records, not report content) */}
+                            {evidenceItem.concerns?.some((w) => w.concern?.properties?.status !== 'dismissed') && (
+                                <Box p={3} bg="red.50" borderRadius="md" borderLeft="4px solid" borderLeftColor="red.300">
+                                    <Text fontSize="xs" fontWeight="semibold" color="red.800" mb={1}>
+                                        Concerns
+                                    </Text>
+                                    <VStack align="stretch" spacing={1}>
+                                        {[...evidenceItem.concerns]
+                                            .map((w) => ({
+                                                ...(w.concern?.properties || {}),
+                                                became: w.became_recommendation?.properties?.recommendation
+                                                    || w.became_plan?.properties?.name,
+                                            }))
+                                            .filter((c) => c.concern && c.status !== 'dismissed')
+                                            .sort((a, b) => (a.status === 'open' ? -1 : 1) - (b.status === 'open' ? -1 : 1))
+                                            .map((c) => (
+                                                <HStack key={c.unique_id} align="start" spacing={2}>
+                                                    <Badge
+                                                        colorScheme={c.status === 'open' ? 'red' : c.status === 'converted' ? 'green' : 'gray'}
+                                                        fontSize="10px"
+                                                        flexShrink={0}
+                                                    >
+                                                        {c.status}
+                                                    </Badge>
+                                                    <Text fontSize="xs" color="gray.700">
+                                                        {c.concern}
+                                                        {c.became ? ` — became: ${c.became}` : (c.resolution ? ` — ${c.resolution}` : '')}
+                                                    </Text>
+                                                </HStack>
+                                            ))}
+                                    </VStack>
+                                </Box>
+                            )}
+
                             {/* Recommendations — end-of-cycle improvements (open first;
                                 dismissed items are working-surface records, not report content) */}
                             {evidenceItem.recommendations?.some((w) => w.recommendation?.properties?.status !== 'dismissed') && (

@@ -405,6 +405,7 @@ const IndicatorReportView = ({ report }) => {
         notes = [], messages = [], metrics = [],
         admin_review_notes: adminReviewNotes = [],
         recommendations = [],
+        concerns = [],
         community_stakeholders: communityStakeholders = [],
     } = report;
 
@@ -584,6 +585,30 @@ const IndicatorReportView = ({ report }) => {
                                 </Box>
                             )}
                         </Box>
+
+                        {concerns.filter((c) => c.status !== 'dismissed').length > 0 && (
+                            <Box>
+                                <SubHeading>Concerns ({concerns.filter((c) => c.status !== 'dismissed').length})</SubHeading>
+                                <Box mt={2}>
+                                    <DataTable
+                                        columns={['Status', 'Concern', 'Raised', 'Outcome']}
+                                        rows={concerns
+                                            .filter((c) => c.status !== 'dismissed')
+                                            .sort((a, b) => (a.status === 'open' ? -1 : 1) - (b.status === 'open' ? -1 : 1))
+                                            .map((c) => [
+                                                <Tag size="sm"
+                                                     colorScheme={c.status === 'open' ? 'red' : 'green'}
+                                                     variant="subtle">{c.status}</Tag>,
+                                                <Box><Text fontWeight="medium" color="gray.800">{c.concern}</Text>{c.detail && <Text fontSize="2xs" color="gray.600" whiteSpace="pre-wrap">{c.detail}</Text>}</Box>,
+                                                <Text fontSize="2xs">{[c.date_raised, c.raised_by?.name && `by ${c.raised_by.name}`].filter(Boolean).join(' ')}</Text>,
+                                                c.became
+                                                    ? <Text color="gray.600">Became {c.became.kind}: {c.became.text}</Text>
+                                                    : (c.resolution ? <Text color="gray.600" whiteSpace="pre-wrap">{c.resolution}</Text> : <Dash />),
+                                            ])}
+                                    />
+                                </Box>
+                            </Box>
+                        )}
 
                         {recommendations.filter((r) => r.status !== 'dismissed').length > 0 && (
                             <Box>

@@ -46,6 +46,24 @@
   {% endif %}
   {% endif %}
 
+  {% if r.concerns %}
+  <h2>Concerns</h2>
+  <p class="muted">Issues raised for which no path to resolution has been defined yet — open items are unanswered.</p>
+  <table>
+    <thead><tr><th scope="col">Status</th><th scope="col">Concern</th><th scope="col">Raised</th><th scope="col">Outcome</th></tr></thead>
+    <tbody>
+    {% for con in r.concerns %}
+      <tr>
+        <td>{% if con.status == 'open' %}<span class="badge s1">Open</span>{% else %}<span class="badge s3">Converted</span>{% endif %}</td>
+        <td>{{ con.concern }}{% if con.detail %}<br/><span class="muted prewrap">{{ con.detail }}</span>{% endif %}</td>
+        <td>{{ con.date_raised or '—' }}</td>
+        <td class="prewrap">{% if con.became %}Became {{ con.became_kind }}: {{ con.became }}{% elif con.resolution %}{{ con.resolution }}{% else %}—{% endif %}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+
   {% if r.recommendations %}
   <h2>Recommendations</h2>
   <p class="muted">Improvements identified during this cycle's review — open items are the work ahead.</p>

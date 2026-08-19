@@ -397,6 +397,26 @@ def get_indicator_report(composite_key, academic_year, campus_abbreviation=None)
             )(rec.created_by.single())}
             for rec in yse.recommendations.all()
         ],
+        # Issues raised with no resolution path yet. Carried alongside
+        # recommendations because an unresolved concern is reportable state —
+        # it says an issue has been sitting without anyone defining what would
+        # close it. `became` names what a converted concern turned into, so the
+        # report can show the disposition without a second lookup.
+        "concerns": [
+            {
+                **con.serialize(),
+                "raised_by": (
+                    lambda author: {"unique_id": author.unique_id, "name": author.name} if author else None
+                )(con.raised_by.single()),
+                "became": (
+                    (lambda r: {"kind": "recommendation", "text": r.recommendation} if r else None)(
+                        con.became_recommendation.single())
+                    or (lambda p: {"kind": "plan", "text": p.name} if p else None)(
+                        con.became_plan.single())
+                ),
+            }
+            for con in yse.concerns.all()
+        ],
         "admin_review_notes": [
             {**note.serialize(), "created_by": (
                 lambda author: {"unique_id": author.unique_id, "name": author.name} if author else None
