@@ -180,6 +180,33 @@
     RETURN labels(n)[0] AS type, coalesce(n.title, n.name) AS title
     ORDER BY type, title
 
+- name: implementations_for_campus
+  category: implementation
+  description: >-
+    Every implementation node (Process/Project/Procedure/Service/Guidance/Tracking/
+    InternalPolicy/TAAP) evidencing at least one YSE at a campus, with description,
+    retired flag, the indicators/years it evidences there, and supporting webpage URLs.
+    The campus-level implementation inventory — use to audit a campus's graph against
+    external sources (e.g. its public ATI website).
+  mode: read
+  params: [campus_abbreviation]   # e.g. "sfsu"
+  cypher: |
+    MATCH (n)-[:is_evidence_for]->(yse:YearSuccessEvidence)-[:evidence_at_campus]->(:Campus {abbreviation: $campus_abbreviation})
+    WHERE any(l IN labels(n) WHERE l IN
+      ['Process','Project','Procedure','Service','Guidance','Tracking','InternalPolicy','TAAP'])
+    MATCH (yse)-[:tracks]->(si:SuccessIndicator)
+    OPTIONAL MATCH (yse)-[:evidence_in_year]->(ay:AcademicYear)
+    OPTIONAL MATCH (n)-[:is_documented_by]->(w:Webpage)
+    RETURN labels(n)[0] AS type,
+           coalesce(n.title, n.name) AS title,
+           n.description AS description,
+           coalesce(n.retired, false) AS retired,
+           n.unique_id AS id,
+           collect(DISTINCT si.composite_key) AS indicators,
+           collect(DISTINCT ay.name) AS years,
+           collect(DISTINCT w.url) AS webpages
+    ORDER BY type, title
+
 # ---------------------------------------------------------------------------
 # INDIVIDUALS  (Person -[:participates_in]-> ATIWorkingGroup; -[:works_at_campus]-> Campus;
 #               -[:implements]-> YSE)
@@ -504,3 +531,77 @@
            [(c)-[s:has_stake_in]->(si:SuccessIndicator) |
               {composite_key: si.composite_key, indicator: si.success_indicator,
                note: s.note}] AS stakes
+
+- name: status_level_rubric
+  category: evidence
+  description: The full six-level CMM maturity rubric - per level, the procedures / resources / documentation / documentation-evidence bars. The grading standard for the maturity-status-reviewer skill.
+  mode: read
+  params: []
+  cypher: |
+    MATCH (sl:StatusLevel)
+    RETURN sl.status_value AS status_value, sl.status_level AS status_level,
+           sl.description_of_procedures AS procedures,
+           sl.description_of_resources AS resources,
+           sl.description_of_documentation AS documentation,
+           sl.description_of_documentation_evidence AS documentation_evidence
+    ORDER BY sl.status_value
+
+- name: yse_maturity_evidence
+  category: evidence
+  description: Everything the maturity-status-reviewer skill grades for one YSE - the SI text + per-SI companion bars, current status + review flags, evidencing implementations (strength, retired, owners, participants, active documentation), report-included notes/messages/metrics, and plans. param year_identifier e.g. 2025-2026-7.11-ins-sfsu.
+  mode: read
+  params: [year_identifier]
+  cypher: |
+    MATCH (e:YearSuccessEvidence {year_identifier: $year_identifier})
+    OPTIONAL MATCH (e)-[:tracks]->(si:SuccessIndicator)
+    OPTIONAL MATCH (e)-[:status_is]->(sl:StatusLevel)
+    RETURN si.composite_key AS composite_key,
+           si.success_indicator AS indicator,
+           si.established_example AS established_example,
+           si.managed_example AS managed_example,
+           si.optimizing_example AS optimizing_example,
+           si.examples_of_evidence AS examples_of_evidence,
+           sl.status_level AS current_status,
+           sl.status_value AS current_status_value,
+           e.ready_for_admin_review AS ready_for_admin_review,
+           e.administrative_review_complete AS administrative_review_complete,
+           e.admin_review_description AS admin_review_description,
+           [(impl)-[r:is_evidence_for]->(e) |
+              {type: head(labels(impl)), title: impl.title,
+               description: impl.description, strength: r.strength,
+               control: r.control,
+               retired: impl.retired,
+               owners: [(impl)-[:owned_by]->(o:Person) | o.name],
+               participants: [(impl)<-[w:worked_on]-(p:Person) | p.name + ' (' + coalesce(w.role_handle, '?') + ')'],
+               documents: [(impl)-[:is_documented_by]->(d:Document) WHERE d.depreciated IS NULL OR d.depreciated = false | d.name],
+               webpages: [(impl)-[:is_documented_by]->(w2:Webpage) WHERE (w2.depreciated IS NULL OR w2.depreciated = false) AND (w2.no_longer_exists IS NULL OR w2.no_longer_exists = false) | w2.title]}] AS implementations,
+           [(e)-[:has_note]->(n:Note) WHERE n.include_in_report <> false | {name: n.name, content: n.content}] AS notes,
+           [(e)-[:has_message]->(m:Message) WHERE m.include_in_report <> false | {name: m.name, content: m.content, type: m.type}] AS messages,
+           [(e)-[:has_metric]->(mt:Metric) | {name: mt.name, description: mt.description}] AS metrics,
+           [(e)<-[:furthers_yse]-(pl:Plan) | {name: pl.name, status: pl.plan_status, description: pl.description}] AS plans,
+           [(e)-[:has_recommendation]->(rec:Recommendation) |
+              {recommendation: rec.recommendation, detail: rec.detail, status: rec.status,
+               resolution: rec.resolution, date_created: toString(rec.date_created)}] AS recommendations
+
+- name: stewarded_ict_for_yse
+  category: evidence
+  description: The derived ICT footprint behind one YSE's internally-controlled evidence - internal is_evidence_for links (unset control counts as internal) -> the implementations' owners/participants -> their employing Department/College -> every Asset those units/people steward under §508 (procured/developed/maintained/used). Answers "what ICT does the responsible unit answer for" even without remediates/uses_tool wiring. param year_identifier.
+  mode: read
+  params: [year_identifier]
+  cypher: |
+    MATCH (impl)-[r:is_evidence_for]->(e:YearSuccessEvidence {year_identifier: $year_identifier})
+    WHERE coalesce(r.control, 'internal') = 'internal'
+    OPTIONAL MATCH (impl)-[:owned_by]->(o:Person)
+    OPTIONAL MATCH (impl)<-[:worked_on]-(p:Person)
+    WITH collect(DISTINCT o) + collect(DISTINCT p) AS raw
+    UNWIND raw AS person
+    WITH [x IN collect(DISTINCT person) WHERE x IS NOT NULL] AS people
+    OPTIONAL MATCH (u)-[:employs]->(pp) WHERE pp IN people AND (u:Department OR u:College)
+    WITH people, [x IN collect(DISTINCT u) WHERE x IS NOT NULL] AS units
+    MATCH (a:Asset)-[st]->(h)
+    WHERE type(st) IN ['procured_by', 'developed_by', 'maintained_by', 'used_by']
+      AND (h IN units OR h IN people)
+    RETURN a.asset_identifier AS asset_identifier, a.title AS title, a.scope AS scope,
+           type(st) AS capacity, h.name AS steward,
+           CASE WHEN h:Person THEN 'Person' WHEN h:College THEN 'College' ELSE 'Department' END AS steward_type
+    ORDER BY toLower(a.title)

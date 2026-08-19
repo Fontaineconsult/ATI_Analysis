@@ -276,6 +276,7 @@ _IMPL_PROJECTION = """
       is_evidence_for: [ (impl)-[ev_r:is_evidence_for]->(yse:YearSuccessEvidence) | {
         year_identifier: yse.year_identifier, unique_id: yse.unique_id,
         strength: ev_r.strength,
+        control: ev_r.control,
         success_indicator: head([ (yse)-[:tracks]->(si:SuccessIndicator) | si.success_indicator ]),
         indicator_number: head([ (yse)-[:tracks]->(si:SuccessIndicator) | si.number ]),
         indicator_composite_key: head([ (yse)-[:tracks]->(si:SuccessIndicator) | si.composite_key ]),
@@ -283,6 +284,7 @@ _IMPL_PROJECTION = """
           { unique_id: c.unique_id, name: c.name, abbreviation: c.abbreviation } ])
       } ],
       dimensions: [ (impl)-[:classified_under]->(dim:Dimension) | { handle: dim.handle, name: dim.name } ],
+      accountable_communities: [ (impl)-[:accountable_community]->(cop:CommunityOfPractice) | { unique_id: cop.unique_id, name: cop.name } ],
       participants: [ (impl)<-[w:worked_on]-(p:Person) |
         { person: { unique_id: p.unique_id, name: p.name }, role_handle: w.role_handle, note: w.note } ],
       assets_raw:

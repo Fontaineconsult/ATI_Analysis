@@ -26,9 +26,61 @@
             <span class="badge review-done">Complete</span>
             {% if r.review.completed_date %} {{ r.review.completed_date }}{% endif %}
             {% if r.review.completed_by %} · {{ r.review.completed_by }}{% endif %}
+          {% elif r.review.ready %}<span class="badge ready">Ready for review</span>
           {% else %}<span class="badge review-open">Not yet complete</span>{% endif %}
         </td></tr>
+    {% if r.communities.accountable %}<tr><th scope="row">Accountable community</th><td>{{ r.communities.accountable | join(', ') }}</td></tr>{% endif %}
+    {% if r.communities.stakeholders %}<tr><th scope="row">Community of practice stakeholders</th><td>{{ r.communities.stakeholders | join(', ') }}</td></tr>{% endif %}
   </table>
+
+  {% if r.review.evidence_summary or r.review.notes %}
+  <h2>Administrative Review</h2>
+  {% if r.review.evidence_summary %}
+  <h3>Evidence Summary</h3>
+  <p class="prewrap">{{ r.review.evidence_summary }}</p>
+  {% endif %}
+  {% if r.review.notes %}
+  <h3>Administrative Review Notes</h3>
+  <p class="muted">Management-level observations recorded during review.</p>
+  <ul class="annotations">{% for n in r.review.notes %}<li><span class="prewrap">{{ n.content }}</span>{% if n.date %}<span class="meta">{{ n.date }}</span>{% endif %}</li>{% endfor %}</ul>
+  {% endif %}
+  {% endif %}
+
+  {% if r.concerns %}
+  <h2>Concerns</h2>
+  <p class="muted">Issues raised for which no path to resolution has been defined yet — open items are unanswered.</p>
+  <table>
+    <thead><tr><th scope="col">Status</th><th scope="col">Concern</th><th scope="col">Raised</th><th scope="col">Outcome</th></tr></thead>
+    <tbody>
+    {% for con in r.concerns %}
+      <tr>
+        <td>{% if con.status == 'open' %}<span class="badge s1">Open</span>{% else %}<span class="badge s3">Converted</span>{% endif %}</td>
+        <td>{{ con.concern }}{% if con.detail %}<br/><span class="muted prewrap">{{ con.detail }}</span>{% endif %}</td>
+        <td>{{ con.date_raised or '—' }}</td>
+        <td class="prewrap">{% if con.became %}Became {{ con.became_kind }}: {{ con.became }}{% elif con.resolution %}{{ con.resolution }}{% else %}—{% endif %}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+
+  {% if r.recommendations %}
+  <h2>Recommendations</h2>
+  <p class="muted">Improvements identified during this cycle's review — open items are the work ahead.</p>
+  <table>
+    <thead><tr><th scope="col">Status</th><th scope="col">Recommendation</th><th scope="col">Raised</th><th scope="col">Resolution</th></tr></thead>
+    <tbody>
+    {% for rec in r.recommendations %}
+      <tr>
+        <td>{% if rec.status == 'open' %}<span class="badge s1">Open</span>{% else %}<span class="badge s3">Addressed</span>{% endif %}</td>
+        <td>{{ rec.recommendation }}{% if rec.detail %}<br/><span class="muted prewrap">{{ rec.detail }}</span>{% endif %}</td>
+        <td>{{ rec.date_created or '—' }}</td>
+        <td class="prewrap">{{ rec.resolution or '—' }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
 
   <h2>Responsible People</h2>
   {% if r.implementers %}
@@ -56,12 +108,18 @@
         {% if im.strength is not none %}
           <span class="badge s{{ im.strength }}">{{ ['No Contribution','Indirect Support','Partial','Full'][im.strength] }}</span>
         {% endif %}
+        {% if im.control == 'external' %}
+          <span class="badge external" title="The evidence owners rely on this practice but don't directly control it">External</span>
+        {% endif %}
         {% if im.retired %}<span class="badge retired">Retired{% if im.retired_date %} {{ im.retired_date }}{% endif %}</span>{% endif %}
+        {% if im.no_active_documents %}<span class="badge warn" title="Every attached document is deprecated">No active documentation</span>{% endif %}
+        {% if im.undocumented %}<span class="badge warn" title="No documents or webpages attached at all">Undocumented</span>{% endif %}
       </h3>
       {% if im.retired and im.retired_note %}<p class="muted">{{ im.retired_note }}</p>{% endif %}
-      {% if im.description %}<p>{{ im.description }}</p>{% endif %}
+      {% if im.description %}<p class="prewrap">{{ im.description }}</p>{% endif %}
       <dl>
         {% if im.owner %}<dt>Owner</dt><dd>{{ im.owner }}</dd>{% endif %}
+        {% if im.accountable_communities %}<dt>Accountable community</dt><dd>{{ im.accountable_communities | join(', ') }}</dd>{% endif %}
         {% if im.accountable_working_group %}<dt>Accountable working group</dt><dd>{{ im.accountable_working_group }}</dd>{% endif %}
         {% if im.dimensions %}<dt>Dimensions</dt><dd>{{ im.dimensions | join(', ') }}</dd>{% endif %}
         {% if im.participants %}
@@ -105,8 +163,26 @@
     <thead><tr><th scope="col">Title</th><th scope="col">Outcome</th><th scope="col">Active</th><th scope="col">Review due</th></tr></thead>
     <tbody>
     {% for t in r.taaps %}
-      <tr><td>{{ t.title }}{% if t.description %}<div class="muted">{{ t.description }}</div>{% endif %}</td>
+      <tr><td>{{ t.title }}{% if t.description %}<div class="muted prewrap">{{ t.description }}</div>{% endif %}</td>
           <td>{{ t.outcome or '—' }}</td><td>{{ 'Yes' if t.active else 'No' }}</td><td>{{ t.review_due or '—' }}</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+
+  {% if r.ict_footprint and r.ict_footprint.assets %}
+  <h2>ICT Footprint — Unit Portfolio{% if r.ict_footprint.units %} ({{ r.ict_footprint.units | join(', ') }}){% endif %}</h2>
+  <p class="muted">The accessibility register of the responsible unit(s) behind this indicator's evidence. "No work wired" = answered for, but untouched by this indicator's implementations.</p>
+  <table>
+    <thead><tr><th scope="col">Asset</th><th scope="col">Scope</th><th scope="col">Stewarded by</th><th scope="col">Work here</th></tr></thead>
+    <tbody>
+    {% for a in r.ict_footprint.assets %}
+      <tr>
+        <td>{{ a.title }}<br/><span class="mono muted">{{ a.identifier }}</span></td>
+        <td>{{ a.scope or '—' }}</td>
+        <td>{% for st in a.stewards %}{{ st.name }} · {{ st.capacities | join(', ') }}{% if not loop.last %}<br/>{% endif %}{% endfor %}</td>
+        <td>{% if a.remediated_here %}<span class="badge s3">Remediated</span>{% else %}<span class="badge s1">No work wired</span>{% endif %}</td>
+      </tr>
     {% endfor %}
     </tbody>
   </table>
@@ -115,20 +191,63 @@
   {% if r.assets or r.interfaces or r.tools or r.vendors %}
   <h2>ICT Touched by This Work</h2>
   {% if r.assets %}
-    <h3>Assets</h3>
-    <ul>{% for a in r.assets %}<li>{{ a.title }} <span class="mono muted">{{ a.identifier }}</span></li>{% endfor %}</ul>
+    <h3>Assets ({{ r.assets | length }})</h3>
+    <table>
+      <thead><tr><th scope="col">Asset</th><th scope="col">Class</th><th scope="col">Scope</th><th scope="col">Reached via</th><th scope="col">Description</th></tr></thead>
+      <tbody>
+      {% for a in r.assets %}
+        <tr>
+          <td>{{ a.title }}<br/><span class="mono muted">{{ a.identifier }}</span></td>
+          <td>{{ a.asset_class.replace('_', ' ') if a.asset_class else '—' }}</td>
+          <td>{{ a.scope or '—' }}</td>
+          <td>{% if a.reached_via %}{{ a.reached_via | join(', ') }}{% else %}—{% endif %}</td>
+          <td class="prewrap">{{ a.description or '—' }}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
   {% endif %}
   {% if r.interfaces %}
-    <h3>Interfaces</h3>
-    <ul>{% for i in r.interfaces %}<li>{{ i.title }} <span class="mono muted">{{ i.identifier }}</span></li>{% endfor %}</ul>
+    <h3>Interfaces ({{ r.interfaces | length }})</h3>
+    <table>
+      <thead><tr><th scope="col">Interface</th><th scope="col">Function</th><th scope="col">Coverage / Audience</th><th scope="col">Description</th></tr></thead>
+      <tbody>
+      {% for i in r.interfaces %}
+        <tr>
+          <td>{{ i.title }}<br/><span class="mono muted">{{ i.identifier }}</span></td>
+          <td>{{ i.function or '—' }}</td>
+          <td>{% set cov = (i.coverage_domains or []) + (i.audience or []) %}{% if cov %}{{ cov | join(', ') }}{% else %}—{% endif %}</td>
+          <td class="prewrap">{{ i.description or '—' }}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
   {% endif %}
   {% if r.tools %}
-    <h3>Tools</h3>
-    <ul>{% for t in r.tools %}<li>{{ t.title }} <span class="mono muted">{{ t.identifier }}</span></li>{% endfor %}</ul>
+    <h3>Tools ({{ r.tools | length }})</h3>
+    <table>
+      <thead><tr><th scope="col">Tool</th><th scope="col">Identifier</th><th scope="col">Description</th></tr></thead>
+      <tbody>
+      {% for t in r.tools %}
+        <tr>
+          <td>{{ t.title }}</td>
+          <td>{% if t.identifier %}<span class="mono muted">{{ t.identifier }}</span>{% else %}—{% endif %}</td>
+          <td class="prewrap">{{ t.description or '—' }}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
   {% endif %}
   {% if r.vendors %}
-    <h3>Vendors</h3>
-    <ul>{% for v in r.vendors %}<li>{{ v.name }}{% if v.location %} <span class="muted">— {{ v.location }}</span>{% endif %}</li>{% endfor %}</ul>
+    <h3>Vendors ({{ r.vendors | length }})</h3>
+    <table>
+      <thead><tr><th scope="col">Vendor</th><th scope="col">Location</th></tr></thead>
+      <tbody>
+      {% for v in r.vendors %}
+        <tr><td>{{ v.name }}</td><td>{{ v.location or '—' }}</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
   {% endif %}
   {% endif %}
 
@@ -148,7 +267,7 @@
   {% endif %}
   {% if r.accomplishments %}
     <h3>Accomplishments</h3>
-    <ul>{% for a in r.accomplishments %}<li>{{ a.name }}{% if a.description %} <span class="muted">— {{ a.description }}</span>{% endif %}</li>{% endfor %}</ul>
+    <ul>{% for a in r.accomplishments %}<li>{{ a.name }}{% if a.description %} <span class="muted prewrap">— {{ a.description }}</span>{% endif %}</li>{% endfor %}</ul>
   {% endif %}
   {% endif %}
 
@@ -156,11 +275,11 @@
   <h2>Annotations</h2>
   {% if r.notes %}
     <h3>Notes</h3>
-    <ul>{% for n in r.notes %}<li>{{ n.content or n.name }}{% if n.created_by or n.date %} <span class="muted">— {{ n.created_by or '' }}{% if n.date %} {{ n.date }}{% endif %}</span>{% endif %}</li>{% endfor %}</ul>
+    <ul class="annotations">{% for n in r.notes %}<li><span class="prewrap">{{ n.content or n.name }}</span>{% if n.created_by or n.date %}<span class="meta">{{ n.created_by or '' }}{% if n.date %} · {{ n.date }}{% endif %}</span>{% endif %}</li>{% endfor %}</ul>
   {% endif %}
   {% if r.messages %}
     <h3>Messages</h3>
-    <ul>{% for m in r.messages %}<li>{{ m.content or m.name }}{% if m.created_by or m.date %} <span class="muted">— {{ m.created_by or '' }}{% if m.date %} {{ m.date }}{% endif %}</span>{% endif %}</li>{% endfor %}</ul>
+    <ul class="annotations">{% for m in r.messages %}<li><span class="prewrap">{{ m.content or m.name }}</span>{% if m.created_by or m.date %}<span class="meta">{{ m.created_by or '' }}{% if m.date %} · {{ m.date }}{% endif %}</span>{% endif %}</li>{% endfor %}</ul>
   {% endif %}
   {% if r.metrics %}
     <h3>Metrics</h3>

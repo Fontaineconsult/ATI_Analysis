@@ -340,6 +340,47 @@ export const fetchAllGovernance = async () => {
     }
 };
 
+// Candidate pool for the two governance -> indicator-framework edges:
+// { goals: [...], success_indicators: [...] }. Year-agnostic — both edges assert
+// a relationship between an instrument and the framework, not campus progress in
+// a given year. Fetched once for the picker, not per selected instrument.
+// The authority behind one success indicator — the inverse reading direction of
+// fetchAllGovernance. Returns { unique_id, composite_key, goal, driving,
+// informing_goal } and, when withCandidates is set, the picker pool too.
+//
+// The candidate pool is ~93% of the payload and is only needed once the panel is
+// expanded, so it is opt-in; the default response carries just what the collapsed
+// header shows. Omits raw_text in both cases — the mirrors run to tens of thousands
+// of characters and this fires on every indicator selection.
+export const fetchGovernanceForIndicator = async (compositeKey, withCandidates = false) => {
+    try {
+        const response = await axios.get(
+            `${process.env.REACT_APP_API_URL}/governance/for-indicator/${encodeURIComponent(compositeKey)}`,
+            withCandidates ? { params: { candidates: 1 } } : undefined,
+        );
+        if (response.status === 200) {
+            return response.data;
+        }
+        throw new Error(`Failed to fetch governance for indicator: ${response.data?.error}`);
+    } catch (error) {
+        console.error('Error fetching governance for indicator:', error.message);
+        throw error;
+    }
+};
+
+export const fetchGovernanceLinkTargets = async () => {
+    try {
+        const response = await axios.get(`${process.env.REACT_APP_API_URL}/governance/link-targets`);
+        if (response.status === 200) {
+            return response.data;
+        }
+        throw new Error(`Failed to fetch governance link targets: ${response.data?.error}`);
+    } catch (error) {
+        console.error('Error fetching governance link targets:', error.message);
+        throw error;
+    }
+};
+
 export const fetchCampusPlan = async (campusAbbrev, academicYear) => {
     try {
         const response = await axios.get(
@@ -527,6 +568,22 @@ export const fetchColleges = async (campus) => {
         throw new Error(`Failed to fetch colleges: ${response.data?.error}`);
     } catch (error) {
         console.error('Error fetching colleges:', error.message);
+        throw error;
+    }
+};
+
+// The derived ICT footprint behind one YSE's internally-controlled evidence:
+// implementations' owners/participants → their employing units → the assets
+// those units/people steward under §508.
+export const fetchStewardedIct = async (yearIdentifier) => {
+    try {
+        const response = await axios.get(
+            `${process.env.REACT_APP_API_URL}/assets/stewarded-for-yse/${encodeURIComponent(yearIdentifier)}`
+        );
+        if (response.status === 200) return response.data;
+        throw new Error(`Failed to fetch stewarded ICT: ${response.data?.error}`);
+    } catch (error) {
+        console.error('Error fetching stewarded ICT:', error.message);
         throw error;
     }
 };

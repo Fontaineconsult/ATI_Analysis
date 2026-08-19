@@ -12,10 +12,12 @@
 import { getIndicatorSummary } from '../../graph_components/indicators/indicatorHelpers';
 import { STATUS_LEVELS_ORDER } from '../../../services/utils/statusColors';
 import { WG_DEFS } from '../../../styles/workingGroupIdentity';
+import { FILTER_LIST, NO_EVIDENCE, statusBucket, trendBucket } from './reportFilters';
 
-// The trailing status-distribution bucket: indicators with no evidence for the year (or,
-// rarely, evidence with no status assigned) — i.e. "not yet on the maturity ladder".
-export const NO_EVIDENCE = 'No evidence';
+// The trailing status-distribution bucket lives in reportFilters now — the status
+// filter and this chart must bucket identically or "filter to Defined" would not
+// return the rows the Defined bar counts. Re-exported for existing importers.
+export { NO_EVIDENCE };
 
 // Working groups in render order (DataContext key, yoyTrends key keyed by name, SFBRN
 // identity accent), derived from the WG single-source-of-truth. Re-exported so existing
@@ -89,8 +91,7 @@ function summarize(summaries) {
     STATUS_LEVELS_ORDER.forEach((lvl) => { counts[lvl] = 0; });
     counts[NO_EVIDENCE] = 0;
     for (const s of summaries) {
-        const onLadder = s.hasEvidence && s.statusLevel && STATUS_LEVELS_ORDER.includes(s.statusLevel);
-        counts[onLadder ? s.statusLevel : NO_EVIDENCE] += 1;
+        counts[statusBucket(s, STATUS_LEVELS_ORDER)] += 1;
     }
     const statusDistribution = [...STATUS_LEVELS_ORDER, NO_EVIDENCE].map((level) => ({
         level,
@@ -113,6 +114,16 @@ function summarize(summaries) {
 
     const reviewComplete = summaries.filter((s) => s.hasEvidence && s.approved).length;
 
+    // Attention counts are derived from the SAME predicates the tables filter on, so a
+    // tile reading "91" is by construction the number of rows selecting it produces.
+    // These used to be inline `.filter()` calls here, duplicating the logic that the
+    // filter would have needed — a tile and its own filter disagreeing is the failure
+    // mode this indirection exists to prevent.
+    const attention = {};
+    for (const f of FILTER_LIST) {
+        attention[f.metric] = summaries.filter((s) => f.match(s)).length;
+    }
+
     return {
         totalIndicators,
         withEvidence,
@@ -121,11 +132,7 @@ function summarize(summaries) {
         statusDistribution,
         avgStatusValue,
         reviewComplete,
-        reviewPending: withEvidence - reviewComplete,
-        readyForReviewCount: summaries.filter((s) => s.hasEvidence && s.readyForReview && !s.approved).length,
-        unassignedCount: summaries.filter((s) => s.hasEvidence && s.personCount === 0 && !s.overrideImplementationRequirement).length,
-        noActiveDocsCount: summaries.filter((s) => s.hasEvidence && s.noActiveDocs).length,
-        missingImplCount: summaries.filter((s) => s.hasEvidence && s.flagMissingImplementation).length,
+        ...attention,
     };
 }
 
@@ -134,10 +141,7 @@ function tallyTrends(wrappers, yoyTrends) {
     const trends = { improving: 0, declining: 0, static: 0, unknown: 0 };
     for (const w of wrappers) {
         const compositeKey = w?.indicator?.properties?.composite_key;
-        const row = findTrendForIndicator(yoyTrends, compositeKey);
-        const t = row?.trend;
-        if (t === 'improving' || t === 'declining' || t === 'static') trends[t] += 1;
-        else trends.unknown += 1;
+        trends[trendBucket(findTrendForIndicator(yoyTrends, compositeKey))] += 1;
     }
     return trends;
 }

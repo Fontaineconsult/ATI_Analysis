@@ -30,6 +30,7 @@ from app.database.graph_schema import (
     serialize_role_holdings,
 )
 from app.database.identifiers import previous_academic_year
+from app.database.queries.assets.read import get_stewarded_ict_for_yse
 from app.endpoints.data_api.errors.custom_exceptions import NotFoundError
 from neomodel import db
 
@@ -69,6 +70,14 @@ def _depreciated(node):
     """True when a Document is flagged depreciated (bool, or the legacy string 'True')."""
     v = getattr(node, "depreciated", None)
     return v is True or v == "True"
+
+
+def _undocumented(impl):
+    """True when the implementation has NO documentation at all — zero documents
+    AND zero webpages. Notes/messages are annotations, not documentation, and
+    deliberately don't count. The sibling gap to _no_active_documents (which
+    asks whether existing docs rotted, and is False on zero docs by design)."""
+    return len(list(impl.supporting_documents.all())) == 0         and len(list(impl.supporting_webpages.all())) == 0
 
 
 def _no_active_documents(impl):
@@ -117,7 +126,7 @@ def _supporting(manager, academic_year):
     return out
 
 
-def _implementation_payload(impl, type_name, academic_year, strength=None):
+def _implementation_payload(impl, type_name, academic_year, strength=None, control=None):
     """Render-ready projection of one implementation node: its documentation (filtered),
     owner, AMM dimensions, and — for the doing-types — accountable working group,
     participant team, and the interfaces it remediates. `strength` is the 0-3
@@ -130,6 +139,7 @@ def _implementation_payload(impl, type_name, academic_year, strength=None):
         "title": impl.title,
         "description": impl.description,
         "strength": strength,
+        "control": control,
         "retired": bool(getattr(impl, "retired", False)),
         "retired_date": str(impl.retired_date) if getattr(impl, "retired_date", None) else None,
         "retired_note": getattr(impl, "retired_note", None),
@@ -142,12 +152,14 @@ def _implementation_payload(impl, type_name, academic_year, strength=None):
         # Computed from ALL documents (not the filtered list above) so the report's
         # "no active documentation" flag agrees with the implementations view.
         "no_active_documents": _no_active_documents(impl),
+        "undocumented": _undocumented(impl),
         "webpages": _supporting(impl.supporting_webpages, academic_year),
         "notes": _supporting(impl.supporting_notes, academic_year),
         "messages": _supporting(impl.supporting_messages, academic_year),
         "metrics": [m.serialize() for m in impl.supporting_metrics.all() if _included(m)],
         # Doing-type-only enrichments (empty/None for reference types).
         "accountable_working_group": None,
+        "accountable_communities": [],
         "participants": [],
         "remediates_interfaces": [],
     }
@@ -155,6 +167,7 @@ def _implementation_payload(impl, type_name, academic_year, strength=None):
     if type_name in _DOING_TYPES:
         awg = impl.accountable_working_group.single()
         payload["accountable_working_group"] = awg.name if awg else None
+        payload["accountable_communities"] = sorted(c.name for c in impl.accountable_community.all())
         payload["participants"] = serialize_participants(impl)
         payload["remediates_interfaces"] = [
             {
@@ -320,6 +333,7 @@ def get_indicator_report(composite_key, academic_year, campus_abbreviation=None)
             implementations.append(_implementation_payload(
                 impl, type_name, academic_year,
                 strength=getattr(rel, "strength", None) if rel else None,
+                control=getattr(rel, "control", None) if rel else None,
             ))
 
     rollup = _rollup(year_identifier)
@@ -375,18 +389,61 @@ def get_indicator_report(composite_key, academic_year, campus_abbreviation=None)
                 {**_person_ref(p), "roles": serialize_role_holdings(p)}
                 for p in yse.persons_that_implement.all()
             ],
-            "admin_reviewers": [_person_ref(p) for p in yse.assigned_reviewers.all()],
             "admin_review_completed_by": _person_ref(completed_by) if completed_by else None,
         },
+        "recommendations": [
+            {**rec.serialize(), "created_by": (
+                lambda author: {"unique_id": author.unique_id, "name": author.name} if author else None
+            )(rec.created_by.single())}
+            for rec in yse.recommendations.all()
+        ],
+        # Issues raised with no resolution path yet. Carried alongside
+        # recommendations because an unresolved concern is reportable state —
+        # it says an issue has been sitting without anyone defining what would
+        # close it. `became` names what a converted concern turned into, so the
+        # report can show the disposition without a second lookup.
+        "concerns": [
+            {
+                **con.serialize(),
+                "raised_by": (
+                    lambda author: {"unique_id": author.unique_id, "name": author.name} if author else None
+                )(con.raised_by.single()),
+                "became": (
+                    (lambda r: {"kind": "recommendation", "text": r.recommendation} if r else None)(
+                        con.became_recommendation.single())
+                    or (lambda p: {"kind": "plan", "text": p.name} if p else None)(
+                        con.became_plan.single())
+                ),
+            }
+            for con in yse.concerns.all()
+        ],
         "admin_review_notes": [
             {**note.serialize(), "created_by": (
                 lambda author: {"unique_id": author.unique_id, "name": author.name} if author else None
             )(note.created_by.single())}
             for note in yse.admin_reviewer_note.all()
         ],
+        # Communities of practice holding a stake in this indicator (has_stake_in,
+        # SI-level by design — campus/year views derive via tracks). Complements the
+        # per-implementation accountable_communities: stakeholders answer "who to
+        # talk to", accountability answers "who answers for the evidenced work".
+        "community_stakeholders": [
+            {"name": row[0], "note": row[1]}
+            for row in db.cypher_query(
+                "MATCH (c:CommunityOfPractice)-[s:has_stake_in]->"
+                "(:SuccessIndicator {composite_key: $ck}) "
+                "RETURN c.name, s.note ORDER BY c.name",
+                {"ck": composite_key},
+            )[0]
+        ],
         "implementations": implementations,
         "taaps": [_taap_payload(t, academic_year) for t in yse.taaps_that_evidence.all()],
         "assets": rollup["assets"],
+        # DERIVED: the responsible unit's §508 register behind this YSE's
+        # internally-controlled evidence (owners/participants -> employing
+        # units -> stewarded assets). Distinct from "assets" above by
+        # RELATIONSHIP: who answers for it, vs what the work here remediates.
+        "ict_footprint": get_stewarded_ict_for_yse(year_identifier),
         "interfaces": rollup["interfaces"],
         "tools": rollup["tools"],
         "vendors": rollup["vendors"],

@@ -14,7 +14,9 @@ import {
     Thead,
     Tr,
     Tag,
+    Tooltip,
     VStack,
+    StackDivider,
     Wrap,
     WrapItem,
     useToast,
@@ -22,7 +24,7 @@ import {
 import { useNavigate, useParams } from 'react-router-dom';
 
 import { getImplementationURL, navigateToIndicator } from '../../../services/utils/tools';
-import { strengthConfig } from '../../graph_components/implementation/implementationConfig';
+import { strengthConfig, controlConfig } from '../../graph_components/implementation/implementationConfig';
 import StatusLevelLadder from '../../functional_components/StatusLevelLadder';
 import StatusProgression from '../campus_plan_components/StatusProgression';
 import { StatusLevelContext } from '../../../context/StatusLevelContext';
@@ -45,6 +47,15 @@ const SubLabel = ({ children }) => (
     <Text fontSize="2xs" fontWeight="bold" color="gray.600" textTransform="uppercase" letterSpacing="wide">
         {children}
     </Text>
+);
+
+/** A true SUBSECTION heading (h3 under the section's h2) wearing the SubLabel
+ *  look — for named subsections screen-reader users should be able to jump to.
+ *  Row labels (e.g. "Maturity") stay SubLabel: they label a value, not a region. */
+const SubHeading = ({ children }) => (
+    <Heading as="h3" fontSize="2xs" fontWeight="bold" color="gray.600" textTransform="uppercase" letterSpacing="wide">
+        {children}
+    </Heading>
 );
 
 const Empty = ({ children }) => (
@@ -208,8 +219,8 @@ const MaturityCriteria = ({ currentStatusLevelName }) => {
 
     if (!level) return null;
     return (
-        <Box mt={4} pt={3} borderTopWidth="1px" borderColor="gray.100">
-            <SubLabel>Expected evidence at “{level.status_level}”</SubLabel>
+        <Box>
+            <SubHeading>Expected evidence at “{level.status_level}”</SubHeading>
             <VStack align="stretch" spacing={3} mt={2}>
                 {RUBRIC_CATEGORIES.map((cat) => {
                     const descs = level[cat.descKey] || [];
@@ -233,7 +244,8 @@ const MaturityCriteria = ({ currentStatusLevelName }) => {
 // ── Implementation entry ────────────────────────────────────────────────────
 const ImplementationEntry = ({ impl, campus, navigate }) => {
     const noActiveDocs = Boolean(impl.no_active_documents);
-    const accent = noActiveDocs ? 'orange' : 'teal';
+    const undocumented = Boolean(impl.undocumented);
+    const accent = (noActiveDocs || undocumented) ? 'orange' : 'teal';
     const participants = impl.participants || [];
     const remediates = (impl.remediates_interfaces || []).map((i) => i.title).filter(Boolean).join(', ');
     return (
@@ -261,6 +273,16 @@ const ImplementationEntry = ({ impl, campus, navigate }) => {
                             {strengthConfig(impl.strength).label}
                         </Badge>
                     )}
+                    {impl.control === 'external' && (
+                        <Badge
+                            colorScheme="purple"
+                            variant="subtle"
+                            fontSize="2xs"
+                            title={controlConfig('external').description}
+                        >
+                            External
+                        </Badge>
+                    )}
                     {impl.retired && (
                         <Badge
                             colorScheme="gray"
@@ -276,16 +298,29 @@ const ImplementationEntry = ({ impl, campus, navigate }) => {
                             ⚠ No active documentation
                         </Badge>
                     )}
+                    {undocumented && (
+                        <Badge colorScheme="orange" variant="outline" fontSize="2xs" title="No documents or webpages are attached to this implementation at all (notes and messages don't count as documentation)">
+                            ⚠ Undocumented
+                        </Badge>
+                    )}
                 </HStack>
             </Box>
 
             {/* Body */}
             <Box p={4}>
-                {impl.description && <Text fontSize="xs" color="gray.700" mb={2}>{impl.description}</Text>}
+                {impl.description && <Text fontSize="xs" color="gray.700" mb={2} whiteSpace="pre-wrap">{impl.description}</Text>}
 
                 <Wrap spacing={2} mb={2}>
                     {impl.owner && <WrapItem><Tag size="sm" colorScheme="teal" variant="subtle">Owner: {impl.owner.name}</Tag></WrapItem>}
-                    {impl.accountable_working_group && <WrapItem><Tag size="sm" colorScheme="cyan" variant="subtle">Accountable: {impl.accountable_working_group}</Tag></WrapItem>}
+                    {((impl.accountable_communities || []).length > 0 || impl.accountable_working_group) && (
+                        <WrapItem>
+                            <Tag size="sm" colorScheme="cyan" variant="subtle">
+                                Accountable: {(impl.accountable_communities || []).length
+                                    ? impl.accountable_communities.join(', ')
+                                    : impl.accountable_working_group}
+                            </Tag>
+                        </WrapItem>
+                    )}
                     {(impl.dimensions || []).map((d) => <WrapItem key={d.handle}><Tag size="sm" colorScheme="orange" variant="subtle">{d.name}</Tag></WrapItem>)}
                     {remediates && <WrapItem><Tag size="sm" colorScheme="blue" variant="outline">Remediates: {remediates}</Tag></WrapItem>}
                 </Wrap>
@@ -340,7 +375,7 @@ const TaapEntry = ({ taap }) => (
 
         {/* Body */}
         <Box p={4}>
-            {taap.description && <Text fontSize="xs" color="gray.700" mb={2}>{taap.description}</Text>}
+            {taap.description && <Text fontSize="xs" color="gray.700" mb={2} whiteSpace="pre-wrap">{taap.description}</Text>}
             <Wrap spacing={2} mb={3}>
                 {taap.owner && <WrapItem><Tag size="sm" colorScheme="teal" variant="subtle">Owner: {taap.owner.name}</Tag></WrapItem>}
                 {(taap.signed_by || []).map((s) => <WrapItem key={s.unique_id}><Tag size="sm" colorScheme="green" variant="subtle">Signed: {s.name}</Tag></WrapItem>)}
@@ -369,7 +404,18 @@ const IndicatorReportView = ({ report }) => {
         plans = [], accomplishments = [],
         notes = [], messages = [], metrics = [],
         admin_review_notes: adminReviewNotes = [],
+        recommendations = [],
+        concerns = [],
+        community_stakeholders: communityStakeholders = [],
     } = report;
+
+    // Communities accountable for this year's evidenced work — union across the
+    // non-retired evidencing implementations (the accountable_community edge).
+    const accountableCommunities = [...new Set(
+        implementations
+            .filter((im) => !im.retired)
+            .flatMap((im) => im.accountable_communities || [])
+    )].sort();
 
     const openEdit = () => navigateToIndicator(navigate, indicator.composite_key, campus);
 
@@ -377,7 +423,14 @@ const IndicatorReportView = ({ report }) => {
     const reviewComplete = yse?.administrative_review_complete;
     const completedBy = people?.admin_review_completed_by;
     const implementers = people?.implementers || [];
-    const ictEmpty = !assets.length && !interfaces.length && !tools.length && !vendors.length;
+    // DERIVED unit portfolio behind the internally-controlled evidence — part of
+    // the ICT Footprint section, distinguished by RELATIONSHIP (who answers for
+    // the asset) from the remediation-reached rollup above it.
+    const footprint = report.ict_footprint || { units: [], people: [], assets: [] };
+    const footprintAssets = footprint.assets || [];
+    const remediatedIds = new Set(assets.map((a) => a.asset_identifier));
+    const ictEmpty = !assets.length && !interfaces.length && !tools.length && !vendors.length
+        && !footprintAssets.length;
     const hasCompanion = (indicator.examples_of_evidence?.length > 0)
         || indicator.established_example || indicator.managed_example || indicator.optimizing_example;
 
@@ -429,66 +482,158 @@ const IndicatorReportView = ({ report }) => {
                     </HStack>
                 </Box>
 
-                {/* Status & Administrative Review */}
+                {/* Status & Administrative Review — five separated blocks:
+                    maturity+flags · community of practice · administrative review ·
+                    recommendations · expected evidence. Named subsections carry real h3s. */}
                 <ReportSection id="sec-status" title="Status & Administrative Review">
-                    <Box mb={3}>
-                        <HStack spacing={3} align="center" flexWrap="wrap" mb={status?.previous_status_level ? 2 : 0}>
-                            <SubLabel>Maturity</SubLabel>
-                            <StatusLevelLadder level={status?.status_level || null} variant="full" />
-                        </HStack>
-                        {status?.previous_status_level && (
-                            <HStack spacing={3} align="center" flexWrap="wrap">
-                                <SubLabel>Year over year</SubLabel>
-                                <StatusProgression previousStatusLevel={status.previous_status_level} currentStatusLevel={status?.status_level} />
-                                <Text fontSize="2xs" color="gray.600">(prev → current)</Text>
+                    <VStack align="stretch" spacing={5} divider={<StackDivider borderColor="gray.100" />}>
+                        <Box>
+                            <HStack spacing={3} align="center" flexWrap="wrap" mb={status?.previous_status_level ? 2 : 0}>
+                                <SubLabel>Maturity</SubLabel>
+                                <StatusLevelLadder level={status?.status_level || null} variant="full" />
                             </HStack>
-                        )}
-                    </Box>
-
-                    <Wrap spacing={2} mb={3}>
-                        {yse?.priority_level && <WrapItem><Tag size="sm" colorScheme="purple" variant="subtle">Priority: {yse.priority_level}</Tag></WrapItem>}
-                        {yse?.worked_on_in_current_year && <WrapItem><Tag size="sm" colorScheme="green" variant="subtle">Worked on this year</Tag></WrapItem>}
-                        {yse?.will_work_on_next_year && <WrapItem><Tag size="sm" colorScheme="blue" variant="subtle">Continuing next year</Tag></WrapItem>}
-                        {yse?.ready_for_admin_review && <WrapItem><Tag size="sm" colorScheme="teal" variant="subtle">Ready for admin review</Tag></WrapItem>}
-                        {yse?.documentation_status && <WrapItem><Tag size="sm" colorScheme="gray" variant="subtle">Docs: {yse.documentation_status}</Tag></WrapItem>}
-                        {yse?.resources_status && <WrapItem><Tag size="sm" colorScheme="gray" variant="subtle">Resources: {yse.resources_status}</Tag></WrapItem>}
-                        {yse?.implementation_plan_status && <WrapItem><Tag size="sm" colorScheme="gray" variant="subtle">Plan: {yse.implementation_plan_status}</Tag></WrapItem>}
-                    </Wrap>
-
-                    <Box>
-                        <SubLabel>Administrative review</SubLabel>
-                        <HStack spacing={2} mt={1} flexWrap="wrap">
-                            <Badge colorScheme={reviewComplete ? 'green' : 'yellow'}>{reviewComplete ? 'Complete' : 'Pending'}</Badge>
-                            {(yse?.administrative_review_completed_date || completedBy) && (
-                                <Text fontSize="xs" color="gray.600">
-                                    {yse?.administrative_review_completed_date ? `Completed ${yse.administrative_review_completed_date}` : 'Completed'}
-                                    {completedBy ? ` by ${completedBy.name}` : ''}
-                                </Text>
+                            {status?.previous_status_level && (
+                                <HStack spacing={3} align="center" flexWrap="wrap" mb={2}>
+                                    <SubLabel>Year over year</SubLabel>
+                                    <StatusProgression previousStatusLevel={status.previous_status_level} currentStatusLevel={status?.status_level} />
+                                    <Text fontSize="2xs" color="gray.600">(prev → current)</Text>
+                                </HStack>
                             )}
-                            {(people?.admin_reviewers || []).map((r) => (
-                                <Tag key={r.unique_id} size="sm" variant="subtle" colorScheme="gray">{r.name}</Tag>
-                            ))}
-                        </HStack>
-                        {yse?.admin_review_description && yse.admin_review_description !== 'No Review' && (
-                            <Box mt={2} p={3} bg="blue.50" borderRadius="md" borderLeftWidth="4px" borderLeftColor="blue.400">
-                                <Text fontSize="xs" color="gray.700">{yse.admin_review_description}</Text>
-                            </Box>
-                        )}
-                        {adminReviewNotes.length > 0 && (
-                            <Box mt={2}>
-                                <DataTable
-                                    columns={['Review note', 'Author', 'Date']}
-                                    rows={adminReviewNotes.map((n) => [
-                                        <Text whiteSpace="pre-wrap">{n.content}</Text>,
-                                        n.created_by?.name ? <Text>{n.created_by.name}</Text> : <Dash />,
-                                        n.dateCreated ? <Text fontSize="2xs" color="gray.600">{n.dateCreated}</Text> : <Dash />,
-                                    ])}
-                                />
-                            </Box>
-                        )}
-                    </Box>
+                            <Wrap spacing={2} mt={2}>
+                                {yse?.priority_level && <WrapItem><Tag size="sm" colorScheme="purple" variant="subtle">Priority: {yse.priority_level}</Tag></WrapItem>}
+                                {yse?.worked_on_in_current_year && <WrapItem><Tag size="sm" colorScheme="green" variant="subtle">Worked on this year</Tag></WrapItem>}
+                                {yse?.will_work_on_next_year && <WrapItem><Tag size="sm" colorScheme="blue" variant="subtle">Continuing next year</Tag></WrapItem>}
+                                {yse?.ready_for_admin_review && <WrapItem><Tag size="sm" colorScheme="teal" variant="subtle">Ready for admin review</Tag></WrapItem>}
+                                {yse?.documentation_status && <WrapItem><Tag size="sm" colorScheme="gray" variant="subtle">Docs: {yse.documentation_status}</Tag></WrapItem>}
+                                {yse?.resources_status && <WrapItem><Tag size="sm" colorScheme="gray" variant="subtle">Resources: {yse.resources_status}</Tag></WrapItem>}
+                                {yse?.implementation_plan_status && <WrapItem><Tag size="sm" colorScheme="gray" variant="subtle">Plan: {yse.implementation_plan_status}</Tag></WrapItem>}
+                            </Wrap>
+                        </Box>
 
-                    <MaturityCriteria currentStatusLevelName={status?.status_level} />
+                        <Box>
+                            <SubHeading>Community of practice</SubHeading>
+                            <VStack align="stretch" spacing={1.5} mt={2}>
+                                <HStack spacing={3} align="center" flexWrap="wrap">
+                                    <SubLabel>Accountable</SubLabel>
+                                    {accountableCommunities.length ? (
+                                        <Wrap spacing={1.5}>
+                                            {accountableCommunities.map((name) => (
+                                                <WrapItem key={name}>
+                                                    <Tag size="sm" colorScheme="cyan" variant="subtle">{name}</Tag>
+                                                </WrapItem>
+                                            ))}
+                                        </Wrap>
+                                    ) : (
+                                        <Text fontSize="xs" color="gray.600" fontStyle="italic">No community answers for the evidenced work yet.</Text>
+                                    )}
+                                </HStack>
+                                <HStack spacing={3} align="center" flexWrap="wrap">
+                                    <SubLabel>Stakeholders</SubLabel>
+                                    {communityStakeholders.length ? (
+                                        <Wrap spacing={1.5}>
+                                            {communityStakeholders.map((c) => (
+                                                <WrapItem key={c.name}>
+                                                    <Tooltip label={c.note || undefined} openDelay={400} isDisabled={!c.note}>
+                                                        <Tag size="sm" colorScheme="gray" variant="subtle">{c.name}</Tag>
+                                                    </Tooltip>
+                                                </WrapItem>
+                                            ))}
+                                        </Wrap>
+                                    ) : (
+                                        <Text fontSize="xs" color="gray.600" fontStyle="italic">No community holds a stake in this indicator.</Text>
+                                    )}
+                                </HStack>
+                            </VStack>
+                        </Box>
+
+                        <Box>
+                            <SubHeading>Administrative review</SubHeading>
+                            <HStack spacing={2} mt={2} flexWrap="wrap">
+                                <Badge colorScheme={reviewComplete ? 'green' : 'yellow'}>{reviewComplete ? 'Complete' : 'Pending'}</Badge>
+                                {(yse?.administrative_review_completed_date || completedBy) && (
+                                    <Text fontSize="xs" color="gray.600">
+                                        {yse?.administrative_review_completed_date ? `Completed ${yse.administrative_review_completed_date}` : 'Completed'}
+                                        {completedBy ? ` by ${completedBy.name}` : ''}
+                                    </Text>
+                                )}
+                            </HStack>
+                            {yse?.admin_review_description && yse.admin_review_description !== 'No Review' && (
+                                <Box mt={3}>
+                                    <SubLabel>Evidence summary</SubLabel>
+                                    <Text fontSize="2xs" color="gray.600" mt={0.5}>
+                                        The ATI coordinator&apos;s account of the year&apos;s evidence.
+                                    </Text>
+                                    <Box mt={1} p={3} bg="blue.50" borderRadius="md" borderLeftWidth="4px" borderLeftColor="blue.400">
+                                        <Text fontSize="xs" color="gray.700" whiteSpace="pre-wrap">{yse.admin_review_description}</Text>
+                                    </Box>
+                                </Box>
+                            )}
+                            {adminReviewNotes.length > 0 && (
+                                <Box mt={3}>
+                                    <SubLabel>Administrative review notes</SubLabel>
+                                    <Text fontSize="2xs" color="gray.600" mt={0.5} mb={1}>
+                                        Management-level observations recorded during review.
+                                    </Text>
+                                    <DataTable
+                                        columns={['Review note', 'Author', 'Date']}
+                                        rows={adminReviewNotes.map((n) => [
+                                            <Text whiteSpace="pre-wrap">{n.content}</Text>,
+                                            n.created_by?.name ? <Text>{n.created_by.name}</Text> : <Dash />,
+                                            n.dateCreated ? <Text fontSize="2xs" color="gray.600">{n.dateCreated}</Text> : <Dash />,
+                                        ])}
+                                    />
+                                </Box>
+                            )}
+                        </Box>
+
+                        {concerns.filter((c) => c.status !== 'dismissed').length > 0 && (
+                            <Box>
+                                <SubHeading>Concerns ({concerns.filter((c) => c.status !== 'dismissed').length})</SubHeading>
+                                <Box mt={2}>
+                                    <DataTable
+                                        columns={['Status', 'Concern', 'Raised', 'Outcome']}
+                                        rows={concerns
+                                            .filter((c) => c.status !== 'dismissed')
+                                            .sort((a, b) => (a.status === 'open' ? -1 : 1) - (b.status === 'open' ? -1 : 1))
+                                            .map((c) => [
+                                                <Tag size="sm"
+                                                     colorScheme={c.status === 'open' ? 'red' : 'green'}
+                                                     variant="subtle">{c.status}</Tag>,
+                                                <Box><Text fontWeight="medium" color="gray.800">{c.concern}</Text>{c.detail && <Text fontSize="2xs" color="gray.600" whiteSpace="pre-wrap">{c.detail}</Text>}</Box>,
+                                                <Text fontSize="2xs">{[c.date_raised, c.raised_by?.name && `by ${c.raised_by.name}`].filter(Boolean).join(' ')}</Text>,
+                                                c.became
+                                                    ? <Text color="gray.600">Became {c.became.kind}: {c.became.text}</Text>
+                                                    : (c.resolution ? <Text color="gray.600" whiteSpace="pre-wrap">{c.resolution}</Text> : <Dash />),
+                                            ])}
+                                    />
+                                </Box>
+                            </Box>
+                        )}
+
+                        {recommendations.filter((r) => r.status !== 'dismissed').length > 0 && (
+                            <Box>
+                                <SubHeading>Recommendations ({recommendations.filter((r) => r.status !== 'dismissed').length})</SubHeading>
+                                <Box mt={2}>
+                                    <DataTable
+                                        columns={['Status', 'Recommendation', 'Raised', 'Resolution']}
+                                        rows={recommendations
+                                            .filter((r) => r.status !== 'dismissed')
+                                            .sort((a, b) => (a.status === 'open' ? -1 : 1) - (b.status === 'open' ? -1 : 1))
+                                            .map((r) => [
+                                                <Tag size="sm"
+                                                     colorScheme={r.status === 'open' ? 'orange' : 'green'}
+                                                     variant="subtle">{r.status}</Tag>,
+                                                <Box><Text fontWeight="medium" color="gray.800">{r.recommendation}</Text>{r.detail && <Text fontSize="2xs" color="gray.600" whiteSpace="pre-wrap">{r.detail}</Text>}</Box>,
+                                                <Text fontSize="2xs">{[r.date_created, r.created_by?.name && `by ${r.created_by.name}`].filter(Boolean).join(' ')}</Text>,
+                                                r.resolution ? <Text color="gray.600" whiteSpace="pre-wrap">{r.resolution}</Text> : <Dash />,
+                                            ])}
+                                    />
+                                </Box>
+                            </Box>
+                        )}
+
+                        <MaturityCriteria currentStatusLevelName={status?.status_level} />
+                    </VStack>
                 </ReportSection>
 
                 {/* Companion Guide — SI-level reference content (examples of evidence + level examples) */}
@@ -581,6 +726,36 @@ const IndicatorReportView = ({ report }) => {
                         <Empty>None recorded for this year.</Empty>
                     ) : (
                         <VStack align="stretch" spacing={4}>
+                            {footprintAssets.length > 0 && (
+                                <Box>
+                                    <SubLabel>
+                                        Unit portfolio ({footprintAssets.length})
+                                        {(footprint.units || []).length > 0 && ` — ${footprint.units.map((u) => u.name).join(', ')}`}
+                                    </SubLabel>
+                                    <Text fontSize="2xs" color="gray.600" mt={0.5}>
+                                        The §508 register of the responsible unit(s) behind this indicator&apos;s
+                                        internally-controlled evidence. &quot;No work wired&quot; = answered for, but
+                                        untouched by this indicator&apos;s implementations.
+                                    </Text>
+                                    <Box mt={1}>
+                                        <DataTable
+                                            columns={['Asset', 'Scope', 'Stewarded by', 'Work here']}
+                                            rows={footprintAssets.map((a) => [
+                                                <Box><Text fontWeight="semibold" color="gray.800">{a.title}</Text><Text fontSize="2xs" color="gray.600" fontFamily="mono">{a.asset_identifier}</Text></Box>,
+                                                a.scope ? <Text>{a.scope}</Text> : <Dash />,
+                                                <VStack align="stretch" spacing={0.5}>
+                                                    {(a.stewards || []).map((s) => (
+                                                        <Text key={s.name} fontSize="2xs">{s.name} · {s.capacities.join(', ')}</Text>
+                                                    ))}
+                                                </VStack>,
+                                                remediatedIds.has(a.asset_identifier)
+                                                    ? <Tag size="sm" colorScheme="green" variant="subtle">remediated</Tag>
+                                                    : <Tag size="sm" colorScheme="orange" variant="subtle">no work wired</Tag>,
+                                            ])}
+                                        />
+                                    </Box>
+                                </Box>
+                            )}
                             {assets.length > 0 && (
                                 <Box>
                                     <SubLabel>Assets ({assets.length})</SubLabel>
@@ -592,7 +767,7 @@ const IndicatorReportView = ({ report }) => {
                                                 a.asset_class ? <Text>{a.asset_class.replace(/_/g, ' ')}</Text> : <Dash />,
                                                 a.scope ? <Text>{a.scope}</Text> : <Dash />,
                                                 (a.reached_via || []).length ? <Text>{a.reached_via.join(', ')}</Text> : <Dash />,
-                                                a.description ? <Text color="gray.600">{a.description}</Text> : <Dash />,
+                                                a.description ? <Text color="gray.600" whiteSpace="pre-wrap">{a.description}</Text> : <Dash />,
                                             ])}
                                         />
                                     </Box>
@@ -608,7 +783,7 @@ const IndicatorReportView = ({ report }) => {
                                                 <Box><Text fontWeight="semibold" color="gray.800">{i.title}</Text><Text fontSize="2xs" color="gray.600" fontFamily="mono">{i.interface_identifier}</Text></Box>,
                                                 i.function ? <Text>{i.function}</Text> : <Dash />,
                                                 [...(i.coverage_domains || []), ...(i.audience || [])].length ? <Text>{[...(i.coverage_domains || []), ...(i.audience || [])].join(', ')}</Text> : <Dash />,
-                                                i.description ? <Text color="gray.600">{i.description}</Text> : <Dash />,
+                                                i.description ? <Text color="gray.600" whiteSpace="pre-wrap">{i.description}</Text> : <Dash />,
                                             ])}
                                         />
                                     </Box>
@@ -623,7 +798,7 @@ const IndicatorReportView = ({ report }) => {
                                             rows={tools.map((t) => [
                                                 <Text fontWeight="semibold" color="gray.800">{t.title}</Text>,
                                                 t.tool_identifier ? <Text fontFamily="mono" color="gray.600">{t.tool_identifier}</Text> : <Dash />,
-                                                t.description ? <Text color="gray.600">{t.description}</Text> : <Dash />,
+                                                t.description ? <Text color="gray.600" whiteSpace="pre-wrap">{t.description}</Text> : <Dash />,
                                             ])}
                                         />
                                     </Box>
@@ -693,7 +868,7 @@ const IndicatorReportView = ({ report }) => {
                                             columns={['Accomplishment', 'Description']}
                                             rows={accomplishments.map((a) => [
                                                 <Text fontWeight="semibold" color="gray.800">{a.name}</Text>,
-                                                a.description ? <Text color="gray.600">{a.description}</Text> : <Dash />,
+                                                a.description ? <Text color="gray.600" whiteSpace="pre-wrap">{a.description}</Text> : <Dash />,
                                             ])}
                                         />
                                     </Box>

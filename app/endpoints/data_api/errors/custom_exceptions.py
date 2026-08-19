@@ -47,6 +47,11 @@ class ValidationError(DatabaseError):
     _log_level = logging.INFO  # expected client outcome (400), not a server fault
 
 
+class AuthorizationError(DatabaseError):
+    """Raised when the acting person lacks the flag/role an operation requires."""
+    _log_level = logging.INFO  # expected client outcome (403), not a server fault
+
+
 class CrudError(Exception):
     """Raised in the CRUD layer when database operations fail."""
     def __init__(self, message, original_exception=None):

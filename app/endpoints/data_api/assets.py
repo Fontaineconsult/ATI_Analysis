@@ -34,6 +34,7 @@ from flask.views import MethodView
 from app.database.queries.assets.create import create_asset, create_taap
 from app.database.queries.assets.read import (
     get_all_assets,
+    get_stewarded_ict_for_yse,
     get_asset,
     get_assets_by_scope,
     get_assets_by_campus,
@@ -295,6 +296,23 @@ class TAAPsAPI(MethodView):
         except Exception as e:
             return make_response(status="error", error=f"An unexpected error occurred: {e}"), 500
 
+
+def stewarded_ict_for_yse_view(year_identifier):
+    """GET the derived ICT footprint behind a YSE's internal evidence: the
+    implementations' owners/participants, their employing units, and every
+    asset those units/people steward under §508."""
+    try:
+        return make_response(status="success", data=get_stewarded_ict_for_yse(year_identifier)), 200
+    except NotFoundError as e:
+        return make_response(status="error", error=str(e)), 404
+    except Exception as e:
+        return make_response(status="error", error=f"An unexpected error occurred: {e}"), 500
+
+
+data_api_endpoints.add_url_rule(
+    "/assets/stewarded-for-yse/<path:year_identifier>",
+    view_func=stewarded_ict_for_yse_view, methods=["GET"],
+)
 
 assets_view = AssetsAPI.as_view("assets_api")
 data_api_endpoints.add_url_rule(

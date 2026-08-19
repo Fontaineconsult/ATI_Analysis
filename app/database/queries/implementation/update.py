@@ -113,6 +113,33 @@ def assign_documentation_to_implementation(
     return True
 
 
+def update_implementation_fields(implementation_type: str,
+                                 implementation_unique_id: str,
+                                 title: str = None,
+                                 description: str = None) -> dict:
+    """Update an implementation's scalar identity fields (title and/or description).
+
+    Only the provided fields change; a None leaves that field untouched. Title
+    remains subject to its unique index — a collision surfaces as a CrudError.
+
+    :return: the node's serialized dict after the update.
+    """
+    if title is None and description is None:
+        raise ValidationError("Nothing to update: pass title and/or description")
+
+    impl_node = _resolve_implementation(implementation_unique_id, implementation_type)
+
+    if title is not None:
+        impl_node.title = title
+    if description is not None:
+        impl_node.description = description
+    try:
+        impl_node.save()
+    except Exception as e:
+        raise CrudError(f"Failed to update {implementation_type} {implementation_unique_id}: {e}")
+    return impl_node.serialize()
+
+
 def add_progress_note_to_plan(
         plan_id: str,
         note_name: str,
@@ -381,6 +408,37 @@ def unassign_accountable_working_group(implementation_unique_id, implementation_
     return True
 
 
+def _resolve_community(name_or_uid):
+    """Resolve a CommunityOfPractice by unique_id first, then by (unique-indexed) name."""
+    node = CommunityOfPractice.nodes.get_or_none(unique_id=name_or_uid)
+    if node is None:
+        node = CommunityOfPractice.nodes.get_or_none(name=name_or_uid)
+    if node is None:
+        raise NotFoundError(f"CommunityOfPractice {name_or_uid!r} not found")
+    return node
+
+
+def assign_accountable_community(implementation_unique_id, implementation_type, community):
+    """Connect an accountable CommunityOfPractice to an implementation (accountable_community).
+    The operating community that answers for this work — distinct from owned_by (the Person)
+    and from accountable_working_group (the committee). Same doing-type guard as the
+    working-group edge."""
+    impl_node = _resolve_accountable_implementation(implementation_unique_id, implementation_type)
+    cop = _resolve_community(community)
+    if not impl_node.accountable_community.is_connected(cop):
+        impl_node.accountable_community.connect(cop)
+    return True
+
+
+def unassign_accountable_community(implementation_unique_id, implementation_type, community):
+    """Disconnect an accountable CommunityOfPractice from an implementation. Inverse of the assign."""
+    impl_node = _resolve_accountable_implementation(implementation_unique_id, implementation_type)
+    cop = _resolve_community(community)
+    if impl_node.accountable_community.is_connected(cop):
+        impl_node.accountable_community.disconnect(cop)
+    return True
+
+
 def set_implementation_dimensions(implementation_type, implementation_unique_id, dimension_handles):
     """
     Replace an implementation's AMM-dimension classification (classified_under) with
@@ -527,6 +585,9 @@ def update_plan(data: dict) -> bool:
         - plan_status : str - New status (e.g., "Completed", "In Progress")
         - abandoned : bool - Mark as abandoned or not
         - abandoned_notes : str - Notes about abandonment
+        - completed_date : str - ISO date the plan closed. Omit and it is stamped
+          automatically on entering "Completed" and cleared on leaving; pass an
+          explicit value to record a completion that happened earlier, or "" to clear.
         - completed_year_name : str - Academic year of completion
         - furthered_goal_number : int - Goal number (use with furthered_working_group)
         - furthered_working_group : str - Working group (use with furthered_goal_number)
@@ -572,8 +633,10 @@ def update_plan(data: dict) -> bool:
     - Validation ensures data integrity with existing nodes
     """
 
-    VALID_PLAN_STATUSES = ["Not Started", "In Progress", "Completed", "On Hold", "Abandoned"]
-
+    # Vocabulary comes from data_config, never a literal here — a local copy is how
+    # this validator and the UI's option list drifted apart in the first place.
+    from app.data_config import plan_statuses as VALID_PLAN_STATUSES
+    from app.database.queries.governance.create import _coerce_date
 
     try:
         unique_id = data.get('unique_id')
@@ -601,6 +664,24 @@ def update_plan(data: dict) -> bool:
         plan.abandoned_notes = data.get('abandoned_notes', plan.abandoned_notes)
         plan.completion_notes = data.get('completion_notes', plan.completion_notes)
         plan.name = data.get('name', plan.name)
+
+        # completed_date follows the Completed state rather than floating free.
+        #
+        #   - an explicit value always wins (present-but-empty clears it), because the
+        #     record is retrospective: a plan finished in March is often entered in
+        #     August, and "today" would be a lie the graph then treats as fact;
+        #   - otherwise entering Completed stamps today, and leaving Completed clears
+        #     the date, so it can never outlive the state it dates.
+        #
+        # `previous_status` is captured above, before plan_status is reassigned.
+        new_plan_status = data.get('plan_status')
+        if 'completed_date' in data:
+            raw = data.get('completed_date')
+            plan.completed_date = _coerce_date(raw) if raw else None
+        elif new_plan_status == "Completed" and previous_status != "Completed":
+            plan.completed_date = date.today()
+        elif new_plan_status is not None and new_plan_status != "Completed":
+            plan.completed_date = None
 
         plan.save()
 
@@ -636,8 +717,8 @@ def update_plan(data: dict) -> bool:
         # When the plan newly becomes Completed, mirror it into an
         # Accomplishment via :achieved_through (idempotent — skip if one
         # already exists). When it leaves Completed, drop the linked
-        # accomplishment so the records stay in sync.
-        new_plan_status = data.get('plan_status')
+        # accomplishment so the records stay in sync. `new_plan_status` is read above,
+        # where completed_date is stamped off the same transition.
         if new_plan_status == "Completed" and previous_status != "Completed":
             existing_acc, _ = db.cypher_query(
                 """
@@ -684,14 +765,21 @@ def update_plan(data: dict) -> bool:
                 plan.furthered_goals.disconnect_all()
                 plan.furthered_goals.connect(furthered_goal)
 
-        # Update furthered YearSuccessEvidence relationship
+        # Ensure the plan furthers this YearSuccessEvidence.
+        #
+        # ADDITIVE, deliberately. This used to disconnect_all() first, which made the
+        # edit destructive: a plan furthers many YSEs (53 of 60 do; one furthers 27),
+        # but every caller sends exactly ONE identifier — the indicator whose page the
+        # editor is on — so saving a plan from one indicator silently unlinked it from
+        # every other. Editing a plan's fields is not a statement about which
+        # indicators it serves; the endpoint's `attach_yse` / `detach_yse` actions are
+        # where that link is managed deliberately.
         furthered_yse_identifier = data.get('furthered_yse_identifier')
         if furthered_yse_identifier:
             furthered_yse = YearSuccessEvidence.nodes.get_or_none(
                 year_identifier=furthered_yse_identifier
             )
-            if furthered_yse:
-                plan.furthered_year_success_indicators.disconnect_all()
+            if furthered_yse and not plan.furthered_year_success_indicators.is_connected(furthered_yse):
                 plan.furthered_year_success_indicators.connect(furthered_yse)
 
         print(f"Plan '{plan.name}' updated successfully")
@@ -699,6 +787,12 @@ def update_plan(data: dict) -> bool:
 
     except Plan.DoesNotExist:
         raise NotFoundError(f"Plan with unique_id '{unique_id}' not found.")
+    except (ValidationError, NotFoundError):
+        # Re-raise as-is so the endpoint maps them to 400/404. Without this the
+        # blanket handler below rewrapped a bad plan_status — a client mistake with
+        # an actionable message — as a CrudError, which the API reports as a 500
+        # "Failed to process request" and the UI cannot explain to the user.
+        raise
     except Exception as e:
         raise CrudError(f"Failed to update plan: {e}")
 

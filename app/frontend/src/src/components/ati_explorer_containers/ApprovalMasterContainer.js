@@ -1,7 +1,7 @@
 import React, { useContext, useState } from 'react';
 import { Box, Button, Text, Spinner, useToast, Heading, Alert, AlertIcon, VStack, HStack, Divider, Tooltip } from '@chakra-ui/react';
 import { UserContext } from '../../context/UserContext';
-import { assignApprover } from '../../services/api/put';
+import { assignApprover, withdrawApproval } from '../../services/api/put';
 import { GenerateReportComponent } from '../../services/report_constructor';
 import StatusLevelDetails from "../graph_components/indicators/StatusLevelDetails";
 import { DataContext } from '../../context/DataContext';
@@ -10,6 +10,8 @@ import { SLUG_TO_DATAKEY } from '../../styles/workingGroupIdentity';
 import SingleReportMasterContainer from "../dashboard_components/report_components/SingleReportMasterContainer";
 import AdminSummaryForm from "../dashboard_components/report_components/AdminSummaryForm";
 import AdminFeedbackForm from "../dashboard_components/report_components/AdminFeedbackForm";
+import RecommendationsPanel from "../dashboard_components/report_components/RecommendationsPanel";
+import ConcernsPanel from "../dashboard_components/report_components/ConcernsPanel";
 
 function ApprovalMasterContainer({
                                      evidenceData: propEvidenceData,
@@ -95,9 +97,12 @@ function ApprovalMasterContainer({
     const { year_identifier, administrative_review_complete } = evidenceData.evidence.properties;
     const currentUserId = user?.employee_id;
     const isApproved = administrative_review_complete === true;
+    // Approving requires the Approver flag (Settings -> Members). The backend
+    // enforces this (403); the disabled button just explains it up front.
+    const canApprove = Boolean(user?.can_approve_yse);
 
     const handleApprove = async () => {
-        if (!currentUserId || isApproved) return;
+        if (!currentUserId || !canApprove || isApproved) return;
 
         setLoading(true);
         try {
@@ -115,7 +120,37 @@ function ApprovalMasterContainer({
             console.error('Approval failed:', error);
             toast({
                 title: "Approval Failed",
-                description: "There was an issue with approving the success indicator.",
+                description: error?.response?.data?.error
+                    || "There was an issue with approving the success indicator.",
+                status: "error",
+                duration: 5000,
+                isClosable: true,
+            });
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleWithdraw = async () => {
+        if (!currentUserId || !canApprove || !isApproved) return;
+
+        setLoading(true);
+        try {
+            await withdrawApproval(currentUserId, year_identifier);
+            await loadSingleWorkingGroupData(currentWorkingGroup);
+            toast({
+                title: "Approval Withdrawn",
+                description: "The evidence has returned to awaiting approval",
+                status: "info",
+                duration: 5000,
+                isClosable: true,
+            });
+        } catch (error) {
+            console.error('Withdraw failed:', error);
+            toast({
+                title: "Withdraw Failed",
+                description: error?.response?.data?.error
+                    || "There was an issue withdrawing the approval.",
                 status: "error",
                 duration: 5000,
                 isClosable: true,
@@ -188,13 +223,27 @@ function ApprovalMasterContainer({
                         }}
                     />
 
-                    {/* Admin Review Status */}
+                    {/* Issues with no resolution path yet — convert or dismiss */}
+                    <ConcernsPanel
+                        yearIdentifier={year_identifier}
+                        concerns={evidenceData.concerns || []}
+                        onUpdate={() => loadSingleWorkingGroupData(currentWorkingGroup)}
+                    />
+
+                    {/* End-of-cycle improvement tracking */}
+                    <RecommendationsPanel
+                        yearIdentifier={year_identifier}
+                        recommendations={evidenceData.recommendations || []}
+                        onUpdate={() => loadSingleWorkingGroupData(currentWorkingGroup)}
+                    />
+
+                    {/* Admin Review Status — complete > ready-awaiting-approval > not yet ready */}
                     <Box
                         p={4}
-                        bg={evidenceData.evidence?.properties?.administrative_review_complete ? "green.50" : "orange.50"}
+                        bg={isApproved ? "green.50" : "orange.50"}
                         borderRadius="lg"
                         borderWidth="1px"
-                        borderColor={evidenceData.evidence?.properties?.administrative_review_complete ? "green.200" : "orange.200"}
+                        borderColor={isApproved ? "green.200" : "orange.200"}
                     >
                         <Text fontSize="xs" fontWeight="semibold" color="gray.600" textTransform="uppercase" mb={2}>
                             Review Status
@@ -203,9 +252,13 @@ function ApprovalMasterContainer({
                             <Text
                                 fontSize="sm"
                                 fontWeight="bold"
-                                color={evidenceData.evidence?.properties?.administrative_review_complete ? "green.600" : "orange.600"}
+                                color={isApproved ? "green.600" : "orange.600"}
                             >
-                                {evidenceData.evidence?.properties?.administrative_review_complete ? "✓ Review Complete" : "⏳ Review Pending"}
+                                {isApproved
+                                    ? "✓ Review Complete"
+                                    : evidenceData.evidence?.properties?.ready_for_admin_review
+                                        ? "⏳ Ready for review — awaiting approval"
+                                        : "Not yet marked ready for review"}
                             </Text>
                         </HStack>
                     </Box>
@@ -214,7 +267,9 @@ function ApprovalMasterContainer({
 
             <Divider borderColor="gray.200" my={6} />
 
-            {/* Report Output Section */}
+            {/* Report Output — the full report the approver signs off on, forced
+                into its embedded single-column mode (the report's own responsive
+                row layout keys off the viewport, not this container). */}
             <Box mb={6}>
                 <Heading as="h4" size="md" color="teal.700" mb={4}>
                     Report Output
@@ -225,11 +280,11 @@ function ApprovalMasterContainer({
                     borderWidth="1px"
                     borderColor="teal.300"
                     borderRadius="lg"
-                    maxHeight="500px"
+                    maxHeight="60vh"
                     overflowY="auto"
                 >
                     {propEvidenceData ? (
-                        <GenerateReportComponent evidenceItem={evidenceData} />
+                        <GenerateReportComponent evidenceItem={evidenceData} singleColumn />
                     ) : (
                         <SingleReportMasterContainer
                             workingGroup={propWorkingGroup}
@@ -245,13 +300,26 @@ function ApprovalMasterContainer({
                 {loading ? (
                     <Spinner size="lg" color="teal.500" thickness="3px" />
                 ) : (
+                    <>
+                    {isApproved && canApprove && (
+                        <Button
+                            variant="outline"
+                            colorScheme="red"
+                            size="md"
+                            onClick={handleWithdraw}
+                        >
+                            Withdraw Approval
+                        </Button>
+                    )}
                     <Tooltip
                         label={
                             !currentUserId
                                 ? "Please select a user to approve this indicator"
                                 : isApproved
                                     ? "This indicator has already been approved"
-                                    : "Click to approve this indicator"
+                                    : !canApprove
+                                        ? "Your account does not have the Approver flag — an administrator can grant it under Settings → Members"
+                                        : "Click to approve this indicator"
                         }
                         placement="top"
                         hasArrow
@@ -260,15 +328,16 @@ function ApprovalMasterContainer({
                             colorScheme={isApproved ? "green" : "teal"}
                             size="md"
                             onClick={handleApprove}
-                            isDisabled={isApproved || !currentUserId}
+                            isDisabled={isApproved || !currentUserId || !canApprove}
                             boxShadow="sm"
-                            _hover={!isApproved && currentUserId ? { boxShadow: "md" } : {}}
+                            _hover={!isApproved && currentUserId && canApprove ? { boxShadow: "md" } : {}}
                             transition="box-shadow 0.2s"
                             leftIcon={isApproved ? <Text>✓</Text> : null}
                         >
                             {isApproved ? "Approved" : "Approve Indicator"}
                         </Button>
                     </Tooltip>
+                    </>
                 )}
             </HStack>
         </Box>

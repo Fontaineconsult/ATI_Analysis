@@ -166,6 +166,13 @@ function PlainTextReport({ evidenceItem, indicatorItem }) {
                 if (etype.evidenceType?.properties?.retired) {
                     report += ' (RETIRED)';
                 }
+                if (((etype.docs || []).filter((d) => d && d.document).length
+                    + (etype.webs || []).filter((w) => w && w.webpage).length) === 0) {
+                    report += ' (UNDOCUMENTED)';
+                }
+                if (etype.control === 'external') {
+                    report += ' (EXTERNAL — relied on, not directly controlled)';
+                }
                 report += '\n';
 
                 if (etype.evidenceType?.properties?.description) {

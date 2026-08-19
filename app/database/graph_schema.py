@@ -12,7 +12,8 @@ import os
 
 from app.data_config import (trajectory_choices, asset_classes, asset_scopes, taap_outcomes,
                              functions, component_kinds, coverage_domains, audiences, interface_provenances,
-                             descriptor_kinds, query_categories, query_statuses)
+                             descriptor_kinds, query_categories, query_statuses, evidence_control_choices,
+                             recommendation_statuses, concern_statuses)
 
 # Configuration enters through the single gateway (app/config_gateway.py). Importing
 # it hydrates os.environ from web.config (production) / .env.<FLASK_ENV> (development),
@@ -204,12 +205,80 @@ and institutional mandates.
 
 Relationships:
 
-- Governance informs Indicators
+- Governance informs Goals            (broad, non-committal — see `informs` below)
+- Governance drives SuccessIndicators (exact, requirement-level — see `drives` below)
 - Governance is documented by Documents, Webpages, Notes, and Messages
 
 
+TWO EDGES, TWO STRENGTHS OF CLAIM
+---------------------------------
+An instrument's bearing on the indicator framework is asserted at one of two
+strengths, and the strength lives in the EDGE TYPE rather than in a property or
+in the grain alone.
+
+  (Governance)-[:informs]->(Goal)
+      Broad and non-committal: this instrument is part of the authority
+      landscape behind the goal. ADA Title II informs many goals without any one
+      of them being *about* ADA Title II. Low bar — a `description` summary can
+      support it. Many instruments may inform one goal.
+
+  (Governance)-[:drives]->(SuccessIndicator)
+      Exact: this instrument states the requirement the indicator measures.
+      High bar, sparse by construction — most instruments drive nothing. Because
+      the claim is one of exactness it cannot be made from a summary: authoring a
+      `drives` edge means reading the instrument's `raw_text` and quoting the
+      operative provision onto the edge (see DrivesRel). An unqualified `drives`
+      edge decays into `informs` with extra steps, which is the failure this
+      distinction exists to prevent.
+
+Grain follows from strength, not the other way round: `informs` lands on the Goal
+because a goal is the unit a broad mandate underwrites, and `drives` lands on the
+SuccessIndicator because the indicator is the unit that carries a requirement, a
+maturity status, and evidence.
+
+Goal -[:supported_by]-> SuccessIndicator is a strict tree (every SI hangs off
+exactly one Goal), so the two layers compose without ambiguity: an indicator's
+authorities are its own `drives` edges plus its goal's `informs` edges. That
+union is DERIVED in the read layer — a `drives` edge is deliberately not
+materialized as an `informs` edge on the parent goal, which would put two
+sources of truth on one claim.
+
+Both edges are heterogeneous on the source side (six governance labels), so
+the reverse direction is read via Cypher rather than a typed neomodel manager —
+the same treatment Principle.derives_from gets.
+
+The descending cascade of specificity across the whole model:
+
+    Governance -[:informs]-> Goal                      the authority landscape
+    Governance -[:drives]--> SuccessIndicator          the stated requirement
+    SuccessIndicator -[:directs]-> Plan/Process/...    the work that answers it
+
 """
 
+
+class DrivesRel(StructuredRel):
+    """Governance → SuccessIndicator, qualifying WHERE in the instrument the
+    indicator's requirement is stated.
+
+    `drives` claims the instrument speaks exactly to the requirement. Without a
+    citation that claim is unfalsifiable, so the qualifying properties are the
+    point of the edge rather than decoration on it:
+
+      provision : the specific locus within the instrument — a section, criterion,
+                  or paragraph ("E202.7.2", "WCAG 2.1 SC 1.2.4", "§7405(d)(1)",
+                  "AA-2015-22 ¶3"). Optional only because a minority of instruments
+                  carry no internal numbering; prefer a quote when it is absent.
+      quote     : the operative sentence(s), verbatim from the instrument's
+                  `raw_text`. Grounds the claim in what the instrument ACTUALLY
+                  says — the same reason raw_text exists on every governance type.
+      note      : why this provision maps to this indicator's requirement, when
+                  the mapping is not self-evident from the quote alone.
+      added_date: when the assertion was made.
+    """
+    provision = StringProperty()
+    quote = StringProperty()
+    note = StringProperty()
+    added_date = DateProperty()
 
 
 class Law(StructuredNode):
@@ -243,7 +312,10 @@ class Law(StructuredNode):
     raw_text = StringProperty()
     raw_text_captured = DateProperty()
 
-    informed_goals = RelationshipTo("Goal", "informs")
+    # The two strengths of claim — see the Governance section docstring above.
+    informed_goals = RelationshipTo("Goal", "informs")                                            # broad
+    driven_success_indicators = RelationshipTo("SuccessIndicator", "drives", model=DrivesRel)     # exact
+
     source_documents = RelationshipTo("Document", "is_sourced_from")
     source_webpages = RelationshipTo("Webpage", "is_sourced_from")
     supporting_notes = RelationshipTo("Note", "is_documented_by")
@@ -276,7 +348,10 @@ class Case(StructuredNode):
     raw_text = StringProperty()
     raw_text_captured = DateProperty()
 
-    informed_goals = RelationshipTo("Goal", "informs")
+    # The two strengths of claim — see the Governance section docstring above.
+    informed_goals = RelationshipTo("Goal", "informs")                                            # broad
+    driven_success_indicators = RelationshipTo("SuccessIndicator", "drives", model=DrivesRel)     # exact
+
     source_documents = RelationshipTo("Document", "is_sourced_from")
     source_webpages = RelationshipTo("Webpage", "is_sourced_from")
     supporting_notes = RelationshipTo("Note", "is_documented_by")
@@ -305,7 +380,10 @@ class Directive(StructuredNode):
     raw_text = StringProperty()
     raw_text_captured = DateProperty()
 
-    informed_goals = RelationshipTo("Goal", "informs")
+    # The two strengths of claim — see the Governance section docstring above.
+    informed_goals = RelationshipTo("Goal", "informs")                                            # broad
+    driven_success_indicators = RelationshipTo("SuccessIndicator", "drives", model=DrivesRel)     # exact
+
     source_documents = RelationshipTo("Document", "is_sourced_from")
     source_webpages = RelationshipTo("Webpage", "is_sourced_from")
     supporting_notes = RelationshipTo("Note", "is_documented_by")
@@ -336,7 +414,10 @@ class ExternalPolicy(StructuredNode):
     raw_text = StringProperty()
     raw_text_captured = DateProperty()
 
-    informed_goals = RelationshipTo("Goal", "informs")
+    # The two strengths of claim — see the Governance section docstring above.
+    informed_goals = RelationshipTo("Goal", "informs")                                            # broad
+    driven_success_indicators = RelationshipTo("SuccessIndicator", "drives", model=DrivesRel)     # exact
+
     source_documents = RelationshipTo("Document", "is_sourced_from")
     source_webpages = RelationshipTo("Webpage", "is_sourced_from")
     supporting_notes = RelationshipTo("Note", "is_documented_by")
@@ -365,7 +446,10 @@ class Memo(StructuredNode):
     raw_text = StringProperty()
     raw_text_captured = DateProperty()
 
-    informed_goals = RelationshipTo("Goal", "informs")
+    # The two strengths of claim — see the Governance section docstring above.
+    informed_goals = RelationshipTo("Goal", "informs")                                            # broad
+    driven_success_indicators = RelationshipTo("SuccessIndicator", "drives", model=DrivesRel)     # exact
+
     source_documents = RelationshipTo("Document", "is_sourced_from")
     source_webpages = RelationshipTo("Webpage", "is_sourced_from")
     supporting_notes = RelationshipTo("Note", "is_documented_by")
@@ -396,7 +480,10 @@ class Guideline(StructuredNode):
     raw_text = StringProperty()
     raw_text_captured = DateProperty()
 
-    informed_goals = RelationshipTo("Goal", "informs")
+    # The two strengths of claim — see the Governance section docstring above.
+    informed_goals = RelationshipTo("Goal", "informs")                                            # broad
+    driven_success_indicators = RelationshipTo("SuccessIndicator", "drives", model=DrivesRel)     # exact
+
     source_documents = RelationshipTo("Document", "is_sourced_from")
     source_webpages = RelationshipTo("Webpage", "is_sourced_from")
     supporting_notes = RelationshipTo("Note", "is_documented_by")
@@ -559,15 +646,25 @@ class DocumentedByRel(StructuredRel):
 
 class IsEvidenceForRel(StructuredRel):
     """Implementation → YearSuccessEvidence evidence link, qualified by how
-    strongly the work addresses the indicator's requirements.
+    strongly the work addresses the indicator's requirements and by who
+    controls the practice relative to this evidence's owners.
 
     strength (0-3; absent/None = unrated — vocab in data_config.evidence_strength_levels):
       0  No Contribution — does not address any requirement of the indicator.
       1  Indirect Support — helps the indicator without directly addressing its requirements.
       2  Partial — directly addresses some, but not all, requirements.
       3  Full — directly and completely addresses the requirements.
+
+    control ('internal' | 'external'; absent/None = unspecified — vocab in
+    data_config.evidence_control_choices). RELATIVE to this link's YSE: the
+    same implementation can be internal evidence for the procurement group's
+    indicator and external for the Library's. External = the evidence owners
+    rely on a practice they don't directly control (another unit, SFBRN, the
+    CO, a vendor) — the formal statement that a duty is discharged elsewhere;
+    maturity reviews grade the owners' interface to it, not the practice.
     """
     strength = IntegerProperty()
+    control = StringProperty(choices=evidence_control_choices)
 
 
 
@@ -758,6 +855,19 @@ class Plan(StructuredNode):
     abandoned = BooleanProperty(default=False)
     abandoned_notes = StringProperty()
     completion_notes = StringProperty()
+
+    # When the plan actually closed. Distinct from `completed_year`, which is the
+    # AcademicYear edge year-scoped views filter on — this is the specific day, the
+    # same way `retired_date` sits alongside the `retired` flag on the implementation
+    # types.
+    #
+    # Stamped by queries/implementation/update.py when plan_status transitions TO
+    # "Completed", and cleared when it leaves — the date must never outlive the state
+    # it dates. An explicitly supplied completed_date wins, because this record is
+    # kept retrospectively: a plan finished in March is often only entered in August,
+    # and stamping "today" would be a lie the graph then treats as fact.
+    completed_date = DateProperty()
+
     plan_status = StringProperty()
     progress_updates = RelationshipTo("Note", "progress_documented_by")
     abandoned_year = RelationshipTo("AcademicYear", "abandoned_in_year")
@@ -782,6 +892,7 @@ class Plan(StructuredNode):
             'abandoned': self.abandoned,
             'abandoned_notes': self.abandoned_notes,
             'completion_notes': self.completion_notes,
+            'completed_date': str(self.completed_date) if self.completed_date else None,
             'plan_status': self.plan_status,
             'asana_task_gid': self.asana_task_gid,
             "unique_id": self.unique_id
@@ -1004,6 +1115,7 @@ class Process(StructuredNode):
     includes_procedures = RelationshipTo("Procedure", "includes_procedure")
     remediates_interface = RelationshipTo("Interface", "remediates_interface")
     accountable_working_group = RelationshipTo("ATIWorkingGroup", "accountable_working_group")  # committee accountable for this work (distinct from owned_by Person)
+    accountable_community = RelationshipTo("CommunityOfPractice", "accountable_community")  # community of practice accountable for this work — the operating community that answers for it (preferred over the committee edge)
     classified_under = RelationshipTo("Dimension", "classified_under")  # cross-cutting AMM dimension(s) of the work
     participants = RelationshipFrom("Person", "worked_on", model=ParticipationRel)  # the working team (people in their roles); distinct from owned_by
 
@@ -1056,6 +1168,7 @@ class Project(StructuredNode):
     includes_procedures = RelationshipTo("Procedure", "includes_procedure")
     remediates_interface = RelationshipTo("Interface", "remediates_interface")
     accountable_working_group = RelationshipTo("ATIWorkingGroup", "accountable_working_group")  # committee accountable for this work (distinct from owned_by Person)
+    accountable_community = RelationshipTo("CommunityOfPractice", "accountable_community")  # community of practice accountable for this work — the operating community that answers for it (preferred over the committee edge)
     classified_under = RelationshipTo("Dimension", "classified_under")  # cross-cutting AMM dimension(s) of the work
     participants = RelationshipFrom("Person", "worked_on", model=ParticipationRel)  # the working team (people in their roles); distinct from owned_by
     start_date = DateProperty()
@@ -1107,6 +1220,7 @@ class Procedure(StructuredNode):
     owned_by = RelationshipTo("Person", "owned_by")
     remediates_interface = RelationshipTo("Interface", "remediates_interface")
     accountable_working_group = RelationshipTo("ATIWorkingGroup", "accountable_working_group")  # committee accountable for this work (distinct from owned_by Person)
+    accountable_community = RelationshipTo("CommunityOfPractice", "accountable_community")  # community of practice accountable for this work — the operating community that answers for it (preferred over the committee edge)
     classified_under = RelationshipTo("Dimension", "classified_under")  # cross-cutting AMM dimension(s) of the work
     participants = RelationshipFrom("Person", "worked_on", model=ParticipationRel)  # the working team (people in their roles); distinct from owned_by
 
@@ -1156,6 +1270,7 @@ class Service(StructuredNode):
     includes_procedures = RelationshipTo("Procedure", "includes_procedure")
     remediates_interface = RelationshipTo("Interface", "remediates_interface")
     accountable_working_group = RelationshipTo("ATIWorkingGroup", "accountable_working_group")  # committee accountable for this work (distinct from owned_by Person)
+    accountable_community = RelationshipTo("CommunityOfPractice", "accountable_community")  # community of practice accountable for this work — the operating community that answers for it (preferred over the committee edge)
     classified_under = RelationshipTo("Dimension", "classified_under")  # cross-cutting AMM dimension(s) of the work
     participants = RelationshipFrom("Person", "worked_on", model=ParticipationRel)  # the working team (people in their roles); distinct from owned_by
 
@@ -1406,6 +1521,101 @@ class DocumentationEvidenceRequirement(StructuredNode):
     requirement_description = StringProperty(unique_index=True)
 
 
+class Recommendation(StructuredNode):
+    """An improvement identified at the end of a review cycle for one YSE —
+    the durable home for "what we think needs to change" (the maturity
+    review's blocking gaps, an approver's conditions, a reviewer's asks).
+
+    Lifecycle (vocab in data_config.recommendation_statuses):
+    open → addressed | dismissed, with `resolution` recording how/why and
+    `date_resolved` stamping the transition. Recommendations are RECORDS —
+    they resolve, they are not deleted.
+
+    Rollover policy is deliberately open: the natural rule is that OPEN
+    recommendations carry forward to the next year's YSE (they are guidance
+    for the next cycle) while resolved ones stay with the reviewed year —
+    to be wired into create_new_ay_campus at the next rollover decision.
+    """
+    unique_id = UniqueIdProperty()
+
+    recommendation = StringProperty(required=True)  # short imperative statement
+    detail = StringProperty()                        # context; what closing it looks like
+    status = StringProperty(choices=recommendation_statuses, default="open")
+    resolution = StringProperty()                    # how addressed / why dismissed
+    date_created = DateProperty()
+    date_resolved = DateProperty()
+
+    created_by = RelationshipTo("Person", "created_by")
+
+    def serialize(self):
+        return {
+            "unique_id": self.unique_id,
+            "recommendation": self.recommendation,
+            "detail": self.detail,
+            "status": self.status,
+            "resolution": self.resolution,
+            "date_created": str(self.date_created) if self.date_created else None,
+            "date_resolved": str(self.date_resolved) if self.date_resolved else None,
+        }
+
+
+class Concern(StructuredNode):
+    """An issue raised against one YSE for which no path to resolution has been
+    defined yet — the holding pen between "someone said this is a problem" and
+    "here is what we are doing about it".
+
+    A Concern is deliberately an unstable state. It exists to LEAVE, in one of
+    three ways (vocab in data_config.concern_statuses):
+
+      open → converted   the concern became a Recommendation (something should
+                         change) or a Plan (someone will do something). The
+                         `became_recommendation` / `became_plan` edge records
+                         which, so the provenance of a plan is queryable.
+      open → dismissed   deliberately not pursued, with `resolution` saying why.
+
+    The distinction from its neighbours is the resolution path, not the subject:
+
+      Concern         an issue with NO defined path — this node.
+      Recommendation  a stated improvement — the path is "make this change".
+      Plan            committed work — the path is "this person does this".
+      Query           an open DECISION with a decider; a concern has no owner
+                      of the answer yet, a query does.
+      Note            an observation that does not assert a problem at all.
+
+    Concerns are records: there is no delete path, and a converted concern
+    keeps its edge to whatever it became. A long-open concern is itself a
+    signal — it says an issue has been sitting without anyone defining what
+    would resolve it.
+    """
+    unique_id = UniqueIdProperty()
+
+    concern = StringProperty(required=True)      # the issue as raised, one sentence
+    detail = StringProperty()                    # context; why it matters, who raised it
+    status = StringProperty(choices=concern_statuses, default="open")
+    resolution = StringProperty()                # why dismissed, or what it became
+    date_raised = DateProperty()
+    date_resolved = DateProperty()               # stamped on convert or dismiss
+
+    raised_by = RelationshipTo("Person", "raised_by")
+
+    # Conversion targets — set when status moves to 'converted'. Both are
+    # RelationshipTo so a concern that spawned both a recommendation and a plan
+    # is representable; in practice one is the norm.
+    became_recommendation = RelationshipTo("Recommendation", "became_recommendation")
+    became_plan = RelationshipTo("Plan", "became_plan")
+
+    def serialize(self):
+        return {
+            "unique_id": self.unique_id,
+            "concern": self.concern,
+            "detail": self.detail,
+            "status": self.status,
+            "resolution": self.resolution,
+            "date_raised": str(self.date_raised) if self.date_raised else None,
+            "date_resolved": str(self.date_resolved) if self.date_resolved else None,
+        }
+
+
 class YearSuccessEvidence(StructuredNode):
 
     """    Class representing a year success evidence node.
@@ -1437,7 +1647,6 @@ class YearSuccessEvidence(StructuredNode):
     administrative_review_complete = BooleanProperty(default=False)
     administrative_review_completed_date = DateProperty()
     administrative_review_completed_by = RelationshipTo("Person", "admin_review_completed_by")
-    assigned_reviewers = RelationshipTo("Person", "can_be_reviewed_by")
     admin_review_description = StringProperty()
     admin_reviewer_note = RelationshipTo("Note", "admin_review_note")
     ready_for_admin_review = BooleanProperty(default=False)
@@ -1446,6 +1655,11 @@ class YearSuccessEvidence(StructuredNode):
     notes = RelationshipTo("Note", "has_note")
     messages = RelationshipTo("Message", "has_message")
     metrics = RelationshipTo("Metric", "has_metric")
+    # End-of-review-cycle improvement tracking (see Recommendation docstring).
+    recommendations = RelationshipTo("Recommendation", "has_recommendation")
+    # Issues raised with no resolution path yet defined (see Concern docstring).
+    # Concerns are expected to convert into a Recommendation or a Plan.
+    concerns = RelationshipTo("Concern", "has_concern")
     worked_on_in_current_year = BooleanProperty(default=False)
     will_work_on_next_year = BooleanProperty(default=False)
 
@@ -1949,8 +2163,12 @@ class Document(StructuredNode):
     raw_text = StringProperty()
     raw_text_captured = DateProperty()
 
-    is_administrative_review_documentation = StringProperty()
-    is_milestone_and_measures_documentation = StringProperty()
+    # Booleans (were StringProperty, which stored the FE switch's booleans as
+    # 'True'/'False' strings — and 'False' is truthy in JS, so the form showed
+    # phantom ON switches). Migrated 2026-08-11 via
+    # batch/migrate_document_flag_booleans.cypher (idempotent).
+    is_administrative_review_documentation = BooleanProperty(default=False)
+    is_milestone_and_measures_documentation = BooleanProperty(default=False)
     depreciated = BooleanProperty()
     depreciated_date = DateProperty()
     include_in_report = BooleanProperty(default=True)

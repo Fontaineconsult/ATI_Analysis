@@ -221,3 +221,86 @@ def get_taaps_due_for_review(on_or_before) -> list:
         t.serialize()
         for t in TAAP.nodes.filter(active=True, review_due__lte=cutoff).order_by("review_due")
     ]
+
+
+def get_stewarded_ict_for_yse(year_identifier: str) -> dict:
+    """
+    The ICT footprint BEHIND one YSE's internally-controlled evidence, derived —
+    not stored: internal is_evidence_for links (control unset counts as
+    internal) → the implementations' owners/participants → the Department/
+    College units employing them → every Asset whose §508 stewardship edges
+    (procured_by / developed_by / maintained_by / used_by) land on those units
+    or people. Answers "what ICT does the responsible unit answer for?" even
+    when no remediates/uses_tool wiring exists yet.
+
+    :return: {people: [names], units: [{name, type}], assets: [
+              {asset_identifier, title, scope, stewards: [
+                {name, holder_type, capacities: [...]}]}]}
+    """
+    try:
+        YearSuccessEvidence.nodes.get(year_identifier=year_identifier)
+    except YearSuccessEvidence.DoesNotExist:
+        raise NotFoundError(f"No YearSuccessEvidence found with year_identifier: {year_identifier}")
+
+    basis_rows, _ = db.cypher_query(
+        """
+        MATCH (impl)-[r:is_evidence_for]->(e:YearSuccessEvidence {year_identifier: $yid})
+        WHERE coalesce(r.control, 'internal') = 'internal'
+        OPTIONAL MATCH (impl)-[:owned_by]->(o:Person)
+        OPTIONAL MATCH (impl)<-[:worked_on]-(p:Person)
+        WITH collect(DISTINCT o) + collect(DISTINCT p) AS raw
+        UNWIND raw AS person
+        WITH DISTINCT person WHERE person IS NOT NULL
+        OPTIONAL MATCH (u)-[:employs]->(person) WHERE u:Department OR u:College
+        RETURN person.name,
+               [x IN collect(DISTINCT u) WHERE x IS NOT NULL |
+                  {name: x.name, type: CASE WHEN x:College THEN 'College' ELSE 'Department' END}]
+        """,
+        {"yid": year_identifier},
+    )
+    people = [r[0] for r in basis_rows]
+    units, seen_units = [], set()
+    for _, unit_list in basis_rows:
+        for u in unit_list:
+            if u["name"] not in seen_units:
+                seen_units.add(u["name"])
+                units.append(u)
+
+    steward_rows, _ = db.cypher_query(
+        """
+        MATCH (impl)-[r:is_evidence_for]->(e:YearSuccessEvidence {year_identifier: $yid})
+        WHERE coalesce(r.control, 'internal') = 'internal'
+        OPTIONAL MATCH (impl)-[:owned_by]->(o:Person)
+        OPTIONAL MATCH (impl)<-[:worked_on]-(p:Person)
+        WITH collect(DISTINCT o) + collect(DISTINCT p) AS raw
+        UNWIND raw AS person
+        WITH [x IN collect(DISTINCT person) WHERE x IS NOT NULL] AS people
+        OPTIONAL MATCH (u)-[:employs]->(pp) WHERE pp IN people AND (u:Department OR u:College)
+        WITH people, [x IN collect(DISTINCT u) WHERE x IS NOT NULL] AS units
+        MATCH (a:Asset)-[st]->(h)
+        WHERE type(st) IN ['procured_by', 'developed_by', 'maintained_by', 'used_by']
+          AND (h IN units OR h IN people)
+        RETURN a.asset_identifier, a.title, a.scope, type(st), h.name,
+               CASE WHEN h:Person THEN 'Person'
+                    WHEN h:College THEN 'College' ELSE 'Department' END
+        ORDER BY toLower(a.title)
+        """,
+        {"yid": year_identifier},
+    )
+
+    assets, index = [], {}
+    for asset_id, title, scope, capacity, holder, holder_type in steward_rows:
+        entry = index.get(asset_id)
+        if entry is None:
+            entry = {"asset_identifier": asset_id, "title": title, "scope": scope, "stewards": []}
+            index[asset_id] = entry
+            assets.append(entry)
+        steward = next((s for s in entry["stewards"] if s["name"] == holder), None)
+        if steward is None:
+            steward = {"name": holder, "holder_type": holder_type, "capacities": []}
+            entry["stewards"].append(steward)
+        capacity_name = capacity.replace("_by", "")
+        if capacity_name not in steward["capacities"]:
+            steward["capacities"].append(capacity_name)
+
+    return {"people": people, "units": units, "assets": assets}

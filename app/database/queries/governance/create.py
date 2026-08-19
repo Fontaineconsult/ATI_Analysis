@@ -14,13 +14,22 @@ _DATE_FIELDS = {"effective_date", "last_updated", "authored_date"}
 
 
 def _coerce_date(value):
-    """Accept date, datetime, or ISO-date string; return a date."""
+    """Accept date, datetime, or ISO-date string; return a date.
+
+    Every failure path raises ValidationError so callers map to 400. A malformed
+    string used to escape as the bare ValueError from date.fromisoformat, which the
+    query layer's blanket handler turned into a CrudError — reporting a client typo
+    as a 500 the UI could not explain.
+    """
     if isinstance(value, date) and not isinstance(value, datetime):
         return value
     if isinstance(value, datetime):
         return value.date()
     if isinstance(value, str):
-        return date.fromisoformat(value)
+        try:
+            return date.fromisoformat(value)
+        except ValueError:
+            raise ValidationError(f"Expected an ISO date (YYYY-MM-DD), got '{value}'.")
     raise ValidationError(f"Expected ISO date string, got {type(value).__name__}.")
 
 # Fields each governance type accepts beyond title/description. Any extra keys

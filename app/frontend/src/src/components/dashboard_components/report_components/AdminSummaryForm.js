@@ -107,7 +107,7 @@ function AdminSummaryForm({ yearIdentifier, currentValue, onUpdate }) {
 
             {!isEditing ? (
                 <VStack align="stretch" spacing={3}>
-                    <Text fontSize="sm" color={hasValue ? "gray.700" : "gray.500"}>
+                    <Text fontSize="sm" color={hasValue ? "gray.700" : "gray.500"} whiteSpace="pre-wrap">
                         {hasValue ? currentValue : "Provide a summary before review"}
                     </Text>
                     <Button

@@ -3,7 +3,7 @@
 #
 from datetime import date
 
-from app.database.graph_schema import Document, Webpage
+from app.database.graph_schema import Document, Goal, SuccessIndicator, Webpage
 from app.database.queries.governance.create import _DATE_FIELDS, _coerce_date
 from app.database.queries.governance.read import GOVERNANCE_TYPE_TO_CLASS
 from app.endpoints.data_api.errors.custom_exceptions import CrudError, NotFoundError, ValidationError
@@ -139,3 +139,137 @@ def detach_webpage_from_governance(governance_type: str, governance_unique_id: s
         return node
     except Exception as e:
         raise CrudError(f"Failed to detach webpage: {e}")
+
+
+#
+# GOVERNANCE -> INDICATOR FRAMEWORK
+#
+# Two edges, two strengths of claim (see the Governance section docstring in
+# graph_schema.py):
+#   informs -> Goal              broad, non-committal, property-free
+#   drives  -> SuccessIndicator  exact, carrying the citation that makes it checkable
+#
+
+
+def attach_goal_to_governance(governance_type: str, governance_unique_id: str, goal_unique_id: str):
+    """Connect a Goal to a governance node as part of its authority landscape (informs).
+
+    Property-free and idempotent: `informs` asserts only that the instrument bears
+    on the goal, so there is nothing to qualify and re-attaching is a no-op.
+    """
+    if not goal_unique_id:
+        raise ValidationError("goal_unique_id is required.")
+    node = _resolve_governance_node(governance_type, governance_unique_id)
+    goal = Goal.nodes.get_or_none(unique_id=goal_unique_id)
+    if goal is None:
+        raise NotFoundError(f"Goal with unique_id '{goal_unique_id}' not found.")
+    try:
+        if not node.informed_goals.is_connected(goal):
+            node.informed_goals.connect(goal)
+        return node
+    except Exception as e:
+        raise CrudError(f"Failed to attach goal: {e}")
+
+
+def detach_goal_from_governance(governance_type: str, governance_unique_id: str, goal_unique_id: str):
+    """Disconnect a Goal from a governance node (drop the informs edge)."""
+    if not goal_unique_id:
+        raise ValidationError("goal_unique_id is required.")
+    node = _resolve_governance_node(governance_type, governance_unique_id)
+    goal = Goal.nodes.get_or_none(unique_id=goal_unique_id)
+    if goal is None:
+        raise NotFoundError(f"Goal with unique_id '{goal_unique_id}' not found.")
+    try:
+        node.informed_goals.disconnect(goal)
+        return node
+    except Exception as e:
+        raise CrudError(f"Failed to detach goal: {e}")
+
+
+def _apply_drives_qualifiers(rel, data: dict, *, creating: bool):
+    """Write DrivesRel's qualifying properties from a request payload.
+
+    Present-but-empty clears; absent leaves alone. That distinction matters because
+    the citation is the substance of a `drives` edge — a typo in a `provision` has
+    to be removable, but an edit that only touches `note` must not silently wipe
+    the `quote`.
+    """
+    for field in ("provision", "quote", "note"):
+        if field in data:
+            value = data.get(field)
+            setattr(rel, field, value.strip() if isinstance(value, str) and value.strip() else None)
+    if creating:
+        rel.added_date = date.today()
+
+
+def attach_indicator_to_governance(governance_type: str, governance_unique_id: str,
+                                   indicator_unique_id: str, data: dict = None):
+    """Connect a SuccessIndicator to a governance node as a driven requirement (drives).
+
+    Idempotent by design: re-attaching an already-driven indicator updates the
+    qualifiers in place rather than creating a second parallel edge. neomodel's
+    `.connect()` does not MERGE, so without the is_connected guard the same
+    assertion could be recorded twice with conflicting citations.
+    """
+    if not indicator_unique_id:
+        raise ValidationError("indicator_unique_id is required.")
+    node = _resolve_governance_node(governance_type, governance_unique_id)
+    indicator = SuccessIndicator.nodes.get_or_none(unique_id=indicator_unique_id)
+    if indicator is None:
+        raise NotFoundError(f"SuccessIndicator with unique_id '{indicator_unique_id}' not found.")
+
+    data = data or {}
+    try:
+        if node.driven_success_indicators.is_connected(indicator):
+            rel = node.driven_success_indicators.relationship(indicator)
+            _apply_drives_qualifiers(rel, data, creating=False)
+            rel.save()
+        else:
+            rel = node.driven_success_indicators.connect(indicator)
+            _apply_drives_qualifiers(rel, data, creating=True)
+            rel.save()
+        return node
+    except Exception as e:
+        raise CrudError(f"Failed to attach success indicator: {e}")
+
+
+def update_governance_drives_indicator(governance_type: str, governance_unique_id: str,
+                                       indicator_unique_id: str, data: dict = None):
+    """Edit the citation on an existing drives edge without re-creating it.
+
+    Distinct from attach so that editing a citation on an edge that has silently
+    gone missing fails loudly instead of quietly re-asserting the claim.
+    """
+    if not indicator_unique_id:
+        raise ValidationError("indicator_unique_id is required.")
+    node = _resolve_governance_node(governance_type, governance_unique_id)
+    indicator = SuccessIndicator.nodes.get_or_none(unique_id=indicator_unique_id)
+    if indicator is None:
+        raise NotFoundError(f"SuccessIndicator with unique_id '{indicator_unique_id}' not found.")
+
+    rel = node.driven_success_indicators.relationship(indicator)
+    if rel is None:
+        raise NotFoundError(
+            f"{governance_type} '{governance_unique_id}' does not drive indicator '{indicator_unique_id}'."
+        )
+    try:
+        _apply_drives_qualifiers(rel, data or {}, creating=False)
+        rel.save()
+        return node
+    except Exception as e:
+        raise CrudError(f"Failed to update drives citation: {e}")
+
+
+def detach_indicator_from_governance(governance_type: str, governance_unique_id: str, indicator_unique_id: str):
+    """Disconnect a SuccessIndicator from a governance node (drop the drives edge)."""
+    if not indicator_unique_id:
+        raise ValidationError("indicator_unique_id is required.")
+    node = _resolve_governance_node(governance_type, governance_unique_id)
+    indicator = SuccessIndicator.nodes.get_or_none(unique_id=indicator_unique_id)
+    if indicator is None:
+        raise NotFoundError(f"SuccessIndicator with unique_id '{indicator_unique_id}' not found.")
+    try:
+        node.driven_success_indicators.disconnect(indicator)
+        return node
+    except Exception as e:
+        raise CrudError(f"Failed to detach success indicator: {e}")

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useContext, useEffect, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import {
     Box,
@@ -18,6 +18,7 @@ import {
     Icon,
     Tooltip,
     IconButton,
+    VisuallyHidden,
     useToast,
 } from '@chakra-ui/react';
 import { TrendingUp, TrendingDown, Minus, HelpCircle, Copy } from 'lucide-react';
@@ -27,6 +28,9 @@ import { getIndicatorSummary } from '../../graph_components/indicators/indicator
 import ViewReportButton from '../../functional_components/ViewReportButton';
 import { findTrendForIndicator } from './reportMetrics';
 import { CODE_TO_SLUG, WORKING_GROUP_LIST, getWorkingGroupIdentity } from '../../../styles/workingGroupIdentity';
+import { DataContext } from '../../../context/DataContext';
+import { setReadyForReview } from '../../../services/api/put';
+import { reviewWashClass } from '../../../styles/reviewWash';
 
 /*
  * The "ATI Success Indicators Report" tables — the per-working-group goal tables that make
@@ -44,9 +48,66 @@ import { CODE_TO_SLUG, WORKING_GROUP_LIST, getWorkingGroupIdentity } from '../..
 const SuccessIndicatorReportTables = ({ data, campus, navigate, openApprovalModal }) => {
     const location = useLocation();
     const toast = useToast();
+    const { loadSingleWorkingGroupData } = useContext(DataContext);
 
     // Ref to store table row elements for hash-based deep linking.
     const rowRefs = useRef({});
+
+    // Composite key of the row whose ready-toggle is in flight (spinner target).
+    const [readyBusyKey, setReadyBusyKey] = useState(null);
+
+    // Arrow-key navigation inside a goal table, delegated from the Tbody.
+    // Rows are focusable (tabIndex=-1) so heading/hash navigation can land real
+    // DOM focus on them; from there Up/Down move row-to-row, Home/End jump to
+    // the table's ends, and Left/Right walk the row's action buttons. Tab needs
+    // no handling: from a focused row it naturally enters that row's buttons.
+    const handleRowNavigation = (e) => {
+        if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
+        const keys = ['ArrowDown', 'ArrowUp', 'Home', 'End', 'ArrowLeft', 'ArrowRight'];
+        if (!keys.includes(e.key)) return;
+        const rowEl = e.target.closest('tr[id]');
+        if (!rowEl) return;
+        const rows = Array.from(rowEl.parentElement.querySelectorAll(':scope > tr[id]'));
+        const rowIndex = rows.indexOf(rowEl);
+
+        if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+            const next = rows[rowIndex + (e.key === 'ArrowDown' ? 1 : -1)];
+            if (next) { e.preventDefault(); next.focus(); }
+        } else if (e.key === 'Home' || e.key === 'End') {
+            e.preventDefault();
+            rows[e.key === 'Home' ? 0 : rows.length - 1].focus();
+        } else {
+            // Left/Right: [row, ...its enabled buttons] as a horizontal strip.
+            const strip = [rowEl, ...Array.from(rowEl.querySelectorAll('button')).filter((b) => !b.disabled)];
+            const here = strip.indexOf(e.target.closest('button') || rowEl);
+            const next = strip[here + (e.key === 'ArrowRight' ? 1 : -1)];
+            if (next) { e.preventDefault(); next.focus(); }
+        }
+    };
+
+    // Step one of the review workflow, inline from the table (step two — approve —
+    // opens the full review modal as before).
+    const handleReadyToggle = async (diag, workingGroupName) => {
+        setReadyBusyKey(diag.compositeKey);
+        try {
+            await setReadyForReview(diag.yearIdentifier, !diag.readyForReview);
+            toast({
+                title: diag.readyForReview ? 'Ready mark withdrawn' : 'Marked ready for review',
+                status: 'success', duration: 2000, isClosable: true, position: 'top-right',
+            });
+            // The evidence endpoint takes the WG slug, not the display name
+            // ('instructional-materials', not 'Instructional Materials').
+            await loadSingleWorkingGroupData(getWorkingGroupIdentity(workingGroupName).slug);
+        } catch (e) {
+            toast({
+                title: 'Failed to update review readiness',
+                description: e?.response?.data?.error || e?.message,
+                status: 'error', duration: 4000, isClosable: true, position: 'top-right',
+            });
+        } finally {
+            setReadyBusyKey(null);
+        }
+    };
 
     // Hash-based navigation: scroll to and briefly highlight the targeted indicator row.
     useEffect(() => {
@@ -56,6 +117,8 @@ const SuccessIndicatorReportTables = ({ data, campus, navigate, openApprovalModa
                 const targetRow = rowRefs.current[hash];
                 if (targetRow) {
                     targetRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    // Land real DOM focus on the row so Tab continues from here.
+                    targetRow.focus({ preventScroll: true });
                     targetRow.classList.add('highlight-row');
                     setTimeout(() => {
                         targetRow.classList.remove('highlight-row');
@@ -210,7 +273,9 @@ const SuccessIndicatorReportTables = ({ data, campus, navigate, openApprovalModa
         if (!goal.indicators || goal.indicators.length === 0) {
             return (
                 <Box key={goal.goal?.id} mb={6}>
-                    <Heading size="sm" color="teal.700" mb={2}>
+                    {/* as="h4" to match the populated branch — without it Chakra
+                        emits an h2 and corrupts the headings-list outline. */}
+                    <Heading as="h4" size="sm" color="teal.700" mb={2}>
                         Goal {goal.goal?.properties?.goal_number}: {goal.goal?.properties?.name}
                     </Heading>
                     <Text color="gray.600" fontSize="sm">No indicators available for this goal.</Text>
@@ -270,7 +335,7 @@ const SuccessIndicatorReportTables = ({ data, campus, navigate, openApprovalModa
                                     <Th width="20%" color="gray.600" fontWeight="semibold" fontSize="xs">Actions</Th>
                                 </Tr>
                             </Thead>
-                            <Tbody>
+                            <Tbody onKeyDown={handleRowNavigation}>
                                 {sortedIndicators.map((indicator) => {
                                     const compositeKey = indicator.indicator?.properties?.composite_key;
                                     const indicatorNumber = compositeKey?.split('-')[0]?.split('.')[1];
@@ -279,23 +344,27 @@ const SuccessIndicatorReportTables = ({ data, campus, navigate, openApprovalModa
                                     // Documentation/implementation diagnostics (same source as the SI list).
                                     const diag = getIndicatorSummary(indicator);
 
-                                    const adminReviewers = indicator.evidences?.[0]?.adminReviewers || [];
-                                    const hasReviewers = adminReviewers.length > 0;
-
                                     const evidenceSummary = indicator.evidences?.[0]?.evidence?.properties?.admin_review_description;
                                     const hasSummary = evidenceSummary &&
                                         evidenceSummary !== "No Review" &&
                                         evidenceSummary !== "None" &&
                                         evidenceSummary.trim() !== "";
 
-                                    const approveButtonText = hasReviewers ? 'Approved' : 'Approve';
-                                    const approveButtonColor = hasReviewers ? 'gray' : (hasSummary ? 'green' : 'yellow');
-                                    const isButtonDisabled = hasReviewers;
+                                    // Review state from the shared summary (adminReviewers OR the
+                                    // complete flag) — the same source as the SI list and washes.
+                                    const approveButtonText = diag.approved ? 'Approved' : 'Approve';
+                                    const approveButtonColor = diag.approved ? 'gray' : (hasSummary ? 'green' : 'yellow');
+                                    const isButtonDisabled = diag.approved;
 
                                     return (
                                         <Tr
                                             key={indicator.indicator?.id}
-                                            _hover={{ bg: "gray.50" }}
+                                            /* Review-state wash from the right edge (bgColor on
+                                               hover, not bg — the shorthand would erase it). */
+                                            className={reviewWashClass('right', diag)}
+                                            _hover={{ bgColor: "gray.50" }}
+                                            tabIndex={-1}
+                                            _focusVisible={{ outline: '2px solid', outlineColor: 'teal.500', outlineOffset: '-2px' }}
                                             ref={(el) => {
                                                 if (el && compositeKey) {
                                                     rowRefs.current[compositeKey] = el;
@@ -303,9 +372,32 @@ const SuccessIndicatorReportTables = ({ data, campus, navigate, openApprovalModa
                                             }}
                                             id={compositeKey}
                                         >
-                                            <Td fontWeight="medium" color="gray.700" fontSize="xs">{indicatorNumber}</Td>
+                                            {/* Row header + real h5 so every indicator row is reachable
+                                                from a screen reader's headings list (h2 page -> h3 WG ->
+                                                h4 goal -> h5 row). Rotor/row-header name is the composite
+                                                key; the visible cell stays the bare number. */}
+                                            <Td as="th" scope="row" fontWeight="medium" color="gray.700" fontSize="xs">
+                                                <Heading as="h5" fontSize="xs" fontWeight="medium" color="gray.700" lineHeight="inherit" m={0}>
+                                                    <VisuallyHidden>{compositeKey}</VisuallyHidden>
+                                                    <span aria-hidden="true">{indicatorNumber}</span>
+                                                </Heading>
+                                            </Td>
                                             <Td color="gray.700" fontSize="xs">
                                                 <Text fontSize="xs">{indicator.indicator?.properties?.success_indicator}</Text>
+                                                {diag.externalCount > 0 && (
+                                                    <Badge
+                                                        mt={1}
+                                                        mr={1}
+                                                        colorScheme="purple"
+                                                        variant="subtle"
+                                                        fontSize="2xs"
+                                                        borderRadius="full"
+                                                        px={2}
+                                                        title={`${diag.externalCount} evidence link${diag.externalCount === 1 ? '' : 's'} rel${diag.externalCount === 1 ? 'ies' : 'y'} on a practice the owners don't directly control (another unit, SFBRN, the CO, a vendor)`}
+                                                    >
+                                                        External ×{diag.externalCount}
+                                                    </Badge>
+                                                )}
                                                 {diag.allImplsRetired && (
                                                     <Badge
                                                         mt={1}
@@ -318,6 +410,20 @@ const SuccessIndicatorReportTables = ({ data, campus, navigate, openApprovalModa
                                                         title="Every implementation linked to this indicator is retired — no active work addresses it"
                                                     >
                                                         ⚠ Imps retired
+                                                    </Badge>
+                                                )}
+                                                {diag.undocumentedImplCount > 0 && (
+                                                    <Badge
+                                                        mt={1}
+                                                        mr={1}
+                                                        colorScheme="orange"
+                                                        variant="outline"
+                                                        fontSize="2xs"
+                                                        borderRadius="full"
+                                                        px={2}
+                                                        title={`${diag.undocumentedImplCount} implementation(s) have no documents or webpages attached at all`}
+                                                    >
+                                                        ⚠ Undocumented ×{diag.undocumentedImplCount}
                                                     </Badge>
                                                 )}
                                                 {diag.noActiveDocs && (
@@ -363,13 +469,36 @@ const SuccessIndicatorReportTables = ({ data, campus, navigate, openApprovalModa
                                                         size="xs"
                                                         colorScheme="gray"
                                                         variant="outline"
+                                                        aria-label={`Edit ${compositeKey}`}
                                                         onClick={() => navigateToIndicator(navigate, compositeKey, campus)}
                                                         _hover={{ bg: "gray.50" }}
                                                     >
                                                         Edit
                                                     </Button>
+                                                    {/* Step one: mark/un-mark ready, inline. Hidden
+                                                        once approved (or with no evidence this year). */}
+                                                    {!diag.approved && diag.yearIdentifier && (
+                                                        <Tooltip
+                                                            label={diag.readyForReview
+                                                                ? 'Withdraw the ready-for-review mark'
+                                                                : 'Mark this evidence ready for administrative review'}
+                                                            placement="top"
+                                                            hasArrow
+                                                        >
+                                                            <Button
+                                                                size="xs"
+                                                                colorScheme="yellow"
+                                                                variant={diag.readyForReview ? 'ghost' : 'outline'}
+                                                                isLoading={readyBusyKey === diag.compositeKey}
+                                                                aria-label={`${diag.readyForReview ? 'Unmark ready' : 'Mark ready'} ${compositeKey}`}
+                                                                onClick={() => handleReadyToggle(diag, workingGroupName)}
+                                                            >
+                                                                {diag.readyForReview ? 'Unmark ready' : 'Mark ready'}
+                                                            </Button>
+                                                        </Tooltip>
+                                                    )}
                                                     <Tooltip
-                                                        label={!hasReviewers && !hasSummary ? "Summary Needed" : ""}
+                                                        label={!diag.approved && !hasSummary ? "Summary Needed" : ""}
                                                         placement="top"
                                                         hasArrow
                                                     >
@@ -378,6 +507,7 @@ const SuccessIndicatorReportTables = ({ data, campus, navigate, openApprovalModa
                                                             colorScheme={approveButtonColor}
                                                             variant="solid"
                                                             isDisabled={isButtonDisabled}
+                                                            aria-label={`${approveButtonText} ${compositeKey}`}
                                                             onClick={() => {
                                                                 if (!isButtonDisabled) {
                                                                     const workingGroupKey = getWorkingGroupIdentity(workingGroupName).slug;
@@ -441,11 +571,34 @@ const SuccessIndicatorReportTables = ({ data, campus, navigate, openApprovalModa
 
     if (!data) return null;
 
+    const presentGroups = WORKING_GROUP_LIST.filter((w) => data[w.dataKey]);
+
+    // Every group filtered away. Without this the card renders as blank space, which
+    // reads as a loading failure rather than as "nothing matches" — and the filter bar
+    // sitting above already says which filters produced it, so this stays short.
+    if (presentGroups.length === 0) {
+        return (
+            <Box
+                p={8}
+                borderWidth="1px"
+                borderStyle="dashed"
+                borderColor="gray.300"
+                borderRadius="lg"
+                bg="gray.50"
+                textAlign="center"
+            >
+                <Text color="gray.600" fontSize="sm">
+                    No indicators match the active filters. Remove one above to widen the report.
+                </Text>
+            </Box>
+        );
+    }
+
     return (
         <Box>
             {/* One section per dashboard working group (in canonical SSOT order), with a
                 divider between consecutive present groups — same divider behavior as before. */}
-            {WORKING_GROUP_LIST.filter((w) => data[w.dataKey]).map((w, i) => (
+            {presentGroups.map((w, i) => (
                 <React.Fragment key={w.dataKey}>
                     {i > 0 && <Divider my={6} borderColor="gray.200" />}
                     {renderWorkingGroup(data[w.dataKey], w.name)}

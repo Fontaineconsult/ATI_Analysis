@@ -32,9 +32,11 @@ import { useStatusLevels } from '../../../hooks/useStatusLevels';
 import { UserContext } from '../../../context/UserContext';
 import { useSettings } from '../../../context/SettingsContext';
 import { DataContext } from '../../../context/DataContext';
-import { updateStatusLevel, assignPersonAsImplementor, unassignPersonAsImplementor } from '../../../services/api/put';
+import { updateStatusLevel, assignPersonAsImplementor, unassignPersonAsImplementor, setReadyForReview } from '../../../services/api/put';
 import { getIndicatorSummary, getStatusColor, PRIORITY_COLORS } from './indicatorHelpers';
+import { reviewWashClass } from '../../../styles/reviewWash';
 import IndicatorAssetsPanel from './IndicatorAssetsPanel';
+import IndicatorGovernancePanel from './IndicatorGovernancePanel';
 import { HelpTip } from '../../functional_components/DescriptorHelp';
 
 // A flat, titled section card. Everything for the selected indicator is rendered inline as
@@ -83,6 +85,29 @@ function SuccessIndicatorDetailPanel({ wrapper }) {
         }
     };
 
+    // Step one of the review workflow: mark/un-mark this year's evidence ready
+    // for administrative review (an approver then completes it in the modal).
+    const [readyBusy, setReadyBusy] = useState(false);
+    const handleReadyToggle = async (ready) => {
+        setReadyBusy(true);
+        try {
+            await setReadyForReview(yearIdentifier, ready);
+            toast({
+                title: ready ? 'Marked ready for review' : 'Ready mark withdrawn',
+                status: 'success', duration: 2000, isClosable: true, position: 'top-right',
+            });
+            await loadSingleWorkingGroupData(currentWorkingGroup);
+        } catch (e) {
+            toast({
+                title: 'Failed to update review readiness',
+                description: e?.response?.data?.error || e?.message,
+                status: 'error', duration: 4000, isClosable: true, position: 'top-right',
+            });
+        } finally {
+            setReadyBusy(false);
+        }
+    };
+
     if (!wrapper || !s) {
         return (
             <Box p={8} borderWidth="1px" borderStyle="dashed" borderColor="gray.300" borderRadius="lg" bg="gray.50" textAlign="center">
@@ -123,8 +148,18 @@ function SuccessIndicatorDetailPanel({ wrapper }) {
 
     return (
         <VStack as="section" aria-label={`Success indicator ${s.compositeKey}`} align="stretch" spacing={3}>
-            {/* Header card — SI description is the headline; controls + badges below it */}
-            <Box bg="white" borderWidth="1px" borderColor="gray.200" borderRadius="lg" boxShadow="sm" p={4}>
+            {/* Header card — SI description is the headline; controls + badges below it.
+                The review-state wash rises from the bottom edge (bgColor, not bg,
+                so the gradient background-image survives). */}
+            <Box
+                className={reviewWashClass('bottom', s)}
+                bgColor="white"
+                borderWidth="1px"
+                borderColor="gray.200"
+                borderRadius="lg"
+                boxShadow="sm"
+                p={4}
+            >
                 <Heading as="h5" fontSize="lg" fontWeight="semibold" color="gray.800" lineHeight="short" mb={3}>
                     {s.description || '(no description)'}
                 </Heading>
@@ -158,6 +193,17 @@ function SuccessIndicatorDetailPanel({ wrapper }) {
                             />
                         </Box>
                         <ViewReportButton compositeKey={s.compositeKey} size="sm" />
+                        {!s.approved && (
+                            <Button
+                                size="sm"
+                                colorScheme="yellow"
+                                variant={s.readyForReview ? 'ghost' : 'outline'}
+                                onClick={() => handleReadyToggle(!s.readyForReview)}
+                                isLoading={readyBusy}
+                            >
+                                {s.readyForReview ? 'Unmark ready' : 'Mark ready for review'}
+                            </Button>
+                        )}
                         <Button
                             size="sm"
                             colorScheme={s.approved ? 'green' : 'yellow'}
@@ -239,6 +285,10 @@ function SuccessIndicatorDetailPanel({ wrapper }) {
                 />
             </Section>
 
+            {/* What authority requires this indicator, before what the campus does about
+                it. Renders its own card and loads its own data, keyed on compositeKey. */}
+            <IndicatorGovernancePanel compositeKey={s.compositeKey} />
+
             {/* ImplementationMasterContainer renders its own "Implementation Details" card. */}
             <ImplementationMasterContainer
                 evidenceData={ev}
@@ -252,6 +302,7 @@ function SuccessIndicatorDetailPanel({ wrapper }) {
                 assets={wrapper.assets}
                 interfaces={wrapper.interfaces}
                 tools={wrapper.tools}
+                yearIdentifier={yearIdentifier}
             />
 
             <Section title={<>Annotations <HelpTip field={['YearSuccessEvidence', 'annotations']} /></>}>
@@ -260,12 +311,17 @@ function SuccessIndicatorDetailPanel({ wrapper }) {
                     hasMessages={ev.has_messages}
                     hasMetrics={ev.has_metrics}
                     plans={ev.plans}
+                    recommendations={ev.recommendations}
+                    concerns={ev.concerns}
                     year_identifier={yearIdentifier}
+                    onRecommendationsChange={() => loadSingleWorkingGroupData(currentWorkingGroup)}
                 />
             </Section>
 
             {/* Review stays behind a button (action-gated). */}
-            <Modal isOpen={approval.isOpen} onClose={approval.onClose} size="2xl">
+            {/* Wide review workspace: the container lays out review + report side
+                by side, and the report needs a real viewport to render. */}
+            <Modal isOpen={approval.isOpen} onClose={approval.onClose} size="6xl" scrollBehavior="inside">
                 <ModalOverlay />
                 <ModalContent>
                     <ModalHeader fontSize="lg" color="teal.700">Approval Process — {s.compositeKey}</ModalHeader>

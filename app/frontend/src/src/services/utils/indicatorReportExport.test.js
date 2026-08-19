@@ -14,13 +14,14 @@ const REPORT = {
     yse: { administrative_review_complete: true, administrative_review_completed_date: '2026-03-01', priority_level: 'High', worked_on_in_current_year: true },
     people: {
         implementers: [{ unique_id: 'p1', name: 'Ivy Implementer', title: 'Web Lead', email: 'ivy@example.edu', roles: [{ handle: 'role:lead', name: 'Lead' }] }],
-        admin_reviewers: [{ unique_id: 'r1', name: 'Rob Reviewer' }],
         admin_review_completed_by: { unique_id: 'r2', name: 'Reviewer Rita' },
     },
     admin_review_notes: [{ unique_id: 'an1', content: 'Needs more evidence.', dateCreated: '2026-02-01', created_by: { name: 'Ann Admin' } }],
+    community_stakeholders: [{ name: 'Stakeholder Community', note: 'why' }],
     implementations: [{
         type: 'Process', unique_id: 'i1', title: 'Homepage audit', description: 'Quarterly audit.',
-        owner: { name: 'Owen Owner' }, accountable_working_group: 'Web', dimensions: [],
+        owner: { name: 'Owen Owner' }, accountable_working_group: 'Web',
+        accountable_communities: ['Library Community'], dimensions: [],
         documents: [{ unique_id: 'd1', name: 'Audit Report', file: { download_url: '/ati/data-api/v1/files/abc?name=audit.pdf' } }],
         webpages: [{ unique_id: 'w1', name: 'Old page', url: 'https://x.invalid', no_longer_exists: true }],
         notes: [], messages: [{ unique_id: 'm1', content: 'Kickoff', date_created: '2026-01-05', file: { download_url: '/ati/data-api/v1/files/msg1' } }],
@@ -41,6 +42,11 @@ describe('buildIndicatorReport', () => {
     it('produces an HTML table document with the indicator identity', () => {
         expect(html).toContain('<table');
         expect(html).toContain('1.2-web');
+        // The Accountable column prefers the community of practice over the legacy WG.
+        expect(html).toContain('Library Community');
+        // Status section carries the community-of-practice sub heading rows.
+        expect(html).toContain('Community of practice:');
+        expect(html).toContain('Stakeholder Community');
         expect(html).toContain('Top pages meet WCAG 2.1 AA.');
     });
 

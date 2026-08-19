@@ -5,24 +5,39 @@ from app.endpoints.data_api.errors.custom_exceptions import NotFoundError, CrudE
 from neomodel import db
 
 
-def _get_campuses_per_plan(plan_unique_ids):
+def _get_plan_scope(plan_unique_ids):
     """
-    For each Plan unique_id, return the deduped, sorted list of Campus
-    abbreviations reached via:
-        Plan -[:furthers_yse]-> YearSuccessEvidence -[:evidence_at_campus]-> Campus
+    How far each Plan reaches, in one pass over `furthers_yse`:
 
-    Returns a dict {plan_unique_id: [abbrev, ...]}. Plans with no reachable
-    campus are absent.
+      campuses        deduped, sorted Campus abbreviations reached via
+                      Plan -[:furthers_yse]-> YearSuccessEvidence -[:evidence_at_campus]-> Campus
+      indicator_count how many YearSuccessEvidence nodes the plan furthers in total
+
+    `indicator_count` is the honest scope signal: a plan is usually shared across
+    indicators (53 of 60 further more than one; one furthers 27), and the editor
+    that shows it is always opened from a single indicator's page. Surfacing the
+    count is what tells an author they are editing something shared.
+
+    The campus hop is OPTIONAL so a YSE with no campus still counts toward
+    indicator_count instead of dropping the plan from the result entirely.
+
+    Returns {plan_unique_id: {"campuses": [...], "indicator_count": int}}.
     """
     if not plan_unique_ids:
         return {}
     query = """
-    MATCH (p:Plan)-[:furthers_yse]->(:YearSuccessEvidence)-[:evidence_at_campus]->(c:Campus)
+    MATCH (p:Plan)-[:furthers_yse]->(y:YearSuccessEvidence)
     WHERE p.unique_id IN $plan_ids
-    RETURN p.unique_id AS plan_id, collect(DISTINCT c.abbreviation) AS abbreviations
+    OPTIONAL MATCH (y)-[:evidence_at_campus]->(c:Campus)
+    RETURN p.unique_id AS plan_id,
+           [a IN collect(DISTINCT c.abbreviation) WHERE a IS NOT NULL] AS abbreviations,
+           count(DISTINCT y) AS indicator_count
     """
     results, _ = db.cypher_query(query, {'plan_ids': list(plan_unique_ids)})
-    return {row[0]: sorted(row[1]) for row in results}
+    return {
+        row[0]: {"campuses": sorted(row[1]), "indicator_count": row[2]}
+        for row in results
+    }
 
 
 def _walk_plan_nodes(data):
@@ -46,20 +61,80 @@ def _walk_plan_nodes(data):
                         yield plan
 
 
-def _inject_plan_campuses(data):
-    """Mutate each plan node in the response to add `properties.campuses`."""
+def _walk_indicator_nodes(data):
+    """Yield every indicator wrapper in one working group's response tree."""
+    for goal in data.get('goals') or []:
+        for indicator in goal.get('indicators') or []:
+            if indicator:
+                yield indicator
+
+
+def _get_communities_per_indicator(composite_keys):
+    """
+    For each SuccessIndicator composite_key, the communities of practice holding a
+    stake in it:  (CommunityOfPractice)-[:has_stake_in]->(SuccessIndicator)
+
+    This is the agentive link between the people layer and the indicator framework —
+    the community holds the practice the indicator measures. It is SI-level by design
+    (campus- and year-agnostic), so it needs no year or campus argument and the same
+    answer serves every view.
+
+    One bulk query rather than the per-community traversal in queries/communities/read,
+    because the report needs the whole map at once.
+
+    Returns {composite_key: [{name, unique_id}, ...]}, each list name-sorted.
+    """
+    if not composite_keys:
+        return {}
+    query = """
+    MATCH (c:CommunityOfPractice)-[:has_stake_in]->(si:SuccessIndicator)
+    WHERE si.composite_key IN $keys
+    RETURN si.composite_key AS key,
+           collect({name: c.name, unique_id: c.unique_id}) AS communities
+    """
+    results, _ = db.cypher_query(query, {'keys': list(composite_keys)})
+    return {
+        row[0]: sorted(row[1], key=lambda c: (c.get('name') or ''))
+        for row in results
+    }
+
+
+def _inject_indicator_communities(data):
+    """Mutate each indicator to add `indicator.properties.communities`.
+
+    Injected after the main query rather than joined inside it: the compound query is
+    already several hundred lines and this is a flat SI-level lookup that fans out no
+    rows. Same treatment plan scope gets.
+    """
+    keys = {
+        ((ind.get('indicator') or {}).get('properties') or {}).get('composite_key')
+        for ind in _walk_indicator_nodes(data)
+    }
+    keys.discard(None)
+    by_key = _get_communities_per_indicator(keys)
+    for ind in _walk_indicator_nodes(data):
+        props = (ind.get('indicator') or {}).get('properties')
+        if props is None:
+            continue
+        props['communities'] = by_key.get(props.get('composite_key'), [])
+
+
+def _inject_plan_scope(data):
+    """Mutate each plan node to add `properties.campuses` and
+    `properties.indicator_count` — see _get_plan_scope."""
     plan_ids = {
         (plan.get('properties') or {}).get('unique_id')
         for plan in _walk_plan_nodes(data)
     }
     plan_ids.discard(None)
-    campuses_by_plan = _get_campuses_per_plan(plan_ids)
+    scope_by_plan = _get_plan_scope(plan_ids)
     for plan in _walk_plan_nodes(data):
         props = plan.get('properties')
         if props is None:
             continue
-        uid = props.get('unique_id')
-        props['campuses'] = campuses_by_plan.get(uid, [])
+        scope = scope_by_plan.get(props.get('unique_id')) or {}
+        props['campuses'] = scope.get('campuses', [])
+        props['indicator_count'] = scope.get('indicator_count', 0)
 
 
 def fetch_evidence_for_working_group(working_group, academic_year, campus_abbreviation=None):
@@ -295,6 +370,7 @@ def fetch_evidence_for_working_group(working_group, academic_year, campus_abbrev
            type: labels(evidenceType)[0],
            evidenceType: evidenceType,
            strength: head([ (evidence)<-[evRel:is_evidence_for]-(evidenceType) | evRel.strength ]),
+           control: head([ (evidence)<-[evRel2:is_evidence_for]-(evidenceType) | evRel2.control ]),
            docs: docs,
            webs: webs,
            notes: notes,
@@ -319,6 +395,16 @@ def fetch_evidence_for_working_group(working_group, academic_year, campus_abbrev
            persons: persons,
            adminReviewers: adminReviewers,
            adminReviewNotes: adminReviewNotes,
+           recommendations: [ (evidence)-[:has_recommendation]->(rec:Recommendation) | {
+             recommendation: rec,
+             created_by: head([ (rec)-[:created_by]->(rp:Person) | rp ])
+           } ],
+           concerns: [ (evidence)-[:has_concern]->(con:Concern) | {
+             concern: con,
+             raised_by: head([ (con)-[:raised_by]->(cp:Person) | cp ]),
+             became_recommendation: head([ (con)-[:became_recommendation]->(br:Recommendation) | br ]),
+             became_plan: head([ (con)-[:became_plan]->(bp:Plan) | bp ])
+           } ],
            has_notes: evidenceNotes,
            has_messages: evidenceMessages,
            has_metrics: evidenceMetrics,
@@ -471,7 +557,8 @@ def fetch_evidence_for_working_group(working_group, academic_year, campus_abbrev
         return {"workingGroup": working_group, "goals": []}
 
     data = json.loads(results[0][0])
-    _inject_plan_campuses(data)
+    _inject_plan_scope(data)
+    _inject_indicator_communities(data)
     return data
 
 if __name__=='__main__':

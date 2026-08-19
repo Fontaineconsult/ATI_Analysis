@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
     Badge,
     Box,
@@ -14,6 +14,7 @@ import {
 } from '@chakra-ui/react';
 import { Link as RouterLink, useParams } from 'react-router-dom';
 import { HelpBox } from '../../functional_components/DescriptorHelp';
+import { fetchStewardedIct } from '../../../services/api/get';
 
 /**
  * Per–success-indicator view of the Assets, Interfaces, and Tools that touch it —
@@ -25,9 +26,33 @@ import { HelpBox } from '../../functional_components/DescriptorHelp';
  * (/{campus}/ati-explorer/assets/{tab}/{identifier}).
  *
  * Props: assets, interfaces, tools — arrays of minimal maps from the query.
+ *
+ * When a yearIdentifier is given, a fourth, DERIVED section loads: the ICT
+ * footprint behind the indicator's internally-controlled evidence — the
+ * implementations' owners/participants → their employing Department/College →
+ * every Asset those units/people steward under §508. This answers "what ICT
+ * does the responsible unit answer for?" even before remediates/uses_tool
+ * wiring exists.
  */
-function IndicatorAssetsPanel({ assets = [], interfaces = [], tools = [] }) {
+function IndicatorAssetsPanel({ assets = [], interfaces = [], tools = [], yearIdentifier = null }) {
     const { campus } = useParams();
+
+    const [stewarded, setStewarded] = useState(null);
+    useEffect(() => {
+        let cancelled = false;
+        setStewarded(null);
+        if (!yearIdentifier) return undefined;
+        (async () => {
+            try {
+                const resp = await fetchStewardedIct(yearIdentifier);
+                if (!cancelled) setStewarded(resp?.data || null);
+            } catch (_) { /* non-fatal: the derived section just doesn't render */ }
+        })();
+        return () => { cancelled = true; };
+    }, [yearIdentifier]);
+
+    const stewardedAssets = stewarded?.assets || [];
+    const stewardUnits = (stewarded?.units || []).map((u) => u.name).join(', ');
 
     const linkTo = (tab, id) =>
         campus && id ? `/${campus}/ati-explorer/assets/${tab}/${encodeURIComponent(id)}` : undefined;
@@ -95,9 +120,12 @@ function IndicatorAssetsPanel({ assets = [], interfaces = [], tools = [] }) {
 
             <Tabs colorScheme="teal" size="sm" variant="line" isLazy>
                 <TabList>
-                    <Tab fontSize="xs" fontWeight="semibold">Assets ({assets.length})</Tab>
+                    <Tab fontSize="xs" fontWeight="semibold">Remediated ({assets.length})</Tab>
                     <Tab fontSize="xs" fontWeight="semibold">Interfaces ({interfaces.length})</Tab>
                     <Tab fontSize="xs" fontWeight="semibold">Tools ({tools.length})</Tab>
+                    {stewardedAssets.length > 0 && (
+                        <Tab fontSize="xs" fontWeight="semibold">Unit portfolio ({stewardedAssets.length})</Tab>
+                    )}
                 </TabList>
 
                 <TabPanels>
@@ -179,6 +207,66 @@ function IndicatorAssetsPanel({ assets = [], interfaces = [], tools = [] }) {
                             <Empty>No tools used for this indicator.</Empty>
                         )}
                     </TabPanel>
+
+                    {/* Unit portfolio — DERIVED: internal evidence → owners/participants →
+                        their units → the ICT those units/people steward under §508.
+                        Every asset is stewarded by definition; this tab differs from
+                        "Remediated" by RELATIONSHIP — who answers for the asset, not
+                        whether this indicator's work touches it. Portfolio assets with
+                        no remediation wiring here are the indicator's exposure. */}
+                    {stewardedAssets.length > 0 && (
+                        <TabPanel px={0} pt={3}>
+                            <Text fontSize="xs" color="gray.600" mb={2}>
+                                The §508 portfolio of the responsible unit{stewarded?.units?.length === 1 ? '' : 's'}
+                                {stewardUnits ? ` (${stewardUnits})` : ''} behind this indicator&apos;s
+                                internally-controlled evidence. Assets marked <b>no work wired</b> are
+                                answered for here but untouched by this indicator&apos;s implementations.
+                            </Text>
+                            <ListBox>
+                                {stewardedAssets.map((a) => {
+                                    const remediatedHere = assets.some(
+                                        (r) => r.asset_identifier === a.asset_identifier
+                                    );
+                                    return (
+                                        <Row
+                                            key={a.asset_identifier}
+                                            to={linkTo('assets', a.asset_identifier)}
+                                            title={a.title || '(untitled asset)'}
+                                            identifier={a.asset_identifier}
+                                        >
+                                            {a.scope && (
+                                                <Badge colorScheme="teal" variant="subtle" fontSize="2xs" textTransform="capitalize">
+                                                    {a.scope}
+                                                </Badge>
+                                            )}
+                                            {(a.stewards || []).map((s) => (
+                                                <Badge
+                                                    key={s.name}
+                                                    colorScheme={s.holder_type === 'Person' ? 'gray' : 'blue'}
+                                                    variant="subtle"
+                                                    fontSize="2xs"
+                                                    title={`${s.name} — ${s.capacities.join(', ')}`}
+                                                >
+                                                    {s.capacities.join(' · ')}
+                                                </Badge>
+                                            ))}
+                                            {remediatedHere ? (
+                                                <Badge colorScheme="green" variant="subtle" fontSize="2xs"
+                                                       title="This indicator's implementations remediate this asset">
+                                                    remediated
+                                                </Badge>
+                                            ) : (
+                                                <Badge colorScheme="orange" variant="subtle" fontSize="2xs"
+                                                       title="Answered for by the responsible unit, but no implementation on this indicator is wired to it">
+                                                    no work wired
+                                                </Badge>
+                                            )}
+                                        </Row>
+                                    );
+                                })}
+                            </ListBox>
+                        </TabPanel>
+                    )}
                 </TabPanels>
             </Tabs>
         </Box>

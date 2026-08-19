@@ -47,7 +47,6 @@ const REPORT = {
     },
     people: {
         implementers: [{ unique_id: 'p1', name: 'Ivy Implementer', title: 'Web Lead', email: 'ivy@example.edu', roles: [{ handle: 'role:lead', name: 'Lead' }] }],
-        admin_reviewers: [{ unique_id: 'r1', name: 'Rob Reviewer' }],
         admin_review_completed_by: { unique_id: 'r2', name: 'Reviewer Rita' },
     },
     admin_review_notes: [

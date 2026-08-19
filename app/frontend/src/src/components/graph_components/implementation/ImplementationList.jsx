@@ -15,7 +15,7 @@ import {
     VStack,
 } from '@chakra-ui/react';
 import { AddIcon, SearchIcon } from '@chakra-ui/icons';
-import { IMPLEMENTATION_TYPES, typeLabel, allDocumentsDepreciated, implementationInCampus } from './implementationConfig';
+import { IMPLEMENTATION_TYPES, typeLabel, allDocumentsDepreciated, isUndocumented, implementationInCampus } from './implementationConfig';
 
 /**
  * Selectable list for the 1/3 column. Mirrors PlansList: a filter bar
@@ -80,6 +80,7 @@ function ImplementationList({
         const ownerCount = impl.owned_by?.length || 0;
         const campuses = Array.isArray(impl.campuses) ? impl.campuses : [];
         const docsAllDeprecated = allDocumentsDepreciated(impl);
+        const undocumented = isUndocumented(impl);
         return (
             <ListItem
                 key={impl.unique_id}
@@ -129,6 +130,11 @@ function ImplementationList({
                     {docsAllDeprecated && (
                         <Badge colorScheme="orange" variant="solid" fontSize="2xs" borderRadius="full" px={2} title="Every attached document is marked depreciated — no active documentation">
                             ⚠ Docs deprecated
+                        </Badge>
+                    )}
+                    {undocumented && (
+                        <Badge colorScheme="orange" variant="outline" fontSize="2xs" borderRadius="full" px={2} title="No documents or webpages are attached at all (notes and messages don't count as documentation)">
+                            ⚠ Undocumented
                         </Badge>
                     )}
                     {campuses.map((abbrev) => (

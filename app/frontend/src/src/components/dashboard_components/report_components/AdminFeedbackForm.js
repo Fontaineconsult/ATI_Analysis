@@ -11,6 +11,7 @@ import {
     Divider
 } from '@chakra-ui/react';
 import { UserContext } from '../../../context/UserContext';
+import { addAdminReviewerNote } from '../../../services/api/post';
 
 /**
  * AdminFeedbackForm - Component for displaying and adding admin reviewer notes
@@ -51,24 +52,7 @@ function AdminFeedbackForm({ yearIdentifier, adminReviewNotes = [], onUpdate }) 
 
         setLoading(true);
         try {
-            const response = await fetch(`${process.env.REACT_APP_API_URL}/evidence`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    action: 'add_admin_reviewer_note',
-                    year_success_evidence: yearIdentifier,
-                    note_content: noteContent,
-                    created_by_employee_id: user.employee_id
-                }),
-            });
-
-            const data = await response.json();
-
-            if (!response.ok) {
-                throw new Error(data.error || 'Failed to add feedback');
-            }
+            await addAdminReviewerNote(yearIdentifier, noteContent, user.employee_id);
 
             toast({
                 title: "Success",
@@ -89,7 +73,7 @@ function AdminFeedbackForm({ yearIdentifier, adminReviewNotes = [], onUpdate }) 
             console.error('Error adding feedback:', error);
             toast({
                 title: "Failed to Add Feedback",
-                description: error.message || "There was an issue adding the feedback",
+                description: error?.response?.data?.error || error.message || "There was an issue adding the feedback",
                 status: "error",
                 duration: 5000,
                 isClosable: true,

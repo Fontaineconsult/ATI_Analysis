@@ -54,6 +54,11 @@ export function getIndicatorSummary(wrapper) {
     let totalDocCount = 0;
     let activeDocCount = 0;
     let anyImplAllDepreciated = false;
+    // Implementations with NO documentation at all (zero documents AND zero
+    // webpages — notes/messages are annotations and deliberately don't count).
+    // The sibling gap to noActiveDocs: that one asks "did the docs rot?", this
+    // one asks "was there ever any documentation?".
+    let undocumentedImplCount = 0;
     for (const et of evidenceTypes) {
         const etDocs = (et.docs || []).filter((d) => d && d.document);
         const etWebs = (et.webs || []).filter((w) => w && w.webpage);
@@ -71,6 +76,7 @@ export function getIndicatorSummary(wrapper) {
         totalDocCount += etTotal;
         activeDocCount += etActive;
         if (etTotal > 0 && etActive === 0) anyImplAllDepreciated = true;
+        if (etTotal === 0) undocumentedImplCount += 1;
     }
     const implCount = evidenceTypes.length;
 
@@ -92,6 +98,10 @@ export function getIndicatorSummary(wrapper) {
         .map(Number);
     const maxStrength = ratedStrengths.length ? Math.max(...ratedStrengths) : null;
 
+    // Evidence links flagged control='external': the owners rely on a practice
+    // they don't directly control (another unit, SFBRN, the CO, a vendor).
+    const externalCount = evidenceTypes.filter((et) => et.control === 'external').length;
+
     // Some indicators are not met through traditional implementation work; when the
     // SI settings flag is set we suppress the missing-implementation diagnostic.
     const overrideImplementationRequirement =
@@ -100,6 +110,10 @@ export function getIndicatorSummary(wrapper) {
 
     return {
         compositeKey: indicator.composite_key,
+        // Communities of practice holding a stake in this indicator — the people who
+        // hold the practice it measures. SI-level and year-agnostic, injected by the
+        // evidence read (_inject_indicator_communities). [] when nothing claims it.
+        communities: indicator.communities || [],
         description: indicator.success_indicator,
         hasEvidence: Boolean(ev?.evidence),
         yearIdentifier: evProps.year_identifier || null,
@@ -108,6 +122,7 @@ export function getIndicatorSummary(wrapper) {
         personCount: ev.persons?.length || 0,
         implCount,
         maxStrength,
+        externalCount,
         retiredImplCount,
         // Every linked implementation is retired — no active work this year.
         allImplsRetired,
@@ -119,6 +134,8 @@ export function getIndicatorSummary(wrapper) {
         activeDocCount,
         // At least one implementation has documents but every one is depreciated.
         noActiveDocs: anyImplAllDepreciated,
+        // Implementations with no documents/webpages at all.
+        undocumentedImplCount,
         annotationCount,
         approved: (ev.adminReviewers?.length || 0) > 0 || Boolean(evProps.administrative_review_complete),
         readyForReview: Boolean(evProps.ready_for_admin_review),

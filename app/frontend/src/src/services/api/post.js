@@ -565,6 +565,59 @@ export const createTaap = async (payload) => {
     }
 };
 
+// End-of-review-cycle improvement: creates a Recommendation (status 'open')
+// wired to the YSE via has_recommendation.
+export const addRecommendation = async (yearSuccessEvidence, recommendation, detail, createdByEmployeeId) => {
+    try {
+        const response = await axios.post(`${process.env.REACT_APP_API_URL}/evidence`, {
+            action: 'add_recommendation',
+            year_success_evidence: yearSuccessEvidence,
+            recommendation,
+            detail: detail || null,
+            created_by_employee_id: createdByEmployeeId || null,
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error adding recommendation:', error);
+        throw error;
+    }
+};
+
+// An issue raised with no path to resolution yet: creates a Concern
+// (status 'open') wired to the YSE via has_concern. Concerns are expected to
+// convert into a Recommendation or a Plan — see put.js.
+export const addConcern = async (yearSuccessEvidence, concern, detail, raisedByEmployeeId) => {
+    try {
+        const response = await axios.post(`${process.env.REACT_APP_API_URL}/evidence`, {
+            action: 'add_concern',
+            year_success_evidence: yearSuccessEvidence,
+            concern,
+            detail: detail || null,
+            raised_by_employee_id: raisedByEmployeeId || null,
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error adding concern:', error);
+        throw error;
+    }
+};
+
+// Admin review feedback: creates a Note wired to the YSE via admin_review_note.
+export const addAdminReviewerNote = async (yearSuccessEvidence, noteContent, createdByEmployeeId) => {
+    try {
+        const response = await axios.post(`${process.env.REACT_APP_API_URL}/evidence`, {
+            action: 'add_admin_reviewer_note',
+            year_success_evidence: yearSuccessEvidence,
+            note_content: noteContent,
+            created_by_employee_id: createdByEmployeeId,
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error adding admin reviewer note:', error);
+        throw error;
+    }
+};
+
 export const createVendor = async (payload) => {
     // payload: { name, location? }
     try {

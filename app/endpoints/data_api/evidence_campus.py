@@ -7,13 +7,22 @@ from app.database.queries.evidence.read_campus import get_all_status_level_nodes
     get_evidence_trends
 from app.database.queries.evidence.update import (assign_status_to_yse,
                                                    assign_approver_to_yse,
+                                                   set_ready_for_admin_review,
                                                    update_admin_reviewer_description,
-                                                   add_admin_reviewer_note)
+                                                   add_admin_reviewer_note,
+                                                   withdraw_approval,
+                                                   add_recommendation_to_yse,
+                                                   update_recommendation,
+                                                   add_concern_to_yse,
+                                                   update_concern,
+                                                   convert_concern_to_recommendation,
+                                                   convert_concern_to_plan)
 from . import data_api_endpoints
 from ...database.class_factory import working_group_names_web_query, status_levels
 from app.endpoints.data_api.util.response import make_response
 from app.endpoints.data_api.errors.custom_exceptions import (
     ApiError,
+    AuthorizationError,
     NotFoundError,
     ValidationError,
     CrudError
@@ -67,6 +76,10 @@ class EvidenceAPI(MethodView):
             return self.handle_create_year_success_evidence(data)
         elif action == "add_admin_reviewer_note":
             return self.handle_add_admin_reviewer_note(data)
+        elif action == "add_recommendation":
+            return self.handle_add_recommendation(data)
+        elif action == "add_concern":
+            return self.handle_add_concern(data)
         else:
             return make_response(status="error", error=f"Unknown action '{action}' in request."), 400
 
@@ -85,12 +98,238 @@ class EvidenceAPI(MethodView):
         # Handle the assign_approver action
         if action == "assign_approver":
             return self.handle_assign_approver(data)
+        elif action == "withdraw_approval":
+            return self.handle_withdraw_approval(data)
+        elif action == "set_ready_for_review":
+            return self.handle_set_ready_for_review(data)
+        elif action == "update_recommendation":
+            return self.handle_update_recommendation(data)
+        elif action == "update_concern":
+            return self.handle_update_concern(data)
+        elif action == "convert_concern_to_recommendation":
+            return self.handle_convert_concern_to_recommendation(data)
+        elif action == "convert_concern_to_plan":
+            return self.handle_convert_concern_to_plan(data)
         elif action == "update_admin_reviewer_description":
             return self.handle_update_admin_reviewer_description(data)
         elif action == "unassign_implementation":
             return self.handle_unassign_implementation(data)
         else:
             return make_response(status="error", error=f"Unknown action '{action}' in request."), 400
+
+    def handle_withdraw_approval(self, data):
+        """
+        Withdraw a completed administrative review (Approver-flag gated, like
+        approving). Clears the complete flag/date and the completed-by edge; the
+        ready flag is untouched, so the evidence returns to awaiting approval.
+
+            {"action": "withdraw_approval",
+             "year_success_evidence": "2025-2026-7.11-ins-sfsu",
+             "employee_id": "912345678"}
+        """
+        yse = data.get('year_success_evidence')
+        employee_id = data.get('employee_id')
+
+        if not yse or not employee_id:
+            return make_response(status="error", error="Missing 'year_success_evidence' or 'employee_id' in request."), 400
+
+        try:
+            withdraw_approval(yse, employee_id)
+            return make_response(status="success", data="Approval withdrawn."), 200
+        except AuthorizationError as e:
+            return make_response(status="error", error=str(e)), 403
+        except NotFoundError as e:
+            return make_response(status="error", error=str(e)), 404
+        except CrudError as e:
+            return make_response(status="error", error=str(e)), 500
+
+
+    def handle_add_recommendation(self, data):
+        """Record an end-of-review-cycle improvement on a YSE.
+
+            {"action": "add_recommendation",
+             "year_success_evidence": "...", "recommendation": "...",
+             "detail": "...", "created_by_employee_id": "..."}
+        """
+        yse = data.get('year_success_evidence')
+        recommendation = data.get('recommendation')
+        if not yse or not recommendation:
+            return make_response(status="error", error="Requires 'year_success_evidence' and 'recommendation'."), 400
+        try:
+            result = add_recommendation_to_yse(
+                yse, recommendation,
+                detail=data.get('detail'),
+                created_by_employee_id=data.get('created_by_employee_id'),
+            )
+            return make_response(status="success", data=result), 201
+        except ValidationError as e:
+            return make_response(status="error", error=str(e)), 400
+        except NotFoundError as e:
+            return make_response(status="error", error=str(e)), 404
+        except CrudError as e:
+            return make_response(status="error", error=str(e)), 500
+
+    def handle_update_recommendation(self, data):
+        """Update a recommendation's lifecycle/text. Leaving 'open' stamps
+        date_resolved; returning to 'open' clears it. No delete path — records.
+
+            {"action": "update_recommendation", "unique_id": "...",
+             "status": "addressed" | "dismissed" | "open",
+             "resolution": "...", "recommendation": "...", "detail": "..."}
+        """
+        unique_id = data.get('unique_id')
+        if not unique_id:
+            return make_response(status="error", error="Requires 'unique_id'."), 400
+        try:
+            result = update_recommendation(
+                unique_id,
+                status=data.get('status'),
+                resolution=data.get('resolution'),
+                recommendation=data.get('recommendation'),
+                detail=data.get('detail'),
+            )
+            return make_response(status="success", data=result), 200
+        except ValidationError as e:
+            return make_response(status="error", error=str(e)), 400
+        except NotFoundError as e:
+            return make_response(status="error", error=str(e)), 404
+        except CrudError as e:
+            return make_response(status="error", error=str(e)), 500
+
+    def handle_add_concern(self, data):
+        """Record an issue on a YSE that has no resolution path yet.
+
+            {"action": "add_concern",
+             "year_success_evidence": "...", "concern": "...",
+             "detail": "...", "raised_by_employee_id": "..."}
+        """
+        yse = data.get('year_success_evidence')
+        concern = data.get('concern')
+        if not yse or not concern:
+            return make_response(status="error", error="Requires 'year_success_evidence' and 'concern'."), 400
+        try:
+            result = add_concern_to_yse(
+                yse, concern,
+                detail=data.get('detail'),
+                raised_by_employee_id=data.get('raised_by_employee_id'),
+            )
+            return make_response(status="success", data=result), 201
+        except ValidationError as e:
+            return make_response(status="error", error=str(e)), 400
+        except NotFoundError as e:
+            return make_response(status="error", error=str(e)), 404
+        except CrudError as e:
+            return make_response(status="error", error=str(e)), 500
+
+    def handle_update_concern(self, data):
+        """Update a concern's lifecycle/text. Leaving 'open' stamps
+        date_resolved; returning to 'open' clears it. No delete path — records.
+
+            {"action": "update_concern", "unique_id": "...",
+             "status": "converted" | "dismissed" | "open",
+             "resolution": "...", "concern": "...", "detail": "..."}
+        """
+        unique_id = data.get('unique_id')
+        if not unique_id:
+            return make_response(status="error", error="Requires 'unique_id'."), 400
+        try:
+            result = update_concern(
+                unique_id,
+                status=data.get('status'),
+                resolution=data.get('resolution'),
+                concern=data.get('concern'),
+                detail=data.get('detail'),
+            )
+            return make_response(status="success", data=result), 200
+        except ValidationError as e:
+            return make_response(status="error", error=str(e)), 400
+        except NotFoundError as e:
+            return make_response(status="error", error=str(e)), 404
+        except CrudError as e:
+            return make_response(status="error", error=str(e)), 500
+
+    def handle_convert_concern_to_recommendation(self, data):
+        """Promote a concern into a Recommendation on the same YSE. The concern
+        survives as the provenance record, wired via became_recommendation.
+
+            {"action": "convert_concern_to_recommendation", "unique_id": "...",
+             "recommendation": "...", "detail": "...", "resolution": "...",
+             "created_by_employee_id": "..."}
+
+        'recommendation' is optional — it defaults to the concern's own text.
+        """
+        unique_id = data.get('unique_id')
+        if not unique_id:
+            return make_response(status="error", error="Requires 'unique_id'."), 400
+        try:
+            result = convert_concern_to_recommendation(
+                unique_id,
+                recommendation=data.get('recommendation'),
+                detail=data.get('detail'),
+                resolution=data.get('resolution'),
+                created_by_employee_id=data.get('created_by_employee_id'),
+            )
+            return make_response(status="success", data=result), 200
+        except ValidationError as e:
+            return make_response(status="error", error=str(e)), 400
+        except NotFoundError as e:
+            return make_response(status="error", error=str(e)), 404
+        except CrudError as e:
+            return make_response(status="error", error=str(e)), 500
+
+    def handle_convert_concern_to_plan(self, data):
+        """Promote a concern into a Plan furthering the same YSE. The concern
+        survives as the provenance record, wired via became_plan.
+
+            {"action": "convert_concern_to_plan", "unique_id": "...",
+             "name": "...", "description": "...", "plan_status": "Not Started",
+             "resolution": "..."}
+        """
+        unique_id = data.get('unique_id')
+        name = data.get('name')
+        if not unique_id or not name:
+            return make_response(status="error", error="Requires 'unique_id' and 'name'."), 400
+        try:
+            result = convert_concern_to_plan(
+                unique_id,
+                name,
+                description=data.get('description'),
+                plan_status=data.get('plan_status') or "Not Started",
+                resolution=data.get('resolution'),
+            )
+            return make_response(status="success", data=result), 200
+        except ValidationError as e:
+            return make_response(status="error", error=str(e)), 400
+        except NotFoundError as e:
+            return make_response(status="error", error=str(e)), 404
+        except CrudError as e:
+            return make_response(status="error", error=str(e)), 500
+
+    def handle_set_ready_for_review(self, data):
+        """
+        Toggle ready_for_admin_review on a YSE — step one of the review workflow
+        (an approver then completes it via assign_approver).
+
+            {"action": "set_ready_for_review",
+             "year_success_evidence": "2025-2026-7.11-ins-sfsu",
+             "ready": true}
+        """
+        yse = data.get('year_success_evidence')
+        ready = data.get('ready')
+
+        if not yse or not isinstance(ready, bool):
+            return make_response(status="error", error="Requires 'year_success_evidence' and a boolean 'ready'."), 400
+
+        try:
+            set_ready_for_admin_review(yse, ready)
+            verb = "marked ready for" if ready else "withdrawn from"
+            return make_response(status="success", data=f"Evidence {verb} administrative review."), 200
+        except ValidationError as e:
+            return make_response(status="error", error=str(e)), 400
+        except NotFoundError as e:
+            return make_response(status="error", error=str(e)), 404
+        except CrudError as e:
+            return make_response(status="error", error=str(e)), 500
 
     def handle_assign_approver(self, data):
         """
@@ -105,6 +344,8 @@ class EvidenceAPI(MethodView):
         try:
             assign_approver_to_yse(yse, employee_id)
             return make_response(status="success", data="Approver assigned successfully."), 200
+        except AuthorizationError as e:
+            return make_response(status="error", error=str(e)), 403
         except NotFoundError as e:
             return make_response(status="error", error=str(e)), 404
         except CrudError as e:

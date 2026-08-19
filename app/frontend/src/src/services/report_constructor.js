@@ -22,7 +22,7 @@ import {
 import {useNavigate, useParams} from "react-router-dom";
 import {navigateToIndicator} from "./utils/tools";
 import { getStatusBackgroundColor, getStatusTextColor } from "./utils/statusColors";
-import { strengthConfig } from "../components/graph_components/implementation/implementationConfig";
+import { strengthConfig, controlConfig } from "../components/graph_components/implementation/implementationConfig";
 import EvidenceQualityPanel from "../components/dashboard_components/report_components/EvidenceQualityPanel";
 
 let datas = {
@@ -425,7 +425,12 @@ function generateReport(evidenceItem) {
     return report;
 }
 
-function GenerateReportComponent({ evidenceItem }) {
+// singleColumn: embedded hosts (e.g. the Administrative Review window) force a
+// stacked layout. The default responsive row keys off the VIEWPORT breakpoint,
+// not the container, so inside a modal on a wide window it still renders
+// two-up and crushes — pass singleColumn wherever the report is imported into
+// a constrained box.
+function GenerateReportComponent({ evidenceItem, singleColumn = false }) {
 
 
     const navigate = useNavigate();
@@ -535,11 +540,11 @@ function GenerateReportComponent({ evidenceItem }) {
     return (
         <Box p={6} bg="gray.50" fontSize="sm" textAlign="left">
             <Flex
-                direction={{ base: 'column', lg: 'row' }}
+                direction={singleColumn ? 'column' : { base: 'column', lg: 'row' }}
                 gap={6}
                 align="flex-start"
             >
-                <Box flex={{ base: 'none', lg: 3 }} w="100%" minW="0">
+                <Box flex={singleColumn ? 'none' : { base: 'none', lg: 3 }} w="100%" minW="0">
                     <VStack align="stretch" spacing={6}>
 
                 {/* Indicator Information - Header Section */}
@@ -644,11 +649,77 @@ function GenerateReportComponent({ evidenceItem }) {
                                         <Text fontSize="xs" fontWeight="semibold" color="blue.800" mb={1}>
                                             Evidence Summary
                                         </Text>
-                                        <Text fontSize="xs" color="gray.700">
+                                        <Text fontSize="xs" color="gray.700" whiteSpace="pre-wrap">
                                             {evidenceItem.evidence.properties.admin_review_description}
                                         </Text>
                                     </Box>
                                 )}
+
+                            {/* Concerns — issues with no resolution path defined (open first;
+                                dismissed items are working-surface records, not report content) */}
+                            {evidenceItem.concerns?.some((w) => w.concern?.properties?.status !== 'dismissed') && (
+                                <Box p={3} bg="red.50" borderRadius="md" borderLeft="4px solid" borderLeftColor="red.300">
+                                    <Text fontSize="xs" fontWeight="semibold" color="red.800" mb={1}>
+                                        Concerns
+                                    </Text>
+                                    <VStack align="stretch" spacing={1}>
+                                        {[...evidenceItem.concerns]
+                                            .map((w) => ({
+                                                ...(w.concern?.properties || {}),
+                                                became: w.became_recommendation?.properties?.recommendation
+                                                    || w.became_plan?.properties?.name,
+                                            }))
+                                            .filter((c) => c.concern && c.status !== 'dismissed')
+                                            .sort((a, b) => (a.status === 'open' ? -1 : 1) - (b.status === 'open' ? -1 : 1))
+                                            .map((c) => (
+                                                <HStack key={c.unique_id} align="start" spacing={2}>
+                                                    <Badge
+                                                        colorScheme={c.status === 'open' ? 'red' : c.status === 'converted' ? 'green' : 'gray'}
+                                                        fontSize="10px"
+                                                        flexShrink={0}
+                                                    >
+                                                        {c.status}
+                                                    </Badge>
+                                                    <Text fontSize="xs" color="gray.700">
+                                                        {c.concern}
+                                                        {c.became ? ` — became: ${c.became}` : (c.resolution ? ` — ${c.resolution}` : '')}
+                                                    </Text>
+                                                </HStack>
+                                            ))}
+                                    </VStack>
+                                </Box>
+                            )}
+
+                            {/* Recommendations — end-of-cycle improvements (open first;
+                                dismissed items are working-surface records, not report content) */}
+                            {evidenceItem.recommendations?.some((w) => w.recommendation?.properties?.status !== 'dismissed') && (
+                                <Box p={3} bg="orange.50" borderRadius="md" borderLeft="4px solid" borderLeftColor="orange.300">
+                                    <Text fontSize="xs" fontWeight="semibold" color="orange.800" mb={1}>
+                                        Recommendations
+                                    </Text>
+                                    <VStack align="stretch" spacing={1}>
+                                        {[...evidenceItem.recommendations]
+                                            .map((w) => ({ ...(w.recommendation?.properties || {}), by: w.created_by?.properties?.name }))
+                                            .filter((r) => r.recommendation && r.status !== 'dismissed')
+                                            .sort((a, b) => (a.status === 'open' ? -1 : 1) - (b.status === 'open' ? -1 : 1))
+                                            .map((r) => (
+                                                <HStack key={r.unique_id} align="start" spacing={2}>
+                                                    <Badge
+                                                        colorScheme={r.status === 'open' ? 'orange' : r.status === 'addressed' ? 'green' : 'gray'}
+                                                        fontSize="10px"
+                                                        flexShrink={0}
+                                                    >
+                                                        {r.status}
+                                                    </Badge>
+                                                    <Text fontSize="xs" color="gray.700">
+                                                        {r.recommendation}
+                                                        {r.resolution ? ` — ${r.resolution}` : ''}
+                                                    </Text>
+                                                </HStack>
+                                            ))}
+                                    </VStack>
+                                </Box>
+                            )}
 
                             {/* Admin Review Notes */}
                             {evidenceItem.adminReviewNotes?.length > 0 && (
@@ -777,7 +848,7 @@ function GenerateReportComponent({ evidenceItem }) {
                                                         <Badge colorScheme="green" fontSize="10px">Campus Plan</Badge>
                                                     )}
                                                 </HStack>
-                                                <Text fontSize="xs" color="gray.700">
+                                                <Text fontSize="xs" color="gray.700" whiteSpace="pre-wrap">
                                                     {plan.properties.description}
                                                 </Text>
                                                 {plan.properties.abandoned && plan.properties.abandoned_notes && (
@@ -816,7 +887,7 @@ function GenerateReportComponent({ evidenceItem }) {
                                                         Completed
                                                     </Badge>
                                                 </HStack>
-                                                <Text fontSize="xs" color="gray.700">
+                                                <Text fontSize="xs" color="gray.700" whiteSpace="pre-wrap">
                                                     {accomplishment.properties.description}
                                                 </Text>
                                             </Box>
@@ -993,6 +1064,27 @@ function GenerateReportComponent({ evidenceItem }) {
                                                 {strengthConfig(etype.strength).label}
                                             </Badge>
                                         )}
+                                        {etype.control === 'external' && (
+                                            <Badge
+                                                colorScheme="purple"
+                                                variant="subtle"
+                                                fontSize="xs"
+                                                title={controlConfig('external').description}
+                                            >
+                                                External
+                                            </Badge>
+                                        )}
+                                        {((etype.docs || []).filter((d) => d && d.document).length
+                                            + (etype.webs || []).filter((w) => w && w.webpage).length) === 0 && (
+                                            <Badge
+                                                colorScheme="orange"
+                                                variant="outline"
+                                                fontSize="xs"
+                                                title="No documents or webpages are attached at all (notes and messages don't count as documentation)"
+                                            >
+                                                ⚠ Undocumented
+                                            </Badge>
+                                        )}
                                         {etype.evidenceType?.properties?.retired && (
                                             <Badge
                                                 colorScheme="gray"
@@ -1021,7 +1113,7 @@ function GenerateReportComponent({ evidenceItem }) {
                                     </HStack>
 
                                     {etype.evidenceType?.properties?.description && (
-                                        <Text fontSize="xs" color="gray.700" mb={3}>
+                                        <Text fontSize="xs" color="gray.700" mb={3} whiteSpace="pre-wrap">
                                             {etype.evidenceType.properties.description}
                                         </Text>
                                     )}
@@ -1170,14 +1262,15 @@ function GenerateReportComponent({ evidenceItem }) {
                     </VStack>
                 </Box>
 
-                {/* Right column: Evidence Quality Criteria (sticky on lg+) */}
+                {/* Right column: Evidence Quality Criteria (sticky on lg+; in
+                    singleColumn mode it stacks below the report instead). */}
                 <Box
-                    flex={{ base: 'none', lg: 1 }}
-                    w={{ base: '100%', lg: 'auto' }}
-                    minW={{ lg: '280px' }}
-                    position={{ lg: 'sticky' }}
-                    top={{ lg: 6 }}
-                    alignSelf={{ lg: 'flex-start' }}
+                    flex={singleColumn ? 'none' : { base: 'none', lg: 1 }}
+                    w={singleColumn ? '100%' : { base: '100%', lg: 'auto' }}
+                    minW={singleColumn ? undefined : { lg: '280px' }}
+                    position={singleColumn ? 'static' : { lg: 'sticky' }}
+                    top={singleColumn ? undefined : { lg: 6 }}
+                    alignSelf={singleColumn ? 'auto' : { lg: 'flex-start' }}
                 >
                     {evidenceItem.statusLevel?.properties?.status_level && (
                         <EvidenceQualityPanel

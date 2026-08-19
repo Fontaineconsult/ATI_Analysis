@@ -6,9 +6,16 @@ A feature is any module exposing:
     register(mcp, ctx) -> None      # called once at startup with the FastMCP
                                     # instance and the shared ServerContext
 
-To add a feature: create a module here, then append it to ALL_FEATURES.
-Order is preserved; a feature that raises during registration is logged and
+To add a feature: create a module here, COMMIT IT, then append it to
+ALL_FEATURES. The order matters — naming a module that isn't on disk raises at
+package-import time and takes the whole server down with it, which is not
+covered by the resilience below. (That is exactly what merge cc0f5f7 did: it
+registered an `implementations_write` module that was never committed on either
+branch, so every MCP entry point died on import.)
+
+Order is preserved; a feature that raises during REGISTRATION is logged and
 skipped (see server.build_server) so one bad feature can't take down the server.
+That safety net starts after import, not before it.
 """
 
 from . import (

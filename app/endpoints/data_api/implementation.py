@@ -1,3 +1,5 @@
+import traceback
+
 from flask import request
 from flask.views import MethodView
 from app.database.queries.implementation.create import add_plan
@@ -8,6 +10,7 @@ from ...database.queries.implementation.update import update_plan, assign_person
     assign_documentation_to_implementation, add_progress_note_to_plan, \
     assign_person_as_owner, unassign_person_as_owner, \
     assign_accountable_working_group, unassign_accountable_working_group, \
+    assign_accountable_community, unassign_accountable_community, \
     set_implementation_dimensions, set_implementation_participants, \
     assign_plan_to_campus, unassign_plan_from_campus, \
     attach_plan_to_yse, detach_plan_from_yse
@@ -365,6 +368,10 @@ class ImplementationAPI(MethodView):
                 return self.handle_assign_accountable_working_group(data)
             elif action == "unassign_accountable_working_group":
                 return self.handle_unassign_accountable_working_group(data)
+            elif action == "assign_accountable_community":
+                return self.handle_assign_accountable_community(data)
+            elif action == "unassign_accountable_community":
+                return self.handle_unassign_accountable_community(data)
             elif action == "set_dimensions":
                 return self.handle_set_dimensions(data)
             elif action == "set_participants":
@@ -379,6 +386,8 @@ class ImplementationAPI(MethodView):
                 return self.handle_assign_implementation_to_yse(data)
             elif action == "set_evidence_strength":
                 return self.handle_set_evidence_strength(data)
+            elif action == "set_evidence_control":
+                return self.handle_set_evidence_control(data)
             elif action == "copy_evidence_to_campuses":
                 return self.handle_copy_evidence_to_campuses(data)
             elif action == "update_documentation_year":
@@ -518,6 +527,28 @@ class ImplementationAPI(MethodView):
             data.get('strength'),
         )
         return make_response("success", data=result, message="Evidence strength updated"), 200
+
+    def handle_set_evidence_control(self, data):
+        """Set or clear (null) the control flag on an existing evidence link —
+        whether this evidence's owners operate the practice ('internal') or
+        rely on one they don't directly control ('external').
+
+        Body: year_success_identifier, implementation_type, unique_id,
+        control ('internal' | 'external' | null).
+        """
+        from app.database.queries.evidence.update import set_evidence_control
+
+        required = ['year_success_identifier', 'implementation_type', 'unique_id']
+        if not all(field in data for field in required):
+            raise ValidationError(f"Missing required fields: {required}")
+
+        result = set_evidence_control(
+            data['year_success_identifier'],
+            data['implementation_type'],
+            data['unique_id'],
+            data.get('control'),
+        )
+        return make_response("success", data=result, message="Evidence control updated"), 200
 
     def handle_copy_evidence_to_campuses(self, data):
         """Copy this year's evidence links (and by default the source YSEs'
@@ -686,6 +717,37 @@ class ImplementationAPI(MethodView):
             working_group=data['working_group'],
         )
         return make_response({"status": "success", "message": "Accountable working group unassigned successfully"}), 200
+
+    def handle_assign_accountable_community(self, data):
+        """
+        Connect an accountable CommunityOfPractice to a doing-implementation
+        (Process/Project/Procedure/Service) via accountable_community.
+
+        Body: { action: "assign_accountable_community",
+                implementation_type, implementation_unique_id, community }
+        where community is a unique_id or the community's (unique-indexed) name.
+        """
+        required = ['implementation_type', 'implementation_unique_id', 'community']
+        if not all(field in data for field in required):
+            raise ValidationError(f"Missing required fields: {required}")
+        assign_accountable_community(
+            implementation_unique_id=data['implementation_unique_id'],
+            implementation_type=data['implementation_type'],
+            community=data['community'],
+        )
+        return make_response({"status": "success", "message": "Accountable community assigned successfully"}), 200
+
+    def handle_unassign_accountable_community(self, data):
+        """Inverse of handle_assign_accountable_community."""
+        required = ['implementation_type', 'implementation_unique_id', 'community']
+        if not all(field in data for field in required):
+            raise ValidationError(f"Missing required fields: {required}")
+        unassign_accountable_community(
+            implementation_unique_id=data['implementation_unique_id'],
+            implementation_type=data['implementation_type'],
+            community=data['community'],
+        )
+        return make_response({"status": "success", "message": "Accountable community unassigned successfully"}), 200
 
     def handle_set_dimensions(self, data):
         """
@@ -943,7 +1005,7 @@ class ImplementationPlanAPI(MethodView):
             # Retrieve action from data
             action = data.get('action')
             if not action:
-                return make_response({"status": "error", "error": "Missing 'action' field in request."}), 400
+                return make_response(status="error", error="Missing 'action' field in request."), 400
 
             # Handle different actions
             if action == "update_plan":
@@ -974,16 +1036,24 @@ class ImplementationPlanAPI(MethodView):
                 except CrudError as e:
                     return make_response(status="error", error=str(e)), 500
             else:
-                return make_response({"status": "error", "error": f"Unknown action '{action}' in request."}), 400
+                return make_response(status="error", error=f"Unknown action '{action}' in request."), 400
 
+        # Keyword form, not a positional dict. make_response's signature is
+        # (status, data, error, message), so make_response({"status": ..., "error": ...})
+        # nests the whole envelope inside `status` and leaves the top-level `error` null —
+        # the client gets a failure it cannot explain. Same fix the campus-assignment
+        # branch above already applies locally.
         except ValidationError as e:
-            return make_response({"status": "error", "error": str(e)}), 400
+            return make_response(status="error", error=str(e)), 400
         except NotFoundError as e:
-            return make_response({"status": "error", "error": str(e)}), 404
+            return make_response(status="error", error=str(e)), 404
         except CrudError as e:
-            return make_response({"status": "error", "error": str(e)}), 500
+            return make_response(status="error", error=str(e)), 500
         except Exception as e:
-            return make_response({"status": "error", "error": "Failed to process request"}), 500
+            # Never swallow the cause: without the traceback an unexpected failure here
+            # is a 500 with nothing in the log to diagnose it from.
+            traceback.print_exc()
+            return make_response(status="error", error=f"Failed to process request: {e}"), 500
 
     def handle_update_plan(self, data):
         """

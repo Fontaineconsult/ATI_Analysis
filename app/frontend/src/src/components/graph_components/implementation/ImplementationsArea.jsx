@@ -25,7 +25,7 @@ import ImplementationStatStrip from './ImplementationStatStrip';
 import ImplementationList from './ImplementationList';
 import ImplementationDetailPanel from './ImplementationDetailPanel';
 import CreateImplementationModal from './CreateImplementation';
-import { IMPLEMENTATION_TYPES, TYPE_KEYS, isValidType, typeLabel, allDocumentsDepreciated, implementationInCampus } from './implementationConfig';
+import { IMPLEMENTATION_TYPES, TYPE_KEYS, isValidType, typeLabel, allDocumentsDepreciated, isUndocumented, implementationInCampus } from './implementationConfig';
 
 const ALL = 'All';
 
@@ -114,14 +114,16 @@ function ImplementationsArea() {
         let noEvidence = 0;
         let noOwner = 0;
         let noActiveDocs = 0;
+        let undocumented = 0;
         scopedAll.forEach((impl) => {
             if (impl.retired) return;
             total += 1;
             if (!(impl.is_evidence_for?.length)) noEvidence += 1;
             if (!(impl.owned_by?.length)) noOwner += 1;
             if (allDocumentsDepreciated(impl)) noActiveDocs += 1;
+            if (isUndocumented(impl)) undocumented += 1;
         });
-        return { total, noEvidence, noOwner, noActiveDocs };
+        return { total, noEvidence, noOwner, noActiveDocs, undocumented };
     }, [scopedAll]);
 
     const definition = !isAll && getNodeTypeDefinition ? getNodeTypeDefinition(selectedType) : null;
@@ -177,6 +179,7 @@ function ImplementationsArea() {
                 noEvidenceCount={stats.noEvidence}
                 noOwnerCount={stats.noOwner}
                 noActiveDocsCount={stats.noActiveDocs}
+                undocumentedCount={stats.undocumented}
                 retiredCount={retiredCount}
             />
 

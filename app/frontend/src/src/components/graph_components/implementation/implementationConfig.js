@@ -50,6 +50,21 @@ export const strengthConfig = (value) => {
     return EVIDENCE_STRENGTH_LEVELS.find((l) => l.value === Number(value)) || null;
 };
 
+// Evidence control — who operates the practice, RELATIVE to this evidence's
+// owners (the same implementation can be internal to one campus/WG's evidence
+// and external to another's). Mirrors data_config.evidence_control_choices;
+// absent/null = unspecified. External marks a dependency on a practice the
+// owners don't directly control (another unit, SFBRN, the CO, a vendor).
+export const EVIDENCE_CONTROL_OPTIONS = [
+    { value: 'internal', label: 'Internal', colorScheme: 'teal', description: 'The evidence owners operate this practice themselves.' },
+    { value: 'external', label: 'External', colorScheme: 'purple', description: "The owners rely on a practice they don't directly control (another unit, SFBRN, the CO, a vendor)." },
+];
+
+export const controlConfig = (value) => {
+    if (value === null || value === undefined || value === '') return null;
+    return EVIDENCE_CONTROL_OPTIONS.find((o) => o.value === value) || null;
+};
+
 // Capability tiers (Sets for O(1) membership). Source: update.py constants.
 const DOING_TYPES = new Set(['Process', 'Project', 'Procedure', 'Service']);
 const DIMENSION_TYPES = new Set(['Process', 'Project', 'Procedure', 'Service', 'InternalPolicy', 'Guidance']);
@@ -89,6 +104,13 @@ export const allDocumentsDepreciated = (impl) => {
         (impl?.supporting_webpages?.length || 0);
     return total > 0 && activeDocumentCount(impl) === 0;
 };
+
+// The sibling gap: NO documentation at all (zero documents AND zero webpages).
+// Notes/messages are annotations, not documentation, and deliberately don't count.
+export const isUndocumented = (impl) => (
+    ((impl?.supporting_documents?.length || 0) +
+     (impl?.supporting_webpages?.length || 0)) === 0
+);
 
 // Campus scoping: an implementation belongs to a campus if it's wired to that campus,
 // or not yet assigned to any (orphans stay visible — matching the list's default).

@@ -7,7 +7,12 @@ from neomodel import db
 
 from app.database.class_factory import implementation_classes
 from app.database.graph_schema import *
-from app.endpoints.data_api.errors.custom_exceptions import NotFoundError, CrudError, ValidationError
+from app.endpoints.data_api.errors.custom_exceptions import (
+    AuthorizationError,
+    CrudError,
+    NotFoundError,
+    ValidationError,
+)
 
 def _validate_evidence_strength(strength):
     """Normalize/validate an evidence-strength value: int 0-3 or None (unrated)."""
@@ -187,6 +192,48 @@ def set_evidence_strength(year_success_identifier: str,
     return {'strength': strength}
 
 
+def set_evidence_control(year_success_identifier: str,
+                         implementation_type: str,
+                         implementation_unique_id: str,
+                         control):
+    """Set (or clear, with None) the control flag on an existing
+    is_evidence_for link: whether THIS evidence's owners operate the practice
+    ('internal') or rely on one they don't directly control ('external' —
+    another unit, SFBRN, the CO, a vendor). Relative to the link, not the
+    implementation — vocab in data_config.evidence_control_choices.
+
+    :return: {'control': 'internal' | 'external' | None} — the stored value.
+    """
+    from app.data_config import evidence_control_choices
+
+    if control is not None and control not in evidence_control_choices:
+        raise ValidationError(
+            f"Invalid evidence control (expected {sorted(evidence_control_choices)} or null): {control!r}"
+        )
+
+    if implementation_type not in implementation_classes:
+        raise ValidationError(f"Invalid implementation_type: {implementation_type}")
+    implementation_class = implementation_classes[implementation_type]
+    try:
+        implementation_node = implementation_class.nodes.get(unique_id=implementation_unique_id)
+    except implementation_class.DoesNotExist:
+        raise NotFoundError(f"No {implementation_type} found with unique_id: {implementation_unique_id}")
+    try:
+        year_success_evidence = YearSuccessEvidence.nodes.get(year_identifier=year_success_identifier)
+    except YearSuccessEvidence.DoesNotExist:
+        raise NotFoundError(f"No YearSuccessEvidence found with year_identifier: {year_success_identifier}")
+
+    rel = implementation_node.is_evidence_for.relationship(year_success_evidence)
+    if rel is None:
+        raise NotFoundError(
+            f"{implementation_type} {implementation_unique_id} is not evidence for {year_success_identifier}"
+        )
+
+    rel.control = control
+    rel.save()
+    return {'control': control}
+
+
 def update_status_level_node(unique_id, data):
     """
     Update an existing StatusLevel node's description fields.
@@ -333,9 +380,20 @@ def assign_approver_to_yse(year_success_identifier: str, employee_id: str) -> bo
         except Person.DoesNotExist:
             raise NotFoundError(f"Person with employee_id '{employee_id}' not found.")
 
-        # Check if the person is already assigned as an approver
-        if year_success_evidence.administrative_review_completed_by.is_connected(person):
-            raise CrudError(f"Approver {employee_id} is already assigned to success indicator {year_success_identifier}")
+        # Approving is gated on the Approver flag (Settings -> Members). The flag
+        # is data-entry on Person; this is the enforcement point every caller
+        # (endpoint, MCP, script) funnels through.
+        if not person.can_approve_yse:
+            raise AuthorizationError(
+                f"Person {employee_id} cannot approve evidence: the Approver flag "
+                "(can_approve_yse) is not set."
+            )
+
+        # Idempotent: a review that is already complete stays as recorded (first
+        # completion wins — a stale second click, by anyone, is a no-op, never a
+        # rewire and never an error). Withdraw first to change the approver.
+        if year_success_evidence.administrative_review_complete:
+            return True
 
         # Assign the approver
         year_success_evidence.administrative_review_completed_by.connect(person)
@@ -346,8 +404,8 @@ def assign_approver_to_yse(year_success_identifier: str, employee_id: str) -> bo
         print(f"Approver {employee_id} assigned to success indicator {year_success_identifier}")
         return True
 
-    except NotFoundError as e:
-        # Reraise NotFoundError to be caught by the calling function for proper error handling
+    except (NotFoundError, AuthorizationError) as e:
+        # Reraise for the endpoint's 404/403 mapping.
         raise e
 
     except Exception as e:
@@ -436,3 +494,361 @@ def add_admin_reviewer_note(year_success_identifier: str, note_content: str, cre
     except Exception as e:
         raise CrudError(f"Error adding admin reviewer note for {year_success_identifier}: {e}")
 
+
+
+def set_ready_for_admin_review(year_success_identifier: str, ready: bool) -> bool:
+    """
+    Toggle the ready_for_admin_review flag on a YearSuccessEvidence — step one
+    of the two-step review workflow (implementor marks ready; a flagged approver
+    then completes the review via assign_approver_to_yse). Pre-approval state,
+    so un-marking is allowed; approval itself leaves the flag untouched (the UI
+    gives Approved precedence). Rollover resets it each year.
+    """
+    if not isinstance(ready, bool):
+        raise ValidationError("'ready' must be a boolean.")
+    try:
+        try:
+            yse = YearSuccessEvidence.nodes.get(year_identifier=year_success_identifier)
+        except YearSuccessEvidence.DoesNotExist:
+            raise NotFoundError(f"YearSuccessEvidence with identifier '{year_success_identifier}' not found.")
+
+        if yse.ready_for_admin_review != ready:
+            yse.ready_for_admin_review = ready
+            yse.save()
+        return True
+
+    except (NotFoundError, ValidationError) as e:
+        raise e
+    except Exception as e:
+        raise CrudError(f"Error setting ready_for_admin_review on {year_success_identifier}: {e}")
+
+
+def withdraw_approval(year_success_identifier: str, employee_id: str) -> bool:
+    """
+    Withdraw a completed administrative review: clears the complete flag and
+    date and removes the admin_review_completed_by edge. Gated on the same
+    Approver flag as approving (any flagged approver may withdraw — the record
+    is a state, not a signature). Idempotent: withdrawing an incomplete review
+    is a no-op. The ready_for_admin_review flag is left untouched, so the
+    evidence drops back to "ready — awaiting approval".
+    """
+    try:
+        try:
+            yse = YearSuccessEvidence.nodes.get(year_identifier=year_success_identifier)
+        except YearSuccessEvidence.DoesNotExist:
+            raise NotFoundError(f"YearSuccessEvidence with identifier '{year_success_identifier}' not found.")
+
+        try:
+            person = Person.nodes.get(employee_id=employee_id)
+        except Person.DoesNotExist:
+            raise NotFoundError(f"Person with employee_id '{employee_id}' not found.")
+
+        if not person.can_approve_yse:
+            raise AuthorizationError(
+                f"Person {employee_id} cannot withdraw an approval: the Approver flag "
+                "(can_approve_yse) is not set."
+            )
+
+        if not yse.administrative_review_complete:
+            return True
+
+        yse.administrative_review_completed_by.disconnect_all()
+        yse.administrative_review_complete = False
+        yse.administrative_review_completed_date = None
+        yse.save()
+        return True
+
+    except (NotFoundError, AuthorizationError) as e:
+        raise e
+    except Exception as e:
+        raise CrudError(f"Error withdrawing approval on {year_success_identifier}: {e}")
+
+
+def add_recommendation_to_yse(year_success_identifier: str, recommendation: str,
+                              detail: str = None, created_by_employee_id: str = None) -> dict:
+    """
+    Record an end-of-review-cycle improvement on a YSE: creates a Recommendation
+    (status 'open') and wires has_recommendation + created_by.
+    """
+    if not recommendation or not recommendation.strip():
+        raise ValidationError("'recommendation' is required.")
+    try:
+        try:
+            yse = YearSuccessEvidence.nodes.get(year_identifier=year_success_identifier)
+        except YearSuccessEvidence.DoesNotExist:
+            raise NotFoundError(f"YearSuccessEvidence with identifier '{year_success_identifier}' not found.")
+
+        person = None
+        if created_by_employee_id:
+            try:
+                person = Person.nodes.get(employee_id=created_by_employee_id)
+            except Person.DoesNotExist:
+                raise NotFoundError(f"Person with employee_id '{created_by_employee_id}' not found.")
+
+        rec = Recommendation(
+            recommendation=recommendation.strip(),
+            detail=(detail or None),
+            date_created=datetime.now().date(),
+        )
+        rec.save()
+        yse.recommendations.connect(rec)
+        if person is not None:
+            rec.created_by.connect(person)
+        return rec.serialize()
+
+    except (NotFoundError, ValidationError) as e:
+        raise e
+    except Exception as e:
+        raise CrudError(f"Error adding recommendation to {year_success_identifier}: {e}")
+
+
+def update_recommendation(unique_id: str, status: str = None, resolution: str = None,
+                          recommendation: str = None, detail: str = None) -> dict:
+    """
+    Update a Recommendation's lifecycle or text. Moving out of 'open' stamps
+    date_resolved; moving back to 'open' clears it. Recommendations are records
+    — there is deliberately no delete path.
+    """
+    from app.data_config import recommendation_statuses
+
+    if status is not None and status not in recommendation_statuses:
+        raise ValidationError(
+            f"Invalid status (expected {sorted(recommendation_statuses)}): {status!r}"
+        )
+    try:
+        try:
+            rec = Recommendation.nodes.get(unique_id=unique_id)
+        except Recommendation.DoesNotExist:
+            raise NotFoundError(f"Recommendation with unique_id '{unique_id}' not found.")
+
+        if recommendation is not None and recommendation.strip():
+            rec.recommendation = recommendation.strip()
+        if detail is not None:
+            rec.detail = detail or None
+        if resolution is not None:
+            rec.resolution = resolution or None
+        if status is not None and status != rec.status:
+            rec.status = status
+            rec.date_resolved = None if status == "open" else datetime.now().date()
+        rec.save()
+        return rec.serialize()
+
+    except (NotFoundError, ValidationError) as e:
+        raise e
+    except Exception as e:
+        raise CrudError(f"Error updating recommendation {unique_id}: {e}")
+
+
+# ---------------------------------------------------------------------------
+# Concern lifecycle — an issue raised on a YSE with no resolution path yet.
+# A concern is meant to LEAVE: it converts into a Recommendation or a Plan, or
+# it is dismissed. See graph_schema.Concern.
+# ---------------------------------------------------------------------------
+
+def add_concern_to_yse(year_success_identifier: str, concern: str,
+                       detail: str = None, raised_by_employee_id: str = None) -> dict:
+    """
+    Record an issue on a YSE for which no path to resolution exists yet: creates
+    a Concern (status 'open') and wires has_concern + raised_by.
+    """
+    if not concern or not concern.strip():
+        raise ValidationError("'concern' is required.")
+    try:
+        try:
+            yse = YearSuccessEvidence.nodes.get(year_identifier=year_success_identifier)
+        except YearSuccessEvidence.DoesNotExist:
+            raise NotFoundError(f"YearSuccessEvidence with identifier '{year_success_identifier}' not found.")
+
+        person = None
+        if raised_by_employee_id:
+            try:
+                person = Person.nodes.get(employee_id=raised_by_employee_id)
+            except Person.DoesNotExist:
+                raise NotFoundError(f"Person with employee_id '{raised_by_employee_id}' not found.")
+
+        con = Concern(
+            concern=concern.strip(),
+            detail=(detail or None),
+            date_raised=datetime.now().date(),
+        )
+        con.save()
+        yse.concerns.connect(con)
+        if person is not None:
+            con.raised_by.connect(person)
+        return con.serialize()
+
+    except (NotFoundError, ValidationError) as e:
+        raise e
+    except Exception as e:
+        raise CrudError(f"Error adding concern to {year_success_identifier}: {e}")
+
+
+def update_concern(unique_id: str, status: str = None, resolution: str = None,
+                   concern: str = None, detail: str = None) -> dict:
+    """
+    Update a Concern's lifecycle or text. Moving out of 'open' stamps
+    date_resolved; moving back to 'open' clears it. Concerns are records —
+    there is deliberately no delete path.
+
+    Setting status to 'converted' directly is allowed but does NOT create the
+    target node; use convert_concern_to_recommendation / convert_concern_to_plan
+    for that, which also wire the provenance edge.
+    """
+    from app.data_config import concern_statuses
+
+    if status is not None and status not in concern_statuses:
+        raise ValidationError(
+            f"Invalid status (expected {sorted(concern_statuses)}): {status!r}"
+        )
+    try:
+        try:
+            con = Concern.nodes.get(unique_id=unique_id)
+        except Concern.DoesNotExist:
+            raise NotFoundError(f"Concern with unique_id '{unique_id}' not found.")
+
+        if concern is not None and concern.strip():
+            con.concern = concern.strip()
+        if detail is not None:
+            con.detail = detail or None
+        if resolution is not None:
+            con.resolution = resolution or None
+        if status is not None and status != con.status:
+            con.status = status
+            con.date_resolved = None if status == "open" else datetime.now().date()
+        con.save()
+        return con.serialize()
+
+    except (NotFoundError, ValidationError) as e:
+        raise e
+    except Exception as e:
+        raise CrudError(f"Error updating concern {unique_id}: {e}")
+
+
+def _load_open_concern(unique_id: str) -> "Concern":
+    """Fetch a Concern that is eligible for conversion, or raise."""
+    try:
+        con = Concern.nodes.get(unique_id=unique_id)
+    except Concern.DoesNotExist:
+        raise NotFoundError(f"Concern with unique_id '{unique_id}' not found.")
+    if con.status == "converted":
+        raise ValidationError(
+            f"Concern '{unique_id}' has already been converted. Reopen it first to convert again."
+        )
+    return con
+
+
+def _yse_for_concern(con: "Concern"):
+    """The YearSuccessEvidence a Concern hangs off (has_concern is its anchor)."""
+    rows, _ = db.cypher_query(
+        """
+        MATCH (y:YearSuccessEvidence)-[:has_concern]->(c:Concern {unique_id: $uid})
+        RETURN y.year_identifier AS yid
+        """,
+        {"uid": con.unique_id},
+    )
+    if not rows:
+        raise NotFoundError(f"Concern '{con.unique_id}' is not attached to any YearSuccessEvidence.")
+    return rows[0][0]
+
+
+def convert_concern_to_recommendation(unique_id: str, recommendation: str = None,
+                                      detail: str = None, resolution: str = None,
+                                      created_by_employee_id: str = None) -> dict:
+    """
+    Promote a Concern into a Recommendation on the same YSE: creates the
+    Recommendation (status 'open'), wires became_recommendation, and closes the
+    concern as 'converted'. The concern is kept — it is the provenance record.
+
+    `recommendation` defaults to the concern's own text when not supplied, so
+    the cheap path is a one-click promote.
+    """
+    try:
+        con = _load_open_concern(unique_id)
+        year_identifier = _yse_for_concern(con)
+
+        rec_text = (recommendation or con.concern or "").strip()
+        if not rec_text:
+            raise ValidationError("'recommendation' is required (the concern has no text to fall back on).")
+
+        rec_payload = add_recommendation_to_yse(
+            year_identifier,
+            rec_text,
+            detail=(detail if detail is not None else con.detail),
+            created_by_employee_id=created_by_employee_id,
+        )
+        rec = Recommendation.nodes.get(unique_id=rec_payload["unique_id"])
+
+        con.became_recommendation.connect(rec)
+        con.status = "converted"
+        con.resolution = (resolution or "Converted to a recommendation.")
+        con.date_resolved = datetime.now().date()
+        con.save()
+
+        return {"concern": con.serialize(), "recommendation": rec.serialize()}
+
+    except (NotFoundError, ValidationError) as e:
+        raise e
+    except Exception as e:
+        raise CrudError(f"Error converting concern {unique_id} to a recommendation: {e}")
+
+
+def convert_concern_to_plan(unique_id: str, name: str, description: str = None,
+                            plan_status: str = "Not Started", resolution: str = None) -> dict:
+    """
+    Promote a Concern into a Plan furthering the same YSE: creates the Plan via
+    the sanctioned add_plan path, wires became_plan, and closes the concern as
+    'converted'. The concern is kept as the provenance record.
+
+    The academic year is taken from the YSE the concern hangs off, so the plan
+    always lands in the year whose evidence raised it.
+    """
+    from app.database.queries.implementation.create import add_plan
+
+    if not name or not name.strip():
+        raise ValidationError("'name' is required to create a plan.")
+    try:
+        con = _load_open_concern(unique_id)
+        year_identifier = _yse_for_concern(con)
+
+        rows, _ = db.cypher_query(
+            """
+            MATCH (y:YearSuccessEvidence {year_identifier: $yid})-[:evidence_in_year]->(a:AcademicYear)
+            RETURN a.name AS year
+            """,
+            {"yid": year_identifier},
+        )
+        if not rows:
+            raise NotFoundError(f"YearSuccessEvidence '{year_identifier}' has no academic year.")
+        academic_year_name = rows[0][0]
+
+        plan_description = (description or con.detail or con.concern or "").strip()
+        if not plan_description:
+            raise ValidationError("'description' is required (the concern has no text to fall back on).")
+
+        add_plan({
+            "name": name.strip(),
+            "description": plan_description,
+            "academic_year_name": academic_year_name,
+            "furthered_yse_identifier": year_identifier,
+            "plan_status": plan_status,
+        })
+
+        # add_plan returns a bool; description carries the unique index, so it is
+        # the reliable handle on the node just created.
+        try:
+            plan = Plan.nodes.get(description=plan_description)
+        except Plan.DoesNotExist:
+            raise CrudError("Plan was created but could not be retrieved by description.")
+
+        con.became_plan.connect(plan)
+        con.status = "converted"
+        con.resolution = (resolution or f"Converted to plan '{name.strip()}'.")
+        con.date_resolved = datetime.now().date()
+        con.save()
+
+        return {"concern": con.serialize(), "plan": plan.serialize()}
+
+    except (NotFoundError, ValidationError, CrudError) as e:
+        raise e
+    except Exception as e:
+        raise CrudError(f"Error converting concern {unique_id} to a plan: {e}")

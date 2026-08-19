@@ -137,10 +137,19 @@ working_group_names_web_query = {d["url_slug"]: d["name"] for d in _INDICATOR_DE
 # report/export vocabulary iterated across the app. Derived.
 working_groups = [d["name"] for d in _INDICATOR_DEFS]
 
+# Plan lifecycle status. THE single source of truth — the write-path validator in
+# queries/implementation/update.py and the frontend's planStatus.js both derive from
+# this list, and nothing should re-declare it.
+#
+# "Completed" (not "Complete"): that is what every Plan in the graph carries, what the
+# accomplishment auto-create branch in update_plan keys on, and what the campus-plan
+# and Plans/Accomplishments views order by. The list said "Complete" while the
+# validator said "Completed", so the Annotations-tab Plan form — which built its
+# options from the wrong spelling — 500'd on every save at that status.
 plan_statuses = [
     "Not Started",
     "In Progress",
-    "Complete",
+    "Completed",
     "On Hold",
     "Abandoned",
 ]
@@ -285,6 +294,33 @@ query_statuses = {
 
 
 # ---------------------------------------------------------------------------
+# Recommendation lifecycle — improvements identified at the end of a review
+# cycle for one YSE (graph_schema.Recommendation). Recommendations are records:
+# they resolve via status + resolution prose, never deletion.
+# ---------------------------------------------------------------------------
+recommendation_statuses = {
+    "open":      "Open",
+    "addressed": "Addressed",
+    "dismissed": "Dismissed",
+}
+
+
+# ---------------------------------------------------------------------------
+# Concern lifecycle — an issue raised against one YSE for which no path to
+# resolution has been defined yet (graph_schema.Concern). A concern is a
+# deliberately unstable state: it exists to LEAVE, by becoming a Recommendation
+# (something should change) or a Plan (someone will do something), or by being
+# dismissed. Like recommendations, concerns are records — they never delete,
+# and a converted concern keeps an edge to whatever it became.
+# ---------------------------------------------------------------------------
+concern_statuses = {
+    "open":      "Open",
+    "converted": "Converted",
+    "dismissed": "Dismissed",
+}
+
+
+# ---------------------------------------------------------------------------
 # Evidence strength — how strongly an implementation's is_evidence_for link
 # addresses the requirements of the success indicator it evidences. Stored as
 # an integer 0-3 on the relationship itself (graph_schema.IsEvidenceForRel);
@@ -295,6 +331,20 @@ evidence_strength_levels = {
     1: "Indirect Support",
     2: "Partial",
     3: "Full",
+}
+
+# ---------------------------------------------------------------------------
+# Evidence control — who operates the practice behind an evidence link,
+# RELATIVE to that evidence's owners (the same implementation can be internal
+# to one campus/WG's evidence and external to another's). Absent/None =
+# unspecified. External makes a dependency visible: the owners rely on a
+# practice they don't directly control (another unit, SFBRN-shared, the
+# Chancellor's Office, or a vendor) — maturity reviews grade their INTERFACE
+# to it, not the practice itself.
+# ---------------------------------------------------------------------------
+evidence_control_choices = {
+    "internal": "The evidence owners operate this practice themselves.",
+    "external": "The owners rely on a practice they don't directly control (another unit, SFBRN, the CO, a vendor).",
 }
 
 evidence_strength_descriptions = {
@@ -338,6 +388,7 @@ PUBLIC_VOCABULARIES = {
     "status_levels":         status_levels,
     "evidence_strength_levels":       evidence_strength_levels,
     "evidence_strength_descriptions": evidence_strength_descriptions,
+    "evidence_control_choices":       evidence_control_choices,
     "working_groups":        working_groups,
     "message_types":         message_types,
     "metric_types":          metric_types,
@@ -347,6 +398,8 @@ PUBLIC_VOCABULARIES = {
     # queries (pending questions)
     "query_categories":      query_categories,
     "query_statuses":        query_statuses,
+    "recommendation_statuses": recommendation_statuses,
+    "concern_statuses":        concern_statuses,
 }
 
 yse_priority_level = {

@@ -61,7 +61,11 @@ export const UserProvider = ({ children }) => {
                 unique_id: userData.unique_id,
                 title: userData.title,
                 email: userData.email,
-                active: userData.active
+                active: userData.active,
+                // Authority flags must survive into the snapshot — the approve
+                // gate reads user.can_approve_yse (this omission once disabled
+                // the Approve button for real approvers).
+                can_approve_yse: userData.can_approve_yse
             };
             setCurrentUser(userInfo);
             localStorage.setItem(
@@ -175,6 +179,39 @@ export const UserProvider = ({ children }) => {
         loadAllIndividuals();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
+
+    // Keep the "notating as" snapshot honest against the live roster. The
+    // persisted selection is a thin snapshot — older ones predate fields like
+    // can_approve_yse, and Settings edits (rename, flag changes) don't rewrite
+    // localStorage — so authoritative person fields re-merge from individuals
+    // whenever either side changes. Stable once merged (no-op when equal).
+    useEffect(() => {
+        if (!currentUser || !individuals) return;
+        const fresh = individuals.find(
+            (p) => p.unique_id === currentUser.unique_id || p.employee_id === currentUser.employee_id
+        );
+        if (!fresh) return;
+        const merged = {
+            ...currentUser,
+            name: fresh.name,
+            employee_id: fresh.employee_id,
+            unique_id: fresh.unique_id,
+            title: fresh.title,
+            email: fresh.email,
+            active: fresh.active,
+            can_approve_yse: fresh.can_approve_yse,
+        };
+        const changed = Object.keys(merged).some((k) => merged[k] !== currentUser[k]);
+        if (changed) {
+            setCurrentUser(merged);
+            const saved = readSavedSelection();
+            localStorage.setItem(
+                STORAGE_KEY,
+                JSON.stringify({ ownerEmail: saved?.ownerEmail ?? authUser?.email ?? null, user: merged })
+            );
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [individuals, currentUser]);
 
     // Resolve the "notating as" attribution. Re-runs whenever the logged-in
     // identity changes (login, logout, /me rehydrate on refresh, account switch)

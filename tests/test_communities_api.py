@@ -271,3 +271,94 @@ def test_communities_by_working_group_derivation(flask_client, test_person):
         any(c["name"] == COMMUNITY_NAME for c in row["communities"])
         for row in items if row["working_group"] == wg_name
     )
+
+
+# --- Accountable community on implementations ---------------------------------
+
+IMPL_TITLE = f"{SENTINEL} Test Accountable Community Process"
+
+
+@pytest.fixture
+def cleanup_sentinel_impls(cleanup_communities):
+    """Sentinel-titled implementations created by the accountability tests."""
+    yield
+    db.cypher_query(
+        "MATCH (i) WHERE (i:Process OR i:Guidance) AND i.title STARTS WITH $prefix DETACH DELETE i",
+        {"prefix": SENTINEL},
+    )
+
+
+def test_accountable_community_round_trip(cleanup_sentinel_impls):
+    from app.database.graph_schema import Process
+    from app.database.queries.communities.create import create_community
+    from app.database.queries.implementation.read import get_implementation_detail
+    from app.database.queries.implementation.update import (
+        assign_accountable_community,
+        unassign_accountable_community,
+    )
+
+    community = create_community({"name": COMMUNITY_NAME})
+    impl = Process(title=IMPL_TITLE, description="sentinel").save()
+
+    # Assign (by unique_id) and read back through the batched projection.
+    assert assign_accountable_community(impl.unique_id, "Process", community.unique_id)
+    detail = get_implementation_detail("Process", impl.unique_id)
+    assert [c["name"] for c in detail["accountable_communities"]] == [COMMUNITY_NAME]
+
+    # Idempotent re-assign; resolve by name works too.
+    assert assign_accountable_community(impl.unique_id, "Process", COMMUNITY_NAME)
+    detail = get_implementation_detail("Process", impl.unique_id)
+    assert len(detail["accountable_communities"]) == 1
+
+    # Unassign clears it.
+    assert unassign_accountable_community(impl.unique_id, "Process", community.unique_id)
+    detail = get_implementation_detail("Process", impl.unique_id)
+    assert detail["accountable_communities"] == []
+
+
+def test_accountable_community_rejects_reference_types(cleanup_sentinel_impls):
+    from app.database.graph_schema import Guidance
+    from app.database.queries.communities.create import create_community
+    from app.database.queries.implementation.update import assign_accountable_community
+    from app.endpoints.data_api.errors.custom_exceptions import NotFoundError, ValidationError
+
+    community = create_community({"name": COMMUNITY_NAME})
+    guidance = Guidance(title=IMPL_TITLE, description="sentinel").save()
+
+    with pytest.raises(ValidationError):
+        assign_accountable_community(guidance.unique_id, "Guidance", community.unique_id)
+
+    # Unknown community on a valid doing type -> NotFoundError.
+    from app.database.graph_schema import Process
+    impl = Process(title=IMPL_TITLE + " 2", description="sentinel").save()
+    with pytest.raises(NotFoundError):
+        assign_accountable_community(impl.unique_id, "Process", "no-such-community")
+
+
+def test_accountable_community_endpoint_actions(flask_client, cleanup_sentinel_impls):
+    from app.database.graph_schema import Process
+    from app.database.queries.communities.create import create_community
+
+    community = create_community({"name": COMMUNITY_NAME})
+    impl = Process(title=IMPL_TITLE, description="sentinel").save()
+
+    resp = flask_client.put("/ati/data-api/v1/implementations", json={
+        "action": "assign_accountable_community",
+        "implementation_type": "Process",
+        "implementation_unique_id": impl.unique_id,
+        "community": community.unique_id,
+    })
+    assert resp.status_code == 200
+
+    from app.database.queries.implementation.read import get_implementation_detail
+    detail = get_implementation_detail("Process", impl.unique_id)
+    assert [c["name"] for c in detail["accountable_communities"]] == [COMMUNITY_NAME]
+
+    resp = flask_client.put("/ati/data-api/v1/implementations", json={
+        "action": "unassign_accountable_community",
+        "implementation_type": "Process",
+        "implementation_unique_id": impl.unique_id,
+        "community": community.unique_id,
+    })
+    assert resp.status_code == 200
+    assert get_implementation_detail("Process", impl.unique_id)["accountable_communities"] == []

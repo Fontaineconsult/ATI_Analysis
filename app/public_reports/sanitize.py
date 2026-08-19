@@ -58,11 +58,18 @@ def _implementation(im):
         ),
         'description': im.get('description'),
         'strength': im.get('strength'),
+        'control': im.get('control'),
+        'no_active_documents': bool(im.get('no_active_documents')),
+        'undocumented': bool(im.get('undocumented')),
         'retired': bool(im.get('retired')),
         'retired_date': _s(im.get('retired_date')),
         'retired_note': im.get('retired_note'),
         'owner': (im.get('owner') or {}).get('name'),
         'accountable_working_group': im.get('accountable_working_group'),
+        'accountable_communities': [
+            c.get('name') if isinstance(c, dict) else c
+            for c in (im.get('accountable_communities') or [])
+        ],
         'dimensions': [d.get('name') for d in (im.get('dimensions') or []) if d.get('name')],
         'participants': [
             {
@@ -118,21 +125,42 @@ def public_implementation_payload(impl):
             'campus_name': campus.get('name'),
             'year': year,
             'strength': link.get('strength'),
+            'control': link.get('control'),
             'public_url': _public_indicator_url(
                 link.get('indicator_composite_key'), campus.get('abbreviation'), year,
             ) if campus.get('abbreviation') and year else None,
         })
     evidence_for.sort(key=lambda e: (e['year'] or '', e['composite_key'] or ''), reverse=True)
 
+    # Documentation health, same rules as the app views: the pool is documents +
+    # webpages (notes/messages are annotations and don't count); a document is
+    # dead when depreciated, a webpage when depreciated or gone. Legacy string
+    # booleans ('True') still exist until the Document-flags migration runs.
+    def _dead(v):
+        return v is True or v == 'True'
+    _docs = [d for d in (impl.get('supporting_documents') or []) if d.get('name')]
+    _webs = list(impl.get('supporting_webpages') or [])
+    _doc_total = len(_docs) + len(_webs)
+    _doc_active = (
+        sum(1 for d in _docs if not _dead(d.get('depreciated')))
+        + sum(1 for w in _webs
+              if not _dead(w.get('depreciated')) and not _dead(w.get('no_longer_exists')))
+    )
+
     return {
         'type': impl.get('type'),
         'unique_id': impl.get('unique_id'),
         'title': impl.get('title'),
         'description': impl.get('description'),
+        'no_active_documents': _doc_total > 0 and _doc_active == 0,
+        'undocumented': _doc_total == 0,
         'retired': bool(impl.get('retired')),
         'retired_date': _s(impl.get('retired_date')),
         'retired_note': impl.get('retired_note'),
         'owners': [p.get('name') for p in (impl.get('owned_by') or []) if p.get('name')],
+        'accountable_communities': [
+            c.get('name') for c in (impl.get('accountable_communities') or []) if c.get('name')
+        ],
         'dimensions': [d.get('name') for d in (impl.get('dimensions') or []) if d.get('name')],
         'participants': [
             {
@@ -212,8 +240,23 @@ def public_report_payload(report):
         },
         'review': {
             'complete': bool(yse.get('administrative_review_complete')),
+            'ready': bool(yse.get('ready_for_admin_review')),
             'completed_date': _s(yse.get('administrative_review_completed_date')),
             'completed_by': completed_by.get('name'),
+            # The reviewer's evidence summary and review notes are public report
+            # content (decision 2026-08-12). Note authors are dropped, matching
+            # the no-attribution rule for public recommendations.
+            'evidence_summary': (
+                yse.get('admin_review_description')
+                if yse.get('admin_review_description')
+                and yse.get('admin_review_description') != 'No Review'
+                else None
+            ),
+            'notes': [
+                {'content': n.get('content'), 'date': _s(n.get('dateCreated'))}
+                for n in (report.get('admin_review_notes') or [])
+                if n.get('content')
+            ],
         },
         'implementers': [_person(p) for p in (people.get('implementers') or [])],
         'implementations': [_implementation(im) for im in (report.get('implementations') or [])],
@@ -230,15 +273,99 @@ def public_report_payload(report):
             for t in (report.get('taaps') or [])
         ],
         'assets': [
-            {'title': a.get('title'), 'identifier': a.get('asset_identifier')}
+            {
+                'title': a.get('title'),
+                'identifier': a.get('asset_identifier'),
+                'asset_class': a.get('asset_class'),
+                'scope': a.get('scope'),
+                'reached_via': a.get('reached_via') or [],
+                'description': a.get('description'),
+            }
             for a in (report.get('assets') or [])
         ],
+        # End-of-cycle improvements: text/status/dates only — creator attribution
+        # (a person) is deliberately dropped on the public page, and DISMISSED
+        # items are working-surface records that never reach a report.
+        # Names only: stake notes are working-surface prose and stay internal.
+        'communities': {
+            'accountable': sorted({
+                name
+                for im in (report.get('implementations') or [])
+                if not im.get('retired')
+                for name in (im.get('accountable_communities') or [])
+            }),
+            'stakeholders': [
+                c.get('name') for c in (report.get('community_stakeholders') or [])
+                if c.get('name')
+            ],
+        },
+        'recommendations': [
+            {
+                'recommendation': r.get('recommendation'),
+                'detail': r.get('detail'),
+                'status': r.get('status'),
+                'resolution': r.get('resolution'),
+                'date_created': _s(r.get('date_created')),
+                'date_resolved': _s(r.get('date_resolved')),
+            }
+            for r in (report.get('recommendations') or [])
+            if r.get('status') != 'dismissed'
+        ],
+        # Issues raised with no resolution path. Same public-surface rules as
+        # recommendations: text/status/dates only, the person who raised it is
+        # dropped, and DISMISSED items never reach a report. Converted concerns
+        # DO publish — they show an issue was raised and answered, and `became`
+        # names what answered it.
+        'concerns': [
+            {
+                'concern': c.get('concern'),
+                'detail': c.get('detail'),
+                'status': c.get('status'),
+                'resolution': c.get('resolution'),
+                'became': (c.get('became') or {}).get('text'),
+                'became_kind': (c.get('became') or {}).get('kind'),
+                'date_raised': _s(c.get('date_raised')),
+                'date_resolved': _s(c.get('date_resolved')),
+            }
+            for c in (report.get('concerns') or [])
+            if c.get('status') != 'dismissed'
+        ],
+        # Derived unit portfolio (names/capacities only — no people emails).
+        'ict_footprint': {
+            'units': [u.get('name') for u in ((report.get('ict_footprint') or {}).get('units') or [])],
+            'assets': [
+                {
+                    'title': a.get('title'),
+                    'identifier': a.get('asset_identifier'),
+                    'scope': a.get('scope'),
+                    'stewards': [
+                        {'name': st.get('name'), 'capacities': st.get('capacities') or []}
+                        for st in (a.get('stewards') or [])
+                    ],
+                    'remediated_here': a.get('asset_identifier') in {
+                        r.get('asset_identifier') for r in (report.get('assets') or [])
+                    },
+                }
+                for a in ((report.get('ict_footprint') or {}).get('assets') or [])
+            ],
+        },
         'interfaces': [
-            {'title': i.get('title'), 'identifier': i.get('interface_identifier')}
+            {
+                'title': i.get('title'),
+                'identifier': i.get('interface_identifier'),
+                'function': i.get('function'),
+                'coverage_domains': i.get('coverage_domains') or [],
+                'audience': i.get('audience') or [],
+                'description': i.get('description'),
+            }
             for i in (report.get('interfaces') or [])
         ],
         'tools': [
-            {'title': t.get('title'), 'identifier': t.get('tool_identifier')}
+            {
+                'title': t.get('title'),
+                'identifier': t.get('tool_identifier'),
+                'description': t.get('description'),
+            }
             for t in (report.get('tools') or [])
         ],
         'vendors': [

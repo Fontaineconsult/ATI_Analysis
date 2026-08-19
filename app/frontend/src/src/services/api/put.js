@@ -108,6 +108,48 @@ export const attachWebpageToGovernance = (governanceType, governanceUniqueId, we
 export const detachWebpageFromGovernance = (governanceType, governanceUniqueId, webpageUniqueId) =>
     _governanceAttachDetach('detach_webpage', governanceType, governanceUniqueId, 'webpage_unique_id', webpageUniqueId);
 
+// GOVERNANCE -> INDICATOR FRAMEWORK
+// Two edges, two strengths of claim (see the Governance docstring in graph_schema.py).
+//
+// informs -> Goal: broad and non-committal, property-free, so it rides the same
+// simple attach/detach helper as documents and webpages.
+export const attachGoalToGovernance = (governanceType, governanceUniqueId, goalUniqueId) =>
+    _governanceAttachDetach('attach_goal', governanceType, governanceUniqueId, 'goal_unique_id', goalUniqueId);
+
+export const detachGoalFromGovernance = (governanceType, governanceUniqueId, goalUniqueId) =>
+    _governanceAttachDetach('detach_goal', governanceType, governanceUniqueId, 'goal_unique_id', goalUniqueId);
+
+export const detachIndicatorFromGovernance = (governanceType, governanceUniqueId, indicatorUniqueId) =>
+    _governanceAttachDetach('detach_indicator', governanceType, governanceUniqueId, 'indicator_unique_id', indicatorUniqueId);
+
+// drives -> SuccessIndicator: carries the citation that makes the claim checkable.
+// `citation` keys are forwarded as-is so present-but-empty (clear this field) stays
+// distinguishable from absent (leave it alone) — pass only what you mean to change.
+const _governanceDrives = async (action, governanceType, governanceUniqueId, indicatorUniqueId, citation = {}) => {
+    try {
+        const response = await axios.put(
+            `${process.env.REACT_APP_API_URL}/governance`,
+            {
+                action,
+                type: governanceType,
+                governance_unique_id: governanceUniqueId,
+                indicator_unique_id: indicatorUniqueId,
+                ...citation,
+            },
+        );
+        return response.data;
+    } catch (error) {
+        console.error(`Error on ${action}:`, error);
+        throw error;
+    }
+};
+
+export const attachIndicatorToGovernance = (governanceType, governanceUniqueId, indicatorUniqueId, citation = {}) =>
+    _governanceDrives('attach_indicator', governanceType, governanceUniqueId, indicatorUniqueId, citation);
+
+export const updateGovernanceIndicatorCitation = (governanceType, governanceUniqueId, indicatorUniqueId, citation = {}) =>
+    _governanceDrives('update_indicator_citation', governanceType, governanceUniqueId, indicatorUniqueId, citation);
+
 export const assignApprover = async (employeeId, yearSuccessEvidence) => {
     try {
         const response = await axios.put(`${process.env.REACT_APP_API_URL}/evidence`,
@@ -116,6 +158,109 @@ export const assignApprover = async (employeeId, yearSuccessEvidence) => {
         return response.data;
     } catch (error) {
         console.error('Error assigning approver:', error);
+        throw error;
+    }
+};
+
+// Update a recommendation's lifecycle/text. Leaving 'open' stamps
+// date_resolved; returning to 'open' clears it. No delete — records.
+export const updateRecommendation = async (uniqueId, fields) => {
+    // fields: { status?, resolution?, recommendation?, detail? }
+    try {
+        const response = await axios.put(`${process.env.REACT_APP_API_URL}/evidence`, {
+            action: 'update_recommendation',
+            unique_id: uniqueId,
+            ...fields,
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error updating recommendation:', error);
+        throw error;
+    }
+};
+
+// Update a concern's lifecycle/text. Leaving 'open' stamps date_resolved;
+// returning to 'open' clears it. Concerns are records — no delete path.
+export const updateConcern = async (uniqueId, fields) => {
+    // fields: { status?, resolution?, concern?, detail? }
+    try {
+        const response = await axios.put(`${process.env.REACT_APP_API_URL}/evidence`, {
+            action: 'update_concern',
+            unique_id: uniqueId,
+            ...fields,
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error updating concern:', error);
+        throw error;
+    }
+};
+
+// Promote a concern into a Recommendation on the same YSE. The concern survives
+// as the provenance record, wired via became_recommendation. `recommendation`
+// is optional — the backend falls back to the concern's own text.
+export const convertConcernToRecommendation = async (uniqueId, fields = {}) => {
+    // fields: { recommendation?, detail?, resolution?, created_by_employee_id? }
+    try {
+        const response = await axios.put(`${process.env.REACT_APP_API_URL}/evidence`, {
+            action: 'convert_concern_to_recommendation',
+            unique_id: uniqueId,
+            ...fields,
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error converting concern to recommendation:', error);
+        throw error;
+    }
+};
+
+// Promote a concern into a Plan furthering the same YSE. The concern survives
+// as the provenance record, wired via became_plan. The plan lands in the
+// academic year of the YSE the concern hangs off.
+export const convertConcernToPlan = async (uniqueId, name, fields = {}) => {
+    // fields: { description?, plan_status?, resolution? }
+    try {
+        const response = await axios.put(`${process.env.REACT_APP_API_URL}/evidence`, {
+            action: 'convert_concern_to_plan',
+            unique_id: uniqueId,
+            name,
+            ...fields,
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error converting concern to plan:', error);
+        throw error;
+    }
+};
+
+// Withdraw a completed administrative review (Approver-flag gated, like
+// approving). The evidence returns to "ready — awaiting approval".
+export const withdrawApproval = async (employeeId, yearSuccessEvidence) => {
+    try {
+        const response = await axios.put(`${process.env.REACT_APP_API_URL}/evidence`, {
+            action: 'withdraw_approval',
+            year_success_evidence: yearSuccessEvidence,
+            employee_id: employeeId,
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error withdrawing approval:', error);
+        throw error;
+    }
+};
+
+// Step one of the review workflow: mark (or un-mark) a YSE ready for
+// administrative review. A flagged approver then completes it via assignApprover.
+export const setReadyForReview = async (yearSuccessEvidence, ready) => {
+    try {
+        const response = await axios.put(`${process.env.REACT_APP_API_URL}/evidence`, {
+            action: 'set_ready_for_review',
+            year_success_evidence: yearSuccessEvidence,
+            ready,
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error setting ready-for-review:', error);
         throw error;
     }
 };
@@ -363,6 +508,38 @@ export const unassignAccountableWorkingGroup = async (implementationType, implem
     }
 };
 
+// Accountable community of practice — the operating community that answers for a
+// doing-implementation's work (preferred accountability seat over the WG edge).
+export const assignAccountableCommunity = async (implementationType, implementationUniqueId, community) => {
+    try {
+        const response = await axios.put(`${process.env.REACT_APP_API_URL}/implementations`, {
+            action: 'assign_accountable_community',
+            implementation_type: implementationType,
+            implementation_unique_id: implementationUniqueId,
+            community,
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error assigning accountable community:', error);
+        throw error;
+    }
+};
+
+export const unassignAccountableCommunity = async (implementationType, implementationUniqueId, community) => {
+    try {
+        const response = await axios.put(`${process.env.REACT_APP_API_URL}/implementations`, {
+            action: 'unassign_accountable_community',
+            implementation_type: implementationType,
+            implementation_unique_id: implementationUniqueId,
+            community,
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error unassigning accountable community:', error);
+        throw error;
+    }
+};
+
 export const unassignPersonAsImplementor = async (employeeId, year_success_indicator) => {
     try {
         await axios.put(`${process.env.REACT_APP_API_URL}/implementations`, unassignResponsiblePersonPayload(employeeId, year_success_indicator));
@@ -429,6 +606,25 @@ export const copyEvidenceToCampuses = async (implementationType, uniqueId, yearN
     }
 }
 
+
+// Set or clear (null) the control flag on an existing evidence link —
+// 'internal' (the evidence owners operate the practice) or 'external' (they
+// rely on a practice they don't directly control).
+export const setEvidenceControl = async (yearIdentifier, implementationType, uniqueId, control) => {
+    try {
+        const response = await axios.put(`${process.env.REACT_APP_API_URL}/implementations`, {
+            action: "set_evidence_control",
+            year_success_identifier: yearIdentifier,
+            implementation_type: implementationType,
+            unique_id: uniqueId,
+            control,
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error setting evidence control:', error);
+        throw error;
+    }
+}
 
 // Set or clear (null) the 0-3 strength rating on an existing evidence link.
 export const setEvidenceStrength = async (yearIdentifier, implementationType, uniqueId, strength) => {

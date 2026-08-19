@@ -38,8 +38,8 @@ import { DeleteIcon, ViewIcon } from '@chakra-ui/icons';
 import SupportingDocumentationTabs from "../../implementation_explorer/doc_components/SupportingDocumentationTabs";
 import normalizeWrappedDocs from "../../implementation_explorer/doc_components/normalizeWrappedDocs";
 import { unassignImplementationFromYSE } from '../../../services/api/delete';
-import { setEvidenceStrength } from '../../../services/api/put';
-import { EVIDENCE_STRENGTH_LEVELS, strengthConfig } from '../implementation/implementationConfig';
+import { setEvidenceStrength, setEvidenceControl } from '../../../services/api/put';
+import { EVIDENCE_STRENGTH_LEVELS, strengthConfig, EVIDENCE_CONTROL_OPTIONS, controlConfig } from '../implementation/implementationConfig';
 
 function EvidenceTypeMasterList({ evidence, yearIdentifier, onRefresh }) {
 
@@ -54,6 +54,37 @@ function EvidenceTypeMasterList({ evidence, yearIdentifier, onRefresh }) {
     // Optimistic per-link strength overrides (key `${type}:${unique_id}`), so the
     // select reflects the change immediately while onRefresh reloads the payload.
     const [strengthOverrides, setStrengthOverrides] = useState({});
+    // Same optimistic pattern for the control flag (internal/external).
+    const [controlOverrides, setControlOverrides] = useState({});
+
+    const handleControlChange = async (evidenceItem, rawValue) => {
+        const implType = evidenceItem.type;
+        const uniqueId = evidenceItem.evidenceType?.properties?.unique_id;
+        const value = rawValue === '' ? null : rawValue;
+        if (!implType || !uniqueId || !yearIdentifier) return;
+        const key = `${implType}:${uniqueId}`;
+        setControlOverrides((m) => ({ ...m, [key]: value }));
+        try {
+            await setEvidenceControl(yearIdentifier, implType, uniqueId, value);
+            const cfg = controlConfig(value);
+            toast({
+                title: cfg ? `Control set to ${cfg.label}` : 'Control cleared',
+                status: 'success', duration: 2000, isClosable: true, position: 'top-right',
+            });
+            if (onRefresh) onRefresh();
+        } catch (error) {
+            setControlOverrides((m) => {
+                const next = { ...m };
+                delete next[key];
+                return next;
+            });
+            toast({
+                title: 'Failed to set control',
+                description: error.response?.data?.error || error.message,
+                status: 'error', duration: 3500, isClosable: true, position: 'top-right',
+            });
+        }
+    };
 
     const handleStrengthChange = async (evidenceItem, rawValue) => {
         const implType = evidenceItem.type;
@@ -252,9 +283,9 @@ function EvidenceTypeMasterList({ evidence, yearIdentifier, onRefresh }) {
                 >
                     <Thead bg="gray.50">
                         <Tr>
-                            <Th width="12%">Type</Th>
-                            <Th width="30%">Title</Th>
-                            <Th width="16%">
+                            <Th width="10%">Type</Th>
+                            <Th width="27%">Title</Th>
+                            <Th width="14%">
                                 <Tooltip
                                     label="How strongly this implementation addresses the indicator's requirements: 0 No Contribution · 1 Indirect Support · 2 Partial · 3 Full"
                                     placement="top"
@@ -262,7 +293,15 @@ function EvidenceTypeMasterList({ evidence, yearIdentifier, onRefresh }) {
                                     <Text as="span" cursor="help">Strength</Text>
                                 </Tooltip>
                             </Th>
-                            <Th width="22%">
+                            <Th width="13%">
+                                <Tooltip
+                                    label="Who operates this practice, relative to this evidence's owners: Internal = they run it themselves; External = they rely on a practice they don't directly control (another unit, SFBRN, the CO, a vendor)"
+                                    placement="top"
+                                >
+                                    <Text as="span" cursor="help">Control</Text>
+                                </Tooltip>
+                            </Th>
+                            <Th width="18%">
                                 <Tooltip
                                     label="Doc=Documents, Web=Webpages, Note=Notes, Msg=Messages, Met=Metrics"
                                     placement="top"
@@ -271,7 +310,7 @@ function EvidenceTypeMasterList({ evidence, yearIdentifier, onRefresh }) {
                                     <Text as="span" cursor="help">Documentation</Text>
                                 </Tooltip>
                             </Th>
-                            <Th width="20%" textAlign="center">Actions</Th>
+                            <Th width="18%" textAlign="center">Actions</Th>
                         </Tr>
                     </Thead>
                     <Tbody>
@@ -290,6 +329,10 @@ function EvidenceTypeMasterList({ evidence, yearIdentifier, onRefresh }) {
                                 ? strengthOverrides[strengthKey]
                                 : (evidenceItem.strength ?? null);
                             const strengthCfg = strengthConfig(strengthValue);
+                            const controlValue = controlOverrides[strengthKey] !== undefined
+                                ? controlOverrides[strengthKey]
+                                : (evidenceItem.control ?? null);
+                            const controlCfg = controlConfig(controlValue);
 
                             return (
                                 <Tr
@@ -329,6 +372,18 @@ function EvidenceTypeMasterList({ evidence, yearIdentifier, onRefresh }) {
                                                     Retired{evidenceItem.evidenceType.properties.retired_date ? ` ${String(evidenceItem.evidenceType.properties.retired_date)}` : ''}
                                                 </Badge>
                                             )}
+                                            {controlValue === 'external' && (
+                                                <Badge
+                                                    colorScheme="purple"
+                                                    variant="subtle"
+                                                    fontSize="2xs"
+                                                    borderRadius="full"
+                                                    px={2}
+                                                    title="The evidence owners rely on this practice but don't directly control it"
+                                                >
+                                                    External
+                                                </Badge>
+                                            )}
                                         </HStack>
                                     </Td>
                                     <Td>
@@ -346,6 +401,25 @@ function EvidenceTypeMasterList({ evidence, yearIdentifier, onRefresh }) {
                                             {EVIDENCE_STRENGTH_LEVELS.map((level) => (
                                                 <option key={level.value} value={level.value}>
                                                     {level.value} — {level.label}
+                                                </option>
+                                            ))}
+                                        </Select>
+                                    </Td>
+                                    <Td>
+                                        <Select
+                                            size="xs"
+                                            maxW="130px"
+                                            placeholder="Unspecified"
+                                            aria-label={`Evidence control — ${evidenceTitle}`}
+                                            title={controlCfg?.description || "Who operates this practice, relative to this evidence's owners"}
+                                            value={controlValue === null ? '' : controlValue}
+                                            onChange={(e) => handleControlChange(evidenceItem, e.target.value)}
+                                            borderColor="gray.300"
+                                            _focus={{ borderColor: 'teal.500' }}
+                                        >
+                                            {EVIDENCE_CONTROL_OPTIONS.map((opt) => (
+                                                <option key={opt.value} value={opt.value}>
+                                                    {opt.label}
                                                 </option>
                                             ))}
                                         </Select>
