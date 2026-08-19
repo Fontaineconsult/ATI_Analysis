@@ -13,7 +13,7 @@ import os
 from app.data_config import (trajectory_choices, asset_classes, asset_scopes, taap_outcomes,
                              functions, component_kinds, coverage_domains, audiences, interface_provenances,
                              descriptor_kinds, query_categories, query_statuses, evidence_control_choices,
-                             recommendation_statuses)
+                             recommendation_statuses, concern_statuses)
 
 # Configuration enters through the single gateway (app/config_gateway.py). Importing
 # it hydrates os.environ from web.config (production) / .env.<FLASK_ENV> (development),
@@ -1559,6 +1559,63 @@ class Recommendation(StructuredNode):
         }
 
 
+class Concern(StructuredNode):
+    """An issue raised against one YSE for which no path to resolution has been
+    defined yet — the holding pen between "someone said this is a problem" and
+    "here is what we are doing about it".
+
+    A Concern is deliberately an unstable state. It exists to LEAVE, in one of
+    three ways (vocab in data_config.concern_statuses):
+
+      open → converted   the concern became a Recommendation (something should
+                         change) or a Plan (someone will do something). The
+                         `became_recommendation` / `became_plan` edge records
+                         which, so the provenance of a plan is queryable.
+      open → dismissed   deliberately not pursued, with `resolution` saying why.
+
+    The distinction from its neighbours is the resolution path, not the subject:
+
+      Concern         an issue with NO defined path — this node.
+      Recommendation  a stated improvement — the path is "make this change".
+      Plan            committed work — the path is "this person does this".
+      Query           an open DECISION with a decider; a concern has no owner
+                      of the answer yet, a query does.
+      Note            an observation that does not assert a problem at all.
+
+    Concerns are records: there is no delete path, and a converted concern
+    keeps its edge to whatever it became. A long-open concern is itself a
+    signal — it says an issue has been sitting without anyone defining what
+    would resolve it.
+    """
+    unique_id = UniqueIdProperty()
+
+    concern = StringProperty(required=True)      # the issue as raised, one sentence
+    detail = StringProperty()                    # context; why it matters, who raised it
+    status = StringProperty(choices=concern_statuses, default="open")
+    resolution = StringProperty()                # why dismissed, or what it became
+    date_raised = DateProperty()
+    date_resolved = DateProperty()               # stamped on convert or dismiss
+
+    raised_by = RelationshipTo("Person", "raised_by")
+
+    # Conversion targets — set when status moves to 'converted'. Both are
+    # RelationshipTo so a concern that spawned both a recommendation and a plan
+    # is representable; in practice one is the norm.
+    became_recommendation = RelationshipTo("Recommendation", "became_recommendation")
+    became_plan = RelationshipTo("Plan", "became_plan")
+
+    def serialize(self):
+        return {
+            "unique_id": self.unique_id,
+            "concern": self.concern,
+            "detail": self.detail,
+            "status": self.status,
+            "resolution": self.resolution,
+            "date_raised": str(self.date_raised) if self.date_raised else None,
+            "date_resolved": str(self.date_resolved) if self.date_resolved else None,
+        }
+
+
 class YearSuccessEvidence(StructuredNode):
 
     """    Class representing a year success evidence node.
@@ -1600,6 +1657,9 @@ class YearSuccessEvidence(StructuredNode):
     metrics = RelationshipTo("Metric", "has_metric")
     # End-of-review-cycle improvement tracking (see Recommendation docstring).
     recommendations = RelationshipTo("Recommendation", "has_recommendation")
+    # Issues raised with no resolution path yet defined (see Concern docstring).
+    # Concerns are expected to convert into a Recommendation or a Plan.
+    concerns = RelationshipTo("Concern", "has_concern")
     worked_on_in_current_year = BooleanProperty(default=False)
     will_work_on_next_year = BooleanProperty(default=False)
 

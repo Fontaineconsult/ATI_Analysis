@@ -179,6 +179,60 @@ export const updateRecommendation = async (uniqueId, fields) => {
     }
 };
 
+// Update a concern's lifecycle/text. Leaving 'open' stamps date_resolved;
+// returning to 'open' clears it. Concerns are records — no delete path.
+export const updateConcern = async (uniqueId, fields) => {
+    // fields: { status?, resolution?, concern?, detail? }
+    try {
+        const response = await axios.put(`${process.env.REACT_APP_API_URL}/evidence`, {
+            action: 'update_concern',
+            unique_id: uniqueId,
+            ...fields,
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error updating concern:', error);
+        throw error;
+    }
+};
+
+// Promote a concern into a Recommendation on the same YSE. The concern survives
+// as the provenance record, wired via became_recommendation. `recommendation`
+// is optional — the backend falls back to the concern's own text.
+export const convertConcernToRecommendation = async (uniqueId, fields = {}) => {
+    // fields: { recommendation?, detail?, resolution?, created_by_employee_id? }
+    try {
+        const response = await axios.put(`${process.env.REACT_APP_API_URL}/evidence`, {
+            action: 'convert_concern_to_recommendation',
+            unique_id: uniqueId,
+            ...fields,
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error converting concern to recommendation:', error);
+        throw error;
+    }
+};
+
+// Promote a concern into a Plan furthering the same YSE. The concern survives
+// as the provenance record, wired via became_plan. The plan lands in the
+// academic year of the YSE the concern hangs off.
+export const convertConcernToPlan = async (uniqueId, name, fields = {}) => {
+    // fields: { description?, plan_status?, resolution? }
+    try {
+        const response = await axios.put(`${process.env.REACT_APP_API_URL}/evidence`, {
+            action: 'convert_concern_to_plan',
+            unique_id: uniqueId,
+            name,
+            ...fields,
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error converting concern to plan:', error);
+        throw error;
+    }
+};
+
 // Withdraw a completed administrative review (Approver-flag gated, like
 // approving). The evidence returns to "ready — awaiting approval".
 export const withdrawApproval = async (employeeId, yearSuccessEvidence) => {

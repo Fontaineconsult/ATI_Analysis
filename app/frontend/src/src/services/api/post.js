@@ -583,6 +583,25 @@ export const addRecommendation = async (yearSuccessEvidence, recommendation, det
     }
 };
 
+// An issue raised with no path to resolution yet: creates a Concern
+// (status 'open') wired to the YSE via has_concern. Concerns are expected to
+// convert into a Recommendation or a Plan — see put.js.
+export const addConcern = async (yearSuccessEvidence, concern, detail, raisedByEmployeeId) => {
+    try {
+        const response = await axios.post(`${process.env.REACT_APP_API_URL}/evidence`, {
+            action: 'add_concern',
+            year_success_evidence: yearSuccessEvidence,
+            concern,
+            detail: detail || null,
+            raised_by_employee_id: raisedByEmployeeId || null,
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error adding concern:', error);
+        throw error;
+    }
+};
+
 // Admin review feedback: creates a Note wired to the YSE via admin_review_note.
 export const addAdminReviewerNote = async (yearSuccessEvidence, noteContent, createdByEmployeeId) => {
     try {

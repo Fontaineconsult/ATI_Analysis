@@ -399,6 +399,12 @@ def fetch_evidence_for_working_group(working_group, academic_year, campus_abbrev
              recommendation: rec,
              created_by: head([ (rec)-[:created_by]->(rp:Person) | rp ])
            } ],
+           concerns: [ (evidence)-[:has_concern]->(con:Concern) | {
+             concern: con,
+             raised_by: head([ (con)-[:raised_by]->(cp:Person) | cp ]),
+             became_recommendation: head([ (con)-[:became_recommendation]->(br:Recommendation) | br ]),
+             became_plan: head([ (con)-[:became_plan]->(bp:Plan) | bp ])
+           } ],
            has_notes: evidenceNotes,
            has_messages: evidenceMessages,
            has_metrics: evidenceMetrics,

@@ -27,7 +27,7 @@ API = "/ati/data-api/v1/evidence"
 
 
 @pytest.fixture
-def review_fixture(neo4j_connection):
+def review_fixture(neo4j_connection, sentinel_academic_year):
     from app.database.graph_schema import Person, YearSuccessEvidence
 
     approver = Person(
@@ -37,7 +37,21 @@ def review_fixture(neo4j_connection):
         name=NON_APPROVER_NAME, employee_id=NON_APPROVER_EMPLOYEE_ID, can_approve_yse=False
     ).save()
     yse = YearSuccessEvidence(year_identifier=YSE_IDENTIFIER).save()
+    # Concern → Plan conversion reads the academic year off the YSE, so the
+    # sentinel year has to be wired even though approval itself never uses it.
+    yse.academic_year.connect(sentinel_academic_year)
     yield approver, non_approver, yse
+    # Plans spawned by concern conversion — matched by the sentinel-prefixed
+    # description the tests write, so production plans can never be caught.
+    db.cypher_query(
+        "MATCH (p:Plan) WHERE p.description STARTS WITH $prefix DETACH DELETE p",
+        {"prefix": SENTINEL},
+    )
+    db.cypher_query(
+        "MATCH (e:YearSuccessEvidence)-[:has_concern]->(c:Concern) "
+        "WHERE e.year_identifier STARTS WITH $prefix DETACH DELETE c",
+        {"prefix": SENTINEL},
+    )
     db.cypher_query(
         "MATCH (e:YearSuccessEvidence)-[:has_recommendation]->(r:Recommendation) "
         "WHERE e.year_identifier STARTS WITH $prefix DETACH DELETE r",
@@ -342,3 +356,155 @@ def test_recommendation_error_mapping(flask_client, review_fixture):
         "status": "addressed",
     })
     assert missing_rec.status_code == 404
+
+
+# --- Concerns: issues with no resolution path, and their conversions ----------
+
+def test_concern_lifecycle_round_trip(flask_client, review_fixture):
+    """Raise a concern, dismiss it, reopen it. Concerns are records — no delete."""
+    created = flask_client.post(API, json={
+        "action": "add_concern",
+        "year_success_evidence": YSE_IDENTIFIER,
+        "concern": "Nobody owns the alternate-format turnaround target",
+        "detail": "Raised in review; no candidate owner named.",
+        "raised_by_employee_id": APPROVER_EMPLOYEE_ID,
+    })
+    assert created.status_code == 201
+    con = created.get_json()["data"]
+    assert con["status"] == "open"
+    assert con["date_raised"] is not None
+    assert con["date_resolved"] is None
+
+    # Wired to the YSE + the person who raised it.
+    rows, _ = db.cypher_query(
+        "MATCH (:YearSuccessEvidence {year_identifier: $yid})-[:has_concern]->"
+        "(c:Concern {unique_id: $uid})-[:raised_by]->(p:Person) RETURN p.employee_id",
+        {"yid": YSE_IDENTIFIER, "uid": con["unique_id"]},
+    )
+    assert rows and rows[0][0] == APPROVER_EMPLOYEE_ID
+
+    dismissed = flask_client.put(API, json={
+        "action": "update_concern",
+        "unique_id": con["unique_id"],
+        "status": "dismissed",
+        "resolution": "Duplicate of the turnaround metric already tracked.",
+    })
+    assert dismissed.status_code == 200
+    body = dismissed.get_json()["data"]
+    assert body["status"] == "dismissed"
+    assert body["date_resolved"] is not None
+
+    reopened = flask_client.put(API, json={
+        "action": "update_concern",
+        "unique_id": con["unique_id"],
+        "status": "open",
+    })
+    assert reopened.status_code == 200
+    assert reopened.get_json()["data"]["date_resolved"] is None
+
+
+def test_concern_converts_to_recommendation(flask_client, review_fixture):
+    """Promotion creates the Recommendation, keeps the Concern, wires provenance."""
+    con = flask_client.post(API, json={
+        "action": "add_concern",
+        "year_success_evidence": YSE_IDENTIFIER,
+        "concern": "LMS role for alt-media staff is undefined",
+        "raised_by_employee_id": APPROVER_EMPLOYEE_ID,
+    }).get_json()["data"]
+
+    converted = flask_client.put(API, json={
+        "action": "convert_concern_to_recommendation",
+        "unique_id": con["unique_id"],
+        "created_by_employee_id": APPROVER_EMPLOYEE_ID,
+    })
+    assert converted.status_code == 200
+    payload = converted.get_json()["data"]
+
+    # Concern closed as converted; recommendation inherits its text by default.
+    assert payload["concern"]["status"] == "converted"
+    assert payload["concern"]["date_resolved"] is not None
+    assert payload["recommendation"]["recommendation"] == "LMS role for alt-media staff is undefined"
+    assert payload["recommendation"]["status"] == "open"
+
+    # Provenance edge exists, and the recommendation hangs off the same YSE.
+    rows, _ = db.cypher_query(
+        "MATCH (c:Concern {unique_id: $cid})-[:became_recommendation]->(r:Recommendation) "
+        "MATCH (:YearSuccessEvidence {year_identifier: $yid})-[:has_recommendation]->(r) "
+        "RETURN r.unique_id",
+        {"cid": con["unique_id"], "yid": YSE_IDENTIFIER},
+    )
+    assert rows and rows[0][0] == payload["recommendation"]["unique_id"]
+
+    # Converting twice is refused — reopen first.
+    again = flask_client.put(API, json={
+        "action": "convert_concern_to_recommendation",
+        "unique_id": con["unique_id"],
+    })
+    assert again.status_code == 400
+
+
+def test_concern_converts_to_plan(flask_client, review_fixture):
+    """Promotion creates the Plan in the YSE's academic year and wires became_plan."""
+    plan_description = f"{SENTINEL} define and publish the alt-media turnaround target"
+    con = flask_client.post(API, json={
+        "action": "add_concern",
+        "year_success_evidence": YSE_IDENTIFIER,
+        "concern": "No published turnaround target",
+        "raised_by_employee_id": APPROVER_EMPLOYEE_ID,
+    }).get_json()["data"]
+
+    converted = flask_client.put(API, json={
+        "action": "convert_concern_to_plan",
+        "unique_id": con["unique_id"],
+        "name": f"{SENTINEL} Turnaround target",
+        "description": plan_description,
+    })
+    assert converted.status_code == 200
+    payload = converted.get_json()["data"]
+    assert payload["concern"]["status"] == "converted"
+    assert payload["plan"]["description"] == plan_description
+
+    # Plan furthers the YSE, sits in its academic year, and carries provenance.
+    rows, _ = db.cypher_query(
+        "MATCH (c:Concern {unique_id: $cid})-[:became_plan]->(p:Plan) "
+        "MATCH (p)-[:furthers_yse]->(:YearSuccessEvidence {year_identifier: $yid}) "
+        "MATCH (p)-[:in_academic_year]->(a:AcademicYear) "
+        "RETURN a.name",
+        {"cid": con["unique_id"], "yid": YSE_IDENTIFIER},
+    )
+    assert rows and rows[0][0] == SENTINEL
+
+
+def test_concern_error_mapping(flask_client, review_fixture):
+    missing = flask_client.post(API, json={
+        "action": "add_concern",
+        "year_success_evidence": YSE_IDENTIFIER,
+    })
+    assert missing.status_code == 400
+
+    bad_yse = flask_client.post(API, json={
+        "action": "add_concern",
+        "year_success_evidence": f"{SENTINEL}-no-such",
+        "concern": "x",
+    })
+    assert bad_yse.status_code == 404
+
+    bad_status = flask_client.put(API, json={
+        "action": "update_concern",
+        "unique_id": "no-such",
+        "status": "addressed",   # a recommendation status, not a concern one
+    })
+    assert bad_status.status_code == 400
+
+    missing_con = flask_client.put(API, json={
+        "action": "update_concern",
+        "unique_id": "no-such",
+        "status": "dismissed",
+    })
+    assert missing_con.status_code == 404
+
+    plan_needs_name = flask_client.put(API, json={
+        "action": "convert_concern_to_plan",
+        "unique_id": "no-such",
+    })
+    assert plan_needs_name.status_code == 400

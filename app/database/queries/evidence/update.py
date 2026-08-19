@@ -637,3 +637,218 @@ def update_recommendation(unique_id: str, status: str = None, resolution: str = 
         raise e
     except Exception as e:
         raise CrudError(f"Error updating recommendation {unique_id}: {e}")
+
+
+# ---------------------------------------------------------------------------
+# Concern lifecycle — an issue raised on a YSE with no resolution path yet.
+# A concern is meant to LEAVE: it converts into a Recommendation or a Plan, or
+# it is dismissed. See graph_schema.Concern.
+# ---------------------------------------------------------------------------
+
+def add_concern_to_yse(year_success_identifier: str, concern: str,
+                       detail: str = None, raised_by_employee_id: str = None) -> dict:
+    """
+    Record an issue on a YSE for which no path to resolution exists yet: creates
+    a Concern (status 'open') and wires has_concern + raised_by.
+    """
+    if not concern or not concern.strip():
+        raise ValidationError("'concern' is required.")
+    try:
+        try:
+            yse = YearSuccessEvidence.nodes.get(year_identifier=year_success_identifier)
+        except YearSuccessEvidence.DoesNotExist:
+            raise NotFoundError(f"YearSuccessEvidence with identifier '{year_success_identifier}' not found.")
+
+        person = None
+        if raised_by_employee_id:
+            try:
+                person = Person.nodes.get(employee_id=raised_by_employee_id)
+            except Person.DoesNotExist:
+                raise NotFoundError(f"Person with employee_id '{raised_by_employee_id}' not found.")
+
+        con = Concern(
+            concern=concern.strip(),
+            detail=(detail or None),
+            date_raised=datetime.now().date(),
+        )
+        con.save()
+        yse.concerns.connect(con)
+        if person is not None:
+            con.raised_by.connect(person)
+        return con.serialize()
+
+    except (NotFoundError, ValidationError) as e:
+        raise e
+    except Exception as e:
+        raise CrudError(f"Error adding concern to {year_success_identifier}: {e}")
+
+
+def update_concern(unique_id: str, status: str = None, resolution: str = None,
+                   concern: str = None, detail: str = None) -> dict:
+    """
+    Update a Concern's lifecycle or text. Moving out of 'open' stamps
+    date_resolved; moving back to 'open' clears it. Concerns are records —
+    there is deliberately no delete path.
+
+    Setting status to 'converted' directly is allowed but does NOT create the
+    target node; use convert_concern_to_recommendation / convert_concern_to_plan
+    for that, which also wire the provenance edge.
+    """
+    from app.data_config import concern_statuses
+
+    if status is not None and status not in concern_statuses:
+        raise ValidationError(
+            f"Invalid status (expected {sorted(concern_statuses)}): {status!r}"
+        )
+    try:
+        try:
+            con = Concern.nodes.get(unique_id=unique_id)
+        except Concern.DoesNotExist:
+            raise NotFoundError(f"Concern with unique_id '{unique_id}' not found.")
+
+        if concern is not None and concern.strip():
+            con.concern = concern.strip()
+        if detail is not None:
+            con.detail = detail or None
+        if resolution is not None:
+            con.resolution = resolution or None
+        if status is not None and status != con.status:
+            con.status = status
+            con.date_resolved = None if status == "open" else datetime.now().date()
+        con.save()
+        return con.serialize()
+
+    except (NotFoundError, ValidationError) as e:
+        raise e
+    except Exception as e:
+        raise CrudError(f"Error updating concern {unique_id}: {e}")
+
+
+def _load_open_concern(unique_id: str) -> "Concern":
+    """Fetch a Concern that is eligible for conversion, or raise."""
+    try:
+        con = Concern.nodes.get(unique_id=unique_id)
+    except Concern.DoesNotExist:
+        raise NotFoundError(f"Concern with unique_id '{unique_id}' not found.")
+    if con.status == "converted":
+        raise ValidationError(
+            f"Concern '{unique_id}' has already been converted. Reopen it first to convert again."
+        )
+    return con
+
+
+def _yse_for_concern(con: "Concern"):
+    """The YearSuccessEvidence a Concern hangs off (has_concern is its anchor)."""
+    rows, _ = db.cypher_query(
+        """
+        MATCH (y:YearSuccessEvidence)-[:has_concern]->(c:Concern {unique_id: $uid})
+        RETURN y.year_identifier AS yid
+        """,
+        {"uid": con.unique_id},
+    )
+    if not rows:
+        raise NotFoundError(f"Concern '{con.unique_id}' is not attached to any YearSuccessEvidence.")
+    return rows[0][0]
+
+
+def convert_concern_to_recommendation(unique_id: str, recommendation: str = None,
+                                      detail: str = None, resolution: str = None,
+                                      created_by_employee_id: str = None) -> dict:
+    """
+    Promote a Concern into a Recommendation on the same YSE: creates the
+    Recommendation (status 'open'), wires became_recommendation, and closes the
+    concern as 'converted'. The concern is kept — it is the provenance record.
+
+    `recommendation` defaults to the concern's own text when not supplied, so
+    the cheap path is a one-click promote.
+    """
+    try:
+        con = _load_open_concern(unique_id)
+        year_identifier = _yse_for_concern(con)
+
+        rec_text = (recommendation or con.concern or "").strip()
+        if not rec_text:
+            raise ValidationError("'recommendation' is required (the concern has no text to fall back on).")
+
+        rec_payload = add_recommendation_to_yse(
+            year_identifier,
+            rec_text,
+            detail=(detail if detail is not None else con.detail),
+            created_by_employee_id=created_by_employee_id,
+        )
+        rec = Recommendation.nodes.get(unique_id=rec_payload["unique_id"])
+
+        con.became_recommendation.connect(rec)
+        con.status = "converted"
+        con.resolution = (resolution or "Converted to a recommendation.")
+        con.date_resolved = datetime.now().date()
+        con.save()
+
+        return {"concern": con.serialize(), "recommendation": rec.serialize()}
+
+    except (NotFoundError, ValidationError) as e:
+        raise e
+    except Exception as e:
+        raise CrudError(f"Error converting concern {unique_id} to a recommendation: {e}")
+
+
+def convert_concern_to_plan(unique_id: str, name: str, description: str = None,
+                            plan_status: str = "Not Started", resolution: str = None) -> dict:
+    """
+    Promote a Concern into a Plan furthering the same YSE: creates the Plan via
+    the sanctioned add_plan path, wires became_plan, and closes the concern as
+    'converted'. The concern is kept as the provenance record.
+
+    The academic year is taken from the YSE the concern hangs off, so the plan
+    always lands in the year whose evidence raised it.
+    """
+    from app.database.queries.implementation.create import add_plan
+
+    if not name or not name.strip():
+        raise ValidationError("'name' is required to create a plan.")
+    try:
+        con = _load_open_concern(unique_id)
+        year_identifier = _yse_for_concern(con)
+
+        rows, _ = db.cypher_query(
+            """
+            MATCH (y:YearSuccessEvidence {year_identifier: $yid})-[:evidence_in_year]->(a:AcademicYear)
+            RETURN a.name AS year
+            """,
+            {"yid": year_identifier},
+        )
+        if not rows:
+            raise NotFoundError(f"YearSuccessEvidence '{year_identifier}' has no academic year.")
+        academic_year_name = rows[0][0]
+
+        plan_description = (description or con.detail or con.concern or "").strip()
+        if not plan_description:
+            raise ValidationError("'description' is required (the concern has no text to fall back on).")
+
+        add_plan({
+            "name": name.strip(),
+            "description": plan_description,
+            "academic_year_name": academic_year_name,
+            "furthered_yse_identifier": year_identifier,
+            "plan_status": plan_status,
+        })
+
+        # add_plan returns a bool; description carries the unique index, so it is
+        # the reliable handle on the node just created.
+        try:
+            plan = Plan.nodes.get(description=plan_description)
+        except Plan.DoesNotExist:
+            raise CrudError("Plan was created but could not be retrieved by description.")
+
+        con.became_plan.connect(plan)
+        con.status = "converted"
+        con.resolution = (resolution or f"Converted to plan '{name.strip()}'.")
+        con.date_resolved = datetime.now().date()
+        con.save()
+
+        return {"concern": con.serialize(), "plan": plan.serialize()}
+
+    except (NotFoundError, ValidationError, CrudError) as e:
+        raise e
+    except Exception as e:
+        raise CrudError(f"Error converting concern {unique_id} to a plan: {e}")

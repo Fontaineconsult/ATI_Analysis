@@ -306,6 +306,21 @@ recommendation_statuses = {
 
 
 # ---------------------------------------------------------------------------
+# Concern lifecycle — an issue raised against one YSE for which no path to
+# resolution has been defined yet (graph_schema.Concern). A concern is a
+# deliberately unstable state: it exists to LEAVE, by becoming a Recommendation
+# (something should change) or a Plan (someone will do something), or by being
+# dismissed. Like recommendations, concerns are records — they never delete,
+# and a converted concern keeps an edge to whatever it became.
+# ---------------------------------------------------------------------------
+concern_statuses = {
+    "open":      "Open",
+    "converted": "Converted",
+    "dismissed": "Dismissed",
+}
+
+
+# ---------------------------------------------------------------------------
 # Evidence strength — how strongly an implementation's is_evidence_for link
 # addresses the requirements of the success indicator it evidences. Stored as
 # an integer 0-3 on the relationship itself (graph_schema.IsEvidenceForRel);
@@ -384,6 +399,7 @@ PUBLIC_VOCABULARIES = {
     "query_categories":      query_categories,
     "query_statuses":        query_statuses,
     "recommendation_statuses": recommendation_statuses,
+    "concern_statuses":        concern_statuses,
 }
 
 yse_priority_level = {

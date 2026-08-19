@@ -11,6 +11,7 @@ import SingleReportMasterContainer from "../dashboard_components/report_componen
 import AdminSummaryForm from "../dashboard_components/report_components/AdminSummaryForm";
 import AdminFeedbackForm from "../dashboard_components/report_components/AdminFeedbackForm";
 import RecommendationsPanel from "../dashboard_components/report_components/RecommendationsPanel";
+import ConcernsPanel from "../dashboard_components/report_components/ConcernsPanel";
 
 function ApprovalMasterContainer({
                                      evidenceData: propEvidenceData,
@@ -220,6 +221,13 @@ function ApprovalMasterContainer({
                         onUpdate={() => {
                             loadSingleWorkingGroupData(currentWorkingGroup);
                         }}
+                    />
+
+                    {/* Issues with no resolution path yet — convert or dismiss */}
+                    <ConcernsPanel
+                        yearIdentifier={year_identifier}
+                        concerns={evidenceData.concerns || []}
+                        onUpdate={() => loadSingleWorkingGroupData(currentWorkingGroup)}
                     />
 
                     {/* End-of-cycle improvement tracking */}

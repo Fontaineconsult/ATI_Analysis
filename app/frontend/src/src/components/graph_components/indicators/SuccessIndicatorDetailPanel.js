@@ -312,6 +312,7 @@ function SuccessIndicatorDetailPanel({ wrapper }) {
                     hasMetrics={ev.has_metrics}
                     plans={ev.plans}
                     recommendations={ev.recommendations}
+                    concerns={ev.concerns}
                     year_identifier={yearIdentifier}
                     onRecommendationsChange={() => loadSingleWorkingGroupData(currentWorkingGroup)}
                 />

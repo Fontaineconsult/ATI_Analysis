@@ -13,6 +13,10 @@ jest.mock('../../dashboard_components/report_components/RecommendationsPanel', (
     __esModule: true,
     default: ({ recommendations }) => <div data-testid="recommendations-panel">{recommendations.length}</div>,
 }));
+jest.mock('../../dashboard_components/report_components/ConcernsPanel', () => ({
+    __esModule: true,
+    default: ({ concerns }) => <div data-testid="concerns-panel">{concerns.length}</div>,
+}));
 
 import React from 'react';
 import { render, screen } from '@testing-library/react';
@@ -35,15 +39,21 @@ const PROPS = {
     recommendations: [
         { recommendation: { properties: { unique_id: 'r1', recommendation: 'Fix intake docs', status: 'open' } }, created_by: null },
     ],
+    concerns: [
+        { concern: { properties: { unique_id: 'c1', concern: 'Nobody owns turnaround', status: 'open' } }, raised_by: null },
+        { concern: { properties: { unique_id: 'c2', concern: 'LMS role undefined', status: 'converted' } }, raised_by: null },
+    ],
     year_identifier: '2025-2026-7.11-ins-sfsu',
 };
 
 describe('YSEAnnotationMasterContainer', () => {
-    it('renders all four tabs with label-filtered counts', () => {
+    it('renders all tabs with label-filtered counts', () => {
         render(<YSEAnnotationMasterContainer {...PROPS} />);
 
         const tabs = screen.getAllByRole('tab');
-        expect(tabs.map((t) => t.textContent)).toEqual(['Notes1', 'Messages2', 'Metrics1', 'Plans1', 'Recommendations1']);
+        expect(tabs.map((t) => t.textContent)).toEqual([
+            'Notes1', 'Messages2', 'Metrics1', 'Plans1', 'Concerns2', 'Recommendations1',
+        ]);
     });
 
     it('shows the metric viewer with the filtered metrics when its tab is opened', async () => {
@@ -56,7 +66,9 @@ describe('YSEAnnotationMasterContainer', () => {
     it('tolerates missing annotation arrays', () => {
         render(<YSEAnnotationMasterContainer year_identifier="2025-2026-7.11-ins-sfsu" />);
         const tabs = screen.getAllByRole('tab');
-        expect(tabs.map((t) => t.textContent)).toEqual(['Notes0', 'Messages0', 'Metrics0', 'Plans0', 'Recommendations0']);
+        expect(tabs.map((t) => t.textContent)).toEqual([
+            'Notes0', 'Messages0', 'Metrics0', 'Plans0', 'Concerns0', 'Recommendations0',
+        ]);
     });
 
     it('shows the recommendations panel with the filtered items when its tab is opened', async () => {
@@ -64,5 +76,12 @@ describe('YSEAnnotationMasterContainer', () => {
 
         await userEvent.click(screen.getByRole('tab', { name: /recommendations/i }));
         expect(screen.getByTestId('recommendations-panel')).toHaveTextContent('1');
+    });
+
+    it('shows the concerns panel with the filtered items when its tab is opened', async () => {
+        render(<YSEAnnotationMasterContainer {...PROPS} />);
+
+        await userEvent.click(screen.getByRole('tab', { name: /concerns/i }));
+        expect(screen.getByTestId('concerns-panel')).toHaveTextContent('2');
     });
 });
