@@ -342,6 +342,51 @@
     RETURN d.name AS name, d.file_path AS path
     ORDER BY name
 
+- name: source_text_candidates_for_implementation
+  category: documentation
+  description: >
+    The fetchable documentation hanging off one implementation, with whether each item
+    already carries Source Text (raw_text) and when it was captured. The worklist for
+    /get-source-text. Dead items (depreciated / no_longer_exists) are excluded - there is
+    no point mirroring a page that is gone. param implementation_title.
+  mode: read
+  params: [implementation_title]
+  cypher: |
+    MATCH (impl)-[:is_documented_by]->(n)
+    WHERE impl.title = $implementation_title AND (n:Webpage OR n:Document)
+      AND (n.depreciated IS NULL OR n.depreciated = false)
+      AND (n.no_longer_exists IS NULL OR n.no_longer_exists = false)
+    RETURN labels(n)[0] AS kind,
+           n.unique_id AS unique_id,
+           coalesce(n.name, n.url) AS name,
+           coalesce(n.url, n.uri_path, n.file_path) AS source,
+           n.raw_text IS NOT NULL AS has_source_text,
+           size(coalesce(n.raw_text, '')) AS source_text_chars,
+           toString(n.raw_text_captured) AS captured
+    ORDER BY has_source_text, kind, name
+
+- name: documentation_missing_source_text
+  category: documentation
+  description: >
+    Every live Webpage with a URL and no Source Text (raw_text), with the implementations
+    it documents. The campus-wide backlog for /get-source-text. Excludes depreciated and
+    no_longer_exists pages. Optional campus filter by abbreviation ('' for all).
+  mode: read
+  params: [campus_abbreviation]
+  cypher: |
+    MATCH (w:Webpage)
+    WHERE w.raw_text IS NULL AND w.url IS NOT NULL
+      AND (w.depreciated IS NULL OR w.depreciated = false)
+      AND (w.no_longer_exists IS NULL OR w.no_longer_exists = false)
+    OPTIONAL MATCH (impl)-[:is_documented_by]->(w)
+    OPTIONAL MATCH (impl)-[:is_evidence_for]->(:YearSuccessEvidence)-[:evidence_at_campus]->(c:Campus)
+    WITH w, collect(DISTINCT impl.title) AS documents_for,
+         collect(DISTINCT c.abbreviation) AS campuses
+    WHERE $campus_abbreviation = '' OR $campus_abbreviation IN campuses
+    RETURN coalesce(w.name, w.url) AS name, w.url AS url, w.unique_id AS unique_id,
+           [t IN documents_for WHERE t IS NOT NULL] AS documents_for, campuses
+    ORDER BY name
+
 # ---------------------------------------------------------------------------
 # COMPOUND / REPORTING
 # ---------------------------------------------------------------------------
@@ -574,7 +619,7 @@
                owners: [(impl)-[:owned_by]->(o:Person) | o.name],
                participants: [(impl)<-[w:worked_on]-(p:Person) | p.name + ' (' + coalesce(w.role_handle, '?') + ')'],
                documents: [(impl)-[:is_documented_by]->(d:Document) WHERE d.depreciated IS NULL OR d.depreciated = false | d.name],
-               webpages: [(impl)-[:is_documented_by]->(w2:Webpage) WHERE (w2.depreciated IS NULL OR w2.depreciated = false) AND (w2.no_longer_exists IS NULL OR w2.no_longer_exists = false) | w2.title]}] AS implementations,
+               webpages: [(impl)-[:is_documented_by]->(w2:Webpage) WHERE (w2.depreciated IS NULL OR w2.depreciated = false) AND (w2.no_longer_exists IS NULL OR w2.no_longer_exists = false) | coalesce(w2.name, w2.url)]}] AS implementations,
            [(e)-[:has_note]->(n:Note) WHERE n.include_in_report <> false | {name: n.name, content: n.content}] AS notes,
            [(e)-[:has_message]->(m:Message) WHERE m.include_in_report <> false | {name: m.name, content: m.content, type: m.type}] AS messages,
            [(e)-[:has_metric]->(mt:Metric) | {name: mt.name, description: mt.description}] AS metrics,
