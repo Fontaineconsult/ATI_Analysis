@@ -280,10 +280,16 @@ IMPL_TITLE = f"{SENTINEL} Test Accountable Community Process"
 
 @pytest.fixture
 def cleanup_sentinel_impls(cleanup_communities):
-    """Sentinel-titled implementations created by the accountability tests."""
+    """Sentinel-titled implementations created by the accountability tests.
+
+    Covers every type these tests touch: the doing types plus the reference types,
+    which now carry community accountability. A label missing here leaves a node
+    behind and the next run trips the unique index on title.
+    """
     yield
     db.cypher_query(
-        "MATCH (i) WHERE (i:Process OR i:Guidance) AND i.title STARTS WITH $prefix DETACH DELETE i",
+        "MATCH (i) WHERE (i:Process OR i:Guidance OR i:InternalPolicy OR i:Tracking) "
+        "AND i.title STARTS WITH $prefix DETACH DELETE i",
         {"prefix": SENTINEL},
     )
 
@@ -316,20 +322,66 @@ def test_accountable_community_round_trip(cleanup_sentinel_impls):
     assert detail["accountable_communities"] == []
 
 
-def test_accountable_community_rejects_reference_types(cleanup_sentinel_impls):
+def test_accountable_community_accepts_reference_types(cleanup_sentinel_impls):
+    """Guidance / InternalPolicy / Tracking carry community accountability.
+
+    They perform no remediation work, so they still carry no accountable WORKING
+    GROUP — but "which community answers for this being current" is a fair question
+    about a guidance page, a policy or a register, and it had no home before.
+    """
+    from app.database.graph_schema import Guidance, InternalPolicy, Tracking
+    from app.database.queries.communities.create import create_community
+    from app.database.queries.implementation.read import get_implementation_detail
+    from app.database.queries.implementation.update import (
+        assign_accountable_community,
+        unassign_accountable_community,
+    )
+
+    community = create_community({"name": COMMUNITY_NAME})
+
+    for cls, type_name in ((Guidance, "Guidance"),
+                           (InternalPolicy, "InternalPolicy"),
+                           (Tracking, "Tracking")):
+        node = cls(title=f"{IMPL_TITLE} {type_name}", description="sentinel").save()
+
+        assert assign_accountable_community(node.unique_id, type_name, community.unique_id)
+        detail = get_implementation_detail(type_name, node.unique_id)
+        assert [c["name"] for c in detail["accountable_communities"]] == [COMMUNITY_NAME], type_name
+
+        assert unassign_accountable_community(node.unique_id, type_name, community.unique_id)
+        detail = get_implementation_detail(type_name, node.unique_id)
+        assert detail["accountable_communities"] == [], type_name
+
+
+def test_accountable_working_group_still_rejects_reference_types(cleanup_sentinel_impls):
+    """The two accountability edges have deliberately different guards.
+
+    Community accountability widened to the reference types; working-group
+    accountability did not, because that edge is about who answers for remediation
+    WORK and a guidance page performs none.
+    """
     from app.database.graph_schema import Guidance
+    from app.database.queries.implementation.update import assign_accountable_working_group
+    from app.endpoints.data_api.errors.custom_exceptions import ValidationError
+
+    guidance = Guidance(title=IMPL_TITLE, description="sentinel").save()
+    with pytest.raises(ValidationError):
+        assign_accountable_working_group(guidance.unique_id, "Guidance", "Web")
+
+
+def test_accountable_community_rejects_unknown_type_and_community(cleanup_sentinel_impls):
+    from app.database.graph_schema import Process
     from app.database.queries.communities.create import create_community
     from app.database.queries.implementation.update import assign_accountable_community
     from app.endpoints.data_api.errors.custom_exceptions import NotFoundError, ValidationError
 
     community = create_community({"name": COMMUNITY_NAME})
-    guidance = Guidance(title=IMPL_TITLE, description="sentinel").save()
 
+    # A type outside the community-accountable set is still refused.
     with pytest.raises(ValidationError):
-        assign_accountable_community(guidance.unique_id, "Guidance", community.unique_id)
+        assign_accountable_community("whatever", "TAAP", community.unique_id)
 
-    # Unknown community on a valid doing type -> NotFoundError.
-    from app.database.graph_schema import Process
+    # Unknown community on a valid type -> NotFoundError.
     impl = Process(title=IMPL_TITLE + " 2", description="sentinel").save()
     with pytest.raises(NotFoundError):
         assign_accountable_community(impl.unique_id, "Process", "no-such-community")

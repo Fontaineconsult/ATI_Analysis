@@ -12,7 +12,9 @@
  *               assets/interfaces.
  *   classified  doing + InternalPolicy + Guidance — carry AMM dimensions
  *               (classified_under).
- *   reference   Guidance / Tracking / InternalPolicy — no team/accountability.
+ *   reference   Guidance / Tracking / InternalPolicy — no participant team and no
+ *               accountable working group, but they DO carry an accountable
+ *               community (someone answers for keeping them current).
  * Every type carries an owner (owned_by), evidence links (is_evidence_for), and
  * supporting documentation.
  *
@@ -70,12 +72,20 @@ const DOING_TYPES = new Set(['Process', 'Project', 'Procedure', 'Service']);
 const DIMENSION_TYPES = new Set(['Process', 'Project', 'Procedure', 'Service', 'InternalPolicy', 'Guidance']);
 const PARTICIPANT_TYPES = new Set(['Process', 'Project', 'Procedure', 'Service']);
 const ACCOUNTABLE_WG_TYPES = new Set(['Process', 'Project', 'Procedure', 'Service']);
+// Community accountability is WIDER than the working-group edge and wider than
+// participants: "which community answers for this being current" is a fair question
+// about a guidance page, a policy or a register, none of which perform remediation
+// work. Mirrors _COMMUNITY_ACCOUNTABLE_TYPES in queries/implementation/update.py.
+const ACCOUNTABLE_COMMUNITY_TYPES = new Set([
+    'Process', 'Project', 'Procedure', 'Service', 'Guidance', 'InternalPolicy', 'Tracking',
+]);
 const ASSET_TYPES = new Set(['Process', 'Project', 'Procedure', 'Service']);
 
 export const isDoing = (type) => DOING_TYPES.has(type);
 export const isDimensioned = (type) => DIMENSION_TYPES.has(type);
 export const hasParticipants = (type) => PARTICIPANT_TYPES.has(type);
 export const hasAccountableWorkingGroup = (type) => ACCOUNTABLE_WG_TYPES.has(type);
+export const hasAccountableCommunity = (type) => ACCOUNTABLE_COMMUNITY_TYPES.has(type);
 export const hasAssets = (type) => ASSET_TYPES.has(type);
 
 const BY_KEY = Object.fromEntries(IMPLEMENTATION_TYPES.map((t) => [t.key, t]));

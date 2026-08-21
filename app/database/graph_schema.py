@@ -1095,6 +1095,10 @@ class InternalPolicy(StructuredNode):
     is_evidence_for = RelationshipTo("YearSuccessEvidence", "is_evidence_for", model=IsEvidenceForRel)
     owned_by = RelationshipTo("Person", "owned_by")
     classified_under = RelationshipTo("Dimension", "classified_under")  # cross-cutting AMM dimension(s) of the work
+    # The operating community that answers for this policy — that it is current and
+    # enforced. See Guidance for why reference types carry community but not
+    # working-group accountability.
+    accountable_community = RelationshipTo("CommunityOfPractice", "accountable_community")
 
 
     #serialize
@@ -1354,6 +1358,11 @@ class Guidance(StructuredNode):
     references_service = RelationshipTo("Service", "references_service")
     references_project = RelationshipTo("Project", "references_project")
     classified_under = RelationshipTo("Dimension", "classified_under")  # cross-cutting AMM dimension(s) of the work
+    # The operating community that answers for this guidance — that it exists, is
+    # current, and is the advice the campus stands behind. Reference types carry
+    # community accountability but NOT accountable_working_group: the committee edge
+    # is about who answers for remediation WORK, which guidance does not perform.
+    accountable_community = RelationshipTo("CommunityOfPractice", "accountable_community")
 
 
 
@@ -1395,6 +1404,10 @@ class Tracking(StructuredNode):
     supporting_metrics = RelationshipTo("Metric", "has_metric")
     is_evidence_for = RelationshipTo("YearSuccessEvidence", "is_evidence_for", model=IsEvidenceForRel)
     owned_by = RelationshipTo("Person", "owned_by")
+    # The operating community that answers for this tracking — that the register or
+    # dashboard is maintained and its numbers are trustworthy. See Guidance for why
+    # reference types carry community but not working-group accountability.
+    accountable_community = RelationshipTo("CommunityOfPractice", "accountable_community")
 
     #serialize
     def serialize(self):
