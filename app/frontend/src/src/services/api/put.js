@@ -1625,3 +1625,22 @@ export const addMinutesNote = async (uniqueId, content, createdByUniqueId = null
     });
     return response.data;
 };
+
+
+// Edit one evidence requirement. PARTIAL update, unlike updateSuccessIndicatorExamples
+// above — only the keys present in `fields` are touched, so saving edited text cannot
+// silently clear the element. Pass element: null explicitly to un-label a requirement.
+// fields: { requirement?, element?, rubric_dimension?, lead_in? }
+export const updateEvidenceRequirement = async (uniqueId, fields) => {
+    try {
+        const response = await axios.put(`${process.env.REACT_APP_API_URL}/indicators`, {
+            action: 'update_evidence_requirement',
+            unique_id: uniqueId,
+            ...fields,
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error updating evidence requirement:', error);
+        throw error;
+    }
+};

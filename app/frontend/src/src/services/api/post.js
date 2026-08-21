@@ -772,3 +772,21 @@ export const createMeetingMinutes = async (payload) => {
         throw error;
     }
 };
+
+// --- Evidence requirements ---
+// One element of a success indicator's companion bar. `element` is optional: some
+// indicators state their bar as unlabelled prose, and an unlabelled requirement is
+// left unlabelled rather than guessed at.
+// payload: { composite_key, level, requirement, element?, rubric_dimension?, lead_in? }
+export const addEvidenceRequirement = async (payload) => {
+    try {
+        const response = await axios.post(`${process.env.REACT_APP_API_URL}/indicators`, {
+            action: 'add_evidence_requirement',
+            ...payload,
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error adding evidence requirement:', error);
+        throw error;
+    }
+};
