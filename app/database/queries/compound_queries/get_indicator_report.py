@@ -38,6 +38,12 @@ from neomodel import db
 # participant team; the reference/governance types (Guidance, Tracking, InternalPolicy) do not.
 _DOING_TYPES = ("Process", "Project", "Procedure", "Service")
 
+# Community accountability is wider — the reference types carry it too, because "which
+# community answers for this being current" is a fair question about a guidance page, a
+# policy or a register. Mirrors _COMMUNITY_ACCOUNTABLE_TYPES in
+# queries/implementation/update.py; keep the two in step.
+_COMMUNITY_ACCOUNTABLE_TYPES = _DOING_TYPES + ("Guidance", "InternalPolicy", "Tracking")
+
 # (reverse-manager on YSE, human label) for each evidence-bearing implementation type.
 _EVIDENCE_MANAGERS = (
     ("processes_that_evidence", "Process"),
@@ -67,9 +73,25 @@ def _included(node):
 
 
 def _depreciated(node):
-    """True when a Document is flagged depreciated (bool, or the legacy string 'True')."""
+    """True when a node is flagged depreciated (bool, or the legacy string 'True')."""
     v = getattr(node, "depreciated", None)
     return v is True or v == "True"
+
+
+def _no_longer_exists(node):
+    """True when a Webpage is flagged gone (link rot). Documents have no such flag."""
+    v = getattr(node, "no_longer_exists", None)
+    return v is True or v == "True"
+
+
+def _document_is_active(node):
+    """A Document is live unless it is flagged depreciated."""
+    return not _depreciated(node)
+
+
+def _webpage_is_active(node):
+    """A Webpage is live unless it is depreciated OR the page is gone."""
+    return not _depreciated(node) and not _no_longer_exists(node)
 
 
 def _undocumented(impl):
@@ -81,14 +103,28 @@ def _undocumented(impl):
 
 
 def _no_active_documents(impl):
-    """True when the implementation has documents but every one is depreciated.
+    """True when the implementation has documentation but every item of it is dead.
 
-    Mirrors the implementations view's allDocumentsDepreciated — and deliberately
-    reads ALL supporting_documents (not the report/year-filtered subset), so the
-    report agrees with that view instead of going quiet when deprecated docs are
-    filtered out of the report."""
+    The documentation pool is documents AND webpages — the same pool _undocumented
+    counts. A document is dead when depreciated; a webpage is dead when depreciated
+    or flagged no_longer_exists (link rot). A live webpage keeps the flag off, which
+    is the point: an implementation evidenced by a published page is documented, and
+    one stale PDF alongside it does not make it undocumented.
+
+    Mirrors implementationConfig.allDocumentsDepreciated exactly — and deliberately
+    reads ALL supporting items (not the report/year-filtered subset), so the report
+    agrees with the implementations view instead of going quiet when deprecated
+    items are filtered out of the report.
+
+    Zero attached items is a DIFFERENT state (see _undocumented), so this stays
+    False when nothing is attached."""
     docs = list(impl.supporting_documents.all())
-    return len(docs) > 0 and all(_depreciated(d) for d in docs)
+    pages = list(impl.supporting_webpages.all())
+    if not docs and not pages:
+        return False
+    active = (sum(1 for d in docs if _document_is_active(d))
+              + sum(1 for p in pages if _webpage_is_active(p)))
+    return active == 0
 
 
 def _supporting(manager, academic_year):
@@ -164,10 +200,12 @@ def _implementation_payload(impl, type_name, academic_year, strength=None, contr
         "remediates_interfaces": [],
     }
 
+    if type_name in _COMMUNITY_ACCOUNTABLE_TYPES:
+        payload["accountable_communities"] = sorted(c.name for c in impl.accountable_community.all())
+
     if type_name in _DOING_TYPES:
         awg = impl.accountable_working_group.single()
         payload["accountable_working_group"] = awg.name if awg else None
-        payload["accountable_communities"] = sorted(c.name for c in impl.accountable_community.all())
         payload["participants"] = serialize_participants(impl)
         payload["remediates_interfaces"] = [
             {
@@ -335,6 +373,14 @@ def get_indicator_report(composite_key, academic_year, campus_abbreviation=None)
                 strength=getattr(rel, "strength", None) if rel else None,
                 control=getattr(rel, "control", None) if rel else None,
             ))
+
+    # Retired implementations sink to the bottom of the evidence list. They stay in
+    # the report — the evidence chain is historical, and a retired implementation is
+    # still what the campus did that year — but active work should read first rather
+    # than being interleaved with it. Sorted here rather than in each renderer so the
+    # in-app report, the public report page, and the email export cannot drift apart.
+    # Stable, so the grouping by implementation type above survives within each half.
+    implementations.sort(key=lambda im: bool(im.get("retired")))
 
     rollup = _rollup(year_identifier)
 

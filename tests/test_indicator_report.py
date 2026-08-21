@@ -16,7 +16,12 @@ from app.database.graph_schema import (
     YearSuccessEvidence,
 )
 from app.database.identifiers import make_yse_identifier
-from app.database.queries.compound_queries.get_indicator_report import get_indicator_report, _supporting
+from app.database.queries.compound_queries.get_indicator_report import (
+    get_indicator_report,
+    _no_active_documents,
+    _supporting,
+    _undocumented,
+)
 from tests.conftest import TEST_ACADEMIC_YEAR_NAME, TEST_PREVIOUS_ACADEMIC_YEAR_NAME
 
 CAMPUS_ABBREV = "sfsu"
@@ -172,3 +177,116 @@ def test_report_previous_status_null_without_prior_year(sentinel_academic_year, 
 
     assert report["status"]["status_level"] == "Defined"
     assert report["status"]["previous_status_level"] is None
+
+
+# --- _no_active_documents / _undocumented -------------------------------------
+# Regression: the flag read supporting_documents ONLY, so an implementation with a
+# single deprecated PDF alongside live published webpages was reported as having
+# "No active documentation". Three real implementations were mislabelled that way
+# (CEETL Courses, Procurement Trainings, SSU Site Improve Reports — each one
+# deprecated doc against 4-5 live pages). The documentation pool is documents AND
+# webpages, matching implementationConfig.allDocumentsDepreciated on the frontend.
+
+class _FakeDoc:
+    def __init__(self, depreciated=False):
+        self.depreciated = depreciated
+
+
+class _FakePage:
+    def __init__(self, depreciated=False, no_longer_exists=False):
+        self.depreciated = depreciated
+        self.no_longer_exists = no_longer_exists
+
+
+class _FakeImpl:
+    def __init__(self, docs=(), pages=()):
+        self.supporting_documents = _FakeManager([(d, None) for d in docs])
+        self.supporting_webpages = _FakeManager([(p, None) for p in pages])
+
+
+@pytest.mark.unit
+def test_no_active_documents_counts_webpages_as_documentation():
+    """A live webpage keeps the flag off even when every document is deprecated."""
+    impl = _FakeImpl(docs=[_FakeDoc(depreciated=True)], pages=[_FakePage()])
+    assert _no_active_documents(impl) is False
+    assert _undocumented(impl) is False
+
+
+@pytest.mark.unit
+def test_no_active_documents_when_whole_pool_is_dead():
+    """Deprecated docs AND dead pages — the flag is earned."""
+    impl = _FakeImpl(
+        docs=[_FakeDoc(depreciated=True)],
+        pages=[_FakePage(depreciated=True), _FakePage(no_longer_exists=True)],
+    )
+    assert _no_active_documents(impl) is True
+
+
+@pytest.mark.unit
+def test_no_active_documents_webpage_link_rot_is_dead():
+    """no_longer_exists alone kills a page — link rot is not live documentation."""
+    impl = _FakeImpl(docs=[], pages=[_FakePage(no_longer_exists=True)])
+    assert _no_active_documents(impl) is True
+    assert _undocumented(impl) is False, "a page is attached, so it is not undocumented"
+
+
+@pytest.mark.unit
+def test_no_active_documents_is_false_when_nothing_attached():
+    """Zero attached items is _undocumented's job, not this flag's."""
+    impl = _FakeImpl()
+    assert _no_active_documents(impl) is False
+    assert _undocumented(impl) is True
+
+
+@pytest.mark.unit
+def test_no_active_documents_live_document_alone_is_enough():
+    impl = _FakeImpl(docs=[_FakeDoc()], pages=[_FakePage(no_longer_exists=True)])
+    assert _no_active_documents(impl) is False
+
+
+@pytest.mark.unit
+def test_depreciated_accepts_legacy_string_flag():
+    """Older rows stored the boolean as the string 'True'."""
+    impl = _FakeImpl(docs=[_FakeDoc(depreciated="True")])
+    assert _no_active_documents(impl) is True
+
+
+@pytest.mark.integration
+def test_retired_implementations_sort_to_the_bottom(sentinel_academic_year, cleanup_yse_family):
+    """Retired evidence sinks below active evidence, with type grouping preserved.
+
+    Ordered in get_indicator_report rather than in each renderer, so the in-app
+    report, the public report page and the email export cannot drift apart.
+    """
+    from app.database.graph_schema import Guidance, Process
+
+    si = _find_web_indicator()
+    yse = _make_yse(TEST_ACADEMIC_YEAR_NAME, si)
+
+    # Interleaved on purpose: a retired item inside each type group, so a passing
+    # result cannot be an accident of the type-by-type build order.
+    made = []
+    try:
+        for title, cls, retired in [
+            (f"{TEST_ACADEMIC_YEAR_NAME} Process Retired", Process, True),
+            (f"{TEST_ACADEMIC_YEAR_NAME} Process Active", Process, False),
+            (f"{TEST_ACADEMIC_YEAR_NAME} Guidance Retired", Guidance, True),
+            (f"{TEST_ACADEMIC_YEAR_NAME} Guidance Active", Guidance, False),
+        ]:
+            node = cls(title=title, retired=retired).save()
+            node.is_evidence_for.connect(yse)
+            made.append(node)
+
+        impls = get_indicator_report(si.composite_key, TEST_ACADEMIC_YEAR_NAME, CAMPUS_ABBREV)["implementations"]
+        mine = [im for im in impls if im["title"].startswith(TEST_ACADEMIC_YEAR_NAME)]
+        assert len(mine) == 4
+
+        flags = [bool(im["retired"]) for im in mine]
+        assert flags == sorted(flags), f"retired must come last, got {flags}"
+        assert flags == [False, False, True, True]
+
+        # Stability: within each half the type-by-type build order survives.
+        assert [im["type"] for im in mine] == ["Process", "Guidance", "Process", "Guidance"]
+    finally:
+        for node in made:
+            node.delete()

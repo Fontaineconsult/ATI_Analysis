@@ -417,6 +417,7 @@ const IndicatorReportView = ({ report }) => {
             .flatMap((im) => im.accountable_communities || [])
     )].sort();
 
+
     const openEdit = () => navigateToIndicator(navigate, indicator.composite_key, campus);
 
     const campusName = report.campus?.name || campus;
@@ -709,6 +710,8 @@ const IndicatorReportView = ({ report }) => {
                                     ⚠ All implementations retired
                                 </Badge>
                             )}
+                            {/* Retired sink to the bottom — ordered by get_indicator_report,
+                                so the in-app report, public page and export all agree. */}
                             {implementations.map((impl) => (
                                 <ImplementationEntry key={`${impl.type}-${impl.unique_id}`} impl={impl} campus={campus} navigate={navigate} />
                             ))}
