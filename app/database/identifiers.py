@@ -203,3 +203,22 @@ def make_rel_type_handle(rel_type: str) -> str:
 def make_principle_handle(slug: str) -> str:
     """Principle handle. Format: 'principle:<slug>' (e.g. 'principle:closest-to-capacity')."""
     return f"principle{DESCRIPTOR_HANDLE_SEPARATOR}{slug}"
+
+
+def make_evidence_requirement_handle(composite_key: str, level: str, seq: int) -> str:
+    """
+    EvidenceRequirement.handle — one bar element of a success indicator's companion
+    guide, decomposed from the prose that used to live in
+    SuccessIndicator.established_example / managed_example / optimizing_example.
+
+    Format:  'evidence:<composite_key>:<level>:<seq>'
+    Example: 'evidence:4.6-pro:established:4'
+
+    Sequence-numbered rather than element-named ('...:output') on purpose. Element
+    names are not unique by contract — nothing stops a curator adding a second
+    Output requirement through the settings UI — and a handle that can collide is
+    worse than one that reads less nicely. `element` stays a queryable property;
+    the handle only has to be stable and unique.
+    """
+    return (f"evidence{DESCRIPTOR_HANDLE_SEPARATOR}{composite_key}"
+            f"{DESCRIPTOR_HANDLE_SEPARATOR}{level}{DESCRIPTOR_HANDLE_SEPARATOR}{seq}")

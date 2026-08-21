@@ -5,9 +5,10 @@ from flask.views import MethodView
 from datetime import datetime as dt  # Added import
 
 from app.database.queries.evidence.delete import delete_year_success_evidence
-from app.database.queries.indicators.create import create_success_indicator, add_goal
+from app.database.queries.indicators.create import create_success_indicator, add_goal, add_evidence_requirement
 from app.database.queries.indicators.read import fetch_success_indicators_for_working_group
-from app.database.queries.indicators.update import set_removed_status_for_success_indicator, set_override_implementation_requirement, update_success_indicator_examples
+from app.database.queries.indicators.update import set_removed_status_for_success_indicator, set_override_implementation_requirement, update_success_indicator_examples, update_evidence_requirement
+from app.database.queries.indicators.delete import delete_evidence_requirement
 
 from app.endpoints.data_api.errors.custom_exceptions import NotFoundError, ValidationError, CrudError
 
@@ -70,6 +71,23 @@ class IndicatorsAPI(MethodView):
                 if create_success_indicator(**indicator_data):
                     return make_response(status="Success Indicator created successfully."), 201
 
+            if action == 'add_evidence_requirement':
+                # One element of an indicator's companion bar. requirement + level are the
+                # minimum; element/rubric_dimension/lead_in are optional because eight
+                # indicators state their bar as unlabelled prose.
+                required_keys = ["composite_key", "level", "requirement"]
+                if not all(key in data for key in required_keys):
+                    return make_response(status="error", error="Missing required fields: composite_key, level, requirement."), 400
+                node = add_evidence_requirement(
+                    composite_key=data["composite_key"],
+                    level=data["level"],
+                    requirement=data["requirement"],
+                    element=data.get("element"),
+                    rubric_dimension=data.get("rubric_dimension"),
+                    lead_in=data.get("lead_in"),
+                )
+                return make_response(status="success", data=node.serialize()), 201
+
             if action == 'add_goal':
 
                 required_keys = ["goal", "goal_number", "name", "removed", "working_group"]
@@ -84,6 +102,8 @@ class IndicatorsAPI(MethodView):
 
         except ValidationError as e:
             return make_response(status='error', error=str(e)), 400
+        except NotFoundError as e:
+            return make_response(status='error', error=str(e)), 404
         except CrudError as e:
             return make_response(status='error', error=str(e)), 500
         except Exception as e:
@@ -137,9 +157,22 @@ class IndicatorsAPI(MethodView):
                 ):
                     return make_response(status="success", data=f"SuccessIndicator {data['composite_key']} updated successfully."), 200
 
+            elif action == 'update_evidence_requirement':
+                # Partial update — only the keys present are touched, so editing the text
+                # of a requirement cannot silently clear its element.
+                if 'unique_id' not in data:
+                    return make_response(status="error", error="Missing required field: unique_id."), 400
+                optional = {k: data[k] for k in ("element", "rubric_dimension", "lead_in") if k in data}
+                node = update_evidence_requirement(
+                    data['unique_id'], requirement=data.get('requirement'), **optional
+                )
+                return make_response(status="success", data=node.serialize()), 200
+
             else:
                 return make_response(status="error", error=f"Unknown action: {action}"), 400
 
+        except ValidationError as e:
+            return make_response(status="error", error=str(e)), 400
         except NotFoundError as e:
             return make_response(status="error", error=str(e)), 404
         except CrudError as e:
@@ -150,12 +183,32 @@ class IndicatorsAPI(MethodView):
 
     def delete(self):
         """
-        Handle DELETE requests to delete a YearSuccessEvidence node.
+        Handle DELETE requests. Only evidence requirements are deletable here —
+        indicators themselves are retired via the `removed` flag, never deleted.
         """
-        return make_response(status="error", error="Not Implemented"), 405
+        try:
+            data = request.get_json() or {}
+            action = data.get('action')
+
+            if action == 'delete_evidence_requirement':
+                if 'unique_id' not in data:
+                    return make_response(status="error", error="Missing required field: unique_id."), 400
+                delete_evidence_requirement(data['unique_id'])
+                return make_response(status="success", data={"deleted": data['unique_id']}), 200
+
+            return make_response(status="error", error=f"Unknown action: {action}"), 400
+
+        except ValidationError as e:
+            return make_response(status="error", error=str(e)), 400
+        except NotFoundError as e:
+            return make_response(status="error", error=str(e)), 404
+        except CrudError as e:
+            return make_response(status="error", error=str(e)), 500
+        except Exception as e:
+            return make_response(status="error", error=f"An unexpected error occurred: {str(e)}"), 500
 
 
 # Register the view with the Blueprint
 indicators_view = IndicatorsAPI.as_view('indicators_api')
 data_api_endpoints.add_url_rule('/indicators/<string:academic_year>', view_func=indicators_view, methods=['GET'])
-data_api_endpoints.add_url_rule('/indicators', view_func=indicators_view, methods=['PUT', 'POST'])
+data_api_endpoints.add_url_rule('/indicators', view_func=indicators_view, methods=['PUT', 'POST', 'DELETE'])

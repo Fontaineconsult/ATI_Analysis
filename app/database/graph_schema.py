@@ -13,7 +13,8 @@ import os
 from app.data_config import (trajectory_choices, asset_classes, asset_scopes, taap_outcomes,
                              functions, component_kinds, coverage_domains, audiences, interface_provenances,
                              descriptor_kinds, query_categories, query_statuses, evidence_control_choices,
-                             recommendation_statuses, concern_statuses)
+                             recommendation_statuses, concern_statuses,
+                             evidence_requirement_levels, evidence_requirement_elements)
 
 # Configuration enters through the single gateway (app/config_gateway.py). Importing
 # it hydrates os.environ from web.config (production) / .env.<FLASK_ENV> (development),
@@ -620,6 +621,10 @@ class SuccessIndicator(StructuredNode):
     introduced_in_year = StringProperty()
 
     notes = RelationshipTo("Note", "has_note")
+    # The companion bar, decomposed. The *_example strings above stay as the authored
+    # source; these are the same content broken into individually addressable pieces so
+    # an evidence link can say WHICH part of the bar it satisfies.
+    evidence_requirements = RelationshipTo("EvidenceRequirement", "has_evidence_requirement")
     date_added = DateProperty()
     tracked_by = RelationshipFrom("SuccessIndicator", "tracks")
     directed_plans = RelationshipTo("Plan", "directs")
@@ -643,6 +648,56 @@ class SuccessIndicator(StructuredNode):
             'introduced_in_year': self.introduced_in_year,
             'date_added': self.date_added,
             "unique_id": self.unique_id
+        }
+
+
+class EvidenceRequirement(StructuredNode):
+    """One element of a success indicator's companion-guide bar.
+
+    The companion guides were authored as prose on the SuccessIndicator itself
+    (`established_example` / `managed_example` / `optimizing_example`) — a bar written
+    as a bullet list. That form is readable but not addressable: nothing can point at
+    "the Output requirement of 4.6-pro" to say an implementation satisfies it. This
+    node is that same content broken into pieces so `IsEvidenceForRel.satisfies` can
+    reference them by handle.
+
+    The `*_example` strings remain on the SI as the authored source, the way `raw_text`
+    sits beside a `url` — these nodes are derived from them, not a replacement.
+
+    handle: 'evidence:<composite_key>:<level>:<seq>' — see
+    identifiers.make_evidence_requirement_handle for why the sequence number rather
+    than the element name.
+
+    element is OPTIONAL. Eight indicators state their Established bar as unlabelled
+    prose bullets under a lead-in sentence; those requirements carry element=None
+    rather than a guess. `lead_in` preserves the sentence that introduced them, which
+    is often where the actual scope statement lives.
+    """
+    unique_id = UniqueIdProperty()
+
+    handle = StringProperty(unique_index=True, required=True)
+    composite_key = StringProperty(required=True, index=True)   # the SI this belongs to
+    level = StringProperty(required=True, choices=evidence_requirement_levels)
+    seq = IntegerProperty(required=True)                        # order within composite_key+level
+
+    element = StringProperty(choices=evidence_requirement_elements)
+    requirement = StringProperty(required=True)
+    rubric_dimension = StringProperty()   # resources | procedures | documentation_evidence
+    lead_in = StringProperty()            # scope sentence the bar's bullets hang under
+
+    indicator = RelationshipFrom("SuccessIndicator", "has_evidence_requirement")
+
+    def serialize(self):
+        return {
+            "unique_id": self.unique_id,
+            "handle": self.handle,
+            "composite_key": self.composite_key,
+            "level": self.level,
+            "seq": self.seq,
+            "element": self.element,
+            "requirement": self.requirement,
+            "rubric_dimension": self.rubric_dimension,
+            "lead_in": self.lead_in,
         }
 
 
