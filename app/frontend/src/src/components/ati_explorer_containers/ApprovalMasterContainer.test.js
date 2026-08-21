@@ -120,3 +120,43 @@ describe('ApprovalMasterContainer approver gating', () => {
         expect(screen.queryByRole('button', { name: /withdraw approval/i })).toBeNull();
     });
 });
+
+// The review window is a decision surface: a reviewer is deciding what still needs
+// work. A CONVERTED concern has already become a recommendation or a plan, and that
+// thing is rendered on the same page — showing the concern too is the same item
+// twice. The full record, converted items included, stays on the Annotations tab.
+describe('ApprovalMasterContainer concern filtering', () => {
+    const concern = (unique_id, status, text) => ({
+        concern: { properties: { unique_id, status, concern: text } },
+        raised_by: null,
+        became_recommendation: null,
+        became_plan: null,
+    });
+
+    const withConcerns = (concerns) => ({ ...evidenceData(), concerns });
+
+    it('hides converted concerns but keeps open and dismissed ones', () => {
+        renderWithUser(
+            { employee_id: 'e1', name: 'No Flag', can_approve_yse: false },
+            withConcerns([
+                concern('c1', 'open', 'No 504 coordinator'),
+                concern('c2', 'converted', 'Became a recommendation already'),
+                concern('c3', 'dismissed', 'Not an accessibility matter'),
+            ])
+        );
+
+        expect(screen.getByText('No 504 coordinator')).toBeInTheDocument();
+        expect(screen.queryByText('Became a recommendation already')).toBeNull();
+        expect(screen.getByText('Not an accessibility matter')).toBeInTheDocument();
+    });
+
+    it('shows the empty state when every concern is converted', () => {
+        renderWithUser(
+            { employee_id: 'e1', name: 'No Flag', can_approve_yse: false },
+            withConcerns([concern('c1', 'converted', 'Answered already')])
+        );
+
+        expect(screen.queryByText('Answered already')).toBeNull();
+        expect(screen.getByText(/no concerns recorded for this indicator/i)).toBeInTheDocument();
+    });
+});

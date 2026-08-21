@@ -223,10 +223,18 @@ function ApprovalMasterContainer({
                         }}
                     />
 
-                    {/* Issues with no resolution path yet — convert or dismiss */}
+                    {/* Issues with no resolution path yet — convert or dismiss.
+                        CONVERTED concerns are filtered out of the review window: once a
+                        concern has become a recommendation or a plan it is answered, and
+                        the thing it became is already on this page. Showing it again is
+                        the same item twice to a reviewer deciding what still needs work.
+                        The full record, converted items included, stays on the
+                        Annotations tab where the provenance is the point. */}
                     <ConcernsPanel
                         yearIdentifier={year_identifier}
-                        concerns={evidenceData.concerns || []}
+                        concerns={(evidenceData.concerns || []).filter(
+                            (w) => w.concern?.properties?.status !== 'converted'
+                        )}
                         onUpdate={() => loadSingleWorkingGroupData(currentWorkingGroup)}
                     />
 
