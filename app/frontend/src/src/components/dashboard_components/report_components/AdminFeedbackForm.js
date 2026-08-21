@@ -12,6 +12,7 @@ import {
 } from '@chakra-ui/react';
 import { UserContext } from '../../../context/UserContext';
 import { addAdminReviewerNote } from '../../../services/api/post';
+import { updateAdminReviewerNote, deleteAdminReviewerNote } from '../../../services/api/put';
 
 /**
  * AdminFeedbackForm - Component for displaying and adding admin reviewer notes
@@ -24,8 +25,64 @@ function AdminFeedbackForm({ yearIdentifier, adminReviewNotes = [], onUpdate }) 
     const [isAdding, setIsAdding] = useState(false);
     const [noteContent, setNoteContent] = useState('');
     const [loading, setLoading] = useState(false);
+    // Inline edit: the unique_id of the note being edited, and its draft text.
+    const [editingId, setEditingId] = useState(null);
+    const [editContent, setEditContent] = useState('');
+    const [rowBusy, setRowBusy] = useState(false);
     const { user } = useContext(UserContext);
     const toast = useToast();
+
+    const fail = (title, e) => toast({
+        title,
+        description: e?.response?.data?.error || e?.message,
+        status: 'error',
+        duration: 4000,
+        isClosable: true,
+    });
+
+    const startEdit = (note) => {
+        setEditingId(note?.unique_id || null);
+        setEditContent(note?.content || '');
+    };
+
+    const cancelEdit = () => {
+        setEditingId(null);
+        setEditContent('');
+    };
+
+    const handleEditSave = async () => {
+        if (!editContent.trim()) {
+            toast({ title: 'Validation Error', description: 'Feedback cannot be empty',
+                    status: 'warning', duration: 3000, isClosable: true });
+            return;
+        }
+        setRowBusy(true);
+        try {
+            await updateAdminReviewerNote(editingId, editContent.trim());
+            toast({ title: 'Feedback updated', status: 'success', duration: 2000, isClosable: true });
+            cancelEdit();
+            if (onUpdate) await onUpdate();
+        } catch (e) {
+            fail('Failed to update feedback', e);
+        } finally {
+            setRowBusy(false);
+        }
+    };
+
+    const handleDelete = async (note) => {
+        if (!note?.unique_id) return;
+        setRowBusy(true);
+        try {
+            await deleteAdminReviewerNote(note.unique_id);
+            toast({ title: 'Feedback deleted', status: 'success', duration: 2000, isClosable: true });
+            if (editingId === note.unique_id) cancelEdit();
+            if (onUpdate) await onUpdate();
+        } catch (e) {
+            fail('Failed to delete feedback', e);
+        } finally {
+            setRowBusy(false);
+        }
+    };
 
     const handleSave = async () => {
         if (!noteContent.trim()) {
@@ -112,9 +169,12 @@ function AdminFeedbackForm({ yearIdentifier, adminReviewNotes = [], onUpdate }) 
             {/* Display existing notes */}
             {adminReviewNotes && adminReviewNotes.length > 0 ? (
                 <VStack align="stretch" spacing={3} mb={4}>
-                    {adminReviewNotes.map((item, index) => (
+                    {adminReviewNotes.map((item, index) => {
+                        const note = item.note?.properties || {};
+                        const isEditing = editingId && editingId === note.unique_id;
+                        return (
                         <Box
-                            key={index}
+                            key={note.unique_id || index}
                             p={3}
                             bg="teal.50"
                             borderRadius="md"
@@ -127,15 +187,57 @@ function AdminFeedbackForm({ yearIdentifier, adminReviewNotes = [], onUpdate }) 
                                         {item.created_by?.properties?.name || 'Unknown'}
                                     </Badge>
                                     <Text fontSize="xs" color="gray.600">
-                                        {formatDate(item.note?.properties?.date_created)}
+                                        {formatDate(note.date_created)}
                                     </Text>
                                 </HStack>
+                                {/* Editing an admin note leaves its author and date alone —
+                                    the record is of who gave the feedback, not who last typed. */}
+                                {!isEditing && note.unique_id && (
+                                    <HStack spacing={1}>
+                                        <Button size="xs" variant="ghost" colorScheme="teal"
+                                                isDisabled={rowBusy}
+                                                aria-label="Edit this feedback"
+                                                onClick={() => startEdit(note)}>
+                                            Edit
+                                        </Button>
+                                        <Button size="xs" variant="ghost" colorScheme="red"
+                                                isDisabled={rowBusy}
+                                                aria-label="Delete this feedback"
+                                                onClick={() => handleDelete(note)}>
+                                            Delete
+                                        </Button>
+                                    </HStack>
+                                )}
                             </HStack>
-                            <Text fontSize="sm" color="gray.700" whiteSpace="pre-wrap">
-                                {item.note?.properties?.content}
-                            </Text>
+
+                            {isEditing ? (
+                                <VStack align="stretch" spacing={2}>
+                                    <Textarea
+                                        size="sm"
+                                        bg="white"
+                                        rows={4}
+                                        value={editContent}
+                                        onChange={(e) => setEditContent(e.target.value)}
+                                        aria-label="Edit administrative review feedback"
+                                    />
+                                    <HStack justify="flex-end" spacing={2}>
+                                        <Button size="xs" variant="ghost" onClick={cancelEdit} isDisabled={rowBusy}>
+                                            Cancel
+                                        </Button>
+                                        <Button size="xs" colorScheme="teal" onClick={handleEditSave}
+                                                isLoading={rowBusy} isDisabled={!editContent.trim()}>
+                                            Save
+                                        </Button>
+                                    </HStack>
+                                </VStack>
+                            ) : (
+                                <Text fontSize="sm" color="gray.700" whiteSpace="pre-wrap">
+                                    {note.content}
+                                </Text>
+                            )}
                         </Box>
-                    ))}
+                        );
+                    })}
                 </VStack>
             ) : (
                 <Text fontSize="sm" color="gray.600" mb={4}>

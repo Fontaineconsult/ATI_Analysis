@@ -114,6 +114,8 @@ class EvidenceAPI(MethodView):
             return self.handle_update_admin_reviewer_description(data)
         elif action == "unassign_implementation":
             return self.handle_unassign_implementation(data)
+        elif action == "delete_admin_reviewer_note":
+            return self.handle_delete_admin_reviewer_note(data)
         else:
             return make_response(status="error", error=f"Unknown action '{action}' in request."), 400
 
@@ -428,6 +430,30 @@ class EvidenceAPI(MethodView):
         try:
             unassign_implementation_from_yse(year_success_identifier, implementation_type, implementation_title)
             return make_response(status="success", message="Implementation unassigned successfully"), 200
+        except NotFoundError as e:
+            return make_response(status="error", error=str(e)), 404
+        except CrudError as e:
+            return make_response(status="error", error=str(e)), 500
+
+    def handle_delete_admin_reviewer_note(self, data):
+        """Delete an administrative review note.
+
+            {"action": "delete_admin_reviewer_note", "unique_id": "..."}
+
+        Deletes the Note node rather than unlinking it: the note exists only for
+        the YSE it was written against. Guarded on the admin_review_note edge, so
+        this cannot be used to delete general notes.
+        """
+        from app.database.queries.evidence.delete import delete_admin_reviewer_note
+
+        unique_id = data.get('unique_id')
+        if not unique_id:
+            return make_response(status="error", error="Requires 'unique_id'."), 400
+        try:
+            delete_admin_reviewer_note(unique_id)
+            return make_response(status="success", data="Administrative review note deleted."), 200
+        except ValidationError as e:
+            return make_response(status="error", error=str(e)), 400
         except NotFoundError as e:
             return make_response(status="error", error=str(e)), 404
         except CrudError as e:
