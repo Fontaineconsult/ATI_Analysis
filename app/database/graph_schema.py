@@ -253,6 +253,36 @@ The descending cascade of specificity across the whole model:
     Governance -[:drives]--> SuccessIndicator          the stated requirement
     SuccessIndicator -[:directs]-> Plan/Process/...    the work that answers it
 
+SUPERSESSION — (Governance)-[:supersedes]->(Governance)
+
+Governance instruments replace one another over time, and which one is CURRENT is
+a question the graph has to be able to answer. Without this edge the answer lives
+only in prose — a title reading "(states it supersedes EO 926)", a description
+paragraph — where nothing can query it and an obsolete instrument looks exactly
+like a live one. That is not hypothetical: the March 2021 ATI memo supersedes
+eight numbered coded memos, several of which are still wired into evidence.
+
+HETEROGENEOUS on BOTH sides (any of the six governance labels can supersede any
+other), so — like Principle.derives_from — these edges are managed in queries via
+Cypher rather than a typed neomodel RelationshipTo. There is no accessor to add
+to the six classes; write and read it through the governance query module.
+
+Edge properties, following DrivesRel's principle that an unfalsifiable claim is
+worth less than a cited one:
+
+    quote      : the superseding sentence, verbatim from the superseding
+                 instrument's raw_text ("This memo supersedes all previous
+                 memos."). The instrument declares its own supersession; the
+                 graph should carry that declaration, not an inference about it.
+    scope      : 'full' when the later instrument replaces the earlier outright,
+                 'partial' when it replaces only a named section (AA-2015-22
+                 replaced only the Implementation section of AA-2013-03).
+    note       : what changed, when the delta is not obvious from the quote.
+    added_date : when the assertion was made.
+
+Direction is always NEWER -[:supersedes]-> OLDER. A node with no inbound
+`supersedes` edge is current; anything with one is historical, and the read layer
+should say so rather than leaving callers to compare dates.
 """
 
 
