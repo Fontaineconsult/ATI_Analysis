@@ -747,9 +747,25 @@ class IsEvidenceForRel(StructuredRel):
     rely on a practice they don't directly control (another unit, SFBRN, the
     CO, a vendor) — the formal statement that a duty is discharged elsewhere;
     maturity reviews grade the owners' interface to it, not the practice.
+
+    satisfies: which EvidenceRequirement handles this work actually clears. `strength`
+    rates the LINK (how well the implementation addresses the indicator as a whole);
+    satisfies names the specific parts of the companion bar it answers for, so a
+    coverage view can show which requirements have evidence and which are bare.
+
+    Handles rather than edges because EvidenceRequirement hangs off the SuccessIndicator,
+    which is year- and campus-agnostic: a direct (impl)-[:satisfies]->(er) edge would
+    claim the requirement is met everywhere, always. The claim is per-year, per-campus,
+    which is exactly the scope this rel already has. Same array-of-strings-on-a-rel
+    pattern as DocumentedByRel.included_in_years above.
+
+    Every handle must belong to the indicator this YSE tracks; the write path enforces
+    that, and deleting an EvidenceRequirement strips its handle from every rel carrying
+    it, because a dangling handle silently under-reports coverage.
     """
     strength = IntegerProperty()
     control = StringProperty(choices=evidence_control_choices)
+    satisfies = ArrayProperty(StringProperty(), default=list)
 
 
 

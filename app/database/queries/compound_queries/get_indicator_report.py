@@ -162,11 +162,13 @@ def _supporting(manager, academic_year):
     return out
 
 
-def _implementation_payload(impl, type_name, academic_year, strength=None, control=None):
+def _implementation_payload(impl, type_name, academic_year, strength=None, control=None,
+                            satisfies=None):
     """Render-ready projection of one implementation node: its documentation (filtered),
     owner, AMM dimensions, and — for the doing-types — accountable working group,
     participant team, and the interfaces it remediates. `strength` is the 0-3
-    rating carried on this YSE's is_evidence_for rel (None = unrated)."""
+    rating carried on this YSE's is_evidence_for rel (None = unrated); `satisfies` is
+    the companion-bar requirement handles that same rel claims."""
     owner = impl.owned_by.single() if hasattr(impl, "owned_by") else None
 
     payload = {
@@ -176,6 +178,7 @@ def _implementation_payload(impl, type_name, academic_year, strength=None, contr
         "description": impl.description,
         "strength": strength,
         "control": control,
+        "satisfies": list(satisfies or []),
         "retired": bool(getattr(impl, "retired", False)),
         "retired_date": str(impl.retired_date) if getattr(impl, "retired_date", None) else None,
         "retired_note": getattr(impl, "retired_note", None),
@@ -372,6 +375,7 @@ def get_indicator_report(composite_key, academic_year, campus_abbreviation=None)
                 impl, type_name, academic_year,
                 strength=getattr(rel, "strength", None) if rel else None,
                 control=getattr(rel, "control", None) if rel else None,
+                satisfies=getattr(rel, "satisfies", None) if rel else None,
             ))
 
     # Retired implementations sink to the bottom of the evidence list. They stay in

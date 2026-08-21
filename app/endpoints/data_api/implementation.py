@@ -128,7 +128,7 @@ class ImplementationAPI(MethodView):
                     implementations = get_all_implementations()
                     return make_response({"status": "success", "data": implementations}), 200
                 except CrudError as e:
-                    return make_response({"status": "error", "error": str(e)}), 500
+                    return make_response(status="error", error=str(e)), 500
 
             # Get query parameters
             implementation_type = request.args.get('implementation_type')
@@ -142,17 +142,17 @@ class ImplementationAPI(MethodView):
                     implementations = get_all_implementations_by_type(implementation_type)
                     return make_response({"status": "success", "data": implementations}), 200
                 except ValidationError as e:
-                    return make_response({"status": "error", "error": str(e)}), 400
+                    return make_response(status="error", error=str(e)), 400
                 except CrudError as e:
-                    return make_response({"status": "error", "error": str(e)}), 500
+                    return make_response(status="error", error=str(e)), 500
 
             # Both type and title required for single implementation
             if not implementation_type or not title:
-                return make_response({"status": "error", "error": "Both 'implementation_type' and 'title' are required for single implementation fetch"}), 400
+                return make_response(status="error", error="Both 'implementation_type' and 'title' are required for single implementation fetch"), 400
 
             # Validate implementation type
             if implementation_type not in implementation_classes:
-                return make_response({"status": "error", "error": f"Invalid implementation_type: {implementation_type}"}), 400
+                return make_response(status="error", error=f"Invalid implementation_type: {implementation_type}"), 400
 
             # Get the implementation class and query for the node
             implementation_class = implementation_classes[implementation_type]
@@ -235,9 +235,9 @@ class ImplementationAPI(MethodView):
                 raise NotFoundError(f"No {implementation_type} found with title: {title}")
 
         except NotFoundError as e:
-            return make_response({"status": "error", "error": str(e)}), 404
+            return make_response(status="error", error=str(e)), 404
         except Exception as e:
-            return make_response({"status": "error", "error": f"Failed to fetch implementation: {str(e)}"}), 500
+            return make_response(status="error", error=f"Failed to fetch implementation: {str(e)}"), 500
 
     def post(self):
         """
@@ -256,19 +256,19 @@ class ImplementationAPI(MethodView):
             action = data.get('action')
 
             if not action:
-                return make_response({"status": "error", "error": "Missing 'action' field in request."}), 400
+                return make_response(status="error", error="Missing 'action' field in request."), 400
 
             if action == "add_implementation":
                 return self.handle_add_implementation(data)
             else:
-                return make_response({"status": "error", "error": f"Unknown action '{action}' in request."}), 400
+                return make_response(status="error", error=f"Unknown action '{action}' in request."), 400
 
         except ValidationError as e:
-            return make_response({"status": "error", "error": str(e)}), 400
+            return make_response(status="error", error=str(e)), 400
         except CrudError as e:
-            return make_response({"status": "error", "error": str(e)}), 500
+            return make_response(status="error", error=str(e)), 500
         except Exception as e:
-            return make_response({"status": "error", "error": "Failed to process request"}), 500
+            return make_response(status="error", error="Failed to process request"), 500
 
     def handle_add_implementation(self, data):
         from app.database.queries.implementation.create import (
@@ -317,7 +317,7 @@ class ImplementationAPI(MethodView):
 
                 return make_response({"status": "success", "message": f"{implementation_type} created successfully"}), 201
             else:
-                return make_response({"status": "error", "error": f"Failed to create {implementation_type}"}), 500
+                return make_response(status="error", error=f"Failed to create {implementation_type}"), 500
         else:
             raise CrudError(f"No creation function found for implementation_type: {implementation_type}")
 
@@ -354,7 +354,7 @@ class ImplementationAPI(MethodView):
             data = request.get_json()
             action = data.get('action')
             if not action:
-                return make_response({"status": "error", "error": "Missing 'action' field in request."}), 400
+                return make_response(status="error", error="Missing 'action' field in request."), 400
 
             if action == "assign_person_as_implementor":
                 return self.handle_assign_person_as_implementor(data)
@@ -388,6 +388,8 @@ class ImplementationAPI(MethodView):
                 return self.handle_set_evidence_strength(data)
             elif action == "set_evidence_control":
                 return self.handle_set_evidence_control(data)
+            elif action == "set_evidence_satisfies":
+                return self.handle_set_evidence_satisfies(data)
             elif action == "copy_evidence_to_campuses":
                 return self.handle_copy_evidence_to_campuses(data)
             elif action == "update_documentation_year":
@@ -395,16 +397,16 @@ class ImplementationAPI(MethodView):
             elif action == "get_documents_for_year":
                 return self.handle_get_documents_for_year(data)
             else:
-                return make_response({"status": "error", "error": f"Unknown action '{action}' in request."}), 400
+                return make_response(status="error", error=f"Unknown action '{action}' in request."), 400
 
         except ValidationError as e:
-            return make_response({"status": "error", "error": str(e)}), 400
+            return make_response(status="error", error=str(e)), 400
         except NotFoundError as e:
-            return make_response({"status": "error", "error": str(e)}), 404
+            return make_response(status="error", error=str(e)), 404
         except CrudError as e:
-            return make_response({"status": "error", "error": str(e)}), 500
+            return make_response(status="error", error=str(e)), 500
         except Exception as e:
-            return make_response({"status": "error", "error": "Failed to process request"}), 500
+            return make_response(status="error", error="Failed to process request"), 500
 
 
     def handle_update_documentation_year(self, data):
@@ -527,6 +529,33 @@ class ImplementationAPI(MethodView):
             data.get('strength'),
         )
         return make_response("success", data=result, message="Evidence strength updated"), 200
+
+    def handle_set_evidence_satisfies(self, data):
+        """Replace which companion-bar requirements this evidence link claims.
+
+        Body: year_success_identifier, implementation_type, unique_id,
+        satisfies (list of EvidenceRequirement handles; [] clears them).
+
+        Full-replace, because the assignment modal submits the complete set — an
+        append-only call would leave no way to un-check a box.
+        """
+        from app.database.queries.evidence.update import set_evidence_satisfies
+
+        required = ['year_success_identifier', 'implementation_type', 'unique_id']
+        if not all(field in data for field in required):
+            raise ValidationError(f"Missing required fields: {required}")
+
+        satisfies = data.get('satisfies', [])
+        if not isinstance(satisfies, list):
+            raise ValidationError("'satisfies' must be a list of requirement handles.")
+
+        result = set_evidence_satisfies(
+            data['year_success_identifier'],
+            data['implementation_type'],
+            data['unique_id'],
+            satisfies,
+        )
+        return make_response("success", data=result, message="Evidence requirements updated"), 200
 
     def handle_set_evidence_control(self, data):
         """Set or clear (null) the control flag on an existing evidence link —
@@ -829,7 +858,7 @@ class ImplementationAPI(MethodView):
                 message = f"Documentation assigned and {action} {academic_year}"
             return make_response({"status": "success", "message": message}), 200
         else:
-            return make_response({"status": "error", "error": "Failed to assign documentation"}), 500
+            return make_response(status="error", error="Failed to assign documentation"), 500
 
 
 class ImplementationPlanAPI(MethodView):
@@ -932,12 +961,12 @@ class ImplementationPlanAPI(MethodView):
                     raise NotFoundError(f"No academic year found with name: {academic_year}")
 
             # If no parameters provided, return error
-            return make_response({"status": "error", "error": "Please provide query parameters"}), 400
+            return make_response(status="error", error="Please provide query parameters"), 400
 
         except NotFoundError as e:
-            return make_response({"status": "error", "error": str(e)}), 404
+            return make_response(status="error", error=str(e)), 404
         except Exception as e:
-            return make_response({"status": "error", "error": f"Failed to fetch plans: {str(e)}"}), 500
+            return make_response(status="error", error=f"Failed to fetch plans: {str(e)}"), 500
 
 
     def post(self):
@@ -976,11 +1005,11 @@ class ImplementationPlanAPI(MethodView):
             return make_response({"status": "success", "message": "Plan added successfully"}), 201
 
         except ValidationError as e:
-            return make_response({"status": "error", "error": str(e)}), 400
+            return make_response(status="error", error=str(e)), 400
         except CrudError as e:
-            return make_response({"status": "error", "error": str(e)}), 500
+            return make_response(status="error", error=str(e)), 500
         except Exception as e:
-            return make_response({"status": "error", "error": "Failed to add plan"}), 500
+            return make_response(status="error", error="Failed to add plan"), 500
 
 
     def put(self):
@@ -1210,11 +1239,11 @@ class ImplementationPlanAPI(MethodView):
                 raise NotFoundError(f"No plan found with unique_id: {unique_id}")
 
         except ValidationError as e:
-            return make_response({"status": "error", "error": str(e)}), 400
+            return make_response(status="error", error=str(e)), 400
         except NotFoundError as e:
-            return make_response({"status": "error", "error": str(e)}), 404
+            return make_response(status="error", error=str(e)), 404
         except Exception as e:
-            return make_response({"status": "error", "error": f"Failed to delete plan: {str(e)}"}), 500
+            return make_response(status="error", error=f"Failed to delete plan: {str(e)}"), 500
 
 
 class ImplementationAccomplishmentAPI(MethodView):
@@ -1336,12 +1365,12 @@ class ImplementationAccomplishmentAPI(MethodView):
                     raise NotFoundError(f"No academic year found with name: {academic_year}")
 
             # If no parameters provided, return error
-            return make_response({"status": "error", "error": "Please provide query parameters"}), 400
+            return make_response(status="error", error="Please provide query parameters"), 400
 
         except NotFoundError as e:
-            return make_response({"status": "error", "error": str(e)}), 404
+            return make_response(status="error", error=str(e)), 404
         except Exception as e:
-            return make_response({"status": "error", "error": f"Failed to fetch accomplishments: {str(e)}"}), 500
+            return make_response(status="error", error=f"Failed to fetch accomplishments: {str(e)}"), 500
 
     def post(self):
         """
@@ -1374,11 +1403,11 @@ class ImplementationAccomplishmentAPI(MethodView):
                 raise CrudError("Failed to create accomplishment")
 
         except ValidationError as e:
-            return make_response({"status": "error", "error": str(e)}), 400
+            return make_response(status="error", error=str(e)), 400
         except CrudError as e:
-            return make_response({"status": "error", "error": str(e)}), 500
+            return make_response(status="error", error=str(e)), 500
         except Exception as e:
-            return make_response({"status": "error", "error": f"Failed to create accomplishment: {str(e)}"}), 500
+            return make_response(status="error", error=f"Failed to create accomplishment: {str(e)}"), 500
 
     def put(self):
         """
@@ -1392,7 +1421,7 @@ class ImplementationAccomplishmentAPI(MethodView):
             # Check for action
             action = data.get('action')
             if not action:
-                return make_response({"status": "error", "error": "Missing 'action' field"}), 400
+                return make_response(status="error", error="Missing 'action' field"), 400
 
             if action == "update_accomplishment":
                 # Ensure unique_id is present
@@ -1407,16 +1436,16 @@ class ImplementationAccomplishmentAPI(MethodView):
                 else:
                     raise CrudError("Failed to update accomplishment")
             else:
-                return make_response({"status": "error", "error": f"Unknown action: {action}"}), 400
+                return make_response(status="error", error=f"Unknown action: {action}"), 400
 
         except ValidationError as e:
-            return make_response({"status": "error", "error": str(e)}), 400
+            return make_response(status="error", error=str(e)), 400
         except NotFoundError as e:
-            return make_response({"status": "error", "error": str(e)}), 404
+            return make_response(status="error", error=str(e)), 404
         except CrudError as e:
-            return make_response({"status": "error", "error": str(e)}), 500
+            return make_response(status="error", error=str(e)), 500
         except Exception as e:
-            return make_response({"status": "error", "error": f"Failed to update accomplishment: {str(e)}"}), 500
+            return make_response(status="error", error=f"Failed to update accomplishment: {str(e)}"), 500
 
 
 

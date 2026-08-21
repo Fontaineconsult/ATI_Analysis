@@ -36,6 +36,9 @@ function ImplementationMasterContainer({ evidenceData = {}, yearIdentifier }) {
     // Drop any phantom entry with no node type (the compound query leaves one when
     // an indicator has zero implementations) so the count reads 0, not "Implementations (1)".
     const { evidenceTypes: rawEvidenceTypes = [] } = evidenceData;
+    // The indicator's companion bar, decomposed. Rides along with the indicator payload
+    // so the claim modal resolves a link's `satisfies` handles to text without a fetch.
+    const evidenceRequirements = evidenceData.evidenceRequirements || [];
     const evidenceTypes = rawEvidenceTypes.filter((et) => et && et.type);
     const [selectedType, setSelectedType] = useState(null);
     const [tabIndex, setTabIndex] = useState(0);
@@ -105,6 +108,7 @@ function ImplementationMasterContainer({ evidenceData = {}, yearIdentifier }) {
                     evidence={filteredEvidence}
                     yearIdentifier={yearIdentifier}
                     onRefresh={refreshAll}
+                    evidenceRequirements={evidenceRequirements}
                 />
             ) : (
                 <Box py={4} textAlign="center">

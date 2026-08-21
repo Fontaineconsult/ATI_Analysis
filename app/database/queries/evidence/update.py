@@ -852,3 +852,69 @@ def convert_concern_to_plan(unique_id: str, name: str, description: str = None,
         raise e
     except Exception as e:
         raise CrudError(f"Error converting concern {unique_id} to a plan: {e}")
+
+
+def set_evidence_satisfies(year_success_identifier: str,
+                           implementation_type: str,
+                           implementation_unique_id: str,
+                           satisfies):
+    """Replace the set of EvidenceRequirement handles this evidence link claims.
+
+    Full-replace, not append: the assignment modal submits the complete intended set,
+    and an append-only API would make un-checking a box impossible.
+
+    Every handle must belong to the indicator this YSE tracks. Nothing structural stops
+    writing 8.3-ins's handle onto a 4.6-pro link — the handles are strings — so the check
+    happens here, where the YSE and its indicator are both in hand. A cross-indicator
+    handle would show up in a coverage view as a satisfied requirement of an indicator
+    the work was never assessed against.
+
+    :return: {'satisfies': [...]} — the stored handles, deduped and in bar order.
+    """
+    if implementation_type not in implementation_classes:
+        raise ValidationError(f"Invalid implementation_type: {implementation_type}")
+    implementation_class = implementation_classes[implementation_type]
+    try:
+        implementation_node = implementation_class.nodes.get(unique_id=implementation_unique_id)
+    except implementation_class.DoesNotExist:
+        raise NotFoundError(f"No {implementation_type} found with unique_id: {implementation_unique_id}")
+    try:
+        year_success_evidence = YearSuccessEvidence.nodes.get(year_identifier=year_success_identifier)
+    except YearSuccessEvidence.DoesNotExist:
+        raise NotFoundError(f"No YearSuccessEvidence found with year_identifier: {year_success_identifier}")
+
+    rel = implementation_node.is_evidence_for.relationship(year_success_evidence)
+    if rel is None:
+        raise NotFoundError(
+            f"{implementation_type} {implementation_unique_id} is not evidence for {year_success_identifier}"
+        )
+
+    requested = [h for h in (satisfies or []) if h and str(h).strip()]
+    if not requested:
+        rel.satisfies = []
+        rel.save()
+        return {'satisfies': []}
+
+    # Resolve against the requirements of THIS YSE's indicator, which both validates the
+    # handles and gives back bar order (level, then seq) for free.
+    rows, _ = db.cypher_query(
+        """
+        MATCH (yse:YearSuccessEvidence {year_identifier: $yid})-[:tracks]->(si:SuccessIndicator)
+        MATCH (si)-[:has_evidence_requirement]->(er:EvidenceRequirement)
+        WHERE er.handle IN $handles
+        RETURN er.handle ORDER BY er.level, er.seq
+        """,
+        {"yid": year_success_identifier, "handles": list(set(requested))},
+    )
+    valid = [row[0] for row in rows]
+
+    unknown = sorted(set(requested) - set(valid))
+    if unknown:
+        raise ValidationError(
+            "These evidence requirements do not belong to the indicator "
+            f"{year_success_identifier} tracks: {', '.join(unknown)}"
+        )
+
+    rel.satisfies = valid
+    rel.save()
+    return {'satisfies': valid}

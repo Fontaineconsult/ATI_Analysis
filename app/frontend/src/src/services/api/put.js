@@ -1644,3 +1644,24 @@ export const updateEvidenceRequirement = async (uniqueId, fields) => {
         throw error;
     }
 };
+
+
+// Replace which companion-bar requirements an evidence link claims to satisfy.
+// Full-replace: pass the complete intended set of handles ([] clears them). Where
+// `strength` rates the link as a whole, this names the specific parts of the bar the
+// work answers for.
+export const setEvidenceSatisfies = async (yearIdentifier, implementationType, uniqueId, satisfies) => {
+    try {
+        const response = await axios.put(`${process.env.REACT_APP_API_URL}/implementations`, {
+            action: "set_evidence_satisfies",
+            year_success_identifier: yearIdentifier,
+            implementation_type: implementationType,
+            unique_id: uniqueId,
+            satisfies,
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error setting evidence requirements claimed:', error);
+        throw error;
+    }
+}

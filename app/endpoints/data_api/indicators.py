@@ -193,8 +193,10 @@ class IndicatorsAPI(MethodView):
             if action == 'delete_evidence_requirement':
                 if 'unique_id' not in data:
                     return make_response(status="error", error="Missing required field: unique_id."), 400
-                delete_evidence_requirement(data['unique_id'])
-                return make_response(status="success", data={"deleted": data['unique_id']}), 200
+                # Reports how many evidence links had their claim cleared, so the UI can
+                # tell the curator what the delete cost instead of dropping claims silently.
+                result = delete_evidence_requirement(data['unique_id'])
+                return make_response(status="success", data=result), 200
 
             return make_response(status="error", error=f"Unknown action: {action}"), 400
 
