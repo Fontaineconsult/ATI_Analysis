@@ -333,12 +333,16 @@ def test_read_projection_exposes_requirements(flask_client, cleanup_evidence_req
 @pytest.mark.api
 def test_seeded_requirements_are_untouched(flask_client):
     """Guard on the shared reference data: the suite adds and removes its own nodes and
-    must leave the seeded companion bars exactly as they were."""
+    must leave the seeded companion bars exactly as they were.
+
+    250, not the 253 originally seeded: 1.2-ins contributed three rows whose text was
+    only an element label, because that indicator writes its labels as bullets of their
+    own. They were dropped and the seed regenerated to match."""
     rows, _ = db.cypher_query(
         "MATCH (:SuccessIndicator)-[:has_evidence_requirement]->(er:EvidenceRequirement) "
         "RETURN count(DISTINCT er)"
     )
-    assert rows[0][0] >= 253
+    assert rows[0][0] >= 250
 
     orphans, _ = db.cypher_query(
         "MATCH (er:EvidenceRequirement) "

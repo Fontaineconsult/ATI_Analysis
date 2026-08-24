@@ -294,6 +294,10 @@ function SuccessIndicatorDetailPanel({ wrapper }) {
                 evidenceData={ev}
                 compositeKey={s.compositeKey}
                 yearIdentifier={yearIdentifier}
+                /* The companion bar hangs off the INDICATOR, not the year's evidence —
+                   one bar, graded against each year — so it comes from the wrapper
+                   rather than from `ev`. */
+                evidenceRequirements={wrapper?.evidenceRequirements || []}
             />
 
             {/* Assets / Interfaces / Tools this indicator touches, reached through its

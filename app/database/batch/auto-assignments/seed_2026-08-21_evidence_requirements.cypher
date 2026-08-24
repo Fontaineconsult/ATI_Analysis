@@ -5,20 +5,26 @@
 // node per bar element so an is_evidence_for link can name WHICH requirement it satisfies.
 // The *_example strings are NOT modified; they remain the authored source.
 //
-// Parsed from three text shapes found in the data:
-//   A  inline labelled bullets   "- Position: text"          180 requirements
-//   B  heading line then bullets  (Position on its own line)         4
-//   C  lead-in then plain bullets (no element label)          51   <- element stays null
-//   D  single-line labelled prose (managed/optimizing)        18
+// Parsed from four text shapes found in the data:
+//   A  inline labelled bullets   "- Position: text"
+//   B  heading line then bullets (the label on its own line)
+//   C  lead-in then plain bullets (no element label)   <- element stays null
+//   D  single-line labelled prose (managed/optimizing)
 //
-// element is left NULL for shape C rather than guessed. Eight indicators state their
+// element is left NULL for shape C rather than guessed. Several indicators state their
 // Established bar as unlabelled prose; `lead_in` keeps the scope sentence they hang under.
+//
+// 1.2-ins is the ragged case: it lists its element labels as bullets of their OWN
+// ("- Position Description", "- Budget", "- Output") with the actual requirements in
+// separate bullets below. Those three parsed to requirements whose text was just a label
+// and have been dropped, so its seq run is 3,5,6..11. The gap is deliberate — renumbering
+// would rewrite handles that satisfies-arrays point at.
 //
 // Idempotent: MERGE on the unique handle, SET on every run so a re-parse can correct text.
 // A re-run reports zero node creates.
 
 
-// --- 1.1-com (4) ---
+// --- 1.1-com ---
 MATCH (si:SuccessIndicator {composite_key: "1.1-com"})
 MERGE (er:EvidenceRequirement {handle: "evidence:1.1-com:established:1"})
   ON CREATE SET er.unique_id = randomUUID()
@@ -48,7 +54,7 @@ SET er.composite_key = "1.1-com", er.level = "established", er.seq = 4,
     er.rubric_dimension = "documentation_evidence", er.lead_in = null
 MERGE (si)-[:has_evidence_requirement]->(er);
 
-// --- 1.1-gov (4) ---
+// --- 1.1-gov ---
 MATCH (si:SuccessIndicator {composite_key: "1.1-gov"})
 MERGE (er:EvidenceRequirement {handle: "evidence:1.1-gov:established:1"})
   ON CREATE SET er.unique_id = randomUUID()
@@ -78,7 +84,7 @@ SET er.composite_key = "1.1-gov", er.level = "established", er.seq = 4,
     er.rubric_dimension = "documentation_evidence", er.lead_in = null
 MERGE (si)-[:has_evidence_requirement]->(er);
 
-// --- 1.11-web (4) ---
+// --- 1.11-web ---
 MATCH (si:SuccessIndicator {composite_key: "1.11-web"})
 MERGE (er:EvidenceRequirement {handle: "evidence:1.11-web:established:1"})
   ON CREATE SET er.unique_id = randomUUID()
@@ -108,7 +114,7 @@ SET er.composite_key = "1.11-web", er.level = "established", er.seq = 4,
     er.rubric_dimension = "documentation_evidence", er.lead_in = null
 MERGE (si)-[:has_evidence_requirement]->(er);
 
-// --- 1.12-pro (6) ---
+// --- 1.12-pro ---
 MATCH (si:SuccessIndicator {composite_key: "1.12-pro"})
 MERGE (er:EvidenceRequirement {handle: "evidence:1.12-pro:established:1"})
   ON CREATE SET er.unique_id = randomUUID()
@@ -152,7 +158,7 @@ SET er.composite_key = "1.12-pro", er.level = "optimizing", er.seq = 1,
     er.rubric_dimension = "procedures", er.lead_in = null
 MERGE (si)-[:has_evidence_requirement]->(er);
 
-// --- 1.12-web (4) ---
+// --- 1.12-web ---
 MATCH (si:SuccessIndicator {composite_key: "1.12-web"})
 MERGE (er:EvidenceRequirement {handle: "evidence:1.12-web:established:1"})
   ON CREATE SET er.unique_id = randomUUID()
@@ -182,7 +188,7 @@ SET er.composite_key = "1.12-web", er.level = "established", er.seq = 4,
     er.rubric_dimension = "documentation_evidence", er.lead_in = null
 MERGE (si)-[:has_evidence_requirement]->(er);
 
-// --- 1.14-web (4) ---
+// --- 1.14-web ---
 MATCH (si:SuccessIndicator {composite_key: "1.14-web"})
 MERGE (er:EvidenceRequirement {handle: "evidence:1.14-web:established:1"})
   ON CREATE SET er.unique_id = randomUUID()
@@ -212,7 +218,7 @@ SET er.composite_key = "1.14-web", er.level = "established", er.seq = 4,
     er.rubric_dimension = "documentation_evidence", er.lead_in = null
 MERGE (si)-[:has_evidence_requirement]->(er);
 
-// --- 1.15-web (4) ---
+// --- 1.15-web ---
 MATCH (si:SuccessIndicator {composite_key: "1.15-web"})
 MERGE (er:EvidenceRequirement {handle: "evidence:1.15-web:established:1"})
   ON CREATE SET er.unique_id = randomUUID()
@@ -242,7 +248,7 @@ SET er.composite_key = "1.15-web", er.level = "established", er.seq = 4,
     er.rubric_dimension = "documentation_evidence", er.lead_in = null
 MERGE (si)-[:has_evidence_requirement]->(er);
 
-// --- 1.19-web (4) ---
+// --- 1.19-web ---
 MATCH (si:SuccessIndicator {composite_key: "1.19-web"})
 MERGE (er:EvidenceRequirement {handle: "evidence:1.19-web:established:1"})
   ON CREATE SET er.unique_id = randomUUID()
@@ -272,7 +278,7 @@ SET er.composite_key = "1.19-web", er.level = "established", er.seq = 4,
     er.rubric_dimension = "documentation_evidence", er.lead_in = "At the Established level, the university has gone beyond awareness and put a formalized, consistent process in place:"
 MERGE (si)-[:has_evidence_requirement]->(er);
 
-// --- 1.2-com (4) ---
+// --- 1.2-com ---
 MATCH (si:SuccessIndicator {composite_key: "1.2-com"})
 MERGE (er:EvidenceRequirement {handle: "evidence:1.2-com:established:1"})
   ON CREATE SET er.unique_id = randomUUID()
@@ -302,7 +308,7 @@ SET er.composite_key = "1.2-com", er.level = "established", er.seq = 4,
     er.rubric_dimension = "documentation_evidence", er.lead_in = null
 MERGE (si)-[:has_evidence_requirement]->(er);
 
-// --- 1.2-gov (4) ---
+// --- 1.2-gov ---
 MATCH (si:SuccessIndicator {composite_key: "1.2-gov"})
 MERGE (er:EvidenceRequirement {handle: "evidence:1.2-gov:established:1"})
   ON CREATE SET er.unique_id = randomUUID()
@@ -332,34 +338,13 @@ SET er.composite_key = "1.2-gov", er.level = "established", er.seq = 4,
     er.rubric_dimension = "documentation_evidence", er.lead_in = null
 MERGE (si)-[:has_evidence_requirement]->(er);
 
-// --- 1.2-ins (11) ---
-MATCH (si:SuccessIndicator {composite_key: "1.2-ins"})
-MERGE (er:EvidenceRequirement {handle: "evidence:1.2-ins:established:1"})
-  ON CREATE SET er.unique_id = randomUUID()
-SET er.composite_key = "1.2-ins", er.level = "established", er.seq = 1,
-    er.element = null, er.requirement = "Position Description",
-    er.rubric_dimension = null, er.lead_in = "At the Established level, the campus has implemented and operationalized a documented process to support the timely adoption of instructional materials."
-MERGE (si)-[:has_evidence_requirement]->(er);
-MATCH (si:SuccessIndicator {composite_key: "1.2-ins"})
-MERGE (er:EvidenceRequirement {handle: "evidence:1.2-ins:established:2"})
-  ON CREATE SET er.unique_id = randomUUID()
-SET er.composite_key = "1.2-ins", er.level = "established", er.seq = 2,
-    er.element = null, er.requirement = "Budget",
-    er.rubric_dimension = null, er.lead_in = "At the Established level, the campus has implemented and operationalized a documented process to support the timely adoption of instructional materials."
-MERGE (si)-[:has_evidence_requirement]->(er);
+// --- 1.2-ins ---
 MATCH (si:SuccessIndicator {composite_key: "1.2-ins"})
 MERGE (er:EvidenceRequirement {handle: "evidence:1.2-ins:established:3"})
   ON CREATE SET er.unique_id = randomUUID()
 SET er.composite_key = "1.2-ins", er.level = "established", er.seq = 3,
     er.element = "Procedures", er.requirement = "The campus maintains and enforces a written, campuswide process that defines how and when instructional materials are adopted, and accounts for courses where instructors are added late by auto-adopting textbooks.",
     er.rubric_dimension = "procedures", er.lead_in = "At the Established level, the campus has implemented and operationalized a documented process to support the timely adoption of instructional materials."
-MERGE (si)-[:has_evidence_requirement]->(er);
-MATCH (si:SuccessIndicator {composite_key: "1.2-ins"})
-MERGE (er:EvidenceRequirement {handle: "evidence:1.2-ins:established:4"})
-  ON CREATE SET er.unique_id = randomUUID()
-SET er.composite_key = "1.2-ins", er.level = "established", er.seq = 4,
-    er.element = null, er.requirement = "Output",
-    er.rubric_dimension = null, er.lead_in = "At the Established level, the campus has implemented and operationalized a documented process to support the timely adoption of instructional materials."
 MERGE (si)-[:has_evidence_requirement]->(er);
 MATCH (si:SuccessIndicator {composite_key: "1.2-ins"})
 MERGE (er:EvidenceRequirement {handle: "evidence:1.2-ins:established:5"})
@@ -411,7 +396,7 @@ SET er.composite_key = "1.2-ins", er.level = "established", er.seq = 11,
     er.rubric_dimension = null, er.lead_in = "At the Established level, the campus has implemented and operationalized a documented process to support the timely adoption of instructional materials."
 MERGE (si)-[:has_evidence_requirement]->(er);
 
-// --- 1.2-web (4) ---
+// --- 1.2-web ---
 MATCH (si:SuccessIndicator {composite_key: "1.2-web"})
 MERGE (er:EvidenceRequirement {handle: "evidence:1.2-web:established:1"})
   ON CREATE SET er.unique_id = randomUUID()
@@ -441,7 +426,7 @@ SET er.composite_key = "1.2-web", er.level = "established", er.seq = 4,
     er.rubric_dimension = "documentation_evidence", er.lead_in = null
 MERGE (si)-[:has_evidence_requirement]->(er);
 
-// --- 1.20-web (4) ---
+// --- 1.20-web ---
 MATCH (si:SuccessIndicator {composite_key: "1.20-web"})
 MERGE (er:EvidenceRequirement {handle: "evidence:1.20-web:established:1"})
   ON CREATE SET er.unique_id = randomUUID()
@@ -471,7 +456,7 @@ SET er.composite_key = "1.20-web", er.level = "established", er.seq = 4,
     er.rubric_dimension = "documentation_evidence", er.lead_in = "At the Established level, the university has moved beyond ad hoc awareness and has a documented, consistent practice:"
 MERGE (si)-[:has_evidence_requirement]->(er);
 
-// --- 1.21-web (4) ---
+// --- 1.21-web ---
 MATCH (si:SuccessIndicator {composite_key: "1.21-web"})
 MERGE (er:EvidenceRequirement {handle: "evidence:1.21-web:established:1"})
   ON CREATE SET er.unique_id = randomUUID()
@@ -501,7 +486,7 @@ SET er.composite_key = "1.21-web", er.level = "established", er.seq = 4,
     er.rubric_dimension = "documentation_evidence", er.lead_in = "At the Established level, the institution has moved beyond one-off efforts and maintains a standardized, enforced practice:"
 MERGE (si)-[:has_evidence_requirement]->(er);
 
-// --- 1.3-com (4) ---
+// --- 1.3-com ---
 MATCH (si:SuccessIndicator {composite_key: "1.3-com"})
 MERGE (er:EvidenceRequirement {handle: "evidence:1.3-com:established:1"})
   ON CREATE SET er.unique_id = randomUUID()
@@ -531,7 +516,7 @@ SET er.composite_key = "1.3-com", er.level = "established", er.seq = 4,
     er.rubric_dimension = "documentation_evidence", er.lead_in = null
 MERGE (si)-[:has_evidence_requirement]->(er);
 
-// --- 1.3-gov (4) ---
+// --- 1.3-gov ---
 MATCH (si:SuccessIndicator {composite_key: "1.3-gov"})
 MERGE (er:EvidenceRequirement {handle: "evidence:1.3-gov:established:1"})
   ON CREATE SET er.unique_id = randomUUID()
@@ -561,7 +546,7 @@ SET er.composite_key = "1.3-gov", er.level = "established", er.seq = 4,
     er.rubric_dimension = "documentation_evidence", er.lead_in = null
 MERGE (si)-[:has_evidence_requirement]->(er);
 
-// --- 1.3-pro (6) ---
+// --- 1.3-pro ---
 MATCH (si:SuccessIndicator {composite_key: "1.3-pro"})
 MERGE (er:EvidenceRequirement {handle: "evidence:1.3-pro:established:1"})
   ON CREATE SET er.unique_id = randomUUID()
@@ -605,7 +590,7 @@ SET er.composite_key = "1.3-pro", er.level = "optimizing", er.seq = 1,
     er.rubric_dimension = "procedures", er.lead_in = null
 MERGE (si)-[:has_evidence_requirement]->(er);
 
-// --- 1.4-com (4) ---
+// --- 1.4-com ---
 MATCH (si:SuccessIndicator {composite_key: "1.4-com"})
 MERGE (er:EvidenceRequirement {handle: "evidence:1.4-com:established:1"})
   ON CREATE SET er.unique_id = randomUUID()
@@ -635,7 +620,7 @@ SET er.composite_key = "1.4-com", er.level = "established", er.seq = 4,
     er.rubric_dimension = "documentation_evidence", er.lead_in = null
 MERGE (si)-[:has_evidence_requirement]->(er);
 
-// --- 1.4-gov (4) ---
+// --- 1.4-gov ---
 MATCH (si:SuccessIndicator {composite_key: "1.4-gov"})
 MERGE (er:EvidenceRequirement {handle: "evidence:1.4-gov:established:1"})
   ON CREATE SET er.unique_id = randomUUID()
@@ -665,7 +650,7 @@ SET er.composite_key = "1.4-gov", er.level = "established", er.seq = 4,
     er.rubric_dimension = "documentation_evidence", er.lead_in = null
 MERGE (si)-[:has_evidence_requirement]->(er);
 
-// --- 1.4-pro (6) ---
+// --- 1.4-pro ---
 MATCH (si:SuccessIndicator {composite_key: "1.4-pro"})
 MERGE (er:EvidenceRequirement {handle: "evidence:1.4-pro:established:1"})
   ON CREATE SET er.unique_id = randomUUID()
@@ -709,7 +694,7 @@ SET er.composite_key = "1.4-pro", er.level = "optimizing", er.seq = 1,
     er.rubric_dimension = "procedures", er.lead_in = null
 MERGE (si)-[:has_evidence_requirement]->(er);
 
-// --- 1.4-web (4) ---
+// --- 1.4-web ---
 MATCH (si:SuccessIndicator {composite_key: "1.4-web"})
 MERGE (er:EvidenceRequirement {handle: "evidence:1.4-web:established:1"})
   ON CREATE SET er.unique_id = randomUUID()
@@ -739,7 +724,7 @@ SET er.composite_key = "1.4-web", er.level = "established", er.seq = 4,
     er.rubric_dimension = "documentation_evidence", er.lead_in = "At the Established level, the university has moved beyond ad hoc checks and conducts evaluations consistently and formally:"
 MERGE (si)-[:has_evidence_requirement]->(er);
 
-// --- 1.5-gov (4) ---
+// --- 1.5-gov ---
 MATCH (si:SuccessIndicator {composite_key: "1.5-gov"})
 MERGE (er:EvidenceRequirement {handle: "evidence:1.5-gov:established:1"})
   ON CREATE SET er.unique_id = randomUUID()
@@ -769,7 +754,7 @@ SET er.composite_key = "1.5-gov", er.level = "established", er.seq = 4,
     er.rubric_dimension = "documentation_evidence", er.lead_in = null
 MERGE (si)-[:has_evidence_requirement]->(er);
 
-// --- 1.6-gov (4) ---
+// --- 1.6-gov ---
 MATCH (si:SuccessIndicator {composite_key: "1.6-gov"})
 MERGE (er:EvidenceRequirement {handle: "evidence:1.6-gov:established:1"})
   ON CREATE SET er.unique_id = randomUUID()
@@ -799,7 +784,7 @@ SET er.composite_key = "1.6-gov", er.level = "established", er.seq = 4,
     er.rubric_dimension = "documentation_evidence", er.lead_in = null
 MERGE (si)-[:has_evidence_requirement]->(er);
 
-// --- 1.6-ins (5) ---
+// --- 1.6-ins ---
 MATCH (si:SuccessIndicator {composite_key: "1.6-ins"})
 MERGE (er:EvidenceRequirement {handle: "evidence:1.6-ins:established:1"})
   ON CREATE SET er.unique_id = randomUUID()
@@ -836,7 +821,7 @@ SET er.composite_key = "1.6-ins", er.level = "established", er.seq = 5,
     er.rubric_dimension = null, er.lead_in = "At the Established level, the campus has a consistent, documented process for producing and distributing instructional materials and adoption performance reports each semester."
 MERGE (si)-[:has_evidence_requirement]->(er);
 
-// --- 1.6-web (3) ---
+// --- 1.6-web ---
 MATCH (si:SuccessIndicator {composite_key: "1.6-web"})
 MERGE (er:EvidenceRequirement {handle: "evidence:1.6-web:established:1"})
   ON CREATE SET er.unique_id = randomUUID()
@@ -859,7 +844,7 @@ SET er.composite_key = "1.6-web", er.level = "established", er.seq = 3,
     er.rubric_dimension = "procedures", er.lead_in = "At the Established level, manual evaluations are not ad hoc but documented, consistent, and part of the institution’s accessibility practice:"
 MERGE (si)-[:has_evidence_requirement]->(er);
 
-// --- 1.7-gov (4) ---
+// --- 1.7-gov ---
 MATCH (si:SuccessIndicator {composite_key: "1.7-gov"})
 MERGE (er:EvidenceRequirement {handle: "evidence:1.7-gov:established:1"})
   ON CREATE SET er.unique_id = randomUUID()
@@ -889,7 +874,7 @@ SET er.composite_key = "1.7-gov", er.level = "established", er.seq = 4,
     er.rubric_dimension = "documentation_evidence", er.lead_in = null
 MERGE (si)-[:has_evidence_requirement]->(er);
 
-// --- 1.7-web (4) ---
+// --- 1.7-web ---
 MATCH (si:SuccessIndicator {composite_key: "1.7-web"})
 MERGE (er:EvidenceRequirement {handle: "evidence:1.7-web:established:1"})
   ON CREATE SET er.unique_id = randomUUID()
@@ -919,7 +904,7 @@ SET er.composite_key = "1.7-web", er.level = "established", er.seq = 4,
     er.rubric_dimension = "documentation_evidence", er.lead_in = "At the Established level, the institution has a formal and consistent process for distributing evaluation results:"
 MERGE (si)-[:has_evidence_requirement]->(er);
 
-// --- 1.9-pro (6) ---
+// --- 1.9-pro ---
 MATCH (si:SuccessIndicator {composite_key: "1.9-pro"})
 MERGE (er:EvidenceRequirement {handle: "evidence:1.9-pro:established:1"})
   ON CREATE SET er.unique_id = randomUUID()
@@ -963,7 +948,7 @@ SET er.composite_key = "1.9-pro", er.level = "optimizing", er.seq = 1,
     er.rubric_dimension = "procedures", er.lead_in = null
 MERGE (si)-[:has_evidence_requirement]->(er);
 
-// --- 1.9-web (4) ---
+// --- 1.9-web ---
 MATCH (si:SuccessIndicator {composite_key: "1.9-web"})
 MERGE (er:EvidenceRequirement {handle: "evidence:1.9-web:established:1"})
   ON CREATE SET er.unique_id = randomUUID()
@@ -993,7 +978,7 @@ SET er.composite_key = "1.9-web", er.level = "established", er.seq = 4,
     er.rubric_dimension = "documentation_evidence", er.lead_in = "At the Established level, the institution has moved beyond ad hoc awareness-building and has a formal, repeatable program to ensure understanding:"
 MERGE (si)-[:has_evidence_requirement]->(er);
 
-// --- 2.1-gov (4) ---
+// --- 2.1-gov ---
 MATCH (si:SuccessIndicator {composite_key: "2.1-gov"})
 MERGE (er:EvidenceRequirement {handle: "evidence:2.1-gov:established:1"})
   ON CREATE SET er.unique_id = randomUUID()
@@ -1023,7 +1008,7 @@ SET er.composite_key = "2.1-gov", er.level = "established", er.seq = 4,
     er.rubric_dimension = "documentation_evidence", er.lead_in = null
 MERGE (si)-[:has_evidence_requirement]->(er);
 
-// --- 2.1-web (4) ---
+// --- 2.1-web ---
 MATCH (si:SuccessIndicator {composite_key: "2.1-web"})
 MERGE (er:EvidenceRequirement {handle: "evidence:2.1-web:established:1"})
   ON CREATE SET er.unique_id = randomUUID()
@@ -1053,7 +1038,7 @@ SET er.composite_key = "2.1-web", er.level = "established", er.seq = 4,
     er.rubric_dimension = "documentation_evidence", er.lead_in = null
 MERGE (si)-[:has_evidence_requirement]->(er);
 
-// --- 2.10-web (4) ---
+// --- 2.10-web ---
 MATCH (si:SuccessIndicator {composite_key: "2.10-web"})
 MERGE (er:EvidenceRequirement {handle: "evidence:2.10-web:established:1"})
   ON CREATE SET er.unique_id = randomUUID()
@@ -1083,7 +1068,7 @@ SET er.composite_key = "2.10-web", er.level = "established", er.seq = 4,
     er.rubric_dimension = "documentation_evidence", er.lead_in = null
 MERGE (si)-[:has_evidence_requirement]->(er);
 
-// --- 2.2-gov (4) ---
+// --- 2.2-gov ---
 MATCH (si:SuccessIndicator {composite_key: "2.2-gov"})
 MERGE (er:EvidenceRequirement {handle: "evidence:2.2-gov:established:1"})
   ON CREATE SET er.unique_id = randomUUID()
@@ -1113,7 +1098,7 @@ SET er.composite_key = "2.2-gov", er.level = "established", er.seq = 4,
     er.rubric_dimension = "documentation_evidence", er.lead_in = null
 MERGE (si)-[:has_evidence_requirement]->(er);
 
-// --- 2.3-gov (4) ---
+// --- 2.3-gov ---
 MATCH (si:SuccessIndicator {composite_key: "2.3-gov"})
 MERGE (er:EvidenceRequirement {handle: "evidence:2.3-gov:established:1"})
   ON CREATE SET er.unique_id = randomUUID()
@@ -1143,7 +1128,7 @@ SET er.composite_key = "2.3-gov", er.level = "established", er.seq = 4,
     er.rubric_dimension = "documentation_evidence", er.lead_in = null
 MERGE (si)-[:has_evidence_requirement]->(er);
 
-// --- 2.4-gov (4) ---
+// --- 2.4-gov ---
 MATCH (si:SuccessIndicator {composite_key: "2.4-gov"})
 MERGE (er:EvidenceRequirement {handle: "evidence:2.4-gov:established:1"})
   ON CREATE SET er.unique_id = randomUUID()
@@ -1173,7 +1158,7 @@ SET er.composite_key = "2.4-gov", er.level = "established", er.seq = 4,
     er.rubric_dimension = "documentation_evidence", er.lead_in = null
 MERGE (si)-[:has_evidence_requirement]->(er);
 
-// --- 3.1-gov (4) ---
+// --- 3.1-gov ---
 MATCH (si:SuccessIndicator {composite_key: "3.1-gov"})
 MERGE (er:EvidenceRequirement {handle: "evidence:3.1-gov:established:1"})
   ON CREATE SET er.unique_id = randomUUID()
@@ -1203,7 +1188,7 @@ SET er.composite_key = "3.1-gov", er.level = "established", er.seq = 4,
     er.rubric_dimension = "documentation_evidence", er.lead_in = null
 MERGE (si)-[:has_evidence_requirement]->(er);
 
-// --- 3.2-web (4) ---
+// --- 3.2-web ---
 MATCH (si:SuccessIndicator {composite_key: "3.2-web"})
 MERGE (er:EvidenceRequirement {handle: "evidence:3.2-web:established:1"})
   ON CREATE SET er.unique_id = randomUUID()
@@ -1233,7 +1218,7 @@ SET er.composite_key = "3.2-web", er.level = "established", er.seq = 4,
     er.rubric_dimension = "documentation_evidence", er.lead_in = null
 MERGE (si)-[:has_evidence_requirement]->(er);
 
-// --- 3.7-web (4) ---
+// --- 3.7-web ---
 MATCH (si:SuccessIndicator {composite_key: "3.7-web"})
 MERGE (er:EvidenceRequirement {handle: "evidence:3.7-web:established:1"})
   ON CREATE SET er.unique_id = randomUUID()
@@ -1263,7 +1248,7 @@ SET er.composite_key = "3.7-web", er.level = "established", er.seq = 4,
     er.rubric_dimension = "documentation_evidence", er.lead_in = null
 MERGE (si)-[:has_evidence_requirement]->(er);
 
-// --- 4.1-ins (5) ---
+// --- 4.1-ins ---
 MATCH (si:SuccessIndicator {composite_key: "4.1-ins"})
 MERGE (er:EvidenceRequirement {handle: "evidence:4.1-ins:established:1"})
   ON CREATE SET er.unique_id = randomUUID()
@@ -1300,7 +1285,7 @@ SET er.composite_key = "4.1-ins", er.level = "established", er.seq = 5,
     er.rubric_dimension = null, er.lead_in = "At the Established level, the campus actively promotes and supports the posting of accessible instructional materials within the university approved LMS."
 MERGE (si)-[:has_evidence_requirement]->(er);
 
-// --- 4.11-ins (6) ---
+// --- 4.11-ins ---
 MATCH (si:SuccessIndicator {composite_key: "4.11-ins"})
 MERGE (er:EvidenceRequirement {handle: "evidence:4.11-ins:established:1"})
   ON CREATE SET er.unique_id = randomUUID()
@@ -1344,7 +1329,7 @@ SET er.composite_key = "4.11-ins", er.level = "established", er.seq = 6,
     er.rubric_dimension = null, er.lead_in = "At the Established level, the campus has a documented process to review faculty-maintained instructional websites."
 MERGE (si)-[:has_evidence_requirement]->(er);
 
-// --- 4.5-ins (5) ---
+// --- 4.5-ins ---
 MATCH (si:SuccessIndicator {composite_key: "4.5-ins"})
 MERGE (er:EvidenceRequirement {handle: "evidence:4.5-ins:established:1"})
   ON CREATE SET er.unique_id = randomUUID()
@@ -1381,7 +1366,7 @@ SET er.composite_key = "4.5-ins", er.level = "established", er.seq = 5,
     er.rubric_dimension = null, er.lead_in = "At the Established level, the campus has an operational process that ensures accommodation staff receive timely LMS access."
 MERGE (si)-[:has_evidence_requirement]->(er);
 
-// --- 4.6-pro (6) ---
+// --- 4.6-pro ---
 MATCH (si:SuccessIndicator {composite_key: "4.6-pro"})
 MERGE (er:EvidenceRequirement {handle: "evidence:4.6-pro:established:1"})
   ON CREATE SET er.unique_id = randomUUID()
@@ -1425,7 +1410,7 @@ SET er.composite_key = "4.6-pro", er.level = "optimizing", er.seq = 1,
     er.rubric_dimension = "procedures", er.lead_in = null
 MERGE (si)-[:has_evidence_requirement]->(er);
 
-// --- 5.11-ins (5) ---
+// --- 5.11-ins ---
 MATCH (si:SuccessIndicator {composite_key: "5.11-ins"})
 MERGE (er:EvidenceRequirement {handle: "evidence:5.11-ins:established:1"})
   ON CREATE SET er.unique_id = randomUUID()
@@ -1462,7 +1447,7 @@ SET er.composite_key = "5.11-ins", er.level = "established", er.seq = 5,
     er.rubric_dimension = null, er.lead_in = "At the Established level, the campus has an end-to-end process for accessible audio and video."
 MERGE (si)-[:has_evidence_requirement]->(er);
 
-// --- 5.14-ins (5) ---
+// --- 5.14-ins ---
 MATCH (si:SuccessIndicator {composite_key: "5.14-ins"})
 MERGE (er:EvidenceRequirement {handle: "evidence:5.14-ins:established:1"})
   ON CREATE SET er.unique_id = randomUUID()
@@ -1499,7 +1484,7 @@ SET er.composite_key = "5.14-ins", er.level = "established", er.seq = 5,
     er.rubric_dimension = null, er.lead_in = "At the Established level, the campus has a structured process for addressing accessibility of emerging instructional technologies."
 MERGE (si)-[:has_evidence_requirement]->(er);
 
-// --- 5.15-ins (5) ---
+// --- 5.15-ins ---
 MATCH (si:SuccessIndicator {composite_key: "5.15-ins"})
 MERGE (er:EvidenceRequirement {handle: "evidence:5.15-ins:established:1"})
   ON CREATE SET er.unique_id = randomUUID()
@@ -1536,7 +1521,7 @@ SET er.composite_key = "5.15-ins", er.level = "established", er.seq = 5,
     er.rubric_dimension = null, er.lead_in = "At the Established level, the campus has a defined process for accessible publisher content."
 MERGE (si)-[:has_evidence_requirement]->(er);
 
-// --- 5.17-ins (5) ---
+// --- 5.17-ins ---
 MATCH (si:SuccessIndicator {composite_key: "5.17-ins"})
 MERGE (er:EvidenceRequirement {handle: "evidence:5.17-ins:established:1"})
   ON CREATE SET er.unique_id = randomUUID()
@@ -1573,7 +1558,7 @@ SET er.composite_key = "5.17-ins", er.level = "established", er.seq = 5,
     er.rubric_dimension = null, er.lead_in = "At the Established level, the campus has a consistent process for accessible syllabi delivery."
 MERGE (si)-[:has_evidence_requirement]->(er);
 
-// --- 6.10-ins (4) ---
+// --- 6.10-ins ---
 MATCH (si:SuccessIndicator {composite_key: "6.10-ins"})
 MERGE (er:EvidenceRequirement {handle: "evidence:6.10-ins:established:1"})
   ON CREATE SET er.unique_id = randomUUID()
@@ -1603,7 +1588,7 @@ SET er.composite_key = "6.10-ins", er.level = "established", er.seq = 4,
     er.rubric_dimension = "documentation_evidence", er.lead_in = null
 MERGE (si)-[:has_evidence_requirement]->(er);
 
-// --- 6.2-ins (4) ---
+// --- 6.2-ins ---
 MATCH (si:SuccessIndicator {composite_key: "6.2-ins"})
 MERGE (er:EvidenceRequirement {handle: "evidence:6.2-ins:established:1"})
   ON CREATE SET er.unique_id = randomUUID()
@@ -1633,7 +1618,7 @@ SET er.composite_key = "6.2-ins", er.level = "established", er.seq = 4,
     er.rubric_dimension = "documentation_evidence", er.lead_in = null
 MERGE (si)-[:has_evidence_requirement]->(er);
 
-// --- 6.4-ins (4) ---
+// --- 6.4-ins ---
 MATCH (si:SuccessIndicator {composite_key: "6.4-ins"})
 MERGE (er:EvidenceRequirement {handle: "evidence:6.4-ins:established:1"})
   ON CREATE SET er.unique_id = randomUUID()
@@ -1663,7 +1648,7 @@ SET er.composite_key = "6.4-ins", er.level = "established", er.seq = 4,
     er.rubric_dimension = "documentation_evidence", er.lead_in = null
 MERGE (si)-[:has_evidence_requirement]->(er);
 
-// --- 6.5-ins (4) ---
+// --- 6.5-ins ---
 MATCH (si:SuccessIndicator {composite_key: "6.5-ins"})
 MERGE (er:EvidenceRequirement {handle: "evidence:6.5-ins:established:1"})
   ON CREATE SET er.unique_id = randomUUID()
@@ -1693,7 +1678,7 @@ SET er.composite_key = "6.5-ins", er.level = "established", er.seq = 4,
     er.rubric_dimension = "documentation_evidence", er.lead_in = null
 MERGE (si)-[:has_evidence_requirement]->(er);
 
-// --- 6.7-ins (4) ---
+// --- 6.7-ins ---
 MATCH (si:SuccessIndicator {composite_key: "6.7-ins"})
 MERGE (er:EvidenceRequirement {handle: "evidence:6.7-ins:established:1"})
   ON CREATE SET er.unique_id = randomUUID()
@@ -1723,7 +1708,7 @@ SET er.composite_key = "6.7-ins", er.level = "established", er.seq = 4,
     er.rubric_dimension = "documentation_evidence", er.lead_in = null
 MERGE (si)-[:has_evidence_requirement]->(er);
 
-// --- 6.8-ins (4) ---
+// --- 6.8-ins ---
 MATCH (si:SuccessIndicator {composite_key: "6.8-ins"})
 MERGE (er:EvidenceRequirement {handle: "evidence:6.8-ins:established:1"})
   ON CREATE SET er.unique_id = randomUUID()
@@ -1753,7 +1738,7 @@ SET er.composite_key = "6.8-ins", er.level = "established", er.seq = 4,
     er.rubric_dimension = "documentation_evidence", er.lead_in = null
 MERGE (si)-[:has_evidence_requirement]->(er);
 
-// --- 6.9-ins (4) ---
+// --- 6.9-ins ---
 MATCH (si:SuccessIndicator {composite_key: "6.9-ins"})
 MERGE (er:EvidenceRequirement {handle: "evidence:6.9-ins:established:1"})
   ON CREATE SET er.unique_id = randomUUID()
@@ -1783,7 +1768,7 @@ SET er.composite_key = "6.9-ins", er.level = "established", er.seq = 4,
     er.rubric_dimension = "documentation_evidence", er.lead_in = null
 MERGE (si)-[:has_evidence_requirement]->(er);
 
-// --- 7.11-ins (4) ---
+// --- 7.11-ins ---
 MATCH (si:SuccessIndicator {composite_key: "7.11-ins"})
 MERGE (er:EvidenceRequirement {handle: "evidence:7.11-ins:established:1"})
   ON CREATE SET er.unique_id = randomUUID()
@@ -1813,7 +1798,7 @@ SET er.composite_key = "7.11-ins", er.level = "established", er.seq = 4,
     er.rubric_dimension = "documentation_evidence", er.lead_in = null
 MERGE (si)-[:has_evidence_requirement]->(er);
 
-// --- 8.11-pro (6) ---
+// --- 8.11-pro ---
 MATCH (si:SuccessIndicator {composite_key: "8.11-pro"})
 MERGE (er:EvidenceRequirement {handle: "evidence:8.11-pro:established:1"})
   ON CREATE SET er.unique_id = randomUUID()
@@ -1857,7 +1842,7 @@ SET er.composite_key = "8.11-pro", er.level = "optimizing", er.seq = 1,
     er.rubric_dimension = "procedures", er.lead_in = null
 MERGE (si)-[:has_evidence_requirement]->(er);
 
-// --- 8.12-pro (6) ---
+// --- 8.12-pro ---
 MATCH (si:SuccessIndicator {composite_key: "8.12-pro"})
 MERGE (er:EvidenceRequirement {handle: "evidence:8.12-pro:established:1"})
   ON CREATE SET er.unique_id = randomUUID()
