@@ -26,11 +26,10 @@ const byLevel = (a, b) => {
  * The companion bar as a reviewer needs to read it — deliberately not the same table the
  * report renders.
  *
- * The report states what is claimed. An approver has to judge whether the claim holds, so
- * this adds the two things that make a claim checkable: the rationale argued on each link,
- * and a flag on claims that are probably wrong. Position and Budget are answered by position
- * descriptions and allocation records rather than by an implementation, so an implementation
- * claiming one is a likely overclaim and is marked rather than counted as coverage.
+ * The report states what is claimed. This adds the thing that makes a claim checkable: the
+ * rationale argued on each link, alongside its strength. Position and Budget still read as
+ * "not counted" because they are answered by position descriptions and allocation records
+ * rather than by an implementation, so scoring them would report a gap that is not one.
  */
 const ApprovalCoverageTable = ({ coverage }) => {
     const requirements = coverage?.requirements || [];
@@ -62,11 +61,8 @@ const ApprovalCoverageTable = ({ coverage }) => {
                 <Tbody>
                     {rows.map((r) => {
                         const claims = r.satisfied_by || [];
-                        // A claim on a requirement that isn't implementation-evidenced is the
-                        // pattern most likely to be wrong, so it is surfaced, not hidden.
-                        const overclaimRisk = claims.length > 0 && !r.implementation_evidenced;
                         return (
-                            <Tr key={r.handle} bg={overclaimRisk ? 'orange.50' : undefined}>
+                            <Tr key={r.handle}>
                                 <Td verticalAlign="top">
                                     <Badge
                                         colorScheme={LEVEL_COLOR[r.level] || 'gray'}
@@ -83,16 +79,7 @@ const ApprovalCoverageTable = ({ coverage }) => {
                                     )}
                                 </Td>
                                 <Td verticalAlign="top">
-                                    {overclaimRisk ? (
-                                        <Tooltip
-                                            label="Claimed by an implementation, but this element is normally answered by position descriptions or allocation records. Check the claim before approving."
-                                            hasArrow
-                                        >
-                                            <Badge colorScheme="orange" variant="solid" fontSize="2xs">
-                                                ⚠ Check claim
-                                            </Badge>
-                                        </Tooltip>
-                                    ) : r.satisfied ? (
+                                    {r.satisfied ? (
                                         <Badge colorScheme="green" variant="solid" fontSize="2xs">Satisfied</Badge>
                                     ) : r.implementation_evidenced ? (
                                         <Badge colorScheme="orange" variant="outline" fontSize="2xs">Bare</Badge>

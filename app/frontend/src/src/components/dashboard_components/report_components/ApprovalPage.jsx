@@ -1,6 +1,11 @@
 import React, { useContext, useEffect, useMemo, useState } from 'react';
 import { Link as RouterLink, useNavigate, useParams } from 'react-router-dom';
 import {
+    Accordion,
+    AccordionButton,
+    AccordionIcon,
+    AccordionItem,
+    AccordionPanel,
     Alert,
     AlertIcon,
     Badge,
@@ -10,7 +15,6 @@ import {
     HStack,
     Heading,
     Link,
-    SimpleGrid,
     Spinner,
     Text,
     Tooltip,
@@ -31,11 +35,11 @@ import AdminFeedbackForm from './AdminFeedbackForm';
 import ConcernsPanel from './ConcernsPanel';
 import RecommendationsPanel from './RecommendationsPanel';
 import ApprovalCoverageTable from './ApprovalCoverageTable';
-import IndicatorReportView from './IndicatorReportView';
+import IndicatorReportView, { PlansAccomplishmentsBody } from './IndicatorReportView';
 
 const Section = ({ title, subtitle, children, action }) => (
     <Box borderWidth="1px" borderColor="gray.200" borderRadius="lg" bg="white" boxShadow="sm" mb={5}>
-        <Box bg="gray.50" px={4} py={2.5} borderBottomWidth="1px" borderColor="gray.200">
+        <Box bg="teal.50" px={4} py={2.5} borderBottomWidth="1px" borderColor="teal.100">
             <HStack justify="space-between" align="center">
                 <Box>
                     <Heading as="h2" size="sm" color="gray.800">{title}</Heading>
@@ -46,25 +50,6 @@ const Section = ({ title, subtitle, children, action }) => (
         </Box>
         <Box p={4}>{children}</Box>
     </Box>
-);
-
-const Stat = ({ label, value, tone = 'gray', hint }) => (
-    <Tooltip label={hint} openDelay={400} hasArrow isDisabled={!hint}>
-        <Box
-            borderWidth="1px"
-            borderColor={`${tone}.200`}
-            bg={`${tone}.50`}
-            borderRadius="md"
-            px={3}
-            py={2}
-            cursor={hint ? 'help' : 'default'}
-        >
-            <Text fontSize="2xs" fontWeight="semibold" color="gray.600" textTransform="uppercase">
-                {label}
-            </Text>
-            <Text fontSize="sm" fontWeight="bold" color={`${tone}.700`}>{value}</Text>
-        </Box>
-    </Tooltip>
 );
 
 /**
@@ -191,26 +176,6 @@ const ApprovalPage = () => {
     const currentUserId = user?.employee_id;
 
     const coverage = report?.evidence_coverage;
-    const summary = coverage?.summary || {};
-    const requirements = coverage?.requirements || [];
-    const implementations = report?.implementations || [];
-
-    // Decision signals. Each is a question an approver would otherwise have to reconstruct
-    // by reading the whole report.
-    const scoredTotal = summary.scored_total || 0;
-    const scoredSatisfied = summary.scored_satisfied || 0;
-    const bare = requirements.filter((r) => r.implementation_evidenced && !r.satisfied).length;
-    const checkClaims = requirements.filter(
-        (r) => !r.implementation_evidenced && (r.satisfied_by || []).length > 0
-    ).length;
-    const live = implementations.filter((im) => !im.retired);
-    const unrated = live.filter((im) => im.strength === null || im.strength === undefined).length;
-    const openRecs = (evidenceData.recommendations || []).filter(
-        (w) => w.recommendation?.properties?.status === 'open'
-    ).length;
-    const openConcerns = (evidenceData.concerns || []).filter(
-        (w) => w.concern?.properties?.status === 'open'
-    ).length;
 
     const act = async (fn, successTitle, successBody) => {
         if (!currentUserId || !canApprove) return;
@@ -275,46 +240,6 @@ const ApprovalPage = () => {
                 </Alert>
             )}
 
-            {/* Decision signals — the questions an approver would otherwise reconstruct by
-                reading the whole report. */}
-            <Section
-                title="At a glance"
-                subtitle="What the indicator asks for, and how completely the evidence answers it."
-            >
-                <SimpleGrid columns={{ base: 2, md: 5 }} spacing={3}>
-                    <Stat
-                        label="Bar coverage"
-                        value={requirements.length ? `${scoredSatisfied} / ${scoredTotal}` : 'No bar'}
-                        tone={requirements.length === 0 ? 'gray' : scoredSatisfied === scoredTotal ? 'green' : 'orange'}
-                        hint="Requirements answered by an implementation. Position and Budget are excluded — they are evidenced by position descriptions and allocation records."
-                    />
-                    <Stat
-                        label="Bare"
-                        value={bare}
-                        tone={bare ? 'orange' : 'green'}
-                        hint="Requirements nothing claims and nothing delivers."
-                    />
-                    <Stat
-                        label="Check claims"
-                        value={checkClaims}
-                        tone={checkClaims ? 'red' : 'green'}
-                        hint="Claims on Position or Budget, which an implementation cannot usually evidence. Likely overclaims."
-                    />
-                    <Stat
-                        label="Unrated links"
-                        value={`${unrated} / ${live.length}`}
-                        tone={unrated ? 'orange' : 'green'}
-                        hint="Live evidence links with no strength rating. An unrated link is an unqualified claim."
-                    />
-                    <Stat
-                        label="Open items"
-                        value={`${openRecs}R · ${openConcerns}C`}
-                        tone={openRecs + openConcerns ? 'orange' : 'green'}
-                        hint="Open recommendations and concerns still outstanding on this evidence."
-                    />
-                </SimpleGrid>
-            </Section>
-
             <Section
                 title="Companion bar coverage"
                 subtitle="Each requirement, what claims it, and the argument made for the claim."
@@ -335,9 +260,27 @@ const ApprovalPage = () => {
                 )}
             </Section>
 
-            <Section title="Maturity status">
-                <StatusLevelDetails statusDetails={evidenceData.statusLevel.properties} />
-            </Section>
+            <Accordion allowToggle mb={5} borderWidth="1px" borderColor="gray.200"
+                borderRadius="lg" bg="white" boxShadow="sm" overflow="hidden">
+                <AccordionItem border="none">
+                    <Heading as="h2" size="sm">
+                        <AccordionButton bg="teal.50" _expanded={{ bg: 'teal.100' }} py={2.5} px={4}>
+                            <Box flex="1" textAlign="left">
+                                <Text fontSize="sm" fontWeight="semibold" color="gray.800">
+                                    Maturity status
+                                </Text>
+                                <Text fontSize="xs" fontWeight="normal" color="gray.600" mt={0.5}>
+                                    The rubric this level is claimed against.
+                                </Text>
+                            </Box>
+                            <AccordionIcon />
+                        </AccordionButton>
+                    </Heading>
+                    <AccordionPanel p={4}>
+                        <StatusLevelDetails statusDetails={evidenceData.statusLevel.properties} />
+                    </AccordionPanel>
+                </AccordionItem>
+            </Accordion>
 
             {/* Review comments — the reviewer's own record, and the reason this page exists
                 as a workspace rather than a confirmation dialog. */}
@@ -381,6 +324,19 @@ const ApprovalPage = () => {
                 </VStack>
             </Section>
 
+            {/* Plans and accomplishments sit above the evidence: they are what the group
+                says comes next, which frames how a reviewer reads what is there now. Same
+                block the report renders, suppressed there so it appears once. */}
+            <Section
+                title="Plans & Accomplishments"
+                subtitle="Committed work and what has already been claimed for this year."
+            >
+                <PlansAccomplishmentsBody
+                    plans={report?.plans || []}
+                    accomplishments={report?.accomplishments || []}
+                />
+            </Section>
+
             {/* The evidence, rendered exactly as the report page renders it. An approver is
                 deciding whether the claimed status is defensible, and that decision is made
                 against the implementations, documentation, people and annotations — not
@@ -400,7 +356,7 @@ const ApprovalPage = () => {
                 overflow="hidden"
                 mb={5}
             >
-                <IndicatorReportView report={report} suppressCoverage />
+                <IndicatorReportView report={report} suppressCoverage suppressPlans />
             </Box>
 
             {/* Sticky action bar — the decision must never depend on scroll position. */}
@@ -426,11 +382,6 @@ const ApprovalPage = () => {
                         >
                             {isApproved ? '✓ Approved' : ready_for_admin_review ? 'Awaiting approval' : 'Not ready'}
                         </Badge>
-                        {checkClaims > 0 && !isApproved && (
-                            <Text fontSize="xs" color="red.600">
-                                {checkClaims} claim{checkClaims > 1 ? 's' : ''} to check before approving
-                            </Text>
-                        )}
                     </HStack>
                     <HStack spacing={3}>
                         {acting && <Spinner size="sm" color="teal.500" />}

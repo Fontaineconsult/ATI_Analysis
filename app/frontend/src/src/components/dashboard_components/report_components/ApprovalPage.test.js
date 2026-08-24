@@ -86,6 +86,11 @@ const REPORT = {
                 satisfied_by: [{ title: 'Statement', type: 'Guidance', unique_id: 'i1', strength: 2, rationale: 'Routes users to support.', retired: false }],
             },
             {
+                handle: 'evidence:1.19-web:established:2', level: 'established', seq: 2,
+                element: 'Budget', requirement: 'Allocations exist for staff time.',
+                satisfied: false, implementation_evidenced: false, satisfied_by: [],
+            },
+            {
                 handle: 'evidence:1.19-web:established:3', level: 'established', seq: 3,
                 element: 'Procedures', requirement: 'A documented procedure exists.',
                 satisfied: false, implementation_evidenced: true, satisfied_by: [],
@@ -209,7 +214,6 @@ describe('ApprovalPage — the evidence itself', () => {
         // one, which is the only version carrying rationale and claim flags.
         renderPage(NON_APPROVER);
         expect(screen.getAllByText('Companion bar coverage')).toHaveLength(1);
-        expect(screen.getByText('⚠ Check claim')).toBeInTheDocument();
     });
 
     it('carries the review-comment surfaces', () => {
@@ -219,27 +223,29 @@ describe('ApprovalPage — the evidence itself', () => {
     });
 });
 
-describe('ApprovalPage — decision signals', () => {
-    it('scores coverage excluding Position and Budget', () => {
-        renderPage(NON_APPROVER);
-        expect(screen.getByText('0 / 2')).toBeInTheDocument();
-    });
-
-    it('counts a claim on a non-implementation-evidenced element as one to check', () => {
-        // The Position row is claimed by an implementation, which is the overclaim shape.
-        renderPage(NON_APPROVER);
-        expect(screen.getByText(/1 claim to check before approving/i)).toBeInTheDocument();
-        expect(screen.getByText('⚠ Check claim')).toBeInTheDocument();
-    });
-
-    it('surfaces unrated evidence links', () => {
-        renderPage(NON_APPROVER);
-        expect(screen.getByText('1 / 2')).toBeInTheDocument();
-    });
-
-    it('shows the rationale behind a claim, and flags a claim without one', () => {
+describe('ApprovalPage — the coverage table', () => {
+    it('shows the rationale argued for each claim', () => {
         renderPage(NON_APPROVER);
         expect(screen.getByText('Routes users to support.')).toBeInTheDocument();
+    });
+
+    it('marks a requirement nothing answers as bare', () => {
+        renderPage(NON_APPROVER);
+        expect(screen.getAllByText('Bare').length).toBe(2);
+    });
+
+    it('leaves an unclaimed Position or Budget requirement uncounted, not bare', () => {
+        // Bare would report a gap against work that was never the right kind of evidence.
+        renderPage(NON_APPROVER);
+        expect(screen.getByText('Not counted')).toBeInTheDocument();
+    });
+
+    it('no longer second-guesses a claim on those elements', () => {
+        // The page used to flag a Position/Budget claim as one to check. Removed — a
+        // claimed requirement now simply reads as satisfied.
+        renderPage(NON_APPROVER);
+        expect(screen.queryByText(/check claim/i)).toBeNull();
+        expect(screen.getByText('Satisfied')).toBeInTheDocument();
     });
 
     it('degrades to a plain message when the indicator has no companion bar', () => {
@@ -248,7 +254,26 @@ describe('ApprovalPage — decision signals', () => {
             evidence_coverage: { summary: {}, requirements: [] },
         });
         expect(screen.getByText(/no companion-bar requirements are authored/i)).toBeInTheDocument();
-        expect(screen.getByText('No bar')).toBeInTheDocument();
+    });
+});
+
+describe('ApprovalPage — layout', () => {
+    it('hoists plans and accomplishments above the evidence', () => {
+        renderPage(NON_APPROVER);
+        const html = document.body.innerHTML;
+        expect(html.indexOf('Plans &amp; Accomplishments')).toBeGreaterThan(-1);
+        expect(html.indexOf('Plans &amp; Accomplishments')).toBeLessThan(html.indexOf('>Evidence<'));
+    });
+
+    it('renders plans once, not once here and again inside the report', () => {
+        renderPage(NON_APPROVER);
+        expect(screen.getAllByText('Plans & Accomplishments')).toHaveLength(1);
+    });
+
+    it('collapses the maturity rubric behind a disclosure', () => {
+        renderPage(NON_APPROVER);
+        const trigger = screen.getByRole('button', { name: /maturity status/i });
+        expect(trigger).toHaveAttribute('aria-expanded', 'false');
     });
 });
 
@@ -283,7 +308,8 @@ describe('ApprovalPage — arriving cold', () => {
         });
 
         await waitFor(() => expect(getOrFetchReport).toHaveBeenCalled());
-        await waitFor(() => expect(screen.getByText('0 / 2')).toBeInTheDocument());
+        await waitFor(() =>
+            expect(screen.getByText('A documented procedure exists.')).toBeInTheDocument());
     });
 
     it('does not claim the bar is unauthored when the report simply is not there', () => {

@@ -483,10 +483,54 @@ const TaapEntry = ({ taap }) => (
 );
 
 // ── Main view ───────────────────────────────────────────────────────────────
+// The plans/accomplishments table, shared so the approval page can hoist it above the
+// evidence without duplicating the markup and letting the two drift.
+export const PlansAccomplishmentsBody = ({ plans = [], accomplishments = [] }) => (
+    <>
+                    {(plans.length > 0 || accomplishments.length > 0) ? (
+                        <VStack align="stretch" spacing={4}>
+                            {plans.length > 0 && (
+                                <Box>
+                                    <SubLabel>Plans ({plans.length})</SubLabel>
+                                    <Box mt={1}>
+                                        <DataTable
+                                            columns={['Plan', 'Status', 'Description']}
+                                            rows={plans.map((p) => [
+                                                <HStack spacing={1.5} flexWrap="wrap">
+                                                    <Text fontWeight="semibold" color="gray.800">{p.name}</Text>
+                                                    {p.is_key_plan && <Badge colorScheme="purple" fontSize="2xs">Key</Badge>}
+                                                    {p.is_campus_plan && <Badge colorScheme="green" fontSize="2xs">Campus plan</Badge>}
+                                                </HStack>,
+                                                p.plan_status ? <Badge colorScheme={getPlanStatusColorScheme(p)} fontSize="2xs">{getPlanStatusLabel(p)}</Badge> : <Dash />,
+                                                p.description ? <Text color="gray.600">{p.description}</Text> : <Dash />,
+                                            ])}
+                                        />
+                                    </Box>
+                                </Box>
+                            )}
+                            {accomplishments.length > 0 && (
+                                <Box>
+                                    <SubLabel>Accomplishments ({accomplishments.length})</SubLabel>
+                                    <Box mt={1}>
+                                        <DataTable
+                                            columns={['Accomplishment', 'Description']}
+                                            rows={accomplishments.map((a) => [
+                                                <Text fontWeight="semibold" color="gray.800">{a.name}</Text>,
+                                                a.description ? <Text color="gray.600" whiteSpace="pre-wrap">{a.description}</Text> : <Dash />,
+                                            ])}
+                                        />
+                                    </Box>
+                                </Box>
+                            )}
+                        </VStack>
+                    ) : <Empty>None recorded for this year.</Empty>}
+    </>
+);
+
 // `suppressCoverage` is for the approval page, which renders its own coverage table
 // above this — a review-lens version carrying each claim's rationale and flagging the
 // ones worth checking. Two coverage tables on one screen would be the same list twice.
-const IndicatorReportView = ({ report, suppressCoverage = false }) => {
+const IndicatorReportView = ({ report, suppressCoverage = false, suppressPlans = false }) => {
     const navigate = useNavigate();
     const { campus } = useParams();
     const toast = useToast();
@@ -907,46 +951,13 @@ const IndicatorReportView = ({ report, suppressCoverage = false }) => {
                     ) : <Empty>None recorded for this year.</Empty>}
                 </ReportSection>
 
-                {/* Plans & Accomplishments */}
+                {/* Plans & Accomplishments. Suppressed on the approval page, which
+                    hoists this above the evidence — the same block, not a copy. */}
+                {!suppressPlans && (
                 <ReportSection id="sec-plans" title="Plans & Accomplishments">
-                    {(plans.length > 0 || accomplishments.length > 0) ? (
-                        <VStack align="stretch" spacing={4}>
-                            {plans.length > 0 && (
-                                <Box>
-                                    <SubLabel>Plans ({plans.length})</SubLabel>
-                                    <Box mt={1}>
-                                        <DataTable
-                                            columns={['Plan', 'Status', 'Description']}
-                                            rows={plans.map((p) => [
-                                                <HStack spacing={1.5} flexWrap="wrap">
-                                                    <Text fontWeight="semibold" color="gray.800">{p.name}</Text>
-                                                    {p.is_key_plan && <Badge colorScheme="purple" fontSize="2xs">Key</Badge>}
-                                                    {p.is_campus_plan && <Badge colorScheme="green" fontSize="2xs">Campus plan</Badge>}
-                                                </HStack>,
-                                                p.plan_status ? <Badge colorScheme={getPlanStatusColorScheme(p)} fontSize="2xs">{getPlanStatusLabel(p)}</Badge> : <Dash />,
-                                                p.description ? <Text color="gray.600">{p.description}</Text> : <Dash />,
-                                            ])}
-                                        />
-                                    </Box>
-                                </Box>
-                            )}
-                            {accomplishments.length > 0 && (
-                                <Box>
-                                    <SubLabel>Accomplishments ({accomplishments.length})</SubLabel>
-                                    <Box mt={1}>
-                                        <DataTable
-                                            columns={['Accomplishment', 'Description']}
-                                            rows={accomplishments.map((a) => [
-                                                <Text fontWeight="semibold" color="gray.800">{a.name}</Text>,
-                                                a.description ? <Text color="gray.600" whiteSpace="pre-wrap">{a.description}</Text> : <Dash />,
-                                            ])}
-                                        />
-                                    </Box>
-                                </Box>
-                            )}
-                        </VStack>
-                    ) : <Empty>None recorded for this year.</Empty>}
+                    <PlansAccomplishmentsBody plans={plans} accomplishments={accomplishments} />
                 </ReportSection>
+                )}
 
                 {/* YSE-level notes, messages & metrics */}
                 <ReportSection id="sec-notes" title="Notes, Messages & Metrics">
