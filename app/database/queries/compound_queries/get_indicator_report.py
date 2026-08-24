@@ -376,6 +376,9 @@ def _evidence_coverage(indicator, implementations):
                 "type": impl.get("type"),
                 "unique_id": impl.get("unique_id"),
                 "strength": impl.get("strength"),
+                # The argument for this claim. An approver judging whether a tick holds
+                # needs the reason it was made, not just that it was made.
+                "rationale": impl.get("rationale"),
                 "retired": bool(impl.get("retired")),
             })
 

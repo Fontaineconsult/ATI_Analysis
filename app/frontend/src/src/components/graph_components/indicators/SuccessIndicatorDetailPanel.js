@@ -1,4 +1,5 @@
 import React, { useContext, useEffect, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import {
     Box,
     VStack,
@@ -12,13 +13,6 @@ import {
     AccordionButton,
     AccordionPanel,
     AccordionIcon,
-    Modal,
-    ModalOverlay,
-    ModalContent,
-    ModalHeader,
-    ModalBody,
-    ModalCloseButton,
-    useDisclosure,
     useToast,
 } from '@chakra-ui/react';
 import DropdownSelect from '../../functional_components/DropdownSelect';
@@ -27,7 +21,6 @@ import ViewReportButton from '../../functional_components/ViewReportButton';
 import PersonAssignmentSelector from '../../functional_components/PersonAssignmentSelector';
 import ImplementationMasterContainer from '../implementation/ImplementationMasterContainer';
 import YSEAnnotationMasterContainer from '../documentation/YSEAnnotationMasterContainer';
-import ApprovalMasterContainer from '../../ati_explorer_containers/ApprovalMasterContainer';
 import { useStatusLevels } from '../../../hooks/useStatusLevels';
 import { UserContext } from '../../../context/UserContext';
 import { useSettings } from '../../../context/SettingsContext';
@@ -35,6 +28,7 @@ import { DataContext } from '../../../context/DataContext';
 import { updateStatusLevel, assignPersonAsImplementor, unassignPersonAsImplementor, setReadyForReview } from '../../../services/api/put';
 import { getIndicatorSummary, getStatusColor, PRIORITY_COLORS } from './indicatorHelpers';
 import { reviewWashClass } from '../../../styles/reviewWash';
+import { CODE_TO_SLUG } from '../../../styles/workingGroupIdentity';
 import IndicatorAssetsPanel from './IndicatorAssetsPanel';
 import IndicatorGovernancePanel from './IndicatorGovernancePanel';
 import { HelpTip } from '../../functional_components/DescriptorHelp';
@@ -61,7 +55,22 @@ function SuccessIndicatorDetailPanel({ wrapper }) {
     const { loadSingleWorkingGroupData } = useContext(DataContext);
     const { individuals, refreshAllIndividuals } = useContext(UserContext);
     const toast = useToast();
-    const approval = useDisclosure();
+    const navigate = useNavigate();
+    const { campus } = useParams();
+
+    // Review is a full page now, not a modal — it carries the bar coverage and the review
+    // comments, and it has to be linkable. Built from the composite key ("1.19-web" ->
+    // goal 1, indicator 19, slug `web`) so it needs nothing threaded in.
+    const approvalUrl = (() => {
+        const key = s?.compositeKey;
+        if (!key || !campus) return null;
+        const [numbers, code] = key.split('-');
+        const [goal, indicator] = (numbers || '').split('.');
+        const slug = CODE_TO_SLUG[code];
+        return goal && indicator && slug
+            ? `/${campus}/dashboard/reports/approve/${slug}/${goal}/${indicator}`
+            : null;
+    })();
 
     const s = wrapper ? getIndicatorSummary(wrapper) : null;
     const ev = wrapper?.evidences?.[0];
@@ -208,7 +217,8 @@ function SuccessIndicatorDetailPanel({ wrapper }) {
                             size="sm"
                             colorScheme={s.approved ? 'green' : 'yellow'}
                             variant={s.approved ? 'solid' : 'outline'}
-                            onClick={approval.onOpen}
+                            onClick={() => approvalUrl && navigate(approvalUrl)}
+                            isDisabled={!approvalUrl}
                         >
                             {s.approved ? 'Approved' : 'Review'}
                         </Button>
@@ -322,19 +332,6 @@ function SuccessIndicatorDetailPanel({ wrapper }) {
                 />
             </Section>
 
-            {/* Review stays behind a button (action-gated). */}
-            {/* Wide review workspace: the container lays out review + report side
-                by side, and the report needs a real viewport to render. */}
-            <Modal isOpen={approval.isOpen} onClose={approval.onClose} size="6xl" scrollBehavior="inside">
-                <ModalOverlay />
-                <ModalContent>
-                    <ModalHeader fontSize="lg" color="teal.700">Approval Process — {s.compositeKey}</ModalHeader>
-                    <ModalCloseButton />
-                    <ModalBody pb={6}>
-                        <ApprovalMasterContainer evidenceData={ev} currentWorkingGroup={currentWorkingGroup} />
-                    </ModalBody>
-                </ModalContent>
-            </Modal>
         </VStack>
     );
 }

@@ -1,4 +1,4 @@
-import React, { useContext, useState, useMemo } from 'react';
+import React, { useContext, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
     Box,
@@ -10,13 +10,6 @@ import {
     Alert,
     AlertIcon,
     Divider,
-    Modal,
-    ModalOverlay,
-    ModalContent,
-    ModalHeader,
-    ModalBody,
-    ModalCloseButton,
-    useDisclosure,
     VisuallyHidden,
 } from '@chakra-ui/react';
 import { DataContext } from '../../../context/DataContext';
@@ -35,7 +28,6 @@ import { findTrendForIndicator } from './reportMetrics';
 import { getIndicatorSummary } from '../../graph_components/indicators/indicatorHelpers';
 import { WORKING_GROUP_LIST } from '../../../styles/workingGroupIdentity';
 import { STATUS_LEVELS_ORDER } from '../../../services/utils/statusColors';
-import ApprovalMasterContainer from '../../ati_explorer_containers/ApprovalMasterContainer';
 
 /*
  * "View Reports" landing — the dashboard's default area. A campus-wide overview shell:
@@ -49,18 +41,11 @@ const ReportMasterList = () => {
     const { data, loading, error, selectedYear } = useContext(DataContext);
     const navigate = useNavigate();
     const { campus } = useParams();
-    const { isOpen, onOpen, onClose } = useDisclosure();
-
-    // Approval modal context — set by the SI table's Approve buttons.
-    const [approvalContext, setApprovalContext] = useState({
-        workingGroup: null,
-        goalNumber: null,
-        indicatorNumber: null,
-    });
-
+    // Approval is a page, not a modal: it carries the bar coverage, the review comments
+    // and the sign-off, and it has to be linkable so someone can be sent to the thing
+    // awaiting them.
     const openApprovalModal = (workingGroup, goalNumber, indicatorNumber) => {
-        setApprovalContext({ workingGroup, goalNumber, indicatorNumber });
-        onOpen();
+        navigate(`/${campus}/dashboard/reports/approve/${workingGroup}/${goalNumber}/${indicatorNumber}`);
     };
 
     // Campus-wide + per-working-group metrics, recomputed only when the data changes (it's
@@ -226,29 +211,6 @@ const ReportMasterList = () => {
                 </>
             )}
 
-            {/* Approval Modal */}
-            <Modal isOpen={isOpen} onClose={onClose} size="xl" isCentered scrollBehavior="inside">
-                <ModalOverlay />
-                <ModalContent
-                    maxW="900px"
-                    w="calc(100% - 32px)"
-                    maxH="calc(100vh - 80px)"
-                    overflow="hidden"
-                    borderRadius="md"
-                >
-                    <ModalHeader>
-                        Approve Success Indicator
-                    </ModalHeader>
-                    <ModalCloseButton />
-                    <ModalBody pb={6} overflowY="auto" maxH="calc(100vh - 200px)">
-                        <ApprovalMasterContainer
-                            workingGroup={approvalContext.workingGroup}
-                            goalNumber={approvalContext.goalNumber}
-                            indicatorNumber={approvalContext.indicatorNumber}
-                        />
-                    </ModalBody>
-                </ModalContent>
-            </Modal>
         </Box>
     );
 };

@@ -6,6 +6,7 @@ import ImplementationsMasterContainer from './dashboard_components/implementatio
 import SettingsMasterContainer from './dashboard_components/settings_components/SettingsMasterContainer';
 import SingleReportMasterContainer from "./dashboard_components/report_components/SingleReportMasterContainer";
 import ReportMasterList from "./dashboard_components/report_components/ReportMasterList";
+import ApprovalPage from "./dashboard_components/report_components/ApprovalPage";
 import ImplementationTypeOverviewWrapper from './implementation_explorer/ImplementationTypeOverviewWrapper';
 import PlansAccomplishmentsManager from "./PlansAndAccomplishments/PlansAccomplishmentsManager";
 import CampusPlanContainer from "./dashboard_components/campus_plan_components/CampusPlanContainer";
@@ -34,6 +35,14 @@ function Dashboard() {
                 <Route path=":workingGroup/goal/:goalId/:indicatorNumber" element={<WorkingGroupGoalsView />} />
 
                 <Route path="report-overview" element={<ReportOverviewMasterContainer />} />
+                {/* Approval workspace. Four segments after `reports`, where the report
+                    route takes three, so the literal `approve` cannot be read as a
+                    working-group slug. Listed first for readability; React Router ranks
+                    static segments above dynamic ones regardless. */}
+                <Route
+                    path="reports/approve/:workingGroup/:goalNumber/:indicatorNumber"
+                    element={<ApprovalPage />}
+                />
                 <Route
                     path="reports/:workingGroup/:goalNumber/:indicatorNumber"
                     element={<SingleReportMasterContainer />}
