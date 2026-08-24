@@ -327,3 +327,129 @@ def test_short_form_redirects_to_explicit_url(flask_client):
 def test_unknown_working_group_and_year_404(flask_client):
     assert flask_client.get("/ati/reports/public/sfsu/2025-2026/nope/1/1").status_code == 404
     assert flask_client.get("/ati/reports/public/sfsu/1900-1901/web/1/1").status_code == 404
+
+
+# ---------------------------------------------------------------------------
+# Companion bar coverage on the public page
+# ---------------------------------------------------------------------------
+
+COVERAGE_RAW = {
+    **RAW,
+    "evidence_coverage": {
+        "requirements": [
+            {
+                "handle": "evidence:1.1-web:established:1", "level": "established", "seq": 1,
+                "element": "Position", "requirement": "Responsibility is formally assigned.",
+                "rubric_dimension": "resources",
+                "satisfied": False, "satisfied_by": [], "implementation_evidenced": False,
+            },
+            {
+                "handle": "evidence:1.1-web:established:2", "level": "established", "seq": 2,
+                "element": "Procedures", "requirement": "A documented procedure exists.",
+                "rubric_dimension": "procedures",
+                "satisfied": True, "implementation_evidenced": True,
+                "satisfied_by": [{
+                    "title": "Homepage audit process", "type": "Process",
+                    "unique_id": "i1", "strength": 3, "retired": False,
+                }],
+            },
+            {
+                "handle": "evidence:1.1-web:established:3", "level": "established", "seq": 3,
+                "element": "Output", "requirement": "Records are retained.",
+                "rubric_dimension": "documentation_evidence",
+                "satisfied": False, "satisfied_by": [], "implementation_evidenced": True,
+            },
+        ],
+        "summary": {"total": 3, "satisfied": 1, "scored_total": 2, "scored_satisfied": 1},
+    },
+}
+
+
+@pytest.mark.unit
+def test_sanitizer_projects_coverage_without_person_detail():
+    """The claim carries who/what internally; the public projection keeps only the
+    implementation's identity, which is already listed elsewhere on the page."""
+    out = public_report_payload(COVERAGE_RAW)
+    requirements = out["evidence_coverage"]["requirements"]
+
+    assert len(requirements) == 3
+    assert out["evidence_coverage"]["summary"]["scored_total"] == 2
+
+    satisfied = next(r for r in requirements if r["satisfied"])
+    assert satisfied["requirement"] == "A documented procedure exists."
+    by = satisfied["satisfied_by"][0]
+    assert by == {"title": "Homepage audit process", "type": "Process", "retired": False}
+    assert "unique_id" not in by and "strength" not in by
+
+
+@pytest.mark.unit
+def test_sanitizer_tolerates_a_report_with_no_coverage():
+    out = public_report_payload(RAW)
+    assert out["evidence_coverage"] == {"requirements": [], "summary": {}}
+
+
+@pytest.mark.api
+def test_public_page_renders_coverage_before_recommendations(flask_client):
+    """Placed ahead of Recommendations so a reader meets the standard and its gaps before
+    the improvements proposed against them."""
+    from neomodel import db
+
+    rows, _ = db.cypher_query(
+        """
+        MATCH (yse:YearSuccessEvidence)-[:tracks]->(si:SuccessIndicator)
+        MATCH (yse)-[:has_recommendation]->(:Recommendation)
+        MATCH (si)-[:has_evidence_requirement]->(:EvidenceRequirement)
+        MATCH (yse)-[:evidence_at_campus]->(cam:Campus)
+        RETURN DISTINCT si.composite_key, cam.abbreviation,
+               left(yse.year_identifier, 9) AS year LIMIT 1
+        """
+    )
+    if not rows:
+        pytest.skip("no YSE with both recommendations and an authored companion bar")
+
+    composite_key, campus, year = rows[0]
+    segments = {"web": "web", "pro": "procurement", "ins": "instructional-materials",
+                "com": "communication-training", "gov": "governance"}
+    goal, rest = composite_key.split(".", 1)
+    indicator, wg = rest.rsplit("-", 1)
+
+    response = flask_client.get(
+        f"/ati/reports/public/{campus}/{year}/{segments[wg]}/{goal}/{indicator}")
+    assert response.status_code == 200
+    html = response.get_data(as_text=True)
+
+    assert "Companion Bar Coverage" in html
+    assert html.index("Companion Bar Coverage") < html.index("<h2>Recommendations</h2>")
+
+
+@pytest.mark.api
+def test_public_coverage_marks_position_and_budget_uncounted(flask_client):
+    """They are answered by position descriptions and allocation records, not by an
+    implementation, so counting them would publish a gap that isn't one."""
+    from neomodel import db
+
+    rows, _ = db.cypher_query(
+        """
+        MATCH (yse:YearSuccessEvidence)-[:tracks]->(si:SuccessIndicator)
+        MATCH (si)-[:has_evidence_requirement]->(er:EvidenceRequirement)
+        WHERE er.element IN ['Position', 'Budget']
+        MATCH (yse)-[:evidence_at_campus]->(cam:Campus)
+        RETURN DISTINCT si.composite_key, cam.abbreviation,
+               left(yse.year_identifier, 9) AS year LIMIT 1
+        """
+    )
+    if not rows:
+        pytest.skip("no indicator with a Position/Budget requirement")
+
+    composite_key, campus, year = rows[0]
+    segments = {"web": "web", "pro": "procurement", "ins": "instructional-materials",
+                "com": "communication-training", "gov": "governance"}
+    goal, rest = composite_key.split(".", 1)
+    indicator, wg = rest.rsplit("-", 1)
+
+    html = flask_client.get(
+        f"/ati/reports/public/{campus}/{year}/{segments[wg]}/{goal}/{indicator}"
+    ).get_data(as_text=True)
+
+    assert "Not counted" in html
+    assert "Position and Budget are listed but not counted" in html

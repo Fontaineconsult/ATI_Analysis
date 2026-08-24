@@ -517,8 +517,6 @@ const IndicatorReportView = ({ report }) => {
     const remediatedIds = new Set(assets.map((a) => a.asset_identifier));
     const ictEmpty = !assets.length && !interfaces.length && !tools.length && !vendors.length
         && !footprintAssets.length;
-    const hasCompanion = (indicator.examples_of_evidence?.length > 0)
-        || indicator.established_example || indicator.managed_example || indicator.optimizing_example;
 
     return (
         <Box as="article" maxW="1400px" mx="auto" p={6} bg="gray.50" textAlign="left" sx={{ '@media print': { bg: 'white', p: 0, maxW: '100%' } }}>
@@ -723,44 +721,11 @@ const IndicatorReportView = ({ report }) => {
                     </VStack>
                 </ReportSection>
 
-                {/* Companion Guide — SI-level reference content (examples of evidence + level examples) */}
-                {hasCompanion && (
-                    <ReportSection id="sec-companion" title="Companion Guide">
-                        <VStack align="stretch" spacing={3}>
-                            {indicator.examples_of_evidence?.length > 0 && (
-                                <Box>
-                                    <SubLabel>Examples of evidence ({indicator.examples_of_evidence.length})</SubLabel>
-                                    <VStack align="stretch" spacing={1} mt={1}>
-                                        {indicator.examples_of_evidence.map((ex, i) => (
-                                            <HStack key={i} align="start" spacing={2}>
-                                                <Text fontSize="sm" color="gray.600">•</Text>
-                                                <Text fontSize="sm" color="gray.700">{ex}</Text>
-                                            </HStack>
-                                        ))}
-                                    </VStack>
-                                </Box>
-                            )}
-                            {indicator.established_example && (
-                                <Box>
-                                    <SubLabel>Example of an established level</SubLabel>
-                                    <Text fontSize="sm" color="gray.700" whiteSpace="pre-wrap" mt={1}>{indicator.established_example}</Text>
-                                </Box>
-                            )}
-                            {indicator.managed_example && (
-                                <Box>
-                                    <SubLabel>Example of a managed level</SubLabel>
-                                    <Text fontSize="sm" color="gray.700" whiteSpace="pre-wrap" mt={1}>{indicator.managed_example}</Text>
-                                </Box>
-                            )}
-                            {indicator.optimizing_example && (
-                                <Box>
-                                    <SubLabel>Example of an optimizing level</SubLabel>
-                                    <Text fontSize="sm" color="gray.700" whiteSpace="pre-wrap" mt={1}>{indicator.optimizing_example}</Text>
-                                </Box>
-                            )}
-                        </VStack>
-                    </ReportSection>
-                )}
+                {/* The companion guide's prose is no longer rendered here. It is the same
+                    content as the coverage table under "Expected evidence at", which states
+                    each requirement AND whether anything answers it — so the prose was the
+                    weaker copy of a section already on the page. The *_example strings remain
+                    on the indicator as the authored source, and are still edited in Settings. */}
 
                 {/* People */}
                 <ReportSection id="sec-people" title="People" count={implementers.length}>

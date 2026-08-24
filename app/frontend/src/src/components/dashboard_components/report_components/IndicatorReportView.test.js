@@ -206,33 +206,28 @@ describe('IndicatorReportView — flat redesign (PR2)', () => {
     });
 });
 
-describe('IndicatorReportView — Companion Guide', () => {
+describe('IndicatorReportView — companion guide prose is not rendered here', () => {
+    // The prose was removed once the coverage table landed: it is the same content, and
+    // the table additionally says whether anything ANSWERS each requirement. The strings
+    // stay on the indicator as the authored source and are still edited in Settings — the
+    // report just isn't where they belong any more.
     const withCompanion = (overrides) => ({
         ...REPORT,
         indicator: { ...REPORT.indicator, ...overrides },
     });
 
-    it('renders the Companion Guide with examples of evidence and the established-level example', () => {
+    it('does not render the companion prose even when the indicator carries it', () => {
         renderReport(withCompanion({
             examples_of_evidence: ['A documented adoption workflow', 'Training materials for faculty'],
             established_example: 'At the Established level, the campus operationalizes the process.',
-            managed_example: null,
-            optimizing_example: null,
-        }));
-        expect(screen.getByRole('heading', { name: /Companion Guide/i })).toBeInTheDocument();
-        expect(screen.getByText('A documented adoption workflow')).toBeInTheDocument();
-        expect(screen.getByText('Training materials for faculty')).toBeInTheDocument();
-        expect(screen.getByText(/operationalizes the process/i)).toBeInTheDocument();
-    });
-
-    it('omits the Companion Guide when the indicator has no companion content', () => {
-        renderReport(withCompanion({
-            examples_of_evidence: [],
-            established_example: null,
-            managed_example: null,
-            optimizing_example: null,
+            managed_example: 'Managed prose.',
+            optimizing_example: 'Optimizing prose.',
         }));
         expect(screen.queryByRole('heading', { name: /Companion Guide/i })).not.toBeInTheDocument();
+        expect(screen.queryByText('A documented adoption workflow')).not.toBeInTheDocument();
+        expect(screen.queryByText(/operationalizes the process/i)).not.toBeInTheDocument();
+        expect(screen.queryByText('Managed prose.')).not.toBeInTheDocument();
+        expect(screen.queryByText('Optimizing prose.')).not.toBeInTheDocument();
     });
 });
 
