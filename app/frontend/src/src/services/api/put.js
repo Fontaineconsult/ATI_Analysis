@@ -1665,3 +1665,23 @@ export const setEvidenceSatisfies = async (yearIdentifier, implementationType, u
         throw error;
     }
 }
+
+
+// Set or clear the prose saying HOW an implementation answers a given indicator.
+// Per-link, not per-implementation: the same work evidences many indicators for
+// different reasons, so this cannot live on the node.
+export const setEvidenceRationale = async (yearIdentifier, implementationType, uniqueId, rationale) => {
+    try {
+        const response = await axios.put(`${process.env.REACT_APP_API_URL}/implementations`, {
+            action: "set_evidence_rationale",
+            year_success_identifier: yearIdentifier,
+            implementation_type: implementationType,
+            unique_id: uniqueId,
+            rationale,
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error setting evidence rationale:', error);
+        throw error;
+    }
+}

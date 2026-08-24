@@ -375,6 +375,9 @@ def fetch_evidence_for_working_group(working_group, academic_year, campus_abbrev
            // the text comes from the indicator's evidenceRequirements below, so
            // the client joins them without a second round trip.
            satisfies: head([ (evidence)<-[evRel3:is_evidence_for]-(evidenceType) | coalesce(evRel3.satisfies, []) ]),
+           // Prose saying HOW this work answers THIS indicator — per-link, because one
+           // implementation evidences many indicators for different reasons.
+           rationale: head([ (evidence)<-[evRel4:is_evidence_for]-(evidenceType) | evRel4.rationale ]),
            docs: docs,
            webs: webs,
            notes: notes,

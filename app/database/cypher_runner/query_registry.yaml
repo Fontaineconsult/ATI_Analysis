@@ -593,7 +593,7 @@
 
 - name: yse_maturity_evidence
   category: evidence
-  description: Everything the maturity-status-reviewer skill grades for one YSE - the SI text + per-SI companion bars, current status + review flags, evidencing implementations (strength, retired, owners, participants, active documentation), report-included notes/messages/metrics, and plans. param year_identifier e.g. 2025-2026-7.11-ins-sfsu.
+  description: Everything the maturity-status-reviewer skill grades for one YSE - the SI text + per-SI companion bars, current status + review flags, evidencing implementations (strength, control, satisfies claims, rationale, retired, owners, participants, active documentation), report-included notes/messages/metrics, and plans. param year_identifier e.g. 2025-2026-7.11-ins-sfsu.
   mode: read
   params: [year_identifier]
   cypher: |
@@ -615,6 +615,8 @@
               {type: head(labels(impl)), title: impl.title,
                description: impl.description, strength: r.strength,
                control: r.control,
+               satisfies: coalesce(r.satisfies, []),
+               rationale: r.rationale,
                retired: impl.retired,
                owners: [(impl)-[:owned_by]->(o:Person) | o.name],
                participants: [(impl)<-[w:worked_on]-(p:Person) | p.name + ' (' + coalesce(w.role_handle, '?') + ')'],
@@ -627,6 +629,30 @@
            [(e)-[:has_recommendation]->(rec:Recommendation) |
               {recommendation: rec.recommendation, detail: rec.detail, status: rec.status,
                resolution: rec.resolution, date_created: toString(rec.date_created)}] AS recommendations
+
+- name: yse_bar_coverage
+  category: evidence
+  description: The companion bar of one YSE's indicator, requirement by requirement, with the implementations claiming each (is_evidence_for.satisfies). Requirement-first - what the indicator ASKS FOR and whether anything answers it - where yse_maturity_evidence is implementation-first. Position/Budget are flagged implementation_evidenced=false because they are normally answered by position descriptions and allocation records, not by an implementation. param year_identifier e.g. 2025-2026-1.19-web-ssu.
+  mode: read
+  params: [year_identifier]
+  cypher: |
+    MATCH (e:YearSuccessEvidence {year_identifier: $year_identifier})-[:tracks]->(si:SuccessIndicator)
+    MATCH (si)-[:has_evidence_requirement]->(er:EvidenceRequirement)
+    OPTIONAL MATCH (impl)-[r:is_evidence_for]->(e)
+      WHERE er.handle IN coalesce(r.satisfies, [])
+    WITH er,
+         [x IN collect({title: impl.title, type: head(labels(impl)),
+                        strength: r.strength, control: r.control,
+                        rationale: r.rationale,
+                        retired: coalesce(impl.retired, false)})
+            WHERE x.title IS NOT NULL] AS claimed_by
+    RETURN er.level AS level, er.seq AS seq, er.element AS element,
+           er.requirement AS requirement, er.rubric_dimension AS rubric_dimension,
+           er.handle AS handle,
+           size(claimed_by) > 0 AS satisfied,
+           NOT coalesce(er.element, '') IN ['Position', 'Budget'] AS implementation_evidenced,
+           claimed_by
+    ORDER BY er.level, er.seq
 
 - name: stewarded_ict_for_yse
   category: evidence

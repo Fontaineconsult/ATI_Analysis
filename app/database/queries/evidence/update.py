@@ -918,3 +918,41 @@ def set_evidence_satisfies(year_success_identifier: str,
     rel.satisfies = valid
     rel.save()
     return {'satisfies': valid}
+
+
+def set_evidence_rationale(year_success_identifier: str,
+                           implementation_type: str,
+                           implementation_unique_id: str,
+                           rationale):
+    """Set (or clear, with None/blank) the prose saying HOW this work answers THIS
+    indicator.
+
+    Per-link, not per-implementation: the same implementation evidences many indicators
+    for different reasons, so a reason written on the node would be written for the wrong
+    scope. Kept separate from set_evidence_satisfies for the same reason strength and
+    control are separate — each qualifier moves on its own.
+
+    :return: {'rationale': <text or None>} — the stored value.
+    """
+    if implementation_type not in implementation_classes:
+        raise ValidationError(f"Invalid implementation_type: {implementation_type}")
+    implementation_class = implementation_classes[implementation_type]
+    try:
+        implementation_node = implementation_class.nodes.get(unique_id=implementation_unique_id)
+    except implementation_class.DoesNotExist:
+        raise NotFoundError(f"No {implementation_type} found with unique_id: {implementation_unique_id}")
+    try:
+        year_success_evidence = YearSuccessEvidence.nodes.get(year_identifier=year_success_identifier)
+    except YearSuccessEvidence.DoesNotExist:
+        raise NotFoundError(f"No YearSuccessEvidence found with year_identifier: {year_success_identifier}")
+
+    rel = implementation_node.is_evidence_for.relationship(year_success_evidence)
+    if rel is None:
+        raise NotFoundError(
+            f"{implementation_type} {implementation_unique_id} is not evidence for {year_success_identifier}"
+        )
+
+    text = (rationale or "").strip() or None
+    rel.rationale = text
+    rel.save()
+    return {'rationale': text}

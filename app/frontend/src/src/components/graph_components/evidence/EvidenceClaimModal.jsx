@@ -14,11 +14,16 @@ import {
     ModalFooter,
     ModalHeader,
     ModalOverlay,
+    Divider,
+    FormControl,
+    FormHelperText,
+    FormLabel,
     Text,
+    Textarea,
     VStack,
     useToast,
 } from '@chakra-ui/react';
-import { setEvidenceSatisfies } from '../../../services/api/put';
+import { setEvidenceSatisfies, setEvidenceRationale } from '../../../services/api/put';
 
 // Alphabetical level order happens to be rubric order, but say it explicitly rather
 // than relying on the coincidence.
@@ -52,18 +57,23 @@ const EvidenceClaimModal = ({
     implementationTitle,
     requirements = [],
     claimed = [],
+    rationale: initialRationale = '',
     onSaved,
 }) => {
     const toast = useToast();
     const [selected, setSelected] = useState([]);
+    const [rationale, setRationale] = useState('');
     const [isSaving, setIsSaving] = useState(false);
 
     // Re-seed whenever a different link is opened, and whenever the payload refreshes
     // underneath an open modal.
     useEffect(() => {
-        if (isOpen) setSelected(claimed || []);
+        if (isOpen) {
+            setSelected(claimed || []);
+            setRationale(initialRationale || '');
+        }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [isOpen, implementationUniqueId, JSON.stringify(claimed)]);
+    }, [isOpen, implementationUniqueId, JSON.stringify(claimed), initialRationale]);
 
     const grouped = useMemo(() => {
         const out = {};
@@ -87,6 +97,15 @@ const EvidenceClaimModal = ({
             await setEvidenceSatisfies(
                 yearIdentifier, implementationType, implementationUniqueId, selected
             );
+            // Separate call, like strength and control — each qualifier on this link moves
+            // on its own. Ordered after the ticks so a rationale failure never leaves the
+            // user unsure whether the selection saved.
+            if ((rationale || '') !== (initialRationale || '')) {
+                await setEvidenceRationale(
+                    yearIdentifier, implementationType, implementationUniqueId,
+                    rationale.trim() || null
+                );
+            }
             toast({
                 title: 'Requirements updated',
                 description: selected.length
@@ -117,7 +136,7 @@ const EvidenceClaimModal = ({
             <ModalOverlay />
             <ModalContent>
                 <ModalHeader pb={2}>
-                    <Text fontSize="md">Requirements Satisfied</Text>
+                    <Text fontSize="md">Evidence Detail</Text>
                     <Text fontSize="sm" fontWeight="normal" color="gray.600" noOfLines={2} mt={1}>
                         {implementationTitle}
                     </Text>
@@ -125,6 +144,25 @@ const EvidenceClaimModal = ({
                 <ModalCloseButton />
 
                 <ModalBody>
+                    <FormControl mb={5}>
+                        <FormLabel fontSize="sm" mb={1}>
+                            How does this work answer this indicator?
+                        </FormLabel>
+                        <Textarea
+                            size="sm"
+                            rows={4}
+                            value={rationale}
+                            onChange={(e) => setRationale(e.target.value)}
+                            placeholder="What this work contributes here, and why that answers what the indicator asks for."
+                        />
+                        <FormHelperText fontSize="xs">
+                            Recorded on this link, not on the implementation — the same work
+                            evidences other indicators for different reasons.
+                        </FormHelperText>
+                    </FormControl>
+
+                    <Divider mb={4} />
+
                     <Text fontSize="xs" color="gray.600" mb={4}>
                         Which parts of this indicator&apos;s companion bar does this work
                         actually answer for? Strength rates the link as a whole; this records
@@ -135,9 +173,10 @@ const EvidenceClaimModal = ({
                         <Alert status="info" fontSize="sm" borderRadius="md">
                             <AlertIcon />
                             <Box>
-                                No evidence requirements are authored for this indicator yet.
-                                They are added under Settings → Success Indicators, in the
-                                indicator&apos;s Edit panel.
+                                No evidence requirements are authored for this indicator yet,
+                                so there is nothing to tick — the rationale above still applies.
+                                Requirements are added under Settings → Success Indicators, in
+                                the indicator&apos;s Edit panel.
                             </Box>
                         </Alert>
                     ) : (
@@ -207,8 +246,7 @@ const EvidenceClaimModal = ({
                                 size="sm"
                                 onClick={handleSave}
                                 isLoading={isSaving}
-                                isDisabled={requirements.length === 0}
-                            >
+                                                >
                                 Save
                             </Button>
                         </HStack>

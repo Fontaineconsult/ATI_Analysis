@@ -337,6 +337,10 @@ function EvidenceTypeMasterList({ evidence, yearIdentifier, onRefresh, evidenceR
                                 : (evidenceItem.control ?? null);
                             const controlCfg = controlConfig(controlValue);
                             const claimedCount = (evidenceItem.satisfies || []).length;
+                            // A link can carry a rationale with no ticks — indicators without an
+                            // authored bar have nothing to tick — so the button reads as filled
+                            // on either.
+                            const hasDetail = claimedCount > 0 || Boolean(evidenceItem.rationale);
 
                             return (
                                 <Tr
@@ -446,22 +450,22 @@ function EvidenceTypeMasterList({ evidence, yearIdentifier, onRefresh, evidenceR
                                             {yearIdentifier && (
                                                 <Tooltip
                                                     label={
-                                                        claimedCount
-                                                            ? `Claims ${claimedCount} companion-bar requirement(s)`
-                                                            : 'Record which companion-bar requirements this work satisfies'
+                                                        hasDetail
+                                                            ? `${claimedCount || 'No'} requirement(s) claimed${evidenceItem.rationale ? ' · rationale recorded' : ''}`
+                                                            : 'Record how this work answers the indicator, and which requirements it satisfies'
                                                     }
                                                     placement="top"
                                                 >
                                                     <Button
-                                                        aria-label={`Requirements satisfied by ${evidenceTitle}`}
+                                                        aria-label={`Evidence detail for ${evidenceTitle}`}
                                                         size="sm"
-                                                        variant={claimedCount ? 'solid' : 'outline'}
+                                                        variant={hasDetail ? 'solid' : 'outline'}
                                                         colorScheme="blue"
                                                         onClick={() => setClaimTarget(evidenceItem)}
                                                         leftIcon={<CheckCircleIcon />}
                                                         px={2}
                                                     >
-                                                        {claimedCount || '—'}
+                                                        {claimedCount || (evidenceItem.rationale ? '✓' : '—')}
                                                     </Button>
                                                 </Tooltip>
                                             )}
@@ -497,6 +501,7 @@ function EvidenceTypeMasterList({ evidence, yearIdentifier, onRefresh, evidenceR
                 implementationTitle={claimTarget?.evidenceType?.properties?.title || 'this implementation'}
                 requirements={evidenceRequirements}
                 claimed={claimTarget?.satisfies || []}
+                rationale={claimTarget?.rationale || ''}
                 onSaved={onRefresh}
             />
 

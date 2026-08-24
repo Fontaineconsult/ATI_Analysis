@@ -160,6 +160,9 @@
       </h3>
       {% if im.retired and im.retired_note %}<p class="muted">{{ im.retired_note }}</p>{% endif %}
       {% if im.description %}<p class="prewrap">{{ im.description }}</p>{% endif %}
+      {# Why this work evidences THIS indicator — distinct from the description above,
+         which is the same wherever the implementation appears. #}
+      {% if im.rationale %}<p class="prewrap rationale"><strong>Why this is evidence here:</strong> {{ im.rationale }}</p>{% endif %}
       <dl>
         {% if im.owner %}<dt>Owner</dt><dd>{{ im.owner }}</dd>{% endif %}
         {% if im.accountable_communities %}<dt>Accountable community</dt><dd>{{ im.accountable_communities | join(', ') }}</dd>{% endif %}

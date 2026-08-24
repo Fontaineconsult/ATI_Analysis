@@ -762,10 +762,19 @@ class IsEvidenceForRel(StructuredRel):
     Every handle must belong to the indicator this YSE tracks; the write path enforces
     that, and deleting an EvidenceRequirement strips its handle from every rel carrying
     it, because a dangling handle silently under-reports coverage.
+
+    rationale: prose saying HOW this work answers THIS indicator. The other three
+    properties quantify the link — how much, who controls it, which bar elements — and
+    none of them can carry an argument. It belongs on the edge rather than on the
+    implementation because one implementation evidences many indicators for different
+    reasons: "SFBRN Service Catalog Routing for Accessibility" is wired to nine YSEs
+    across two campuses and two years, and its node description explains none of the
+    nine. Writing the reason once on the node would be writing it for the wrong scope.
     """
     strength = IntegerProperty()
     control = StringProperty(choices=evidence_control_choices)
     satisfies = ArrayProperty(StringProperty(), default=list)
+    rationale = StringProperty()
 
 
 

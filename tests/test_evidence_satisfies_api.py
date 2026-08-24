@@ -277,3 +277,110 @@ def test_position_and_budget_are_listed_but_not_scored(flask_client):
     assert all(r["element"] in ("Position", "Budget") for r in unscored)
     assert coverage["summary"]["scored_total"] == \
         len(coverage["requirements"]) - len(unscored)
+
+
+# --- rationale: how this work answers THIS indicator --------------------------------------
+
+@pytest.fixture
+def rationale_link(evidence_link):
+    """evidence_link, with the rel's original rationale restored on teardown."""
+    yid, impl_type, uid, handles = evidence_link
+    rows, _ = db.cypher_query(
+        "MATCH (impl {unique_id: $uid})-[r:is_evidence_for]->"
+        "(:YearSuccessEvidence {year_identifier: $yid}) RETURN r.rationale",
+        {"uid": uid, "yid": yid},
+    )
+    original = rows[0][0] if rows else None
+    yield yid, impl_type, uid, handles
+    db.cypher_query(
+        "MATCH (impl {unique_id: $uid})-[r:is_evidence_for]->"
+        "(:YearSuccessEvidence {year_identifier: $yid}) SET r.rationale = $original",
+        {"uid": uid, "yid": yid, "original": original},
+    )
+
+
+def _set_rationale(client, yid, impl_type, uid, rationale):
+    return client.put(IMPLEMENTATIONS_URL, json={
+        "action": "set_evidence_rationale",
+        "year_success_identifier": yid,
+        "implementation_type": impl_type,
+        "unique_id": uid,
+        "rationale": rationale,
+    })
+
+
+@pytest.mark.integration
+@pytest.mark.api
+def test_rationale_round_trips(flask_client, rationale_link):
+    yid, impl_type, uid, _ = rationale_link
+    text = "Handles the addressing half of the indicator's report-and-address requirement."
+
+    assert _set_rationale(flask_client, yid, impl_type, uid, text).get_json()["data"] == \
+        {"rationale": text}
+
+    rows, _ = db.cypher_query(
+        "MATCH (impl {unique_id: $uid})-[r:is_evidence_for]->"
+        "(:YearSuccessEvidence {year_identifier: $yid}) RETURN r.rationale",
+        {"uid": uid, "yid": yid},
+    )
+    assert rows[0][0] == text
+
+
+@pytest.mark.integration
+@pytest.mark.api
+def test_blank_rationale_clears_rather_than_storing_whitespace(flask_client, rationale_link):
+    yid, impl_type, uid, _ = rationale_link
+    _set_rationale(flask_client, yid, impl_type, uid, "Something.")
+    assert _set_rationale(flask_client, yid, impl_type, uid, "   ").get_json()["data"] == \
+        {"rationale": None}
+
+
+@pytest.mark.integration
+@pytest.mark.api
+def test_rationale_must_be_text(flask_client, rationale_link):
+    yid, impl_type, uid, _ = rationale_link
+    assert _set_rationale(flask_client, yid, impl_type, uid, 42).status_code == 400
+
+
+@pytest.mark.integration
+@pytest.mark.api
+def test_rationale_is_per_link_not_per_implementation(flask_client, rationale_link):
+    """The whole reason it lives on the edge: one implementation evidences many indicators
+    for different reasons, so writing it here must not touch its other links."""
+    yid, impl_type, uid, _ = rationale_link
+
+    others, _ = db.cypher_query(
+        "MATCH (impl {unique_id: $uid})-[r:is_evidence_for]->(y:YearSuccessEvidence) "
+        "WHERE y.year_identifier <> $yid RETURN y.year_identifier, r.rationale",
+        {"uid": uid, "yid": yid},
+    )
+    if not others:
+        pytest.skip("this implementation only evidences one YSE")
+    before = {row[0]: row[1] for row in others}
+
+    _set_rationale(flask_client, yid, impl_type, uid, "Reason scoped to this indicator only.")
+
+    after, _ = db.cypher_query(
+        "MATCH (impl {unique_id: $uid})-[r:is_evidence_for]->(y:YearSuccessEvidence) "
+        "WHERE y.year_identifier <> $yid RETURN y.year_identifier, r.rationale",
+        {"uid": uid, "yid": yid},
+    )
+    assert {row[0]: row[1] for row in after} == before
+
+
+@pytest.mark.integration
+@pytest.mark.api
+def test_rationale_reaches_the_report_payload(flask_client, rationale_link):
+    from app.database.queries.compound_queries.get_indicator_report import get_indicator_report
+
+    yid, impl_type, uid, _ = rationale_link
+    text = "Report-payload probe."
+    _set_rationale(flask_client, yid, impl_type, uid, text)
+
+    year = "-".join(yid.split("-")[:2])
+    composite_key, campus = yid.split("-", 2)[2].rsplit("-", 1)
+    report = get_indicator_report(composite_key, year, campus)
+
+    match = next((im for im in report["implementations"] if im["unique_id"] == uid), None)
+    assert match is not None
+    assert match["rationale"] == text

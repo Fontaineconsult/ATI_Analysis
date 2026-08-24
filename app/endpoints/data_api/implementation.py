@@ -390,6 +390,8 @@ class ImplementationAPI(MethodView):
                 return self.handle_set_evidence_control(data)
             elif action == "set_evidence_satisfies":
                 return self.handle_set_evidence_satisfies(data)
+            elif action == "set_evidence_rationale":
+                return self.handle_set_evidence_rationale(data)
             elif action == "copy_evidence_to_campuses":
                 return self.handle_copy_evidence_to_campuses(data)
             elif action == "update_documentation_year":
@@ -529,6 +531,30 @@ class ImplementationAPI(MethodView):
             data.get('strength'),
         )
         return make_response("success", data=result, message="Evidence strength updated"), 200
+
+    def handle_set_evidence_rationale(self, data):
+        """Set or clear the prose saying how this work answers this indicator.
+
+        Body: year_success_identifier, implementation_type, unique_id,
+        rationale (text; null or blank clears it).
+        """
+        from app.database.queries.evidence.update import set_evidence_rationale
+
+        required = ['year_success_identifier', 'implementation_type', 'unique_id']
+        if not all(field in data for field in required):
+            raise ValidationError(f"Missing required fields: {required}")
+
+        rationale = data.get('rationale')
+        if rationale is not None and not isinstance(rationale, str):
+            raise ValidationError("'rationale' must be text or null.")
+
+        result = set_evidence_rationale(
+            data['year_success_identifier'],
+            data['implementation_type'],
+            data['unique_id'],
+            rationale,
+        )
+        return make_response("success", data=result, message="Evidence rationale updated"), 200
 
     def handle_set_evidence_satisfies(self, data):
         """Replace which companion-bar requirements this evidence link claims.

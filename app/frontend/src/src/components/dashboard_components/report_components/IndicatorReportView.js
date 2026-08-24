@@ -390,6 +390,18 @@ const ImplementationEntry = ({ impl, campus, navigate, requirementsByHandle = {}
             <Box p={4}>
                 {impl.description && <Text fontSize="xs" color="gray.700" mb={2} whiteSpace="pre-wrap">{impl.description}</Text>}
 
+                {/* Why this work is evidence HERE. Distinct from the description above,
+                    which describes the work itself and is the same on every indicator it
+                    evidences. Set apart so a reader can tell the two claims apart. */}
+                {impl.rationale && (
+                    <Box mb={3} p={2} bg="teal.50" borderLeftWidth="2px" borderLeftColor="teal.300" borderRadius="sm">
+                        <SubLabel>Why this is evidence here</SubLabel>
+                        <Text fontSize="xs" color="gray.700" whiteSpace="pre-wrap" mt={0.5}>
+                            {impl.rationale}
+                        </Text>
+                    </Box>
+                )}
+
                 <Wrap spacing={2} mb={2}>
                     {impl.owner && <WrapItem><Tag size="sm" colorScheme="teal" variant="subtle">Owner: {impl.owner.name}</Tag></WrapItem>}
                     {((impl.accountable_communities || []).length > 0 || impl.accountable_working_group) && (

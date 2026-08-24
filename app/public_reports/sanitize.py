@@ -59,6 +59,9 @@ def _implementation(im):
         'description': im.get('description'),
         'strength': im.get('strength'),
         'control': im.get('control'),
+        # Why this work evidences THIS indicator. Authored explanation, no person or
+        # file detail in it, and it is the part a public reader most needs.
+        'rationale': im.get('rationale'),
         'no_active_documents': bool(im.get('no_active_documents')),
         'undocumented': bool(im.get('undocumented')),
         'retired': bool(im.get('retired')),
