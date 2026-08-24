@@ -58,6 +58,10 @@ function SuccessIndicatorDetailPanel({ wrapper }) {
     const navigate = useNavigate();
     const { campus } = useParams();
 
+    const s = wrapper ? getIndicatorSummary(wrapper) : null;
+    const ev = wrapper?.evidences?.[0];
+    const yearIdentifier = s?.yearIdentifier;
+
     // Review is a full page now, not a modal — it carries the bar coverage and the review
     // comments, and it has to be linkable. Built from the composite key ("1.19-web" ->
     // goal 1, indicator 19, slug `web`) so it needs nothing threaded in.
@@ -71,10 +75,6 @@ function SuccessIndicatorDetailPanel({ wrapper }) {
             ? `/${campus}/dashboard/reports/approve/${slug}/${goal}/${indicator}`
             : null;
     })();
-
-    const s = wrapper ? getIndicatorSummary(wrapper) : null;
-    const ev = wrapper?.evidences?.[0];
-    const yearIdentifier = s?.yearIdentifier;
 
     const [localStatus, setLocalStatus] = useState(s?.statusLevel || '');
     useEffect(() => { setLocalStatus(s?.statusLevel || ''); }, [s?.statusLevel, s?.compositeKey]);
