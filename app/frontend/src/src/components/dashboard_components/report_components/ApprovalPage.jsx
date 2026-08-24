@@ -31,6 +31,7 @@ import AdminFeedbackForm from './AdminFeedbackForm';
 import ConcernsPanel from './ConcernsPanel';
 import RecommendationsPanel from './RecommendationsPanel';
 import ApprovalCoverageTable from './ApprovalCoverageTable';
+import IndicatorReportView from './IndicatorReportView';
 
 const Section = ({ title, subtitle, children, action }) => (
     <Box borderWidth="1px" borderColor="gray.200" borderRadius="lg" bg="white" boxShadow="sm" mb={5}>
@@ -230,7 +231,7 @@ const ApprovalPage = () => {
     };
 
     return (
-        <Box maxW="1200px" mx="auto" p={6} textAlign="left" pb="96px">
+        <Box maxW="1400px" mx="auto" p={6} textAlign="left" pb="96px">
             {/* Identity + where you are */}
             <HStack justify="space-between" align="flex-start" mb={1} flexWrap="wrap" gap={2}>
                 <Box>
@@ -252,7 +253,7 @@ const ApprovalPage = () => {
                     variant="outline"
                     rightIcon={<ExternalLinkIcon />}
                 >
-                    Open full report
+                    Open standalone report
                 </Button>
             </HStack>
 
@@ -380,6 +381,28 @@ const ApprovalPage = () => {
                 </VStack>
             </Section>
 
+            {/* The evidence, rendered exactly as the report page renders it. An approver is
+                deciding whether the claimed status is defensible, and that decision is made
+                against the implementations, documentation, people and annotations — not
+                against a summary of them. Same component, so the two can never drift. Its
+                own coverage section is suppressed because the review-lens table above
+                already carries that ground with rationale and claim flags. */}
+            <Box mt={2} mb={4}>
+                <Heading as="h2" size="sm" color="gray.800" mb={1}>Evidence</Heading>
+                <Text fontSize="xs" color="gray.600">
+                    The full record for this indicator, as it appears on the report.
+                </Text>
+            </Box>
+            <Box
+                borderWidth="1px"
+                borderColor="gray.200"
+                borderRadius="lg"
+                overflow="hidden"
+                mb={5}
+            >
+                <IndicatorReportView report={report} suppressCoverage />
+            </Box>
+
             {/* Sticky action bar — the decision must never depend on scroll position. */}
             <Box
                 position="fixed"
@@ -394,7 +417,7 @@ const ApprovalPage = () => {
                 py={3}
                 zIndex={10}
             >
-                <HStack maxW="1200px" mx="auto" justify="space-between" flexWrap="wrap" gap={2}>
+                <HStack maxW="1400px" mx="auto" justify="space-between" flexWrap="wrap" gap={2}>
                     <HStack spacing={3} flexWrap="wrap">
                         <Badge
                             colorScheme={isApproved ? 'green' : ready_for_admin_review ? 'orange' : 'gray'}

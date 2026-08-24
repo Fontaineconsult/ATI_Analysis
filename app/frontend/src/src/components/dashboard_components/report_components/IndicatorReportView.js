@@ -483,7 +483,10 @@ const TaapEntry = ({ taap }) => (
 );
 
 // ── Main view ───────────────────────────────────────────────────────────────
-const IndicatorReportView = ({ report }) => {
+// `suppressCoverage` is for the approval page, which renders its own coverage table
+// above this — a review-lens version carrying each claim's rationale and flagging the
+// ones worth checking. Two coverage tables on one screen would be the same list twice.
+const IndicatorReportView = ({ report, suppressCoverage = false }) => {
     const navigate = useNavigate();
     const { campus } = useParams();
     const toast = useToast();
@@ -729,7 +732,7 @@ const IndicatorReportView = ({ report }) => {
                         )}
 
                         <MaturityCriteria currentStatusLevelName={status?.status_level} />
-                        <EvidenceCoverage coverage={report.evidence_coverage} />
+                        {!suppressCoverage && <EvidenceCoverage coverage={report.evidence_coverage} />}
                     </VStack>
                 </ReportSection>
 

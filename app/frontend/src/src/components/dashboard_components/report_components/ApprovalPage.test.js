@@ -188,11 +188,28 @@ describe('ApprovalPage — concern filtering (ported from the modal)', () => {
     });
 });
 
-describe('ApprovalPage — the report is linked, not embedded', () => {
-    it('offers a link to the full report rather than rendering one', () => {
+describe('ApprovalPage — the evidence itself', () => {
+    it('renders the report content, not a summary of it', () => {
+        // An approver decides against the implementations and documentation, so the page
+        // has to carry them. Same component the report page uses, so the two cannot drift.
         renderPage(NON_APPROVER);
-        expect(screen.getByRole('link', { name: /open full report/i }))
+        expect(screen.getAllByText('Statement').length).toBeGreaterThan(0);
+        expect(screen.getAllByText('Routing').length).toBeGreaterThan(0);
+    });
+
+    it('still links to the standalone report', () => {
+        renderPage(NON_APPROVER);
+        expect(screen.getByRole('link', { name: /open standalone report/i }))
             .toHaveAttribute('href', '/ssu/dashboard/reports/web/1/19');
+    });
+
+    it('shows the coverage table once, not twice', () => {
+        // Both the page and the embedded report head their coverage "Companion bar
+        // coverage". The report's is suppressed, so exactly one survives — the review-lens
+        // one, which is the only version carrying rationale and claim flags.
+        renderPage(NON_APPROVER);
+        expect(screen.getAllByText('Companion bar coverage')).toHaveLength(1);
+        expect(screen.getByText('⚠ Check claim')).toBeInTheDocument();
     });
 
     it('carries the review-comment surfaces', () => {
