@@ -294,3 +294,92 @@ describe('IndicatorReportView — copy public link', () => {
         expect(url).toContain('/2025-2026/web/1/2');
     });
 });
+
+describe('IndicatorReportView — companion bar coverage', () => {
+    const COVERAGE_REPORT = {
+        ...REPORT,
+        implementations: [
+            {
+                ...REPORT.implementations[0],
+                satisfies: ['evidence:1.2-web:established:3'],
+            },
+            {
+                type: 'Guidance', unique_id: 'i2', title: 'Unclaiming guidance',
+                description: 'Claims nothing.', dimensions: [], documents: [], webpages: [],
+                notes: [], messages: [], metrics: [], participants: [],
+                remediates_interfaces: [], satisfies: [],
+            },
+        ],
+        evidence_coverage: {
+            requirements: [
+                {
+                    handle: 'evidence:1.2-web:established:1', level: 'established', seq: 1,
+                    element: 'Position', requirement: 'Responsibility is formally assigned.',
+                    satisfied: false, satisfied_by: [], implementation_evidenced: false,
+                },
+                {
+                    handle: 'evidence:1.2-web:established:3', level: 'established', seq: 3,
+                    element: 'Procedures', requirement: 'A documented procedure exists.',
+                    satisfied: true,
+                    satisfied_by: [{ title: 'Homepage audit process', type: 'Process', unique_id: 'i1', retired: false }],
+                    implementation_evidenced: true,
+                },
+                {
+                    handle: 'evidence:1.2-web:established:4', level: 'established', seq: 4,
+                    element: 'Output', requirement: 'Records are retained.',
+                    satisfied: false, satisfied_by: [], implementation_evidenced: true,
+                },
+            ],
+            summary: { total: 3, satisfied: 1, scored_total: 2, scored_satisfied: 1 },
+        },
+    };
+
+    it('lists every requirement with its state', () => {
+        renderReport(COVERAGE_REPORT);
+        expect(screen.getByText('Companion bar coverage')).toBeInTheDocument();
+        expect(screen.getByText('A documented procedure exists.')).toBeInTheDocument();
+        expect(screen.getByText('Records are retained.')).toBeInTheDocument();
+        expect(screen.getByText('Responsibility is formally assigned.')).toBeInTheDocument();
+        expect(screen.getByText('Satisfied')).toBeInTheDocument();
+        expect(screen.getAllByText('Not satisfied')).toHaveLength(2);
+    });
+
+    it('names the implementation that satisfies a requirement', () => {
+        renderReport(COVERAGE_REPORT);
+        // Once on the implementation card, once in the coverage table's "Satisfied by".
+        expect(screen.getAllByText('Homepage audit process').length).toBeGreaterThan(1);
+    });
+
+    it('scores against the implementation-evidenced requirements only', () => {
+        // Position is listed but excluded from the ratio — it is answered by position
+        // descriptions, not by an implementation, so counting it would report a false gap.
+        renderReport(COVERAGE_REPORT);
+        expect(screen.getByText(/1 of 2 requirements answered by an implementation/)).toBeInTheDocument();
+        expect(screen.getByText(/Position and Budget are listed but not counted/)).toBeInTheDocument();
+    });
+
+    it('badges an implementation that claims requirements, and only that one', () => {
+        renderReport(COVERAGE_REPORT);
+        expect(screen.getByText('✓ Satisfies 1')).toBeInTheDocument();
+        expect(screen.queryByText('✓ Satisfies 0')).not.toBeInTheDocument();
+    });
+
+    it('renders nothing when the indicator has no companion bar', () => {
+        renderReport({ ...COVERAGE_REPORT, evidence_coverage: { requirements: [], summary: {} } });
+        expect(screen.queryByText('Companion bar coverage')).not.toBeInTheDocument();
+    });
+
+    it('omits the exclusion note when every requirement is implementation-evidenced', () => {
+        const scoredOnly = {
+            ...COVERAGE_REPORT,
+            evidence_coverage: {
+                requirements: COVERAGE_REPORT.evidence_coverage.requirements.filter(
+                    (r) => r.implementation_evidenced
+                ),
+                summary: { total: 2, satisfied: 1, scored_total: 2, scored_satisfied: 1 },
+            },
+        };
+        renderReport(scoredOnly);
+        expect(screen.queryByText(/Position and Budget are listed but not counted/)).not.toBeInTheDocument();
+    });
+});

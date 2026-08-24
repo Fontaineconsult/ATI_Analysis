@@ -346,6 +346,66 @@ def _rollup(year_identifier):
     return data
 
 
+# Elements whose evidence is normally NOT an implementation. Position is answered by role
+# holdings and position descriptions; Budget by allocation records. Leaving them in the
+# coverage table unmarked would report a gap against work that was never the right kind of
+# evidence, so they are flagged and excluded from the implementation-coverage totals.
+# (Decision, 2026-08-24: label rather than count. Revisit if a second evidence surface
+# lands for role holdings and org facts.)
+_NON_IMPLEMENTATION_ELEMENTS = ("Position", "Budget")
+
+
+def _evidence_coverage(indicator, implementations):
+    """One row per companion-bar requirement, marked satisfied by which implementations.
+
+    The claims live on each is_evidence_for rel as `satisfies` handles; this inverts them
+    so the report can read requirement-first ("is this part of the bar answered?") rather
+    than implementation-first ("what does this work claim?").
+
+    Retired implementations still count. The evidence chain is historical — a retired
+    implementation is what the campus did that year — and the card already marks it
+    retired, so a reader can weigh it.
+    """
+    claims = {}
+    for impl in implementations:
+        for handle in impl.get("satisfies") or []:
+            claims.setdefault(handle, []).append({
+                "title": impl.get("title"),
+                "type": impl.get("type"),
+                "unique_id": impl.get("unique_id"),
+                "strength": impl.get("strength"),
+                "retired": bool(impl.get("retired")),
+            })
+
+    rows = []
+    for req in sorted(indicator.evidence_requirements.all(),
+                      key=lambda r: (r.level or "", r.seq or 0)):
+        by = claims.get(req.handle, [])
+        rows.append({
+            "handle": req.handle,
+            "level": req.level,
+            "seq": req.seq,
+            "element": req.element,
+            "requirement": req.requirement,
+            "rubric_dimension": req.rubric_dimension,
+            "satisfied": bool(by),
+            "satisfied_by": by,
+            "implementation_evidenced": req.element not in _NON_IMPLEMENTATION_ELEMENTS,
+        })
+
+    scored = [r for r in rows if r["implementation_evidenced"]]
+    return {
+        "requirements": rows,
+        "summary": {
+            "total": len(rows),
+            "satisfied": sum(1 for r in rows if r["satisfied"]),
+            # Denominator excludes Position/Budget — see _NON_IMPLEMENTATION_ELEMENTS.
+            "scored_total": len(scored),
+            "scored_satisfied": sum(1 for r in scored if r["satisfied"]),
+        },
+    }
+
+
 def get_indicator_report(composite_key, academic_year, campus_abbreviation=None):
     """Build the full single-indicator report payload.
 
@@ -387,6 +447,7 @@ def get_indicator_report(composite_key, academic_year, campus_abbreviation=None)
     implementations.sort(key=lambda im: bool(im.get("retired")))
 
     rollup = _rollup(year_identifier)
+    coverage = _evidence_coverage(indicator, implementations)
 
     return {
         "indicator": {
@@ -404,6 +465,10 @@ def get_indicator_report(composite_key, academic_year, campus_abbreviation=None)
             "optimizing_example": indicator.optimizing_example,
             "override_implementation_requirement": getattr(indicator, "override_implementation_requirement", False),
         },
+        # The companion bar, requirement by requirement, each marked satisfied or not by
+        # the implementations claiming it. Requirement-first so the report can show which
+        # parts of the bar are answered and which are bare.
+        "evidence_coverage": coverage,
         "year": academic_year,
         "campus": {
             "abbreviation": identity["campus_abbreviation"],

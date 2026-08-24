@@ -241,8 +241,76 @@ const MaturityCriteria = ({ currentStatusLevelName }) => {
     );
 };
 
+// ── Companion-bar coverage ──────────────────────────────────────────────────
+// Requirement-first view of the bar: is each part answered, and by what. The claims
+// themselves live on each is_evidence_for rel; the report inverts them so a reviewer
+// reads the standard and sees what is missing, rather than reading the work and
+// inferring what it covers.
+const LEVEL_COLOR = { established: 'teal', managed: 'purple', optimizing: 'orange' };
+
+const EvidenceCoverage = ({ coverage }) => {
+    const requirements = coverage?.requirements || [];
+    if (!requirements.length) return null;
+
+    const { scored_total: scoredTotal = 0, scored_satisfied: scoredSatisfied = 0 } =
+        coverage.summary || {};
+    // Position and Budget are normally answered by role holdings and allocation records,
+    // not by an implementation. They stay in the table — a reviewer still needs to see
+    // them — but out of the ratio, which would otherwise report a gap against work that
+    // was never the right kind of evidence.
+    const hasUnscored = requirements.some((r) => !r.implementation_evidenced);
+
+    const rows = requirements.map((r) => [
+        <Badge colorScheme={LEVEL_COLOR[r.level] || 'gray'} variant="subtle" fontSize="2xs">
+            {r.level}
+        </Badge>,
+        <Box>
+            <Text fontSize="xs" color="gray.700">{r.requirement}</Text>
+            {r.element && (
+                <Text fontSize="2xs" color="gray.500" mt={0.5}>{r.element}</Text>
+            )}
+        </Box>,
+        r.satisfied ? (
+            <Badge colorScheme="green" variant="solid" fontSize="2xs">Satisfied</Badge>
+        ) : (
+            <Badge
+                colorScheme={r.implementation_evidenced ? 'orange' : 'gray'}
+                variant={r.implementation_evidenced ? 'solid' : 'outline'}
+                fontSize="2xs"
+                title={r.implementation_evidenced
+                    ? 'No implementation claims this requirement'
+                    : 'Normally evidenced by position descriptions or allocation records rather than by an implementation'}
+            >
+                Not satisfied
+            </Badge>
+        ),
+        r.satisfied_by?.length ? (
+            <VStack align="stretch" spacing={0.5}>
+                {r.satisfied_by.map((im) => (
+                    <Text key={`${im.type}-${im.unique_id}`} fontSize="2xs" color="gray.700">
+                        {im.title}{im.retired ? ' (retired)' : ''}
+                    </Text>
+                ))}
+            </VStack>
+        ) : <Dash />,
+    ]);
+
+    return (
+        <Box mt={4}>
+            <SubHeading>Companion bar coverage</SubHeading>
+            <Text fontSize="2xs" color="gray.600" mt={1} mb={2}>
+                {scoredSatisfied} of {scoredTotal} requirements answered by an implementation.
+                {hasUnscored && ' Position and Budget are listed but not counted — they are'
+                    + ' normally evidenced by position descriptions and allocation records'
+                    + ' rather than by an implementation.'}
+            </Text>
+            <DataTable columns={['Level', 'Requirement', 'State', 'Satisfied by']} rows={rows} />
+        </Box>
+    );
+};
+
 // ── Implementation entry ────────────────────────────────────────────────────
-const ImplementationEntry = ({ impl, campus, navigate }) => {
+const ImplementationEntry = ({ impl, campus, navigate, requirementsByHandle = {} }) => {
     const noActiveDocs = Boolean(impl.no_active_documents);
     const undocumented = Boolean(impl.undocumented);
     const accent = (noActiveDocs || undocumented) ? 'orange' : 'teal';
@@ -271,6 +339,18 @@ const ImplementationEntry = ({ impl, campus, navigate }) => {
                             title={strengthConfig(impl.strength).description}
                         >
                             {strengthConfig(impl.strength).label}
+                        </Badge>
+                    )}
+                    {(impl.satisfies || []).length > 0 && (
+                        <Badge
+                            colorScheme="green"
+                            variant="solid"
+                            fontSize="2xs"
+                            title={impl.satisfies
+                                .map((h) => requirementsByHandle[h]?.requirement || h)
+                                .join('\n\n')}
+                        >
+                            ✓ Satisfies {impl.satisfies.length}
                         </Badge>
                     )}
                     {impl.control === 'external' && (
@@ -397,6 +477,11 @@ const IndicatorReportView = ({ report }) => {
     const toast = useToast();
 
     if (!report) return null;
+    // handle -> requirement, so an implementation card's badge can name what it claims
+    // without carrying the text on every link.
+    const requirementsByHandle = Object.fromEntries(
+        (report.evidence_coverage?.requirements || []).map((r) => [r.handle, r])
+    );
     const {
         indicator, status, yse, people,
         implementations = [], taaps = [],
@@ -634,6 +719,7 @@ const IndicatorReportView = ({ report }) => {
                         )}
 
                         <MaturityCriteria currentStatusLevelName={status?.status_level} />
+                        <EvidenceCoverage coverage={report.evidence_coverage} />
                     </VStack>
                 </ReportSection>
 
@@ -713,7 +799,8 @@ const IndicatorReportView = ({ report }) => {
                             {/* Retired sink to the bottom — ordered by get_indicator_report,
                                 so the in-app report, public page and export all agree. */}
                             {implementations.map((impl) => (
-                                <ImplementationEntry key={`${impl.type}-${impl.unique_id}`} impl={impl} campus={campus} navigate={navigate} />
+                                <ImplementationEntry key={`${impl.type}-${impl.unique_id}`} impl={impl} campus={campus} navigate={navigate}
+                                    requirementsByHandle={requirementsByHandle} />
                             ))}
                         </VStack>
                     ) : indicator.override_implementation_requirement ? (

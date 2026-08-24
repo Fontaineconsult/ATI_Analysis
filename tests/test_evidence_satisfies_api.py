@@ -216,3 +216,64 @@ def test_deleting_a_requirement_clears_claims_that_referenced_it(flask_client, e
     remaining = rows[0][0]
     assert created["handle"] not in remaining
     assert handles[0] in remaining, "unrelated claims must survive the delete"
+
+
+# --- report coverage projection ----------------------------------------------------------
+
+@pytest.mark.integration
+@pytest.mark.api
+def test_report_inverts_claims_into_requirement_coverage(flask_client, evidence_link):
+    """The report reads requirement-first — is each part of the bar answered — where the
+    claims are stored implementation-first on each link."""
+    from app.database.queries.compound_queries.get_indicator_report import get_indicator_report
+
+    yid, impl_type, uid, handles = evidence_link
+    year, rest = yid.split("-", 2)[0] + "-" + yid.split("-")[1], yid.split("-", 2)[2]
+    composite_key, campus = rest.rsplit("-", 1)
+
+    _set(flask_client, yid, impl_type, uid, handles[:2])
+    coverage = get_indicator_report(composite_key, year, campus)["evidence_coverage"]
+
+    by_handle = {r["handle"]: r for r in coverage["requirements"]}
+    assert by_handle[handles[0]]["satisfied"] is True
+    assert by_handle[handles[0]]["satisfied_by"], "a satisfied requirement names its evidence"
+    assert by_handle[handles[2]]["satisfied"] is False
+
+    summary = coverage["summary"]
+    assert summary["total"] == len(coverage["requirements"])
+    assert summary["satisfied"] >= 2
+    # Position and Budget are listed but excluded from the scored denominator.
+    assert summary["scored_total"] <= summary["total"]
+
+
+@pytest.mark.integration
+@pytest.mark.api
+def test_position_and_budget_are_listed_but_not_scored(flask_client):
+    """Decision 2026-08-24: label rather than count. Those elements are answered by role
+    holdings and allocation records, so scoring them would report a gap against work that
+    was never the right kind of evidence."""
+    from app.database.queries.compound_queries.get_indicator_report import get_indicator_report
+    from neomodel import db as _db
+
+    rows, _ = _db.cypher_query(
+        """
+        MATCH (yse:YearSuccessEvidence)-[:tracks]->(si:SuccessIndicator)
+        MATCH (si)-[:has_evidence_requirement]->(er:EvidenceRequirement)
+        WHERE er.element IN ['Position', 'Budget']
+        RETURN yse.year_identifier LIMIT 1
+        """
+    )
+    if not rows:
+        pytest.skip("no indicator with a Position/Budget requirement")
+
+    yid = rows[0][0]
+    year = "-".join(yid.split("-")[:2])
+    composite_key, campus = yid.split("-", 2)[2].rsplit("-", 1)
+
+    coverage = get_indicator_report(composite_key, year, campus)["evidence_coverage"]
+    unscored = [r for r in coverage["requirements"] if not r["implementation_evidenced"]]
+
+    assert unscored, "Position/Budget requirements must still appear in the table"
+    assert all(r["element"] in ("Position", "Budget") for r in unscored)
+    assert coverage["summary"]["scored_total"] == \
+        len(coverage["requirements"]) - len(unscored)
