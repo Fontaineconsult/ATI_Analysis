@@ -99,15 +99,19 @@ const REPORT = {
     },
 };
 
-const renderPage = (user, ev = evidence(), report = REPORT) => render(
+// Overrides let a test express arriving cold (no working-group data) or with an empty
+// report cache — the two states the happy-path harness cannot reach.
+const renderPage = (user, ev = evidence(), report = REPORT, overrides = {}) => render(
     <ChakraProvider>
         <SettingsContext.Provider value={{ currentAcademicYear: '2025-2026' }}>
             <UserContext.Provider value={{ user }}>
                 <DataContext.Provider value={{
                     data: dataFor(ev),
+                    dataVersion: 1,
                     loadSingleWorkingGroupData: jest.fn(),
                     getCachedReport: () => ({ indicators: { '1.19-web': report } }),
                     getOrFetchReport: jest.fn(),
+                    ...overrides,
                 }}>
                     <MemoryRouter initialEntries={['/ssu/dashboard/reports/approve/web/1/19']}>
                         <Routes>
@@ -228,5 +232,53 @@ describe('ApprovalPage — decision signals', () => {
         });
         expect(screen.getByText(/no companion-bar requirements are authored/i)).toBeInTheDocument();
         expect(screen.getByText('No bar')).toBeInTheDocument();
+    });
+});
+
+
+describe('ApprovalPage — arriving cold', () => {
+    // A linkable page is reachable without visiting anything first: pasted, bookmarked,
+    // or after a refresh. The modal it replaced could assume its working group was already
+    // loaded, because you could only open it from a page that had loaded it.
+    it('loads the working group named in the URL when context has none', () => {
+        const loadSingleWorkingGroupData = jest.fn();
+        renderPage(NON_APPROVER, evidence(), REPORT, { data: {}, loadSingleWorkingGroupData });
+
+        expect(loadSingleWorkingGroupData).toHaveBeenCalledWith('web');
+    });
+
+    it('shows a spinner rather than claiming the evidence does not exist', () => {
+        renderPage(NON_APPROVER, evidence(), REPORT, {
+            data: {}, loadSingleWorkingGroupData: jest.fn(),
+        });
+
+        expect(screen.getByText(/loading approval workspace/i)).toBeInTheDocument();
+        expect(screen.queryByText(/no evidence found/i)).toBeNull();
+    });
+
+    it('fetches the report when the cache is empty', async () => {
+        const getOrFetchReport = jest.fn().mockResolvedValue({
+            indicators: { '1.19-web': REPORT },
+        });
+        renderPage(NON_APPROVER, evidence(), REPORT, {
+            getCachedReport: () => null,
+            getOrFetchReport,
+        });
+
+        await waitFor(() => expect(getOrFetchReport).toHaveBeenCalled());
+        await waitFor(() => expect(screen.getByText('0 / 2')).toBeInTheDocument());
+    });
+
+    it('does not claim the bar is unauthored when the report simply is not there', () => {
+        // A cached goal that lacks this indicator. "No bar was written" and "the report
+        // did not load" are different claims, and only the first belongs to the reviewer.
+        renderPage(NON_APPROVER, evidence(), REPORT, {
+            getCachedReport: () => ({ indicators: {} }),
+        });
+
+        expect(screen.getByText(/coverage is unavailable/i)).toBeInTheDocument();
+        expect(screen.queryByText(/no companion-bar requirements are authored/i)).toBeNull();
+        // The review tools must survive a missing report — they read different data.
+        expect(screen.getByTestId('admin-feedback')).toBeInTheDocument();
     });
 });

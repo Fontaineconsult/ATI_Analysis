@@ -83,7 +83,8 @@ const ApprovalPage = () => {
     const { campus, workingGroup, goalNumber, indicatorNumber } = useParams();
     const { currentAcademicYear } = useContext(SettingsContext);
     const { currentWorkingGroup } = useSettings();
-    const { data, getCachedReport, getOrFetchReport, loadSingleWorkingGroupData } = useContext(DataContext);
+    const { data, dataVersion, getCachedReport, getOrFetchReport, loadSingleWorkingGroupData } =
+        useContext(DataContext);
     const { user } = useContext(UserContext);
     const navigate = useNavigate();
     const toast = useToast();
@@ -101,9 +102,27 @@ const ApprovalPage = () => {
         ? `${wgCode}|${goalNumber}|${currentAcademicYear}|${campus || ''}`
         : null;
 
+    // Load this URL's working-group data if it isn't already in context. The old modal
+    // could assume it: you could only open it from a page that had already loaded the
+    // group. A linkable page is reachable cold — pasted, bookmarked, or after a refresh —
+    // and would otherwise render its own "no evidence found" state on evidence that
+    // exists. transformWorkingGroup takes the slug, so the URL segment goes straight in.
+    const wgDataKey = SLUG_TO_DATAKEY[workingGroup];
+    const wgLoaded = Boolean(wgDataKey && data[wgDataKey]);
+    useEffect(() => {
+        if (!wgDataKey || wgLoaded) return;
+        loadSingleWorkingGroupData(workingGroup);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [wgDataKey, wgLoaded, workingGroup]);
+
     // The report payload carries evidence_coverage — the bar with what answers each part.
     // Same goal-level cache the report page uses, so arriving here after viewing the report
     // costs nothing.
+    //
+    // Keyed on dataVersion as well as the goal: every mutation on this page runs
+    // loadSingleWorkingGroupData, which calls clearReportCache. Without that dependency the
+    // effect would never re-run, the cache would stay empty, and the coverage table would
+    // silently blank out the moment anyone added a review note.
     useEffect(() => {
         if (!goalKey) return;
         const cached = getCachedReport(goalKey);
@@ -122,7 +141,7 @@ const ApprovalPage = () => {
             .finally(() => { if (!cancelled) setLoading(false); });
         return () => { cancelled = true; };
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [goalKey, compositeKey]);
+    }, [goalKey, compositeKey, dataVersion]);
 
     // The mutable side (concerns, recommendations, review notes, the approve flag) lives in
     // the working-group payload, which the panels below already write against.
@@ -141,7 +160,10 @@ const ApprovalPage = () => {
 
     const backToReport = `/${campus}/dashboard/reports/${workingGroup}/${goalNumber}/${indicatorNumber}`;
 
-    if (loading && !report) {
+    // Arriving cold, the working-group payload is still in flight, so evidenceData is
+    // legitimately null for a moment. Without this the page would flash "no evidence
+    // found" over evidence that exists.
+    if ((loading && !report) || !wgLoaded) {
         return (
             <Box p={8} textAlign="left">
                 <HStack spacing={3}><Spinner color="teal.500" /><Text color="gray.600">Loading approval workspace…</Text></HStack>
@@ -296,7 +318,20 @@ const ApprovalPage = () => {
                 title="Companion bar coverage"
                 subtitle="Each requirement, what claims it, and the argument made for the claim."
             >
-                <ApprovalCoverageTable coverage={coverage} />
+                {report ? (
+                    <ApprovalCoverageTable coverage={coverage} />
+                ) : (
+                    /* The page-level guard covers "still loading", so reaching here means
+                       the report resolved without this indicator in it. The table's empty
+                       state asserts the bar was never authored, which is a different claim
+                       and not one this state supports. */
+                    <Alert status="warning" fontSize="sm" borderRadius="md">
+                        <AlertIcon />
+                        Coverage is unavailable — the report for {compositeKey} could not be
+                        loaded, so the companion bar cannot be shown. The evidence and review
+                        tools below still work.
+                    </Alert>
+                )}
             </Section>
 
             <Section title="Maturity status">
