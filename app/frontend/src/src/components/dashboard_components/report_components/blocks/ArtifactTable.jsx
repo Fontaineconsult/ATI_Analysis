@@ -30,7 +30,7 @@ export function artifactRows({ documents = [], webpages = [], notes = [], messag
         const href = resolveArtifactHref(d);
         const flags = (
             <Wrap spacing={1}>
-                {fileMeta(d.file) && <WrapItem><Text fontSize="2xs" color="gray.600">{fileMeta(d.file)}</Text></WrapItem>}
+                {fileMeta(d.file) && <WrapItem><Text fontSize="2xs" color="gray.700">{fileMeta(d.file)}</Text></WrapItem>}
                 {isTrue(d.is_administrative_review_documentation) && <WrapItem><Badge colorScheme="purple" fontSize="2xs">Admin Review</Badge></WrapItem>}
                 {isTrue(d.is_milestone_and_measures_documentation) && <WrapItem><Badge colorScheme="blue" fontSize="2xs">Milestones</Badge></WrapItem>}
                 {isTrue(d.depreciated) && <WrapItem><Badge colorScheme="orange" fontSize="2xs">Deprecated</Badge></WrapItem>}
@@ -38,7 +38,7 @@ export function artifactRows({ documents = [], webpages = [], notes = [], messag
         );
         rows.push([
             <TagBadge tag={d.file?.download_url ? 'FILE' : 'URL'} />,
-            href ? <Link href={href} isExternal color="teal.600">{d.name || 'Document'}</Link> : <Text>{d.name || 'Document'}</Text>,
+            href ? <Link href={href} isExternal color="teal.700">{d.name || 'Document'}</Link> : <Text>{d.name || 'Document'}</Text>,
             flags,
         ]);
     });
@@ -49,14 +49,14 @@ export function artifactRows({ documents = [], webpages = [], notes = [], messag
             <TagBadge tag={gone ? 'GONE' : 'WEB'} />,
             gone
                 ? <Text as="s" aria-label={`${w.name || w.url} (no longer available)`}>{w.name || w.url}</Text>
-                : <Link href={w.url} isExternal color="teal.600">{w.name || w.url}</Link>,
+                : <Link href={w.url} isExternal color="teal.700">{w.name || w.url}</Link>,
             isTrue(w.depreciated) ? <Badge colorScheme="orange" fontSize="2xs">Deprecated</Badge> : <Dash />,
         ]);
     });
 
     notes.forEach((n) => rows.push([
         <TagBadge tag="NOTE" />, <Text>{n.content}</Text>,
-        (n.dateCreated || n.date_created) ? <Text fontSize="2xs" color="gray.600">{n.dateCreated || n.date_created}</Text> : <Dash />,
+        (n.dateCreated || n.date_created) ? <Text fontSize="2xs" color="gray.700">{n.dateCreated || n.date_created}</Text> : <Dash />,
     ]));
 
     messages.forEach((m) => {
@@ -64,8 +64,8 @@ export function artifactRows({ documents = [], webpages = [], notes = [], messag
         rows.push([
             <TagBadge tag="MSG" />, <Text>{m.content || m.name}</Text>,
             <HStack spacing={2}>
-                {href && <Link href={href} isExternal color="teal.600" fontSize="2xs">attachment</Link>}
-                {m.date_created && <Text fontSize="2xs" color="gray.600">{m.date_created}</Text>}
+                {href && <Link href={href} isExternal color="teal.700" fontSize="2xs">attachment</Link>}
+                {m.date_created && <Text fontSize="2xs" color="gray.700">{m.date_created}</Text>}
                 {!href && !m.date_created && <Dash />}
             </HStack>,
         ]);
@@ -76,7 +76,7 @@ export function artifactRows({ documents = [], webpages = [], notes = [], messag
         rows.push([
             <TagBadge tag="METRIC" />,
             <Text><Text as="span" fontWeight="semibold">{m.name}:</Text> {m.single_value ?? '—'}</Text>,
-            extra ? <Text fontSize="2xs" color="gray.600">{extra}</Text> : <Dash />,
+            extra ? <Text fontSize="2xs" color="gray.700">{extra}</Text> : <Dash />,
         ]);
     });
 

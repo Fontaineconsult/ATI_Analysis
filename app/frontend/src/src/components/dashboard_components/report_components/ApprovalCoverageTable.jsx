@@ -30,7 +30,7 @@ const ApprovalCoverageTable = ({ coverage }) => {
 
     if (!requirements.length) {
         return (
-            <Text fontSize="sm" color="gray.600">
+            <Text fontSize="sm" color="gray.700">
                 No companion-bar requirements are authored for this indicator, so there is no
                 bar to grade against. Judge the evidence on the generic rubric.
             </Text>
@@ -104,11 +104,11 @@ const ApprovalCoverageTable = ({ coverage }) => {
                                                     {/* The argument being made. Without it a reviewer can only
                                                         guess why the tick is there. */}
                                                     {im.rationale ? (
-                                                        <Text fontSize="2xs" color="gray.600" mt={0.5}>
+                                                        <Text fontSize="2xs" color="gray.700" mt={0.5}>
                                                             {im.rationale}
                                                         </Text>
                                                     ) : (
-                                                        <Text fontSize="2xs" color="orange.600" mt={0.5}>
+                                                        <Text fontSize="2xs" color="orange.800" mt={0.5}>
                                                             No rationale recorded.
                                                         </Text>
                                                     )}
@@ -116,7 +116,7 @@ const ApprovalCoverageTable = ({ coverage }) => {
                                             ))}
                                         </VStack>
                                     ) : (
-                                        <Text fontSize="2xs" color="gray.400">—</Text>
+                                        <Text fontSize="2xs" color="gray.700">—</Text>
                                     )}
                                 </Td>
                             </Tr>

@@ -101,7 +101,7 @@ function AdminSummaryForm({ yearIdentifier, currentValue, onUpdate }) {
             transition="box-shadow 0.2s"
             _hover={{ boxShadow: "md" }}
         >
-            <Text fontSize="xs" fontWeight="semibold" color="teal.600" textTransform="uppercase" mb={3}>
+            <Text fontSize="xs" fontWeight="semibold" color="teal.700" textTransform="uppercase" mb={3}>
                 Evidence Summary
             </Text>
 

@@ -31,7 +31,7 @@ const PeopleTable = ({ implementers = [] }) => {
                         </Wrap>
                     )
                     : <Dash />,
-                p.email ? <Link href={`mailto:${p.email}`} color="teal.600">{p.email}</Link> : <Dash />,
+                p.email ? <Link href={`mailto:${p.email}`} color="teal.700">{p.email}</Link> : <Dash />,
             ])}
         />
     );

@@ -20,7 +20,7 @@ const AssetsTable = ({ assets = [], showDescription = true, emptyText = 'No asse
                 const cells = [
                     <Box>
                         <Text fontWeight="semibold" color="gray.800">{a.title}</Text>
-                        <Text fontSize="2xs" color="gray.600" fontFamily="mono">{a.asset_identifier}</Text>
+                        <Text fontSize="2xs" color="gray.700" fontFamily="mono">{a.asset_identifier}</Text>
                     </Box>,
                     a.asset_class ? <Text>{a.asset_class.replace(/_/g, ' ')}</Text> : <Dash />,
                     a.scope ? <Text>{a.scope}</Text> : <Dash />,
@@ -28,7 +28,7 @@ const AssetsTable = ({ assets = [], showDescription = true, emptyText = 'No asse
                 ];
                 if (showDescription) {
                     cells.push(a.description
-                        ? <Text color="gray.600" whiteSpace="pre-wrap">{a.description}</Text>
+                        ? <Text color="gray.700" whiteSpace="pre-wrap">{a.description}</Text>
                         : <Dash />);
                 }
                 return cells;

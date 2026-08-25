@@ -162,7 +162,7 @@ function AdminFeedbackForm({ yearIdentifier, adminReviewNotes = [], onUpdate }) 
             transition="box-shadow 0.2s"
             _hover={{ boxShadow: "md" }}
         >
-            <Text fontSize="xs" fontWeight="semibold" color="teal.600" textTransform="uppercase" mb={3}>
+            <Text fontSize="xs" fontWeight="semibold" color="teal.700" textTransform="uppercase" mb={3}>
                 Administrative Review Notes
             </Text>
 
@@ -186,7 +186,7 @@ function AdminFeedbackForm({ yearIdentifier, adminReviewNotes = [], onUpdate }) 
                                     <Badge colorScheme="teal" fontSize="xs" px={2} py={1} borderRadius="md">
                                         {item.created_by?.properties?.name || 'Unknown'}
                                     </Badge>
-                                    <Text fontSize="xs" color="gray.600">
+                                    <Text fontSize="xs" color="gray.700">
                                         {formatDate(note.date_created)}
                                     </Text>
                                 </HStack>
@@ -240,7 +240,7 @@ function AdminFeedbackForm({ yearIdentifier, adminReviewNotes = [], onUpdate }) 
                     })}
                 </VStack>
             ) : (
-                <Text fontSize="sm" color="gray.600" mb={4}>
+                <Text fontSize="sm" color="gray.700" mb={4}>
                     No admin reviewer feedback provided yet
                 </Text>
             )}

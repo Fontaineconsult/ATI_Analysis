@@ -171,7 +171,7 @@ const ImplementationCard = ({
                                 rows={participants.map((p) => [
                                     <Text color="gray.800">{p.person?.name}</Text>,
                                     p.role_handle ? <Text>{p.role_handle.replace(/^role:/, '')}</Text> : <Dash />,
-                                    p.note ? <Text fontStyle="italic" color="gray.600">{p.note}</Text> : <Dash />,
+                                    p.note ? <Text fontStyle="italic" color="gray.700">{p.note}</Text> : <Dash />,
                                 ])}
                             />
                         </Box>

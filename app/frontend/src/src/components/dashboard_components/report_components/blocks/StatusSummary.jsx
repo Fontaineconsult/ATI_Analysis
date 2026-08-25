@@ -26,7 +26,7 @@ const StatusSummary = ({ status, yse }) => (
             <HStack spacing={3} align="center" flexWrap="wrap" mb={2}>
                 <SubLabel>Year over year</SubLabel>
                 <StatusProgression previousStatusLevel={status.previous_status_level} currentStatusLevel={status?.status_level} />
-                <Text fontSize="2xs" color="gray.600">(prev → current)</Text>
+                <Text fontSize="2xs" color="gray.700">(prev → current)</Text>
             </HStack>
         )}
         <Wrap spacing={2} mt={2}>

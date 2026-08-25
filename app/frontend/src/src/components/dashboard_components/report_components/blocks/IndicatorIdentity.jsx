@@ -27,16 +27,16 @@ const IndicatorIdentity = ({ indicator = {}, compositeKey, campusName, year, bre
                     {indicator.working_group && (
                         <>
                             <Box w="10px" h="10px" borderRadius="full" bg={getWgHex(indicator.working_group)} />
-                            <Text fontSize="sm" color="gray.600">{indicator.working_group}</Text>
+                            <Text fontSize="sm" color="gray.700">{indicator.working_group}</Text>
                         </>
                     )}
-                    <Text fontSize="sm" color="gray.600">· {campusName} · {year}</Text>
+                    <Text fontSize="sm" color="gray.700">· {campusName} · {year}</Text>
                 </HStack>
                 <Heading as="h1" size="md" color="gray.800" lineHeight="1.35">
                     {indicator.success_indicator}
                 </Heading>
                 {indicator.goal_number && (
-                    <Text fontSize="sm" color="gray.600" mt={1}>
+                    <Text fontSize="sm" color="gray.700" mt={1}>
                         Goal {indicator.goal_number} — {indicator.goal_name}
                     </Text>
                 )}

@@ -67,10 +67,10 @@ const MaturityCriteria = ({ currentStatusLevelName }) => {
                     if (!descs.length && !reqs.length) return null;
                     return (
                         <Box key={cat.name}>
-                            <Text fontSize="2xs" fontWeight="semibold" color="gray.600" mb={1}>{cat.name}</Text>
+                            <Text fontSize="2xs" fontWeight="semibold" color="gray.700" mb={1}>{cat.name}</Text>
                             <VStack align="stretch" spacing={0.5} pl={2}>
                                 {descs.map((d) => <Text key={d.unique_id} fontSize="xs" color="gray.700">• {d.description}</Text>)}
-                                {reqs.map((r) => <Text key={r.unique_id} fontSize="xs" color="gray.600">• {r.requirement_description}</Text>)}
+                                {reqs.map((r) => <Text key={r.unique_id} fontSize="xs" color="gray.700">• {r.requirement_description}</Text>)}
                             </VStack>
                         </Box>
                     );
@@ -128,7 +128,7 @@ const EvidenceCoverage = ({ coverage }) => {
     return (
         <Box mt={4}>
             <SubHeading>Companion bar coverage</SubHeading>
-            <Text fontSize="2xs" color="gray.600" mt={1} mb={2}>
+            <Text fontSize="2xs" color="gray.700" mt={1} mb={2}>
                 {scoredSatisfied} of {scoredTotal} requirements answered by an implementation.
                 {hasUnscored && ' Position and Budget are listed but not counted — they are'
                     + ' normally evidenced by position descriptions and allocation records'
@@ -243,7 +243,7 @@ const IndicatorReportView = ({ report }) => {
                             <HStack spacing={2} mt={2} flexWrap="wrap">
                                 <Badge colorScheme={reviewComplete ? 'green' : 'yellow'}>{reviewComplete ? 'Complete' : 'Pending'}</Badge>
                                 {(yse?.administrative_review_completed_date || completedBy) && (
-                                    <Text fontSize="xs" color="gray.600">
+                                    <Text fontSize="xs" color="gray.700">
                                         {yse?.administrative_review_completed_date ? `Completed ${yse.administrative_review_completed_date}` : 'Completed'}
                                         {completedBy ? ` by ${completedBy.name}` : ''}
                                     </Text>
@@ -252,7 +252,7 @@ const IndicatorReportView = ({ report }) => {
                             {yse?.admin_review_description && yse.admin_review_description !== 'No Review' && (
                                 <Box mt={3}>
                                     <SubLabel>Evidence summary</SubLabel>
-                                    <Text fontSize="2xs" color="gray.600" mt={0.5}>
+                                    <Text fontSize="2xs" color="gray.700" mt={0.5}>
                                         The ATI coordinator&apos;s account of the year&apos;s evidence.
                                     </Text>
                                     <Box mt={1} p={3} bg="blue.50" borderRadius="md" borderLeftWidth="4px" borderLeftColor="blue.400">
@@ -263,7 +263,7 @@ const IndicatorReportView = ({ report }) => {
                             {adminReviewNotes.length > 0 && (
                                 <Box mt={3}>
                                     <SubLabel>Administrative review notes</SubLabel>
-                                    <Text fontSize="2xs" color="gray.600" mt={0.5} mb={1}>
+                                    <Text fontSize="2xs" color="gray.700" mt={0.5} mb={1}>
                                         Management-level observations recorded during review.
                                     </Text>
                                     <DataTable
@@ -271,7 +271,7 @@ const IndicatorReportView = ({ report }) => {
                                         rows={adminReviewNotes.map((n) => [
                                             <Text whiteSpace="pre-wrap">{n.content}</Text>,
                                             n.created_by?.name ? <Text>{n.created_by.name}</Text> : <Dash />,
-                                            n.dateCreated ? <Text fontSize="2xs" color="gray.600">{n.dateCreated}</Text> : <Dash />,
+                                            n.dateCreated ? <Text fontSize="2xs" color="gray.700">{n.dateCreated}</Text> : <Dash />,
                                         ])}
                                     />
                                 </Box>
@@ -291,11 +291,11 @@ const IndicatorReportView = ({ report }) => {
                                                 <Tag size="sm"
                                                      colorScheme={c.status === 'open' ? 'red' : 'green'}
                                                      variant="subtle">{c.status}</Tag>,
-                                                <Box><Text fontWeight="medium" color="gray.800">{c.concern}</Text>{c.detail && <Text fontSize="2xs" color="gray.600" whiteSpace="pre-wrap">{c.detail}</Text>}</Box>,
+                                                <Box><Text fontWeight="medium" color="gray.800">{c.concern}</Text>{c.detail && <Text fontSize="2xs" color="gray.700" whiteSpace="pre-wrap">{c.detail}</Text>}</Box>,
                                                 <Text fontSize="2xs">{[c.date_raised, c.raised_by?.name && `by ${c.raised_by.name}`].filter(Boolean).join(' ')}</Text>,
                                                 c.became
-                                                    ? <Text color="gray.600">Became {c.became.kind}: {c.became.text}</Text>
-                                                    : (c.resolution ? <Text color="gray.600" whiteSpace="pre-wrap">{c.resolution}</Text> : <Dash />),
+                                                    ? <Text color="gray.700">Became {c.became.kind}: {c.became.text}</Text>
+                                                    : (c.resolution ? <Text color="gray.700" whiteSpace="pre-wrap">{c.resolution}</Text> : <Dash />),
                                             ])}
                                     />
                                 </Box>
@@ -315,9 +315,9 @@ const IndicatorReportView = ({ report }) => {
                                                 <Tag size="sm"
                                                      colorScheme={r.status === 'open' ? 'orange' : 'green'}
                                                      variant="subtle">{r.status}</Tag>,
-                                                <Box><Text fontWeight="medium" color="gray.800">{r.recommendation}</Text>{r.detail && <Text fontSize="2xs" color="gray.600" whiteSpace="pre-wrap">{r.detail}</Text>}</Box>,
+                                                <Box><Text fontWeight="medium" color="gray.800">{r.recommendation}</Text>{r.detail && <Text fontSize="2xs" color="gray.700" whiteSpace="pre-wrap">{r.detail}</Text>}</Box>,
                                                 <Text fontSize="2xs">{[r.date_created, r.created_by?.name && `by ${r.created_by.name}`].filter(Boolean).join(' ')}</Text>,
-                                                r.resolution ? <Text color="gray.600" whiteSpace="pre-wrap">{r.resolution}</Text> : <Dash />,
+                                                r.resolution ? <Text color="gray.700" whiteSpace="pre-wrap">{r.resolution}</Text> : <Dash />,
                                             ])}
                                     />
                                 </Box>
@@ -384,7 +384,7 @@ const IndicatorReportView = ({ report }) => {
                                         Unit portfolio ({footprintAssets.length})
                                         {(footprint.units || []).length > 0 && ` — ${footprint.units.map((u) => u.name).join(', ')}`}
                                     </SubLabel>
-                                    <Text fontSize="2xs" color="gray.600" mt={0.5}>
+                                    <Text fontSize="2xs" color="gray.700" mt={0.5}>
                                         The §508 register of the responsible unit(s) behind this indicator&apos;s
                                         internally-controlled evidence. &quot;No work wired&quot; = answered for, but
                                         untouched by this indicator&apos;s implementations.
@@ -393,7 +393,7 @@ const IndicatorReportView = ({ report }) => {
                                         <DataTable
                                             columns={['Asset', 'Scope', 'Stewarded by', 'Work here']}
                                             rows={footprintAssets.map((a) => [
-                                                <Box><Text fontWeight="semibold" color="gray.800">{a.title}</Text><Text fontSize="2xs" color="gray.600" fontFamily="mono">{a.asset_identifier}</Text></Box>,
+                                                <Box><Text fontWeight="semibold" color="gray.800">{a.title}</Text><Text fontSize="2xs" color="gray.700" fontFamily="mono">{a.asset_identifier}</Text></Box>,
                                                 a.scope ? <Text>{a.scope}</Text> : <Dash />,
                                                 <VStack align="stretch" spacing={0.5}>
                                                     {(a.stewards || []).map((s) => (
@@ -423,10 +423,10 @@ const IndicatorReportView = ({ report }) => {
                                         <DataTable
                                             columns={['Interface', 'Function', 'Coverage / Audience', 'Description']}
                                             rows={interfaces.map((i) => [
-                                                <Box><Text fontWeight="semibold" color="gray.800">{i.title}</Text><Text fontSize="2xs" color="gray.600" fontFamily="mono">{i.interface_identifier}</Text></Box>,
+                                                <Box><Text fontWeight="semibold" color="gray.800">{i.title}</Text><Text fontSize="2xs" color="gray.700" fontFamily="mono">{i.interface_identifier}</Text></Box>,
                                                 i.function ? <Text>{i.function}</Text> : <Dash />,
                                                 [...(i.coverage_domains || []), ...(i.audience || [])].length ? <Text>{[...(i.coverage_domains || []), ...(i.audience || [])].join(', ')}</Text> : <Dash />,
-                                                i.description ? <Text color="gray.600" whiteSpace="pre-wrap">{i.description}</Text> : <Dash />,
+                                                i.description ? <Text color="gray.700" whiteSpace="pre-wrap">{i.description}</Text> : <Dash />,
                                             ])}
                                         />
                                     </Box>
@@ -440,8 +440,8 @@ const IndicatorReportView = ({ report }) => {
                                             columns={['Tool', 'Identifier', 'Description']}
                                             rows={tools.map((t) => [
                                                 <Text fontWeight="semibold" color="gray.800">{t.title}</Text>,
-                                                t.tool_identifier ? <Text fontFamily="mono" color="gray.600">{t.tool_identifier}</Text> : <Dash />,
-                                                t.description ? <Text color="gray.600" whiteSpace="pre-wrap">{t.description}</Text> : <Dash />,
+                                                t.tool_identifier ? <Text fontFamily="mono" color="gray.700">{t.tool_identifier}</Text> : <Dash />,
+                                                t.description ? <Text color="gray.700" whiteSpace="pre-wrap">{t.description}</Text> : <Dash />,
                                             ])}
                                         />
                                     </Box>
@@ -458,8 +458,8 @@ const IndicatorReportView = ({ report }) => {
                                                 v.location ? <Text>{v.location}</Text> : <Dash />,
                                                 (v.sales_contact_email || v.technical_contact_email) ? (
                                                     <VStack align="stretch" spacing={0.5}>
-                                                        {v.sales_contact_email && <Link href={`mailto:${v.sales_contact_email}`} color="teal.600" fontSize="2xs">Sales: {v.sales_contact_email}</Link>}
-                                                        {v.technical_contact_email && <Link href={`mailto:${v.technical_contact_email}`} color="teal.600" fontSize="2xs">Tech: {v.technical_contact_email}</Link>}
+                                                        {v.sales_contact_email && <Link href={`mailto:${v.sales_contact_email}`} color="teal.700" fontSize="2xs">Sales: {v.sales_contact_email}</Link>}
+                                                        {v.technical_contact_email && <Link href={`mailto:${v.technical_contact_email}`} color="teal.700" fontSize="2xs">Tech: {v.technical_contact_email}</Link>}
                                                     </VStack>
                                                 ) : <Dash />,
                                             ])}

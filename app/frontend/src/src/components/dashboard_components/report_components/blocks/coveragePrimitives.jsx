@@ -32,6 +32,6 @@ export const LevelBadge = ({ level }) => (
 export const RequirementCell = ({ requirement, element }) => (
     <>
         <Text fontSize="xs" color="gray.700">{requirement}</Text>
-        {element && <Text fontSize="2xs" color="gray.500" mt={0.5}>{element}</Text>}
+        {element && <Text fontSize="2xs" color="gray.700" mt={0.5}>{element}</Text>}
     </>
 );

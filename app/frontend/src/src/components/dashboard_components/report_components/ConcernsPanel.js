@@ -131,7 +131,7 @@ function ConcernsPanel({ yearIdentifier, concerns = [], onUpdate }) {
         <Box p={4} bg="white" borderRadius="lg" borderWidth="1px" borderColor="gray.200">
             <HStack justify="space-between" mb={2}>
                 <HStack spacing={2}>
-                    <Text fontSize="xs" fontWeight="semibold" color="gray.600" textTransform="uppercase">
+                    <Text fontSize="xs" fontWeight="semibold" color="gray.700" textTransform="uppercase">
                         Concerns
                     </Text>
                     {openCount > 0 && (
@@ -144,7 +144,7 @@ function ConcernsPanel({ yearIdentifier, concerns = [], onUpdate }) {
                     {isAdding ? 'Cancel' : 'Add Concern'}
                 </Button>
             </HStack>
-            <Text fontSize="xs" color="gray.600" mb={3}>
+            <Text fontSize="xs" color="gray.700" mb={3}>
                 Issues raised with no path to resolution yet. Each one should become a recommendation
                 or a plan — or be dismissed with a reason.
             </Text>
@@ -181,7 +181,7 @@ function ConcernsPanel({ yearIdentifier, concerns = [], onUpdate }) {
             )}
 
             {items.length === 0 ? (
-                <Text fontSize="sm" color="gray.600" fontStyle="italic">
+                <Text fontSize="sm" color="gray.700" fontStyle="italic">
                     No concerns recorded for this indicator.
                 </Text>
             ) : (
@@ -204,11 +204,11 @@ function ConcernsPanel({ yearIdentifier, concerns = [], onUpdate }) {
                                         {con.concern}
                                     </Text>
                                     {con.detail && (
-                                        <Text fontSize="xs" color="gray.600" mt={0.5} whiteSpace="pre-wrap">
+                                        <Text fontSize="xs" color="gray.700" mt={0.5} whiteSpace="pre-wrap">
                                             {con.detail}
                                         </Text>
                                     )}
-                                    <HStack spacing={2} mt={1} fontSize="2xs" color="gray.600">
+                                    <HStack spacing={2} mt={1} fontSize="2xs" color="gray.700">
                                         {con.date_raised && <Text>Raised {String(con.date_raised)}</Text>}
                                         {con.raised_by && <Text>by {con.raised_by}</Text>}
                                         {con.date_resolved && <Text>· closed {String(con.date_resolved)}</Text>}

@@ -85,11 +85,14 @@ desaturated and saturated color carries *meaning* (status) or *identity* (workin
 | Tertiary / mono identifiers | `gray.600` + `fontFamily="mono"` (differentiate by face, not lightness) |
 | Muted / empty-state text | `gray.600` (often `fontStyle="italic"`) |
 
-> **AA floor (2026-07): `gray.600` is the lightest allowed text gray.** `gray.500`
-> (4.01:1) and `gray.400` (2.25:1) fail WCAG AA for the small sizes this app runs on —
-> the axe sweep enforces this. Express muted-ness through size, weight, casing, or
-> italics, never by dropping below `gray.600`. (`gray.400`/`gray.500` remain fine for
-> borders and decorative glyphs.)
+> **Contrast floor raised to 8:1 (2026-08-25): `gray.700` is the lightest allowed text
+> gray.** The floor was AA/`gray.600` (2026-07); the report and approval surfaces now
+> require ≥8:1, and `gray.600` (7.53:1 on white, 6.96:1 on `teal.50`) misses it —
+> `gray.700` is 11.99:1. Body-text links use `teal.700` (8.71:1), never `teal.600`
+> (6.90:1); warning text `orange.800`. Express muted-ness through size, weight, casing,
+> or italics, never by dropping below `gray.700`. (`gray.400`/`gray.500` remain fine
+> for borders and decorative glyphs.) Ratios are computed against THIS theme's palette —
+> `teal.*` is the SFBRN brand blue, not Chakra teal.
 
 **Semantic — meaning only.** Two palettes, both centralized — **do not hardcode hex**:
 
@@ -222,9 +225,10 @@ a footer of **count chips** (icon + number, **red when 0**) and state flags
 component (`AssetBadges.js`: `ScopeBadge`/`ClassBadge`/`ElevationBadge`;
 `governanceTypes.js` color map). Status pills use `borderRadius="full"`; category badges `"md"`.
 
-Contrast: `theme.js` re-shades `solid` (bg) and `outline` (text) per colorScheme so
-white-on-`.500` / `.500`-on-white combinations meet AA — stick to `colorScheme`, don't
-hand-set badge bg/text hexes. Status-level badges are the exception with their own rule:
+Contrast: `theme.js`'s `SHADE_8` table re-shades every Button variant and every solid
+Badge per colorScheme to ≥8:1 (white-on-fill and text-on-white alike) — stick to
+`colorScheme`, don't hand-set button/badge bg/text hexes. Outline/subtle badges stay at
+the AA table so the status hues remain distinguishable. Status-level badges are the exception with their own rule:
 tint bg + `getStatusTextColor` (see §2 Semantic).
 
 ### 4.3 Forms (create / edit)

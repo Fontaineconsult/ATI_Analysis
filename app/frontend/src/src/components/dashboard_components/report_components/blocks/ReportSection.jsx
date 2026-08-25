@@ -17,8 +17,13 @@ import { Box, Heading, HStack, Text } from '@chakra-ui/react';
  * block for detail panels. This is the page-level h2 wrapper.
  */
 const ReportSection = ({ id, title, subtitle, count, action, banded = false, children, ...rest }) => {
+    // Extrabold and a stop darker than the old treatment: section headings are the
+    // page's wayfinding and have to carry visibly more weight than the body text.
+    // teal.800 = 11.17:1 on white, gray.900 = 16.19:1 on the teal.50 band — both
+    // comfortably over the 8:1 floor.
     const heading = (
-        <Heading as="h2" id={id} size="sm" color={banded ? 'gray.800' : 'teal.700'}>
+        <Heading as="h2" id={id} size="sm" fontWeight="extrabold"
+            color={banded ? 'gray.900' : 'teal.800'}>
             {title}{typeof count === 'number' ? ` (${count})` : ''}
         </Heading>
     );
@@ -31,7 +36,7 @@ const ReportSection = ({ id, title, subtitle, count, action, banded = false, chi
                     {heading}
                     {action}
                 </HStack>
-                {subtitle && <Text fontSize="xs" color="gray.600" mb={3}>{subtitle}</Text>}
+                {subtitle && <Text fontSize="xs" color="gray.700" mb={3}>{subtitle}</Text>}
                 {children}
             </Box>
         );
@@ -46,7 +51,7 @@ const ReportSection = ({ id, title, subtitle, count, action, banded = false, chi
                     {heading}
                     {action}
                 </HStack>
-                {subtitle && <Text fontSize="xs" color="gray.600" mt={0.5}>{subtitle}</Text>}
+                {subtitle && <Text fontSize="xs" color="gray.700" mt={0.5}>{subtitle}</Text>}
             </Box>
             <Box p={3}>{children}</Box>
         </Box>

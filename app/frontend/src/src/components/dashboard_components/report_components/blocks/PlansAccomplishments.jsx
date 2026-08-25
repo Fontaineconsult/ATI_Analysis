@@ -28,7 +28,7 @@ const PlansAccomplishments = ({ plans = [], accomplishments = [], emptyText = 'N
                                     {p.is_campus_plan && <Badge colorScheme="green" fontSize="2xs">Campus plan</Badge>}
                                 </HStack>,
                                 p.plan_status ? <Badge colorScheme={getPlanStatusColorScheme(p)} fontSize="2xs">{getPlanStatusLabel(p)}</Badge> : <Dash />,
-                                p.description ? <Text color="gray.600">{p.description}</Text> : <Dash />,
+                                p.description ? <Text color="gray.700">{p.description}</Text> : <Dash />,
                             ])}
                         />
                     </Box>
@@ -42,7 +42,7 @@ const PlansAccomplishments = ({ plans = [], accomplishments = [], emptyText = 'N
                             columns={['Accomplishment', 'Description']}
                             rows={accomplishments.map((a) => [
                                 <Text fontWeight="semibold" color="gray.800">{a.name}</Text>,
-                                a.description ? <Text color="gray.600" whiteSpace="pre-wrap">{a.description}</Text> : <Dash />,
+                                a.description ? <Text color="gray.700" whiteSpace="pre-wrap">{a.description}</Text> : <Dash />,
                             ])}
                         />
                     </Box>

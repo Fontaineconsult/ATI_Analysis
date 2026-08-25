@@ -82,14 +82,14 @@ function RecommendationsPanel({ yearIdentifier, recommendations = [], onUpdate }
     return (
         <Box p={4} bg="white" borderRadius="lg" borderWidth="1px" borderColor="gray.200">
             <HStack justify="space-between" mb={2}>
-                <Text fontSize="xs" fontWeight="semibold" color="gray.600" textTransform="uppercase">
+                <Text fontSize="xs" fontWeight="semibold" color="gray.700" textTransform="uppercase">
                     Recommendations
                 </Text>
                 <Button size="xs" colorScheme="teal" variant="outline" onClick={() => setIsAdding((v) => !v)}>
                     {isAdding ? 'Cancel' : 'Add Recommendation'}
                 </Button>
             </HStack>
-            <Text fontSize="xs" color="gray.600" mb={3}>
+            <Text fontSize="xs" color="gray.700" mb={3}>
                 What should improve before the next review cycle. Items resolve — they are never deleted.
             </Text>
 
@@ -119,7 +119,7 @@ function RecommendationsPanel({ yearIdentifier, recommendations = [], onUpdate }
             )}
 
             {items.length === 0 ? (
-                <Text fontSize="sm" color="gray.600" fontStyle="italic">
+                <Text fontSize="sm" color="gray.700" fontStyle="italic">
                     No recommendations recorded for this cycle yet.
                 </Text>
             ) : (
@@ -132,8 +132,8 @@ function RecommendationsPanel({ yearIdentifier, recommendations = [], onUpdate }
                                 </Badge>
                                 <Box flex="1" minW={0}>
                                     <Text fontSize="sm" color="gray.800" fontWeight="medium">{rec.recommendation}</Text>
-                                    {rec.detail && <Text fontSize="xs" color="gray.600" mt={0.5} whiteSpace="pre-wrap">{rec.detail}</Text>}
-                                    <HStack spacing={2} mt={1} fontSize="2xs" color="gray.600">
+                                    {rec.detail && <Text fontSize="xs" color="gray.700" mt={0.5} whiteSpace="pre-wrap">{rec.detail}</Text>}
+                                    <HStack spacing={2} mt={1} fontSize="2xs" color="gray.700">
                                         {rec.date_created && <Text>Raised {String(rec.date_created)}</Text>}
                                         {rec.created_by && <Text>by {rec.created_by}</Text>}
                                         {rec.date_resolved && <Text>· resolved {String(rec.date_resolved)}</Text>}

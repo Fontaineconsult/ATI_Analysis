@@ -161,7 +161,7 @@ const ApprovalPage = () => {
             <Box p={8} textAlign="left">
                 <HStack spacing={3}>
                     <Spinner color="teal.500" />
-                    <Text color="gray.600">Loading approval workspace…</Text>
+                    <Text color="gray.700">Loading approval workspace…</Text>
                 </HStack>
             </Box>
         );
@@ -223,8 +223,8 @@ const ApprovalPage = () => {
                     campusName={report?.campus?.name || (campus || '').toUpperCase()}
                     year={report?.year || currentAcademicYear}
                     breadcrumb={
-                        <Text fontSize="xs" color="gray.500" mb={1}>
-                            <Link as={RouterLink} to={`/${campus}/dashboard/reports`} color="teal.600">
+                        <Text fontSize="xs" color="gray.700" mb={1}>
+                            <Link as={RouterLink} to={`/${campus}/dashboard/reports`} color="teal.700">
                                 Reports
                             </Link>
                             {' / '}Approval
@@ -322,7 +322,7 @@ const ApprovalPage = () => {
                                 <Text fontSize="sm" fontWeight="semibold" color="gray.800">
                                     Maturity rubric
                                 </Text>
-                                <Text fontSize="xs" fontWeight="normal" color="gray.600" mt={0.5}>
+                                <Text fontSize="xs" fontWeight="normal" color="gray.700" mt={0.5}>
                                     What “{status.status_level || 'this level'}” asks for — reference while grading.
                                 </Text>
                             </Box>

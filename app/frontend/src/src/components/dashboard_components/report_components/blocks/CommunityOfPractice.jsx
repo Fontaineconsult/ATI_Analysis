@@ -36,7 +36,7 @@ const CommunityOfPractice = ({ implementations = [], stakeholders = [] }) => {
                             ))}
                         </Wrap>
                     ) : (
-                        <Text fontSize="xs" color="gray.600" fontStyle="italic">No community answers for the evidenced work yet.</Text>
+                        <Text fontSize="xs" color="gray.700" fontStyle="italic">No community answers for the evidenced work yet.</Text>
                     )}
                 </HStack>
                 <HStack spacing={3} align="center" flexWrap="wrap">
@@ -52,7 +52,7 @@ const CommunityOfPractice = ({ implementations = [], stakeholders = [] }) => {
                             ))}
                         </Wrap>
                     ) : (
-                        <Text fontSize="xs" color="gray.600" fontStyle="italic">No community holds a stake in this indicator.</Text>
+                        <Text fontSize="xs" color="gray.700" fontStyle="italic">No community holds a stake in this indicator.</Text>
                     )}
                 </HStack>
             </VStack>
