@@ -165,11 +165,18 @@ def get_community_review_spread(unique_id: str, academic_year: str, campus_abbre
 
     Stakes whose indicator has no YSE for the campus/year still return (with null
     status): a stake with no evidence is a finding for the members, not a row to hide.
+
+    The year in the URL is a hard scope (the app's year-view contract): an indicator
+    introduced AFTER that year does not exist in it and must not render as a gap —
+    "no evidence this year" would misread "not yet an indicator" as "work missing".
+    Removed indicators are likewise not reviewable and are excluded.
     """
     rows, _ = db.cypher_query(
         """
         MATCH (c:CommunityOfPractice {unique_id: $uid})
         OPTIONAL MATCH (c)-[:has_stake_in]->(si:SuccessIndicator)
+            WHERE coalesce(si.removed, false) = false
+              AND (si.introduced_in_year IS NULL OR si.introduced_in_year <= $year)
         OPTIONAL MATCH (si)<-[:supported_by]-(g:Goal)
         OPTIONAL MATCH (si)<-[:tracks]-(yse:YearSuccessEvidence)
             WHERE yse.year_identifier = $year + '-' + si.composite_key + '-' + $campus

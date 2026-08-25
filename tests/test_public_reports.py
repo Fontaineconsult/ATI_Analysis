@@ -530,3 +530,30 @@ def test_community_review_spread_404s(flask_client):
     assert flask_client.get(
         "/ati/reports/public/community/ssu/1999-2000/60524d5ea6644529a2f9493f097800fe"
     ).status_code == 404
+
+
+@pytest.mark.api
+def test_community_review_spread_respects_the_url_year(flask_client):
+    """The year in the URL is a hard scope: an indicator introduced in a later year
+    must not render on an earlier year's page — "no evidence this year" would misread
+    "not yet an indicator" as "work missing"."""
+    from neomodel import db
+
+    rows, _ = db.cypher_query(
+        """
+        MATCH (c:CommunityOfPractice)-[:has_stake_in]->(si:SuccessIndicator)
+        WHERE si.introduced_in_year = '2026-2027'
+        RETURN c.unique_id, si.composite_key LIMIT 1
+        """
+    )
+    if not rows:
+        pytest.skip("no community holds a stake on a 2026-2027-introduced indicator")
+    uid, gated_key = rows[0]
+
+    early = flask_client.get(
+        f"/ati/reports/public/community/sfsu/2025-2026/{uid}").get_data(as_text=True)
+    late = flask_client.get(
+        f"/ati/reports/public/community/sfsu/2026-2027/{uid}").get_data(as_text=True)
+
+    assert gated_key not in early
+    assert gated_key in late
