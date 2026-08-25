@@ -56,7 +56,11 @@ export function artifactRows({ documents = [], webpages = [], notes = [], messag
 
     notes.forEach((n) => rows.push([
         <TagBadge tag="NOTE" />, <Text>{n.content}</Text>,
-        (n.dateCreated || n.date_created) ? <Text fontSize="2xs" color="gray.700">{n.dateCreated || n.date_created}</Text> : <Dash />,
+        <HStack spacing={2}>
+            {isTrue(n.depreciated) && <Badge colorScheme="orange" fontSize="2xs">Deprecated</Badge>}
+            {(n.dateCreated || n.date_created) && <Text fontSize="2xs" color="gray.700">{String(n.dateCreated || n.date_created)}</Text>}
+            {!isTrue(n.depreciated) && !(n.dateCreated || n.date_created) && <Dash />}
+        </HStack>,
     ]));
 
     messages.forEach((m) => {
@@ -64,9 +68,10 @@ export function artifactRows({ documents = [], webpages = [], notes = [], messag
         rows.push([
             <TagBadge tag="MSG" />, <Text>{m.content || m.name}</Text>,
             <HStack spacing={2}>
+                {isTrue(m.depreciated) && <Badge colorScheme="orange" fontSize="2xs">Deprecated</Badge>}
                 {href && <Link href={href} isExternal color="teal.700" fontSize="2xs">attachment</Link>}
-                {m.date_created && <Text fontSize="2xs" color="gray.700">{m.date_created}</Text>}
-                {!href && !m.date_created && <Dash />}
+                {m.date_created && <Text fontSize="2xs" color="gray.700">{String(m.date_created)}</Text>}
+                {!isTrue(m.depreciated) && !href && !m.date_created && <Dash />}
             </HStack>,
         ]);
     });

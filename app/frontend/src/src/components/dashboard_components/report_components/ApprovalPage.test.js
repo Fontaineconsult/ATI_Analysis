@@ -330,6 +330,28 @@ describe('ApprovalPage — layout', () => {
 });
 
 
+describe('ApprovalPage — the full annotation record', () => {
+    it('surfaces annotations the report hides, flagged as deprecated', async () => {
+        // The report payload filters deprecated / opted-out annotations; the reviewer
+        // sees them anyway, in the "Not shown on the report" sub-table, because an
+        // approval signed without the history is signed without the history.
+        await renderLoaded(NON_APPROVER, evidence({}, {
+            has_notes: [
+                { note: { properties: { unique_id: 'hn1', content: 'Deprecated but load-bearing history', depreciated: true } } },
+            ],
+        }));
+
+        expect(screen.getByText(/not shown on the report \(1\)/i)).toBeInTheDocument();
+        expect(screen.getByText('Deprecated but load-bearing history')).toBeInTheDocument();
+        expect(screen.getByText('Deprecated')).toBeInTheDocument();
+    });
+
+    it('shows no hidden-annotations block when the report already carries everything', async () => {
+        await renderLoaded(NON_APPROVER);
+        expect(screen.queryByText(/not shown on the report/i)).toBeNull();
+    });
+});
+
 describe('ApprovalPage — arriving cold', () => {
     // A linkable page is reachable without visiting anything first: pasted, bookmarked,
     // or after a refresh. The modal it replaced could assume its working group was already

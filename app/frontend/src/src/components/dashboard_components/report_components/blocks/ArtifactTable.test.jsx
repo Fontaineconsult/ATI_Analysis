@@ -83,6 +83,19 @@ describe('ArtifactTable', () => {
         expect(screen.getByText('per term · 2025-2026')).toBeInTheDocument();
     });
 
+    it('badges a deprecated note or message instead of hiding it', () => {
+        // Deprecation is history, not noise — the row renders, flagged, the same
+        // convention documents and webpages already follow.
+        renderTable({
+            notes: [{ unique_id: 'n1', content: 'Old process note', depreciated: true, dateCreated: '2025-01-01' }],
+            messages: [{ unique_id: 'm1', content: 'Old email', depreciated: 'True' }],
+        });
+
+        expect(screen.getByText('Old process note')).toBeInTheDocument();
+        expect(screen.getByText('Old email')).toBeInTheDocument();
+        expect(screen.getAllByText('Deprecated')).toHaveLength(2);
+    });
+
     it('renders the empty text when nothing is attached', () => {
         renderTable({ emptyText: 'No documentation attached.' });
         expect(screen.getByText('No documentation attached.')).toBeInTheDocument();

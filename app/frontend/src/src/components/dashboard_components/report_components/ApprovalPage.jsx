@@ -151,6 +151,28 @@ const ApprovalPage = () => {
         (report?.evidence_coverage?.requirements || []).map((r) => [r.handle, r])
     ), [report]);
 
+    // Annotations the report payload hides — deprecated or opted out of the report.
+    // The report is the curated record; a REVIEWER sees everything, flagged, because a
+    // note that was deprecated is history, not noise, and an approval signed without it
+    // is signed without the history. The working-group payload carries all annotations
+    // unfiltered; anything absent from the curated lists renders in its own sub-table.
+    const hiddenAnnotations = useMemo(() => {
+        const flatten = (wrapped, key) => (wrapped || [])
+            .map((w) => w?.[key]?.properties)
+            .filter(Boolean);
+        const curated = new Set([
+            ...(report?.notes || []), ...(report?.messages || []), ...(report?.metrics || []),
+        ].map((a) => a.unique_id));
+        const keep = (items) => items.filter((a) => !curated.has(a.unique_id));
+        return {
+            notes: keep(flatten(evidenceData?.has_notes, 'note')),
+            messages: keep(flatten(evidenceData?.has_messages, 'message')),
+            metrics: keep(flatten(evidenceData?.has_metrics, 'metric')),
+        };
+    }, [report, evidenceData]);
+    const hiddenCount = hiddenAnnotations.notes.length + hiddenAnnotations.messages.length
+        + hiddenAnnotations.metrics.length;
+
     const backToReport = `/${campus}/dashboard/reports/${workingGroup}/${goalNumber}/${indicatorNumber}`;
 
     // Full-page spinner ONLY on a cold load. Every write on this page triggers a refetch,
@@ -408,6 +430,23 @@ const ApprovalPage = () => {
                     metrics={report?.metrics}
                     emptyText="None recorded for this year."
                 />
+                {hiddenCount > 0 && (
+                    <Box mt={4} pt={3} borderTopWidth="1px" borderColor="gray.300">
+                        <Text fontSize="2xs" fontWeight="bold" color="gray.700"
+                            textTransform="uppercase" letterSpacing="wide">
+                            Not shown on the report ({hiddenCount})
+                        </Text>
+                        <Text fontSize="2xs" color="gray.700" mb={1}>
+                            Deprecated or opted out of the report — shown here because a
+                            review reads the full record.
+                        </Text>
+                        <ArtifactTable
+                            notes={hiddenAnnotations.notes}
+                            messages={hiddenAnnotations.messages}
+                            metrics={hiddenAnnotations.metrics}
+                        />
+                    </Box>
+                )}
             </ReportSection>
 
             {/* Sticky action bar — the decision must never depend on scroll position. */}
