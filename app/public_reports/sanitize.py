@@ -59,6 +59,9 @@ def _implementation(im):
         'description': im.get('description'),
         'strength': im.get('strength'),
         'control': im.get('control'),
+        # Why this work evidences THIS indicator. Authored explanation, no person or
+        # file detail in it, and it is the part a public reader most needs.
+        'rationale': im.get('rationale'),
         'no_active_documents': bool(im.get('no_active_documents')),
         'undocumented': bool(im.get('undocumented')),
         'retired': bool(im.get('retired')),
@@ -228,6 +231,32 @@ def public_report_payload(report):
             'working_group': indicator.get('working_group'),
             'examples_of_evidence': indicator.get('examples_of_evidence') or [],
             'override_implementation_requirement': bool(indicator.get('override_implementation_requirement')),
+        },
+        # The companion bar, requirement by requirement, with what answers each. Safe to
+        # publish: the requirement text is the CSU companion guide's own standard, and the
+        # implementations named are already listed on this page. Person-level detail is
+        # dropped by taking only title/type/retired from each claim.
+        'evidence_coverage': {
+            'requirements': [
+                {
+                    'handle': req.get('handle'),
+                    'level': req.get('level'),
+                    'element': req.get('element'),
+                    'requirement': req.get('requirement'),
+                    'satisfied': bool(req.get('satisfied')),
+                    'implementation_evidenced': bool(req.get('implementation_evidenced')),
+                    'satisfied_by': [
+                        {
+                            'title': by.get('title'),
+                            'type': by.get('type'),
+                            'retired': bool(by.get('retired')),
+                        }
+                        for by in (req.get('satisfied_by') or [])
+                    ],
+                }
+                for req in ((report.get('evidence_coverage') or {}).get('requirements') or [])
+            ],
+            'summary': (report.get('evidence_coverage') or {}).get('summary') or {},
         },
         'year': report.get('year'),
         'campus': {

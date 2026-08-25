@@ -34,14 +34,15 @@ import {
     Wrap,
     WrapItem
 } from '@chakra-ui/react';
-import { DeleteIcon, ViewIcon } from '@chakra-ui/icons';
+import { CheckCircleIcon, DeleteIcon, ViewIcon } from '@chakra-ui/icons';
 import SupportingDocumentationTabs from "../../implementation_explorer/doc_components/SupportingDocumentationTabs";
 import normalizeWrappedDocs from "../../implementation_explorer/doc_components/normalizeWrappedDocs";
 import { unassignImplementationFromYSE } from '../../../services/api/delete';
 import { setEvidenceStrength, setEvidenceControl } from '../../../services/api/put';
+import EvidenceClaimModal from './EvidenceClaimModal';
 import { EVIDENCE_STRENGTH_LEVELS, strengthConfig, EVIDENCE_CONTROL_OPTIONS, controlConfig } from '../implementation/implementationConfig';
 
-function EvidenceTypeMasterList({ evidence, yearIdentifier, onRefresh }) {
+function EvidenceTypeMasterList({ evidence, yearIdentifier, onRefresh, evidenceRequirements = [] }) {
 
     const { isOpen, onOpen, onClose } = useDisclosure();  // Chakra UI hook for modal control
     const [selectedEvidence, setSelectedEvidence] = useState(null);  // State to track the currently selected evidence
@@ -56,6 +57,8 @@ function EvidenceTypeMasterList({ evidence, yearIdentifier, onRefresh }) {
     const [strengthOverrides, setStrengthOverrides] = useState({});
     // Same optimistic pattern for the control flag (internal/external).
     const [controlOverrides, setControlOverrides] = useState({});
+    // Which evidence link is having its claimed requirements edited.
+    const [claimTarget, setClaimTarget] = useState(null);
 
     const handleControlChange = async (evidenceItem, rawValue) => {
         const implType = evidenceItem.type;
@@ -333,6 +336,11 @@ function EvidenceTypeMasterList({ evidence, yearIdentifier, onRefresh }) {
                                 ? controlOverrides[strengthKey]
                                 : (evidenceItem.control ?? null);
                             const controlCfg = controlConfig(controlValue);
+                            const claimedCount = (evidenceItem.satisfies || []).length;
+                            // A link can carry a rationale with no ticks — indicators without an
+                            // authored bar have nothing to tick — so the button reads as filled
+                            // on either.
+                            const hasDetail = claimedCount > 0 || Boolean(evidenceItem.rationale);
 
                             return (
                                 <Tr
@@ -440,6 +448,28 @@ function EvidenceTypeMasterList({ evidence, yearIdentifier, onRefresh }) {
                                                 />
                                             </Tooltip>
                                             {yearIdentifier && (
+                                                <Tooltip
+                                                    label={
+                                                        hasDetail
+                                                            ? `${claimedCount || 'No'} requirement(s) claimed${evidenceItem.rationale ? ' · rationale recorded' : ''}`
+                                                            : 'Record how this work answers the indicator, and which requirements it satisfies'
+                                                    }
+                                                    placement="top"
+                                                >
+                                                    <Button
+                                                        aria-label={`Evidence detail for ${evidenceTitle}`}
+                                                        size="sm"
+                                                        variant={hasDetail ? 'solid' : 'outline'}
+                                                        colorScheme="blue"
+                                                        onClick={() => setClaimTarget(evidenceItem)}
+                                                        leftIcon={<CheckCircleIcon />}
+                                                        px={2}
+                                                    >
+                                                        {claimedCount || (evidenceItem.rationale ? '✓' : '—')}
+                                                    </Button>
+                                                </Tooltip>
+                                            )}
+                                            {yearIdentifier && (
                                                 <Tooltip label="Remove this implementation" placement="top">
                                                     <IconButton
                                                         aria-label={`Remove ${evidenceTitle}`}
@@ -460,6 +490,20 @@ function EvidenceTypeMasterList({ evidence, yearIdentifier, onRefresh }) {
                     </Tbody>
                 </Table>
             </Box>
+
+            {/* Which companion-bar requirements this evidence claims to satisfy */}
+            <EvidenceClaimModal
+                isOpen={claimTarget !== null}
+                onClose={() => setClaimTarget(null)}
+                yearIdentifier={yearIdentifier}
+                implementationType={claimTarget?.type}
+                implementationUniqueId={claimTarget?.evidenceType?.properties?.unique_id}
+                implementationTitle={claimTarget?.evidenceType?.properties?.title || 'this implementation'}
+                requirements={evidenceRequirements}
+                claimed={claimTarget?.satisfies || []}
+                rationale={claimTarget?.rationale || ''}
+                onSaved={onRefresh}
+            />
 
             {/* Delete Confirmation Dialog */}
             <AlertDialog

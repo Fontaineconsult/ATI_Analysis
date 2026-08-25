@@ -339,3 +339,35 @@ export const deleteMeetingMinutes = async (uniqueId) => {
         throw error;
     }
 };
+
+/**
+ * Delete one EvidenceRequirement (a single element of an indicator's companion bar).
+ * Hard delete — these are reference content, not evidence about a year.
+ * @param {string} uniqueId - The unique ID of the evidence requirement
+ * @returns {Promise<Object>} Response object
+ */
+export const deleteEvidenceRequirement = async (uniqueId) => {
+    try {
+        const response = await fetch(`${API_URL}/indicators`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                action: 'delete_evidence_requirement',
+                unique_id: uniqueId,
+            }),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.error || 'Failed to delete evidence requirement');
+        }
+
+        return data;
+    } catch (error) {
+        console.error('Error deleting evidence requirement:', error);
+        throw error;
+    }
+};

@@ -22,67 +22,8 @@ jest.mock('axios', () => ({
 }));
 
 import IndicatorReportView from './IndicatorReportView';
+import { REPORT } from './blocks/__fixtures__/indicatorReport';
 
-const REPORT = {
-    indicator: {
-        composite_key: '1.2-web',
-        goal_number: 1,
-        goal_name: 'Accessible web presence',
-        success_indicator: 'Top pages meet WCAG 2.1 AA.',
-        working_group: 'Web',
-        override_implementation_requirement: false,
-    },
-    year: '2025-2026',
-    campus: { abbreviation: 'sfsu', name: 'San Francisco State University' },
-    status: { status_level: 'Defined', previous_status_level: 'Initiated' },
-    yse: {
-        administrative_review_complete: true,
-        administrative_review_completed_date: '2026-03-01',
-        admin_review_description: 'Reviewed against the rubric.',
-        priority_level: 'High',
-        documentation_status: 'in_progress',
-        worked_on_in_current_year: true,
-        will_work_on_next_year: true,
-        ready_for_admin_review: true,
-    },
-    people: {
-        implementers: [{ unique_id: 'p1', name: 'Ivy Implementer', title: 'Web Lead', email: 'ivy@example.edu', roles: [{ handle: 'role:lead', name: 'Lead' }] }],
-        admin_review_completed_by: { unique_id: 'r2', name: 'Reviewer Rita' },
-    },
-    admin_review_notes: [
-        { unique_id: 'an1', content: 'Needs more evidence next year.', dateCreated: '2026-02-01', created_by: { unique_id: 'a1', name: 'Ann Admin' } },
-    ],
-    implementations: [
-        {
-            type: 'Process', unique_id: 'i1', title: 'Homepage audit process', description: 'Quarterly audit.',
-            owner: { name: 'Owen Owner' }, accountable_working_group: 'Web', dimensions: [],
-            documents: [{ unique_id: 'd1', name: 'Audit Report', file: { download_url: '/ati/data-api/v1/files/abc?name=audit.pdf', size: 2048, uploaded_date: '2026-01-02' }, file_path: null, uri_path: null }],
-            webpages: [{ unique_id: 'w1', name: 'Old audit page', url: 'https://example.invalid/old', no_longer_exists: true }],
-            notes: [],
-            messages: [{ unique_id: 'm1', content: 'Kickoff email to the team', date_created: '2026-01-05', file: { download_url: '/ati/data-api/v1/files/msg1?name=email.eml' } }],
-            metrics: [],
-            participants: [{ person: { unique_id: 'p2', name: 'Pat Participant' }, role_handle: 'role:auditor', note: 'ran the manual pass' }],
-            remediates_interfaces: [],
-        },
-    ],
-    taaps: [
-        {
-            unique_id: 't1', title: 'Interim access plan', owner: { name: 'Tia Owner' },
-            signed_by: [{ unique_id: 's1', name: 'Sam Signer' }], covers_assets: [],
-            documents: [], webpages: [],
-            notes: [{ unique_id: 'tn1', content: 'Signed off by the committee.', dateCreated: '2026-01-10' }],
-            messages: [],
-        },
-    ],
-    assets: [], interfaces: [],
-    tools: [{ unique_id: 'tool1', title: 'Pope Tech', tool_identifier: 'pope-tech' }],
-    vendors: [{ unique_id: 'v1', name: 'Acme Accessibility', sales_contact_email: 'sales@acme.test' }],
-    plans: [{ unique_id: 'pl1', name: 'Remediation plan', plan_status: 'In Progress', is_key_plan: true }],
-    accomplishments: [],
-    notes: [],
-    messages: [{ unique_id: 'ym1', content: 'Year-level status message', date_created: '2026-04-01', file: { download_url: '/ati/data-api/v1/files/yse1?name=y.pdf' } }],
-    metrics: [],
-};
 
 const renderReport = (report = REPORT) => render(
     <ChakraProvider>
@@ -206,33 +147,28 @@ describe('IndicatorReportView — flat redesign (PR2)', () => {
     });
 });
 
-describe('IndicatorReportView — Companion Guide', () => {
+describe('IndicatorReportView — companion guide prose is not rendered here', () => {
+    // The prose was removed once the coverage table landed: it is the same content, and
+    // the table additionally says whether anything ANSWERS each requirement. The strings
+    // stay on the indicator as the authored source and are still edited in Settings — the
+    // report just isn't where they belong any more.
     const withCompanion = (overrides) => ({
         ...REPORT,
         indicator: { ...REPORT.indicator, ...overrides },
     });
 
-    it('renders the Companion Guide with examples of evidence and the established-level example', () => {
+    it('does not render the companion prose even when the indicator carries it', () => {
         renderReport(withCompanion({
             examples_of_evidence: ['A documented adoption workflow', 'Training materials for faculty'],
             established_example: 'At the Established level, the campus operationalizes the process.',
-            managed_example: null,
-            optimizing_example: null,
-        }));
-        expect(screen.getByRole('heading', { name: /Companion Guide/i })).toBeInTheDocument();
-        expect(screen.getByText('A documented adoption workflow')).toBeInTheDocument();
-        expect(screen.getByText('Training materials for faculty')).toBeInTheDocument();
-        expect(screen.getByText(/operationalizes the process/i)).toBeInTheDocument();
-    });
-
-    it('omits the Companion Guide when the indicator has no companion content', () => {
-        renderReport(withCompanion({
-            examples_of_evidence: [],
-            established_example: null,
-            managed_example: null,
-            optimizing_example: null,
+            managed_example: 'Managed prose.',
+            optimizing_example: 'Optimizing prose.',
         }));
         expect(screen.queryByRole('heading', { name: /Companion Guide/i })).not.toBeInTheDocument();
+        expect(screen.queryByText('A documented adoption workflow')).not.toBeInTheDocument();
+        expect(screen.queryByText(/operationalizes the process/i)).not.toBeInTheDocument();
+        expect(screen.queryByText('Managed prose.')).not.toBeInTheDocument();
+        expect(screen.queryByText('Optimizing prose.')).not.toBeInTheDocument();
     });
 });
 
@@ -292,5 +228,94 @@ describe('IndicatorReportView — copy public link', () => {
         const url = writeText.mock.calls[0][0];
         expect(url).toContain('/ati/reports/public/');
         expect(url).toContain('/2025-2026/web/1/2');
+    });
+});
+
+describe('IndicatorReportView — companion bar coverage', () => {
+    const COVERAGE_REPORT = {
+        ...REPORT,
+        implementations: [
+            {
+                ...REPORT.implementations[0],
+                satisfies: ['evidence:1.2-web:established:3'],
+            },
+            {
+                type: 'Guidance', unique_id: 'i2', title: 'Unclaiming guidance',
+                description: 'Claims nothing.', dimensions: [], documents: [], webpages: [],
+                notes: [], messages: [], metrics: [], participants: [],
+                remediates_interfaces: [], satisfies: [],
+            },
+        ],
+        evidence_coverage: {
+            requirements: [
+                {
+                    handle: 'evidence:1.2-web:established:1', level: 'established', seq: 1,
+                    element: 'Position', requirement: 'Responsibility is formally assigned.',
+                    satisfied: false, satisfied_by: [], implementation_evidenced: false,
+                },
+                {
+                    handle: 'evidence:1.2-web:established:3', level: 'established', seq: 3,
+                    element: 'Procedures', requirement: 'A documented procedure exists.',
+                    satisfied: true,
+                    satisfied_by: [{ title: 'Homepage audit process', type: 'Process', unique_id: 'i1', retired: false }],
+                    implementation_evidenced: true,
+                },
+                {
+                    handle: 'evidence:1.2-web:established:4', level: 'established', seq: 4,
+                    element: 'Output', requirement: 'Records are retained.',
+                    satisfied: false, satisfied_by: [], implementation_evidenced: true,
+                },
+            ],
+            summary: { total: 3, satisfied: 1, scored_total: 2, scored_satisfied: 1 },
+        },
+    };
+
+    it('lists every requirement with its state', () => {
+        renderReport(COVERAGE_REPORT);
+        expect(screen.getByText('Companion bar coverage')).toBeInTheDocument();
+        expect(screen.getByText('A documented procedure exists.')).toBeInTheDocument();
+        expect(screen.getByText('Records are retained.')).toBeInTheDocument();
+        expect(screen.getByText('Responsibility is formally assigned.')).toBeInTheDocument();
+        expect(screen.getByText('Satisfied')).toBeInTheDocument();
+        expect(screen.getAllByText('Not satisfied')).toHaveLength(2);
+    });
+
+    it('names the implementation that satisfies a requirement', () => {
+        renderReport(COVERAGE_REPORT);
+        // Once on the implementation card, once in the coverage table's "Satisfied by".
+        expect(screen.getAllByText('Homepage audit process').length).toBeGreaterThan(1);
+    });
+
+    it('scores against the implementation-evidenced requirements only', () => {
+        // Position is listed but excluded from the ratio — it is answered by position
+        // descriptions, not by an implementation, so counting it would report a false gap.
+        renderReport(COVERAGE_REPORT);
+        expect(screen.getByText(/1 of 2 requirements answered by an implementation/)).toBeInTheDocument();
+        expect(screen.getByText(/Position and Budget are listed but not counted/)).toBeInTheDocument();
+    });
+
+    it('badges an implementation that claims requirements, and only that one', () => {
+        renderReport(COVERAGE_REPORT);
+        expect(screen.getByText('✓ Satisfies 1')).toBeInTheDocument();
+        expect(screen.queryByText('✓ Satisfies 0')).not.toBeInTheDocument();
+    });
+
+    it('renders nothing when the indicator has no companion bar', () => {
+        renderReport({ ...COVERAGE_REPORT, evidence_coverage: { requirements: [], summary: {} } });
+        expect(screen.queryByText('Companion bar coverage')).not.toBeInTheDocument();
+    });
+
+    it('omits the exclusion note when every requirement is implementation-evidenced', () => {
+        const scoredOnly = {
+            ...COVERAGE_REPORT,
+            evidence_coverage: {
+                requirements: COVERAGE_REPORT.evidence_coverage.requirements.filter(
+                    (r) => r.implementation_evidenced
+                ),
+                summary: { total: 2, satisfied: 1, scored_total: 2, scored_satisfied: 1 },
+            },
+        };
+        renderReport(scoredOnly);
+        expect(screen.queryByText(/Position and Budget are listed but not counted/)).not.toBeInTheDocument();
     });
 });

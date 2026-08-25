@@ -371,6 +371,13 @@ def fetch_evidence_for_working_group(working_group, academic_year, campus_abbrev
            evidenceType: evidenceType,
            strength: head([ (evidence)<-[evRel:is_evidence_for]-(evidenceType) | evRel.strength ]),
            control: head([ (evidence)<-[evRel2:is_evidence_for]-(evidenceType) | evRel2.control ]),
+           // Which companion-bar requirements this link claims. Handles only —
+           // the text comes from the indicator's evidenceRequirements below, so
+           // the client joins them without a second round trip.
+           satisfies: head([ (evidence)<-[evRel3:is_evidence_for]-(evidenceType) | coalesce(evRel3.satisfies, []) ]),
+           // Prose saying HOW this work answers THIS indicator — per-link, because one
+           // implementation evidences many indicators for different reasons.
+           rationale: head([ (evidence)<-[evRel4:is_evidence_for]-(evidenceType) | evRel4.rationale ]),
            docs: docs,
            webs: webs,
            notes: notes,
@@ -453,10 +460,27 @@ def fetch_evidence_for_working_group(working_group, academic_year, campus_abbrev
              | tool { .tool_identifier, .title, .unique_id }
          ]) AS touchedTools
 
+    // The companion bar for this indicator, in bar order. Year-agnostic reference data,
+    // so no year filter — it is the standard, not evidence about a year. Rides along so
+    // the assignment modal and the coverage view can resolve a link's `satisfies` handles
+    // to their requirement text without a second fetch.
+    // Sorted seq-then-level: sortMaps is stable, so the second pass groups by level while
+    // preserving seq inside each. Alphabetical level order happens to be rubric order
+    // (established, managed, optimizing), so no ordinal column is needed.
+    WITH wg, goal, indicator, evidences, touchedAssets, touchedInterfaces, touchedTools,
+         apoc.coll.sortMaps(
+           apoc.coll.sortMaps(
+             [ (indicator)-[:has_evidence_requirement]->(er:EvidenceRequirement) |
+               er { .unique_id, .handle, .level, .seq, .element, .requirement, .rubric_dimension, .lead_in }
+             ], '^seq'
+           ), '^level'
+         ) AS evidenceRequirements
+
     // Create a map for each indicator with its evidences
     WITH wg, goal, indicator, evidences, touchedAssets, touchedInterfaces, touchedTools,
          {
            indicator: indicator,
+           evidenceRequirements: evidenceRequirements,
            evidences: evidences,
            assets: touchedAssets,
            interfaces: touchedInterfaces,

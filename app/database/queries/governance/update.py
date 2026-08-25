@@ -3,6 +3,8 @@
 #
 from datetime import date
 
+from neomodel import db
+
 from app.database.graph_schema import Document, Goal, SuccessIndicator, Webpage
 from app.database.queries.governance.create import _DATE_FIELDS, _coerce_date
 from app.database.queries.governance.read import GOVERNANCE_TYPE_TO_CLASS
@@ -273,3 +275,77 @@ def detach_indicator_from_governance(governance_type: str, governance_unique_id:
         return node
     except Exception as e:
         raise CrudError(f"Failed to detach success indicator: {e}")
+
+
+# ---------------------------------------------------------------------------
+# Supersession — (Governance)-[:supersedes]->(Governance)
+#
+# Heterogeneous on both sides, so managed here in Cypher rather than through a
+# typed neomodel accessor (same treatment as Principle.derives_from). Direction
+# is always NEWER -> OLDER. See the Governance docstring in graph_schema for the
+# edge's property contract.
+# ---------------------------------------------------------------------------
+
+_VALID_SUPERSEDE_SCOPES = ("full", "partial")
+
+
+def attach_supersedes(governance_type: str, governance_unique_id: str,
+                      superseded_unique_id: str, quote: str = None,
+                      scope: str = "full", note: str = None):
+    """Record that one governance instrument replaces another.
+
+    The superseding instrument normally declares its own supersession; `quote`
+    carries that sentence verbatim so the claim is cited rather than inferred.
+    `scope` is 'full' (replaces outright) or 'partial' (replaces a named
+    section only). Idempotent: re-attaching refreshes the qualifiers.
+    """
+    if not superseded_unique_id:
+        raise ValidationError("superseded_unique_id is required.")
+    if scope not in _VALID_SUPERSEDE_SCOPES:
+        raise ValidationError(
+            f"Invalid scope (expected {list(_VALID_SUPERSEDE_SCOPES)}): {scope!r}"
+        )
+    node = _resolve_governance_node(governance_type, governance_unique_id)
+    if node.unique_id == superseded_unique_id:
+        raise ValidationError("An instrument cannot supersede itself.")
+    try:
+        rows, _ = db.cypher_query(
+            """
+            MATCH (newer {unique_id: $newer})
+            MATCH (older {unique_id: $older})
+            MERGE (newer)-[r:supersedes]->(older)
+            ON CREATE SET r.added_date = date()
+            SET r.quote = $quote, r.scope = $scope, r.note = $note
+            RETURN older.unique_id
+            """,
+            {"newer": node.unique_id, "older": superseded_unique_id,
+             "quote": quote, "scope": scope, "note": note},
+        )
+        if not rows:
+            raise NotFoundError(
+                f"Governance node with unique_id '{superseded_unique_id}' not found."
+            )
+        return node
+    except (NotFoundError, ValidationError):
+        raise
+    except Exception as e:
+        raise CrudError(f"Failed to attach supersedes: {e}")
+
+
+def detach_supersedes(governance_type: str, governance_unique_id: str,
+                      superseded_unique_id: str):
+    """Drop a supersession edge (the assertion was wrong, not the history)."""
+    if not superseded_unique_id:
+        raise ValidationError("superseded_unique_id is required.")
+    node = _resolve_governance_node(governance_type, governance_unique_id)
+    try:
+        db.cypher_query(
+            """
+            MATCH (newer {unique_id: $newer})-[r:supersedes]->(older {unique_id: $older})
+            DELETE r
+            """,
+            {"newer": node.unique_id, "older": superseded_unique_id},
+        )
+        return node
+    except Exception as e:
+        raise CrudError(f"Failed to detach supersedes: {e}")

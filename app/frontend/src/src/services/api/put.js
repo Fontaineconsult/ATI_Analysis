@@ -276,6 +276,37 @@ export const updateNote = async (year_success_evidence, note_dict, created_by) =
     }
 }
 
+// Edit an administrative review note's text. Deliberately passes NO
+// year_success_evidence and NO created_by: update_note would connect the note to
+// the YSE via has_note (giving an admin note a second home in the Notes tab) and
+// would reassign authorship to whoever is editing. The note is found by
+// unique_id, and only its content changes.
+export const updateAdminReviewerNote = async (noteUniqueId, content) => {
+    try {
+        const response = await axios.put(`${process.env.REACT_APP_API_URL}/documents/notes`,
+            updateNotePayload(null, { unique_id: noteUniqueId, content }, null));
+        return response.data;
+    } catch (error) {
+        console.error('Error updating admin reviewer note:', error);
+        throw error;
+    }
+};
+
+// Delete an administrative review note outright. Unlike supporting
+// documentation, where delete means unlink, the note exists only for this YSE.
+export const deleteAdminReviewerNote = async (noteUniqueId) => {
+    try {
+        const response = await axios.put(`${process.env.REACT_APP_API_URL}/evidence`, {
+            action: 'delete_admin_reviewer_note',
+            unique_id: noteUniqueId,
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error deleting admin reviewer note:', error);
+        throw error;
+    }
+};
+
 export const updateMessage = async (year_success_evidence, message_dict, created_by) => {
     try {
         const response = await axios.put(`${process.env.REACT_APP_API_URL}/documents/messages`, updateMessagePayload(year_success_evidence, message_dict, created_by));
@@ -1594,3 +1625,63 @@ export const addMinutesNote = async (uniqueId, content, createdByUniqueId = null
     });
     return response.data;
 };
+
+
+// Edit one evidence requirement. PARTIAL update, unlike updateSuccessIndicatorExamples
+// above — only the keys present in `fields` are touched, so saving edited text cannot
+// silently clear the element. Pass element: null explicitly to un-label a requirement.
+// fields: { requirement?, element?, rubric_dimension?, lead_in? }
+export const updateEvidenceRequirement = async (uniqueId, fields) => {
+    try {
+        const response = await axios.put(`${process.env.REACT_APP_API_URL}/indicators`, {
+            action: 'update_evidence_requirement',
+            unique_id: uniqueId,
+            ...fields,
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error updating evidence requirement:', error);
+        throw error;
+    }
+};
+
+
+// Replace which companion-bar requirements an evidence link claims to satisfy.
+// Full-replace: pass the complete intended set of handles ([] clears them). Where
+// `strength` rates the link as a whole, this names the specific parts of the bar the
+// work answers for.
+export const setEvidenceSatisfies = async (yearIdentifier, implementationType, uniqueId, satisfies) => {
+    try {
+        const response = await axios.put(`${process.env.REACT_APP_API_URL}/implementations`, {
+            action: "set_evidence_satisfies",
+            year_success_identifier: yearIdentifier,
+            implementation_type: implementationType,
+            unique_id: uniqueId,
+            satisfies,
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error setting evidence requirements claimed:', error);
+        throw error;
+    }
+}
+
+
+// Set or clear the prose saying HOW an implementation answers a given indicator.
+// Per-link, not per-implementation: the same work evidences many indicators for
+// different reasons, so this cannot live on the node.
+export const setEvidenceRationale = async (yearIdentifier, implementationType, uniqueId, rationale) => {
+    try {
+        const response = await axios.put(`${process.env.REACT_APP_API_URL}/implementations`, {
+            action: "set_evidence_rationale",
+            year_success_identifier: yearIdentifier,
+            implementation_type: implementationType,
+            unique_id: uniqueId,
+            rationale,
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error setting evidence rationale:', error);
+        throw error;
+    }
+}

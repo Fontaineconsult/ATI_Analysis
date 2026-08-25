@@ -26,19 +26,27 @@ indicator/year/campus"), it is never invented.
 ```
 python -m app.database.cypher_runner.run_query --query status_level_rubric
 python -m app.database.cypher_runner.run_query --query yse_maturity_evidence --param year_identifier=<yid>
+python -m app.database.cypher_runner.run_query --query yse_bar_coverage --param year_identifier=<yid>
 python -m app.database.cypher_runner.run_query --query stewarded_ict_for_yse --param year_identifier=<yid>
 ```
 
 - **The bar**: six levels × three dimensions — procedures / resources /
   documentation (+ documentation-evidence per level). PLUS the SI's own
-  companion bars: `established_example` (the SI-specific Established bar —
-  Position / Budget / Procedures / Output), `managed_example` /
-  `optimizing_example` (fall back to the generic rubric when None), and
-  `examples_of_evidence` (what proof for THIS indicator looks like).
+  companion bar, now decomposed into **EvidenceRequirement** nodes — one per
+  bar element, addressable by handle. `established_example` /
+  `managed_example` / `optimizing_example` remain on the SI as the authored
+  source; the requirement nodes are what to grade against, because an evidence
+  link can point at them. `examples_of_evidence` is still prose (not yet
+  decomposed) — read it, but nothing can claim it.
 - **The evidence**: current status + review flags, implementations (type,
-  description, strength rating, retired, owners, participants with role
-  handles, active documents/webpages), report-included notes/messages/metrics,
-  and plans.
+  description, strength, control, **satisfies claims**, retired, owners,
+  participants with role handles, active documents/webpages), report-included
+  notes/messages/metrics, and plans.
+- **The coverage** (`yse_bar_coverage`): the same bar inverted —
+  requirement-first, each marked satisfied or not and by which implementations.
+  This is the instrument the review is now built around: it states what the
+  indicator ASKS FOR, so a bare row is a named gap in the guide's own words
+  rather than an absence you had to notice.
 
 ## Step 2 — Decompose the SI scope
 
@@ -55,6 +63,46 @@ wired are concrete Output-bar questions ("records demonstrating assets are
 consistently accessible" — for WHICH systems?) and often just missing
 `remediates` wiring rather than missing practice — say which you think it is.
 
+## Step 2b — Grade the bar, requirement by requirement
+
+`yse_bar_coverage` turns the companion bar into a checklist. Walk it before
+grading dimensions: each requirement is a specific thing the indicator asks for,
+and the coverage row says whether anyone claims to answer it.
+
+**A claim is an assertion, not proof.** `satisfies` records what a curator
+asserted; it is not evidence that the requirement is met. Verify every claim
+against what the claiming implementation actually holds — its type, description,
+`rationale` on that link, active documentation, owners. The rationale is the
+argument to test: read it before the ticks, because a stated reason can be
+confirmed or refuted, where a bare tick can only be guessed at. Four verdicts
+per requirement:
+
+| Verdict | Condition | Effect on the grade |
+|---|---|---|
+| **Met** | claimed, and the claiming work plausibly delivers it | counts |
+| **Overclaimed** | claimed, but the work does not deliver it | does NOT count, and is a finding in its own right — a wrong claim is worse than none, because the coverage view then reports a gap as closed |
+| **Unclaimed but met** | nothing claims it, yet an implementation on this YSE plainly delivers it | counts, and recommend the claim be recorded — missing wiring, not missing practice |
+| **Bare** | nothing claims it and nothing delivers it | a named gap, quoted from the bar |
+
+The Overclaimed and Unclaimed-but-met rows are the ones worth the reader's time.
+Both are invisible in the report itself — it renders claims at face value — so
+surfacing them is work only a review can do.
+
+### Position and Budget claims are a smell
+
+`implementation_evidenced=false` marks the Position and Budget requirements:
+they are answered by role holdings, position descriptions and allocation
+records, not by an implementation. So an implementation claiming one is a
+**probable overclaim** and gets checked first. A published statement, a
+procedure or a training page does not establish that responsibility is formally
+assigned or that staff time is funded — those need a `holds_role` with
+`in_position_description=true`, an org fact, or a budget document.
+
+Grade Position and Budget from that evidence instead, and say so plainly rather
+than reading the claim as coverage. If nothing in the graph speaks to them,
+they are unevidenced — which is a normal, honest finding, not a defect in the
+work.
+
 ## Step 3 — Grade each dimension, conservatively
 
 Evidence weights (strongest first):
@@ -67,6 +115,21 @@ Evidence weights (strongest first):
 3. **Strength ratings on `is_evidence_for`** (0–3) qualify how well the LINK
    addresses THIS indicator — a strength-1 link is peripheral evidence even if
    the implementation is mature.
+3a. **`satisfies` claims on `is_evidence_for`** — WHICH bar requirements the
+   link asserts it answers. Verified per Step 2b, never taken at face value.
+   A verified claim is the most precise evidence available, because it ties a
+   specific piece of work to a specific sentence of the bar.
+3a-ii. **`rationale` on `is_evidence_for`** — the curator's prose on HOW this
+   work answers THIS indicator. Read it FIRST when judging a claim: it is the
+   argument being made, and a claim is much easier to confirm or refute against
+   a stated reason than against a bare tick. Per-link, so the same
+   implementation carries a different rationale on each indicator it evidences —
+   never read one link's rationale as covering another. A rationale is still an
+   assertion: it can be well-argued and still describe work the graph does not
+   hold. Where it names artifacts, check they exist. A link with a rationale
+   that contradicts its `satisfies` ticks (argues Procedures, ticks Position) is
+   a finding — usually the ticks are wrong, since prose is written deliberately
+   and checkboxes get swept.
 3b. **Control flag on `is_evidence_for`** (`internal` / `external` / unset) —
    the FORMAL boundary statement, read before inferring boundaries from notes.
    An `external` link says the evidence owners rely on a practice they don't
@@ -135,6 +198,14 @@ what would defend the higher.
 Current: <level>   Recommended: <level>   Verdict: HOLD | RAISE | LOWER   Confidence: high/med/low
 
 Scope coverage        <verb/area>: <implementation(s) or GAP> …
+Bar coverage          <met>/<gradeable> requirements met. One line per row that
+                      is NOT plainly met: Bare (quote the requirement),
+                      Overclaimed (what claims it, why it doesn't deliver),
+                      Unclaimed-but-met (what delivers it, record the claim).
+                      Position/Budget graded from role holdings and allocation
+                      records, never from a claim. Note links carrying claims
+                      with NO rationale — an unexplained claim is the hardest
+                      kind to review and the easiest to get wrong.
 Procedures            <level earned> — findings w/ node citations
 Resources             <level earned> — owners/roles/PD status
 Documentation         <level earned> — active docs vs the practice
@@ -155,6 +226,10 @@ user):
    improvement tracking: recommendations carry a lifecycle (open → addressed /
    dismissed with resolution) and surface in the review window and the report,
    so next cycle's review starts by checking THIS cycle's recommendations.
+3. Correct the `satisfies` claims the review found wrong — drop overclaims,
+   record unclaimed-but-met (PUT `set_evidence_satisfies`, full-replace). This
+   is the one write that makes the NEXT review cheaper, because the coverage
+   view starts truthful. Still only on explicit approval.
 Never touch `status_is`, `ready_for_admin_review`, or the approve flow from
 this skill.
 

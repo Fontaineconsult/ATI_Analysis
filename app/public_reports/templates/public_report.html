@@ -64,6 +64,49 @@
   </table>
   {% endif %}
 
+  {% if r.evidence_coverage.requirements %}
+  {# The companion bar, requirement by requirement. Placed ahead of Recommendations so a
+     reader meets the standard and its gaps before the improvements proposed against them. #}
+  <h2>Companion Bar Coverage</h2>
+  <p class="muted">
+    What this indicator asks a campus to have in place, and what currently answers each part.
+    {{ r.evidence_coverage.summary.scored_satisfied or 0 }} of
+    {{ r.evidence_coverage.summary.scored_total or 0 }} requirements answered by an
+    implementation.
+    {%- if r.evidence_coverage.requirements | rejectattr('implementation_evidenced') | list %}
+    Position and Budget are listed but not counted — they are normally evidenced by position
+    descriptions and allocation records rather than by an implementation.
+    {%- endif %}
+  </p>
+  <table>
+    <thead><tr>
+      <th scope="col">Level</th><th scope="col">Requirement</th>
+      <th scope="col">State</th><th scope="col">Satisfied by</th>
+    </tr></thead>
+    <tbody>
+    {% for req in r.evidence_coverage.requirements %}
+      <tr>
+        <td>{{ req.level }}</td>
+        <td>
+          {{ req.requirement }}
+          {% if req.element %}<div class="muted">{{ req.element }}</div>{% endif %}
+        </td>
+        <td>
+          {% if req.satisfied %}<span class="badge review-done">Satisfied</span>
+          {% elif req.implementation_evidenced %}<span class="badge warn">Not satisfied</span>
+          {% else %}<span class="badge unrated">Not counted</span>{% endif %}
+        </td>
+        <td>
+          {% if req.satisfied_by %}
+            <ul>{% for by in req.satisfied_by %}<li>{{ by.title }}{% if by.retired %} <span class="muted">(retired)</span>{% endif %}</li>{% endfor %}</ul>
+          {% else %}&mdash;{% endif %}
+        </td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+
   {% if r.recommendations %}
   <h2>Recommendations</h2>
   <p class="muted">Improvements identified during this cycle's review — open items are the work ahead.</p>
@@ -117,6 +160,9 @@
       </h3>
       {% if im.retired and im.retired_note %}<p class="muted">{{ im.retired_note }}</p>{% endif %}
       {% if im.description %}<p class="prewrap">{{ im.description }}</p>{% endif %}
+      {# Why this work evidences THIS indicator — distinct from the description above,
+         which is the same wherever the implementation appears. #}
+      {% if im.rationale %}<p class="prewrap rationale"><strong>Why this is evidence here:</strong> {{ im.rationale }}</p>{% endif %}
       <dl>
         {% if im.owner %}<dt>Owner</dt><dd>{{ im.owner }}</dd>{% endif %}
         {% if im.accountable_communities %}<dt>Accountable community</dt><dd>{{ im.accountable_communities | join(', ') }}</dd>{% endif %}

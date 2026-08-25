@@ -7,6 +7,7 @@ import {
     Button,
     Heading,
     HStack,
+    Link,
     Spinner,
     Text,
     useToast,
@@ -16,6 +17,8 @@ import {
 } from '@chakra-ui/react';
 import { DeleteIcon, EditIcon } from '@chakra-ui/icons';
 import { Input, Select } from '@chakra-ui/react';
+import { Link as RouterLink, useParams } from 'react-router-dom';
+import { getGoalViewUrlFromCompositeKey } from '../../../services/utils/tools';
 import { UserContext } from '../../../context/UserContext';
 import { DataContext } from '../../../context/DataContext';
 import { fetchCommunity } from '../../../services/api/get';
@@ -46,6 +49,7 @@ import { personCommunities } from './peopleConfig';
  *   onDeleted()      Called after a successful delete (clear selection).
  */
 function CommunityDetailPanel({ communityId, onAfterChange, onEdit, onDeleted }) {
+    const { campus } = useParams();
     const { individuals, refreshAllIndividuals } = useContext(UserContext);
     const { data } = useContext(DataContext);
     const [detail, setDetail] = useState(null);
@@ -308,7 +312,23 @@ function CommunityDetailPanel({ communityId, onAfterChange, onEdit, onDeleted })
                                 borderWidth="1px" borderColor="gray.200" borderRadius="md" align="start">
                             <Badge colorScheme="purple" variant="subtle" flexShrink={0}>{s.composite_key}</Badge>
                             <Box minW={0} flex="1">
-                                <Text fontSize="xs" color="gray.800" noOfLines={2}>{s.success_indicator}</Text>
+                                {campus ? (
+                                    <Link
+                                        as={RouterLink}
+                                        to={getGoalViewUrlFromCompositeKey(s.composite_key, campus)}
+                                        display="block"
+                                        textAlign="left"
+                                        fontSize="xs"
+                                        color="teal.700"
+                                        noOfLines={2}
+                                        _hover={{ textDecoration: 'underline' }}
+                                        _focusVisible={{ outline: '2px solid', outlineColor: 'teal.500', borderRadius: 'sm' }}
+                                    >
+                                        {s.success_indicator}
+                                    </Link>
+                                ) : (
+                                    <Text fontSize="xs" color="gray.800" noOfLines={2}>{s.success_indicator}</Text>
+                                )}
                                 {s.note && <Text fontSize="2xs" color="gray.600">{s.note}</Text>}
                             </Box>
                             <Button
