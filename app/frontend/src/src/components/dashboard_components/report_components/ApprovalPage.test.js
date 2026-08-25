@@ -43,6 +43,7 @@ import { SettingsContext } from '../../../context/SettingsContext';
 import { assignApprover, withdrawApproval } from '../../../services/api/put';
 import { fetchPrimaryData } from '../../../services/api/get';
 import ApprovalPage from './ApprovalPage';
+import { REPORT as SHARED_REPORT } from './blocks/__fixtures__/indicatorReport';
 
 const YID = '2025-2026-1.19-web-ssu';
 
@@ -74,9 +75,14 @@ const dataFor = (ev) => ({
     },
 });
 
+// Built on the canonical fixture (drift protection: both page suites render the same
+// payload shapes), with this suite's coverage scenario layered on top. The two extra
+// implementations keep the names its assertions were written against.
 const REPORT = {
-    indicator: { success_indicator: 'Publish accessibility statements.' },
+    ...SHARED_REPORT,
+    indicator: { ...SHARED_REPORT.indicator, success_indicator: 'Publish accessibility statements.' },
     implementations: [
+        ...SHARED_REPORT.implementations,
         { unique_id: 'i1', title: 'Statement', type: 'Guidance', strength: 2, retired: false },
         { unique_id: 'i2', title: 'Routing', type: 'Process', strength: null, retired: false },
     ],
@@ -212,7 +218,8 @@ describe('ApprovalPage — concern filtering (ported from the modal)', () => {
 describe('ApprovalPage — the evidence itself', () => {
     it('renders the report content, not a summary of it', async () => {
         // An approver decides against the implementations and documentation, so the page
-        // has to carry them. Same component the report page uses, so the two cannot drift.
+        // has to carry them. Rendered through the shared blocks (./blocks), which is what
+        // keeps this page and the report from drifting.
         await renderLoaded(NON_APPROVER);
         expect(screen.getAllByText('Statement').length).toBeGreaterThan(0);
         expect(screen.getAllByText('Routing').length).toBeGreaterThan(0);
@@ -225,9 +232,8 @@ describe('ApprovalPage — the evidence itself', () => {
     });
 
     it('shows the coverage table once, not twice', async () => {
-        // Both the page and the embedded report head their coverage "Companion bar
-        // coverage". The report's is suppressed, so exactly one survives — the review-lens
-        // one, which is the only version carrying rationale and claim flags.
+        // The page renders only the review-lens coverage table (rationale and claim
+        // detail); the report's summary-lens table does not appear here.
         await renderLoaded(NON_APPROVER);
         expect(screen.getAllByText('Companion bar coverage')).toHaveLength(1);
     });
@@ -299,7 +305,7 @@ describe('ApprovalPage — layout', () => {
             .toBeLessThan(html.indexOf('Implementation evidence'));
     });
 
-    it('renders plans once, not once here and again inside the report', async () => {
+    it('renders plans exactly once', async () => {
         await renderLoaded(NON_APPROVER);
         expect(screen.getAllByText('Plans & Accomplishments')).toHaveLength(1);
     });

@@ -3,21 +3,17 @@ import {
     Badge,
     Box,
     Button,
-    Heading,
     HStack,
     Link,
     Text,
     Tag,
     VStack,
     StackDivider,
-    Wrap,
-    WrapItem,
     useToast,
 } from '@chakra-ui/react';
 import { useNavigate, useParams } from 'react-router-dom';
 
 import { getImplementationURL, navigateToIndicator } from '../../../services/utils/tools';
-import { strengthConfig, controlConfig } from '../../graph_components/implementation/implementationConfig';
 import { StatusLevelContext } from '../../../context/StatusLevelContext';
 import CopyIndicatorReportButton from './CopyIndicatorReportButton';
 import { SubLabel, SubHeading, Empty, Dash, DataTable } from './blocks/reportPrimitives';

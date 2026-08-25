@@ -18,8 +18,6 @@ import {
     Text,
     Tooltip,
     VStack,
-    Wrap,
-    WrapItem,
     useToast,
 } from '@chakra-ui/react';
 import { ExternalLinkIcon } from '@chakra-ui/icons';
@@ -30,13 +28,12 @@ import { fetchGoalReport, fetchPrimaryData } from '../../../services/api/get';
 import { assignApprover, withdrawApproval } from '../../../services/api/put';
 import { workingGroupCodeFromName } from '../../../services/utils/tools';
 import StatusLevelDetails from '../../graph_components/indicators/StatusLevelDetails';
-import { strengthConfig, controlConfig } from '../../graph_components/implementation/implementationConfig';
 import AdminSummaryForm from './AdminSummaryForm';
 import AdminFeedbackForm from './AdminFeedbackForm';
 import ConcernsPanel from './ConcernsPanel';
 import RecommendationsPanel from './RecommendationsPanel';
 import ApprovalCoverageTable from './ApprovalCoverageTable';
-import { SubLabel as Label, Empty } from './blocks/reportPrimitives';
+import { Empty } from './blocks/reportPrimitives';
 import ReportSection from './blocks/ReportSection';
 import ArtifactTable from './blocks/ArtifactTable';
 import PlansAccomplishments from './blocks/PlansAccomplishments';
@@ -52,15 +49,16 @@ import ImplementationCard from './blocks/ImplementationCard';
  * Approval workspace at
  * /:campus/dashboard/reports/approve/:workingGroup/:goalNumber/:indicatorNumber.
  *
- * This owns its markup rather than embedding IndicatorReportView. Embedding was tried: the
- * report presents a finished record, this page supports a decision, and reconciling the two
- * cost a suppression prop per block — coverage, review notes, concerns, recommendations, the
- * rubric, the evidence summary — then a split into intro and evidence halves. Each prop was
- * defensible alone; together they were a report component contorted around a second caller.
+ * Composes the shared report blocks (./blocks) in its own order — context, then the
+ * reviewer's own account of the year, then what the bar asks for, then everything the claim
+ * rests on — with the review-lens props turned on where the report leaves them off
+ * (rationale callouts, claimed requirements, unrated badges). The blocks are what keep this
+ * page and IndicatorReportView from drifting; the ORDER and the editable panels are what
+ * make it an approval workspace rather than a second report.
  *
- * The cost of separating them is that the two can drift. The gain is that this page orders
- * things the way a reviewer reads: context, then their own account of the year, then what
- * the bar asks for, then everything the claim rests on — and the report stays a report.
+ * History, for whoever wonders why it isn't just the report embedded: embedding was tried
+ * and cost a suppression prop per block; a fully standalone template was tried next and
+ * drifted seven behaviors in one rewrite. The block decomposition is the synthesis.
  */
 
 // ── The page ────────────────────────────────────────────────────────────────
