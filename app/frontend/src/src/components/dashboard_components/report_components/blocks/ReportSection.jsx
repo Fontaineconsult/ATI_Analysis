@@ -40,7 +40,7 @@ const ReportSection = ({ id, title, subtitle, count, action, banded = false, chi
     return (
         <Box as="section" aria-labelledby={id} bg="white" borderWidth="1px"
             borderColor="gray.200" borderRadius="lg" boxShadow="sm" overflow="hidden" {...rest}>
-            <Box bg="teal.50" px={4} py={2.5} borderBottomWidth="1px" borderColor="teal.100">
+            <Box bg="teal.50" px={3.5} py={2} borderBottomWidth="1px" borderColor="teal.100">
                 {/* count renders in the title in both modes — one convention */}
                 <HStack justify="space-between" align="baseline" flexWrap="wrap">
                     {heading}
@@ -48,7 +48,7 @@ const ReportSection = ({ id, title, subtitle, count, action, banded = false, chi
                 </HStack>
                 {subtitle && <Text fontSize="xs" color="gray.600" mt={0.5}>{subtitle}</Text>}
             </Box>
-            <Box p={4}>{children}</Box>
+            <Box p={3}>{children}</Box>
         </Box>
     );
 };

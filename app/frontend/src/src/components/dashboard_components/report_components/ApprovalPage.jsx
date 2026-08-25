@@ -210,9 +210,9 @@ const ApprovalPage = () => {
     };
 
     return (
-        <Box maxW="1280px" mx="auto" p={6} textAlign="left" pb="96px">
+        <Box maxW="1280px" mx="auto" p={5} textAlign="left" pb="96px">
             {/* ── Intro: who and what, before anything asks for a judgement ── */}
-            <Box mb={5}>
+            <Box mb={4}>
                 <IndicatorIdentity
                     indicator={indicator}
                     compositeKey={compositeKey}
@@ -236,20 +236,20 @@ const ApprovalPage = () => {
             </Box>
 
             {isApproved && (
-                <Alert status="success" borderRadius="md" fontSize="sm" mb={5}>
+                <Alert status="success" borderRadius="md" fontSize="sm" mb={3}>
                     <AlertIcon />
                     This indicator has been approved. Withdraw it to reopen the review.
                 </Alert>
             )}
             {!isApproved && !ready_for_admin_review && (
-                <Alert status="info" borderRadius="md" fontSize="sm" mb={5}>
+                <Alert status="info" borderRadius="md" fontSize="sm" mb={3}>
                     <AlertIcon />
                     Not yet marked ready for review by the working group. You can still review and
                     comment; approving early is possible but the group may not be finished.
                 </Alert>
             )}
 
-            <ReportSection banded mb={5} id="ap-status" title="Status"
+            <ReportSection banded mb={3} id="ap-status" title="Status"
                 subtitle="Where this indicator stands, and who answers for it.">
                 <VStack align="stretch" spacing={4}>
                     <Box>
@@ -261,12 +261,8 @@ const ApprovalPage = () => {
                 </VStack>
             </ReportSection>
 
-            <ReportSection banded mb={5} id="ap-people" title="People" count={implementers.length}>
-                <PeopleTable implementers={implementers} />
-            </ReportSection>
-
             {/* ── The reviewer's own account, first among the things they write ── */}
-            <ReportSection banded mb={5} id="ap-summary" title="Evidence summary"
+            <ReportSection banded mb={3} id="ap-summary" title="Evidence summary"
                 subtitle="The ATI coordinator's account of this year's evidence.">
                 <AdminSummaryForm
                     yearIdentifier={year_identifier}
@@ -275,40 +271,7 @@ const ApprovalPage = () => {
                 />
             </ReportSection>
 
-            <ReportSection banded mb={5} id="ap-coverage" title="Companion bar coverage"
-                subtitle="Each requirement, what claims it, and the argument made for the claim.">
-                {report ? <ApprovalCoverageTable coverage={report.evidence_coverage} /> : (
-                    <Alert status="warning" fontSize="sm" borderRadius="md">
-                        <AlertIcon />
-                        Coverage is unavailable — the report for {compositeKey} could not be loaded.
-                        The review tools below still work.
-                    </Alert>
-                )}
-            </ReportSection>
-
-            <Accordion allowToggle mb={5} borderWidth="1px" borderColor="gray.200"
-                borderRadius="lg" bg="white" boxShadow="sm" overflow="hidden">
-                <AccordionItem border="none">
-                    <Heading as="h2" size="sm">
-                        <AccordionButton bg="teal.50" _expanded={{ bg: 'teal.100' }} py={2.5} px={4}>
-                            <Box flex="1" textAlign="left">
-                                <Text fontSize="sm" fontWeight="semibold" color="gray.800">
-                                    Maturity rubric
-                                </Text>
-                                <Text fontSize="xs" fontWeight="normal" color="gray.600" mt={0.5}>
-                                    What “{status.status_level || 'this level'}” asks for — reference while grading.
-                                </Text>
-                            </Box>
-                            <AccordionIcon />
-                        </AccordionButton>
-                    </Heading>
-                    <AccordionPanel p={4}>
-                        <StatusLevelDetails statusDetails={evidenceData.statusLevel.properties} />
-                    </AccordionPanel>
-                </AccordionItem>
-            </Accordion>
-
-            <ReportSection banded mb={5} id="ap-review-notes" title="Review notes"
+            <ReportSection banded mb={3} id="ap-review-notes" title="Review notes"
                 subtitle="Notes to the working group, kept on the record for next cycle.">
                 <AdminFeedbackForm
                     yearIdentifier={year_identifier}
@@ -317,7 +280,7 @@ const ApprovalPage = () => {
                 />
             </ReportSection>
 
-            <ReportSection banded mb={5} id="ap-outstanding" title="Outstanding work"
+            <ReportSection banded mb={3} id="ap-outstanding" title="Outstanding work"
                 subtitle="Concerns have no path to resolution yet; recommendations are the work ahead.">
                 <VStack align="stretch" spacing={5}>
                     <ConcernsPanel
@@ -335,13 +298,56 @@ const ApprovalPage = () => {
                 </VStack>
             </ReportSection>
 
-            <ReportSection banded mb={5} id="ap-plans" title="Plans & Accomplishments"
+            <ReportSection banded mb={3} id="ap-coverage" title="Companion bar coverage"
+                subtitle="Each requirement, what claims it, and the argument made for the claim.">
+                {report ? <ApprovalCoverageTable coverage={report.evidence_coverage} /> : (
+                    <Alert status="warning" fontSize="sm" borderRadius="md">
+                        <AlertIcon />
+                        Coverage is unavailable — the report for {compositeKey} could not be loaded.
+                        The review tools below still work.
+                    </Alert>
+                )}
+            </ReportSection>
+
+            <Accordion allowToggle mb={3} borderWidth="1px" borderColor="gray.200"
+                borderRadius="lg" bg="white" boxShadow="sm" overflow="hidden">
+                <AccordionItem border="none">
+                    <Heading as="h2" size="sm">
+                        <AccordionButton bg="teal.50" _expanded={{ bg: 'teal.100' }} py={2} px={3.5}>
+                            <Box flex="1" textAlign="left">
+                                <Text fontSize="sm" fontWeight="semibold" color="gray.800">
+                                    Maturity rubric
+                                </Text>
+                                <Text fontSize="xs" fontWeight="normal" color="gray.600" mt={0.5}>
+                                    What “{status.status_level || 'this level'}” asks for — reference while grading.
+                                </Text>
+                            </Box>
+                            <AccordionIcon />
+                        </AccordionButton>
+                    </Heading>
+                    <AccordionPanel p={3}>
+                        <StatusLevelDetails statusDetails={evidenceData.statusLevel.properties} />
+                    </AccordionPanel>
+                </AccordionItem>
+            </Accordion>
+
+            <ReportSection banded mb={3} id="ap-people" title="People" count={implementers.length}>
+                <PeopleTable implementers={implementers} />
+            </ReportSection>
+
+
+
+
+
+
+
+            <ReportSection banded mb={3} id="ap-plans" title="Plans & Accomplishments"
                 subtitle="Committed work, and what has been claimed for this year.">
                 <PlansAccomplishments plans={plans} accomplishments={accomplishments} />
             </ReportSection>
 
             {/* ── What the claim actually rests on ── */}
-            <ReportSection banded mb={5} id="ap-implementations" title="Implementation evidence" count={implementations.length}
+            <ReportSection banded mb={3} id="ap-implementations" title="Implementation evidence" count={implementations.length}
                 subtitle="The work claimed as evidence, with its documentation.">
                 {implementations.length ? (
                     <VStack align="stretch" spacing={3}>
@@ -360,7 +366,7 @@ const ApprovalPage = () => {
             </ReportSection>
 
             {taaps.length > 0 && (
-                <ReportSection banded mb={5} id="ap-taaps" title="Temporary Alternate Access Plans" count={taaps.length}>
+                <ReportSection banded mb={3} id="ap-taaps" title="Temporary Alternate Access Plans" count={taaps.length}>
                     <VStack align="stretch" spacing={3}>
                         {taaps.map((t) => <TaapEntry key={t.unique_id} taap={t} />)}
                     </VStack>
@@ -368,12 +374,12 @@ const ApprovalPage = () => {
             )}
 
             {assets.length > 0 && (
-                <ReportSection banded mb={5} id="ap-ict" title="ICT touched by this work" count={assets.length}>
+                <ReportSection banded mb={3} id="ap-ict" title="ICT touched by this work" count={assets.length}>
                     <AssetsTable assets={assets} showDescription={false} />
                 </ReportSection>
             )}
 
-            <ReportSection banded mb={5} id="ap-annotations" title="Annotations"
+            <ReportSection banded mb={3} id="ap-annotations" title="Annotations"
                 subtitle="Notes, messages and metrics recorded against this year's evidence.">
                 <ArtifactTable
                     notes={report?.notes}

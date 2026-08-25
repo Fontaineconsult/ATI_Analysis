@@ -244,13 +244,24 @@ describe('ApprovalPage — the evidence itself', () => {
         expect(screen.getByTestId('admin-feedback')).toBeInTheDocument();
     });
 
-    it('leads with the evidence summary', async () => {
-        // It is the reviewer own account of the year — what they are here to write, and
-        // what another reader wants before anything else.
+    it('runs the review cluster in reading order: status, summary, notes, outstanding, coverage, rubric', async () => {
+        // The reviewer's own writes come straight after status; the reference material
+        // (the bar and the rubric) follows them. Order chosen deliberately (2026-08-25).
         await renderLoaded(NON_APPROVER);
         const html = document.body.innerHTML;
-        expect(html.indexOf('Evidence summary')).toBeGreaterThan(-1);
-        expect(html.indexOf('Evidence summary')).toBeLessThan(html.indexOf('Companion bar coverage'));
+        const at = (t) => {
+            const i = html.indexOf(t);
+            expect(i).toBeGreaterThan(-1);
+            return i;
+        };
+        const order = ['Evidence summary', 'Review notes', 'Outstanding work',
+            'Companion bar coverage', 'Maturity rubric'];
+        let prev = at('>Status<');
+        for (const title of order) {
+            const i = at(title);
+            expect(i).toBeGreaterThan(prev);
+            prev = i;
+        }
     });
 
     it('shows the level rubric only in the collapsible section', async () => {
