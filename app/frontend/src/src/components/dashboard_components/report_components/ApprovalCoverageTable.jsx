@@ -14,13 +14,7 @@ import {
     VStack,
 } from '@chakra-ui/react';
 
-const LEVEL_ORDER = ['established', 'managed', 'optimizing'];
-const LEVEL_COLOR = { established: 'teal', managed: 'purple', optimizing: 'orange' };
-const byLevel = (a, b) => {
-    const ai = LEVEL_ORDER.indexOf(a);
-    const bi = LEVEL_ORDER.indexOf(b);
-    return (ai === -1 ? LEVEL_ORDER.length : ai) - (bi === -1 ? LEVEL_ORDER.length : bi);
-};
+import { LevelBadge, RequirementCell, byLevel } from './blocks/coveragePrimitives';
 
 /**
  * The companion bar as a reviewer needs to read it — deliberately not the same table the
@@ -64,19 +58,10 @@ const ApprovalCoverageTable = ({ coverage }) => {
                         return (
                             <Tr key={r.handle}>
                                 <Td verticalAlign="top">
-                                    <Badge
-                                        colorScheme={LEVEL_COLOR[r.level] || 'gray'}
-                                        variant="subtle"
-                                        fontSize="2xs"
-                                    >
-                                        {r.level}
-                                    </Badge>
+                                    <LevelBadge level={r.level} />
                                 </Td>
                                 <Td verticalAlign="top" whiteSpace="normal">
-                                    <Text fontSize="xs" color="gray.700">{r.requirement}</Text>
-                                    {r.element && (
-                                        <Text fontSize="2xs" color="gray.500" mt={0.5}>{r.element}</Text>
-                                    )}
+                                    <RequirementCell requirement={r.requirement} element={r.element} />
                                 </Td>
                                 <Td verticalAlign="top">
                                     {r.satisfied ? (

@@ -28,6 +28,7 @@ import CopyIndicatorReportButton from './CopyIndicatorReportButton';
 import { SubLabel, SubHeading, Empty, Dash, DataTable } from './blocks/reportPrimitives';
 import ReportSection from './blocks/ReportSection';
 import PeopleTable from './blocks/PeopleTable';
+import { LevelBadge, RequirementCell } from './blocks/coveragePrimitives';
 
 /*
  * The single-indicator "View" report — a flat, single-column, single-page rendering of ALL
@@ -182,8 +183,6 @@ const MaturityCriteria = ({ currentStatusLevelName }) => {
 // themselves live on each is_evidence_for rel; the report inverts them so a reviewer
 // reads the standard and sees what is missing, rather than reading the work and
 // inferring what it covers.
-const LEVEL_COLOR = { established: 'teal', managed: 'purple', optimizing: 'orange' };
-
 const EvidenceCoverage = ({ coverage }) => {
     const requirements = coverage?.requirements || [];
     if (!requirements.length) return null;
@@ -197,15 +196,8 @@ const EvidenceCoverage = ({ coverage }) => {
     const hasUnscored = requirements.some((r) => !r.implementation_evidenced);
 
     const rows = requirements.map((r) => [
-        <Badge colorScheme={LEVEL_COLOR[r.level] || 'gray'} variant="subtle" fontSize="2xs">
-            {r.level}
-        </Badge>,
-        <Box>
-            <Text fontSize="xs" color="gray.700">{r.requirement}</Text>
-            {r.element && (
-                <Text fontSize="2xs" color="gray.500" mt={0.5}>{r.element}</Text>
-            )}
-        </Box>,
+        <LevelBadge level={r.level} />,
+        <Box><RequirementCell requirement={r.requirement} element={r.element} /></Box>,
         r.satisfied ? (
             <Badge colorScheme="green" variant="solid" fontSize="2xs">Satisfied</Badge>
         ) : (
