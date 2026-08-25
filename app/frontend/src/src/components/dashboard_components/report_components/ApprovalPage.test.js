@@ -341,6 +341,7 @@ describe('ApprovalPage — arriving cold', () => {
             expect(fetchPrimaryData).toHaveBeenCalledWith('web', '2025-2026', 'ssu'));
     });
 
+
     it('shows a spinner rather than claiming the evidence does not exist', () => {
         renderPage(NON_APPROVER, evidence(), REPORT, { wgPayload: null });
         expect(screen.getByText(/loading approval workspace/i)).toBeInTheDocument();

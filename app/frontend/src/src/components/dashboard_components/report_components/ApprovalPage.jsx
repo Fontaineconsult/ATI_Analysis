@@ -152,7 +152,11 @@ const ApprovalPage = () => {
 
     const backToReport = `/${campus}/dashboard/reports/${workingGroup}/${goalNumber}/${indicatorNumber}`;
 
-    if ((reportLoading && !report) || wgLoading) {
+    // Full-page spinner ONLY on a cold load. Every write on this page triggers a refetch,
+    // and blanking a workspace someone is actively using — after each approve, note or
+    // concern — reads as the page crashing. Stale-but-present data keeps rendering while
+    // the fresh copy is in flight.
+    if ((reportLoading && !report) || (wgLoading && !wgPayload)) {
         return (
             <Box p={8} textAlign="left">
                 <HStack spacing={3}>
