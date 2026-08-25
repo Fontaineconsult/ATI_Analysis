@@ -527,10 +527,12 @@ export const PlansAccomplishmentsBody = ({ plans = [], accomplishments = [] }) =
     </>
 );
 
-// `suppressCoverage` is for the approval page, which renders its own coverage table
-// above this — a review-lens version carrying each claim's rationale and flagging the
-// ones worth checking. Two coverage tables on one screen would be the same list twice.
-const IndicatorReportView = ({ report, suppressCoverage = false, suppressPlans = false }) => {
+// `suppressReviewBlocks` is for the approval page, which owns all of this: it renders
+// editable review notes, concerns and recommendations, plus its own coverage table with
+// each claim's rationale. Left on, the reader would meet every one of them twice — once
+// as something to act on, once as a read-only copy — with no way to tell which was live.
+// `suppressPlans` is a hoist rather than a suppression: the same block renders higher up.
+const IndicatorReportView = ({ report, suppressReviewBlocks = false, suppressPlans = false }) => {
     const navigate = useNavigate();
     const { campus } = useParams();
     const toast = useToast();
@@ -711,7 +713,7 @@ const IndicatorReportView = ({ report, suppressCoverage = false, suppressPlans =
                                     </Box>
                                 </Box>
                             )}
-                            {adminReviewNotes.length > 0 && (
+                            {!suppressReviewBlocks && adminReviewNotes.length > 0 && (
                                 <Box mt={3}>
                                     <SubLabel>Administrative review notes</SubLabel>
                                     <Text fontSize="2xs" color="gray.600" mt={0.5} mb={1}>
@@ -729,7 +731,7 @@ const IndicatorReportView = ({ report, suppressCoverage = false, suppressPlans =
                             )}
                         </Box>
 
-                        {concerns.filter((c) => c.status !== 'dismissed').length > 0 && (
+                        {!suppressReviewBlocks && concerns.filter((c) => c.status !== 'dismissed').length > 0 && (
                             <Box>
                                 <SubHeading>Concerns ({concerns.filter((c) => c.status !== 'dismissed').length})</SubHeading>
                                 <Box mt={2}>
@@ -753,7 +755,7 @@ const IndicatorReportView = ({ report, suppressCoverage = false, suppressPlans =
                             </Box>
                         )}
 
-                        {recommendations.filter((r) => r.status !== 'dismissed').length > 0 && (
+                        {!suppressReviewBlocks && recommendations.filter((r) => r.status !== 'dismissed').length > 0 && (
                             <Box>
                                 <SubHeading>Recommendations ({recommendations.filter((r) => r.status !== 'dismissed').length})</SubHeading>
                                 <Box mt={2}>
@@ -776,7 +778,7 @@ const IndicatorReportView = ({ report, suppressCoverage = false, suppressPlans =
                         )}
 
                         <MaturityCriteria currentStatusLevelName={status?.status_level} />
-                        {!suppressCoverage && <EvidenceCoverage coverage={report.evidence_coverage} />}
+                        {!suppressReviewBlocks && <EvidenceCoverage coverage={report.evidence_coverage} />}
                     </VStack>
                 </ReportSection>
 

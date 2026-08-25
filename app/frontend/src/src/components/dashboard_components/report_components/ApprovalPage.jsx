@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { Link as RouterLink, useNavigate, useParams } from 'react-router-dom';
 import {
     Accordion,
@@ -22,13 +22,12 @@ import {
     useToast,
 } from '@chakra-ui/react';
 import { ExternalLinkIcon } from '@chakra-ui/icons';
-import { SettingsContext, useSettings } from '../../../context/SettingsContext';
+import { SettingsContext } from '../../../context/SettingsContext';
 import { DataContext } from '../../../context/DataContext';
 import { UserContext } from '../../../context/UserContext';
-import { fetchGoalReport } from '../../../services/api/get';
+import { fetchGoalReport, fetchPrimaryData } from '../../../services/api/get';
 import { assignApprover, withdrawApproval } from '../../../services/api/put';
 import { workingGroupCodeFromName } from '../../../services/utils/tools';
-import { SLUG_TO_DATAKEY } from '../../../styles/workingGroupIdentity';
 import StatusLevelDetails from '../../graph_components/indicators/StatusLevelDetails';
 import AdminSummaryForm from './AdminSummaryForm';
 import AdminFeedbackForm from './AdminFeedbackForm';
@@ -68,8 +67,7 @@ const Section = ({ title, subtitle, children, action }) => (
 const ApprovalPage = () => {
     const { campus, workingGroup, goalNumber, indicatorNumber } = useParams();
     const { currentAcademicYear } = useContext(SettingsContext);
-    const { currentWorkingGroup } = useSettings();
-    const { data, dataVersion, getCachedReport, getOrFetchReport, loadSingleWorkingGroupData } =
+    const { dataVersion, getCachedReport, getOrFetchReport, loadSingleWorkingGroupData } =
         useContext(DataContext);
     const { user } = useContext(UserContext);
     const navigate = useNavigate();
@@ -88,18 +86,38 @@ const ApprovalPage = () => {
         ? `${wgCode}|${goalNumber}|${currentAcademicYear}|${campus || ''}`
         : null;
 
-    // Load this URL's working-group data if it isn't already in context. The old modal
-    // could assume it: you could only open it from a page that had already loaded the
-    // group. A linkable page is reachable cold — pasted, bookmarked, or after a refresh —
-    // and would otherwise render its own "no evidence found" state on evidence that
-    // exists. transformWorkingGroup takes the slug, so the URL segment goes straight in.
-    const wgDataKey = SLUG_TO_DATAKEY[workingGroup];
-    const wgLoaded = Boolean(wgDataKey && data[wgDataKey]);
-    useEffect(() => {
-        if (!wgDataKey || wgLoaded) return;
+    // Fetched for the campus in the URL, deliberately NOT read out of DataContext.
+    //
+    // DataContext loads whichever campus the settings picker is on. The report on this page
+    // is fetched for the campus in the URL. Reading the mutable side from context therefore
+    // put two campuses on one screen — sfsu's report beside ssu's empty panels — which reads
+    // as "this indicator has no recommendations" when it has three. Empty would have been a
+    // bug; wrong is worse, because nothing about it looks wrong.
+    const [wgPayload, setWgPayload] = useState(null);
+    const [wgLoading, setWgLoading] = useState(true);
+
+    const loadWorkingGroup = useCallback(async () => {
+        if (!workingGroup || !currentAcademicYear || !campus) return;
+        setWgLoading(true);
+        try {
+            const resp = await fetchPrimaryData(workingGroup, currentAcademicYear, campus);
+            setWgPayload(resp?.data || null);
+        } catch (e) {
+            setError(e?.response?.data?.error || e.message);
+        } finally {
+            setWgLoading(false);
+        }
+    }, [workingGroup, currentAcademicYear, campus]);
+
+    useEffect(() => { loadWorkingGroup(); }, [loadWorkingGroup]);
+
+    // A write refreshes this page's own copy, and the shared context too so the rest of the
+    // app doesn't go stale behind it.
+    const refreshAfterWrite = useCallback(() => {
+        loadWorkingGroup();
         loadSingleWorkingGroupData(workingGroup);
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [wgDataKey, wgLoaded, workingGroup]);
+    }, [loadWorkingGroup, workingGroup]);
 
     // The report payload carries evidence_coverage — the bar with what answers each part.
     // Same goal-level cache the report page uses, so arriving here after viewing the report
@@ -132,8 +150,7 @@ const ApprovalPage = () => {
     // The mutable side (concerns, recommendations, review notes, the approve flag) lives in
     // the working-group payload, which the panels below already write against.
     const evidenceData = useMemo(() => {
-        const dataKey = SLUG_TO_DATAKEY[workingGroup];
-        const wgData = dataKey ? data[dataKey] : null;
+        const wgData = wgPayload;
         if (!wgData) return null;
         const goal = wgData.goals?.find(
             (g) => g.goal?.properties?.goal_number === parseInt(goalNumber, 10)
@@ -142,14 +159,14 @@ const ApprovalPage = () => {
             (ind) => ind.indicator?.properties?.composite_key === compositeKey
         );
         return indicator?.evidences?.[0] || null;
-    }, [data, workingGroup, goalNumber, compositeKey]);
+    }, [wgPayload, goalNumber, compositeKey]);
 
     const backToReport = `/${campus}/dashboard/reports/${workingGroup}/${goalNumber}/${indicatorNumber}`;
 
     // Arriving cold, the working-group payload is still in flight, so evidenceData is
     // legitimately null for a moment. Without this the page would flash "no evidence
     // found" over evidence that exists.
-    if ((loading && !report) || !wgLoaded) {
+    if ((loading && !report) || wgLoading) {
         return (
             <Box p={8} textAlign="left">
                 <HStack spacing={3}><Spinner color="teal.500" /><Text color="gray.600">Loading approval workspace…</Text></HStack>
@@ -182,7 +199,7 @@ const ApprovalPage = () => {
         setActing(true);
         try {
             await fn(currentUserId, year_identifier);
-            await loadSingleWorkingGroupData(currentWorkingGroup);
+            await refreshAfterWrite();
             toast({ title: successTitle, description: successBody, status: 'success', duration: 5000, isClosable: true });
         } catch (e) {
             toast({
@@ -292,13 +309,13 @@ const ApprovalPage = () => {
                     <AdminSummaryForm
                         yearIdentifier={year_identifier}
                         currentValue={evidenceData.evidence.properties.admin_review_description || 'No Review'}
-                        onUpdate={() => loadSingleWorkingGroupData(currentWorkingGroup)}
+                        onUpdate={refreshAfterWrite}
                     />
                     <Divider />
                     <AdminFeedbackForm
                         yearIdentifier={year_identifier}
                         adminReviewNotes={evidenceData.adminReviewNotes || []}
-                        onUpdate={() => loadSingleWorkingGroupData(currentWorkingGroup)}
+                        onUpdate={refreshAfterWrite}
                     />
                 </VStack>
             </Section>
@@ -313,13 +330,13 @@ const ApprovalPage = () => {
                         concerns={(evidenceData.concerns || []).filter(
                             (w) => w.concern?.properties?.status !== 'converted'
                         )}
-                        onUpdate={() => loadSingleWorkingGroupData(currentWorkingGroup)}
+                        onUpdate={refreshAfterWrite}
                     />
                     <Divider />
                     <RecommendationsPanel
                         yearIdentifier={year_identifier}
                         recommendations={evidenceData.recommendations || []}
-                        onUpdate={() => loadSingleWorkingGroupData(currentWorkingGroup)}
+                        onUpdate={refreshAfterWrite}
                     />
                 </VStack>
             </Section>
@@ -356,7 +373,7 @@ const ApprovalPage = () => {
                 overflow="hidden"
                 mb={5}
             >
-                <IndicatorReportView report={report} suppressCoverage suppressPlans />
+                <IndicatorReportView report={report} suppressReviewBlocks suppressPlans />
             </Box>
 
             {/* Sticky action bar — the decision must never depend on scroll position. */}
