@@ -165,14 +165,31 @@ describe('ApprovalPage — approver gating (ported from the modal)', () => {
         expect(screen.getByRole('button', { name: /approve indicator/i })).toBeDisabled();
     });
 
-    it('enables Approve for a flagged approver and submits as them', async () => {
+    it('submits as the approver only after the are-you-sure dialog confirms', async () => {
         assignApprover.mockResolvedValue({ status: 'success' });
         await renderLoaded(APPROVER);
 
         const button = screen.getByRole('button', { name: /approve indicator/i });
         expect(button).toBeEnabled();
         await userEvent.click(button);
+
+        // The click opens the confirmation — nothing is signed yet.
+        expect(assignApprover).not.toHaveBeenCalled();
+        expect(await screen.findByText(/Approve 1\.19-web\?/)).toBeInTheDocument();
+
+        await userEvent.click(screen.getByRole('button', { name: /yes, approve/i }));
         await waitFor(() => expect(assignApprover).toHaveBeenCalledWith('e2', YID));
+    });
+
+    it('cancelling the dialog signs nothing', async () => {
+        assignApprover.mockResolvedValue({ status: 'success' });
+        await renderLoaded(APPROVER);
+
+        await userEvent.click(screen.getByRole('button', { name: /approve indicator/i }));
+        await screen.findByText(/Approve 1\.19-web\?/);
+        await userEvent.click(screen.getByRole('button', { name: /^cancel$/i }));
+
+        expect(assignApprover).not.toHaveBeenCalled();
     });
 
     it('shows Approved and stays disabled once the review is complete', async () => {

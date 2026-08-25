@@ -1,7 +1,13 @@
-import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { Link as RouterLink, useNavigate, useParams } from 'react-router-dom';
 import {
     Accordion,
+    AlertDialog,
+    AlertDialogBody,
+    AlertDialogContent,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogOverlay,
     AccordionButton,
     AccordionIcon,
     AccordionItem,
@@ -76,6 +82,12 @@ const ApprovalPage = () => {
     const [reportLoading, setReportLoading] = useState(false);
     const [error, setError] = useState(null);
     const [acting, setActing] = useState(false);
+    // The approve confirmation. Approval is a one-click formal sign-off on a sticky bar
+    // — it stamps who and when — so it gets the same are-you-sure treatment the delete
+    // flows already have. The dialog restates what is being signed, so the confirmation
+    // carries information, not just friction.
+    const [confirmOpen, setConfirmOpen] = useState(false);
+    const cancelRef = useRef();
 
     const wgCode = workingGroup ? workingGroupCodeFromName(workingGroup) : null;
     const compositeKey = wgCode && goalNumber && indicatorNumber
@@ -449,6 +461,66 @@ const ApprovalPage = () => {
                 )}
             </ReportSection>
 
+            {/* Are-you-sure on approval. Confirming states what is being signed —
+                the indicator, the year, the campus, and how much of the bar the
+                evidence actually answers — because a reviewer should meet the number
+                one last time at the moment of signing. */}
+            <AlertDialog
+                isOpen={confirmOpen}
+                leastDestructiveRef={cancelRef}
+                onClose={() => setConfirmOpen(false)}
+                isCentered
+            >
+                <AlertDialogOverlay>
+                    <AlertDialogContent>
+                        <AlertDialogHeader fontSize="md" fontWeight="bold">
+                            Approve {compositeKey}?
+                        </AlertDialogHeader>
+                        <AlertDialogBody fontSize="sm">
+                            <Text mb={2}>
+                                You are signing off the administrative review for{' '}
+                                <Text as="span" fontWeight="semibold">{compositeKey}</Text>
+                                {' '}at {(report?.campus?.name || (campus || '').toUpperCase())} for{' '}
+                                {report?.year || currentAcademicYear}, recorded under your name
+                                with today's date.
+                            </Text>
+                            {report?.evidence_coverage?.requirements?.length > 0 && (
+                                <Text mb={2}>
+                                    Companion bar: {report.evidence_coverage.summary?.scored_satisfied ?? 0} of{' '}
+                                    {report.evidence_coverage.summary?.scored_total ?? 0} requirements
+                                    answered by an implementation.
+                                </Text>
+                            )}
+                            {!ready_for_admin_review && (
+                                <Text color="orange.800" fontWeight="semibold">
+                                    The working group has not marked this evidence ready for review.
+                                </Text>
+                            )}
+                            <Text color="gray.700">
+                                Approval can be withdrawn later if the review needs to reopen.
+                            </Text>
+                        </AlertDialogBody>
+                        <AlertDialogFooter>
+                            <Button ref={cancelRef} size="sm" onClick={() => setConfirmOpen(false)}>
+                                Cancel
+                            </Button>
+                            <Button
+                                colorScheme="teal"
+                                size="sm"
+                                ml={3}
+                                onClick={() => {
+                                    setConfirmOpen(false);
+                                    act(assignApprover, 'Approval successful',
+                                        'The success indicator has been approved.');
+                                }}
+                            >
+                                Yes, approve
+                            </Button>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialogOverlay>
+            </AlertDialog>
+
             {/* Sticky action bar — the decision must never depend on scroll position. */}
             <Box position="fixed" bottom={0} left={0} right={0} bg="white" borderTopWidth="1px"
                 borderColor="gray.200" boxShadow="0 -2px 8px rgba(0,0,0,0.06)" px={6} py={3} zIndex={10}>
@@ -483,8 +555,7 @@ const ApprovalPage = () => {
                                 colorScheme={isApproved ? 'green' : 'teal'}
                                 size="sm"
                                 isDisabled={isApproved || !currentUserId || !canApprove || acting}
-                                onClick={() => act(assignApprover, 'Approval successful',
-                                    'The success indicator has been approved.')}
+                                onClick={() => setConfirmOpen(true)}
                             >
                                 {isApproved ? 'Approved' : 'Approve Indicator'}
                             </Button>
