@@ -237,6 +237,23 @@ describe('ApprovalPage — the evidence itself', () => {
         expect(screen.getByTestId('admin-summary')).toBeInTheDocument();
         expect(screen.getByTestId('admin-feedback')).toBeInTheDocument();
     });
+
+    it('leads with the evidence summary', async () => {
+        // It is the reviewer own account of the year — what they are here to write, and
+        // what another reader wants before anything else.
+        await renderLoaded(NON_APPROVER);
+        const html = document.body.innerHTML;
+        expect(html.indexOf('Evidence summary')).toBeGreaterThan(-1);
+        expect(html.indexOf('Evidence summary')).toBeLessThan(html.indexOf('Companion bar coverage'));
+    });
+
+    it('shows the level rubric only in the collapsible section', async () => {
+        // The report renders the same rubric under "Expected evidence at"; suppressed here
+        // so the collapsible Maturity status is the only copy.
+        await renderLoaded(NON_APPROVER);
+        expect(screen.queryByText(/Expected evidence at/i)).toBeNull();
+        expect(screen.getByRole('button', { name: /maturity status/i })).toBeInTheDocument();
+    });
 });
 
 describe('ApprovalPage — the coverage table', () => {

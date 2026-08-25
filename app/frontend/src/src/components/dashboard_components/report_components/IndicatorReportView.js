@@ -527,10 +527,12 @@ export const PlansAccomplishmentsBody = ({ plans = [], accomplishments = [] }) =
     </>
 );
 
-// `suppressReviewBlocks` is for the approval page, which owns all of this: it renders
-// editable review notes, concerns and recommendations, plus its own coverage table with
-// each claim's rationale. Left on, the reader would meet every one of them twice — once
-// as something to act on, once as a read-only copy — with no way to tell which was live.
+// `suppressReviewBlocks` is for the approval page, which owns all of this: the evidence
+// summary and review notes (editable there), concerns and recommendations (editable
+// there), its own coverage table carrying each claim's rationale, and the level rubric
+// under Maturity status — StatusLevelDetails renders the same content MaturityCriteria
+// does. Left on, the reader would meet every one of them twice: once as something to
+// act on, once as a read-only copy, with no way to tell which was live.
 // `suppressPlans` is a hoist rather than a suppression: the same block renders higher up.
 const IndicatorReportView = ({ report, suppressReviewBlocks = false, suppressPlans = false }) => {
     const navigate = useNavigate();
@@ -702,7 +704,7 @@ const IndicatorReportView = ({ report, suppressReviewBlocks = false, suppressPla
                                     </Text>
                                 )}
                             </HStack>
-                            {yse?.admin_review_description && yse.admin_review_description !== 'No Review' && (
+                            {!suppressReviewBlocks && yse?.admin_review_description && yse.admin_review_description !== 'No Review' && (
                                 <Box mt={3}>
                                     <SubLabel>Evidence summary</SubLabel>
                                     <Text fontSize="2xs" color="gray.600" mt={0.5}>
@@ -777,7 +779,9 @@ const IndicatorReportView = ({ report, suppressReviewBlocks = false, suppressPla
                             </Box>
                         )}
 
-                        <MaturityCriteria currentStatusLevelName={status?.status_level} />
+                        {!suppressReviewBlocks && (
+                            <MaturityCriteria currentStatusLevelName={status?.status_level} />
+                        )}
                         {!suppressReviewBlocks && <EvidenceCoverage coverage={report.evidence_coverage} />}
                     </VStack>
                 </ReportSection>

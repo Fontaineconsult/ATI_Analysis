@@ -257,6 +257,20 @@ const ApprovalPage = () => {
                 </Alert>
             )}
 
+            {/* The evidence summary leads. It is the reviewer's own account of the year —
+                the thing they are here to write, and the thing another reader wants first.
+                The report's read-only copy is suppressed so this is the only one. */}
+            <Section
+                title="Evidence summary"
+                subtitle="The ATI coordinator's account of this year's evidence."
+            >
+                <AdminSummaryForm
+                    yearIdentifier={year_identifier}
+                    currentValue={evidenceData.evidence.properties.admin_review_description || 'No Review'}
+                    onUpdate={refreshAfterWrite}
+                />
+            </Section>
+
             <Section
                 title="Companion bar coverage"
                 subtitle="Each requirement, what claims it, and the argument made for the claim."
@@ -299,25 +313,17 @@ const ApprovalPage = () => {
                 </AccordionItem>
             </Accordion>
 
-            {/* Review comments — the reviewer's own record, and the reason this page exists
-                as a workspace rather than a confirmation dialog. */}
+            {/* Notes to the working group. The evidence summary that used to sit beside
+                these is now the first thing on the page. */}
             <Section
-                title="Review comments"
-                subtitle="Your summary of the evidence, and notes to the working group."
+                title="Review notes"
+                subtitle="Notes to the working group, kept on the record for next cycle."
             >
-                <VStack align="stretch" spacing={5}>
-                    <AdminSummaryForm
-                        yearIdentifier={year_identifier}
-                        currentValue={evidenceData.evidence.properties.admin_review_description || 'No Review'}
-                        onUpdate={refreshAfterWrite}
-                    />
-                    <Divider />
-                    <AdminFeedbackForm
-                        yearIdentifier={year_identifier}
-                        adminReviewNotes={evidenceData.adminReviewNotes || []}
-                        onUpdate={refreshAfterWrite}
-                    />
-                </VStack>
+                <AdminFeedbackForm
+                    yearIdentifier={year_identifier}
+                    adminReviewNotes={evidenceData.adminReviewNotes || []}
+                    onUpdate={refreshAfterWrite}
+                />
             </Section>
 
             <Section
