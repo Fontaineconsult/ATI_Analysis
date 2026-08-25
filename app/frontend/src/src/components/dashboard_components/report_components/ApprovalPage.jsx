@@ -46,6 +46,7 @@ import CommunityOfPractice from './blocks/CommunityOfPractice';
 import IndicatorIdentity from './blocks/IndicatorIdentity';
 import TaapEntry from './blocks/TaapEntry';
 import AssetsTable from './blocks/AssetsTable';
+import ImplementationCard from './blocks/ImplementationCard';
 
 /*
  * Approval workspace at
@@ -61,155 +62,6 @@ import AssetsTable from './blocks/AssetsTable';
  * things the way a reviewer reads: context, then their own account of the year, then what
  * the bar asks for, then everything the claim rests on — and the report stays a report.
  */
-
-// ── One implementation ──────────────────────────────────────────────────────
-const ImplementationCard = ({ impl, requirementsByHandle }) => {
-    const flagged = impl.no_active_documents || impl.undocumented;
-    const accent = flagged ? 'orange' : 'teal';
-    const claims = impl.satisfies || [];
-    const strength = strengthConfig(impl.strength);
-
-    return (
-        <Box borderWidth="1px" borderColor="gray.200" borderLeftWidth="3px"
-            borderLeftColor={`${accent}.400`} borderRadius="md" bg="white" overflow="hidden"
-            opacity={impl.retired ? 0.7 : 1}>
-            <Box bg={`${accent}.50`} px={3} py={2} borderBottomWidth="1px" borderColor="gray.200">
-                <HStack spacing={2} align="center" flexWrap="wrap">
-                    <Badge colorScheme={accent} variant="solid" fontSize="2xs" textTransform="uppercase">
-                        {impl.type}
-                    </Badge>
-                    <Text fontSize="sm" fontWeight="semibold" color="gray.800">{impl.title}</Text>
-                    {strength ? (
-                        <Tooltip label={strength.description} hasArrow>
-                            <Badge colorScheme={strength.colorScheme} variant="subtle" fontSize="2xs">
-                                {strength.label}
-                            </Badge>
-                        </Tooltip>
-                    ) : (
-                        <Tooltip label="This link carries no strength rating — an unqualified claim." hasArrow>
-                            <Badge colorScheme="gray" variant="outline" fontSize="2xs">unrated</Badge>
-                        </Tooltip>
-                    )}
-                    {impl.control === 'external' && (
-                        <Tooltip label={controlConfig('external')?.description} hasArrow>
-                            <Badge colorScheme="purple" variant="subtle" fontSize="2xs">External</Badge>
-                        </Tooltip>
-                    )}
-                    {claims.length > 0 && (
-                        <Badge colorScheme="green" variant="solid" fontSize="2xs">
-                            ✓ Satisfies {claims.length}
-                        </Badge>
-                    )}
-                    {impl.retired && (
-                        <Badge colorScheme="gray" variant="solid" fontSize="2xs">
-                            Retired{impl.retired_date ? ` ${impl.retired_date}` : ''}
-                        </Badge>
-                    )}
-                    {impl.no_active_documents && (
-                        <Badge colorScheme="orange" variant="solid" fontSize="2xs">
-                            ⚠ No active documentation
-                        </Badge>
-                    )}
-                    {impl.undocumented && (
-                        <Badge colorScheme="orange" variant="outline" fontSize="2xs">⚠ Undocumented</Badge>
-                    )}
-                </HStack>
-            </Box>
-
-            <Box p={3}>
-                {impl.description && (
-                    <Text fontSize="xs" color="gray.700" whiteSpace="pre-wrap" mb={2}>{impl.description}</Text>
-                )}
-
-                {/* Why this work is evidence HERE — distinct from the description, which
-                    describes the work and is identical wherever it appears. */}
-                {impl.rationale && (
-                    <Box mb={3} p={2} bg="teal.50" borderLeftWidth="2px" borderLeftColor="teal.300"
-                        borderRadius="sm">
-                        <Label>Why this is evidence here</Label>
-                        <Text fontSize="xs" color="gray.700" whiteSpace="pre-wrap" mt={0.5}>
-                            {impl.rationale}
-                        </Text>
-                    </Box>
-                )}
-
-                {claims.length > 0 && (
-                    <Box mb={3}>
-                        <Label>Requirements claimed</Label>
-                        <VStack align="stretch" spacing={0.5} mt={1}>
-                            {claims.map((h) => (
-                                <Text key={h} fontSize="2xs" color="gray.700">
-                                    • {requirementsByHandle[h]?.requirement || h}
-                                </Text>
-                            ))}
-                        </VStack>
-                    </Box>
-                )}
-
-                <Wrap spacing={2} mb={3}>
-                    {impl.owner && (
-                        <WrapItem>
-                            <Badge colorScheme="teal" variant="subtle" fontSize="2xs">
-                                Owner: {impl.owner.name}
-                            </Badge>
-                        </WrapItem>
-                    )}
-                    {(impl.accountable_communities || []).map((c) => (
-                        <WrapItem key={c}>
-                            <Badge colorScheme="cyan" variant="subtle" fontSize="2xs">Accountable: {c}</Badge>
-                        </WrapItem>
-                    ))}
-                    {impl.accountable_working_group && (
-                        <WrapItem>
-                            <Badge colorScheme="cyan" variant="outline" fontSize="2xs">
-                                WG: {impl.accountable_working_group}
-                            </Badge>
-                        </WrapItem>
-                    )}
-                    {(impl.dimensions || []).map((d) => (
-                        <WrapItem key={d.handle || d.name}>
-                            <Badge colorScheme="orange" variant="subtle" fontSize="2xs">{d.name}</Badge>
-                        </WrapItem>
-                    ))}
-                    {(impl.remediates_interfaces || []).map((i) => (
-                        <WrapItem key={i.unique_id || i.title}>
-                            <Badge colorScheme="blue" variant="outline" fontSize="2xs">
-                                Remediates: {i.title}
-                            </Badge>
-                        </WrapItem>
-                    ))}
-                </Wrap>
-
-                {(impl.participants || []).length > 0 && (
-                    <Box mb={3}>
-                        <Label>Worked on by</Label>
-                        <VStack align="stretch" spacing={0.5} mt={1}>
-                            {impl.participants.map((p, i) => (
-                                <Text key={i} fontSize="2xs" color="gray.700">
-                                    <Text as="span" fontWeight="semibold">{p.person?.name}</Text>
-                                    {p.role_handle ? ` — ${p.role_handle.replace('role:', '')}` : ''}
-                                    {p.note ? ` · ${p.note}` : ''}
-                                </Text>
-                            ))}
-                        </VStack>
-                    </Box>
-                )}
-
-                <Label>Documentation</Label>
-                <Box mt={1}>
-                    <ArtifactTable
-                        documents={impl.documents}
-                        webpages={impl.webpages}
-                        notes={impl.notes}
-                        messages={impl.messages}
-                        metrics={impl.metrics}
-                        emptyText="No documentation attached."
-                    />
-                </Box>
-            </Box>
-        </Box>
-    );
-};
 
 // ── The page ────────────────────────────────────────────────────────────────
 const ApprovalPage = () => {
@@ -500,6 +352,9 @@ const ApprovalPage = () => {
                                 key={`${impl.type}-${impl.unique_id}`}
                                 impl={impl}
                                 requirementsByHandle={requirementsByHandle}
+                                showRationale
+                                showClaimedRequirements
+                                showUnratedBadge
                             />
                         ))}
                     </VStack>
