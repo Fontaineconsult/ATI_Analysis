@@ -303,7 +303,7 @@ const ApprovalPage = () => {
             </ReportSection>
 
             <ReportSection banded mb={3} id="ap-coverage" title="Companion bar coverage"
-                subtitle="Each requirement, what claims it, and the argument made for the claim.">
+                subtitle="Minimum requirements to reach Established">
                 {report ? <ApprovalCoverageTable coverage={report.evidence_coverage} /> : (
                     <Alert status="warning" fontSize="sm" borderRadius="md">
                         <AlertIcon />
