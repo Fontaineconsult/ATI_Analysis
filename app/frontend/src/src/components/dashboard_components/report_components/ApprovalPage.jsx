@@ -15,14 +15,8 @@ import {
     Heading,
     Link,
     Spinner,
-    Table,
-    Tbody,
-    Td,
     Text,
-    Th,
-    Thead,
     Tooltip,
-    Tr,
     VStack,
     Wrap,
     WrapItem,
@@ -42,7 +36,7 @@ import AdminFeedbackForm from './AdminFeedbackForm';
 import ConcernsPanel from './ConcernsPanel';
 import RecommendationsPanel from './RecommendationsPanel';
 import ApprovalCoverageTable from './ApprovalCoverageTable';
-import { SubLabel as Label, Empty, Dash } from './blocks/reportPrimitives';
+import { SubLabel as Label, Empty } from './blocks/reportPrimitives';
 import ReportSection from './blocks/ReportSection';
 import ArtifactTable from './blocks/ArtifactTable';
 import PlansAccomplishments from './blocks/PlansAccomplishments';
@@ -67,29 +61,6 @@ import AssetsTable from './blocks/AssetsTable';
  * things the way a reviewer reads: context, then their own account of the year, then what
  * the bar asks for, then everything the claim rests on — and the report stays a report.
  */
-
-// ── Local primitives ──────────────────────────────────────────────────────────────────────
-const SimpleTable = ({ columns, rows, empty = 'None recorded.' }) => {
-    if (!rows.length) return <Empty>{empty}</Empty>;
-    return (
-        <Box overflowX="auto">
-            <Table size="sm" variant="simple">
-                <Thead bg="gray.50">
-                    <Tr>{columns.map((c) => <Th key={c} fontSize="2xs">{c}</Th>)}</Tr>
-                </Thead>
-                <Tbody>
-                    {rows.map((cells, i) => (
-                        <Tr key={i}>
-                            {cells.map((cell, j) => (
-                                <Td key={j} fontSize="xs" verticalAlign="top" whiteSpace="normal">{cell}</Td>
-                            ))}
-                        </Tr>
-                    ))}
-                </Tbody>
-            </Table>
-        </Box>
-    );
-};
 
 // ── One implementation ──────────────────────────────────────────────────────
 const ImplementationCard = ({ impl, requirementsByHandle }) => {
