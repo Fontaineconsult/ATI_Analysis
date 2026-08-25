@@ -46,6 +46,7 @@ import RecommendationsPanel from './RecommendationsPanel';
 import ApprovalCoverageTable from './ApprovalCoverageTable';
 import { SubLabel as Label, Empty, Dash } from './blocks/reportPrimitives';
 import ReportSection from './blocks/ReportSection';
+import ArtifactTable from './blocks/ArtifactTable';
 import PeopleTable from './blocks/PeopleTable';
 
 /*
@@ -84,59 +85,6 @@ const SimpleTable = ({ columns, rows, empty = 'None recorded.' }) => {
             </Table>
         </Box>
     );
-};
-
-// A document's location is whichever it actually has: an uploaded file, a URI, or a path on
-// a drive. No location still renders — as text, so the record is visible either way.
-const docHref = (d) => d?.file?.download_url || d?.uri_path || d?.file_path || null;
-const isActiveDoc = (d) => !d?.depreciated;
-const isActiveWeb = (w) => !w?.depreciated && !w?.no_longer_exists;
-
-// ── Attached artifacts, for an implementation or for the year itself ────────
-const ArtifactList = ({ documents = [], webpages = [], notes = [], messages = [], metrics = [],
-                        empty = 'None recorded.' }) => {
-    const rows = [];
-    (documents || []).filter(Boolean).forEach((d) => {
-        const href = docHref(d);
-        rows.push([
-            <Badge colorScheme="blue" variant="subtle" fontSize="2xs">DOC</Badge>,
-            href ? <Link href={href} isExternal color="teal.600">{d.name}</Link> : <Text>{d.name}</Text>,
-            isActiveDoc(d) ? <Dash />
-                : <Badge colorScheme="gray" variant="outline" fontSize="2xs">deprecated</Badge>,
-        ]);
-    });
-    (webpages || []).filter(Boolean).forEach((w) => {
-        rows.push([
-            <Badge colorScheme="cyan" variant="subtle" fontSize="2xs">WEB</Badge>,
-            w.url && isActiveWeb(w)
-                ? <Link href={w.url} isExternal color="teal.600">{w.name || w.url}</Link>
-                : <Text>{w.name || w.url}</Text>,
-            isActiveWeb(w) ? <Dash />
-                : <Badge colorScheme="orange" variant="outline" fontSize="2xs">
-                    {w.no_longer_exists ? 'link rot' : 'deprecated'}
-                  </Badge>,
-        ]);
-    });
-    (notes || []).filter(Boolean).forEach((n) => rows.push([
-        <Badge colorScheme="purple" variant="subtle" fontSize="2xs">NOTE</Badge>,
-        <Text whiteSpace="pre-wrap">{n.content || n.name}</Text>,
-        n.dateCreated ? <Text color="gray.500">{String(n.dateCreated)}</Text> : <Dash />,
-    ]));
-    (messages || []).filter(Boolean).forEach((m) => rows.push([
-        <Badge colorScheme="pink" variant="subtle" fontSize="2xs">MSG</Badge>,
-        <Text whiteSpace="pre-wrap">{m.content || m.name}</Text>,
-        m.date_created ? <Text color="gray.500">{String(m.date_created)}</Text> : <Dash />,
-    ]));
-    (metrics || []).filter(Boolean).forEach((mt) => rows.push([
-        <Badge colorScheme="green" variant="subtle" fontSize="2xs">METRIC</Badge>,
-        <Text>
-            <Text as="span" fontWeight="semibold">{mt.name}</Text>
-            {mt.single_value !== undefined && mt.single_value !== null ? `: ${mt.single_value}` : ''}
-        </Text>,
-        mt.comment ? <Text color="gray.500">{mt.comment}</Text> : <Dash />,
-    ]));
-
-    return <SimpleTable columns={['Kind', 'Item', 'Detail']} rows={rows} empty={empty} />;
 };
 
 // ── One implementation ──────────────────────────────────────────────────────
@@ -274,13 +222,13 @@ const ImplementationCard = ({ impl, requirementsByHandle }) => {
 
                 <Label>Documentation</Label>
                 <Box mt={1}>
-                    <ArtifactList
+                    <ArtifactTable
                         documents={impl.documents}
                         webpages={impl.webpages}
                         notes={impl.notes}
                         messages={impl.messages}
                         metrics={impl.metrics}
-                        empty="No documentation attached."
+                        emptyText="No documentation attached."
                     />
                 </Box>
             </Box>
@@ -742,10 +690,10 @@ const ApprovalPage = () => {
                                     ))}
                                 </Wrap>
                                 <Box mt={2}>
-                                    <ArtifactList
+                                    <ArtifactTable
                                         documents={t.documents} webpages={t.webpages}
                                         notes={t.notes} messages={t.messages}
-                                        empty="No evidence recorded."
+                                        emptyText="No evidence recorded."
                                     />
                                 </Box>
                             </Box>
@@ -770,11 +718,11 @@ const ApprovalPage = () => {
 
             <ReportSection banded mb={5} id="ap-annotations" title="Annotations"
                 subtitle="Notes, messages and metrics recorded against this year's evidence.">
-                <ArtifactList
+                <ArtifactTable
                     notes={report?.notes}
                     messages={report?.messages}
                     metrics={report?.metrics}
-                    empty="None recorded for this year."
+                    emptyText="None recorded for this year."
                 />
             </ReportSection>
 
