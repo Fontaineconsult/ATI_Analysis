@@ -163,8 +163,9 @@ describe('SuccessIndicatorReportTables review flow', () => {
         expect(within(row('7.1-web')).getByRole('button', { name: /mark ready/i })).toBeInTheDocument();
         expect(within(row('7.2-web')).getByRole('button', { name: /unmark ready/i })).toBeInTheDocument();
         expect(within(row('7.3-web')).queryByRole('button', { name: /ready/i })).toBeNull();
-        // Approved row's approve button is the disabled 'Approved'.
-        expect(within(row('7.3-web')).getByRole('button', { name: /approved/i })).toBeDisabled();
+        // Approved rows still navigate: approval is a page now, and the record and
+        // the Withdraw action live there — a disabled button was a dead end.
+        expect(within(row('7.3-web')).getByRole('button', { name: /approved/i })).toBeEnabled();
     });
 
     it('marks ready inline and refreshes the working group', async () => {

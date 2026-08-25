@@ -352,9 +352,12 @@ const SuccessIndicatorReportTables = ({ data, campus, navigate, openApprovalModa
 
                                     // Review state from the shared summary (adminReviewers OR the
                                     // complete flag) — the same source as the SI list and washes.
+                                    // Approval is a page now, not a state-change modal:
+                                    // an approved row still navigates there, because that
+                                    // is where the record and the Withdraw action live.
                                     const approveButtonText = diag.approved ? 'Approved' : 'Approve';
                                     const approveButtonColor = diag.approved ? 'gray' : (hasSummary ? 'green' : 'yellow');
-                                    const isButtonDisabled = diag.approved;
+                                    const isButtonDisabled = false;
 
                                     return (
                                         <Tr
@@ -498,7 +501,7 @@ const SuccessIndicatorReportTables = ({ data, campus, navigate, openApprovalModa
                                                         </Tooltip>
                                                     )}
                                                     <Tooltip
-                                                        label={!diag.approved && !hasSummary ? "Summary Needed" : ""}
+                                                        label={diag.approved ? "Approved — open the review to see the record or withdraw" : (!hasSummary ? "Summary Needed" : "")}
                                                         placement="top"
                                                         hasArrow
                                                     >

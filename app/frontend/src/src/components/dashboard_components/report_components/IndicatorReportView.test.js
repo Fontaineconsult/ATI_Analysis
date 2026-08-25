@@ -10,7 +10,7 @@ import React from 'react';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { ChakraProvider } from '@chakra-ui/react';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter, Route, Routes } from 'react-router-dom';
 
 jest.mock('axios', () => ({
     __esModule: true,
@@ -107,6 +107,27 @@ describe('IndicatorReportView — flat redesign (PR2)', () => {
         renderReport();
         expect(screen.getByText('FILE')).toBeInTheDocument();
         expect(screen.getByText('GONE')).toBeInTheDocument();
+    });
+
+    it('offers an Approve button pointing at the approval workspace', () => {
+        // The report is the read lens; the review lens — comments, coverage, sign-off —
+        // is one click away rather than something this page re-implements. The URL is
+        // derived from the composite key AND the campus route param, so this render
+        // supplies a real route (the shared helper's bare MemoryRouter has no campus,
+        // under which the button correctly does not render).
+        render(
+            <ChakraProvider>
+                <MemoryRouter initialEntries={['/sfsu/dashboard/reports/web/1/2']}>
+                    <Routes>
+                        <Route
+                            path="/:campus/dashboard/reports/:workingGroup/:goalNumber/:indicatorNumber"
+                            element={<IndicatorReportView report={REPORT} />}
+                        />
+                    </Routes>
+                </MemoryRouter>
+            </ChakraProvider>,
+        );
+        expect(screen.getByRole('button', { name: /^approve$/i })).toBeEnabled();
     });
 
     it('fires window.print from the Print report button', async () => {

@@ -14,6 +14,7 @@ import {
 import { useNavigate, useParams } from 'react-router-dom';
 
 import { getImplementationURL, navigateToIndicator } from '../../../services/utils/tools';
+import { CODE_TO_SLUG } from '../../../styles/workingGroupIdentity';
 import { StatusLevelContext } from '../../../context/StatusLevelContext';
 import CopyIndicatorReportButton from './CopyIndicatorReportButton';
 import { SubLabel, SubHeading, Empty, Dash, DataTable } from './blocks/reportPrimitives';
@@ -169,6 +170,17 @@ const IndicatorReportView = ({ report }) => {
 
     const openEdit = () => navigateToIndicator(navigate, indicator.composite_key, campus);
 
+    // The approval workspace for this indicator, derived from the composite key
+    // ("1.19-web" -> web/1/19) — same derivation the indicator detail panel uses.
+    const approvalUrl = (() => {
+        const [numbers, code] = (indicator.composite_key || '').split('-');
+        const [goalNum, indicatorNum] = (numbers || '').split('.');
+        const slug = CODE_TO_SLUG[code];
+        return goalNum && indicatorNum && slug && campus
+            ? `/${campus}/dashboard/reports/approve/${slug}/${goalNum}/${indicatorNum}`
+            : null;
+    })();
+
     const campusName = report.campus?.name || campus;
     const reviewComplete = yse?.administrative_review_complete;
     const completedBy = people?.admin_review_completed_by;
@@ -196,6 +208,14 @@ const IndicatorReportView = ({ report }) => {
                     year={report.year}
                     action={
                         <HStack className="report-no-print" spacing={2} flexShrink={0}>
+                                {/* The review lens on this same evidence — comments,
+                                    coverage, and the sign-off live there. */}
+                                {approvalUrl && (
+                                    <Button size="sm" colorScheme="green"
+                                        onClick={() => navigate(approvalUrl)}>
+                                        Approve
+                                    </Button>
+                                )}
                                 <CopyIndicatorReportButton report={report} />
                                 <Button
                                     size="sm"
