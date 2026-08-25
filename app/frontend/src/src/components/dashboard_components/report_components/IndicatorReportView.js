@@ -8,7 +8,6 @@ import {
     Link,
     Text,
     Tag,
-    Tooltip,
     VStack,
     StackDivider,
     Wrap,
@@ -19,10 +18,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 
 import { getImplementationURL, navigateToIndicator } from '../../../services/utils/tools';
 import { strengthConfig, controlConfig } from '../../graph_components/implementation/implementationConfig';
-import StatusLevelLadder from '../../functional_components/StatusLevelLadder';
-import StatusProgression from '../campus_plan_components/StatusProgression';
 import { StatusLevelContext } from '../../../context/StatusLevelContext';
-import { getPlanStatusColorScheme, getPlanStatusLabel } from '../../../styles/planStatusColors';
 import { getWgHex } from '../../../styles/workingGroupIdentity';
 import CopyIndicatorReportButton from './CopyIndicatorReportButton';
 import { SubLabel, SubHeading, Empty, Dash, DataTable } from './blocks/reportPrimitives';
@@ -31,6 +27,8 @@ import PeopleTable from './blocks/PeopleTable';
 import { LevelBadge, RequirementCell } from './blocks/coveragePrimitives';
 import ArtifactTable from './blocks/ArtifactTable';
 import PlansAccomplishments from './blocks/PlansAccomplishments';
+import StatusSummary from './blocks/StatusSummary';
+import CommunityOfPractice from './blocks/CommunityOfPractice';
 
 /*
  * The single-indicator "View" report — a flat, single-column, single-page rendering of ALL
@@ -327,13 +325,6 @@ const IndicatorReportView = ({ report }) => {
         community_stakeholders: communityStakeholders = [],
     } = report;
 
-    // Communities accountable for this year's evidenced work — union across the
-    // non-retired evidencing implementations (the accountable_community edge).
-    const accountableCommunities = [...new Set(
-        implementations
-            .filter((im) => !im.retired)
-            .flatMap((im) => im.accountable_communities || [])
-    )].sort();
 
 
     const openEdit = () => navigateToIndicator(navigate, indicator.composite_key, campus);
@@ -405,62 +396,11 @@ const IndicatorReportView = ({ report }) => {
                 <ReportSection id="sec-status" title="Status & Administrative Review">
                     <VStack align="stretch" spacing={5} divider={<StackDivider borderColor="gray.100" />}>
                         <Box>
-                            <HStack spacing={3} align="center" flexWrap="wrap" mb={status?.previous_status_level ? 2 : 0}>
-                                <SubLabel>Maturity</SubLabel>
-                                <StatusLevelLadder level={status?.status_level || null} variant="full" />
-                            </HStack>
-                            {status?.previous_status_level && (
-                                <HStack spacing={3} align="center" flexWrap="wrap" mb={2}>
-                                    <SubLabel>Year over year</SubLabel>
-                                    <StatusProgression previousStatusLevel={status.previous_status_level} currentStatusLevel={status?.status_level} />
-                                    <Text fontSize="2xs" color="gray.600">(prev → current)</Text>
-                                </HStack>
-                            )}
-                            <Wrap spacing={2} mt={2}>
-                                {yse?.priority_level && <WrapItem><Tag size="sm" colorScheme="purple" variant="subtle">Priority: {yse.priority_level}</Tag></WrapItem>}
-                                {yse?.worked_on_in_current_year && <WrapItem><Tag size="sm" colorScheme="green" variant="subtle">Worked on this year</Tag></WrapItem>}
-                                {yse?.will_work_on_next_year && <WrapItem><Tag size="sm" colorScheme="blue" variant="subtle">Continuing next year</Tag></WrapItem>}
-                                {yse?.ready_for_admin_review && <WrapItem><Tag size="sm" colorScheme="teal" variant="subtle">Ready for admin review</Tag></WrapItem>}
-                                {yse?.documentation_status && <WrapItem><Tag size="sm" colorScheme="gray" variant="subtle">Docs: {yse.documentation_status}</Tag></WrapItem>}
-                                {yse?.resources_status && <WrapItem><Tag size="sm" colorScheme="gray" variant="subtle">Resources: {yse.resources_status}</Tag></WrapItem>}
-                                {yse?.implementation_plan_status && <WrapItem><Tag size="sm" colorScheme="gray" variant="subtle">Plan: {yse.implementation_plan_status}</Tag></WrapItem>}
-                            </Wrap>
+                            <StatusSummary status={status} yse={yse} />
                         </Box>
 
                         <Box>
-                            <SubHeading>Community of practice</SubHeading>
-                            <VStack align="stretch" spacing={1.5} mt={2}>
-                                <HStack spacing={3} align="center" flexWrap="wrap">
-                                    <SubLabel>Accountable</SubLabel>
-                                    {accountableCommunities.length ? (
-                                        <Wrap spacing={1.5}>
-                                            {accountableCommunities.map((name) => (
-                                                <WrapItem key={name}>
-                                                    <Tag size="sm" colorScheme="cyan" variant="subtle">{name}</Tag>
-                                                </WrapItem>
-                                            ))}
-                                        </Wrap>
-                                    ) : (
-                                        <Text fontSize="xs" color="gray.600" fontStyle="italic">No community answers for the evidenced work yet.</Text>
-                                    )}
-                                </HStack>
-                                <HStack spacing={3} align="center" flexWrap="wrap">
-                                    <SubLabel>Stakeholders</SubLabel>
-                                    {communityStakeholders.length ? (
-                                        <Wrap spacing={1.5}>
-                                            {communityStakeholders.map((c) => (
-                                                <WrapItem key={c.name}>
-                                                    <Tooltip label={c.note || undefined} openDelay={400} isDisabled={!c.note}>
-                                                        <Tag size="sm" colorScheme="gray" variant="subtle">{c.name}</Tag>
-                                                    </Tooltip>
-                                                </WrapItem>
-                                            ))}
-                                        </Wrap>
-                                    ) : (
-                                        <Text fontSize="xs" color="gray.600" fontStyle="italic">No community holds a stake in this indicator.</Text>
-                                    )}
-                                </HStack>
-                            </VStack>
+                            <CommunityOfPractice implementations={implementations} stakeholders={communityStakeholders} />
                         </Box>
 
                         <Box>

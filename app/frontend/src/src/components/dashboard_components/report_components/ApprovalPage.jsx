@@ -36,7 +36,6 @@ import { fetchGoalReport, fetchPrimaryData } from '../../../services/api/get';
 import { assignApprover, withdrawApproval } from '../../../services/api/put';
 import { workingGroupCodeFromName } from '../../../services/utils/tools';
 import { getWgHex } from '../../../styles/workingGroupIdentity';
-import StatusLevelLadder from '../../functional_components/StatusLevelLadder';
 import StatusLevelDetails from '../../graph_components/indicators/StatusLevelDetails';
 import { strengthConfig, controlConfig } from '../../graph_components/implementation/implementationConfig';
 import AdminSummaryForm from './AdminSummaryForm';
@@ -49,6 +48,8 @@ import ReportSection from './blocks/ReportSection';
 import ArtifactTable from './blocks/ArtifactTable';
 import PlansAccomplishments from './blocks/PlansAccomplishments';
 import PeopleTable from './blocks/PeopleTable';
+import StatusSummary from './blocks/StatusSummary';
+import CommunityOfPractice from './blocks/CommunityOfPractice';
 
 /*
  * Approval workspace at
@@ -362,9 +363,6 @@ const ApprovalPage = () => {
     const implementers = report?.people?.implementers || [];
     const implementations = report?.implementations || [];
     const stakeholders = report?.community_stakeholders || [];
-    const accountable = [...new Set(
-        implementations.flatMap((im) => im.accountable_communities || [])
-    )];
     const plans = report?.plans || [];
     const accomplishments = report?.accomplishments || [];
     const assets = report?.assets || [];
@@ -446,87 +444,14 @@ const ApprovalPage = () => {
                 </Alert>
             )}
 
-            <ReportSection banded mb={5} id="ap-status" title="Status" subtitle="Where this indicator stands, and who answers for it.">
+            <ReportSection banded mb={5} id="ap-status" title="Status"
+                subtitle="Where this indicator stands, and who answers for it.">
                 <VStack align="stretch" spacing={4}>
                     <Box>
-                        <Label>Maturity</Label>
-                        <Box mt={1}>
-                            <StatusLevelLadder level={status.status_level || null} variant="full" />
-                        </Box>
+                        <StatusSummary status={status} yse={yseProps} />
                     </Box>
-                    {status.previous_status_level && (
-                        <HStack spacing={2} align="center" flexWrap="wrap">
-                            <Label>Year over year</Label>
-                            <Badge colorScheme="gray" variant="subtle" fontSize="2xs">
-                                {status.previous_status_level}
-                            </Badge>
-                            <Text fontSize="xs" color="gray.500">→</Text>
-                            <Badge colorScheme="teal" variant="subtle" fontSize="2xs">
-                                {status.status_level}
-                            </Badge>
-                        </HStack>
-                    )}
-                    <Wrap spacing={2}>
-                        {ready_for_admin_review && (
-                            <WrapItem>
-                                <Badge colorScheme="orange" variant="subtle" fontSize="2xs">
-                                    Ready for admin review
-                                </Badge>
-                            </WrapItem>
-                        )}
-                        {yseProps.priority_level && (
-                            <WrapItem>
-                                <Badge colorScheme="red" variant="subtle" fontSize="2xs">
-                                    Priority: {yseProps.priority_level}
-                                </Badge>
-                            </WrapItem>
-                        )}
-                        {yseProps.worked_on_in_current_year && (
-                            <WrapItem>
-                                <Badge colorScheme="green" variant="subtle" fontSize="2xs">
-                                    Worked on this year
-                                </Badge>
-                            </WrapItem>
-                        )}
-                        {yseProps.will_work_on_next_year && (
-                            <WrapItem>
-                                <Badge colorScheme="blue" variant="subtle" fontSize="2xs">
-                                    Continuing next year
-                                </Badge>
-                            </WrapItem>
-                        )}
-                    </Wrap>
                     <Box>
-                        <Label>Community of practice</Label>
-                        <Box mt={1}>
-                            {accountable.length ? (
-                                <Wrap spacing={2}>
-                                    {accountable.map((c) => (
-                                        <WrapItem key={c}>
-                                            <Badge colorScheme="cyan" variant="solid" fontSize="2xs">{c}</Badge>
-                                        </WrapItem>
-                                    ))}
-                                </Wrap>
-                            ) : (
-                                <Text fontSize="xs" color="orange.600">
-                                    No community answers for the evidenced work yet.
-                                </Text>
-                            )}
-                            {stakeholders.length > 0 && (
-                                <Wrap spacing={2} mt={2}>
-                                    {stakeholders.map((sh) => (
-                                        <WrapItem key={sh.name}>
-                                            <Tooltip label={sh.note} hasArrow openDelay={300}>
-                                                <Badge colorScheme="gray" variant="subtle"
-                                                    fontSize="2xs" cursor="help">
-                                                    stake: {sh.name}
-                                                </Badge>
-                                            </Tooltip>
-                                        </WrapItem>
-                                    ))}
-                                </Wrap>
-                            )}
-                        </Box>
+                        <CommunityOfPractice implementations={implementations} stakeholders={stakeholders} />
                     </Box>
                 </VStack>
             </ReportSection>
