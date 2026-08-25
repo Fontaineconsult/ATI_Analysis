@@ -50,6 +50,8 @@ import PeopleTable from './blocks/PeopleTable';
 import StatusSummary from './blocks/StatusSummary';
 import CommunityOfPractice from './blocks/CommunityOfPractice';
 import IndicatorIdentity from './blocks/IndicatorIdentity';
+import TaapEntry from './blocks/TaapEntry';
+import AssetsTable from './blocks/AssetsTable';
 
 /*
  * Approval workspace at
@@ -536,50 +538,14 @@ const ApprovalPage = () => {
             {taaps.length > 0 && (
                 <ReportSection banded mb={5} id="ap-taaps" title="Temporary Alternate Access Plans" count={taaps.length}>
                     <VStack align="stretch" spacing={3}>
-                        {taaps.map((t) => (
-                            <Box key={t.unique_id} p={3} borderWidth="1px" borderColor="gray.200"
-                                borderRadius="md">
-                                <Text fontSize="sm" fontWeight="semibold" color="gray.800">{t.title}</Text>
-                                <Wrap spacing={2} mt={1}>
-                                    {t.owner && (
-                                        <WrapItem>
-                                            <Badge colorScheme="teal" variant="subtle" fontSize="2xs">
-                                                Owner: {t.owner.name}
-                                            </Badge>
-                                        </WrapItem>
-                                    )}
-                                    {(t.covers_assets || []).map((a) => (
-                                        <WrapItem key={a.unique_id}>
-                                            <Badge colorScheme="gray" variant="subtle" fontSize="2xs">
-                                                Covers: {a.title}
-                                            </Badge>
-                                        </WrapItem>
-                                    ))}
-                                </Wrap>
-                                <Box mt={2}>
-                                    <ArtifactTable
-                                        documents={t.documents} webpages={t.webpages}
-                                        notes={t.notes} messages={t.messages}
-                                        emptyText="No evidence recorded."
-                                    />
-                                </Box>
-                            </Box>
-                        ))}
+                        {taaps.map((t) => <TaapEntry key={t.unique_id} taap={t} />)}
                     </VStack>
                 </ReportSection>
             )}
 
             {assets.length > 0 && (
                 <ReportSection banded mb={5} id="ap-ict" title="ICT touched by this work" count={assets.length}>
-                    <SimpleTable
-                        columns={['Asset', 'Class', 'Scope', 'Reached via']}
-                        rows={assets.map((a) => [
-                            <Text fontWeight="medium" color="gray.800">{a.title}</Text>,
-                            a.asset_class ? <Text>{a.asset_class.replace(/_/g, ' ')}</Text> : <Dash />,
-                            a.scope ? <Text>{a.scope}</Text> : <Dash />,
-                            (a.reached_via || []).length ? <Text>{a.reached_via.join(', ')}</Text> : <Dash />,
-                        ])}
-                    />
+                    <AssetsTable assets={assets} showDescription={false} />
                 </ReportSection>
             )}
 
