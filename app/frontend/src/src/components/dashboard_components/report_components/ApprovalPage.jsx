@@ -276,7 +276,7 @@ const ApprovalPage = () => {
             </ReportSection>
 
             <ReportSection banded mb={3} id="ap-review-notes" title="Review notes"
-                subtitle="Notes to the working group, kept on the record for next cycle.">
+                subtitle="Executive and working group notes.">
                 <AdminFeedbackForm
                     yearIdentifier={year_identifier}
                     adminReviewNotes={evidenceData.adminReviewNotes || []}
@@ -285,7 +285,7 @@ const ApprovalPage = () => {
             </ReportSection>
 
             <ReportSection banded mb={3} id="ap-outstanding" title="Outstanding work"
-                subtitle="Concerns have no path to resolution yet; recommendations are the work ahead.">
+                subtitle="Immediate Concerns and Future Recommendations">
                 <VStack align="stretch" spacing={5}>
                     <ConcernsPanel
                         yearIdentifier={year_identifier}
@@ -323,7 +323,7 @@ const ApprovalPage = () => {
                                     Maturity rubric
                                 </Text>
                                 <Text fontSize="xs" fontWeight="normal" color="teal.50" mt={0.5}>
-                                    What “{status.status_level || 'this level'}” asks for — reference while grading.
+                                    Required evidence for “{status.status_level || 'this level'}”.
                                 </Text>
                             </Box>
                             <AccordionIcon />
@@ -345,14 +345,13 @@ const ApprovalPage = () => {
 
 
 
-            <ReportSection banded mb={3} id="ap-plans" title="Plans & Accomplishments"
-                subtitle="Committed work, and what has been claimed for this year.">
+            <ReportSection banded mb={3} id="ap-plans" title="Plans & Accomplishments">
                 <PlansAccomplishments plans={plans} accomplishments={accomplishments} />
             </ReportSection>
 
             {/* ── What the claim actually rests on ── */}
             <ReportSection banded mb={3} id="ap-implementations" title="Implementation evidence" count={implementations.length}
-                subtitle="The work claimed as evidence, with its documentation.">
+                >
                 {implementations.length ? (
                     <VStack align="stretch" spacing={3}>
                         {implementations.map((impl) => (

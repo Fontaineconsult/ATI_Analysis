@@ -64,9 +64,28 @@
   </table>
   {% endif %}
 
+  {% if r.recommendations %}
+  <h2>Recommendations</h2>
+  <p class="muted">Improvements identified during this cycle's review — open items are the work ahead.</p>
+  <table>
+    <thead><tr><th scope="col">Status</th><th scope="col">Recommendation</th><th scope="col">Raised</th><th scope="col">Resolution</th></tr></thead>
+    <tbody>
+    {% for rec in r.recommendations %}
+      <tr>
+        <td>{% if rec.status == 'open' %}<span class="badge s1">Open</span>{% else %}<span class="badge s3">Addressed</span>{% endif %}</td>
+        <td>{{ rec.recommendation }}{% if rec.detail %}<br/><span class="muted prewrap">{{ rec.detail }}</span>{% endif %}</td>
+        <td>{{ rec.date_created or '—' }}</td>
+        <td class="prewrap">{{ rec.resolution or '—' }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+
   {% if r.evidence_coverage.requirements %}
-  {# The companion bar, requirement by requirement. Placed ahead of Recommendations so a
-     reader meets the standard and its gaps before the improvements proposed against them. #}
+  {# The companion bar, requirement by requirement — after the outstanding work, matching
+     the approval workspace's reading order: the review record first, then the standard it
+     is graded against. #}
   <h2>Companion Bar Coverage</h2>
   <p class="muted">
     What this indicator asks a campus to have in place, and what currently answers each part.
@@ -107,24 +126,6 @@
   </table>
   {% endif %}
 
-  {% if r.recommendations %}
-  <h2>Recommendations</h2>
-  <p class="muted">Improvements identified during this cycle's review — open items are the work ahead.</p>
-  <table>
-    <thead><tr><th scope="col">Status</th><th scope="col">Recommendation</th><th scope="col">Raised</th><th scope="col">Resolution</th></tr></thead>
-    <tbody>
-    {% for rec in r.recommendations %}
-      <tr>
-        <td>{% if rec.status == 'open' %}<span class="badge s1">Open</span>{% else %}<span class="badge s3">Addressed</span>{% endif %}</td>
-        <td>{{ rec.recommendation }}{% if rec.detail %}<br/><span class="muted prewrap">{{ rec.detail }}</span>{% endif %}</td>
-        <td>{{ rec.date_created or '—' }}</td>
-        <td class="prewrap">{{ rec.resolution or '—' }}</td>
-      </tr>
-    {% endfor %}
-    </tbody>
-  </table>
-  {% endif %}
-
   <h2>Responsible People</h2>
   {% if r.implementers %}
   <table>
@@ -138,6 +139,26 @@
     </tbody>
   </table>
   {% else %}<p class="empty">No people assigned.</p>{% endif %}
+
+  {% if r.plans or r.accomplishments %}
+  <h2>Plans &amp; Accomplishments</h2>
+  {% if r.plans %}
+  <table>
+    <caption>Plans furthering this indicator in {{ r.year }}</caption>
+    <thead><tr><th scope="col">Plan</th><th scope="col">Status</th><th scope="col">Key plan</th></tr></thead>
+    <tbody>
+    {% for p in r.plans %}
+      <tr><td>{{ p.name }}{% if p.abandoned_notes %}<div class="muted">{{ p.abandoned_notes }}</div>{% endif %}</td>
+          <td>{{ p.status or '—' }}</td><td>{{ 'Yes' if p.is_key_plan else '—' }}</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+  {% if r.accomplishments %}
+    <h3>Accomplishments</h3>
+    <ul>{% for a in r.accomplishments %}<li>{{ a.name }}{% if a.description %} <span class="muted prewrap">— {{ a.description }}</span>{% endif %}</li>{% endfor %}</ul>
+  {% endif %}
+  {% endif %}
 
   <h2>Implementation Evidence ({{ r.implementations | length }})</h2>
   {% if r.implementations %}
@@ -294,26 +315,6 @@
       {% endfor %}
       </tbody>
     </table>
-  {% endif %}
-  {% endif %}
-
-  {% if r.plans or r.accomplishments %}
-  <h2>Plans &amp; Accomplishments</h2>
-  {% if r.plans %}
-  <table>
-    <caption>Plans furthering this indicator in {{ r.year }}</caption>
-    <thead><tr><th scope="col">Plan</th><th scope="col">Status</th><th scope="col">Key plan</th></tr></thead>
-    <tbody>
-    {% for p in r.plans %}
-      <tr><td>{{ p.name }}{% if p.abandoned_notes %}<div class="muted">{{ p.abandoned_notes }}</div>{% endif %}</td>
-          <td>{{ p.status or '—' }}</td><td>{{ 'Yes' if p.is_key_plan else '—' }}</td></tr>
-    {% endfor %}
-    </tbody>
-  </table>
-  {% endif %}
-  {% if r.accomplishments %}
-    <h3>Accomplishments</h3>
-    <ul>{% for a in r.accomplishments %}<li>{{ a.name }}{% if a.description %} <span class="muted prewrap">— {{ a.description }}</span>{% endif %}</li>{% endfor %}</ul>
   {% endif %}
   {% endif %}
 

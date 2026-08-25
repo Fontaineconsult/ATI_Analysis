@@ -90,7 +90,7 @@ function RecommendationsPanel({ yearIdentifier, recommendations = [], onUpdate }
                 </Button>
             </HStack>
             <Text fontSize="xs" color="gray.700" mb={3}>
-                What should improve before the next review cycle. Items resolve — they are never deleted.
+                Recommendations for next cycle's campus plan.
             </Text>
 
             {isAdding && (

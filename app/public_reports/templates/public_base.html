@@ -7,10 +7,12 @@
 <title>{% block title %}SFBRN Evidence Graph{% endblock %}</title>
 <style>
   /* Self-contained styles on the app's design tokens (design-sense.md).
-     gray #4A5568 is the AA floor for muted text; status/strength colors are
-     the AA-safe text ramps used in the app. */
-  :root { --brand:#4966A4; --brand-dark:#354A7A; --ink:#1A202C; --muted:#4A5568;
-          --line:#E2E8F0; --bg:#F7FAFC; }
+     Contrast floor is 8:1 (2026-08-25): muted text is gray.700 #2D3748 (11.99:1) —
+     #4A5568 (7.53:1) no longer clears it; links use brand-dark #354A7A (8.71:1),
+     not the 4.85:1 brand blue. Status/strength badge colors stay on the AA ramps
+     (the status-hue exception). */
+  :root { --brand:#4966A4; --brand-dark:#354A7A; --ink:#1A202C; --muted:#2D3748;
+          --line:#E2E8F0; --bg:#F7FAFC; --row:#EDF2F7; --row-line:#CBD5E0; }
   * { box-sizing: border-box; }
   body { margin:0; font-family: Roboto, "Segoe UI", Arial, sans-serif; color:var(--ink);
          background:var(--bg); line-height:1.5; }
@@ -30,8 +32,10 @@
   main { max-width: 920px; margin: 0 auto; padding: 24px 24px 48px; }
   h1 { font-size:22px; color:var(--ink); margin:18px 0 4px; }
   h1 .ck { font-family: Consolas, monospace; color:var(--brand-dark); }
-  h2 { font-size:15px; color:var(--brand-dark); text-transform:uppercase; letter-spacing:.06em;
-       border-bottom:2px solid var(--line); padding-bottom:4px; margin:32px 0 10px; }
+  /* Section headings match the approval workspace: a solid brand band (white on
+     #354A7A = 8.71:1), not an underlined caption that dissolved into the page. */
+  h2 { font-size:15px; color:#fff; background:var(--brand-dark); font-weight:800;
+       padding:7px 12px; border-radius:6px; margin:32px 0 10px; }
   h3 { font-size:14px; margin:16px 0 6px; }
   p.lede { color:var(--muted); margin:0 0 8px; }
   table { border-collapse:collapse; width:100%; background:#fff; font-size:13px; margin:8px 0; }
@@ -43,7 +47,7 @@
   dl { padding-left:0; }
   dt { font-weight:600; font-size:12px; color:var(--muted); margin-top:8px; }
   dd { margin:2px 0 4px 0; }
-  a { color:var(--brand); }
+  a { color:var(--brand-dark); }
   .badge { display:inline-block; border-radius:9px; padding:1px 9px; font-size:11px;
            font-weight:700; letter-spacing:.02em; }
   .badge.type { background:#E4E9F4; color:var(--brand-dark); text-transform:uppercase; }
@@ -59,7 +63,7 @@
   /* Annotation cards — one bordered card per note/message so entries read as
      separate records instead of a run-on bullet list. */
   ul.annotations { list-style:none; padding:0; margin:8px 0 16px; }
-  ul.annotations li { background:#fff; border:1px solid var(--line); border-left:3px solid #9B8CC4;
+  ul.annotations li { background:var(--row); border:1px solid var(--row-line); border-left:3px solid #9B8CC4;
                       border-radius:6px; padding:8px 12px; margin:0 0 8px; font-size:13px; }
   ul.annotations li .meta { display:block; margin-top:4px; font-size:12px; color:var(--muted); }
   /* Authored prose (descriptions, notes, resolutions) keeps its line breaks. */
@@ -76,7 +80,8 @@
   .empty { color:var(--muted); font-style:italic; font-size:13px; }
   footer.site { max-width:920px; margin:0 auto; padding:16px 24px 32px; font-size:12px;
                 color:var(--muted); border-top:1px solid var(--line); }
-  @media print { header.site{background:#fff;color:var(--ink)} header.site .sub{color:var(--muted)} }
+  @media print { header.site{background:#fff;color:var(--ink)} header.site .sub{color:var(--muted)}
+                 h2{background:#fff;color:var(--brand-dark);border-bottom:2px solid var(--line);border-radius:0;padding:0 0 4px} }
 </style>
 </head>
 <body>

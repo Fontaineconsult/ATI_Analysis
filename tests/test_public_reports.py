@@ -389,9 +389,10 @@ def test_sanitizer_tolerates_a_report_with_no_coverage():
 
 
 @pytest.mark.api
-def test_public_page_renders_coverage_before_recommendations(flask_client):
-    """Placed ahead of Recommendations so a reader meets the standard and its gaps before
-    the improvements proposed against them."""
+def test_public_page_order_matches_the_approval_workspace(flask_client):
+    """The public page reads in the approval workspace's order (2026-08-25): the review
+    record — concerns, then recommendations — before the standard it is graded against,
+    and plans before the implementation evidence they frame."""
     from neomodel import db
 
     rows, _ = db.cypher_query(
@@ -419,7 +420,10 @@ def test_public_page_renders_coverage_before_recommendations(flask_client):
     html = response.get_data(as_text=True)
 
     assert "Companion Bar Coverage" in html
-    assert html.index("Companion Bar Coverage") < html.index("<h2>Recommendations</h2>")
+    assert html.index("<h2>Recommendations</h2>") < html.index("Companion Bar Coverage")
+    # Plans renders only when the report has any — assert its position when present.
+    if "<h2>Plans &amp; Accomplishments</h2>" in html:
+        assert html.index("<h2>Plans &amp; Accomplishments</h2>") < html.index("<h2>Implementation Evidence")
 
 
 @pytest.mark.api

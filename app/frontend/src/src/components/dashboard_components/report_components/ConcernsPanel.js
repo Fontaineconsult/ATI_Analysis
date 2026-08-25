@@ -145,8 +145,7 @@ function ConcernsPanel({ yearIdentifier, concerns = [], onUpdate }) {
                 </Button>
             </HStack>
             <Text fontSize="xs" color="gray.700" mb={3}>
-                Issues raised with no path to resolution yet. Each one should become a recommendation
-                or a plan — or be dismissed with a reason.
+                Issues raised with no path to resolution yet.
             </Text>
 
             {isAdding && (
