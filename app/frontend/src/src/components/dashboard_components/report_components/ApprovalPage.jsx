@@ -44,6 +44,8 @@ import AdminFeedbackForm from './AdminFeedbackForm';
 import ConcernsPanel from './ConcernsPanel';
 import RecommendationsPanel from './RecommendationsPanel';
 import ApprovalCoverageTable from './ApprovalCoverageTable';
+import { SubLabel as Label, Empty, Dash } from './blocks/reportPrimitives';
+import ReportSection from './blocks/ReportSection';
 
 /*
  * Approval workspace at
@@ -60,33 +62,7 @@ import ApprovalCoverageTable from './ApprovalCoverageTable';
  * the bar asks for, then everything the claim rests on — and the report stays a report.
  */
 
-// ── Local primitives ────────────────────────────────────────────────────────
-const Dash = () => <Text as="span" color="gray.400">—</Text>;
-
-const Empty = ({ children }) => <Text fontSize="sm" color="gray.500">{children}</Text>;
-
-const Label = ({ children }) => (
-    <Text fontSize="2xs" fontWeight="semibold" color="gray.600"
-        textTransform="uppercase" letterSpacing="0.04em">
-        {children}
-    </Text>
-);
-
-const Section = ({ title, subtitle, count, children }) => (
-    <Box borderWidth="1px" borderColor="gray.200" borderRadius="lg" bg="white" boxShadow="sm" mb={5}>
-        <Box bg="teal.50" px={4} py={2.5} borderBottomWidth="1px" borderColor="teal.100">
-            <HStack spacing={2} align="baseline" flexWrap="wrap">
-                <Heading as="h2" size="sm" color="gray.800">{title}</Heading>
-                {count !== undefined && (
-                    <Badge colorScheme="teal" variant="subtle" fontSize="2xs">{count}</Badge>
-                )}
-            </HStack>
-            {subtitle && <Text fontSize="xs" color="gray.600" mt={0.5}>{subtitle}</Text>}
-        </Box>
-        <Box p={4}>{children}</Box>
-    </Box>
-);
-
+// ── Local primitives ──────────────────────────────────────────────────────────────────────
 const SimpleTable = ({ columns, rows, empty = 'None recorded.' }) => {
     if (!rows.length) return <Empty>{empty}</Empty>;
     return (
@@ -520,7 +496,7 @@ const ApprovalPage = () => {
                 </Alert>
             )}
 
-            <Section title="Status" subtitle="Where this indicator stands, and who answers for it.">
+            <ReportSection banded mb={5} id="ap-status" title="Status" subtitle="Where this indicator stands, and who answers for it.">
                 <VStack align="stretch" spacing={4}>
                     <Box>
                         <Label>Maturity</Label>
@@ -603,9 +579,9 @@ const ApprovalPage = () => {
                         </Box>
                     </Box>
                 </VStack>
-            </Section>
+            </ReportSection>
 
-            <Section title="People" count={implementers.length}>
+            <ReportSection banded mb={5} id="ap-people" title="People" count={implementers.length}>
                 <SimpleTable
                     columns={['Name', 'Title', 'Roles', 'Email']}
                     empty="No people assigned."
@@ -626,19 +602,19 @@ const ApprovalPage = () => {
                             : <Dash />,
                     ])}
                 />
-            </Section>
+            </ReportSection>
 
             {/* ── The reviewer's own account, first among the things they write ── */}
-            <Section title="Evidence summary"
+            <ReportSection banded mb={5} id="ap-summary" title="Evidence summary"
                 subtitle="The ATI coordinator's account of this year's evidence.">
                 <AdminSummaryForm
                     yearIdentifier={year_identifier}
                     currentValue={yseProps.admin_review_description || 'No Review'}
                     onUpdate={refreshAfterWrite}
                 />
-            </Section>
+            </ReportSection>
 
-            <Section title="Companion bar coverage"
+            <ReportSection banded mb={5} id="ap-coverage" title="Companion bar coverage"
                 subtitle="Each requirement, what claims it, and the argument made for the claim.">
                 {report ? <ApprovalCoverageTable coverage={report.evidence_coverage} /> : (
                     <Alert status="warning" fontSize="sm" borderRadius="md">
@@ -647,7 +623,7 @@ const ApprovalPage = () => {
                         The review tools below still work.
                     </Alert>
                 )}
-            </Section>
+            </ReportSection>
 
             <Accordion allowToggle mb={5} borderWidth="1px" borderColor="gray.200"
                 borderRadius="lg" bg="white" boxShadow="sm" overflow="hidden">
@@ -671,16 +647,16 @@ const ApprovalPage = () => {
                 </AccordionItem>
             </Accordion>
 
-            <Section title="Review notes"
+            <ReportSection banded mb={5} id="ap-review-notes" title="Review notes"
                 subtitle="Notes to the working group, kept on the record for next cycle.">
                 <AdminFeedbackForm
                     yearIdentifier={year_identifier}
                     adminReviewNotes={evidenceData.adminReviewNotes || []}
                     onUpdate={refreshAfterWrite}
                 />
-            </Section>
+            </ReportSection>
 
-            <Section title="Outstanding work"
+            <ReportSection banded mb={5} id="ap-outstanding" title="Outstanding work"
                 subtitle="Concerns have no path to resolution yet; recommendations are the work ahead.">
                 <VStack align="stretch" spacing={5}>
                     <ConcernsPanel
@@ -696,9 +672,9 @@ const ApprovalPage = () => {
                         onUpdate={refreshAfterWrite}
                     />
                 </VStack>
-            </Section>
+            </ReportSection>
 
-            <Section title="Plans & Accomplishments"
+            <ReportSection banded mb={5} id="ap-plans" title="Plans & Accomplishments"
                 subtitle="Committed work, and what has been claimed for this year.">
                 <VStack align="stretch" spacing={4}>
                     <Box>
@@ -742,10 +718,10 @@ const ApprovalPage = () => {
                         </Box>
                     )}
                 </VStack>
-            </Section>
+            </ReportSection>
 
             {/* ── What the claim actually rests on ── */}
-            <Section title="Implementation evidence" count={implementations.length}
+            <ReportSection banded mb={5} id="ap-implementations" title="Implementation evidence" count={implementations.length}
                 subtitle="The work claimed as evidence, with its documentation.">
                 {implementations.length ? (
                     <VStack align="stretch" spacing={3}>
@@ -758,10 +734,10 @@ const ApprovalPage = () => {
                         ))}
                     </VStack>
                 ) : <Empty>No implementations are wired to this indicator.</Empty>}
-            </Section>
+            </ReportSection>
 
             {taaps.length > 0 && (
-                <Section title="Temporary Alternate Access Plans" count={taaps.length}>
+                <ReportSection banded mb={5} id="ap-taaps" title="Temporary Alternate Access Plans" count={taaps.length}>
                     <VStack align="stretch" spacing={3}>
                         {taaps.map((t) => (
                             <Box key={t.unique_id} p={3} borderWidth="1px" borderColor="gray.200"
@@ -793,11 +769,11 @@ const ApprovalPage = () => {
                             </Box>
                         ))}
                     </VStack>
-                </Section>
+                </ReportSection>
             )}
 
             {assets.length > 0 && (
-                <Section title="ICT touched by this work" count={assets.length}>
+                <ReportSection banded mb={5} id="ap-ict" title="ICT touched by this work" count={assets.length}>
                     <SimpleTable
                         columns={['Asset', 'Class', 'Scope', 'Reached via']}
                         rows={assets.map((a) => [
@@ -807,10 +783,10 @@ const ApprovalPage = () => {
                             (a.reached_via || []).length ? <Text>{a.reached_via.join(', ')}</Text> : <Dash />,
                         ])}
                     />
-                </Section>
+                </ReportSection>
             )}
 
-            <Section title="Annotations"
+            <ReportSection banded mb={5} id="ap-annotations" title="Annotations"
                 subtitle="Notes, messages and metrics recorded against this year's evidence.">
                 <ArtifactList
                     notes={report?.notes}
@@ -818,7 +794,7 @@ const ApprovalPage = () => {
                     metrics={report?.metrics}
                     empty="None recorded for this year."
                 />
-            </Section>
+            </ReportSection>
 
             {/* Sticky action bar — the decision must never depend on scroll position. */}
             <Box position="fixed" bottom={0} left={0} right={0} bg="white" borderTopWidth="1px"
