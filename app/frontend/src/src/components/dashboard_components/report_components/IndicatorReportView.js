@@ -30,6 +30,7 @@ import ReportSection from './blocks/ReportSection';
 import PeopleTable from './blocks/PeopleTable';
 import { LevelBadge, RequirementCell } from './blocks/coveragePrimitives';
 import ArtifactTable from './blocks/ArtifactTable';
+import PlansAccomplishments from './blocks/PlansAccomplishments';
 
 /*
  * The single-indicator "View" report — a flat, single-column, single-page rendering of ALL
@@ -714,43 +715,7 @@ const IndicatorReportView = ({ report }) => {
 
                 {/* Plans & Accomplishments */}
                 <ReportSection id="sec-plans" title="Plans & Accomplishments">
-                    {(plans.length > 0 || accomplishments.length > 0) ? (
-                        <VStack align="stretch" spacing={4}>
-                            {plans.length > 0 && (
-                                <Box>
-                                    <SubLabel>Plans ({plans.length})</SubLabel>
-                                    <Box mt={1}>
-                                        <DataTable
-                                            columns={['Plan', 'Status', 'Description']}
-                                            rows={plans.map((p) => [
-                                                <HStack spacing={1.5} flexWrap="wrap">
-                                                    <Text fontWeight="semibold" color="gray.800">{p.name}</Text>
-                                                    {p.is_key_plan && <Badge colorScheme="purple" fontSize="2xs">Key</Badge>}
-                                                    {p.is_campus_plan && <Badge colorScheme="green" fontSize="2xs">Campus plan</Badge>}
-                                                </HStack>,
-                                                p.plan_status ? <Badge colorScheme={getPlanStatusColorScheme(p)} fontSize="2xs">{getPlanStatusLabel(p)}</Badge> : <Dash />,
-                                                p.description ? <Text color="gray.600">{p.description}</Text> : <Dash />,
-                                            ])}
-                                        />
-                                    </Box>
-                                </Box>
-                            )}
-                            {accomplishments.length > 0 && (
-                                <Box>
-                                    <SubLabel>Accomplishments ({accomplishments.length})</SubLabel>
-                                    <Box mt={1}>
-                                        <DataTable
-                                            columns={['Accomplishment', 'Description']}
-                                            rows={accomplishments.map((a) => [
-                                                <Text fontWeight="semibold" color="gray.800">{a.name}</Text>,
-                                                a.description ? <Text color="gray.600" whiteSpace="pre-wrap">{a.description}</Text> : <Dash />,
-                                            ])}
-                                        />
-                                    </Box>
-                                </Box>
-                            )}
-                        </VStack>
-                    ) : <Empty>None recorded for this year.</Empty>}
+                    <PlansAccomplishments plans={plans} accomplishments={accomplishments} />
                 </ReportSection>
 
                 {/* YSE-level notes, messages & metrics */}

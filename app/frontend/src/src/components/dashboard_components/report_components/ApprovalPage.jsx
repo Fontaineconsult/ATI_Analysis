@@ -47,6 +47,7 @@ import ApprovalCoverageTable from './ApprovalCoverageTable';
 import { SubLabel as Label, Empty, Dash } from './blocks/reportPrimitives';
 import ReportSection from './blocks/ReportSection';
 import ArtifactTable from './blocks/ArtifactTable';
+import PlansAccomplishments from './blocks/PlansAccomplishments';
 import PeopleTable from './blocks/PeopleTable';
 
 /*
@@ -606,48 +607,7 @@ const ApprovalPage = () => {
 
             <ReportSection banded mb={5} id="ap-plans" title="Plans & Accomplishments"
                 subtitle="Committed work, and what has been claimed for this year.">
-                <VStack align="stretch" spacing={4}>
-                    <Box>
-                        <Label>Plans ({plans.length})</Label>
-                        <Box mt={1}>
-                            <SimpleTable
-                                columns={['Plan', 'Status', 'Description']}
-                                empty="No plans recorded for this year."
-                                rows={plans.map((p) => [
-                                    <HStack spacing={1.5} flexWrap="wrap">
-                                        <Text fontWeight="semibold" color="gray.800">{p.name}</Text>
-                                        {p.is_key_plan && (
-                                            <Badge colorScheme="purple" fontSize="2xs">Key</Badge>
-                                        )}
-                                        {p.is_campus_plan && (
-                                            <Badge colorScheme="green" fontSize="2xs">Campus plan</Badge>
-                                        )}
-                                    </HStack>,
-                                    p.plan_status
-                                        ? <Badge colorScheme="gray" fontSize="2xs">{p.plan_status}</Badge>
-                                        : <Dash />,
-                                    p.description ? <Text color="gray.600">{p.description}</Text> : <Dash />,
-                                ])}
-                            />
-                        </Box>
-                    </Box>
-                    {accomplishments.length > 0 && (
-                        <Box>
-                            <Label>Accomplishments ({accomplishments.length})</Label>
-                            <Box mt={1}>
-                                <SimpleTable
-                                    columns={['Accomplishment', 'Description']}
-                                    rows={accomplishments.map((a) => [
-                                        <Text fontWeight="semibold" color="gray.800">{a.name}</Text>,
-                                        a.description
-                                            ? <Text color="gray.600" whiteSpace="pre-wrap">{a.description}</Text>
-                                            : <Dash />,
-                                    ])}
-                                />
-                            </Box>
-                        </Box>
-                    )}
-                </VStack>
+                <PlansAccomplishments plans={plans} accomplishments={accomplishments} />
             </ReportSection>
 
             {/* ── What the claim actually rests on ── */}
