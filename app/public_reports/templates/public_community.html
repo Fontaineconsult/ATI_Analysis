@@ -1,0 +1,73 @@
+{% extends "public_base.html" %}
+
+{% block title %}{{ c.name }} · Review Spread · {{ c.campus | upper }} {{ c.year }} — SFBRN Evidence Graph{% endblock %}
+
+{% block footer_meta %}{{ c.campus | upper }} · {{ c.year }} ·{% endblock %}
+
+{% block content %}
+<h1>{{ c.name }} — Review Spread</h1>
+  <p class="lede">{{ c.description }}</p>
+  <p class="lede">
+    Every success indicator this community of practice holds a stake in, with its
+    {{ c.year }} review state at {{ c.campus | upper }}. Each row links to the full
+    public evidence report — the place to read what is claimed and what answers it.
+  </p>
+
+  {% if c.stakes %}
+  {# Needs-attention first: awaiting approval, then in progress, then approved —
+     the page exists so a member can find what needs reviewing without hunting. #}
+  {% set awaiting = c.stakes | selectattr('ready_for_admin_review') | rejectattr('administrative_review_complete') | list %}
+  {% set approved = c.stakes | selectattr('administrative_review_complete') | list %}
+  {% set in_progress = c.stakes | rejectattr('ready_for_admin_review') | rejectattr('administrative_review_complete') | list %}
+
+  {% for group, label, note in [
+      (awaiting, 'Awaiting approval', 'Marked ready by the working group — these are the reviews to do.'),
+      (in_progress, 'In progress', 'Not yet marked ready — evidence is still being assembled.'),
+      (approved, 'Approved', 'This cycle\'s review is complete.'),
+  ] %}
+  {% if group %}
+  <h2>{{ label }} ({{ group | length }})</h2>
+  <p class="muted">{{ note }}</p>
+  <table>
+    <thead><tr>
+      <th scope="col">Indicator</th><th scope="col">Goal</th>
+      <th scope="col">Maturity</th><th scope="col">Review</th>
+    </tr></thead>
+    <tbody>
+    {% for s in group %}
+      <tr>
+        <td>
+          {% if s.public_url %}
+            <a href="{{ s.public_url }}"><span class="mono">{{ s.composite_key }}</span></a>
+          {% else %}
+            <span class="mono">{{ s.composite_key }}</span>
+          {% endif %}
+          <div class="prewrap">{{ s.indicator_text }}</div>
+        </td>
+        <td>{% if s.goal_number %}Goal {{ s.goal_number }}{% if s.goal_name %} — {{ s.goal_name }}{% endif %}{% else %}—{% endif %}</td>
+        <td>
+          {% if s.status_level %}
+            <span class="status st-{{ s.status_level | lower | replace(' ', '-') }}">{{ s.status_level }}</span>
+          {% elif not s.has_evidence %}
+            <span class="empty">No evidence this year</span>
+          {% else %}<span class="empty">Unset</span>{% endif %}
+        </td>
+        <td>
+          {% if s.administrative_review_complete %}
+            <span class="badge review-done">Complete</span>{% if s.completed_date %} {{ s.completed_date }}{% endif %}
+          {% elif s.ready_for_admin_review %}
+            <span class="badge ready">Ready for review</span>
+          {% else %}
+            <span class="badge review-open">Not yet ready</span>
+          {% endif %}
+        </td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+  {% endfor %}
+  {% else %}
+  <p class="empty">This community holds no indicator stakes yet.</p>
+  {% endif %}
+{% endblock %}

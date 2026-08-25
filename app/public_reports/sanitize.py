@@ -418,3 +418,36 @@ def public_report_payload(report):
         'messages': [_annotation(m) for m in (report.get('messages') or [])],
         'metrics': [_annotation(m) for m in (report.get('metrics') or [])],
     }
+
+
+def public_community_payload(spread):
+    """Allowlist projection of a community's review spread for the public page.
+
+    The community's name/description and its stakes' review state are the whole
+    surface — no members, no emails, no annotations. Each stake carries the public
+    report URL when its working-group family has a public segment (com/gov do not);
+    a stake without one renders as text, never a broken link.
+    """
+    year = spread.get('year')
+    campus = spread.get('campus')
+    return {
+        'name': spread.get('name'),
+        'description': spread.get('description'),
+        'year': year,
+        'campus': campus,
+        'stakes': [
+            {
+                'composite_key': s.get('composite_key'),
+                'indicator_text': s.get('indicator_text'),
+                'goal_number': s.get('goal_number'),
+                'goal_name': s.get('goal_name'),
+                'status_level': s.get('status_level'),
+                'ready_for_admin_review': bool(s.get('ready_for_admin_review')),
+                'administrative_review_complete': bool(s.get('administrative_review_complete')),
+                'completed_date': s.get('completed_date'),
+                'has_evidence': bool(s.get('has_evidence')),
+                'public_url': _public_indicator_url(s.get('composite_key'), campus, year),
+            }
+            for s in (spread.get('stakes') or [])
+        ],
+    }

@@ -152,3 +152,61 @@ def get_communities_by_working_group() -> list:
     ]
     results.sort(key=lambda r: order.get(r["working_group"], len(order)))
     return results
+
+
+def get_community_review_spread(unique_id: str, academic_year: str, campus_abbreviation: str) -> dict:
+    """The community's indicator stakes with each one's review state for a campus/year.
+
+    The instrument behind the public "review spread" page: a Community of Practice's
+    members need one shareable list answering "what of ours needs reviewing" —
+    every SI the community holds a stake in, with that campus/year's evidence status
+    and review flags. Communities are campus-agnostic; the campus chooses WHICH
+    year-evidence the stakes resolve to.
+
+    Stakes whose indicator has no YSE for the campus/year still return (with null
+    status): a stake with no evidence is a finding for the members, not a row to hide.
+    """
+    rows, _ = db.cypher_query(
+        """
+        MATCH (c:CommunityOfPractice {unique_id: $uid})
+        OPTIONAL MATCH (c)-[:has_stake_in]->(si:SuccessIndicator)
+        OPTIONAL MATCH (si)<-[:supported_by]-(g:Goal)
+        OPTIONAL MATCH (si)<-[:tracks]-(yse:YearSuccessEvidence)
+            WHERE yse.year_identifier = $year + '-' + si.composite_key + '-' + $campus
+        OPTIONAL MATCH (yse)-[:status_is]->(sl:StatusLevel)
+        RETURN c.name AS name, c.description AS description,
+               si.composite_key AS composite_key,
+               si.success_indicator AS indicator_text,
+               g.goal_number AS goal_number, g.name AS goal_name,
+               sl.status_level AS status_level,
+               yse.ready_for_admin_review AS ready_for_admin_review,
+               yse.administrative_review_complete AS administrative_review_complete,
+               toString(yse.administrative_review_completed_date) AS completed_date
+        ORDER BY si.composite_key
+        """,
+        {"uid": unique_id, "year": academic_year, "campus": campus_abbreviation},
+    )
+    if not rows:
+        raise NotFoundError(f"CommunityOfPractice '{unique_id}' not found.")
+
+    stakes = [
+        {
+            "composite_key": r[2],
+            "indicator_text": r[3],
+            "goal_number": r[4],
+            "goal_name": r[5],
+            "status_level": r[6],
+            "ready_for_admin_review": bool(r[7]),
+            "administrative_review_complete": bool(r[8]),
+            "completed_date": r[9],
+            "has_evidence": r[6] is not None or r[7] is not None or r[8] is not None,
+        }
+        for r in rows if r[2] is not None
+    ]
+    return {
+        "name": rows[0][0],
+        "description": rows[0][1],
+        "year": academic_year,
+        "campus": campus_abbreviation,
+        "stakes": stakes,
+    }

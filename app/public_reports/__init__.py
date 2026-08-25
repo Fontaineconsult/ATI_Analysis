@@ -110,3 +110,44 @@ def implementation_detail(impl_type, unique_id):
         im=public_implementation_payload(impl),
         edit_url=edit_url,
     )
+
+
+@public_reports.route('/community/<unique_id>')
+def community_review_spread_default(unique_id):
+    """Short form — redirect to the explicit campus/year URL, same contract as
+    the indicator short form: shared links resolve to stable archives."""
+    if not current_app.config.get('PUBLIC_REPORTS_ENABLED', True):
+        abort(404)
+    return redirect(url_for(
+        'public_reports.community_review_spread',
+        campus=_DEFAULT_CAMPUS, year=_current_year(), unique_id=unique_id,
+    ))
+
+
+@public_reports.route('/community/<campus>/<year>/<unique_id>')
+def community_review_spread(campus, year, unique_id):
+    """A community of practice's review spread: every indicator it holds a stake
+    in, with that campus/year's review state, each linking to the public evidence
+    report. The shareable answer to "what of ours needs reviewing" — communities
+    are campus-agnostic, so the campus in the URL picks whose evidence the stakes
+    resolve to."""
+    if not current_app.config.get('PUBLIC_REPORTS_ENABLED', True):
+        abort(404)
+    if year not in academic_years:
+        abort(404)
+
+    from app.database.queries.communities.read import get_community_review_spread
+    from app.endpoints.data_api.errors.custom_exceptions import NotFoundError
+    from app.public_reports.sanitize import public_community_payload
+
+    try:
+        spread = get_community_review_spread(unique_id, year, campus)
+    except NotFoundError:
+        abort(404)
+
+    edit_url = f"/ati/{campus}/ati-explorer/people/communities/{unique_id}"
+    return render_template(
+        'public_community.html',
+        c=public_community_payload(spread),
+        edit_url=edit_url,
+    )
