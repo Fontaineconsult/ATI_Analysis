@@ -248,11 +248,11 @@ describe('ApprovalPage — the evidence itself', () => {
     });
 
     it('shows the level rubric only in the collapsible section', async () => {
-        // The report renders the same rubric under "Expected evidence at"; suppressed here
-        // so the collapsible Maturity status is the only copy.
+        // The report's always-open "Expected evidence at" block has no counterpart here —
+        // the rubric is reference material and stays folded until wanted.
         await renderLoaded(NON_APPROVER);
         expect(screen.queryByText(/Expected evidence at/i)).toBeNull();
-        expect(screen.getByRole('button', { name: /maturity status/i })).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: /maturity rubric/i })).toBeInTheDocument();
     });
 });
 
@@ -295,7 +295,8 @@ describe('ApprovalPage — layout', () => {
         await renderLoaded(NON_APPROVER);
         const html = document.body.innerHTML;
         expect(html.indexOf('Plans &amp; Accomplishments')).toBeGreaterThan(-1);
-        expect(html.indexOf('Plans &amp; Accomplishments')).toBeLessThan(html.indexOf('>Evidence<'));
+        expect(html.indexOf('Plans &amp; Accomplishments'))
+            .toBeLessThan(html.indexOf('Implementation evidence'));
     });
 
     it('renders plans once, not once here and again inside the report', async () => {
@@ -305,7 +306,7 @@ describe('ApprovalPage — layout', () => {
 
     it('collapses the maturity rubric behind a disclosure', async () => {
         await renderLoaded(NON_APPROVER);
-        const trigger = screen.getByRole('button', { name: /maturity status/i });
+        const trigger = screen.getByRole('button', { name: /maturity rubric/i });
         expect(trigger).toHaveAttribute('aria-expanded', 'false');
     });
 });

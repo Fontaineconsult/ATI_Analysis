@@ -390,18 +390,6 @@ const ImplementationEntry = ({ impl, campus, navigate, requirementsByHandle = {}
             <Box p={4}>
                 {impl.description && <Text fontSize="xs" color="gray.700" mb={2} whiteSpace="pre-wrap">{impl.description}</Text>}
 
-                {/* Why this work is evidence HERE. Distinct from the description above,
-                    which describes the work itself and is the same on every indicator it
-                    evidences. Set apart so a reader can tell the two claims apart. */}
-                {impl.rationale && (
-                    <Box mb={3} p={2} bg="teal.50" borderLeftWidth="2px" borderLeftColor="teal.300" borderRadius="sm">
-                        <SubLabel>Why this is evidence here</SubLabel>
-                        <Text fontSize="xs" color="gray.700" whiteSpace="pre-wrap" mt={0.5}>
-                            {impl.rationale}
-                        </Text>
-                    </Box>
-                )}
-
                 <Wrap spacing={2} mb={2}>
                     {impl.owner && <WrapItem><Tag size="sm" colorScheme="teal" variant="subtle">Owner: {impl.owner.name}</Tag></WrapItem>}
                     {((impl.accountable_communities || []).length > 0 || impl.accountable_working_group) && (
@@ -483,58 +471,7 @@ const TaapEntry = ({ taap }) => (
 );
 
 // ── Main view ───────────────────────────────────────────────────────────────
-// The plans/accomplishments table, shared so the approval page can hoist it above the
-// evidence without duplicating the markup and letting the two drift.
-export const PlansAccomplishmentsBody = ({ plans = [], accomplishments = [] }) => (
-    <>
-                    {(plans.length > 0 || accomplishments.length > 0) ? (
-                        <VStack align="stretch" spacing={4}>
-                            {plans.length > 0 && (
-                                <Box>
-                                    <SubLabel>Plans ({plans.length})</SubLabel>
-                                    <Box mt={1}>
-                                        <DataTable
-                                            columns={['Plan', 'Status', 'Description']}
-                                            rows={plans.map((p) => [
-                                                <HStack spacing={1.5} flexWrap="wrap">
-                                                    <Text fontWeight="semibold" color="gray.800">{p.name}</Text>
-                                                    {p.is_key_plan && <Badge colorScheme="purple" fontSize="2xs">Key</Badge>}
-                                                    {p.is_campus_plan && <Badge colorScheme="green" fontSize="2xs">Campus plan</Badge>}
-                                                </HStack>,
-                                                p.plan_status ? <Badge colorScheme={getPlanStatusColorScheme(p)} fontSize="2xs">{getPlanStatusLabel(p)}</Badge> : <Dash />,
-                                                p.description ? <Text color="gray.600">{p.description}</Text> : <Dash />,
-                                            ])}
-                                        />
-                                    </Box>
-                                </Box>
-                            )}
-                            {accomplishments.length > 0 && (
-                                <Box>
-                                    <SubLabel>Accomplishments ({accomplishments.length})</SubLabel>
-                                    <Box mt={1}>
-                                        <DataTable
-                                            columns={['Accomplishment', 'Description']}
-                                            rows={accomplishments.map((a) => [
-                                                <Text fontWeight="semibold" color="gray.800">{a.name}</Text>,
-                                                a.description ? <Text color="gray.600" whiteSpace="pre-wrap">{a.description}</Text> : <Dash />,
-                                            ])}
-                                        />
-                                    </Box>
-                                </Box>
-                            )}
-                        </VStack>
-                    ) : <Empty>None recorded for this year.</Empty>}
-    </>
-);
-
-// `suppressReviewBlocks` is for the approval page, which owns all of this: the evidence
-// summary and review notes (editable there), concerns and recommendations (editable
-// there), its own coverage table carrying each claim's rationale, and the level rubric
-// under Maturity status — StatusLevelDetails renders the same content MaturityCriteria
-// does. Left on, the reader would meet every one of them twice: once as something to
-// act on, once as a read-only copy, with no way to tell which was live.
-// `suppressPlans` is a hoist rather than a suppression: the same block renders higher up.
-const IndicatorReportView = ({ report, suppressReviewBlocks = false, suppressPlans = false }) => {
+const IndicatorReportView = ({ report }) => {
     const navigate = useNavigate();
     const { campus } = useParams();
     const toast = useToast();
@@ -704,7 +641,7 @@ const IndicatorReportView = ({ report, suppressReviewBlocks = false, suppressPla
                                     </Text>
                                 )}
                             </HStack>
-                            {!suppressReviewBlocks && yse?.admin_review_description && yse.admin_review_description !== 'No Review' && (
+                            {yse?.admin_review_description && yse.admin_review_description !== 'No Review' && (
                                 <Box mt={3}>
                                     <SubLabel>Evidence summary</SubLabel>
                                     <Text fontSize="2xs" color="gray.600" mt={0.5}>
@@ -715,7 +652,7 @@ const IndicatorReportView = ({ report, suppressReviewBlocks = false, suppressPla
                                     </Box>
                                 </Box>
                             )}
-                            {!suppressReviewBlocks && adminReviewNotes.length > 0 && (
+                            {adminReviewNotes.length > 0 && (
                                 <Box mt={3}>
                                     <SubLabel>Administrative review notes</SubLabel>
                                     <Text fontSize="2xs" color="gray.600" mt={0.5} mb={1}>
@@ -733,7 +670,7 @@ const IndicatorReportView = ({ report, suppressReviewBlocks = false, suppressPla
                             )}
                         </Box>
 
-                        {!suppressReviewBlocks && concerns.filter((c) => c.status !== 'dismissed').length > 0 && (
+                        {concerns.filter((c) => c.status !== 'dismissed').length > 0 && (
                             <Box>
                                 <SubHeading>Concerns ({concerns.filter((c) => c.status !== 'dismissed').length})</SubHeading>
                                 <Box mt={2}>
@@ -757,7 +694,7 @@ const IndicatorReportView = ({ report, suppressReviewBlocks = false, suppressPla
                             </Box>
                         )}
 
-                        {!suppressReviewBlocks && recommendations.filter((r) => r.status !== 'dismissed').length > 0 && (
+                        {recommendations.filter((r) => r.status !== 'dismissed').length > 0 && (
                             <Box>
                                 <SubHeading>Recommendations ({recommendations.filter((r) => r.status !== 'dismissed').length})</SubHeading>
                                 <Box mt={2}>
@@ -779,10 +716,8 @@ const IndicatorReportView = ({ report, suppressReviewBlocks = false, suppressPla
                             </Box>
                         )}
 
-                        {!suppressReviewBlocks && (
-                            <MaturityCriteria currentStatusLevelName={status?.status_level} />
-                        )}
-                        {!suppressReviewBlocks && <EvidenceCoverage coverage={report.evidence_coverage} />}
+                        <MaturityCriteria currentStatusLevelName={status?.status_level} />
+                        <EvidenceCoverage coverage={report.evidence_coverage} />
                     </VStack>
                 </ReportSection>
 
@@ -957,13 +892,46 @@ const IndicatorReportView = ({ report, suppressReviewBlocks = false, suppressPla
                     ) : <Empty>None recorded for this year.</Empty>}
                 </ReportSection>
 
-                {/* Plans & Accomplishments. Suppressed on the approval page, which
-                    hoists this above the evidence — the same block, not a copy. */}
-                {!suppressPlans && (
+                {/* Plans & Accomplishments */}
                 <ReportSection id="sec-plans" title="Plans & Accomplishments">
-                    <PlansAccomplishmentsBody plans={plans} accomplishments={accomplishments} />
+                    {(plans.length > 0 || accomplishments.length > 0) ? (
+                        <VStack align="stretch" spacing={4}>
+                            {plans.length > 0 && (
+                                <Box>
+                                    <SubLabel>Plans ({plans.length})</SubLabel>
+                                    <Box mt={1}>
+                                        <DataTable
+                                            columns={['Plan', 'Status', 'Description']}
+                                            rows={plans.map((p) => [
+                                                <HStack spacing={1.5} flexWrap="wrap">
+                                                    <Text fontWeight="semibold" color="gray.800">{p.name}</Text>
+                                                    {p.is_key_plan && <Badge colorScheme="purple" fontSize="2xs">Key</Badge>}
+                                                    {p.is_campus_plan && <Badge colorScheme="green" fontSize="2xs">Campus plan</Badge>}
+                                                </HStack>,
+                                                p.plan_status ? <Badge colorScheme={getPlanStatusColorScheme(p)} fontSize="2xs">{getPlanStatusLabel(p)}</Badge> : <Dash />,
+                                                p.description ? <Text color="gray.600">{p.description}</Text> : <Dash />,
+                                            ])}
+                                        />
+                                    </Box>
+                                </Box>
+                            )}
+                            {accomplishments.length > 0 && (
+                                <Box>
+                                    <SubLabel>Accomplishments ({accomplishments.length})</SubLabel>
+                                    <Box mt={1}>
+                                        <DataTable
+                                            columns={['Accomplishment', 'Description']}
+                                            rows={accomplishments.map((a) => [
+                                                <Text fontWeight="semibold" color="gray.800">{a.name}</Text>,
+                                                a.description ? <Text color="gray.600" whiteSpace="pre-wrap">{a.description}</Text> : <Dash />,
+                                            ])}
+                                        />
+                                    </Box>
+                                </Box>
+                            )}
+                        </VStack>
+                    ) : <Empty>None recorded for this year.</Empty>}
                 </ReportSection>
-                )}
 
                 {/* YSE-level notes, messages & metrics */}
                 <ReportSection id="sec-notes" title="Notes, Messages & Metrics">
