@@ -46,6 +46,7 @@ import RecommendationsPanel from './RecommendationsPanel';
 import ApprovalCoverageTable from './ApprovalCoverageTable';
 import { SubLabel as Label, Empty, Dash } from './blocks/reportPrimitives';
 import ReportSection from './blocks/ReportSection';
+import PeopleTable from './blocks/PeopleTable';
 
 /*
  * Approval workspace at
@@ -582,26 +583,7 @@ const ApprovalPage = () => {
             </ReportSection>
 
             <ReportSection banded mb={5} id="ap-people" title="People" count={implementers.length}>
-                <SimpleTable
-                    columns={['Name', 'Title', 'Roles', 'Email']}
-                    empty="No people assigned."
-                    rows={implementers.map((p) => [
-                        <Text fontWeight="medium" color="gray.800">{p.name}</Text>,
-                        p.title ? <Text>{p.title}</Text> : <Dash />,
-                        (p.roles || []).length
-                            ? <Wrap spacing={1}>{p.roles.map((r) => (
-                                <WrapItem key={r.handle}>
-                                    <Badge colorScheme="purple" variant="subtle" fontSize="2xs">
-                                        {r.name}
-                                    </Badge>
-                                </WrapItem>
-                            ))}</Wrap>
-                            : <Dash />,
-                        p.email
-                            ? <Link href={`mailto:${p.email}`} color="teal.600">{p.email}</Link>
-                            : <Dash />,
-                    ])}
-                />
+                <PeopleTable implementers={implementers} />
             </ReportSection>
 
             {/* ── The reviewer's own account, first among the things they write ── */}

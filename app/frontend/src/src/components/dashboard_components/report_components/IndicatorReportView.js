@@ -27,6 +27,7 @@ import { getWgHex } from '../../../styles/workingGroupIdentity';
 import CopyIndicatorReportButton from './CopyIndicatorReportButton';
 import { SubLabel, SubHeading, Empty, Dash, DataTable } from './blocks/reportPrimitives';
 import ReportSection from './blocks/ReportSection';
+import PeopleTable from './blocks/PeopleTable';
 
 /*
  * The single-indicator "View" report — a flat, single-column, single-page rendering of ALL
@@ -664,19 +665,7 @@ const IndicatorReportView = ({ report }) => {
 
                 {/* People */}
                 <ReportSection id="sec-people" title="People" count={implementers.length}>
-                    {implementers.length ? (
-                        <DataTable
-                            columns={['Name', 'Title', 'Roles', 'Email']}
-                            rows={implementers.map((p) => [
-                                <Text fontWeight="medium" color="gray.800">{p.name}</Text>,
-                                p.title ? <Text>{p.title}</Text> : <Dash />,
-                                (p.roles || []).length
-                                    ? <Wrap spacing={1}>{p.roles.map((r) => <WrapItem key={r.handle}><Badge colorScheme="purple" variant="subtle" fontSize="2xs">{r.name}</Badge></WrapItem>)}</Wrap>
-                                    : <Dash />,
-                                p.email ? <Link href={`mailto:${p.email}`} color="teal.600">{p.email}</Link> : <Dash />,
-                            ])}
-                        />
-                    ) : <Empty>No people assigned.</Empty>}
+                    <PeopleTable implementers={implementers} />
                 </ReportSection>
 
                 {/* Implementation Evidence */}
