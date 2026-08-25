@@ -21,12 +21,20 @@ required — never grade a cross-campus blend. Verify the node exists before
 grading; a missing YSE ends the review ("no evidence exists for this
 indicator/year/campus"), it is never invented.
 
-## Step 1 — Pull the two sides (registry, one shot each)
+## Step 1 — Load the ontology FIRST, then the evidence (registry, one shot each)
+
+The order is the method: read the standard before the evidence, or the review
+anchors on what exists and rationalizes a bar around it. The first two pulls are
+the ontology — the generic rubric and this indicator's own bar — and are fully
+digested before any evidence is read. Only then pull what the campus actually has.
 
 ```
+# The ontology — what is being graded against
 python -m app.database.cypher_runner.run_query --query status_level_rubric
-python -m app.database.cypher_runner.run_query --query yse_maturity_evidence --param year_identifier=<yid>
 python -m app.database.cypher_runner.run_query --query yse_bar_coverage --param year_identifier=<yid>
+
+# The evidence — what the campus holds
+python -m app.database.cypher_runner.run_query --query yse_maturity_evidence --param year_identifier=<yid>
 python -m app.database.cypher_runner.run_query --query stewarded_ict_for_yse --param year_identifier=<yid>
 ```
 
@@ -41,7 +49,11 @@ python -m app.database.cypher_runner.run_query --query stewarded_ict_for_yse --p
 - **The evidence**: current status + review flags, implementations (type,
   description, strength, control, **satisfies claims**, retired, owners,
   participants with role handles, active documents/webpages), report-included
-  notes/messages/metrics, and plans.
+  notes/messages/metrics, plans, recommendations, and **prior admin review
+  notes** (authored, dated). The prior review is where THIS review starts:
+  check what the last cycle flagged and whether it moved — including a
+  previous filing of this very skill, which reads as a baseline to confirm,
+  advance, or overturn with reasons, never to silently re-derive.
 - **The coverage** (`yse_bar_coverage`): the same bar inverted —
   requirement-first, each marked satisfied or not and by which implementations.
   This is the instrument the review is now built around: it states what the

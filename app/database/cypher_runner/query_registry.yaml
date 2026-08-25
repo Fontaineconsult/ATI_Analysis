@@ -593,7 +593,7 @@
 
 - name: yse_maturity_evidence
   category: evidence
-  description: Everything the maturity-status-reviewer skill grades for one YSE - the SI text + per-SI companion bars, current status + review flags, evidencing implementations (strength, control, satisfies claims, rationale, retired, owners, participants, active documentation), report-included notes/messages/metrics, and plans. param year_identifier e.g. 2025-2026-7.11-ins-sfsu.
+  description: Everything the maturity-status-reviewer skill grades for one YSE - the SI text + per-SI companion bars, current status + review flags, evidencing implementations (strength, control, satisfies claims, rationale, retired, owners, participants, active documentation), report-included notes/messages/metrics, plans, recommendations, and prior admin review notes (authored). param year_identifier e.g. 2025-2026-7.11-ins-sfsu.
   mode: read
   params: [year_identifier]
   cypher: |
@@ -628,7 +628,10 @@
            [(e)<-[:furthers_yse]-(pl:Plan) | {name: pl.name, status: pl.plan_status, description: pl.description}] AS plans,
            [(e)-[:has_recommendation]->(rec:Recommendation) |
               {recommendation: rec.recommendation, detail: rec.detail, status: rec.status,
-               resolution: rec.resolution, date_created: toString(rec.date_created)}] AS recommendations
+               resolution: rec.resolution, date_created: toString(rec.date_created)}] AS recommendations,
+           [(e)-[:admin_review_note]->(arn:Note) |
+              {content: arn.content, date_created: toString(arn.date_created),
+               author: head([(arn)-[:created_by]->(p:Person) | p.name])}] AS admin_review_notes
 
 - name: yse_bar_coverage
   category: evidence
