@@ -255,7 +255,8 @@ describe('ApprovalPage — the evidence itself', () => {
             return i;
         };
         const order = ['Evidence summary', 'Review notes', 'Outstanding work',
-            'Companion bar coverage', 'Maturity rubric'];
+            'Companion bar coverage', 'Maturity rubric', 'Plans &amp; Accomplishments',
+            '>People', 'Implementation evidence'];
         let prev = at('>Status<');
         for (const title of order) {
             const i = at(title);

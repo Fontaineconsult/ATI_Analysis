@@ -11,6 +11,7 @@ import {
     Badge,
     Box,
     Button,
+    Divider,
     HStack,
     Heading,
     Link,
@@ -253,6 +254,10 @@ const ApprovalPage = () => {
                 </Alert>
             )}
 
+            {/* The page reads in three groups, separated visually: the review record
+                (status, the reviewer's account, their notes), the standard and the road
+                ahead (outstanding work, the bar, the rubric, plans), and finally what the
+                claim rests on (people, implementations, TAAPs, ICT, annotations). */}
             <ReportSection banded mb={3} id="ap-status" title="Status"
                 subtitle="Where this indicator stands, and who answers for it.">
                 <VStack align="stretch" spacing={4}>
@@ -283,6 +288,12 @@ const ApprovalPage = () => {
                     onUpdate={refreshAfterWrite}
                 />
             </ReportSection>
+
+            {/* ── group break ── */}
+            <Box my={7} role="presentation">
+                <Divider borderBottomWidth="2px" borderColor="gray.300" />
+            </Box>
+
 
             <ReportSection banded mb={3} id="ap-outstanding" title="Outstanding work"
                 subtitle="Immediate Concerns and Future Recommendations">
@@ -335,9 +346,6 @@ const ApprovalPage = () => {
                 </AccordionItem>
             </Accordion>
 
-            <ReportSection banded mb={3} id="ap-people" title="People" count={implementers.length}>
-                <PeopleTable implementers={implementers} />
-            </ReportSection>
 
 
 
@@ -349,7 +357,17 @@ const ApprovalPage = () => {
                 <PlansAccomplishments plans={plans} accomplishments={accomplishments} />
             </ReportSection>
 
+            {/* ── group break ── */}
+            <Box my={7} role="presentation">
+                <Divider borderBottomWidth="2px" borderColor="gray.300" />
+            </Box>
+
+
             {/* ── What the claim actually rests on ── */}
+            <ReportSection banded mb={3} id="ap-people" title="People" count={implementers.length}>
+                <PeopleTable implementers={implementers} />
+            </ReportSection>
+
             <ReportSection banded mb={3} id="ap-implementations" title="Implementation evidence" count={implementations.length}
                 >
                 {implementations.length ? (
