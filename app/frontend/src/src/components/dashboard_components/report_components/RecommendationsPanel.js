@@ -125,7 +125,7 @@ function RecommendationsPanel({ yearIdentifier, recommendations = [], onUpdate }
             ) : (
                 <VStack align="stretch" spacing={2}>
                     {items.map((rec) => (
-                        <Box key={rec.unique_id} p={3} borderWidth="1px" borderColor="gray.200" borderRadius="md" bg="gray.50">
+                        <Box key={rec.unique_id} p={3} borderWidth="1px" borderColor="gray.300" borderRadius="md" bg="gray.100">
                             <HStack align="start" spacing={2}>
                                 <Badge colorScheme={STATUS_COLORS[rec.status] || 'gray'} fontSize="2xs" flexShrink={0}>
                                     {rec.status}
@@ -164,7 +164,7 @@ function RecommendationsPanel({ yearIdentifier, recommendations = [], onUpdate }
                             )}
                             {rec.status !== 'open' && (
                                 <HStack mt={2} justify="flex-end">
-                                    <Button size="xs" variant="ghost" colorScheme="orange" isDisabled={busy}
+                                    <Button size="xs" variant="outline" colorScheme="orange" isDisabled={busy}
                                             onClick={() => handleStatus(rec, 'open')}>
                                         Reopen
                                     </Button>

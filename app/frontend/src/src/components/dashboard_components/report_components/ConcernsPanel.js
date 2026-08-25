@@ -128,7 +128,7 @@ function ConcernsPanel({ yearIdentifier, concerns = [], onUpdate }) {
     };
 
     return (
-        <Box p={4} bg="white" borderRadius="lg" borderWidth="1px" borderColor="gray.200">
+        <Box p={4} bg="white" borderRadius="lg" borderWidth="1px" borderColor="gray.300">
             <HStack justify="space-between" mb={2}>
                 <HStack spacing={2}>
                     <Text fontSize="xs" fontWeight="semibold" color="gray.700" textTransform="uppercase">
@@ -191,9 +191,9 @@ function ConcernsPanel({ yearIdentifier, concerns = [], onUpdate }) {
                             key={con.unique_id}
                             p={3}
                             borderWidth="1px"
-                            borderColor="gray.200"
+                            borderColor="gray.300"
                             borderRadius="md"
-                            bg="gray.50"
+                            bg="gray.100"
                         >
                             <HStack align="start" spacing={2}>
                                 <Badge colorScheme={STATUS_COLORS[con.status] || 'gray'} fontSize="2xs" flexShrink={0}>
@@ -291,7 +291,7 @@ function ConcernsPanel({ yearIdentifier, concerns = [], onUpdate }) {
                                 <HStack mt={2} justify="flex-end">
                                     <Button
                                         size="xs"
-                                        variant="ghost"
+                                        variant="outline"
                                         colorScheme="orange"
                                         isDisabled={busy}
                                         onClick={() => handleStatus(con, 'open')}

@@ -317,12 +317,12 @@ const ApprovalPage = () => {
                 borderRadius="lg" bg="white" boxShadow="sm" overflow="hidden">
                 <AccordionItem border="none">
                     <Heading as="h2" size="sm">
-                        <AccordionButton bg="teal.50" _expanded={{ bg: 'teal.100' }} py={2} px={3.5}>
+                        <AccordionButton bg="teal.700" _hover={{ bg: 'teal.800' }} _expanded={{ bg: 'teal.800' }} py={2} px={3.5}>
                             <Box flex="1" textAlign="left">
-                                <Text fontSize="sm" fontWeight="semibold" color="gray.800">
+                                <Text fontSize="sm" fontWeight="extrabold" color="white">
                                     Maturity rubric
                                 </Text>
-                                <Text fontSize="xs" fontWeight="normal" color="gray.700" mt={0.5}>
+                                <Text fontSize="xs" fontWeight="normal" color="teal.50" mt={0.5}>
                                     What “{status.status_level || 'this level'}” asks for — reference while grading.
                                 </Text>
                             </Box>

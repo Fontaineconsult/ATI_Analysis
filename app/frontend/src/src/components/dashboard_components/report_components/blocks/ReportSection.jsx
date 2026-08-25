@@ -17,13 +17,13 @@ import { Box, Heading, HStack, Text } from '@chakra-ui/react';
  * block for detail panels. This is the page-level h2 wrapper.
  */
 const ReportSection = ({ id, title, subtitle, count, action, banded = false, children, ...rest }) => {
-    // Extrabold and a stop darker than the old treatment: section headings are the
-    // page's wayfinding and have to carry visibly more weight than the body text.
-    // teal.800 = 11.17:1 on white, gray.900 = 16.19:1 on the teal.50 band — both
-    // comfortably over the 8:1 floor.
+    // Extrabold, and the banded look is now a SOLID brand band: the old teal.50 tint
+    // sat at 1.16:1 against the white card — the header div itself had no contrast
+    // with its surroundings. White on teal.700 is 8.71:1; the flat look's teal.800
+    // heading is 11.17:1 on white.
     const heading = (
         <Heading as="h2" id={id} size="sm" fontWeight="extrabold"
-            color={banded ? 'gray.900' : 'teal.800'}>
+            color={banded ? 'white' : 'teal.800'}>
             {title}{typeof count === 'number' ? ` (${count})` : ''}
         </Heading>
     );
@@ -45,13 +45,13 @@ const ReportSection = ({ id, title, subtitle, count, action, banded = false, chi
     return (
         <Box as="section" aria-labelledby={id} bg="white" borderWidth="1px"
             borderColor="gray.200" borderRadius="lg" boxShadow="sm" overflow="hidden" {...rest}>
-            <Box bg="teal.50" px={3.5} py={2} borderBottomWidth="1px" borderColor="teal.100">
+            <Box bg="teal.700" px={3.5} py={2} borderBottomWidth="1px" borderColor="teal.800">
                 {/* count renders in the title in both modes — one convention */}
                 <HStack justify="space-between" align="baseline" flexWrap="wrap">
                     {heading}
                     {action}
                 </HStack>
-                {subtitle && <Text fontSize="xs" color="gray.700" mt={0.5}>{subtitle}</Text>}
+                {subtitle && <Text fontSize="xs" color="teal.50" mt={0.5}>{subtitle}</Text>}
             </Box>
             <Box p={3}>{children}</Box>
         </Box>

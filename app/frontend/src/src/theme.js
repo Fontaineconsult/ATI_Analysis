@@ -150,7 +150,18 @@ const theme = extendTheme({
                 },
                 outline: (props) => {
                     const shade = TEXT_AA_SHADE[props.colorScheme];
-                    return shade ? { color: `${props.colorScheme}.${shade}` } : {};
+                    if (!shade) return {};
+                    // Border in the text shade: Chakra's default outline border (gray.200
+                    // for the default scheme) is 1.2:1 against a white page — the button
+                    // dissolved into its surroundings. bg is explicitly white, not
+                    // transparent, so the button also stands off tinted grounds (the
+                    // gray.100 list rows, the teal band): a button whose fill is whatever
+                    // happens to be behind it is the violation this fixes.
+                    return {
+                        color: `${props.colorScheme}.${shade}`,
+                        borderColor: `${props.colorScheme}.${shade}`,
+                        bg: 'white',
+                    };
                 },
                 ghost: (props) => {
                     const shade = TEXT_AA_SHADE[props.colorScheme];

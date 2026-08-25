@@ -176,7 +176,7 @@ function AdminFeedbackForm({ yearIdentifier, adminReviewNotes = [], onUpdate }) 
                         <Box
                             key={note.unique_id || index}
                             p={3}
-                            bg="teal.50"
+                            bg="teal.100"
                             borderRadius="md"
                             borderLeft="3px solid"
                             borderLeftColor="teal.400"
@@ -194,13 +194,13 @@ function AdminFeedbackForm({ yearIdentifier, adminReviewNotes = [], onUpdate }) 
                                     the record is of who gave the feedback, not who last typed. */}
                                 {!isEditing && note.unique_id && (
                                     <HStack spacing={1}>
-                                        <Button size="xs" variant="ghost" colorScheme="teal"
+                                        <Button size="xs" variant="outline" colorScheme="teal"
                                                 isDisabled={rowBusy}
                                                 aria-label="Edit this feedback"
                                                 onClick={() => startEdit(note)}>
                                             Edit
                                         </Button>
-                                        <Button size="xs" variant="ghost" colorScheme="red"
+                                        <Button size="xs" variant="outline" colorScheme="red"
                                                 isDisabled={rowBusy}
                                                 aria-label="Delete this feedback"
                                                 onClick={() => handleDelete(note)}>
@@ -221,7 +221,7 @@ function AdminFeedbackForm({ yearIdentifier, adminReviewNotes = [], onUpdate }) 
                                         aria-label="Edit administrative review feedback"
                                     />
                                     <HStack justify="flex-end" spacing={2}>
-                                        <Button size="xs" variant="ghost" onClick={cancelEdit} isDisabled={rowBusy}>
+                                        <Button size="xs" variant="outline" onClick={cancelEdit} isDisabled={rowBusy}>
                                             Cancel
                                         </Button>
                                         <Button size="xs" colorScheme="teal" onClick={handleEditSave}

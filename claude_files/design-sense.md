@@ -228,7 +228,16 @@ component (`AssetBadges.js`: `ScopeBadge`/`ClassBadge`/`ElevationBadge`;
 Contrast: `theme.js`'s `SHADE_8` table re-shades every Button variant and every solid
 Badge per colorScheme to ≥8:1 (white-on-fill and text-on-white alike) — stick to
 `colorScheme`, don't hand-set button/badge bg/text hexes. Outline/subtle badges stay at
-the AA table so the status hues remain distinguishable. Status-level badges are the exception with their own rule:
+the AA table so the status hues remain distinguishable.
+
+**Component boundaries (2026-08-25).** A component whose background is whatever happens
+to be behind it is a violation, not a style: outline buttons carry an explicit `white`
+fill plus a border in their text shade (never Chakra's gray.200 hairline); prefer
+`outline` over `ghost` for row actions, which otherwise read as plain text. Section
+header bands are solid `teal.700` with white extrabold headings and `teal.50` subtitles
+(8.71:1 / 8.12:1) — a tinted `teal.50` band sits at 1.16:1 against a white card and
+disappears. Repeated list rows (recommendations, concerns, notes) separate on
+`gray.100` bg + `gray.300` border; `gray.50`-on-white (1.07:1) does not group anything. Status-level badges are the exception with their own rule:
 tint bg + `getStatusTextColor` (see §2 Semantic).
 
 ### 4.3 Forms (create / edit)
