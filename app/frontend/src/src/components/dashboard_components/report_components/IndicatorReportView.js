@@ -6,13 +6,7 @@ import {
     Heading,
     HStack,
     Link,
-    Table,
-    Tbody,
-    Td,
     Text,
-    Th,
-    Thead,
-    Tr,
     Tag,
     Tooltip,
     VStack,
@@ -31,6 +25,8 @@ import { StatusLevelContext } from '../../../context/StatusLevelContext';
 import { getPlanStatusColorScheme, getPlanStatusLabel } from '../../../styles/planStatusColors';
 import { getWgHex } from '../../../styles/workingGroupIdentity';
 import CopyIndicatorReportButton from './CopyIndicatorReportButton';
+import { SubLabel, SubHeading, Empty, Dash, DataTable } from './blocks/reportPrimitives';
+import ReportSection from './blocks/ReportSection';
 
 /*
  * The single-indicator "View" report — a flat, single-column, single-page rendering of ALL
@@ -41,67 +37,6 @@ import CopyIndicatorReportButton from './CopyIndicatorReportButton';
  * All record lists render as subtle tables (thin row rules, muted headers, no heavy chrome).
  * Semantic document: one <h1> (the indicator), <h2> per section, <h3> per implementation entry.
  */
-
-// ── Primitives ──────────────────────────────────────────────────────────────
-const SubLabel = ({ children }) => (
-    <Text fontSize="2xs" fontWeight="bold" color="gray.600" textTransform="uppercase" letterSpacing="wide">
-        {children}
-    </Text>
-);
-
-/** A true SUBSECTION heading (h3 under the section's h2) wearing the SubLabel
- *  look — for named subsections screen-reader users should be able to jump to.
- *  Row labels (e.g. "Maturity") stay SubLabel: they label a value, not a region. */
-const SubHeading = ({ children }) => (
-    <Heading as="h3" fontSize="2xs" fontWeight="bold" color="gray.600" textTransform="uppercase" letterSpacing="wide">
-        {children}
-    </Heading>
-);
-
-const Empty = ({ children }) => (
-    <Text fontSize="sm" color="gray.600" fontStyle="italic">{children}</Text>
-);
-
-const Dash = () => <Text as="span" color="gray.600">—</Text>;
-
-/** Subtle data table — muted uppercase headers, thin horizontal row rules, no vertical lines. */
-const TH_SX = {
-    fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.03em', color: 'gray.600',
-    fontWeight: 'bold', px: 2, py: 1.5, borderBottomWidth: '1px', borderColor: 'gray.200',
-    textAlign: 'left', whiteSpace: 'nowrap',
-};
-const TD_SX = { fontSize: 'xs', color: 'gray.700', px: 2, py: 2, borderBottomWidth: '1px', borderColor: 'gray.100', verticalAlign: 'top' };
-
-const DataTable = ({ columns, rows }) => {
-    if (!rows.length) return null;
-    return (
-        <Box overflowX="auto">
-            <Table size="sm" variant="unstyled" sx={{ tableLayout: 'auto' }}>
-                <Thead>
-                    <Tr>{columns.map((c, i) => <Th key={i} sx={TH_SX}>{c}</Th>)}</Tr>
-                </Thead>
-                <Tbody>
-                    {rows.map((cells, ri) => (
-                        <Tr key={ri}>{cells.map((cell, ci) => <Td key={ci} sx={TD_SX}>{cell}</Td>)}</Tr>
-                    ))}
-                </Tbody>
-            </Table>
-        </Box>
-    );
-};
-
-/** A titled white section with an <h2> heading and `aria-labelledby` for landmark nav. */
-const ReportSection = ({ id, title, count, action, children }) => (
-    <Box as="section" aria-labelledby={id} bg="white" borderWidth="1px" borderColor="gray.200" borderRadius="lg" boxShadow="sm" p={5}>
-        <HStack justify="space-between" align="baseline" mb={3}>
-            <Heading as="h2" id={id} size="sm" color="teal.700">
-                {title}{typeof count === 'number' ? ` (${count})` : ''}
-            </Heading>
-            {action}
-        </HStack>
-        {children}
-    </Box>
-);
 
 // ── Artifact rows (typed leading tag + resolved link) ───────────────────────
 // Canonical artifact link resolution: uploaded (managed) files carry their link at
