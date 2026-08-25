@@ -342,22 +342,18 @@ def public_report_payload(report):
         ],
         # Issues raised with no resolution path. Same public-surface rules as
         # recommendations: text/status/dates only, the person who raised it is
-        # dropped, and DISMISSED items never reach a report. Converted concerns
-        # DO publish — they show an issue was raised and answered, and `became`
-        # names what answered it.
+        # dropped. Only OPEN concerns publish (decision 2026-08-26): dismissed
+        # never did, and converted ones are answered — the recommendation or plan
+        # they became is already on the page, so publishing the concern too shows
+        # a reader the same item twice, the rule the review window already applies.
         'concerns': [
             {
                 'concern': c.get('concern'),
                 'detail': c.get('detail'),
-                'status': c.get('status'),
-                'resolution': c.get('resolution'),
-                'became': (c.get('became') or {}).get('text'),
-                'became_kind': (c.get('became') or {}).get('kind'),
                 'date_raised': _s(c.get('date_raised')),
-                'date_resolved': _s(c.get('date_resolved')),
             }
             for c in (report.get('concerns') or [])
-            if c.get('status') != 'dismissed'
+            if c.get('status') == 'open'
         ],
         # Derived unit portfolio (names/capacities only — no people emails).
         'ict_footprint': {
