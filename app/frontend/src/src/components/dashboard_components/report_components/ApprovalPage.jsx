@@ -35,7 +35,6 @@ import { UserContext } from '../../../context/UserContext';
 import { fetchGoalReport, fetchPrimaryData } from '../../../services/api/get';
 import { assignApprover, withdrawApproval } from '../../../services/api/put';
 import { workingGroupCodeFromName } from '../../../services/utils/tools';
-import { getWgHex } from '../../../styles/workingGroupIdentity';
 import StatusLevelDetails from '../../graph_components/indicators/StatusLevelDetails';
 import { strengthConfig, controlConfig } from '../../graph_components/implementation/implementationConfig';
 import AdminSummaryForm from './AdminSummaryForm';
@@ -50,6 +49,7 @@ import PlansAccomplishments from './blocks/PlansAccomplishments';
 import PeopleTable from './blocks/PeopleTable';
 import StatusSummary from './blocks/StatusSummary';
 import CommunityOfPractice from './blocks/CommunityOfPractice';
+import IndicatorIdentity from './blocks/IndicatorIdentity';
 
 /*
  * Approval workspace at
@@ -390,44 +390,26 @@ const ApprovalPage = () => {
         <Box maxW="1280px" mx="auto" p={6} textAlign="left" pb="96px">
             {/* ── Intro: who and what, before anything asks for a judgement ── */}
             <Box mb={5}>
-                <Text fontSize="xs" color="gray.500" mb={1}>
-                    <Link as={RouterLink} to={`/${campus}/dashboard/reports`} color="teal.600">
-                        Reports
-                    </Link>
-                    {' / '}Approval
-                </Text>
-                <HStack justify="space-between" align="flex-start" flexWrap="wrap" gap={3}>
-                    <Box minW={0}>
-                        <HStack spacing={2} mb={1} flexWrap="wrap">
-                            <Text fontFamily="mono" fontSize="lg" fontWeight="bold" color="gray.700">
-                                {compositeKey}
-                            </Text>
-                            {indicator.working_group && (
-                                <>
-                                    <Box w="10px" h="10px" borderRadius="full"
-                                        bg={getWgHex(indicator.working_group)} />
-                                    <Text fontSize="sm" color="gray.600">{indicator.working_group}</Text>
-                                </>
-                            )}
-                            <Text fontSize="sm" color="gray.600">
-                                · {report?.campus?.name || (campus || '').toUpperCase()}
-                                {' · '}{report?.year || currentAcademicYear}
-                            </Text>
-                        </HStack>
-                        <Heading as="h1" size="md" color="gray.800" lineHeight="1.35">
-                            {indicator.success_indicator}
-                        </Heading>
-                        {indicator.goal_number && (
-                            <Text fontSize="sm" color="gray.600" mt={1}>
-                                Goal {indicator.goal_number} — {indicator.goal_name}
-                            </Text>
-                        )}
-                    </Box>
-                    <Button as={RouterLink} to={backToReport} size="sm" variant="outline"
-                        rightIcon={<ExternalLinkIcon />} flexShrink={0}>
-                        Open standalone report
-                    </Button>
-                </HStack>
+                <IndicatorIdentity
+                    indicator={indicator}
+                    compositeKey={compositeKey}
+                    campusName={report?.campus?.name || (campus || '').toUpperCase()}
+                    year={report?.year || currentAcademicYear}
+                    breadcrumb={
+                        <Text fontSize="xs" color="gray.500" mb={1}>
+                            <Link as={RouterLink} to={`/${campus}/dashboard/reports`} color="teal.600">
+                                Reports
+                            </Link>
+                            {' / '}Approval
+                        </Text>
+                    }
+                    action={
+                        <Button as={RouterLink} to={backToReport} size="sm" variant="outline"
+                            rightIcon={<ExternalLinkIcon />} flexShrink={0}>
+                            Open standalone report
+                        </Button>
+                    }
+                />
             </Box>
 
             {isApproved && (

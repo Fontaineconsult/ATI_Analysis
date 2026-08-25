@@ -19,7 +19,6 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { getImplementationURL, navigateToIndicator } from '../../../services/utils/tools';
 import { strengthConfig, controlConfig } from '../../graph_components/implementation/implementationConfig';
 import { StatusLevelContext } from '../../../context/StatusLevelContext';
-import { getWgHex } from '../../../styles/workingGroupIdentity';
 import CopyIndicatorReportButton from './CopyIndicatorReportButton';
 import { SubLabel, SubHeading, Empty, Dash, DataTable } from './blocks/reportPrimitives';
 import ReportSection from './blocks/ReportSection';
@@ -29,6 +28,7 @@ import ArtifactTable from './blocks/ArtifactTable';
 import PlansAccomplishments from './blocks/PlansAccomplishments';
 import StatusSummary from './blocks/StatusSummary';
 import CommunityOfPractice from './blocks/CommunityOfPractice';
+import IndicatorIdentity from './blocks/IndicatorIdentity';
 
 /*
  * The single-indicator "View" report — a flat, single-column, single-page rendering of ALL
@@ -347,48 +347,43 @@ const IndicatorReportView = ({ report }) => {
             <style>{`@media print { .report-no-print { display: none !important; } }`}</style>
 
             <VStack align="stretch" spacing={4}>
-                {/* Header */}
-                <Box as="header">
-                    <HStack justify="space-between" align="flex-start" flexWrap="wrap" gap={3}>
-                        <Box minW={0}>
-                            <HStack spacing={2} mb={1} flexWrap="wrap">
-                                <Text fontFamily="mono" fontSize="lg" fontWeight="bold" color="gray.700">{indicator.composite_key}</Text>
-                                <Box w="10px" h="10px" borderRadius="full" bg={getWgHex(indicator.working_group)} />
-                                <Text fontSize="sm" color="gray.600">{indicator.working_group}</Text>
-                                <Text fontSize="sm" color="gray.600">· {campusName} · {report.year}</Text>
-                            </HStack>
-                            <Heading as="h1" size="md" color="gray.800" lineHeight="1.35">{indicator.success_indicator}</Heading>
-                            <Text fontSize="sm" color="gray.600" mt={1}>Goal {indicator.goal_number} — {indicator.goal_name}</Text>
-                        </Box>
+                {/* Header — identity via the shared block; the action buttons stay
+                    page-owned (Copy/Print/Edit and the .report-no-print class are the
+                    report's own concerns). */}
+                <IndicatorIdentity
+                    indicator={indicator}
+                    campusName={campusName}
+                    year={report.year}
+                    action={
                         <HStack className="report-no-print" spacing={2} flexShrink={0}>
-                            <CopyIndicatorReportButton report={report} />
-                            <Button
-                                size="sm"
-                                variant="outline"
-                                colorScheme="teal"
-                                title="Copy the shareable read-only public page for this report"
-                                onClick={() => {
-                                    // Derive the public URL from the composite key ("1.1-web").
-                                    const [numbers, suffix] = (indicator.composite_key || '').split('-');
-                                    const [goalNum, siNum] = (numbers || '').split('.');
-                                    const seg = { web: 'web', ins: 'instructional-materials', pro: 'procurement' }[suffix];
-                                    if (!seg || !goalNum || !siNum) return;
-                                    const url = `${window.location.origin}/ati/reports/public/${campus}/${report.year}/${seg}/${goalNum}/${siNum}`;
-                                    navigator.clipboard.writeText(url);
-                                    toast({
-                                        title: 'Public link copied!',
-                                        description: 'Shareable read-only report link copied to clipboard.',
-                                        status: 'success', duration: 2000, isClosable: true,
-                                    });
-                                }}
-                            >
-                                Copy public link
-                            </Button>
-                            <Button size="sm" colorScheme="teal" onClick={() => window.print()}>Print report</Button>
-                            <Button size="sm" variant="outline" colorScheme="teal" onClick={openEdit}>Edit</Button>
-                        </HStack>
-                    </HStack>
-                </Box>
+                                <CopyIndicatorReportButton report={report} />
+                                <Button
+                                    size="sm"
+                                    variant="outline"
+                                    colorScheme="teal"
+                                    title="Copy the shareable read-only public page for this report"
+                                    onClick={() => {
+                                        // Derive the public URL from the composite key ("1.1-web").
+                                        const [numbers, suffix] = (indicator.composite_key || '').split('-');
+                                        const [goalNum, siNum] = (numbers || '').split('.');
+                                        const seg = { web: 'web', ins: 'instructional-materials', pro: 'procurement' }[suffix];
+                                        if (!seg || !goalNum || !siNum) return;
+                                        const url = `${window.location.origin}/ati/reports/public/${campus}/${report.year}/${seg}/${goalNum}/${siNum}`;
+                                        navigator.clipboard.writeText(url);
+                                        toast({
+                                            title: 'Public link copied!',
+                                            description: 'Shareable read-only report link copied to clipboard.',
+                                            status: 'success', duration: 2000, isClosable: true,
+                                        });
+                                    }}
+                                >
+                                    Copy public link
+                                </Button>
+                                <Button size="sm" colorScheme="teal" onClick={() => window.print()}>Print report</Button>
+                                <Button size="sm" variant="outline" colorScheme="teal" onClick={openEdit}>Edit</Button>
+                            </HStack>
+                    }
+                />
 
                 {/* Status & Administrative Review — five separated blocks:
                     maturity+flags · community of practice · administrative review ·
