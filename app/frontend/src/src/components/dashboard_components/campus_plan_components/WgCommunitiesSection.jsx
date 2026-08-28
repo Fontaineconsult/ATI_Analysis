@@ -88,11 +88,14 @@ function WgCommunitiesSection({ leads = [], onManageLeads, communities = [], acc
                     <VStack align="stretch" spacing={1.5}>
                         {visible.map((c) => {
                             const allMembers = c.leads || [];
-                            // Campus context: only this campus's members. A member with no
-                            // campus recorded stays visible — a missing works_at_campus edge
-                            // is a data gap, not evidence they work elsewhere.
+                            // Campus context: only members ACTIVE here. active_campuses is
+                            // the server-resolved effective scope (the membership's own
+                            // campus list when set, else the member's home campus). An
+                            // empty effective list is a data gap, not evidence they work
+                            // elsewhere — those members stay visible.
+                            const eff = (m) => m.active_campuses ?? (m.campus ? [m.campus] : []);
                             const members = campusAbbrev
-                                ? allMembers.filter((m) => !m.campus || m.campus === campusAbbrev)
+                                ? allMembers.filter((m) => eff(m).length === 0 || eff(m).includes(campusAbbrev))
                                 : allMembers;
                             return (
                             <Box

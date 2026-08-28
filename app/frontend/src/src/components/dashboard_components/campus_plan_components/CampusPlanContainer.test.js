@@ -251,15 +251,19 @@ describe('CampusPlanContainer (v2 single-page shell)', () => {
                                 name: 'Procurement Community',
                                 stake_count: 15,
                                 leads: [
-                                    { name: 'Sam Steward', title: 'Buyer II', campus: 'sfsu', note: null },
-                                    { name: 'Kris Peer', title: 'Analyst', campus: 'csueb', note: null },
+                                    { name: 'Sam Steward', title: 'Buyer II', campus: 'sfsu', active_campuses: ['sfsu'], note: null },
+                                    { name: 'Kris Peer', title: 'Analyst', campus: 'csueb', active_campuses: ['csueb'], note: null },
+                                    // Membership scoped to BOTH campuses — visible here at sfsu.
+                                    { name: 'Dual Duty', title: 'SFBRN', campus: 'csueb', active_campuses: ['sfsu', 'csueb'], note: null },
+                                    // No effective scope at all: a data gap stays visible.
+                                    { name: 'Gap Case', title: 'Unlinked', campus: null, active_campuses: [], note: null },
                                 ],
                             },
                             { name: 'Disability Services', stake_count: 2, leads: [] },
                             {
                                 name: 'Library Community',
                                 stake_count: 1,
-                                leads: [{ name: 'Far Member', title: 'Librarian', campus: 'csueb', note: null }],
+                                leads: [{ name: 'Far Member', title: 'Librarian', campus: 'csueb', active_campuses: ['csueb'], note: null }],
                             },
                         ],
                         working_group_members: [],
@@ -275,10 +279,14 @@ describe('CampusPlanContainer (v2 single-page shell)', () => {
         expect(await screen.findByText('Procurement Community')).toBeInTheDocument();
         expect(screen.getByText('15 stakes')).toBeInTheDocument();
         expect(screen.getByText(/Sam Steward/)).toBeInTheDocument();
-        // Campus context: members from OTHER campuses are filtered out entirely —
+        // Campus context: members not ACTIVE here are filtered out entirely —
         // a campus plan shows its own campus's roster, not the cross-campus community.
         expect(screen.queryByText(/Kris Peer/)).not.toBeInTheDocument();
         expect(screen.queryByText('csueb')).not.toBeInTheDocument();
+        // A membership scoped to sfsu+csueb IS active here, home campus notwithstanding.
+        expect(screen.getByText(/Dual Duty/)).toBeInTheDocument();
+        // Empty effective scope = data gap, stays visible.
+        expect(screen.getByText(/Gap Case/)).toBeInTheDocument();
         // Leaderless community shows the derive-via-working-group empty state.
         expect(screen.getByText('Disability Services')).toBeInTheDocument();
         expect(screen.getByText(/people derive from the working group/i)).toBeInTheDocument();
