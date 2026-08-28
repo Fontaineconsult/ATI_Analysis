@@ -800,8 +800,16 @@ class ParticipationRel(StructuredRel):
 
 
 class CommunityMembershipRel(StructuredRel):
-    """A person's membership in a community of practice."""
+    """A person's membership in a community of practice.
+
+    `campuses` scopes WHERE the person is active in this community. Empty/None means
+    the home-campus fallback (Person.works_at_campus) — today's behavior for every
+    pre-existing edge. A non-empty list is AUTHORITATIVE: active at exactly those
+    campuses, home included only if listed (so "active only away from home" is
+    representable). Decided 2026-09-04.
+    """
     note = StringProperty()             # optional: the person's stake in the area
+    campuses = ArrayProperty(StringProperty())  # campus abbrevs; empty = home fallback
     added_date = DateProperty()
 
 
@@ -833,7 +841,14 @@ def serialize_role_holdings(person):
 
 
 def serialize_community_memberships(person):
-    """Project a Person's in_communities edges → [{unique_id, name, note}]."""
+    """Project a Person's in_communities edges → [{unique_id, name, note, campuses, added_date}].
+
+    Every edge property MUST be projected here: the MCP assign_person_to_community
+    tool (and the CommunityDetailPanel writeMembership rebuild) reconstruct the FULL
+    membership list from this projection and replay it through replace-semantics
+    set_person_communities — a field missing here is silently wiped on every
+    incremental assign.
+    """
     rows = []
     for community in person.in_communities.all():
         rel = person.in_communities.relationship(community)
@@ -841,6 +856,8 @@ def serialize_community_memberships(person):
             "unique_id": community.unique_id,
             "name": community.name,
             "note": rel.note if rel else None,
+            "campuses": (rel.campuses if rel else None) or [],
+            "added_date": rel.added_date.isoformat() if rel and rel.added_date else None,
         })
     return rows
 

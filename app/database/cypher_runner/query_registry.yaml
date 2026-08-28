@@ -522,10 +522,13 @@
   params: []
   cypher: |
     MATCH (c:CommunityOfPractice)
-    OPTIONAL MATCH (p:Person)-[:member_of_community]->(c)
+    OPTIONAL MATCH (p:Person)-[m:member_of_community]->(c)
     OPTIONAL MATCH (p)-[:works_at_campus]->(campus:Campus)
+    WITH c, p,
+         CASE WHEN size(coalesce(m.campuses, [])) > 0 THEN m.campuses
+              ELSE [a IN [campus.abbreviation] WHERE a IS NOT NULL] END AS eff
     WITH c, count(DISTINCT p) AS member_count,
-         [a IN collect(DISTINCT campus.abbreviation) WHERE a IS NOT NULL] AS campuses
+         apoc.coll.toSet(apoc.coll.flatten(collect(eff))) AS campuses
     RETURN c.name AS name, c.description AS description, member_count, campuses,
            size([(c)-[:has_stake_in]->(:SuccessIndicator) | 1]) AS stake_count
     ORDER BY toLower(c.name)
@@ -548,6 +551,9 @@
             leads: [(lead:Person)-[m:member_of_community]->(c) |
                       {name: lead.name, title: lead.title,
                        campus: head([(lead)-[:works_at_campus]->(ca:Campus) | ca.abbreviation]),
+                       active_campuses: CASE WHEN size(coalesce(m.campuses, [])) > 0
+                                             THEN m.campuses
+                                             ELSE [(lead)-[:works_at_campus]->(ca:Campus) | ca.abbreviation] END,
                        note: m.note}]
          }) WHERE x.name IS NOT NULL] AS communities
     OPTIONAL MATCH (p:Person)-[:participates_in]->(wg)
@@ -572,6 +578,10 @@
            [(p:Person)-[m:member_of_community]->(c) |
               {name: p.name, title: p.title, employee_id: p.employee_id,
                campus: head([(p)-[:works_at_campus]->(ca) | ca.abbreviation]),
+               campuses: coalesce(m.campuses, []),
+               active_campuses: CASE WHEN size(coalesce(m.campuses, [])) > 0
+                                     THEN m.campuses
+                                     ELSE [(p)-[:works_at_campus]->(ca) | ca.abbreviation] END,
                note: m.note}] AS members,
            [(c)-[s:has_stake_in]->(si:SuccessIndicator) |
               {composite_key: si.composite_key, indicator: si.success_indicator,

@@ -67,10 +67,14 @@ def register(mcp, ctx) -> None:
 
     def assign_person_to_community(
         employee_id: str, community_name: str, note: Optional[str] = None,
+        campuses: Optional[list] = None,
     ) -> dict:
         """Add one community membership to a Person (by employee_id) without touching
         their other memberships. `community_name` is the full CommunityOfPractice.name;
-        the optional note records the person's stake in the area."""
+        the optional note records the person's stake in the area. `campuses` (list of
+        campus abbrevs) scopes where the member is active in this community — omit it
+        to follow their home campus; a non-empty list is authoritative (home counts
+        only if listed)."""
         ensure_app()
         from app.database.graph_schema import Person
         from app.database.queries.communities.update import set_person_communities
@@ -81,13 +85,16 @@ def register(mcp, ctx) -> None:
         if person is None:
             raise NotFoundError(f"Person with employee_id {employee_id!r} not found")
 
-        # set_person_communities is replace-semantics; carry the existing set forward.
+        # set_person_communities is replace-semantics; carry the existing set forward
+        # with EVERY edge property — whatever this list omits gets wiped on replay.
         current = [
-            {"community_id": c["unique_id"], "note": c.get("note")}
+            {"community_id": c["unique_id"], "note": c.get("note"),
+             "campuses": c.get("campuses"), "added_date": c.get("added_date")}
             for c in person.serialize().get("communities", [])
             if c["unique_id"] != community.unique_id
         ]
-        current.append({"community_id": community.unique_id, "note": note})
+        current.append({"community_id": community.unique_id, "note": note,
+                        "campuses": campuses})
         with _quiet():
             set_person_communities(employee_id, current)
         return {"ok": True, "person": person.name, "community": community.name}
