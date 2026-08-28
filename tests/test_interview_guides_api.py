@@ -229,3 +229,59 @@ def test_delete(guide_fixtures):
         get_interview_guide(g.unique_id)
     # The person (and the real YSE) survive the guide's deletion.
     assert Person.nodes.first_or_none(unique_id=f["person"].unique_id) is not None
+
+
+# --- Endpoint layer ----------------------------------------------------------------
+
+@pytest.mark.api
+def test_endpoint_flow(flask_client, guide_fixtures):
+    f = guide_fixtures
+    base = "/ati/data-api/v1/interview-guides"
+
+    resp = flask_client.post(base, json={
+        "action": "create_interview_guide",
+        "title": GUIDE_TITLE,
+        "campus_abbrev": f["campus"],
+        "year_name": TEST_ACADEMIC_YEAR_NAME,
+        "content": "## endpoint guide",
+        "meeting_date": "2099-07-01",
+        "prepared_for_unique_ids": [f["person"].unique_id],
+        "target_year_identifiers": [f["targets"][0]],
+        "pertains_to_community_unique_ids": [f["community"].unique_id],
+    })
+    assert resp.status_code == 201, resp.get_json()
+    created = resp.get_json()["data"]
+    uid = created["unique_id"]
+    assert [p["unique_id"] for p in created["prepared_for"]] == [f["person"].unique_id]
+    assert [t["year_identifier"] for t in created["targets"]] == [f["targets"][0]]
+    assert [c["unique_id"] for c in created["pertains_to_communities"]] == [f["community"].unique_id]
+
+    resp = flask_client.get(f"{base}/campus/{f['campus']}/{TEST_ACADEMIC_YEAR_NAME}")
+    assert resp.status_code == 200
+    assert any(g["unique_id"] == uid for g in resp.get_json()["data"]["guides"])
+
+    resp = flask_client.get(f"{base}/community/{f['community'].unique_id}")
+    assert resp.status_code == 200
+    assert [g["unique_id"] for g in resp.get_json()["data"]["guides"]] == [uid]
+
+    # Full-replace via PUT; non-list payload is a 400.
+    resp = flask_client.put(base, json={
+        "action": "set_prepared_for", "unique_id": uid, "person_unique_ids": [],
+    })
+    assert resp.status_code == 200
+    assert resp.get_json()["data"]["prepared_for"] == []
+    resp = flask_client.put(base, json={
+        "action": "set_targets", "unique_id": uid, "target_year_identifiers": "x",
+    })
+    assert resp.status_code == 400
+
+    resp = flask_client.put(base, json={
+        "action": "update_interview_guide", "unique_id": uid, "title": f"{GUIDE_TITLE} renamed",
+    })
+    assert resp.status_code == 200
+    assert resp.get_json()["data"]["title"] == f"{GUIDE_TITLE} renamed"
+
+    resp = flask_client.delete(f"{base}/{uid}")
+    assert resp.status_code == 200
+    resp = flask_client.get(f"{base}/item/{uid}")
+    assert resp.status_code == 404
