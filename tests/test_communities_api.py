@@ -590,3 +590,19 @@ def test_set_communities_endpoint_accepts_campuses(flask_client, test_person_wit
         "communities": [{"community_id": community.unique_id, "campuses": ["zzz"]}],
     })
     assert resp.status_code == 400
+
+
+def test_add_stake_rejects_removed_indicator(cleanup_communities):
+    """A retired (removed=true) SuccessIndicator is not a valid new stake target."""
+    from app.database.graph_schema import SuccessIndicator
+    from app.database.queries.communities.create import create_community
+    from app.database.queries.communities.update import add_community_stake
+    from app.endpoints.data_api.errors.custom_exceptions import ValidationError
+
+    removed_si = SuccessIndicator.nodes.filter(removed=True).first_or_none()
+    if removed_si is None:
+        pytest.skip("No removed SuccessIndicator in the graph to test against")
+
+    community = create_community({"name": COMMUNITY_NAME})
+    with pytest.raises(ValidationError):
+        add_community_stake(community.unique_id, removed_si.composite_key)

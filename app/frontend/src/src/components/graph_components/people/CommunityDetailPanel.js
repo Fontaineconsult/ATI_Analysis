@@ -157,7 +157,9 @@ function CommunityDetailPanel({ communityId, onAfterChange, onEdit, onDeleted })
             const options = [];
             (wg.goals || []).forEach((goal) => {
                 (goal.successIndicators || []).forEach((si) => {
-                    if (si?.composite_key && !staked.has(si.composite_key)) {
+                    // The payload keeps removed SIs (settings manages them there);
+                    // a retired indicator is not a valid new stake target.
+                    if (si?.composite_key && !si.removed && !staked.has(si.composite_key)) {
                         options.push({ key: si.composite_key, text: si.success_indicator || '' });
                     }
                 });

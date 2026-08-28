@@ -141,14 +141,20 @@ def add_community_stake(community_unique_id: str, composite_key: str, note: str 
     Idempotent (MERGE): re-adding refreshes the note only when one is provided.
     Modeled on committees.update.add_prioritized_indicator.
 
-    Raises NotFoundError if either node is missing, CrudError on failure.
+    Raises NotFoundError if either node is missing, ValidationError when the
+    indicator is removed (a retired indicator is not a valid new stake target —
+    the backstop behind the UI filter), CrudError on failure.
     """
     community = get_community_node(community_unique_id)
 
     try:
-        SuccessIndicator.nodes.get(composite_key=composite_key)
+        si = SuccessIndicator.nodes.get(composite_key=composite_key)
     except SuccessIndicator.DoesNotExist:
         raise NotFoundError(f"SuccessIndicator {composite_key!r} not found")
+    if si.removed:
+        raise ValidationError(
+            f"SuccessIndicator {composite_key!r} is removed; a retired indicator cannot take a new stake."
+        )
 
     try:
         db.cypher_query(

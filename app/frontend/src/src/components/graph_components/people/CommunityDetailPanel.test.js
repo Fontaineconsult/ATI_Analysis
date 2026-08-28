@@ -87,6 +87,8 @@ const INDICATORS = [
         goals: [{ goal_number: 1, successIndicators: [
             { composite_key: '1.19-web', success_indicator: 'A very long indicator name that must not be cut off in the picker' },
             { composite_key: '1.2-web', success_indicator: 'Accessibility statement' },
+            // Removed SI rides along in the payload (settings needs it) — never pickable.
+            { composite_key: '1.7-web', success_indicator: 'Retired indicator', removed: true },
         ] }],
     },
 ];
@@ -150,6 +152,8 @@ describe('CommunityDetailPanel — membership campus scoping', () => {
         const webOptions = [...picker.querySelectorAll('optgroup')[0].querySelectorAll('option')]
             .map((o) => o.value);
         expect(webOptions).toEqual(['1.2-web', '1.19-web']); // numeric, not lexicographic
+        // The removed indicator never appears as a stake target.
+        expect(screen.queryByRole('option', { name: /1\.7-web/ })).not.toBeInTheDocument();
         // Full text, no truncation.
         expect(screen.getByRole('option', {
             name: /1\.19-web — A very long indicator name that must not be cut off in the picker/,
