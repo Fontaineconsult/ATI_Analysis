@@ -29,6 +29,7 @@ import Card from '../common/Card';
 import Section from '../common/Section';
 import PersonAssignmentSelector from '../../functional_components/PersonAssignmentSelector';
 import CopyCommunityReportButton from './CopyCommunityReportButton';
+import CopyCommunityStakesButton from './CopyCommunityStakesButton';
 import MemberCampusScopePicker from './MemberCampusScopePicker';
 import { buildMembershipWrite, personCommunities } from './peopleConfig';
 import { ALL_WORKING_GROUPS } from '../../../styles/workingGroupIdentity';
@@ -352,6 +353,10 @@ function CommunityDetailPanel({ communityId, onAfterChange, onEdit, onDeleted })
                        report. Server-rendered, so Open is a plain full-page link —
                        React Router must never swallow it. */
                     <HStack spacing={1.5}>
+                        <CopyCommunityStakesButton
+                            detail={detail}
+                            reviewSpreadUrl={`${window.location.origin}/ati/reports/public/community/${campus}/${currentAcademicYear}/${communityId}`}
+                        />
                         <Button
                             size="xs"
                             colorScheme="teal"

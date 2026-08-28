@@ -113,4 +113,34 @@ export function buildCommunityReport(detail) {
     return { html, plainText: lines.join('\n'), rowCount: members.length + stakes.length };
 }
 
+/**
+ * Stakes-only variant: just the indicator-stakes table for one community, for
+ * mailing the "what this community reviews" list without the member roster.
+ * Same Outlook-safe conventions as buildCommunityReport. Pass `reviewSpreadUrl`
+ * to include the public review-spread link under the heading, so recipients can
+ * click through to the live review states.
+ */
+export function buildCommunityStakesReport(detail, { reviewSpreadUrl = null } = {}) {
+    const stakes = Array.isArray(detail?.stakes) ? detail.stakes : [];
+    const name = detail?.name || 'Community of Practice';
+
+    const html = `<div style="${FONT}">`
+        + `<p style="margin:0 0 2px 0;font-size:16px;font-weight:bold;color:${NAVY};${FONT}">${esc(name)}</p>`
+        + `<p style="margin:0 0 4px 0;font-size:11px;color:${MUTED};${FONT}">Community of Practice — indicator stakes</p>`
+        + (reviewSpreadUrl
+            ? `<p style="margin:0 0 8px 0;font-size:12px;${FONT}"><a href="${esc(reviewSpreadUrl)}" style="color:${NAVY};">Live review spread</a></p>` : '')
+        + sectionHeading(`Indicator stakes (${stakes.length})`)
+        + stakesTableHtml(stakes)
+        + '</div>';
+
+    const lines = [name, 'Community of Practice — indicator stakes'];
+    if (reviewSpreadUrl) lines.push(`Live review spread: ${reviewSpreadUrl}`);
+    lines.push('', `INDICATOR STAKES (${stakes.length})`);
+    stakes.forEach((s) => lines.push(
+        `  - ${s.composite_key}: ${s.success_indicator || ''}${s.note ? ` — ${s.note}` : ''}`,
+    ));
+
+    return { html, plainText: lines.join('\n'), rowCount: stakes.length };
+}
+
 export default buildCommunityReport;

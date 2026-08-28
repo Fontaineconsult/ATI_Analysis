@@ -152,6 +152,8 @@ describe('CommunityDetailPanel — membership campus scoping', () => {
         const webOptions = [...picker.querySelectorAll('optgroup')[0].querySelectorAll('option')]
             .map((o) => o.value);
         expect(webOptions).toEqual(['1.2-web', '1.19-web']); // numeric, not lexicographic
+        // The email-table copy button sits in the stakes card.
+        expect(screen.getByRole('button', { name: /copy table/i })).toBeInTheDocument();
         // The removed indicator never appears as a stake target.
         expect(screen.queryByRole('option', { name: /1\.7-web/ })).not.toBeInTheDocument();
         // Full text, no truncation.

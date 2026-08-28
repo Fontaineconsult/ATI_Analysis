@@ -1,4 +1,4 @@
-import { buildCommunityReport } from './communityReport';
+import { buildCommunityReport, buildCommunityStakesReport } from './communityReport';
 
 const DETAIL = {
     name: 'Library',
@@ -64,5 +64,39 @@ describe('buildCommunityReport', () => {
 
     it('tolerates a null detail', () => {
         expect(buildCommunityReport(null).rowCount).toBe(0);
+    });
+});
+
+
+describe('buildCommunityStakesReport', () => {
+    it('renders the stakes table only, with the review-spread link line', () => {
+        const { html, plainText, rowCount } = buildCommunityStakesReport(DETAIL, {
+            reviewSpreadUrl: 'https://example.edu/ati/reports/public/community/sfsu/2025-2026/abc',
+        });
+        expect(rowCount).toBe(1);
+        expect(html).toContain('Indicator stakes (1)');
+        expect(html).toContain('7.11-ins');
+        expect(html).toContain('Library assets &lt;lifecycle&gt;');
+        expect(html).toContain('href="https://example.edu/ati/reports/public/community/sfsu/2025-2026/abc"');
+        // Stakes only — no member roster.
+        expect(html).not.toContain('Members (');
+        expect(html).not.toContain('Christy Stevens');
+        expect(plainText).toContain('INDICATOR STAKES (1)');
+        expect(plainText).toContain('Live review spread: https://example.edu/ati/reports/public/community/sfsu/2025-2026/abc');
+        expect(plainText).not.toContain('MEMBERS');
+    });
+
+    it('omits the link line without a URL and stays Outlook-safe', () => {
+        const { html } = buildCommunityStakesReport(DETAIL);
+        expect(html).not.toContain('Live review spread');
+        expect(html).toContain('<table cellpadding="0" cellspacing="0"');
+        expect(html).toContain('bgcolor=');
+        expect(html).not.toContain('<style');
+    });
+
+    it('reports rowCount 0 for a stakeless community', () => {
+        const { rowCount, html } = buildCommunityStakesReport({ name: 'Empty', stakes: [] });
+        expect(rowCount).toBe(0);
+        expect(html).toContain('No indicator stakes recorded yet.');
     });
 });
