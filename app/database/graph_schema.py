@@ -1899,6 +1899,20 @@ class MeetingMinutes(StructuredNode):
     supporting_webpages  = RelationshipTo("Webpage", "is_documented_by", model=DocumentedByRel)
     notes                = RelationshipTo("Note", "has_note")
 
+    # Who is REPRESENTED in the record — broader than attendance: a person whose voice,
+    # program or interests the minutes carry is represented whether they sat in the room
+    # or a colleague reported for them. Distinct from recorded_by (the scribe) and from
+    # any worked_on/implements edge the ingest may wire from the CONTENT of the meeting —
+    # this edge is about the record itself, so "which meetings covered X's ground" is one
+    # hop, not a text search.
+    represents = RelationshipTo("Person", "represents")
+
+    # Communities of practice whose ground the meeting touched. The ingest's routing
+    # already decides which communities a meeting speaks to (has_stake_in wiring, member
+    # rosters); this edge keeps that judgment ON the record, so a community's page can
+    # list the meetings that concern it without re-deriving from prose.
+    referenced_communities = RelationshipTo("CommunityOfPractice", "references_community")
+
     def serialize(self):
         return {
             "unique_id": self.unique_id,
@@ -2055,6 +2069,9 @@ class CommunityOfPractice(StructuredNode):
 
     # Reverse of Person.in_communities; the membership edge carries an optional note.
     members = RelationshipFrom("Person", "member_of_community", model=CommunityMembershipRel)
+    # Meetings whose minutes reference this community — the record-side counterpart of
+    # MeetingMinutes.referenced_communities.
+    referenced_in_minutes = RelationshipFrom("MeetingMinutes", "references_community")
 
     # The indicators this community's practice area has stakes in (agentive: its
     # members are the stakeholders for that indicator's evidence). Declared here on
@@ -2111,6 +2128,9 @@ class Person(StructuredNode):
     host_campus = RelationshipTo("Campus", "works_at_campus", cardinality=ZeroOrOne)
     holds_role = RelationshipTo("Role", "holds_role", model=RoleHoldingRel)  # capacities the person provides (PD tracking lives on the edge)
     in_communities = RelationshipTo("CommunityOfPractice", "member_of_community", model=CommunityMembershipRel)  # cross-campus shared-interest groupings
+    # Meetings whose minutes represent this person — voice or interests carried in the
+    # record, not merely attendance. Counterpart of MeetingMinutes.represents.
+    represented_in_minutes = RelationshipFrom("MeetingMinutes", "represents")
     # Participatory "working team" edges to the four doing-implementations — the role
     # acted in is a property on the edge (ParticipationRel.role_handle); distinct from
     # owned_by (custodial). One shared rel-type "worked_on" across the four.
