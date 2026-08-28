@@ -15,6 +15,7 @@ import {
     filterCommunities,
     summarizePeople,
     summarizeCommunities,
+    buildMembershipWrite,
 } from './peopleConfig';
 
 const person = (overrides = {}) => ({
@@ -139,5 +140,52 @@ describe('communities', () => {
         expect(summarizeCommunities(
             [{ unique_id: 'c3', stake_count: 2 }, { unique_id: 'c4', stake_count: 3 }], [],
         ).totalStakes).toBe(5);
+    });
+
+    describe('buildMembershipWrite (replace-semantics payload builder)', () => {
+        const rp = person({
+            unique_id: 'a',
+            host_campus: 'sfsu',
+            communities: [
+                { unique_id: 'c1', name: 'Library', note: 'liaison', campuses: ['ssu', 'csueb'] },
+                { unique_id: 'c2', name: 'Alt Media', note: null, campuses: [] },
+            ],
+        });
+
+        it('carries other memberships verbatim on add and on remove', () => {
+            const added = buildMembershipWrite(rp, 'c3', { include: true });
+            expect(added).toEqual([
+                { community_id: 'c1', note: 'liaison', campuses: ['ssu', 'csueb'] },
+                { community_id: 'c2', note: null, campuses: [] },
+                { community_id: 'c3' },
+            ]);
+            const removed = buildMembershipWrite(rp, 'c2', { include: false });
+            expect(removed).toEqual([
+                { community_id: 'c1', note: 'liaison', campuses: ['ssu', 'csueb'] },
+            ]);
+        });
+
+        it('sets campuses on the target membership, keeping its note', () => {
+            const out = buildMembershipWrite(rp, 'c1', { campuses: ['sfsu'] });
+            expect(out.find((m) => m.community_id === 'c1')).toEqual(
+                { community_id: 'c1', note: 'liaison', campuses: ['sfsu'] },
+            );
+        });
+
+        it('no-freeze: raw-empty membership set to exactly [home] stays []', () => {
+            const out = buildMembershipWrite(rp, 'c2', { campuses: ['sfsu'] });
+            expect(out.find((m) => m.community_id === 'c2').campuses).toEqual([]);
+            // But home + another campus IS an explicit scope.
+            const scoped = buildMembershipWrite(rp, 'c2', { campuses: ['sfsu', 'ssu'] });
+            expect(scoped.find((m) => m.community_id === 'c2').campuses).toEqual(['sfsu', 'ssu']);
+            // And an already-scoped membership set to [home] keeps the explicit [home].
+            const explicit = buildMembershipWrite(rp, 'c1', { campuses: ['sfsu'] });
+            expect(explicit.find((m) => m.community_id === 'c1').campuses).toEqual(['sfsu']);
+        });
+
+        it('clearing to [] on a scoped membership follows home again', () => {
+            const out = buildMembershipWrite(rp, 'c1', { campuses: [] });
+            expect(out.find((m) => m.community_id === 'c1').campuses).toEqual([]);
+        });
     });
 });

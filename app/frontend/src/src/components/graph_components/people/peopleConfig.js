@@ -149,10 +149,41 @@ export const PERSON_STATUS_FIELDS = [
 // groupings by shared functional area; freely creatable data, not a vocabulary.
 // ---------------------------------------------------------------------------
 
-/** Normalize person.communities ([{unique_id, name, note}]) to that array. */
+/** Normalize person.communities ([{unique_id, name, note, campuses}]) to that array. */
 export function personCommunities(person) {
     if (!person || !Array.isArray(person.communities)) return [];
     return person.communities.filter(Boolean);
+}
+
+/**
+ * Build the full-replace payload for setPersonCommunities from a roster person.
+ * Replace semantics make this the danger zone: every OTHER membership must be
+ * carried through verbatim (community_id, note, campuses) or its fields get
+ * wiped on replay — so all membership writes go through this one builder.
+ *
+ * opts:
+ *   include   true = ensure communityId present, false = drop it
+ *   campuses  when given, the new campus scope for communityId, with the
+ *             NO-FREEZE rule: a membership whose raw list was empty and whose
+ *             new selection is exactly [host_campus] stays [] — it keeps
+ *             following the person's home instead of freezing today's home.
+ */
+export function buildMembershipWrite(rosterPerson, communityId, { include = true, campuses } = {}) {
+    const carry = (c) => ({ community_id: c.unique_id, note: c.note, campuses: c.campuses });
+    const others = personCommunities(rosterPerson)
+        .filter((c) => c.unique_id !== communityId)
+        .map(carry);
+    if (!include) return others;
+
+    const current = personCommunities(rosterPerson).find((c) => c.unique_id === communityId);
+    const entry = current ? carry(current) : { community_id: communityId };
+    if (campuses !== undefined) {
+        const home = rosterPerson?.host_campus;
+        const wasEmpty = !(current?.campuses || []).length;
+        const isJustHome = campuses.length === 1 && home && campuses[0] === home;
+        entry.campuses = wasEmpty && isJustHome ? [] : campuses;
+    }
+    return [...others, entry];
 }
 
 /**

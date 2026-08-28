@@ -1442,7 +1442,10 @@ export const removeCommunityStake = async (uniqueId, compositeKey) => {
 };
 
 // Replace a person's community-of-practice memberships. Keyed on employee_id.
-// memberships: [{ community_id, note }]
+// memberships: [{ community_id, note?, campuses? }] — campuses (campus abbrevs)
+// scopes where the member is active in that community; an ABSENT key preserves
+// the edge's existing list server-side, [] clears to home-fallback, a non-empty
+// list is authoritative (home counts only if listed).
 export const setPersonCommunities = async (employeeId, memberships) => {
     try {
         const response = await axios.put(`${process.env.REACT_APP_API_URL}/individuals`, {
