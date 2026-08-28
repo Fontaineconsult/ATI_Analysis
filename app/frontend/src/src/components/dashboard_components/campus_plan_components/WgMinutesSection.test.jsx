@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 import { ChakraProvider } from '@chakra-ui/react';
 
 // axios v1 is ESM and CRA's Jest doesn't transform node_modules — neutralize it with the
@@ -56,6 +56,13 @@ describe('WgMinutesSection', () => {
         expect(screen.getByText('not ingested')).toBeInTheDocument();
         expect(screen.getByText('Alternative Media')).toBeInTheDocument();
         expect(screen.getByText('Pat Person')).toBeInTheDocument();
+
+        // Opening a record repeats the same badge line in the modal header.
+        fireEvent.click(screen.getByRole('button', { name: /open meeting minutes: web wg — march/i }));
+        const dialog = await screen.findByRole('dialog');
+        expect(within(dialog).getByText('ingested')).toBeInTheDocument();
+        expect(within(dialog).getByText('Alternative Media')).toBeInTheDocument();
+        expect(within(dialog).getByText('Pat Person')).toBeInTheDocument();
     });
 
     it('shows the empty message when the plan has no minutes', async () => {

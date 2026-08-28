@@ -48,6 +48,31 @@ function MinutesModal({ minutes, accentColor, workingGroupName, onChanged, onEdi
                         <Box w="9px" h="9px" borderRadius="full" bg={accentColor} />
                         <Text fontSize="xs" color="gray.600">{workingGroupName}</Text>
                     </HStack>
+                    {/* Same badge line as the list row: ingest state, communities, participants. */}
+                    <Flex mt={2} gap={1.5} wrap="wrap" align="center">
+                        {minutes.ontology_ingested ? (
+                            <Badge colorScheme="teal" variant="subtle" fontSize="2xs">ingested</Badge>
+                        ) : (
+                            <Badge
+                                colorScheme="orange"
+                                variant="subtle"
+                                fontSize="2xs"
+                                title="Not yet processed by the ontology-ingest skill — untapped source material"
+                            >
+                                not ingested
+                            </Badge>
+                        )}
+                        {(minutes.pertains_to_communities || []).map((c) => (
+                            <Badge key={c.unique_id} colorScheme="purple" variant="subtle" fontSize="2xs" textTransform="none">
+                                {c.name}
+                            </Badge>
+                        ))}
+                        {(minutes.participants || []).map((p) => (
+                            <Badge key={p.unique_id} colorScheme="gray" variant="subtle" fontSize="2xs" textTransform="none">
+                                {p.name}
+                            </Badge>
+                        ))}
+                    </Flex>
                 </ModalHeader>
                 <ModalCloseButton />
                 <ModalBody>
