@@ -19,7 +19,8 @@ That safety net starts after import, not before it.
 """
 
 from . import (
-    catalog, communities_write, meeting_minutes, meeting_minutes_write, notes_write, ontology,
+    catalog, communities_write, interview_guides, interview_guides_write,
+    meeting_minutes, meeting_minutes_write, notes_write, ontology,
     ontology_write, people_write, query, query_write, registry_queries, schema_notes,
 )
 
@@ -30,10 +31,12 @@ ALL_FEATURES = [
     ontology,               # the ontology itself: node types/fields/descriptions + health (read)
     query,                  # pending questions (Query): reads
     meeting_minutes,        # working-group meeting records (MeetingMinutes): reads
+    interview_guides,       # stakeholder-interview preps (InterviewGuide): reads + closure state
     ontology_write,         # descriptive-layer edits (write-gated; ATI_MCP_ALLOW_WRITE)
     notes_write,            # transcript annotation: attach notes to YSE/implementations (write-gated)
     query_write,            # pending questions (Query): create/update/settle/link/delete (write-gated)
     meeting_minutes_write,  # meeting records: record/update/link/delete (write-gated)
     people_write,           # people & org units: create/update + assignments (write-gated)
     communities_write,      # communities of practice: create/membership/indicator stakes (write-gated)
+    interview_guides_write, # interview preps: save/update/close the prep loop (write-gated)
 ]

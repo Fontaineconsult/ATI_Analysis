@@ -11,9 +11,9 @@ office the graph keeps naming; Zach coordinates ATI and owns most of the wired g
 Between the two of them, every open element in this guide is answerable in one room.
 
 ## Identity round — verify these live
-- **Dawna Komorosky** — Director of Faculty Development. VERIFY SPELLING on the
-  recording (heard as "Komorosy"; graph holds "Komorosky" — the node also carries stray
-  whitespace in the name, a data fix to make after confirmation).
+- **Dawna Komorosky** — Director of Faculty Development. Spelling confirmed
+  2026-08-28; the Person node's stray-whitespace name has been repaired. Still say
+  full names into the recording per protocol.
 - **Zach Oshri** — ATI Coordinator (identity settled since the "Zach Autry" mis-hearing).
 - Ask both: who else runs faculty-facing training? (Cheryl Saelee, Sr. eLearning
   Specialist, is the only other csueb member of this community on file.)
