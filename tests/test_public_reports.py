@@ -504,7 +504,7 @@ def test_community_review_spread_renders_with_stake_links(flask_client):
     assert resp.status_code == 200
     html = resp.get_data(as_text=True)
 
-    assert "Review Spread" in html
+    assert "ATI Community of Practice" in html
     # every stake row links to its public evidence report
     assert "/ati/reports/public/ssu/2025-2026/instructional-materials/7/11" in html
     # review-state grouping is the page's point
