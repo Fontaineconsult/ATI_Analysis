@@ -256,6 +256,11 @@ describe('CampusPlanContainer (v2 single-page shell)', () => {
                                 ],
                             },
                             { name: 'Disability Services', stake_count: 2, leads: [] },
+                            {
+                                name: 'Library Community',
+                                stake_count: 1,
+                                leads: [{ name: 'Far Member', title: 'Librarian', campus: 'csueb', note: null }],
+                            },
                         ],
                         working_group_members: [],
                     },
@@ -270,11 +275,17 @@ describe('CampusPlanContainer (v2 single-page shell)', () => {
         expect(await screen.findByText('Procurement Community')).toBeInTheDocument();
         expect(screen.getByText('15 stakes')).toBeInTheDocument();
         expect(screen.getByText(/Sam Steward/)).toBeInTheDocument();
-        // Cross-campus member is tagged with their campus.
-        expect(screen.getByText('csueb')).toBeInTheDocument();
+        // Campus context: members from OTHER campuses are filtered out entirely —
+        // a campus plan shows its own campus's roster, not the cross-campus community.
+        expect(screen.queryByText(/Kris Peer/)).not.toBeInTheDocument();
+        expect(screen.queryByText('csueb')).not.toBeInTheDocument();
         // Leaderless community shows the derive-via-working-group empty state.
         expect(screen.getByText('Disability Services')).toBeInTheDocument();
         expect(screen.getByText(/people derive from the working group/i)).toBeInTheDocument();
+        // A community whose members are ALL elsewhere says so instead of listing them.
+        expect(screen.getByText('Library Community')).toBeInTheDocument();
+        expect(screen.queryByText(/Far Member/)).not.toBeInTheDocument();
+        expect(screen.getByText(/no members at this campus/i)).toBeInTheDocument();
         // The leads area is its own labeled region (one per card), still showing Lee Lead.
         expect(screen.getAllByText('Leads')).toHaveLength(4);
         expect(screen.getByText('Lee Lead')).toBeInTheDocument();
