@@ -41,6 +41,7 @@ function WorkingGroupMasterContainer() {
                 <Route path="people" element={<PeopleArea activeTab="people" />} />
                 <Route path="people/communities" element={<PeopleArea activeTab="communities" />} />
                 <Route path="people/communities/:communityId" element={<PeopleArea activeTab="communities" />} />
+                <Route path="people/interview-guides" element={<PeopleArea activeTab="guides" />} />
                 <Route path="people/:personId" element={<PeopleArea activeTab="people" />} />
 
                 {/* Governance area = Governance items + Principles (tabbed). URL-driven: the

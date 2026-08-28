@@ -13,7 +13,7 @@ jest.mock('axios', () => ({
         interceptors: { request: { use: jest.fn() }, response: { use: jest.fn() } },
     },
 }));
-jest.mock('../../../services/api/get', () => ({ fetchCommunity: jest.fn() }));
+jest.mock('../../../services/api/get', () => ({ fetchCommunity: jest.fn(), fetchGuidesForCommunity: jest.fn() }));
 jest.mock('../../../services/api/put', () => ({
     setPersonCommunities: jest.fn(),
     addCommunityStake: jest.fn(),
@@ -32,7 +32,7 @@ jest.mock('../../../context/SettingsContext', () => ({
     }),
 }));
 
-import { fetchCommunity } from '../../../services/api/get';
+import { fetchCommunity, fetchGuidesForCommunity } from '../../../services/api/get';
 import { setPersonCommunities } from '../../../services/api/put';
 import { UserContext } from '../../../context/UserContext';
 import { DataContext } from '../../../context/DataContext';
@@ -113,6 +113,13 @@ const renderPanel = () => render(
 describe('CommunityDetailPanel — membership campus scoping', () => {
     beforeEach(() => {
         fetchCommunity.mockResolvedValue({ status: 'success', data: { community: COMMUNITY } });
+        fetchGuidesForCommunity.mockResolvedValue({
+            status: 'success',
+            data: { guides: [
+                { unique_id: 'g1', title: 'Prep: Alt Media walkthrough', meeting_date: '2026-08-19',
+                  resulted_in: { unique_id: 'mm1', title: 'DS minutes' } },
+            ] },
+        });
         setPersonCommunities.mockResolvedValue({});
     });
 
@@ -154,6 +161,9 @@ describe('CommunityDetailPanel — membership campus scoping', () => {
         expect(webOptions).toEqual(['1.2-web', '1.19-web']); // numeric, not lexicographic
         // The email-table copy button sits in the stakes card.
         expect(screen.getByRole('button', { name: /copy table/i })).toBeInTheDocument();
+        // The community's interview preps render with their closure state.
+        expect(await screen.findByText('Prep: Alt Media walkthrough')).toBeInTheDocument();
+        expect(screen.getByText('held')).toBeInTheDocument();
         // The removed indicator never appears as a stake target.
         expect(screen.queryByRole('option', { name: /1\.7-web/ })).not.toBeInTheDocument();
         // Full text, no truncation.

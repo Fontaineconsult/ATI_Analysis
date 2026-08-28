@@ -92,7 +92,23 @@ def guides_panel_for_campus_year(campus_abbrev: str, year_name: str) -> dict:
         if g:
             guides.append(_serialize_guide(g))
     guides.sort(key=_sort_key, reverse=True)
-    return {"campus_abbrev": campus_abbrev, "academic_year": year_name, "guides": guides}
+
+    # Closure candidates: every minutes record under this campus+year's plans,
+    # so the edit modal can point resulted_in without a per-WG fetch dance.
+    mrows, _ = db.cypher_query(
+        """
+        MATCH (m:MeetingMinutes)-[:minutes_under_plan]->(wgp:WorkingGroupPlan)
+        WHERE wgp.plan_identifier STARTS WITH $yc
+        RETURN m.unique_id, m.title, toString(m.meeting_date)
+        ORDER BY coalesce(m.meeting_date, date('1900-01-01')) DESC
+        """,
+        {"yc": f"{year_name}-{campus_abbrev}-"},
+    )
+    minutes_candidates = [
+        {"unique_id": r[0], "title": r[1], "meeting_date": r[2]} for r in mrows
+    ]
+    return {"campus_abbrev": campus_abbrev, "academic_year": year_name,
+            "guides": guides, "minutes_candidates": minutes_candidates}
 
 
 def guides_for_community(community_unique_id: str) -> list:
