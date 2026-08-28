@@ -371,3 +371,21 @@ export const deleteEvidenceRequirement = async (uniqueId) => {
         throw error;
     }
 };
+
+// Delete one interview guide (people/targets/communities/minutes survive).
+export const deleteInterviewGuide = async (uniqueId) => {
+    try {
+        const response = await fetch(`${API_URL}/interview-guides/${uniqueId}`, {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+        });
+        const data = await response.json();
+        if (!response.ok) {
+            throw new Error(data?.error || 'Failed to delete interview guide');
+        }
+        return data;
+    } catch (error) {
+        console.error('Error deleting interview guide:', error);
+        throw error;
+    }
+};

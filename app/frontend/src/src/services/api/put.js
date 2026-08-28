@@ -1651,6 +1651,53 @@ export const setMinutesCommunities = async (uniqueId, communityUniqueIds) => {
     return response.data;
 };
 
+// --- Interview guides — full-replace setters mirror the minutes conventions. ---
+export const updateInterviewGuide = async (uniqueId, fields) => {
+    const response = await axios.put(`${process.env.REACT_APP_API_URL}/interview-guides`, {
+        action: 'update_interview_guide',
+        unique_id: uniqueId,
+        ...fields,
+    });
+    return response.data;
+};
+
+export const setGuidePeople = async (uniqueId, personUniqueIds) => {
+    const response = await axios.put(`${process.env.REACT_APP_API_URL}/interview-guides`, {
+        action: 'set_prepared_for',
+        unique_id: uniqueId,
+        person_unique_ids: personUniqueIds,
+    });
+    return response.data;
+};
+
+export const setGuideTargets = async (uniqueId, targetYearIdentifiers) => {
+    const response = await axios.put(`${process.env.REACT_APP_API_URL}/interview-guides`, {
+        action: 'set_targets',
+        unique_id: uniqueId,
+        target_year_identifiers: targetYearIdentifiers,
+    });
+    return response.data;
+};
+
+export const setGuideCommunities = async (uniqueId, communityUniqueIds) => {
+    const response = await axios.put(`${process.env.REACT_APP_API_URL}/interview-guides`, {
+        action: 'set_pertains_to',
+        unique_id: uniqueId,
+        community_unique_ids: communityUniqueIds,
+    });
+    return response.data;
+};
+
+// minutesUniqueId null clears the closure edge.
+export const setGuideResultedIn = async (uniqueId, minutesUniqueId) => {
+    const response = await axios.put(`${process.env.REACT_APP_API_URL}/interview-guides`, {
+        action: 'set_resulted_in',
+        unique_id: uniqueId,
+        minutes_unique_id: minutesUniqueId,
+    });
+    return response.data;
+};
+
 
 // Edit one evidence requirement. PARTIAL update, unlike updateSuccessIndicatorExamples
 // above — only the keys present in `fields` are touched, so saving edited text cannot

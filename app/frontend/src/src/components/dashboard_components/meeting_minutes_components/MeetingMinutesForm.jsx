@@ -1,8 +1,8 @@
 import React, { useContext, useEffect, useState } from 'react';
 import {
-    Badge, Box, Button, Flex, FormControl, FormLabel, HStack, Input, Modal, ModalBody,
+    Badge, Box, Button, FormControl, FormLabel, HStack, Input, Modal, ModalBody,
     ModalCloseButton, ModalContent, ModalFooter, ModalHeader, ModalOverlay, Select, Tab,
-    TabList, TabPanel, TabPanels, Tabs, Tag, TagCloseButton, TagLabel, Text, Textarea,
+    TabList, TabPanel, TabPanels, Tabs, Text, Textarea,
     VStack, useToast,
 } from '@chakra-ui/react';
 import { UserContext } from '../../../context/UserContext';
@@ -12,44 +12,7 @@ import {
     setMinutesCommunities, setMinutesParticipants, updateMeetingMinutes,
 } from '../../../services/api/put';
 import Markdown from '../../graph_components/common/Markdown';
-
-/**
- * Add-and-remove multi-select: a dropdown that appends to a tag list. Options already
- * selected drop out of the dropdown; each tag carries its own remove button.
- */
-function TagMultiSelect({ options, selectedIds, onChange, addLabel, colorScheme = 'teal' }) {
-    const byId = new Map(options.map((o) => [o.value, o.label]));
-    const available = options.filter((o) => !selectedIds.includes(o.value));
-    return (
-        <VStack align="stretch" spacing={2}>
-            {selectedIds.length > 0 && (
-                <Flex gap={1.5} wrap="wrap">
-                    {selectedIds.map((id) => (
-                        <Tag key={id} size="sm" colorScheme={colorScheme} variant="subtle">
-                            <TagLabel>{byId.get(id) || id}</TagLabel>
-                            <TagCloseButton
-                                aria-label={`Remove ${byId.get(id) || id}`}
-                                onClick={() => onChange(selectedIds.filter((x) => x !== id))}
-                            />
-                        </Tag>
-                    ))}
-                </Flex>
-            )}
-            <Select
-                size="sm"
-                maxW="360px"
-                value=""
-                placeholder={addLabel}
-                onChange={(e) => { if (e.target.value) onChange([...selectedIds, e.target.value]); }}
-                isDisabled={available.length === 0}
-            >
-                {available.map((o) => (
-                    <option key={o.value} value={o.value}>{o.label}</option>
-                ))}
-            </Select>
-        </VStack>
-    );
-}
+import TagMultiSelect from '../../functional_components/TagMultiSelect';
 
 /**
  * Create / edit modal for a MeetingMinutes record. In create mode it needs the anchor:

@@ -22,7 +22,7 @@ import { getGoalViewUrlFromCompositeKey } from '../../../services/utils/tools';
 import { UserContext } from '../../../context/UserContext';
 import { DataContext } from '../../../context/DataContext';
 import { useSettings } from '../../../context/SettingsContext';
-import { fetchCommunity } from '../../../services/api/get';
+import { fetchCommunity, fetchGuidesForCommunity } from '../../../services/api/get';
 import { addCommunityStake, removeCommunityStake, setPersonCommunities } from '../../../services/api/put';
 import { deleteCommunity } from '../../../services/api/delete';
 import Card from '../common/Card';
@@ -30,6 +30,7 @@ import Section from '../common/Section';
 import PersonAssignmentSelector from '../../functional_components/PersonAssignmentSelector';
 import CopyCommunityReportButton from './CopyCommunityReportButton';
 import CopyCommunityStakesButton from './CopyCommunityStakesButton';
+import { guideClosure } from './InterviewGuidesPanel';
 import MemberCampusScopePicker from './MemberCampusScopePicker';
 import { buildMembershipWrite, personCommunities } from './peopleConfig';
 import { ALL_WORKING_GROUPS } from '../../../styles/workingGroupIdentity';
@@ -82,6 +83,18 @@ function CommunityDetailPanel({ communityId, onAfterChange, onEdit, onDeleted })
     }, [communityId]);
 
     useEffect(() => { loadDetail(); }, [loadDetail]);
+
+    // Interview preps working this community's ground (read-only card; guides
+    // are managed on the People area's Interview Guides tab).
+    const [guides, setGuides] = useState([]);
+    useEffect(() => {
+        let cancelled = false;
+        if (!communityId) { setGuides([]); return undefined; }
+        fetchGuidesForCommunity(communityId)
+            .then((resp) => { if (!cancelled) setGuides(resp?.data?.guides || []); })
+            .catch(() => { if (!cancelled) setGuides([]); });
+        return () => { cancelled = true; };
+    }, [communityId]);
 
     const activePeople = useMemo(() => {
         if (!Array.isArray(individuals)) return [];
@@ -466,6 +479,32 @@ function CommunityDetailPanel({ communityId, onAfterChange, onEdit, onDeleted })
                     </HStack>
                 </VStack>
             </Card>
+
+            {guides.length > 0 && (
+                <Card title={`Interview Guides (${guides.length})`}
+                      action={<Text fontSize="2xs" color="gray.600">managed on the Interview Guides tab</Text>}>
+                    <VStack align="stretch" spacing={1.5}>
+                        {guides.map((g) => {
+                            const closure = guideClosure(g);
+                            return (
+                                <HStack key={g.unique_id} spacing={2} px={2} py={1.5}
+                                        borderWidth="1px" borderColor="gray.200" borderRadius="md" align="center">
+                                    <Text fontSize="sm" color="gray.800" flex="1" minW={0} noOfLines={1}>{g.title}</Text>
+                                    {g.meeting_date && (
+                                        <Text fontFamily="mono" fontSize="2xs" color="gray.600">{g.meeting_date}</Text>
+                                    )}
+                                    <Badge
+                                        colorScheme={closure === 'held' ? 'green' : closure === 'unclosed' ? 'orange' : 'blue'}
+                                        variant="subtle" fontSize="2xs"
+                                    >
+                                        {closure}
+                                    </Badge>
+                                </HStack>
+                            );
+                        })}
+                    </VStack>
+                </Card>
+            )}
 
             {membersWithNotes.length > 0 && (
                 <Section title="Membership Notes">
