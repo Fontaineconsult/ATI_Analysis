@@ -1,18 +1,64 @@
-import React, { useContext, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import {
-    Box, Button, FormControl, FormLabel, Input, Modal, ModalBody, ModalCloseButton,
-    ModalContent, ModalFooter, ModalHeader, ModalOverlay, Select, Tab, TabList, TabPanel,
-    TabPanels, Tabs, Textarea, VStack, useToast,
+    Badge, Box, Button, Flex, FormControl, FormLabel, HStack, Input, Modal, ModalBody,
+    ModalCloseButton, ModalContent, ModalFooter, ModalHeader, ModalOverlay, Select, Tab,
+    TabList, TabPanel, TabPanels, Tabs, Tag, TagCloseButton, TagLabel, Text, Textarea,
+    VStack, useToast,
 } from '@chakra-ui/react';
 import { UserContext } from '../../../context/UserContext';
+import { fetchAllCommunities } from '../../../services/api/get';
 import { createMeetingMinutes } from '../../../services/api/post';
-import { updateMeetingMinutes } from '../../../services/api/put';
+import {
+    setMinutesCommunities, setMinutesParticipants, updateMeetingMinutes,
+} from '../../../services/api/put';
 import Markdown from '../../graph_components/common/Markdown';
+
+/**
+ * Add-and-remove multi-select: a dropdown that appends to a tag list. Options already
+ * selected drop out of the dropdown; each tag carries its own remove button.
+ */
+function TagMultiSelect({ options, selectedIds, onChange, addLabel, colorScheme = 'teal' }) {
+    const byId = new Map(options.map((o) => [o.value, o.label]));
+    const available = options.filter((o) => !selectedIds.includes(o.value));
+    return (
+        <VStack align="stretch" spacing={2}>
+            {selectedIds.length > 0 && (
+                <Flex gap={1.5} wrap="wrap">
+                    {selectedIds.map((id) => (
+                        <Tag key={id} size="sm" colorScheme={colorScheme} variant="subtle">
+                            <TagLabel>{byId.get(id) || id}</TagLabel>
+                            <TagCloseButton
+                                aria-label={`Remove ${byId.get(id) || id}`}
+                                onClick={() => onChange(selectedIds.filter((x) => x !== id))}
+                            />
+                        </Tag>
+                    ))}
+                </Flex>
+            )}
+            <Select
+                size="sm"
+                maxW="360px"
+                value=""
+                placeholder={addLabel}
+                onChange={(e) => { if (e.target.value) onChange([...selectedIds, e.target.value]); }}
+                isDisabled={available.length === 0}
+            >
+                {available.map((o) => (
+                    <option key={o.value} value={o.value}>{o.label}</option>
+                ))}
+            </Select>
+        </VStack>
+    );
+}
 
 /**
  * Create / edit modal for a MeetingMinutes record. In create mode it needs the anchor:
  * `workingGroupPlanIdentifier`, or `createContext` = {campusAbbrev, academicYear, workingGroup}.
- * The body is Markdown, with a Write/Preview toggle.
+ * The body is Markdown, with a Write/Preview toggle. Participants (Person -participated_in->
+ * minutes; people the transcript shows were present, not idle mentions) and pertinent
+ * communities of practice (minutes -pertains_to-> CoP, multiple expected) are assigned here;
+ * both save as full-replace sets. Edit mode also surfaces the ontology-ingest stamp
+ * (read-only — the ingest pipeline writes it).
  */
 export default function MeetingMinutesForm({
     isOpen, onClose, mode = 'create', initial = null,
@@ -26,10 +72,31 @@ export default function MeetingMinutesForm({
     const [meetingDate, setMeetingDate] = useState(initial?.meeting_date || '');
     const [content, setContent] = useState(initial?.content || '');
     const [recordedBy, setRecordedBy] = useState(initial?.recorded_by?.unique_id || user?.unique_id || '');
+    const [participantIds, setParticipantIds] = useState(
+        (initial?.participants || []).map((p) => p.unique_id),
+    );
+    const [communityIds, setCommunityIds] = useState(
+        (initial?.pertains_to_communities || []).map((c) => c.unique_id),
+    );
+    const [communities, setCommunities] = useState([]);
     const [saving, setSaving] = useState(false);
 
+    useEffect(() => {
+        let cancelled = false;
+        fetchAllCommunities()
+            .then((resp) => { if (!cancelled) setCommunities(resp?.data || []); })
+            .catch(() => { if (!cancelled) setCommunities([]); });
+        return () => { cancelled = true; };
+    }, []);
+
     const people = (individuals || []).filter((p) => p.active || p.non_committee_member_active);
+    const personOptions = people.map((p) => ({
+        value: p.unique_id,
+        label: p.title ? `${p.name} — ${p.title}` : p.name,
+    }));
+    const communityOptions = communities.map((c) => ({ value: c.unique_id, label: c.name }));
     const errText = (err) => err?.response?.data?.error || err?.message || 'Please try again.';
+    const sameSet = (a, b) => [...a].sort().join('|') === [...b].sort().join('|');
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -40,12 +107,23 @@ export default function MeetingMinutesForm({
                 await updateMeetingMinutes(initial.unique_id, {
                     title: title.trim(), content, meeting_date: meetingDate || null,
                 });
+                // Full-replace sets — only send when the selection actually moved.
+                const initialParticipants = (initial.participants || []).map((p) => p.unique_id);
+                const initialCommunities = (initial.pertains_to_communities || []).map((c) => c.unique_id);
+                if (!sameSet(participantIds, initialParticipants)) {
+                    await setMinutesParticipants(initial.unique_id, participantIds);
+                }
+                if (!sameSet(communityIds, initialCommunities)) {
+                    await setMinutesCommunities(initial.unique_id, communityIds);
+                }
             } else {
                 const payload = {
                     title: title.trim(),
                     content: content || undefined,
                     meeting_date: meetingDate || undefined,
                     recorded_by_unique_id: recordedBy || undefined,
+                    participant_unique_ids: participantIds.length ? participantIds : undefined,
+                    pertains_to_community_unique_ids: communityIds.length ? communityIds : undefined,
                 };
                 if (workingGroupPlanIdentifier) {
                     payload.working_group_plan_identifier = workingGroupPlanIdentifier;
@@ -110,6 +188,31 @@ export default function MeetingMinutesForm({
                                 </TabPanels>
                             </Tabs>
                         </FormControl>
+                        <FormControl>
+                            <FormLabel fontSize="sm">Participants</FormLabel>
+                            <Text fontSize="xs" color="gray.700" mb={1}>
+                                Who the transcript shows was in the meeting — not people merely mentioned.
+                            </Text>
+                            <TagMultiSelect
+                                options={personOptions}
+                                selectedIds={participantIds}
+                                onChange={setParticipantIds}
+                                addLabel="Add a participant…"
+                            />
+                        </FormControl>
+                        <FormControl>
+                            <FormLabel fontSize="sm">Pertains to communities of practice</FormLabel>
+                            <Text fontSize="xs" color="gray.700" mb={1}>
+                                Which communities this meeting concerns — several is normal.
+                            </Text>
+                            <TagMultiSelect
+                                options={communityOptions}
+                                selectedIds={communityIds}
+                                onChange={setCommunityIds}
+                                addLabel="Add a community…"
+                                colorScheme="purple"
+                            />
+                        </FormControl>
                         {!isEdit && (
                             <FormControl>
                                 <FormLabel fontSize="sm">Recorded by</FormLabel>
@@ -121,6 +224,29 @@ export default function MeetingMinutesForm({
                                     ))}
                                 </Select>
                             </FormControl>
+                        )}
+                        {isEdit && (
+                            <Box borderWidth="1px" borderColor="gray.200" borderRadius="md" bg="gray.50" p={3}>
+                                <HStack spacing={2} mb={1}>
+                                    <Text fontSize="xs" fontWeight="bold" color="teal.700" textTransform="uppercase">Ontology ingest</Text>
+                                    {initial?.ontology_ingested ? (
+                                        <Badge colorScheme="teal" variant="subtle" fontSize="2xs">ingested</Badge>
+                                    ) : (
+                                        <Badge colorScheme="orange" variant="subtle" fontSize="2xs">not ingested</Badge>
+                                    )}
+                                </HStack>
+                                {initial?.ontology_ingested ? (
+                                    <Text fontSize="xs" color="gray.700">
+                                        {initial.ontology_ingest_date ? `Ingested ${initial.ontology_ingest_date}.` : 'Ingested.'}
+                                        {initial.ontology_ingest_note ? ` ${initial.ontology_ingest_note}` : ''}
+                                    </Text>
+                                ) : (
+                                    <Text fontSize="xs" color="gray.700">
+                                        Not yet processed into the knowledge graph — untapped source material.
+                                        The ontology-ingest pipeline stamps this, not this form.
+                                    </Text>
+                                )}
+                            </Box>
                         )}
                     </VStack>
                 </ModalBody>

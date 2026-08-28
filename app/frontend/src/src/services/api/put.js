@@ -1626,6 +1626,28 @@ export const addMinutesNote = async (uniqueId, content, createdByUniqueId = null
     return response.data;
 };
 
+// Full-replace the participant set (Person -participated_in-> minutes). Send the complete
+// list every call; [] clears everyone.
+export const setMinutesParticipants = async (uniqueId, personUniqueIds) => {
+    const response = await axios.put(`${process.env.REACT_APP_API_URL}/meeting-minutes`, {
+        action: 'set_participants',
+        unique_id: uniqueId,
+        person_unique_ids: personUniqueIds,
+    });
+    return response.data;
+};
+
+// Full-replace the minutes -pertains_to-> CommunityOfPractice set. Send the complete
+// list every call; [] clears the edges.
+export const setMinutesCommunities = async (uniqueId, communityUniqueIds) => {
+    const response = await axios.put(`${process.env.REACT_APP_API_URL}/meeting-minutes`, {
+        action: 'set_pertains_to',
+        unique_id: uniqueId,
+        community_unique_ids: communityUniqueIds,
+    });
+    return response.data;
+};
+
 
 // Edit one evidence requirement. PARTIAL update, unlike updateSuccessIndicatorExamples
 // above — only the keys present in `fields` are touched, so saving edited text cannot

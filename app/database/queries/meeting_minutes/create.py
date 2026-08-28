@@ -64,6 +64,32 @@ def _parse_date(value):
         raise ValidationError(f"meeting_date must be 'YYYY-MM-DD'; got {value!r}")
 
 
+def resolve_people(person_unique_ids) -> list:
+    """unique_ids -> Person nodes, deduped, order kept. Raises on bad input/missing."""
+    if not isinstance(person_unique_ids, list):
+        raise ValidationError("person_unique_ids must be a list")
+    people = []
+    for pid in dict.fromkeys(person_unique_ids):
+        try:
+            people.append(Person.nodes.get(unique_id=pid))
+        except Person.DoesNotExist:
+            raise NotFoundError(f"Person {pid!r} not found")
+    return people
+
+
+def resolve_communities(community_unique_ids) -> list:
+    """unique_ids -> CommunityOfPractice nodes, deduped, order kept. Raises on bad input/missing."""
+    if not isinstance(community_unique_ids, list):
+        raise ValidationError("community_unique_ids must be a list")
+    communities = []
+    for cid in dict.fromkeys(community_unique_ids):
+        try:
+            communities.append(CommunityOfPractice.nodes.get(unique_id=cid))
+        except CommunityOfPractice.DoesNotExist:
+            raise NotFoundError(f"CommunityOfPractice {cid!r} not found")
+    return communities
+
+
 def create_meeting_minutes(title: str,
                            content: str = None,
                            working_group_plan_identifier: str = None,
@@ -71,14 +97,21 @@ def create_meeting_minutes(title: str,
                            year_name: str = None,
                            working_group: str = None,
                            meeting_date: str = None,
-                           recorded_by_unique_id: str = None) -> MeetingMinutes:
+                           recorded_by_unique_id: str = None,
+                           participant_unique_ids: list = None,
+                           pertains_to_community_unique_ids: list = None) -> MeetingMinutes:
     """
     Create a MeetingMinutes record anchored to a WorkingGroupPlan. `content` is the minutes
     body as Markdown. Identify the anchor with `working_group_plan_identifier` or the
     (campus_abbrev, year_name, working_group) triple.
 
-    Raises ValidationError on bad input, NotFoundError if the plan/person is missing,
-    CrudError on save failure.
+    `participant_unique_ids` wires Person -[participated_in]-> minutes (people the
+    transcript shows were present, not idle mentions); `pertains_to_community_unique_ids`
+    wires minutes -[pertains_to]-> CommunityOfPractice (multiple expected). Both resolve
+    before anything is saved, so a bad id fails the whole create.
+
+    Raises ValidationError on bad input, NotFoundError if the plan/person/community is
+    missing, CrudError on save failure.
     """
     if not title or not title.strip():
         raise ValidationError("title is required")
@@ -95,6 +128,9 @@ def create_meeting_minutes(title: str,
         except Person.DoesNotExist:
             raise NotFoundError(f"Person {recorded_by_unique_id!r} not found")
 
+    participants = resolve_people(participant_unique_ids or [])
+    communities = resolve_communities(pertains_to_community_unique_ids or [])
+
     try:
         minutes = MeetingMinutes(
             title=title.strip(),
@@ -106,6 +142,10 @@ def create_meeting_minutes(title: str,
         minutes.working_group_plan.connect(wgp)
         if recorder:
             minutes.recorded_by.connect(recorder)
+        for person in participants:
+            minutes.participants.connect(person)
+        for community in communities:
+            minutes.pertains_to.connect(community)
         return minutes
     except Exception as e:
         raise CrudError(f"Failed to create MeetingMinutes: {e}")
