@@ -414,3 +414,195 @@ def test_accountable_community_endpoint_actions(flask_client, cleanup_sentinel_i
     })
     assert resp.status_code == 200
     assert get_implementation_detail("Process", impl.unique_id)["accountable_communities"] == []
+
+
+# --- Membership campus scoping (CommunityMembershipRel.campuses) ----------------
+
+@pytest.fixture
+def test_person_with_home(test_person):
+    """The sentinel person wired to a real Campus as home (reference data, read-only reuse)."""
+    from app.database.graph_schema import Campus
+    campuses = Campus.nodes.all()
+    if not campuses:
+        pytest.skip("No Campus reference data in the graph")
+    home = campuses[0]
+    test_person.host_campus.connect(home)
+    return test_person, home.abbreviation
+
+
+def test_membership_campuses_fallback_and_authoritative(test_person_with_home):
+    """Empty list = home fallback; filled list = exactly those campuses, home only if listed."""
+    from app.database.graph_schema import Campus
+    from app.database.queries.communities.create import create_community
+    from app.database.queries.communities.read import get_community
+    from app.database.queries.communities.update import set_person_communities
+
+    person, home = test_person_with_home
+    abbrevs = sorted(c.abbreviation for c in Campus.nodes.all())
+    away = next((a for a in abbrevs if a != home), None)
+    community = create_community({"name": COMMUNITY_NAME})
+
+    # No campuses on the edge: raw empty, effective falls back to home.
+    set_person_communities(PERSON_EMPLOYEE_ID, [{"community_id": community.unique_id}])
+    m = get_community(community.unique_id)["members"][0]
+    assert m["campuses"] == []
+    assert m["active_campuses"] == [home]
+    assert m["host_campus"] == home
+
+    if away:
+        # Authoritative list that deliberately EXCLUDES home (the away-only case).
+        set_person_communities(PERSON_EMPLOYEE_ID, [
+            {"community_id": community.unique_id, "campuses": [away]},
+        ])
+        m = get_community(community.unique_id)["members"][0]
+        assert m["campuses"] == [away]
+        assert m["active_campuses"] == [away]
+        assert m["host_campus"] == home  # home itself is untouched
+
+        # Multi-campus, dupes folded.
+        set_person_communities(PERSON_EMPLOYEE_ID, [
+            {"community_id": community.unique_id, "campuses": [home, away, home]},
+        ])
+        m = get_community(community.unique_id)["members"][0]
+        assert m["campuses"] == [home, away]
+        assert m["active_campuses"] == [home, away]
+
+    # The rollup counts effective campuses.
+    from app.database.queries.communities.read import get_all_communities
+    row = next(c for c in get_all_communities() if c["name"] == COMMUNITY_NAME)
+    assert set(row["campuses"]) == set(m["active_campuses"])
+
+
+def test_membership_campuses_validation(test_person):
+    from app.database.queries.communities.create import create_community
+    from app.database.queries.communities.update import set_person_communities
+    from app.endpoints.data_api.errors.custom_exceptions import ValidationError
+
+    community = create_community({"name": COMMUNITY_NAME})
+    with pytest.raises(ValidationError):
+        set_person_communities(PERSON_EMPLOYEE_ID, [
+            {"community_id": community.unique_id, "campuses": ["not-a-campus"]},
+        ])
+    with pytest.raises(ValidationError):
+        set_person_communities(PERSON_EMPLOYEE_ID, [
+            {"community_id": community.unique_id, "campuses": "sfsu"},
+        ])
+
+
+def test_membership_serializer_round_trip_preserves_campuses(test_person_with_home):
+    """The serializer→set_person_communities replay (the MCP assign path and the FE
+    writeMembership rebuild) must carry campuses AND added_date through unchanged."""
+    from app.database.graph_schema import Campus, Person
+    from app.database.queries.communities.create import create_community
+    from app.database.queries.communities.update import set_person_communities
+
+    person, home = test_person_with_home
+    community = create_community({"name": COMMUNITY_NAME})
+    other = create_community({"name": OTHER_COMMUNITY_NAME})
+
+    set_person_communities(PERSON_EMPLOYEE_ID, [
+        {"community_id": community.unique_id, "note": "scoped", "campuses": [home],
+         "added_date": "2026-01-15"},
+    ])
+
+    # Simulate the incremental-assign rebuild: serialize, append, replay.
+    person = Person.nodes.get(employee_id=PERSON_EMPLOYEE_ID)
+    current = [
+        {"community_id": c["unique_id"], "note": c.get("note"),
+         "campuses": c.get("campuses"), "added_date": c.get("added_date")}
+        for c in person.serialize()["communities"]
+    ]
+    current.append({"community_id": other.unique_id})
+    set_person_communities(PERSON_EMPLOYEE_ID, current)
+
+    person = Person.nodes.get(employee_id=PERSON_EMPLOYEE_ID)
+    by_name = {c["name"]: c for c in person.serialize()["communities"]}
+    kept = by_name[COMMUNITY_NAME]
+    assert kept["campuses"] == [home]
+    assert kept["note"] == "scoped"
+    assert kept["added_date"] == "2026-01-15"  # preserved, not reset to today
+    assert by_name[OTHER_COMMUNITY_NAME]["campuses"] == []
+
+
+def test_membership_absent_key_preserves_and_errors_leave_edges_intact(test_person_with_home):
+    """A rebuild WITHOUT the campuses/added_date keys preserves both (the stale-caller
+    guard), [] explicitly clears, and a validation failure mutates nothing."""
+    from app.database.graph_schema import Person
+    from app.database.queries.communities.create import create_community
+    from app.database.queries.communities.update import set_person_communities
+    from app.endpoints.data_api.errors.custom_exceptions import ValidationError
+
+    person, home = test_person_with_home
+    community = create_community({"name": COMMUNITY_NAME})
+
+    set_person_communities(PERSON_EMPLOYEE_ID, [
+        {"community_id": community.unique_id, "campuses": [home], "added_date": "2026-02-01"},
+    ])
+
+    # Stale-caller rebuild: same membership, no campuses/added_date keys at all.
+    set_person_communities(PERSON_EMPLOYEE_ID, [
+        {"community_id": community.unique_id, "note": "note changed"},
+    ])
+    row = Person.nodes.get(employee_id=PERSON_EMPLOYEE_ID).serialize()["communities"][0]
+    assert row["campuses"] == [home], "absent key must preserve the scoping"
+    assert row["added_date"] == "2026-02-01", "absent key must preserve the date"
+    assert row["note"] == "note changed"
+
+    # Validation failure BEFORE any mutation: the edge survives untouched.
+    with pytest.raises(ValidationError):
+        set_person_communities(PERSON_EMPLOYEE_ID, [
+            {"community_id": community.unique_id, "campuses": ["zzz-not-real"]},
+        ])
+    row = Person.nodes.get(employee_id=PERSON_EMPLOYEE_ID).serialize()["communities"][0]
+    assert row["campuses"] == [home]
+
+    # Explicit [] clears back to home-fallback.
+    set_person_communities(PERSON_EMPLOYEE_ID, [
+        {"community_id": community.unique_id, "campuses": []},
+    ])
+    row = Person.nodes.get(employee_id=PERSON_EMPLOYEE_ID).serialize()["communities"][0]
+    assert row["campuses"] == []
+
+
+def test_set_communities_endpoint_accepts_campuses(flask_client, test_person_with_home):
+    from app.database.graph_schema import Campus
+    from app.database.queries.communities.create import create_community
+    from app.database.queries.communities.read import get_community
+
+    person, home = test_person_with_home
+    community = create_community({"name": COMMUNITY_NAME})
+
+    resp = flask_client.put("/ati/data-api/v1/individuals", json={
+        "action": "set_communities",
+        "employee_id": PERSON_EMPLOYEE_ID,
+        "communities": [{"community_id": community.unique_id, "campuses": [home]}],
+    })
+    assert resp.status_code == 200, resp.get_json()
+    assert resp.get_json()["data"]["person"]["communities"][0]["campuses"] == [home]
+
+    m = get_community(community.unique_id)["members"][0]
+    assert m["active_campuses"] == [home]
+
+    # Unknown campus -> 400 through the endpoint.
+    resp = flask_client.put("/ati/data-api/v1/individuals", json={
+        "action": "set_communities",
+        "employee_id": PERSON_EMPLOYEE_ID,
+        "communities": [{"community_id": community.unique_id, "campuses": ["zzz"]}],
+    })
+    assert resp.status_code == 400
+
+
+def test_add_stake_rejects_removed_indicator(cleanup_communities):
+    """A retired (removed=true) SuccessIndicator is not a valid new stake target."""
+    from app.database.graph_schema import SuccessIndicator
+    from app.database.queries.communities.create import create_community
+    from app.database.queries.communities.update import add_community_stake
+    from app.endpoints.data_api.errors.custom_exceptions import ValidationError
+
+    removed_si = SuccessIndicator.nodes.filter(removed=True).first_or_none()
+    if removed_si is None:
+        pytest.skip("No removed SuccessIndicator in the graph to test against")
+
+    community = create_community({"name": COMMUNITY_NAME})
+    with pytest.raises(ValidationError):
+        add_community_stake(community.unique_id, removed_si.composite_key)

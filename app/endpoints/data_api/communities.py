@@ -8,7 +8,9 @@ membership edges are managed on the individuals endpoint (PUT set_communities),
 mirroring how role holdings work; this endpoint owns the community nodes themselves.
 
 URL surface (mounted at /ati/data-api/v1):
-    GET    /communities               list (member counts + campuses + stake counts)
+    GET    /communities               list (member counts + campuses + stake counts;
+                                      campuses = union of members' EFFECTIVE scope —
+                                      each membership's own campuses list, else home)
     GET    /communities?view=by_working_group
                                       communities per working group, derived via
                                       stakes (wg->Goal->SI<-has_stake_in); each

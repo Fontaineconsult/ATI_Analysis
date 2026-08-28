@@ -1442,7 +1442,10 @@ export const removeCommunityStake = async (uniqueId, compositeKey) => {
 };
 
 // Replace a person's community-of-practice memberships. Keyed on employee_id.
-// memberships: [{ community_id, note }]
+// memberships: [{ community_id, note?, campuses? }] — campuses (campus abbrevs)
+// scopes where the member is active in that community; an ABSENT key preserves
+// the edge's existing list server-side, [] clears to home-fallback, a non-empty
+// list is authoritative (home counts only if listed).
 export const setPersonCommunities = async (employeeId, memberships) => {
     try {
         const response = await axios.put(`${process.env.REACT_APP_API_URL}/individuals`, {
@@ -1622,6 +1625,28 @@ export const addMinutesNote = async (uniqueId, content, createdByUniqueId = null
         unique_id: uniqueId,
         content,
         created_by_unique_id: createdByUniqueId,
+    });
+    return response.data;
+};
+
+// Full-replace the participant set (Person -participated_in-> minutes). Send the complete
+// list every call; [] clears everyone.
+export const setMinutesParticipants = async (uniqueId, personUniqueIds) => {
+    const response = await axios.put(`${process.env.REACT_APP_API_URL}/meeting-minutes`, {
+        action: 'set_participants',
+        unique_id: uniqueId,
+        person_unique_ids: personUniqueIds,
+    });
+    return response.data;
+};
+
+// Full-replace the minutes -pertains_to-> CommunityOfPractice set. Send the complete
+// list every call; [] clears the edges.
+export const setMinutesCommunities = async (uniqueId, communityUniqueIds) => {
+    const response = await axios.put(`${process.env.REACT_APP_API_URL}/meeting-minutes`, {
+        action: 'set_pertains_to',
+        unique_id: uniqueId,
+        community_unique_ids: communityUniqueIds,
     });
     return response.data;
 };

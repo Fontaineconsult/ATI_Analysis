@@ -36,6 +36,11 @@ import {
  * Optional copy:
  *   - `placeholder`  — text in the Select prompt (default: "Select person to assign")
  *   - `assignLabel`  — text on the Assign button (default: "Assign")
+ *
+ * Optional extra column (strictly additive — when absent the table renders its
+ * classic three columns, so the seven other callers are untouched):
+ *   - `extraColumnHeader`         — header text for a fourth column
+ *   - `renderExtraColumn(person)` — cell content per assigned person
  */
 function PersonAssignmentSelector({
                                       assignedPersons = [],
@@ -45,6 +50,8 @@ function PersonAssignmentSelector({
                                       afterChange,
                                       placeholder = 'Select person to assign',
                                       assignLabel = 'Assign',
+                                      extraColumnHeader = null,
+                                      renderExtraColumn = null,
                                   }) {
     const [selectedPerson, setSelectedPerson] = useState('');
     const [isAssigning, setIsAssigning] = useState(false);
@@ -153,6 +160,9 @@ function PersonAssignmentSelector({
                         <Tr bg="teal.50">
                             <Th color="teal.700" fontWeight="semibold" fontSize="xs">Name</Th>
                             <Th color="teal.700" fontWeight="semibold" fontSize="xs">Title</Th>
+                            {extraColumnHeader && (
+                                <Th color="teal.700" fontWeight="semibold" fontSize="xs">{extraColumnHeader}</Th>
+                            )}
                             <Th color="teal.700" fontWeight="semibold" fontSize="xs">Actions</Th>
                         </Tr>
                     </Thead>
@@ -161,6 +171,9 @@ function PersonAssignmentSelector({
                             <Tr key={person.unique_id} _hover={{ bg: 'gray.50' }}>
                                 <Td color="gray.700" fontSize="xs">{person.name}</Td>
                                 <Td color="gray.600" fontSize="xs">{person.title}</Td>
+                                {renderExtraColumn && (
+                                    <Td fontSize="xs">{renderExtraColumn(person)}</Td>
+                                )}
                                 <Td>
                                     <Button
                                         size="xs"

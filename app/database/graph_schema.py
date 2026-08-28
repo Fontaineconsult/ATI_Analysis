@@ -800,8 +800,16 @@ class ParticipationRel(StructuredRel):
 
 
 class CommunityMembershipRel(StructuredRel):
-    """A person's membership in a community of practice."""
+    """A person's membership in a community of practice.
+
+    `campuses` scopes WHERE the person is active in this community. Empty/None means
+    the home-campus fallback (Person.works_at_campus) — today's behavior for every
+    pre-existing edge. A non-empty list is AUTHORITATIVE: active at exactly those
+    campuses, home included only if listed (so "active only away from home" is
+    representable). Decided 2026-09-04.
+    """
     note = StringProperty()             # optional: the person's stake in the area
+    campuses = ArrayProperty(StringProperty())  # campus abbrevs; empty = home fallback
     added_date = DateProperty()
 
 
@@ -833,7 +841,14 @@ def serialize_role_holdings(person):
 
 
 def serialize_community_memberships(person):
-    """Project a Person's in_communities edges → [{unique_id, name, note}]."""
+    """Project a Person's in_communities edges → [{unique_id, name, note, campuses, added_date}].
+
+    Every edge property MUST be projected here: the MCP assign_person_to_community
+    tool (and the CommunityDetailPanel writeMembership rebuild) reconstruct the FULL
+    membership list from this projection and replay it through replace-semantics
+    set_person_communities — a field missing here is silently wiped on every
+    incremental assign.
+    """
     rows = []
     for community in person.in_communities.all():
         rel = person.in_communities.relationship(community)
@@ -841,6 +856,8 @@ def serialize_community_memberships(person):
             "unique_id": community.unique_id,
             "name": community.name,
             "note": rel.note if rel else None,
+            "campuses": (rel.campuses if rel else None) or [],
+            "added_date": rel.added_date.isoformat() if rel and rel.added_date else None,
         })
     return rows
 
@@ -1899,6 +1916,18 @@ class MeetingMinutes(StructuredNode):
     supporting_webpages  = RelationshipTo("Webpage", "is_documented_by", model=DocumentedByRel)
     notes                = RelationshipTo("Note", "has_note")
 
+    # Communities of practice this meeting pertains to. Multiple links expected — a
+    # single meeting routinely touches several communities' ground. An ASSERTED edge,
+    # not derived from participant membership: a meeting can pertain to a community
+    # none of whose members were in the room.
+    pertains_to = RelationshipTo("CommunityOfPractice", "pertains_to")
+
+    # People who PARTICIPATED — derivable from the transcript (they spoke, or the
+    # record places them in the meeting), as opposed to people merely mentioned in
+    # passing, who stay in the prose. The edge points Person -> minutes; this is the
+    # record-side accessor.
+    participants = RelationshipFrom("Person", "participated_in")
+
     def serialize(self):
         return {
             "unique_id": self.unique_id,
@@ -2055,6 +2084,9 @@ class CommunityOfPractice(StructuredNode):
 
     # Reverse of Person.in_communities; the membership edge carries an optional note.
     members = RelationshipFrom("Person", "member_of_community", model=CommunityMembershipRel)
+    # Meetings asserted to pertain to this community — counterpart of
+    # MeetingMinutes.pertains_to.
+    pertaining_minutes = RelationshipFrom("MeetingMinutes", "pertains_to")
 
     # The indicators this community's practice area has stakes in (agentive: its
     # members are the stakeholders for that indicator's evidence). Declared here on
@@ -2111,6 +2143,10 @@ class Person(StructuredNode):
     host_campus = RelationshipTo("Campus", "works_at_campus", cardinality=ZeroOrOne)
     holds_role = RelationshipTo("Role", "holds_role", model=RoleHoldingRel)  # capacities the person provides (PD tracking lives on the edge)
     in_communities = RelationshipTo("CommunityOfPractice", "member_of_community", model=CommunityMembershipRel)  # cross-campus shared-interest groupings
+    # Meetings this person participated in — a transcript-derived fact (they spoke, or
+    # the record places them there), never an idle mention. Note the tense: distinct
+    # from `participates_in` (ATIWorkingGroup membership) above.
+    participated_in_meetings = RelationshipTo("MeetingMinutes", "participated_in")
     # Participatory "working team" edges to the four doing-implementations — the role
     # acted in is a property on the edge (ParticipationRel.role_handle); distinct from
     # owned_by (custodial). One shared rel-type "worked_on" across the four.

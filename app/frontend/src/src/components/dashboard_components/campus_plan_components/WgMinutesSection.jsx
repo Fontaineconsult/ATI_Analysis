@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import {
-    Box, Button, HStack, Modal, ModalBody, ModalCloseButton, ModalContent,
+    Badge, Box, Button, Flex, HStack, Modal, ModalBody, ModalCloseButton, ModalContent,
     ModalFooter, ModalHeader, ModalOverlay, Spinner, Text, VStack, useDisclosure, useToast,
 } from '@chakra-ui/react';
 
@@ -48,6 +48,31 @@ function MinutesModal({ minutes, accentColor, workingGroupName, onChanged, onEdi
                         <Box w="9px" h="9px" borderRadius="full" bg={accentColor} />
                         <Text fontSize="xs" color="gray.600">{workingGroupName}</Text>
                     </HStack>
+                    {/* Same badge line as the list row: ingest state, communities, participants. */}
+                    <Flex mt={2} gap={1.5} wrap="wrap" align="center">
+                        {minutes.ontology_ingested ? (
+                            <Badge colorScheme="teal" variant="subtle" fontSize="2xs">ingested</Badge>
+                        ) : (
+                            <Badge
+                                colorScheme="orange"
+                                variant="subtle"
+                                fontSize="2xs"
+                                title="Not yet processed by the ontology-ingest skill — untapped source material"
+                            >
+                                not ingested
+                            </Badge>
+                        )}
+                        {(minutes.pertains_to_communities || []).map((c) => (
+                            <Badge key={c.unique_id} colorScheme="purple" variant="subtle" fontSize="2xs" textTransform="none">
+                                {c.name}
+                            </Badge>
+                        ))}
+                        {(minutes.participants || []).map((p) => (
+                            <Badge key={p.unique_id} colorScheme="gray" variant="subtle" fontSize="2xs" textTransform="none">
+                                {p.name}
+                            </Badge>
+                        ))}
+                    </Flex>
                 </ModalHeader>
                 <ModalCloseButton />
                 <ModalBody>
@@ -117,11 +142,14 @@ export default function WgMinutesSection({ workingGroupPlanIdentifier, workingGr
             ) : minutes.length === 0 ? (
                 <Text fontSize="sm" color="gray.600" fontStyle="italic">No meeting minutes yet.</Text>
             ) : (
-                <VStack align="stretch" spacing={2}>
+                // Capped height, then scroll — long meeting histories stay inside the card.
+                <VStack align="stretch" spacing={2} maxH="300px" overflowY="auto" pr={1}>
                     {minutes.map((m) => {
                         const n = attachCount(m);
+                        const participants = m.participants || [];
+                        const communities = m.pertains_to_communities || [];
                         return (
-                            <HStack
+                            <Box
                                 key={m.unique_id}
                                 borderWidth="1px"
                                 borderColor="gray.200"
@@ -129,10 +157,10 @@ export default function WgMinutesSection({ workingGroupPlanIdentifier, workingGr
                                 bg="white"
                                 px={2.5}
                                 py={2}
-                                spacing={2.5}
+                                textAlign="left"
                                 cursor="pointer"
                                 _hover={{ bg: 'gray.50' }}
-                                _focusVisible={{ outline: '2px solid', outlineColor: 'teal.500', outlineOffset: '1px' }}
+                                _focusVisible={{ outline: '2px solid', outlineColor: 'teal.500', outlineOffset: '-2px' }}
                                 onClick={() => setOpenId(m.unique_id)}
                                 onKeyDown={(e) => {
                                     if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setOpenId(m.unique_id); }
@@ -141,15 +169,41 @@ export default function WgMinutesSection({ workingGroupPlanIdentifier, workingGr
                                 tabIndex={0}
                                 aria-label={`Open meeting minutes: ${m.title}`}
                             >
-                                <Text fontSize="sm" fontWeight="medium" color="gray.800" flex="1" minW={0} noOfLines={1}>
-                                    {m.title}
-                                </Text>
-                                {m.meeting_date && (
-                                    <Text fontFamily="mono" fontSize="2xs" color="gray.600" whiteSpace="nowrap">{m.meeting_date}</Text>
-                                )}
-                                {n > 0 && <Text fontSize="2xs" color="teal.600" whiteSpace="nowrap">{n} att</Text>}
-                                <Text fontSize="2xs" color="gray.600">▸</Text>
-                            </HStack>
+                                <HStack spacing={2.5} align="start">
+                                    <Text fontSize="sm" fontWeight="medium" color="gray.800" flex="1" minW={0} noOfLines={1}>
+                                        {m.title}
+                                    </Text>
+                                    <Text fontSize="2xs" color="gray.600">▸</Text>
+                                </HStack>
+                                <Flex mt={1} gap={1.5} wrap="wrap" align="center">
+                                    {m.meeting_date && (
+                                        <Text fontFamily="mono" fontSize="2xs" color="gray.600" whiteSpace="nowrap">{m.meeting_date}</Text>
+                                    )}
+                                    {n > 0 && <Text fontSize="2xs" color="teal.600" whiteSpace="nowrap">{n} att</Text>}
+                                    {m.ontology_ingested ? (
+                                        <Badge colorScheme="teal" variant="subtle" fontSize="2xs">ingested</Badge>
+                                    ) : (
+                                        <Badge
+                                            colorScheme="orange"
+                                            variant="subtle"
+                                            fontSize="2xs"
+                                            title="Not yet processed by the ontology-ingest skill — untapped source material"
+                                        >
+                                            not ingested
+                                        </Badge>
+                                    )}
+                                    {communities.map((c) => (
+                                        <Badge key={c.unique_id} colorScheme="purple" variant="subtle" fontSize="2xs" textTransform="none">
+                                            {c.name}
+                                        </Badge>
+                                    ))}
+                                    {participants.map((p) => (
+                                        <Badge key={p.unique_id} colorScheme="gray" variant="subtle" fontSize="2xs" textTransform="none">
+                                            {p.name}
+                                        </Badge>
+                                    ))}
+                                </Flex>
+                            </Box>
                         );
                     })}
                 </VStack>

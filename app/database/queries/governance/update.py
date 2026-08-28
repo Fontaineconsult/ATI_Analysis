@@ -221,8 +221,18 @@ def attach_indicator_to_governance(governance_type: str, governance_unique_id: s
         raise NotFoundError(f"SuccessIndicator with unique_id '{indicator_unique_id}' not found.")
 
     data = data or {}
+    # Outside the try: the blanket except below wraps everything in CrudError
+    # (a 500), and this must surface as a 400.
+    already_driven = node.driven_success_indicators.is_connected(indicator)
+    if not already_driven and indicator.removed:
+        # New drives edges never target a retired indicator (matches the
+        # link-targets pool, which already excludes them); existing edges stay
+        # editable below so their citations remain correctable.
+        raise ValidationError(
+            f"SuccessIndicator {indicator.composite_key!r} is removed; a retired indicator cannot be newly driven."
+        )
     try:
-        if node.driven_success_indicators.is_connected(indicator):
+        if already_driven:
             rel = node.driven_success_indicators.relationship(indicator)
             _apply_drives_qualifiers(rel, data, creating=False)
             rel.save()

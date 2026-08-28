@@ -22,7 +22,7 @@ def get_all_persons() -> list:
           yearSuccessEvidences: [yse IN yearSuccessEvidences | yse { .* }],
           host_campus: host_campus,
           roles: [(p)-[hr:holds_role]->(role:Role) | {handle: role.handle, name: role.name, in_position_description: hr.in_position_description, pd_description: hr.pd_description}],
-          communities: [(p)-[mc:member_of_community]->(cop:CommunityOfPractice) | {unique_id: cop.unique_id, name: cop.name, note: mc.note}]
+          communities: [(p)-[mc:member_of_community]->(cop:CommunityOfPractice) | {unique_id: cop.unique_id, name: cop.name, note: mc.note, campuses: coalesce(mc.campuses, []), added_date: toString(mc.added_date)}]
         } AS personData
         RETURN apoc.convert.toJson(collect(personData)) AS jsonResult
             """
@@ -120,7 +120,7 @@ def get_person_implementation_details(employee_id: str) -> dict:
                  WHEN u:College    THEN 'College'
                  WHEN u:Vendor     THEN 'Vendor'
                  ELSE head(labels(u)) END}],
-          communities: [(p)-[mc:member_of_community]->(cop:CommunityOfPractice) | {unique_id: cop.unique_id, name: cop.name, note: mc.note}],
+          communities: [(p)-[mc:member_of_community]->(cop:CommunityOfPractice) | {unique_id: cop.unique_id, name: cop.name, note: mc.note, campuses: coalesce(mc.campuses, []), added_date: toString(mc.added_date)}],
           yearSuccessEvidences: yses
         }) AS jsonResult
     """

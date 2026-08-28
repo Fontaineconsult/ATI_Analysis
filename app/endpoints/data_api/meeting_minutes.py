@@ -28,6 +28,8 @@ from app.database.queries.meeting_minutes.update import (
     detach_document,
     detach_webpage,
     add_minutes_note,
+    set_minutes_communities,
+    set_minutes_participants,
     set_ontology_ingested,
 )
 from app.database.queries.meeting_minutes.delete import delete_meeting_minutes
@@ -80,8 +82,15 @@ class MeetingMinutesAPI(MethodView):
                     working_group=data.get("working_group"),
                     meeting_date=data.get("meeting_date"),
                     recorded_by_unique_id=data.get("recorded_by_unique_id"),
+                    participant_unique_ids=data.get("participant_unique_ids"),
+                    pertains_to_community_unique_ids=data.get("pertains_to_community_unique_ids"),
                 )
-                return make_response(status="success", data=m.serialize(), message="Meeting minutes created."), 201
+                # Full projection (not m.serialize()) so participants / pertains_to
+                # communities come back on the create response.
+                return make_response(
+                    status="success", data=get_meeting_minutes(m.unique_id),
+                    message="Meeting minutes created.",
+                ), 201
 
             return make_response(status="error", error=f"Unknown action: {action}"), 400
 
@@ -133,6 +142,20 @@ class MeetingMinutesAPI(MethodView):
                     return make_response(status="error", error="Missing required field: 'webpage_unique_id'"), 400
                 result = detach_webpage(unique_id, data["webpage_unique_id"])
                 return make_response(status="success", data=result, message="Webpage detached."), 200
+
+            if action == "set_participants":
+                # Full-replace: the complete participant list every call; [] clears it.
+                if not isinstance(data.get("person_unique_ids"), list):
+                    return make_response(status="error", error="'person_unique_ids' must be a list."), 400
+                result = set_minutes_participants(unique_id, data["person_unique_ids"])
+                return make_response(status="success", data=result, message="Participants updated."), 200
+
+            if action == "set_pertains_to":
+                # Full-replace: the complete community list every call; [] clears it.
+                if not isinstance(data.get("community_unique_ids"), list):
+                    return make_response(status="error", error="'community_unique_ids' must be a list."), 400
+                result = set_minutes_communities(unique_id, data["community_unique_ids"])
+                return make_response(status="success", data=result, message="Pertinent communities updated."), 200
 
             if action == "set_ontology_ingested":
                 # Mark (or revert) the record as processed by the ontology-ingest

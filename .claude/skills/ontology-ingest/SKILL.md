@@ -86,7 +86,7 @@ degraded version of the same node.
 | **Asset** | steward known | A thing whose accessibility must be MAINTAINED. Usually already exists; rarely created from a transcript. |
 | **Interface** | never from transcript | 4-coordinate identity is a deliberate modeling act. Link existing ones only. |
 | **Metric** | artifact in hand | Only when the file/number set exists. Numbers in passing are description content; a promised export is a Plan. |
-| **CommunityOfPractice / member_of_community** | S1 self-ID or roster | Check `list_communities` first — near-miss names resolve to the existing node. |
+| **CommunityOfPractice / member_of_community** | S1 self-ID or roster | Check `list_communities` first — near-miss names resolve to the existing node. A transcript attesting the person does this community's work at SPECIFIC campuses may set the membership edge's `campuses` list (assign_person_to_community's campuses parameter); silence about campus = leave unset, which follows their home campus. |
 | **has_stake_in** | S1/S2 subject-matter | One or two best SIs; don't spray a community across a family. |
 | **Accomplishment** | S1 + completed | A finished, claimable outcome. |
 | **StatusLevel** | never | Status moves only through admin review. |

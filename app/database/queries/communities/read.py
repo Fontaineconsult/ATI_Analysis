@@ -24,10 +24,15 @@ def get_all_communities() -> list:
         rows, _ = db.cypher_query(
             """
             MATCH (c:CommunityOfPractice)
-            OPTIONAL MATCH (p:Person)-[:member_of_community]->(c)
+            OPTIONAL MATCH (p:Person)-[m:member_of_community]->(c)
             OPTIONAL MATCH (p)-[:works_at_campus]->(campus:Campus)
+            // Effective campuses per membership: the edge's list when set
+            // (authoritative), else the member's home campus (fallback).
+            WITH c, p,
+                 CASE WHEN size(coalesce(m.campuses, [])) > 0 THEN m.campuses
+                      ELSE [a IN [campus.abbreviation] WHERE a IS NOT NULL] END AS eff
             WITH c, count(DISTINCT p) AS member_count,
-                 [a IN collect(DISTINCT campus.abbreviation) WHERE a IS NOT NULL] AS campuses
+                 apoc.coll.toSet(apoc.coll.flatten(collect(eff))) AS campuses
             RETURN c.unique_id, c.name, c.description, member_count, campuses,
                    size([(c)-[:has_stake_in]->(:SuccessIndicator) | 1]) AS stake_count
             ORDER BY toLower(c.name)
@@ -49,21 +54,30 @@ def get_all_communities() -> list:
 
 
 def get_community(unique_id: str) -> dict:
-    """One community with its member roster (campus + membership note per member)
-    and its indicator stakes (the has_stake_in edges, note included)."""
+    """One community with its member roster and its indicator stakes (the
+    has_stake_in edges, note included).
+
+    Member rows carry campus at three grains: `host_campus` (home, unchanged),
+    `campuses` (the RAW edge list — what the picker edits; empty = fallback), and
+    `active_campuses` (the EFFECTIVE list — what filters and displays use:
+    the edge list when set, else [home], else [])."""
     community = get_community_node(unique_id)
     try:
         members = []
         for person in community.members.all():
             rel = community.members.relationship(person)
             campus = person.host_campus.single()
+            home = campus.abbreviation if campus else None
+            raw = (rel.campuses if rel else None) or []
             members.append({
                 "unique_id": person.unique_id,
                 "employee_id": person.employee_id,
                 "name": person.name,
                 "email": person.email,
                 "title": person.title,
-                "host_campus": campus.abbreviation if campus else None,
+                "host_campus": home,
+                "campuses": raw,
+                "active_campuses": raw if raw else ([home] if home else []),
                 "note": rel.note if rel else None,
             })
         members.sort(key=lambda m: (m["name"] or "").lower())
@@ -122,6 +136,9 @@ def get_communities_by_working_group() -> list:
                               {name: lead.name, title: lead.title,
                                employee_id: lead.employee_id,
                                campus: head([(lead)-[:works_at_campus]->(ca:Campus) | ca.abbreviation]),
+                               active_campuses: CASE WHEN size(coalesce(m.campuses, [])) > 0
+                                                     THEN m.campuses
+                                                     ELSE [(lead)-[:works_at_campus]->(ca:Campus) | ca.abbreviation] END,
                                note: m.note}]
                  }) WHERE x.name IS NOT NULL] AS communities
             OPTIONAL MATCH (p:Person)-[:participates_in]->(wg)
