@@ -21,6 +21,7 @@ import { Link as RouterLink, useParams } from 'react-router-dom';
 import { getGoalViewUrlFromCompositeKey } from '../../../services/utils/tools';
 import { UserContext } from '../../../context/UserContext';
 import { DataContext } from '../../../context/DataContext';
+import { useSettings } from '../../../context/SettingsContext';
 import { fetchCommunity } from '../../../services/api/get';
 import { addCommunityStake, removeCommunityStake, setPersonCommunities } from '../../../services/api/put';
 import { deleteCommunity } from '../../../services/api/delete';
@@ -52,6 +53,7 @@ function CommunityDetailPanel({ communityId, onAfterChange, onEdit, onDeleted })
     const { campus } = useParams();
     const { individuals, refreshAllIndividuals } = useContext(UserContext);
     const { data } = useContext(DataContext);
+    const { currentAcademicYear } = useSettings();
     const [detail, setDetail] = useState(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
@@ -299,7 +301,40 @@ function CommunityDetailPanel({ communityId, onAfterChange, onEdit, onDeleted })
 
             <Card
                 title={`Indicator Stakes (${stakes.length})`}
-                action={<Text fontSize="2xs" color="gray.600">indicators this community's practice area has a stake in</Text>}
+                action={
+                    /* The review spread: the same stakes as a shareable public page,
+                       grouped by review state, each row linking to its public evidence
+                       report. Server-rendered, so Open is a plain full-page link —
+                       React Router must never swallow it. */
+                    <HStack spacing={1.5}>
+                        <Button
+                            size="xs"
+                            colorScheme="teal"
+                            onClick={() => {
+                                const url = `${window.location.origin}/ati/reports/public/community/${campus}/${currentAcademicYear}/${communityId}`;
+                                navigator.clipboard.writeText(url);
+                                toast({
+                                    title: 'Review spread link copied!',
+                                    description: 'Shareable read-only list of the stakes and their review state.',
+                                    status: 'success', duration: 2500, isClosable: true,
+                                });
+                            }}
+                        >
+                            Copy review spread
+                        </Button>
+                        <Button
+                            size="xs"
+                            variant="outline"
+                            colorScheme="teal"
+                            as="a"
+                            href={`/ati/reports/public/community/${campus}/${currentAcademicYear}/${communityId}`}
+                            target="_blank"
+                            rel="noopener"
+                        >
+                            Open
+                        </Button>
+                    </HStack>
+                }
             >
                 <VStack align="stretch" spacing={2}>
                     {stakes.length === 0 && (

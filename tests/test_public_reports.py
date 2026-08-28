@@ -179,18 +179,16 @@ def test_sanitizer_keeps_notes_messages_and_report_facts():
     assert "Rita Reviewer" not in str(clean)
     assert "Buy a different platform" not in str(clean)
 
-    # Concerns follow the same public-surface rules as recommendations.
-    assert len(clean["concerns"]) == 2, "dismissed concerns never reach a report"
+    # Concerns: OPEN only (decision 2026-08-26). Dismissed never published, and a
+    # converted concern's answer — the recommendation or plan it became — is already
+    # on the page, so publishing the concern too shows the reader the same item twice.
+    assert len(clean["concerns"]) == 1
     con = clean["concerns"][0]
     assert con["concern"] == "No designated 504 coordinator"
-    assert con["status"] == "open"
     assert "raised_by" not in con, "who raised it stays off the public page"
     assert "Carla Concerned" not in str(clean)
-    assert "Coffee machine is broken" not in str(clean)
-    # A converted concern publishes what it became, so the disposition is legible.
-    converted = clean["concerns"][1]
-    assert converted["became"] == "Replace the vendor portal"
-    assert converted["became_kind"] == "recommendation"
+    assert "Coffee machine is broken" not in str(clean), "dismissed stays off"
+    assert "Vendor portal is unusable" not in str(clean), "converted stays off"
     assert clean["implementers"][0] == {"name": "Pat Person", "title": "Director",
                                         "ati_role": "Lead", "roles": ["Auditor"]}
 
@@ -457,3 +455,103 @@ def test_public_coverage_marks_position_and_budget_uncounted(flask_client):
 
     assert "Not counted" in html
     assert "Position and Budget are listed but not counted" in html
+
+
+# ---------------------------------------------------------------------------
+# Community review spread
+# ---------------------------------------------------------------------------
+
+SPREAD_RAW = {
+    "name": "Alternative Media",
+    "description": "Alt-media specialists producing accessible course materials.",
+    "year": "2025-2026",
+    "campus": "ssu",
+    "stakes": [
+        {"composite_key": "7.11-ins", "indicator_text": "Library assets process.",
+         "goal_number": 7, "goal_name": "Accessible Instructional Materials",
+         "status_level": "Defined", "ready_for_admin_review": True,
+         "administrative_review_complete": False, "completed_date": None,
+         "has_evidence": True},
+        {"composite_key": "1.1-gov", "indicator_text": "A governance stake.",
+         "goal_number": 1, "goal_name": "Governance", "status_level": None,
+         "ready_for_admin_review": False, "administrative_review_complete": False,
+         "completed_date": None, "has_evidence": False},
+    ],
+}
+
+
+@pytest.mark.unit
+def test_community_sanitizer_builds_urls_and_carries_no_people():
+    from app.public_reports.sanitize import public_community_payload
+
+    out = public_community_payload(SPREAD_RAW)
+    assert out["name"] == "Alternative Media"
+    assert out["stakes"][0]["public_url"] == \
+        "/ati/reports/public/ssu/2025-2026/instructional-materials/7/11"
+    # gov has no public segment — text, never a broken link
+    assert out["stakes"][1]["public_url"] is None
+    # the allowlist boundary: nothing person-shaped survives
+    flat = str(out)
+    assert "email" not in flat and "member" not in flat
+
+
+@pytest.mark.api
+def test_community_review_spread_renders_with_stake_links(flask_client):
+    resp = flask_client.get(
+        "/ati/reports/public/community/ssu/2025-2026/60524d5ea6644529a2f9493f097800fe")
+    if resp.status_code == 404:
+        pytest.skip("example community not present in this graph")
+    assert resp.status_code == 200
+    html = resp.get_data(as_text=True)
+
+    assert "ATI Community of Practice" in html
+    # every stake row links to its public evidence report
+    assert "/ati/reports/public/ssu/2025-2026/instructional-materials/7/11" in html
+    # review-state grouping is the page's point
+    assert "Awaiting approval" in html or "In progress" in html or "Approved" in html
+    # no emails on a public page, ever
+    assert "@sfsu.edu" not in html and "@sonoma.edu" not in html
+
+
+@pytest.mark.api
+def test_community_review_spread_short_form_redirects(flask_client):
+    resp = flask_client.get(
+        "/ati/reports/public/community/60524d5ea6644529a2f9493f097800fe")
+    assert resp.status_code == 302
+    assert "/ati/reports/public/community/" in resp.headers["Location"]
+
+
+@pytest.mark.api
+def test_community_review_spread_404s(flask_client):
+    assert flask_client.get(
+        "/ati/reports/public/community/ssu/2025-2026/nope").status_code == 404
+    assert flask_client.get(
+        "/ati/reports/public/community/ssu/1999-2000/60524d5ea6644529a2f9493f097800fe"
+    ).status_code == 404
+
+
+@pytest.mark.api
+def test_community_review_spread_respects_the_url_year(flask_client):
+    """The year in the URL is a hard scope: an indicator introduced in a later year
+    must not render on an earlier year's page — "no evidence this year" would misread
+    "not yet an indicator" as "work missing"."""
+    from neomodel import db
+
+    rows, _ = db.cypher_query(
+        """
+        MATCH (c:CommunityOfPractice)-[:has_stake_in]->(si:SuccessIndicator)
+        WHERE si.introduced_in_year = '2026-2027'
+        RETURN c.unique_id, si.composite_key LIMIT 1
+        """
+    )
+    if not rows:
+        pytest.skip("no community holds a stake on a 2026-2027-introduced indicator")
+    uid, gated_key = rows[0]
+
+    early = flask_client.get(
+        f"/ati/reports/public/community/sfsu/2025-2026/{uid}").get_data(as_text=True)
+    late = flask_client.get(
+        f"/ati/reports/public/community/sfsu/2026-2027/{uid}").get_data(as_text=True)
+
+    assert gated_key not in early
+    assert gated_key in late

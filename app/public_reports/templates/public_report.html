@@ -47,17 +47,17 @@
   {% endif %}
 
   {% if r.concerns %}
-  <h2>Concerns</h2>
-  <p class="muted">Issues raised for which no path to resolution has been defined yet — open items are unanswered.</p>
+  {# Open concerns only: dismissed never published, and a converted concern's answer —
+     the recommendation or plan it became — is already on this page. #}
+  <h2>Open Concerns</h2>
+  <p class="muted">Issues raised for which no path to resolution has been defined yet.</p>
   <table>
-    <thead><tr><th scope="col">Status</th><th scope="col">Concern</th><th scope="col">Raised</th><th scope="col">Outcome</th></tr></thead>
+    <thead><tr><th scope="col">Concern</th><th scope="col">Raised</th></tr></thead>
     <tbody>
     {% for con in r.concerns %}
       <tr>
-        <td>{% if con.status == 'open' %}<span class="badge s1">Open</span>{% else %}<span class="badge s3">Converted</span>{% endif %}</td>
         <td>{{ con.concern }}{% if con.detail %}<br/><span class="muted prewrap">{{ con.detail }}</span>{% endif %}</td>
         <td>{{ con.date_raised or '—' }}</td>
-        <td class="prewrap">{% if con.became %}Became {{ con.became_kind }}: {{ con.became }}{% elif con.resolution %}{{ con.resolution }}{% else %}—{% endif %}</td>
       </tr>
     {% endfor %}
     </tbody>
