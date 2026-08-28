@@ -135,7 +135,7 @@ def test_removed_indicator_rejected_as_target(guide_fixtures):
         )
 
 
-def test_setters_full_replace_and_resulted_in(guide_fixtures):
+def test_setters_full_replace_and_resulted_in(guide_fixtures, cleanup_plan_family):
     from app.database.queries.interview_guides.create import create_interview_guide
     from app.database.queries.interview_guides.update import (
         set_guide_communities,
