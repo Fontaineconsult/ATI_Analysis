@@ -29,7 +29,8 @@ import Card from '../common/Card';
 import Section from '../common/Section';
 import PersonAssignmentSelector from '../../functional_components/PersonAssignmentSelector';
 import CopyCommunityReportButton from './CopyCommunityReportButton';
-import { personCommunities } from './peopleConfig';
+import MemberCampusScopePicker from './MemberCampusScopePicker';
+import { buildMembershipWrite, personCommunities } from './peopleConfig';
 
 /**
  * Right-column detail for a community of practice. Fetches its own detail by
@@ -92,7 +93,11 @@ function CommunityDetailPanel({ communityId, onAfterChange, onEdit, onDeleted })
     const campuses = useMemo(() => {
         const counts = new Map();
         members.forEach((m) => {
-            if (m.host_campus) counts.set(m.host_campus, (counts.get(m.host_campus) || 0) + 1);
+            // Effective scope: the membership's own list when set, else home.
+            const active = (m.active_campuses && m.active_campuses.length)
+                ? m.active_campuses
+                : (m.host_campus ? [m.host_campus] : []);
+            active.forEach((a) => counts.set(a, (counts.get(a) || 0) + 1));
         });
         return [...counts.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
     }, [members]);
@@ -101,23 +106,40 @@ function CommunityDetailPanel({ communityId, onAfterChange, onEdit, onDeleted })
     // set_communities is replace-semantics, so the person's OTHER memberships
     // (and their notes) must be carried over — the full roster provides them
     // (full, not active-only: a member may be inactive and still unassignable).
-    const writeMembership = useCallback(async (personUniqueId, include) => {
+    const resolveRosterPerson = useCallback((personUniqueId) => {
         const rosterPerson = (Array.isArray(individuals) ? individuals : [])
             .find((p) => p.unique_id === personUniqueId);
         if (!rosterPerson?.employee_id) {
             throw new Error('Cannot resolve this person in the roster — refresh and try again.');
         }
-        const current = personCommunities(rosterPerson)
-            .map((c) => ({ community_id: c.unique_id, note: c.note }));
-        const without = current.filter((c) => c.community_id !== communityId);
-        const next = include ? [...without, { community_id: communityId }] : without;
-        await setPersonCommunities(rosterPerson.employee_id, next);
-    }, [individuals, communityId]);
+        return rosterPerson;
+    }, [individuals]);
+
+    const writeMembership = useCallback(async (personUniqueId, include) => {
+        const rosterPerson = resolveRosterPerson(personUniqueId);
+        await setPersonCommunities(
+            rosterPerson.employee_id,
+            buildMembershipWrite(rosterPerson, communityId, { include }),
+        );
+    }, [resolveRosterPerson, communityId]);
 
     const handleAfterChange = useCallback(async () => {
         await Promise.all([loadDetail(), refreshAllIndividuals()]);
         if (onAfterChange) await onAfterChange();
     }, [loadDetail, refreshAllIndividuals, onAfterChange]);
+
+    // Set one membership's campus scope (the picker's Save / Follow-home). The
+    // builder carries every other membership verbatim and applies the no-freeze
+    // rule; the refresh is explicit here because the picker sits outside the
+    // selector's own afterChange flow.
+    const writeMembershipCampuses = useCallback(async (personUniqueId, campuses) => {
+        const rosterPerson = resolveRosterPerson(personUniqueId);
+        await setPersonCommunities(
+            rosterPerson.employee_id,
+            buildMembershipWrite(rosterPerson, communityId, { include: true, campuses }),
+        );
+        await handleAfterChange();
+    }, [resolveRosterPerson, communityId, handleAfterChange]);
 
     // Indicator stakes (has_stake_in). The picker is fed from the indicators payload
     // already in DataContext (WG -> goals -> SIs), flattened to composite_key + text;
@@ -296,6 +318,13 @@ function CommunityDetailPanel({ communityId, onAfterChange, onEdit, onDeleted })
                     afterChange={handleAfterChange}
                     placeholder="Select person to add"
                     assignLabel="Add member"
+                    extraColumnHeader="Campuses"
+                    renderExtraColumn={(m) => (
+                        <MemberCampusScopePicker
+                            member={m}
+                            onSave={(campuses) => writeMembershipCampuses(m.unique_id, campuses)}
+                        />
+                    )}
                 />
             </Card>
 
