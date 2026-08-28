@@ -1,16 +1,15 @@
 {% extends "public_base.html" %}
 
-{% block title %}{{ c.name }} · Review Spread · {{ c.campus | upper }} {{ c.year }} — SFBRN Evidence Graph{% endblock %}
+{% block title %}{{ c.name }} · ATI Community of Practice · {{ c.campus | upper }} {{ c.year }} — SFBRN Evidence Graph{% endblock %}
 
 {% block footer_meta %}{{ c.campus | upper }} · {{ c.year }} ·{% endblock %}
 
 {% block content %}
-<h1>{{ c.name }} — Review Spread</h1>
+<h1>{{ c.name }} — ATI Community of Practice</h1>
   <p class="lede">{{ c.description }}</p>
   <p class="lede">
-    Every success indicator this community of practice holds a stake in, with its
-    {{ c.year }} review state at {{ c.campus | upper }}. Each row links to the full
-    public evidence report — the place to read what is claimed and what answers it.
+    Every success indicator this community of practice holds a stake in for the  {{ c.year }}
+      review cycle at {{ c.campus | upper }}.
   </p>
 
   {% if c.stakes %}
