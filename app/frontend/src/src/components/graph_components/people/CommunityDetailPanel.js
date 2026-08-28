@@ -31,6 +31,7 @@ import PersonAssignmentSelector from '../../functional_components/PersonAssignme
 import CopyCommunityReportButton from './CopyCommunityReportButton';
 import MemberCampusScopePicker from './MemberCampusScopePicker';
 import { buildMembershipWrite, personCommunities } from './peopleConfig';
+import { ALL_WORKING_GROUPS } from '../../../styles/workingGroupIdentity';
 
 /**
  * Right-column detail for a community of practice. Fetches its own detail by
@@ -145,19 +146,32 @@ function CommunityDetailPanel({ communityId, onAfterChange, onEdit, onDeleted })
     // already in DataContext (WG -> goals -> SIs), flattened to composite_key + text;
     // already-staked indicators are excluded from the options.
     const stakes = useMemo(() => (Array.isArray(detail?.stakes) ? detail.stakes : []), [detail]);
-    const indicatorOptions = useMemo(() => {
+    // One section per working group (registry order), indicators ordered by
+    // goal.indicator number within — the flat alphabetical list hid which group
+    // an indicator belonged to and interleaved 1.19 with 10.2.
+    const indicatorGroups = useMemo(() => {
         const staked = new Set(stakes.map((s) => s.composite_key));
-        const flat = [];
+        const registryOrder = new Map(ALL_WORKING_GROUPS.map((w, idx) => [w.name, idx]));
+        const groups = [];
         (Array.isArray(data?.indicators) ? data.indicators : []).forEach((wg) => {
+            const options = [];
             (wg.goals || []).forEach((goal) => {
                 (goal.successIndicators || []).forEach((si) => {
                     if (si?.composite_key && !staked.has(si.composite_key)) {
-                        flat.push({ key: si.composite_key, text: si.success_indicator || '' });
+                        options.push({ key: si.composite_key, text: si.success_indicator || '' });
                     }
                 });
             });
+            if (options.length) {
+                options.sort((a, b) => a.key.localeCompare(b.key, undefined, { numeric: true }));
+                groups.push({ name: wg.name || 'Other', options });
+            }
         });
-        return flat.sort((a, b) => a.key.localeCompare(b.key, undefined, { numeric: true }));
+        return groups.sort((a, b) => {
+            const ai = registryOrder.has(a.name) ? registryOrder.get(a.name) : 99;
+            const bi = registryOrder.has(b.name) ? registryOrder.get(b.name) : 99;
+            return ai - bi || a.name.localeCompare(b.name);
+        });
     }, [data, stakes]);
 
     const handleAddStake = useCallback(async () => {
@@ -413,12 +427,16 @@ function CommunityDetailPanel({ communityId, onAfterChange, onEdit, onDeleted })
                             value={stakeKey}
                             onChange={(e) => setStakeKey(e.target.value)}
                             aria-label="Success indicator to add as a stake"
-                            maxW="220px"
+                            maxW="420px"
                         >
-                            {indicatorOptions.map((o) => (
-                                <option key={o.key} value={o.key}>
-                                    {o.key} — {o.text.slice(0, 70)}
-                                </option>
+                            {indicatorGroups.map((g) => (
+                                <optgroup key={g.name} label={g.name}>
+                                    {g.options.map((o) => (
+                                        <option key={o.key} value={o.key}>
+                                            {o.key} — {o.text}
+                                        </option>
+                                    ))}
+                                </optgroup>
                             ))}
                         </Select>
                         <Input

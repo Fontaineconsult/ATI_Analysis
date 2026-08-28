@@ -73,10 +73,28 @@ const ROSTER = [
     },
 ];
 
+// Two WGs deliberately in NON-registry order, with indicators out of numeric
+// order, so the picker's grouping + sorting is what the test proves.
+const INDICATORS = [
+    {
+        name: 'Procurement',
+        goals: [{ goal_number: 1, successIndicators: [
+            { composite_key: '2.3-pro', success_indicator: 'Vendor conformance review' },
+        ] }],
+    },
+    {
+        name: 'Web',
+        goals: [{ goal_number: 1, successIndicators: [
+            { composite_key: '1.19-web', success_indicator: 'A very long indicator name that must not be cut off in the picker' },
+            { composite_key: '1.2-web', success_indicator: 'Accessibility statement' },
+        ] }],
+    },
+];
+
 const renderPanel = () => render(
     <ChakraProvider>
         <UserContext.Provider value={{ individuals: ROSTER, refreshAllIndividuals: jest.fn() }}>
-            <DataContext.Provider value={{ data: { indicators: [] } }}>
+            <DataContext.Provider value={{ data: { indicators: INDICATORS } }}>
                 <MemoryRouter initialEntries={['/ati/sfsu/ati-explorer/people/communities/com1']}>
                     <Routes>
                         <Route
@@ -121,6 +139,21 @@ describe('CommunityDetailPanel — membership campus scoping', () => {
         await waitFor(() => expect(setPersonCommunities).toHaveBeenCalledWith('e1', [
             { community_id: 'com1', note: null, campuses: ['sfsu', 'ssu'] },
         ]));
+    });
+
+    it('groups the stake picker by working group in registry order, numerically sorted, full names', async () => {
+        renderPanel();
+        await screen.findByText('Pat Person');
+        const picker = screen.getByRole('combobox', { name: /success indicator to add as a stake/i });
+        const groups = [...picker.querySelectorAll('optgroup')].map((g) => g.label);
+        expect(groups).toEqual(['Web', 'Procurement']); // registry order, not payload order
+        const webOptions = [...picker.querySelectorAll('optgroup')[0].querySelectorAll('option')]
+            .map((o) => o.value);
+        expect(webOptions).toEqual(['1.2-web', '1.19-web']); // numeric, not lexicographic
+        // Full text, no truncation.
+        expect(screen.getByRole('option', {
+            name: /1\.19-web — A very long indicator name that must not be cut off in the picker/,
+        })).toBeInTheDocument();
     });
 
     it('Follow home campus clears to [] and other memberships survive verbatim', async () => {
