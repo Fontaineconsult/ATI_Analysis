@@ -312,3 +312,19 @@ def test_link_actions_reject_bad_input(flask_client, test_law, payload, expected
         payload["governance_unique_id"] = test_law.unique_id
     resp = flask_client.put(f"{API}/governance", json=payload)
     assert resp.status_code == expected
+
+
+def test_attach_indicator_rejects_removed(test_law):
+    """A NEW drives edge never targets a retired indicator — matching the
+    link-targets pool, which already excludes them. (Existing edges stay
+    editable; only creation is blocked.)"""
+    from app.database.graph_schema import SuccessIndicator
+    from app.database.queries.governance.update import attach_indicator_to_governance
+    from app.endpoints.data_api.errors.custom_exceptions import ValidationError
+
+    removed_si = SuccessIndicator.nodes.filter(removed=True).first_or_none()
+    if removed_si is None:
+        pytest.skip("No removed SuccessIndicator in the graph to test against")
+
+    with pytest.raises(ValidationError):
+        attach_indicator_to_governance("law", test_law.unique_id, removed_si.unique_id, {})
