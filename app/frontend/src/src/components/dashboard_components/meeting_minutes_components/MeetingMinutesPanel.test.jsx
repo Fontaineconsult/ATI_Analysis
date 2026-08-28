@@ -77,7 +77,7 @@ describe('MeetingMinutesPanel', () => {
         fetchMinutesPanelForPlan.mockResolvedValue({
             data: { exists: true, working_group: 'Web', working_group_plan_identifier: '2025-2026-sfsu-web', minutes: [] },
         });
-        fetchAllCommunities.mockResolvedValue({ data: [{ unique_id: 'c1', name: 'Alternative Media' }] });
+        fetchAllCommunities.mockResolvedValue({ data: { items: [{ unique_id: 'c1', name: 'Alternative Media' }] } });
         createMeetingMinutes.mockResolvedValue({});
 
         renderWithUser(<MeetingMinutesPanel workingGroupPlanIdentifier="2025-2026-sfsu-web" />);
@@ -115,7 +115,7 @@ describe('MeetingMinutesPanel', () => {
     });
 
     it('edit modal preselects assignments and shows the ontology-ingest stamp', async () => {
-        fetchAllCommunities.mockResolvedValue({ data: [{ unique_id: 'c1', name: 'Alternative Media' }] });
+        fetchAllCommunities.mockResolvedValue({ data: { items: [{ unique_id: 'c1', name: 'Alternative Media' }] } });
         renderWithUser(
             <MeetingMinutesForm
                 isOpen
@@ -142,7 +142,7 @@ describe('MeetingMinutesPanel', () => {
     });
 
     it('not-ingested minutes say so in the edit modal', async () => {
-        fetchAllCommunities.mockResolvedValue({ data: [] });
+        fetchAllCommunities.mockResolvedValue({ data: { items: [] } });
         renderWithUser(
             <MeetingMinutesForm
                 isOpen onClose={() => {}} mode="edit"

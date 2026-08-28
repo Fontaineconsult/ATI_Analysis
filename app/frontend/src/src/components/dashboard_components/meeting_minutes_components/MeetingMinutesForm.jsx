@@ -84,7 +84,7 @@ export default function MeetingMinutesForm({
     useEffect(() => {
         let cancelled = false;
         fetchAllCommunities()
-            .then((resp) => { if (!cancelled) setCommunities(resp?.data || []); })
+            .then((resp) => { if (!cancelled) setCommunities(resp?.data?.items || []); })
             .catch(() => { if (!cancelled) setCommunities([]); });
         return () => { cancelled = true; };
     }, []);
