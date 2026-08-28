@@ -1928,9 +1928,11 @@ class MeetingMinutes(StructuredNode):
     # record-side accessor.
     participants = RelationshipFrom("Person", "participated_in")
 
-    # The prep guide this meeting closed, if one was authored (reverse of
-    # InterviewGuide.resulted_in). At most one — a guide preps one meeting.
-    prepared_by_guide = RelationshipFrom("InterviewGuide", "resulted_in", cardinality=ZeroOrOne)
+    # The prep guide(s) this meeting closed (reverse of InterviewGuide.resulted_in).
+    # A guide preps ONE meeting (guide-side ZeroOrOne), but one meeting can be
+    # prepped by several documents — the 2026-08-07 library meeting had a background
+    # guide AND a runsheet — so this side is unbounded.
+    prepared_by_guides = RelationshipFrom("InterviewGuide", "resulted_in")
 
     def serialize(self):
         return {

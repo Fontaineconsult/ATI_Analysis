@@ -1,4 +1,5 @@
 # Meeting run sheet — J. Paul Leonard Library × SFBRN ATI
+graph: 06943b0cbf5a4ebdab55092f34144cf6
 SF State · Zoom, recorded · ~65 minutes
 Companion to `2026-08-07-sfsu-library-alternative-access-process.md` (the background)
 

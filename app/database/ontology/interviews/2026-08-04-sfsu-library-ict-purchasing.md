@@ -1,4 +1,5 @@
 # Interview: Dean Christy Stevens — Library ICT footprint & tech purchasing
+graph: 6234be4cc005443fb48ace87dab969c8
 Generated 2026-08-04 · SF State (sfsu) · J. Paul Leonard Library
 Working groups: **Procurement** (primary) · Instructional Materials (7.11) · Web (public surfaces)
 Anchor year: **2025-2026** (current reporting; 2026-2027 stubs are live)
