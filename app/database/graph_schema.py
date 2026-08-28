@@ -1899,6 +1899,18 @@ class MeetingMinutes(StructuredNode):
     supporting_webpages  = RelationshipTo("Webpage", "is_documented_by", model=DocumentedByRel)
     notes                = RelationshipTo("Note", "has_note")
 
+    # Communities of practice this meeting pertains to. Multiple links expected — a
+    # single meeting routinely touches several communities' ground. An ASSERTED edge,
+    # not derived from participant membership: a meeting can pertain to a community
+    # none of whose members were in the room.
+    pertains_to = RelationshipTo("CommunityOfPractice", "pertains_to")
+
+    # People who PARTICIPATED — derivable from the transcript (they spoke, or the
+    # record places them in the meeting), as opposed to people merely mentioned in
+    # passing, who stay in the prose. The edge points Person -> minutes; this is the
+    # record-side accessor.
+    participants = RelationshipFrom("Person", "participated_in")
+
     def serialize(self):
         return {
             "unique_id": self.unique_id,
@@ -2055,6 +2067,9 @@ class CommunityOfPractice(StructuredNode):
 
     # Reverse of Person.in_communities; the membership edge carries an optional note.
     members = RelationshipFrom("Person", "member_of_community", model=CommunityMembershipRel)
+    # Meetings asserted to pertain to this community — counterpart of
+    # MeetingMinutes.pertains_to.
+    pertaining_minutes = RelationshipFrom("MeetingMinutes", "pertains_to")
 
     # The indicators this community's practice area has stakes in (agentive: its
     # members are the stakeholders for that indicator's evidence). Declared here on
@@ -2111,6 +2126,10 @@ class Person(StructuredNode):
     host_campus = RelationshipTo("Campus", "works_at_campus", cardinality=ZeroOrOne)
     holds_role = RelationshipTo("Role", "holds_role", model=RoleHoldingRel)  # capacities the person provides (PD tracking lives on the edge)
     in_communities = RelationshipTo("CommunityOfPractice", "member_of_community", model=CommunityMembershipRel)  # cross-campus shared-interest groupings
+    # Meetings this person participated in — a transcript-derived fact (they spoke, or
+    # the record places them there), never an idle mention. Note the tense: distinct
+    # from `participates_in` (ATIWorkingGroup membership) above.
+    participated_in_meetings = RelationshipTo("MeetingMinutes", "participated_in")
     # Participatory "working team" edges to the four doing-implementations — the role
     # acted in is a property on the edge (ParticipationRel.role_handle); distinct from
     # owned_by (custodial). One shared rel-type "worked_on" across the four.
