@@ -40,6 +40,7 @@ function SubNavbar() {
             { label: 'People', path: `${campusPrefix}/ati-explorer/people`, base: `${campusPrefix}/ati-explorer/people` },
             { label: 'Governance', path: `${campusPrefix}/ati-explorer/governance`, base: `${campusPrefix}/ati-explorer/governance` },
             { label: 'Assets', path: `${campusPrefix}/ati-explorer/assets`, base: `${campusPrefix}/ati-explorer/assets` },
+            { label: 'Documentation', path: `${campusPrefix}/ati-explorer/documentation`, base: `${campusPrefix}/ati-explorer/documentation` },
         ];
     } else if (location.pathname.includes('/dashboard')) {
         // The dashboard working groups (derived from the WG single-source-of-truth) carry the

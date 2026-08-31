@@ -8,6 +8,7 @@ import PlansAccomplishmentsManager from "../PlansAndAccomplishments/PlansAccompl
 import PeopleArea from "./PeopleArea";
 import GovernanceArea from "./GovernanceArea";
 import AssetsMasterContainer from "./AssetsMasterContainer";
+import DocumentationMasterContainer from "./DocumentationMasterContainer";
 
 function WorkingGroupMasterContainer() {
     const { loading, error } = useContext(DataContext);
@@ -55,6 +56,13 @@ function WorkingGroupMasterContainer() {
                 <Route path="assets" element={<AssetsMasterContainer />} />
                 <Route path="assets/:assetTab" element={<AssetsMasterContainer />} />
                 <Route path="assets/:assetTab/:itemId" element={<AssetsMasterContainer />} />
+
+                {/* Documentation. The type sits in the path alongside the id because
+                    the detail fetch needs it before the index has resolved — same
+                    reason implementations/:implementationType/:implementationId does. */}
+                <Route path="documentation" element={<DocumentationMasterContainer />} />
+                <Route path="documentation/:docGroup" element={<DocumentationMasterContainer />} />
+                <Route path="documentation/:docGroup/:docType/:docId" element={<DocumentationMasterContainer />} />
                 <Route path="*" element={<Text>Please select a section.</Text>} />
             </Routes>
         </Box>

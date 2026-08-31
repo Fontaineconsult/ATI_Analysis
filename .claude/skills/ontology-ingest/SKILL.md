@@ -17,6 +17,57 @@ Never route from the source alone. Prefer the registry runner
 year_identifiers; `notes_for_yse` / `notes_for_implementation` check for existing
 annotations); fall back to ad-hoc read-only Bolt.
 
+### 0. PULL THE ONTOLOGY FIRST — mandatory, before anything else
+
+The graph describes itself. `UniversalDescriptor` nodes define every node type,
+field, field value and relationship type, and they are the authority on what
+exists and what it is called. **Read them before routing, before writing Cypher,
+and before trusting any property name.**
+
+```cypher
+// the whole map, once
+MATCH (d:UniversalDescriptor)
+RETURN d.descriptor_kind AS kind, d.descriptor_handle AS handle,
+       d.target_label AS label, d.target_field AS field,
+       d.description_short AS meaning
+ORDER BY kind, handle
+```
+
+```cypher
+// or scoped to the labels this ingest will touch
+MATCH (d:UniversalDescriptor) WHERE d.target_label IN $labels
+RETURN d.descriptor_kind, d.descriptor_handle, d.target_field, d.description_full
+```
+
+Four families: `node_type:*` (what each label means and when to use it),
+`field:*` (**the real property names** — this is the one that prevents silent
+failures), `field_value:*` (the enumerated values a field accepts), `rel_type:*`
+(what an edge asserts). `descriptor_kind` filters them; `target_label` and
+`target_field` join them back to the schema.
+
+**Why this is mandatory and not advisory** — calibration, 2026-08-20 SFSU ingest,
+where descriptors were skipped:
+- `AcademicYear {academic_year_name: …}` — the property is `name`. EXPLAIN passed,
+  the MATCH bound nothing, and the statement silently dropped three `includes_plan`
+  edges. Caught only by a manual bind-check.
+- `Campus {campus_abbreviation: …}` — the property is `abbreviation`. Same failure.
+- `Plan` was nearly MERGEd on `name` when the unique index is `description`, which
+  would have duplicated plans on every re-run.
+
+Descriptors do NOT cover everything. **Role handles are not in the descriptor
+set** — sample the seeded values off existing `worked_on` edges
+(`MATCH ()-[w:worked_on]->() RETURN DISTINCT w.role_handle`) and use only those.
+Inventing a handle is the same class of error as inventing a property name.
+
+### Bind-check every MATCH target before executing
+
+`run_file` validation is EXPLAIN — it proves the Cypher parses, not that anything
+matches. A MATCH on a misspelled property is valid Cypher that binds zero rows,
+so the statement no-ops and everything downstream of it silently vanishes. Before
+`--execute`, run one query that counts each anchor the file MATCHes — campus,
+academic year, WGP, every YSE, every node referenced by `unique_id` — and confirm
+the counts are what you expect. Treat a zero as a bug, never as "nothing to do".
+
 1. **Reference data**: campuses, AcademicYears, ATIWorkingGroups, Role handles,
    Dimension handles, Tools, Vendors, Assets, Interfaces.
 2. **Anchors**: WorkingGroupPlans for the target year/campus/WG; SuccessIndicator
@@ -75,7 +126,7 @@ degraded version of the same node.
 | Target | Min | Test |
 |---|---|---|
 | **Implementation** (Process/Procedure/Service/Guidance/Project/InternalPolicy) | S1 | The work EXISTS and operates today. Never from intent. |
-| **Plan** | S2 | Future/ongoing work with commitment language from its owner. `plan_status` "In Progress" if started, else "Not Started". |
+| **Plan** | S2 | Future/ongoing work with commitment language from its owner. Name it as a completable task, describe the WORK not the subject (see below). `plan_status` "In Progress" if started, else "Not Started". |
 | **Query** | S3 | A decision someone must make, WITH a decider. Awaiting authority = `resource_request`; method choice = `technical_clarification`. Already decided → Note or Plan. |
 | **Concern** | S1–S3 | A problem with NO path to resolution — no owner, no decider, no agreed change. Anchors to a YSE (`has_concern`). Converting to a Recommendation or Plan later is a first-class outcome; the `became_*` edge keeps provenance. |
 | **Recommendation** | S2–S3 | A stated improvement — the path IS "make this change". If nobody said what should change, it is a Concern. |
@@ -121,6 +172,45 @@ back to the notes: the node already carries its own date and author, and the rea
 sees both records side by side. Both fields render on the public report, where the
 reader wants the ask, not the archive. A detail that opens with context is a Note
 wearing the wrong label.
+
+### Writing Plan name and description
+
+A Plan is **work someone will complete**, not a topic someone discussed. Both
+fields go wrong in the same way — by describing the subject instead of the task.
+
+**`Plan.name` must be a completable task, verb-led.** The test: could someone set
+this to Completed and have that be unambiguously true or false? A noun-phrase
+lifted from the transcript fails the test, because a topic is never finished.
+
+| Not a plan name | A plan name |
+|---|---|
+| `SFSU: CEETL Teaching Square rollout` | `SFSU: Verify CEETL Teaching Square rollout` |
+| `SFSU: AT accessibility documentation catalog` | `SFSU: Publish the AT accessibility documentation catalog` |
+| `SFSU: Captioning vendor` | `SFSU: Execute the Verbit captioning contract` |
+
+Keep the campus prefix — it keeps names unique across campuses, which the MERGE
+depends on. Start the rest with a verb: publish, verify, document, deliver,
+allocate, wire, obtain, decide.
+
+**`Plan.description` must state what needs to happen, not what the thing is.**
+This is the mistake to watch for, because the source material is *about* the
+subject, so the subject is what comes to hand. Ask: does this paragraph describe
+a thing, or describe work? If a thing — it belongs on the implementation node, or
+in a Note. The plan wants the task, the owner, and the done-condition.
+
+- **Never duplicate an implementation's description into a Plan.** When a Plan and
+  an implementation cover the same programme, the implementation says what it IS
+  and the Plan says what must HAPPEN. If both paragraphs read alike, one is wrong.
+- Include the done-condition explicitly — the reader should be able to tell when
+  to flip `plan_status` without asking anyone.
+- Background, funding structure, history and who said what go in a **Note** on the
+  same YSE, exactly as with Recommendation and Concern detail.
+
+Calibration (2026-08-20 SFSU): a plan was filed as `SFSU: CEETL Teaching Square
+rollout`, with a description that explained what a Teaching Square is, who leads
+it, and how the stipends are funded. Every sentence was true and none of it was a
+plan — the programme description belonged on the Guidance node, and the name named
+a topic nobody could ever mark complete.
 
 ### Implementation sub-routing (all S1)
 

@@ -280,6 +280,44 @@ export const fetchCampuses = async () => {
     }
 }
 
+/**
+ * Every documentation record (Document / Webpage / Note / Message / Metric) with
+ * its references, derived signals and a summary, for the central Documentation
+ * area.
+ *
+ * Distinct from fetchAllDocuments/fetchAllWebpages below, which return bare
+ * serialize() arrays from the older /documents/<type> routes and are still used
+ * by the governance panel. This one returns { items, summary, meta }.
+ *
+ * Full text (raw_text / content) is withheld here — raw_text can be an entire
+ * document. Use fetchDocumentationItem for one record with its text.
+ */
+export const fetchDocumentationIndex = async (types = null) => {
+    try {
+        const query = types?.length ? `?types=${types.join(',')}` : '';
+        const response = await axios.get(`${process.env.REACT_APP_API_URL}/documentation${query}`);
+        if (response.status === 200) return response.data;
+        throw new Error(`Failed to fetch documentation: ${response.data?.error}`);
+    } catch (error) {
+        console.error('Error fetching documentation index:', error.message);
+        throw error;
+    }
+};
+
+/** One documentation record, always including its full text. */
+export const fetchDocumentationItem = async (docType, uniqueId) => {
+    try {
+        const response = await axios.get(
+            `${process.env.REACT_APP_API_URL}/documentation/${docType}/${encodeURIComponent(uniqueId)}`,
+        );
+        if (response.status === 200) return response.data;
+        throw new Error(`Failed to fetch ${docType} ${uniqueId}: ${response.data?.error}`);
+    } catch (error) {
+        console.error('Error fetching documentation item:', error.message);
+        throw error;
+    }
+};
+
 export const fetchAllDocuments = async () => {
     try {
         const response = await axios.get(`${process.env.REACT_APP_API_URL}/documents/documents`);

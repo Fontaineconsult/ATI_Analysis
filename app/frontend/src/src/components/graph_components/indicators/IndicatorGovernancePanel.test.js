@@ -78,7 +78,12 @@ const expand = async () => {
         .toHaveBeenCalledWith('1.1-web', true));
     // Chakra's Collapse keeps the panel out of the a11y tree until the transition
     // settles, so wait for a body control to actually be reachable before asserting.
-    await screen.findByRole('button', { name: /Link an instrument/ });
+    //
+    // The timeout is raised above findBy's 1s default because this waits on a real
+    // CSS transition, and transition wall-clock stretches when the suite runs with
+    // more workers competing for CPU. It failed once the suite grew past ~46 files.
+    // Nothing about the component changed — only how much company it has.
+    await screen.findByRole('button', { name: /Link an instrument/ }, { timeout: 5000 });
 };
 
 beforeEach(() => {

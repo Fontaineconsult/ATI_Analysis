@@ -355,9 +355,9 @@ class DocumentsAPI(MethodView):
                     return make_response(status="error", error=str(e)), 400
                 except NotFoundError as e:
                     return make_response(status="error", error=str(e)), 404
-                # except Exception as e:
-                #     print(f"Unexpected error during message update: {e}")
-                #     return make_response(status="error", error="An unexpected error occurred."), 500
+                except Exception as e:
+                    print(f"Unexpected error during message update: {e}")
+                    return make_response(status="error", error="An unexpected error occurred."), 500
 
             elif action == 'update_metric':
                 required_fields = ['metric_dict']
@@ -477,10 +477,19 @@ class DocumentsAPI(MethodView):
             return make_response(status='error', error=str(e)), 404
         except CrudError as e:
             return make_response(status='error', error=str(e)), 500
-        # except Exception as e:
-        #     return make_response(status='error', error=f"An unexpected error occurred: {str(e)}"), 500
+        except Exception as e:
+            # Without this, an unexpected error escapes to Flask and the view
+            # returns None — a 500 with no JSON envelope, so the frontend reads
+            # response.data.error as undefined.
+            traceback.print_exc()
+            return make_response(status='error', error=f"An unexpected error occurred: {str(e)}"), 500
 
-
+        # An unrecognised action previously fell off the end of the if/elif chain
+        # and returned None, which Flask rejects with "did not return a valid
+        # response". Name the bad action instead.
+        return make_response(
+            status='error', error=f"Unknown action: {action!r}"
+        ), 400
 
     def delete(self):
         """
@@ -489,7 +498,17 @@ class DocumentsAPI(MethodView):
         return make_response(status="error", error="Not Implemented"), 405
 
 
-# Register the view for different document types
+# Register the view for different document types.
+#
+# The methods are split deliberately. post() takes no document_type and put()
+# requires one, so the two combinations removed here — POST /documents/<type>
+# and PUT /documents — could only ever raise TypeError and return a 500 with an
+# HTML body. Verified against every caller (2026-08-22): post.js posts to
+# /documents bare, and put.js always includes the type segment.
+#
+# Note that put() accepts document_type but never reads it — dispatch is entirely
+# on the `action` field in the body. That mismatch is what made the dead route
+# non-obvious in the first place.
 documents_view = DocumentsAPI.as_view('documents_api')
-data_api_endpoints.add_url_rule('/documents/<string:document_type>', view_func=documents_view, methods=['GET', 'PUT', 'POST'])
-data_api_endpoints.add_url_rule('/documents', view_func=documents_view, methods=['POST', 'PUT'])
+data_api_endpoints.add_url_rule('/documents/<string:document_type>', view_func=documents_view, methods=['GET', 'PUT'])
+data_api_endpoints.add_url_rule('/documents', view_func=documents_view, methods=['POST'])
