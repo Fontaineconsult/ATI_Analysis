@@ -1,4 +1,5 @@
 # Pamela Baird + Zach Oshri — Disability Services CoP
+graph: 6d97de3d41474e92b4cfb92a80234e63
 CSU East Bay · reporting year **2025-2026** · rebuilt 2026-08-19 after the site ingest
 
 State of the graph for every indicator this community holds a stake in, measured against each

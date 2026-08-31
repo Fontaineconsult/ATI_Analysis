@@ -36,6 +36,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import Card from '../common/Card';
 import {
     allDocumentsDepreciated,
+    hasAccountableCommunity,
     hasAssets,
     hasParticipants,
     isDimensioned,
@@ -95,6 +96,8 @@ function ImplementationDetailPanel({ implementation, onAfterChange }) {
     const type = implementation?.type;
     const dimensioned = isDimensioned(type);
     const participantType = hasParticipants(type);
+    // Wider than participantType: reference types answer for their own currency.
+    const communityAccountableType = hasAccountableCommunity(type);
     const assetType = hasAssets(type);
 
     const [isEditing, setIsEditing] = useState(false);
@@ -134,10 +137,10 @@ function ImplementationDetailPanel({ implementation, onAfterChange }) {
         return () => { cancelled = true; };
     }, [dimensioned]);
 
-    // Community options for the accountable-community picker (doing types only).
+    // Community options for the accountable-community picker.
     const [communityOptions, setCommunityOptions] = useState([]);
     useEffect(() => {
-        if (!participantType) return;
+        if (!communityAccountableType) return;
         let cancelled = false;
         (async () => {
             try {
@@ -146,7 +149,7 @@ function ImplementationDetailPanel({ implementation, onAfterChange }) {
             } catch (_) { /* non-fatal: picker just shows no options */ }
         })();
         return () => { cancelled = true; };
-    }, [participantType]);
+    }, [communityAccountableType]);
 
     // Drop out of edit mode whenever the selection changes.
     useEffect(() => { setIsEditing(false); }, [implementation?.unique_id]);
@@ -812,9 +815,11 @@ function ImplementationDetailPanel({ implementation, onAfterChange }) {
             </Card>
 
             {/* Accountable community — the operating community that answers for this
-                work (doing types only). Preferred accountability seat; distinct from
-                Owners (custodial Person) and from working-group committee accountability. */}
-            {participantType && (
+                work. Preferred accountability seat; distinct from Owners (custodial
+                Person) and from working-group committee accountability. Shown for the
+                reference types too (Guidance / InternalPolicy / Tracking): they perform
+                no remediation, but someone still answers for keeping them current. */}
+            {communityAccountableType && (
                 <Card title={<>Accountable community <HelpTip field={['Implementation', 'accountable_community']} /></>}>
                     <Divider mb={4} borderColor="gray.200" />
                     <Text fontSize="xs" color="gray.600" mb={2}>

@@ -52,9 +52,14 @@ Recon, in order:
    `(si)<-[:has_stake_in]-(c:CommunityOfPractice)<-[:member_of_community]-(p)`
    (registry: `community_detail`). Those members are the interview candidates;
    list them on the guide so the interviewer knows who else works this ground.
-3. **Last contact**: most recent MeetingMinutes involving this stakeholder or
-   campus/WG; extract the action-items note. Unfinished items are follow-ups —
-   the interview's opening business.
+3. **Last contact**: check prior InterviewGuide nodes FIRST —
+   `(p:Person)<-[:prepared_for]-(g:InterviewGuide)` or the community's
+   `pertaining_guides` — and walk each guide's `resulted_in` to its minutes:
+   that pairing says exactly what was planned AND what the meeting actually
+   produced, and a guide with NO resulted_in past its meeting_date is an open
+   loop to mention. Then the most recent MeetingMinutes involving this
+   stakeholder or campus/WG; extract the action-items note. Unfinished items
+   are follow-ups — the interview's opening business.
 4. **Open Queries** under the campus's WGPs: each is a question to ask LIVE.
    Settling one in the interview is a first-class outcome (status → settled,
    answer recorded).
@@ -161,6 +166,21 @@ Verdict to reach live: <what would have to be true>. Do not claim Established on
 ## Protocol reminder: identity round → walkthrough → BAR SWEEP → commitments →
 ## pending decisions → artifacts → RECAP ALOUD
 ```
+
+### Persist the guide (the last prep step)
+
+The file is the printable artifact; the graph node is the memory. After writing
+the guide file, mirror it into the graph and record the printed unique_id on the
+file's second line (`graph: <unique_id>`):
+
+```
+PYTHONPATH=. python app/database/tools/save_interview_guide.py     --file app/database/ontology/interviews/<the-guide>.md     --campus <abbrev> --year <YYYY-YYYY> [--meeting-date YYYY-MM-DD]     --people <person-uids> --targets <yse-year-identifiers>     --communities <community-uids>
+```
+
+`--people` = the intended interviewees (prepared_for), `--targets` = the guide's
+target YSEs, `--communities` = the CoP(s) whose ground this works. The node is an
+InterviewGuide anchored to campus + year; its working-group footprint derives
+from the targets. Re-save an edited guide with `--update <unique_id>`.
 
 ## Part 2 — The standing protocol (the repeatable method)
 
@@ -277,6 +297,11 @@ because it is next year's work order.
    not reached. The not-reached list seeds the NEXT guide.
 3. Settle any Query nodes answered live (status, answer, date_settled) as part of
    the ingest manifest.
+3b. **Close the guide**: once ingest lands the MeetingMinutes node, point the
+   prep at it — `save_interview_guide.py --file <guide.md> --update <guide-uid>
+   --resulted-in <minutes-uid>` (or PUT set_resulted_in on /interview-guides).
+   A guide past its meeting_date with no resulted_in is a visible loose end;
+   next-cycle recon reads the pairing as plan-vs-record.
 4. Check off delivered artifacts as they arrive — each becomes a Document wired per
    the ingest rules. An artifact promised but never delivered leaves its bar element
    unmet; carry it forward rather than quietly dropping it.

@@ -52,7 +52,8 @@ function Avatar({ name, size = '22px' }) {
  *   onManageLeads  opens the manage-leads modal (owned by the card)
  *   communities    [{name, stake_count, leads: [{name, campus, title, note}]}]
  *   accentColor    the working group's accent (campusPlanConfig)
- *   campusAbbrev   current campus — members elsewhere get a campus chip
+ *   campusAbbrev   current campus — the roster shows ONLY this campus's members
+ *                  (communities are cross-campus; a campus plan is not)
  */
 function WgCommunitiesSection({ leads = [], onManageLeads, communities = [], accentColor, campusAbbrev }) {
     const [showAll, setShowAll] = useState(false);
@@ -85,7 +86,18 @@ function WgCommunitiesSection({ leads = [], onManageLeads, communities = [], acc
                         Communities of Practice ({communities.length})
                     </Text>
                     <VStack align="stretch" spacing={1.5}>
-                        {visible.map((c) => (
+                        {visible.map((c) => {
+                            const allMembers = c.leads || [];
+                            // Campus context: only members ACTIVE here. active_campuses is
+                            // the server-resolved effective scope (the membership's own
+                            // campus list when set, else the member's home campus). An
+                            // empty effective list is a data gap, not evidence they work
+                            // elsewhere — those members stay visible.
+                            const eff = (m) => m.active_campuses ?? (m.campus ? [m.campus] : []);
+                            const members = campusAbbrev
+                                ? allMembers.filter((m) => eff(m).length === 0 || eff(m).includes(campusAbbrev))
+                                : allMembers;
+                            return (
                             <Box
                                 key={c.name}
                                 borderWidth="1px"
@@ -104,27 +116,27 @@ function WgCommunitiesSection({ leads = [], onManageLeads, communities = [], acc
                                     <Badge colorScheme="gray" variant="subtle" fontSize="2xs" flexShrink={0}>
                                         {c.stake_count} stake{c.stake_count === 1 ? '' : 's'}
                                     </Badge>
-                                    {(c.leads || []).length === 0 ? (
+                                    {allMembers.length === 0 ? (
                                         <Text fontSize="13px" color="gray.500" fontStyle="italic">
                                             no members recorded — people derive from the working group
                                         </Text>
+                                    ) : members.length === 0 ? (
+                                        <Text fontSize="13px" color="gray.500" fontStyle="italic">
+                                            no members at this campus
+                                        </Text>
                                     ) : (
-                                        c.leads.map((m, i) => (
+                                        members.map((m, i) => (
                                             <HStack key={`${m.name}-${i}`} spacing={1} whiteSpace="nowrap">
                                                 <Text fontSize="13px" color="gray.700">
-                                                    {m.name}{i < c.leads.length - 1 ? ',' : ''}
+                                                    {m.name}{i < members.length - 1 ? ',' : ''}
                                                 </Text>
-                                                {m.campus && m.campus !== campusAbbrev && (
-                                                    <Badge colorScheme="purple" variant="subtle" fontSize="2xs">
-                                                        {m.campus}
-                                                    </Badge>
-                                                )}
                                             </HStack>
                                         ))
                                     )}
                                 </HStack>
                             </Box>
-                        ))}
+                            );
+                        })}
                     </VStack>
                     {hidden > 0 && (
                         <Button size="xs" variant="ghost" colorScheme="teal" mt={1.5} onClick={() => setShowAll(true)}>

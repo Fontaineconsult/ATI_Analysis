@@ -30,6 +30,13 @@ function sectionHeading(label) {
     return `<p style="margin:16px 0 6px 0;font-size:13px;font-weight:bold;color:${NAVY};${FONT}">${label}</p>`;
 }
 
+// Effective campus scope for one member row: the membership's own campus list
+// when set (authoritative), else the member's home campus (fallback).
+function effectiveCampuses(m) {
+    if (m.active_campuses && m.active_campuses.length) return m.active_campuses;
+    return m.host_campus ? [m.host_campus] : [];
+}
+
 function membersTableHtml(members) {
     if (!members.length) {
         return `<p style="margin:4px 0;font-size:12px;color:${MUTED};${FONT}">No members recorded yet.</p>`;
@@ -37,11 +44,11 @@ function membersTableHtml(members) {
     const rows = members.map((m) => '<tr>'
         + td(`<strong>${esc(m.name)}</strong>`)
         + td(esc(m.title || '—'))
-        + td((m.host_campus || '—').toUpperCase())
+        + td(effectiveCampuses(m).map((c) => c.toUpperCase()).join(', ') || '—')
         + td(esc(m.note || ''))
         + '</tr>').join('');
     return `<table cellpadding="0" cellspacing="0" width="100%" style="border-collapse:collapse;">`
-        + `<tr>${th('Member', '24%')}${th('Title', '34%')}${th('Campus', '10%')}${th('Note', '32%')}</tr>`
+        + `<tr>${th('Member', '24%')}${th('Title', '32%')}${th('Campus', '14%')}${th('Note', '30%')}</tr>`
         + rows + '</table>';
 }
 
@@ -70,7 +77,7 @@ export function buildCommunityReport(detail) {
     const stakes = Array.isArray(detail?.stakes) ? detail.stakes : [];
     const name = detail?.name || 'Community of Practice';
 
-    const campuses = [...new Set(members.map((m) => m.host_campus).filter(Boolean))]
+    const campuses = [...new Set(members.flatMap((m) => effectiveCampuses(m)))]
         .map((c) => c.toUpperCase()).sort();
 
     const html = `<div style="${FONT}">`
@@ -91,16 +98,49 @@ export function buildCommunityReport(detail) {
     ];
     if (detail?.description) lines.push(detail.description);
     lines.push('', `MEMBERS (${members.length})`);
-    members.forEach((m) => lines.push(
-        `  - ${m.name}${m.title ? ` — ${m.title}` : ''}`
-        + `${m.host_campus ? ` (${m.host_campus.toUpperCase()})` : ''}${m.note ? ` — ${m.note}` : ''}`,
-    ));
+    members.forEach((m) => {
+        const scope = effectiveCampuses(m).map((c) => c.toUpperCase()).join(', ');
+        lines.push(
+            `  - ${m.name}${m.title ? ` — ${m.title}` : ''}`
+            + `${scope ? ` (${scope})` : ''}${m.note ? ` — ${m.note}` : ''}`,
+        );
+    });
     lines.push('', `INDICATOR STAKES (${stakes.length})`);
     stakes.forEach((s) => lines.push(
         `  - ${s.composite_key}: ${s.success_indicator || ''}${s.note ? ` — ${s.note}` : ''}`,
     ));
 
     return { html, plainText: lines.join('\n'), rowCount: members.length + stakes.length };
+}
+
+/**
+ * Stakes-only variant: just the indicator-stakes table for one community, for
+ * mailing the "what this community reviews" list without the member roster.
+ * Same Outlook-safe conventions as buildCommunityReport. Pass `reviewSpreadUrl`
+ * to include the public review-spread link under the heading, so recipients can
+ * click through to the live review states.
+ */
+export function buildCommunityStakesReport(detail, { reviewSpreadUrl = null } = {}) {
+    const stakes = Array.isArray(detail?.stakes) ? detail.stakes : [];
+    const name = detail?.name || 'Community of Practice';
+
+    const html = `<div style="${FONT}">`
+        + `<p style="margin:0 0 2px 0;font-size:16px;font-weight:bold;color:${NAVY};${FONT}">${esc(name)}</p>`
+        + `<p style="margin:0 0 4px 0;font-size:11px;color:${MUTED};${FONT}">Community of Practice — indicator stakes</p>`
+        + (reviewSpreadUrl
+            ? `<p style="margin:0 0 8px 0;font-size:12px;${FONT}"><a href="${esc(reviewSpreadUrl)}" style="color:${NAVY};">Live review spread</a></p>` : '')
+        + sectionHeading(`Indicator stakes (${stakes.length})`)
+        + stakesTableHtml(stakes)
+        + '</div>';
+
+    const lines = [name, 'Community of Practice — indicator stakes'];
+    if (reviewSpreadUrl) lines.push(`Live review spread: ${reviewSpreadUrl}`);
+    lines.push('', `INDICATOR STAKES (${stakes.length})`);
+    stakes.forEach((s) => lines.push(
+        `  - ${s.composite_key}: ${s.success_indicator || ''}${s.note ? ` — ${s.note}` : ''}`,
+    ));
+
+    return { html, plainText: lines.join('\n'), rowCount: stakes.length };
 }
 
 export default buildCommunityReport;

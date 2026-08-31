@@ -32,7 +32,7 @@ const IMPLEMENTATION_TYPES = ['Tracking', 'Guidance', 'Process', 'Project', 'Pro
  * collapse): the type chips (with counts) and the selected type's list are always visible, and
  * Add is one click. Used inside SuccessIndicatorDetailPanel.
  */
-function ImplementationMasterContainer({ evidenceData = {}, yearIdentifier }) {
+function ImplementationMasterContainer({ evidenceData = {}, yearIdentifier, evidenceRequirements = [] }) {
     // Drop any phantom entry with no node type (the compound query leaves one when
     // an indicator has zero implementations) so the count reads 0, not "Implementations (1)".
     const { evidenceTypes: rawEvidenceTypes = [] } = evidenceData;
@@ -105,6 +105,7 @@ function ImplementationMasterContainer({ evidenceData = {}, yearIdentifier }) {
                     evidence={filteredEvidence}
                     yearIdentifier={yearIdentifier}
                     onRefresh={refreshAll}
+                    evidenceRequirements={evidenceRequirements}
                 />
             ) : (
                 <Box py={4} textAlign="center">

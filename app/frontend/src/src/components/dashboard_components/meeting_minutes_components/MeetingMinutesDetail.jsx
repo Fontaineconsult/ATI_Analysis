@@ -1,7 +1,7 @@
 import React, { useContext, useState } from 'react';
 import {
-    Box, Button, Divider, Flex, HStack, IconButton, Input, Link, Select, Text, Textarea,
-    VStack, useToast,
+    Badge, Box, Button, Divider, Flex, HStack, IconButton, Input, Link, Select, Text,
+    Textarea, VStack, useToast,
 } from '@chakra-ui/react';
 import { DeleteIcon, ExternalLinkIcon } from '@chakra-ui/icons';
 import { UserContext } from '../../../context/UserContext';
@@ -29,6 +29,8 @@ export default function MeetingMinutesDetail({ minutes, onChanged }) {
 
     const documents = minutes.documents || [];
     const webpages = minutes.webpages || [];
+    const participants = minutes.participants || [];
+    const communities = minutes.pertains_to_communities || [];
 
     const handleAttach = async () => {
         if (attachType === 'document' ? !attachName.trim() : !attachUrl.trim()) return;
@@ -75,6 +77,36 @@ export default function MeetingMinutesDetail({ minutes, onChanged }) {
                     ? <Markdown>{minutes.content}</Markdown>
                     : <Text fontSize="sm" color="gray.600" fontStyle="italic">No minutes text.</Text>}
             </Box>
+
+            {/* Who was there + which communities this meeting concerns (assigned in the
+                edit modal; participation is transcript-derived, never an idle mention). */}
+            {(participants.length > 0 || communities.length > 0) && (
+                <VStack align="stretch" spacing={1}>
+                    {participants.length > 0 && (
+                        <HStack align="start" spacing={2}>
+                            <Text fontSize="xs" fontWeight="bold" color="teal.700" textTransform="uppercase" pt="1px">Participants</Text>
+                            <Text fontSize="sm" color="gray.700">{participants.map((p) => p.name).join(', ')}</Text>
+                        </HStack>
+                    )}
+                    {communities.length > 0 && (
+                        <HStack align="start" spacing={2} wrap="wrap">
+                            <Text fontSize="xs" fontWeight="bold" color="teal.700" textTransform="uppercase" pt="1px">Pertains to</Text>
+                            {communities.map((c) => (
+                                <Badge key={c.unique_id} colorScheme="purple" variant="subtle" fontSize="2xs" textTransform="none">{c.name}</Badge>
+                            ))}
+                        </HStack>
+                    )}
+                </VStack>
+            )}
+
+            {/* The ontology-ingest stamp, readable without hovering the row badge. */}
+            {minutes.ontology_ingested && (
+                <Text fontSize="xs" color="gray.700">
+                    <Text as="span" fontWeight="bold" color="teal.700" textTransform="uppercase">Ingested to graph</Text>
+                    {minutes.ontology_ingest_date ? ` ${minutes.ontology_ingest_date}` : ''}
+                    {minutes.ontology_ingest_note ? ` — ${minutes.ontology_ingest_note}` : ''}
+                </Text>
+            )}
 
             <Divider />
 

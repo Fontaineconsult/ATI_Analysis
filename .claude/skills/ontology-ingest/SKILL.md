@@ -84,11 +84,16 @@ the counts are what you expect. Treat a zero as a bug, never as "nothing to do".
    ```
 
    Read the source WITH that list in hand — a transcript states the fact, it never
-   announces "this answers your open question". Then the **interview guide**, if
-   `app/database/ontology/interviews/` holds one (see /stakeholder-interview): its
+   announces "this answers your open question". Then the **interview guide**: check
+   the graph FIRST — an InterviewGuide node whose `targets` hit this meeting's YSEs
+   or whose `prepared_for` names the attendees — then
+   `app/database/ontology/interviews/` for the file (see /stakeholder-interview): its
    bar-element tables are the intake checklist. Walk the source against those rows,
    not just the topic — a fact filling a named bar element is evidence; the same fact
-   routed generically is an unremarkable Note.
+   routed generically is an unremarkable Note. When a guide NODE preps this meeting,
+   the batch's stamp step ALSO sets its closure — MATCH the guide and MERGE
+   `(g)-[:resulted_in]->(mm)` alongside the ontology_ingested flags — so the
+   plan-vs-record pairing survives for next-cycle recon.
 
 Everything is read-only until the gate clears: **no Cypher is written or executed
 until the decision manifest has been presented and approved.**
@@ -137,7 +142,7 @@ degraded version of the same node.
 | **Asset** | steward known | A thing whose accessibility must be MAINTAINED. Usually already exists; rarely created from a transcript. |
 | **Interface** | never from transcript | 4-coordinate identity is a deliberate modeling act. Link existing ones only. |
 | **Metric** | artifact in hand | Only when the file/number set exists. Numbers in passing are description content; a promised export is a Plan. |
-| **CommunityOfPractice / member_of_community** | S1 self-ID or roster | Check `list_communities` first — near-miss names resolve to the existing node. |
+| **CommunityOfPractice / member_of_community** | S1 self-ID or roster | Check `list_communities` first — near-miss names resolve to the existing node. A transcript attesting the person does this community's work at SPECIFIC campuses may set the membership edge's `campuses` list (assign_person_to_community's campuses parameter); silence about campus = leave unset, which follows their home campus. |
 | **has_stake_in** | S1/S2 subject-matter | One or two best SIs; don't spray a community across a family. |
 | **Accomplishment** | S1 + completed | A finished, claimable outcome. |
 | **StatusLevel** | never | Status moves only through admin review. |

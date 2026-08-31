@@ -6,7 +6,10 @@ from os import removedirs
 
 from neomodel import db
 from app.database.graph_schema import *
-from app.data_config import working_group_names, compsite_key_wg_names
+from app.data_config import (working_group_names, compsite_key_wg_names,
+                             evidence_requirement_levels, evidence_requirement_elements,
+                             evidence_requirement_rubric_dimensions)
+from app.database.identifiers import make_evidence_requirement_handle
 
 from app.endpoints.data_api.errors.custom_exceptions import NotFoundError, ValidationError, CrudError
 
@@ -132,3 +135,68 @@ def add_goal(goal, goal_number, name, removed, working_group):
         return True
     except Exception as e:
         raise CrudError(f"Failed to create goal: {str(e)}")
+
+
+def add_evidence_requirement(composite_key,
+                             level,
+                             requirement,
+                             element=None,
+                             rubric_dimension=None,
+                             lead_in=None):
+    """Create one EvidenceRequirement and attach it to its SuccessIndicator.
+
+    The sanctioned creation path: an EvidenceRequirement with no `has_evidence_requirement`
+    edge is meaningless — it is one element of a specific indicator's bar — and neomodel
+    cannot enforce a required RelationshipTo at save time, so the invariant lives here.
+
+    `seq` is assigned as max+1 within (composite_key, level), which is also what makes the
+    handle unique. Concurrency is not a concern here: this is a single-curator settings
+    form, and the unique index on handle is the backstop if it ever becomes one.
+    """
+    requirement = (requirement or "").strip()
+    if not requirement:
+        raise ValidationError("An evidence requirement needs requirement text.")
+    if level not in evidence_requirement_levels:
+        raise ValidationError(
+            f"Unknown level '{level}'. Expected one of: {', '.join(evidence_requirement_levels)}."
+        )
+    element = (element or None)
+    if element and element not in evidence_requirement_elements:
+        raise ValidationError(
+            f"Unknown element '{element}'. Expected one of: {', '.join(evidence_requirement_elements)}."
+        )
+
+    try:
+        indicator = SuccessIndicator.nodes.get(composite_key=composite_key)
+    except SuccessIndicator.DoesNotExist:
+        raise NotFoundError(f"SuccessIndicator with composite_key '{composite_key}' not found.")
+
+    try:
+        rows, _ = db.cypher_query(
+            "MATCH (er:EvidenceRequirement {composite_key: $ck, level: $lvl}) "
+            "RETURN coalesce(max(er.seq), 0)",
+            {"ck": composite_key, "lvl": level},
+        )
+        seq = (rows[0][0] if rows else 0) + 1
+
+        # Default the dimension from the element when the caller doesn't state one, so a
+        # requirement stays gradeable against the same three rubric dimensions.
+        if rubric_dimension is None and element:
+            rubric_dimension = evidence_requirement_rubric_dimensions.get(element)
+
+        node = EvidenceRequirement(
+            handle=make_evidence_requirement_handle(composite_key, level, seq),
+            composite_key=composite_key,
+            level=level,
+            seq=seq,
+            element=element,
+            requirement=requirement,
+            rubric_dimension=rubric_dimension,
+            lead_in=(lead_in or None),
+        ).save()
+        indicator.evidence_requirements.connect(node)
+        return node
+    except (ValidationError, NotFoundError):
+        raise
+    except Exception as e:
+        raise CrudError(f"Failed to add evidence requirement to {composite_key}: {e}")

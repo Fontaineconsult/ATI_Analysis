@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useContext, useEffect, useMemo, useState } from 'react';
 import {
     Modal,
     ModalOverlay,
@@ -15,18 +15,36 @@ import {
     Badge,
     Text,
     HStack,
+    Divider,
     useToast,
 } from '@chakra-ui/react';
 import { updateSuccessIndicatorExamples } from '../../../services/api/put';
 import { DataContext } from '../../../context/DataContext';
+import EvidenceRequirementsPanel from './EvidenceRequirementsPanel';
 
 // Edit the companion-guide evidence for a single existing SuccessIndicator.
 // Scope: the four companion fields (examples of evidence + Established / Managed /
 // Optimizing level examples). Identity (composite_key), text, and status are edited
 // elsewhere in the settings table, so they're shown read-only here for context.
 const EditIndicator = ({ indicator, isOpen, onClose }) => {
-    const { refreshIndicators } = useContext(DataContext);
+    const { data, refreshIndicators } = useContext(DataContext);
     const toast = useToast();
+
+    // refreshIndicators() replaces data.indicators wholesale, so the object this modal
+    // was opened with goes stale the moment a requirement is added or deleted. Re-resolve
+    // it by composite_key on every render so the requirements list reflects the write.
+    const liveIndicator = useMemo(() => {
+        if (!indicator) return null;
+        for (const category of data?.indicators || []) {
+            for (const goal of category.goals || []) {
+                const hit = (goal.successIndicators || []).find(
+                    (si) => si.composite_key === indicator.composite_key
+                );
+                if (hit) return hit;
+            }
+        }
+        return indicator;
+    }, [data?.indicators, indicator]);
 
     const [examplesOfEvidenceText, setExamplesOfEvidenceText] = useState('');
     const [establishedExample, setEstablishedExample] = useState('');
@@ -137,6 +155,16 @@ const EditIndicator = ({ indicator, isOpen, onClose }) => {
                             rows={3}
                         />
                     </FormControl>
+
+                    <Divider my={4} />
+
+                    {/* The same bar as the prose above, broken into addressable pieces.
+                        Saves immediately per row — it does NOT ride on Save Evidence,
+                        because these are separate nodes, not fields of the indicator. */}
+                    <EvidenceRequirementsPanel
+                        indicator={liveIndicator}
+                        onChanged={refreshIndicators}
+                    />
                 </ModalBody>
                 <ModalFooter>
                     <Button variant="ghost" mr={3} onClick={onClose} isDisabled={isSaving}>Cancel</Button>

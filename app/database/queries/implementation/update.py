@@ -15,6 +15,17 @@ from neomodel import db
 # accountable for the remediation work, distinct from owned_by Person).
 _WORKING_GROUP_ACCOUNTABLE_TYPES = ("Process", "Project", "Procedure", "Service")
 
+# Community accountability is BROADER than working-group accountability, and the two
+# guards are deliberately different sets. The working-group edge asks "which committee
+# answers for this remediation work", which only the doing types perform. The community
+# edge asks "which operating community answers for this thing existing and being right"
+# — a question that applies just as well to a guidance page, a policy, or a register:
+# someone answers for keeping them current. Reference types therefore carry
+# accountable_community while still not carrying accountable_working_group.
+_COMMUNITY_ACCOUNTABLE_TYPES = (
+    "Process", "Project", "Procedure", "Service", "Guidance", "InternalPolicy", "Tracking",
+)
+
 # AMM-dimension classification is broader than working-group accountability: it also
 # covers InternalPolicy and Guidance (but not Tracking / Plan).
 _DIMENSION_CLASSIFIABLE_TYPES = (
@@ -380,6 +391,18 @@ def _resolve_accountable_implementation(implementation_unique_id, implementation
     return _resolve_implementation(implementation_unique_id, implementation_type)
 
 
+def _resolve_community_accountable_implementation(implementation_unique_id, implementation_type):
+    """Resolve an implementation that can carry accountable_community — the doing types
+    plus the reference types (Guidance / InternalPolicy / Tracking). Deliberately a wider
+    set than the working-group guard; see _COMMUNITY_ACCOUNTABLE_TYPES."""
+    if implementation_type not in _COMMUNITY_ACCOUNTABLE_TYPES:
+        raise ValidationError(
+            f"implementation_type must be one of {list(_COMMUNITY_ACCOUNTABLE_TYPES)} to carry "
+            f"community accountability; got {implementation_type!r}"
+        )
+    return _resolve_implementation(implementation_unique_id, implementation_type)
+
+
 def _resolve_working_group(name_or_abbrev):
     """Resolve an ATIWorkingGroup by full name ('Web') or abbreviation ('web'/'pro'/'ins')."""
     name = working_group_names.get(name_or_abbrev, name_or_abbrev)
@@ -421,9 +444,9 @@ def _resolve_community(name_or_uid):
 def assign_accountable_community(implementation_unique_id, implementation_type, community):
     """Connect an accountable CommunityOfPractice to an implementation (accountable_community).
     The operating community that answers for this work — distinct from owned_by (the Person)
-    and from accountable_working_group (the committee). Same doing-type guard as the
-    working-group edge."""
-    impl_node = _resolve_accountable_implementation(implementation_unique_id, implementation_type)
+    and from accountable_working_group (the committee). WIDER guard than the working-group
+    edge: reference types (Guidance / InternalPolicy / Tracking) carry it too."""
+    impl_node = _resolve_community_accountable_implementation(implementation_unique_id, implementation_type)
     cop = _resolve_community(community)
     if not impl_node.accountable_community.is_connected(cop):
         impl_node.accountable_community.connect(cop)
@@ -432,7 +455,7 @@ def assign_accountable_community(implementation_unique_id, implementation_type, 
 
 def unassign_accountable_community(implementation_unique_id, implementation_type, community):
     """Disconnect an accountable CommunityOfPractice from an implementation. Inverse of the assign."""
-    impl_node = _resolve_accountable_implementation(implementation_unique_id, implementation_type)
+    impl_node = _resolve_community_accountable_implementation(implementation_unique_id, implementation_type)
     cop = _resolve_community(community)
     if impl_node.accountable_community.is_connected(cop):
         impl_node.accountable_community.disconnect(cop)

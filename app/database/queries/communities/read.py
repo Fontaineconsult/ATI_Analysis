@@ -24,10 +24,15 @@ def get_all_communities() -> list:
         rows, _ = db.cypher_query(
             """
             MATCH (c:CommunityOfPractice)
-            OPTIONAL MATCH (p:Person)-[:member_of_community]->(c)
+            OPTIONAL MATCH (p:Person)-[m:member_of_community]->(c)
             OPTIONAL MATCH (p)-[:works_at_campus]->(campus:Campus)
+            // Effective campuses per membership: the edge's list when set
+            // (authoritative), else the member's home campus (fallback).
+            WITH c, p,
+                 CASE WHEN size(coalesce(m.campuses, [])) > 0 THEN m.campuses
+                      ELSE [a IN [campus.abbreviation] WHERE a IS NOT NULL] END AS eff
             WITH c, count(DISTINCT p) AS member_count,
-                 [a IN collect(DISTINCT campus.abbreviation) WHERE a IS NOT NULL] AS campuses
+                 apoc.coll.toSet(apoc.coll.flatten(collect(eff))) AS campuses
             RETURN c.unique_id, c.name, c.description, member_count, campuses,
                    size([(c)-[:has_stake_in]->(:SuccessIndicator) | 1]) AS stake_count
             ORDER BY toLower(c.name)
@@ -49,21 +54,30 @@ def get_all_communities() -> list:
 
 
 def get_community(unique_id: str) -> dict:
-    """One community with its member roster (campus + membership note per member)
-    and its indicator stakes (the has_stake_in edges, note included)."""
+    """One community with its member roster and its indicator stakes (the
+    has_stake_in edges, note included).
+
+    Member rows carry campus at three grains: `host_campus` (home, unchanged),
+    `campuses` (the RAW edge list — what the picker edits; empty = fallback), and
+    `active_campuses` (the EFFECTIVE list — what filters and displays use:
+    the edge list when set, else [home], else [])."""
     community = get_community_node(unique_id)
     try:
         members = []
         for person in community.members.all():
             rel = community.members.relationship(person)
             campus = person.host_campus.single()
+            home = campus.abbreviation if campus else None
+            raw = (rel.campuses if rel else None) or []
             members.append({
                 "unique_id": person.unique_id,
                 "employee_id": person.employee_id,
                 "name": person.name,
                 "email": person.email,
                 "title": person.title,
-                "host_campus": campus.abbreviation if campus else None,
+                "host_campus": home,
+                "campuses": raw,
+                "active_campuses": raw if raw else ([home] if home else []),
                 "note": rel.note if rel else None,
             })
         members.sort(key=lambda m: (m["name"] or "").lower())
@@ -122,6 +136,9 @@ def get_communities_by_working_group() -> list:
                               {name: lead.name, title: lead.title,
                                employee_id: lead.employee_id,
                                campus: head([(lead)-[:works_at_campus]->(ca:Campus) | ca.abbreviation]),
+                               active_campuses: CASE WHEN size(coalesce(m.campuses, [])) > 0
+                                                     THEN m.campuses
+                                                     ELSE [(lead)-[:works_at_campus]->(ca:Campus) | ca.abbreviation] END,
                                note: m.note}]
                  }) WHERE x.name IS NOT NULL] AS communities
             OPTIONAL MATCH (p:Person)-[:participates_in]->(wg)
@@ -152,3 +169,68 @@ def get_communities_by_working_group() -> list:
     ]
     results.sort(key=lambda r: order.get(r["working_group"], len(order)))
     return results
+
+
+def get_community_review_spread(unique_id: str, academic_year: str, campus_abbreviation: str) -> dict:
+    """The community's indicator stakes with each one's review state for a campus/year.
+
+    The instrument behind the public "review spread" page: a Community of Practice's
+    members need one shareable list answering "what of ours needs reviewing" —
+    every SI the community holds a stake in, with that campus/year's evidence status
+    and review flags. Communities are campus-agnostic; the campus chooses WHICH
+    year-evidence the stakes resolve to.
+
+    Stakes whose indicator has no YSE for the campus/year still return (with null
+    status): a stake with no evidence is a finding for the members, not a row to hide.
+
+    The year in the URL is a hard scope (the app's year-view contract): an indicator
+    introduced AFTER that year does not exist in it and must not render as a gap —
+    "no evidence this year" would misread "not yet an indicator" as "work missing".
+    Removed indicators are likewise not reviewable and are excluded.
+    """
+    rows, _ = db.cypher_query(
+        """
+        MATCH (c:CommunityOfPractice {unique_id: $uid})
+        OPTIONAL MATCH (c)-[:has_stake_in]->(si:SuccessIndicator)
+            WHERE coalesce(si.removed, false) = false
+              AND (si.introduced_in_year IS NULL OR si.introduced_in_year <= $year)
+        OPTIONAL MATCH (si)<-[:supported_by]-(g:Goal)
+        OPTIONAL MATCH (si)<-[:tracks]-(yse:YearSuccessEvidence)
+            WHERE yse.year_identifier = $year + '-' + si.composite_key + '-' + $campus
+        OPTIONAL MATCH (yse)-[:status_is]->(sl:StatusLevel)
+        RETURN c.name AS name, c.description AS description,
+               si.composite_key AS composite_key,
+               si.success_indicator AS indicator_text,
+               g.goal_number AS goal_number, g.name AS goal_name,
+               sl.status_level AS status_level,
+               yse.ready_for_admin_review AS ready_for_admin_review,
+               yse.administrative_review_complete AS administrative_review_complete,
+               toString(yse.administrative_review_completed_date) AS completed_date
+        ORDER BY si.composite_key
+        """,
+        {"uid": unique_id, "year": academic_year, "campus": campus_abbreviation},
+    )
+    if not rows:
+        raise NotFoundError(f"CommunityOfPractice '{unique_id}' not found.")
+
+    stakes = [
+        {
+            "composite_key": r[2],
+            "indicator_text": r[3],
+            "goal_number": r[4],
+            "goal_name": r[5],
+            "status_level": r[6],
+            "ready_for_admin_review": bool(r[7]),
+            "administrative_review_complete": bool(r[8]),
+            "completed_date": r[9],
+            "has_evidence": r[6] is not None or r[7] is not None or r[8] is not None,
+        }
+        for r in rows if r[2] is not None
+    ]
+    return {
+        "name": rows[0][0],
+        "description": rows[0][1],
+        "year": academic_year,
+        "campus": campus_abbreviation,
+        "stakes": stakes,
+    }

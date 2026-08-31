@@ -815,3 +815,23 @@ def test_post_unknown_campus_returns_404(
     )
     assert resp.status_code == 404
     assert "Campus" in resp.get_json()["error"]
+
+
+@pytest.mark.integration
+def test_add_prioritized_indicator_rejects_removed(sentinel_academic_year, cleanup_plan_family):
+    """A retired indicator cannot be NEWLY prioritized (backstop behind the
+    filtered available_indicators picker); edges predating a removal stay
+    re-addable, so only the no-existing-edge case errors."""
+    from app.database.graph_schema import SuccessIndicator
+    from app.database.queries.committees.update import add_prioritized_indicator
+    from app.endpoints.data_api.errors.custom_exceptions import ValidationError
+
+    removed_si = SuccessIndicator.nodes.filter(removed=True).first_or_none()
+    if removed_si is None:
+        pytest.skip("No removed SuccessIndicator in the graph to test against")
+
+    create_campus_plan(CAMPUS_ABBREV, TEST_ACADEMIC_YEAR_NAME)
+    wgp_id = make_working_group_plan_identifier(TEST_ACADEMIC_YEAR_NAME, CAMPUS_ABBREV, "web")
+
+    with pytest.raises(ValidationError):
+        add_prioritized_indicator(wgp_id, removed_si.composite_key)

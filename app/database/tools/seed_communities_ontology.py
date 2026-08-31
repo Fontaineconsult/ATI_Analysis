@@ -42,13 +42,16 @@ NODE_TYPE_DESCRIPTOR = (
     "whom', a community answers 'who else, anywhere in the system, works the same "
     "ground'.\n\n"
     "Campus-agnostic by design: there is one node per area, with members from any "
-    "campus. A campus breakdown of a community is derived from its members' "
-    "works_at_campus edges rather than from any edge on the community itself — the "
-    "community node never needs migrating when campuses join or leave.\n\n"
+    "campus. A campus breakdown of a community derives from each membership's "
+    "EFFECTIVE campus scope — the member_of_community edge's own campuses list "
+    "when set, else the member's works_at_campus home campus — never from any "
+    "edge on the community itself, so the node needs no migrating when campuses "
+    "join or leave.\n\n"
     "Communities are freely creatable data (like Person or Department), not a seeded "
     "vocabulary: the unique index on name is the dedupe backstop. Membership is the "
     "member_of_community edge from Person; the edge carries an optional note (the "
-    "person's stake in the area) and the date added. A person's memberships are managed "
+    "person's stake in the area), the date added, and an optional campuses list "
+    "scoping where the member is active in this community. A person's memberships are managed "
     "with replace semantics from the individuals endpoint (set_communities), mirroring "
     "how role holdings work.",
 )
@@ -57,8 +60,12 @@ RELATIONSHIPS = {
     "member_of_community": (
         "Member of Community",
         "Connects a Person to a CommunityOfPractice they belong to. The edge carries an "
-        "optional note (the person's stake in the area) and the date added. A person's "
-        "memberships are replaced as a set via the individuals endpoint "
+        "optional note (the person's stake in the area), the date added, and an optional "
+        "campuses list (campus abbreviations) scoping WHERE the member is active in this "
+        "community: empty means active at their home campus (works_at_campus); a "
+        "non-empty list is authoritative — active at exactly those campuses, home "
+        "included only if listed, so 'active only away from home' is representable. "
+        "A person's memberships are replaced as a set via the individuals endpoint "
         "(set_communities), mirroring role holdings.",
     ),
     "has_stake_in": (

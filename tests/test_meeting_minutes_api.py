@@ -27,6 +27,8 @@ from app.database.queries.meeting_minutes.update import (
     attach_webpage,
     detach_document,
     add_minutes_note,
+    set_minutes_communities,
+    set_minutes_participants,
     set_ontology_ingested,
 )
 from app.database.queries.meeting_minutes.delete import delete_meeting_minutes
@@ -239,3 +241,126 @@ def test_endpoint_flow(flask_client, sentinel_web_plan, cleanup_minutes):
 
     resp = flask_client.get(f"{base}/item/{uid}")
     assert resp.status_code == 404
+
+
+# --- Participants + pertinent communities ------------------------------------------
+
+@pytest.fixture
+def sentinel_people_and_community(neo4j_connection):
+    """Two sentinel Person nodes and one sentinel CommunityOfPractice, detach-deleted on
+    teardown by unique_id. Never touches real reference people/communities."""
+    from app.database.graph_schema import Person, CommunityOfPractice
+    made = []
+    p1 = Person(name="ZZZ Sentinel Participant A (9999)", active=False).save()
+    p2 = Person(name="ZZZ Sentinel Participant B (9999)", active=False).save()
+    c = CommunityOfPractice(name="ZZZ Sentinel Community (9999)").save()
+    made = [p1, p2, c]
+    yield {"p1": p1, "p2": p2, "community": c}
+    db.cypher_query(
+        "MATCH (n) WHERE n.unique_id IN $ids DETACH DELETE n",
+        {"ids": [n.unique_id for n in made]},
+    )
+
+
+def test_create_with_participants_and_communities(sentinel_web_plan, sentinel_people_and_community, cleanup_minutes):
+    s = sentinel_people_and_community
+    m = create_meeting_minutes(
+        title="wired at create",
+        working_group_plan_identifier=sentinel_web_plan["wgp_identifier"],
+        participant_unique_ids=[s["p1"].unique_id, s["p2"].unique_id, s["p1"].unique_id],  # dupe folded
+        pertains_to_community_unique_ids=[s["community"].unique_id],
+    )
+    cleanup_minutes.append(m.unique_id)
+
+    data = get_meeting_minutes(m.unique_id)
+    assert [p["name"] for p in data["participants"]] == [s["p1"].name, s["p2"].name]
+    assert [c["name"] for c in data["pertains_to_communities"]] == [s["community"].name]
+
+
+def test_set_participants_full_replace_and_clear(sentinel_web_plan, sentinel_people_and_community, cleanup_minutes):
+    s = sentinel_people_and_community
+    m = create_meeting_minutes(title="replace me", working_group_plan_identifier=sentinel_web_plan["wgp_identifier"])
+    cleanup_minutes.append(m.unique_id)
+
+    after = set_minutes_participants(m.unique_id, [s["p1"].unique_id])
+    assert [p["unique_id"] for p in after["participants"]] == [s["p1"].unique_id]
+
+    # Full-replace: p2 in, p1 out — not additive.
+    after = set_minutes_participants(m.unique_id, [s["p2"].unique_id])
+    assert [p["unique_id"] for p in after["participants"]] == [s["p2"].unique_id]
+
+    # Empty list clears.
+    after = set_minutes_participants(m.unique_id, [])
+    assert after["participants"] == []
+
+
+def test_set_communities_full_replace_and_clear(sentinel_web_plan, sentinel_people_and_community, cleanup_minutes):
+    s = sentinel_people_and_community
+    m = create_meeting_minutes(title="cop links", working_group_plan_identifier=sentinel_web_plan["wgp_identifier"])
+    cleanup_minutes.append(m.unique_id)
+
+    after = set_minutes_communities(m.unique_id, [s["community"].unique_id])
+    assert [c["unique_id"] for c in after["pertains_to_communities"]] == [s["community"].unique_id]
+
+    after = set_minutes_communities(m.unique_id, [])
+    assert after["pertains_to_communities"] == []
+
+
+def test_participants_bad_input(sentinel_web_plan, cleanup_minutes):
+    m = create_meeting_minutes(title="bad ids", working_group_plan_identifier=sentinel_web_plan["wgp_identifier"])
+    cleanup_minutes.append(m.unique_id)
+    with pytest.raises(NotFoundError):
+        set_minutes_participants(m.unique_id, ["no-such-person-id"])
+    with pytest.raises(ValidationError):
+        set_minutes_participants(m.unique_id, "not-a-list")
+    with pytest.raises(NotFoundError):
+        set_minutes_communities(m.unique_id, ["no-such-community-id"])
+    # A bad participant id fails the whole create — nothing is half-made.
+    with pytest.raises(NotFoundError):
+        create_meeting_minutes(
+            title="never lands",
+            working_group_plan_identifier=sentinel_web_plan["wgp_identifier"],
+            participant_unique_ids=["no-such-person-id"],
+        )
+
+
+@pytest.mark.api
+def test_endpoint_participants_and_pertains_to(flask_client, sentinel_web_plan, sentinel_people_and_community, cleanup_minutes):
+    s = sentinel_people_and_community
+    base = "/ati/data-api/v1/meeting-minutes"
+
+    # Create carries both lists; the 201 body is the full projection.
+    resp = flask_client.post(base, json={
+        "action": "create_meeting_minutes",
+        "title": "Endpoint wired minutes",
+        "working_group_plan_identifier": sentinel_web_plan["wgp_identifier"],
+        "participant_unique_ids": [s["p1"].unique_id],
+        "pertains_to_community_unique_ids": [s["community"].unique_id],
+    })
+    assert resp.status_code == 201, resp.get_json()
+    created = resp.get_json()["data"]
+    uid = created["unique_id"]
+    cleanup_minutes.append(uid)
+    assert [p["unique_id"] for p in created["participants"]] == [s["p1"].unique_id]
+    assert [c["unique_id"] for c in created["pertains_to_communities"]] == [s["community"].unique_id]
+
+    # Full-replace via PUT.
+    resp = flask_client.put(base, json={
+        "action": "set_participants", "unique_id": uid,
+        "person_unique_ids": [s["p2"].unique_id],
+    })
+    assert resp.status_code == 200
+    assert [p["unique_id"] for p in resp.get_json()["data"]["participants"]] == [s["p2"].unique_id]
+
+    # Clear the communities.
+    resp = flask_client.put(base, json={
+        "action": "set_pertains_to", "unique_id": uid, "community_unique_ids": [],
+    })
+    assert resp.status_code == 200
+    assert resp.get_json()["data"]["pertains_to_communities"] == []
+
+    # Non-list payloads are 400s.
+    resp = flask_client.put(base, json={"action": "set_participants", "unique_id": uid, "person_unique_ids": "x"})
+    assert resp.status_code == 400
+    resp = flask_client.put(base, json={"action": "set_pertains_to", "unique_id": uid})
+    assert resp.status_code == 400

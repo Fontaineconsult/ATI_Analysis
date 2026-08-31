@@ -97,7 +97,27 @@ def test_communities_round_trip(monkeypatch):
             "employee_id": EMPLOYEE_ID,
             "community_name": COMMUNITY_NAME,
             "note": "round-trip member",
+            "campuses": ["sfsu"],
         }))
+        # Incremental-assign regression lock: a SECOND assign (idempotent re-assert
+        # without campuses) rebuilds the full set from the serializer — the first
+        # edge's campuses and added_date must survive that replay.
+        asyncio.run(mcp.call_tool("assign_person_to_community", {
+            "employee_id": EMPLOYEE_ID,
+            "community_name": COMMUNITY_NAME,
+            "note": "round-trip member",
+        }))
+        rows, _ = db.cypher_query(
+            """
+            MATCH (:Person {employee_id: $eid})-[m:member_of_community]->(c:CommunityOfPractice {name: $name})
+            RETURN m.campuses, m.added_date IS NOT NULL
+            """,
+            {"eid": EMPLOYEE_ID, "name": COMMUNITY_NAME},
+        )
+        # The re-assign passed campuses=None -> absent-key-preserve keeps ["sfsu"].
+        assert rows[0][0] == ["sfsu"], "campuses must survive the incremental-assign replay"
+        assert rows[0][1] is True
+
         asyncio.run(mcp.call_tool("add_community_stake", {
             "community_name": COMMUNITY_NAME,
             "composite_key": si.composite_key,

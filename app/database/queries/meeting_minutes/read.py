@@ -45,6 +45,14 @@ def _serialize_minutes(m) -> dict:
     data["campus_abbrev"] = campus
     data["academic_year"] = year
     data["recorded_by"] = _person_min(m.recorded_by.single())
+    data["participants"] = sorted(
+        (_person_min(p) for p in m.participants.all()),
+        key=lambda p: (p["name"] or "").lower(),
+    )
+    data["pertains_to_communities"] = sorted(
+        ({"unique_id": c.unique_id, "name": c.name} for c in m.pertains_to.all()),
+        key=lambda c: (c["name"] or "").lower(),
+    )
     data["documents"] = [d.serialize() for d in m.supporting_documents.all()]
     data["webpages"] = [w.serialize() for w in m.supporting_webpages.all()]
     data["notes"] = [n.serialize() for n in m.notes.all()]

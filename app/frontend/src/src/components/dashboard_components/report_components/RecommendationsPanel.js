@@ -82,15 +82,15 @@ function RecommendationsPanel({ yearIdentifier, recommendations = [], onUpdate }
     return (
         <Box p={4} bg="white" borderRadius="lg" borderWidth="1px" borderColor="gray.200">
             <HStack justify="space-between" mb={2}>
-                <Text fontSize="xs" fontWeight="semibold" color="gray.600" textTransform="uppercase">
+                <Text fontSize="xs" fontWeight="semibold" color="gray.700" textTransform="uppercase">
                     Recommendations
                 </Text>
                 <Button size="xs" colorScheme="teal" variant="outline" onClick={() => setIsAdding((v) => !v)}>
                     {isAdding ? 'Cancel' : 'Add Recommendation'}
                 </Button>
             </HStack>
-            <Text fontSize="xs" color="gray.600" mb={3}>
-                What should improve before the next review cycle. Items resolve — they are never deleted.
+            <Text fontSize="xs" color="gray.700" mb={3}>
+                Recommendations for next cycle's campus plan.
             </Text>
 
             {isAdding && (
@@ -119,21 +119,21 @@ function RecommendationsPanel({ yearIdentifier, recommendations = [], onUpdate }
             )}
 
             {items.length === 0 ? (
-                <Text fontSize="sm" color="gray.600" fontStyle="italic">
+                <Text fontSize="sm" color="gray.700" fontStyle="italic">
                     No recommendations recorded for this cycle yet.
                 </Text>
             ) : (
                 <VStack align="stretch" spacing={2}>
                     {items.map((rec) => (
-                        <Box key={rec.unique_id} p={3} borderWidth="1px" borderColor="gray.200" borderRadius="md" bg="gray.50">
+                        <Box key={rec.unique_id} p={3} borderWidth="1px" borderColor="gray.300" borderRadius="md" bg="gray.100">
                             <HStack align="start" spacing={2}>
                                 <Badge colorScheme={STATUS_COLORS[rec.status] || 'gray'} fontSize="2xs" flexShrink={0}>
                                     {rec.status}
                                 </Badge>
                                 <Box flex="1" minW={0}>
                                     <Text fontSize="sm" color="gray.800" fontWeight="medium">{rec.recommendation}</Text>
-                                    {rec.detail && <Text fontSize="xs" color="gray.600" mt={0.5} whiteSpace="pre-wrap">{rec.detail}</Text>}
-                                    <HStack spacing={2} mt={1} fontSize="2xs" color="gray.600">
+                                    {rec.detail && <Text fontSize="xs" color="gray.700" mt={0.5} whiteSpace="pre-wrap">{rec.detail}</Text>}
+                                    <HStack spacing={2} mt={1} fontSize="2xs" color="gray.700">
                                         {rec.date_created && <Text>Raised {String(rec.date_created)}</Text>}
                                         {rec.created_by && <Text>by {rec.created_by}</Text>}
                                         {rec.date_resolved && <Text>· resolved {String(rec.date_resolved)}</Text>}
@@ -164,7 +164,7 @@ function RecommendationsPanel({ yearIdentifier, recommendations = [], onUpdate }
                             )}
                             {rec.status !== 'open' && (
                                 <HStack mt={2} justify="flex-end">
-                                    <Button size="xs" variant="ghost" colorScheme="orange" isDisabled={busy}
+                                    <Button size="xs" variant="outline" colorScheme="orange" isDisabled={busy}
                                             onClick={() => handleStatus(rec, 'open')}>
                                         Reopen
                                     </Button>

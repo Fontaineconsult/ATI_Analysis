@@ -347,6 +347,41 @@ evidence_control_choices = {
     "external": "The owners rely on a practice they don't directly control (another unit, SFBRN, the CO, a vendor).",
 }
 
+# --- Evidence requirements ---------------------------------------------------------------
+# The STRUCTURE of a companion-guide bar. The requirement TEXT itself is graph-resident
+# (EvidenceRequirement nodes hanging off the SuccessIndicator) — deliberately not here,
+# because it is authored content that curators edit, not a controlled vocabulary.
+
+evidence_requirement_levels = {
+    "established": "The bar a campus must clear to claim Established for this indicator.",
+    "managed":     "Additional bar for Managed — tracking procedures and collected success data.",
+    "optimizing":  "Additional bar for Optimizing — regular administrative review of that data.",
+}
+
+# The bar elements as the companion guides actually write them. `element` is optional on an
+# EvidenceRequirement: eight indicators state their Established bar as unlabelled prose
+# bullets, and an unlabelled requirement is left unlabelled rather than guessed at.
+evidence_requirement_elements = {
+    "Position":              "Who is responsible, and whether that responsibility is documented.",
+    "Budget":                "Staff time, tooling and funding allocated to the work.",
+    "Procedures":            "The documented process that makes the work repeatable.",
+    "Output":                "The records or artifacts the practice leaves behind.",
+    "Metrics":               "What is measured to manage the practice (Managed level).",
+    "Administrative Review": "Regular review of the collected data (Optimizing level).",
+}
+
+# Which rubric dimension each element grades against, so an EvidenceRequirement can roll up
+# to the same three dimensions the generic Status Level rubric uses.
+evidence_requirement_rubric_dimensions = {
+    "Position":              "resources",
+    "Budget":                "resources",
+    "Procedures":            "procedures",
+    "Output":                "documentation_evidence",
+    "Metrics":               "documentation_evidence",
+    "Administrative Review": "procedures",
+}
+
+
 evidence_strength_descriptions = {
     0: "Does not address any requirement of the success indicator — review whether the link belongs at all.",
     1: "Supports the success indicator indirectly — enabling or adjacent work that does not itself address the indicator's requirements.",
@@ -389,6 +424,8 @@ PUBLIC_VOCABULARIES = {
     "evidence_strength_levels":       evidence_strength_levels,
     "evidence_strength_descriptions": evidence_strength_descriptions,
     "evidence_control_choices":       evidence_control_choices,
+    "evidence_requirement_levels":    evidence_requirement_levels,
+    "evidence_requirement_elements":  evidence_requirement_elements,
     "working_groups":        working_groups,
     "message_types":         message_types,
     "metric_types":          metric_types,

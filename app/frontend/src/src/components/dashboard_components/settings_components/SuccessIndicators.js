@@ -219,7 +219,9 @@ const SuccessIndicators = () => {
                                                                 const isRemoved = indicator.removed;
                                                                 const hasYse = indicator.yearSuccessIndicators?.length > 0;
                                                                 const evidenceCount = indicator.examples_of_evidence?.length || 0;
+                                                                const requirementCount = indicator.evidenceRequirements?.length || 0;
                                                                 const hasCompanion = evidenceCount > 0
+                                                                    || requirementCount > 0
                                                                     || Boolean(indicator.established_example)
                                                                     || Boolean(indicator.managed_example)
                                                                     || Boolean(indicator.optimizing_example);
@@ -298,6 +300,13 @@ const SuccessIndicators = () => {
                                                                                     <Tooltip label={`${evidenceCount} example(s) of evidence`} openDelay={400} hasArrow>
                                                                                         <Badge fontSize="2xs" colorScheme="green" variant="subtle">
                                                                                             {evidenceCount}
+                                                                                        </Badge>
+                                                                                    </Tooltip>
+                                                                                )}
+                                                                                {requirementCount > 0 && (
+                                                                                    <Tooltip label={`${requirementCount} evidence requirement(s) — the companion bar, decomposed`} openDelay={400} hasArrow>
+                                                                                        <Badge fontSize="2xs" colorScheme="blue" variant="subtle">
+                                                                                            {requirementCount}
                                                                                         </Badge>
                                                                                     </Tooltip>
                                                                                 )}

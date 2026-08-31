@@ -30,14 +30,24 @@ def fetch_success_indicators_for_working_group(academic_year):
         
         // Collect evidence per indicator
         WITH wg, goal, indicator, collect(DISTINCT evidence) AS yearSuccessIndicators
-        
+
+        // The companion bar, decomposed — one row per requirement, so the settings UI can
+        // list and edit them individually. Year-agnostic reference data like the *_example
+        // prose they were parsed from, so no year filter applies.
+        OPTIONAL MATCH (indicator)-[:has_evidence_requirement]->(er:EvidenceRequirement)
+        WITH wg, goal, indicator, yearSuccessIndicators, er
+        ORDER BY er.level, er.seq
+        WITH wg, goal, indicator, yearSuccessIndicators,
+             [x IN collect(er {.*}) WHERE x IS NOT NULL] AS evidenceRequirements
+
         // Create indicator map including its properties and evidence.
         // A goal whose indicators are all filtered out (e.g. year-gated) must produce an
         // EMPTY successIndicators list — merging the null indicator would emit a phantom
         // {yearSuccessIndicators: []} entry. CASE yields null so collect() drops it.
         WITH wg, goal,
              CASE WHEN indicator IS NULL THEN NULL
-                  ELSE apoc.map.merge(indicator {.*}, {yearSuccessIndicators: yearSuccessIndicators})
+                  ELSE apoc.map.merge(indicator {.*}, {yearSuccessIndicators: yearSuccessIndicators,
+                                                       evidenceRequirements: evidenceRequirements})
              END AS ind
         
         // Collect indicators per goal

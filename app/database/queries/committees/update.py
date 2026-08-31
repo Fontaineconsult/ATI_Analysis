@@ -32,11 +32,28 @@ def add_prioritized_indicator(working_group_plan_identifier: str, indicator_comp
         )
 
     try:
-        SuccessIndicator.nodes.get(composite_key=indicator_composite_key)
+        si = SuccessIndicator.nodes.get(composite_key=indicator_composite_key)
     except SuccessIndicator.DoesNotExist:
         raise NotFoundError(
             f"SuccessIndicator {indicator_composite_key!r} not found"
         )
+    if si.removed:
+        # A retired indicator is not a valid NEW prioritization target (the
+        # backstop behind the picker filter). An edge that already exists —
+        # prioritized before the removal — stays re-addable so the MERGE keeps
+        # its idempotence for history.
+        rows, _ = db.cypher_query(
+            """
+            MATCH (:WorkingGroupPlan {plan_identifier: $wgp_id})
+                  -[r:prioritizes_success_indicator]->(:SuccessIndicator {composite_key: $si_key})
+            RETURN count(r)
+            """,
+            {"wgp_id": working_group_plan_identifier, "si_key": indicator_composite_key},
+        )
+        if rows[0][0] == 0:
+            raise ValidationError(
+                f"SuccessIndicator {indicator_composite_key!r} is removed; a retired indicator cannot be newly prioritized."
+            )
 
     try:
         db.cypher_query(

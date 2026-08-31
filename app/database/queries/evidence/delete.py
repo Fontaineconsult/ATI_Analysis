@@ -3,7 +3,7 @@
 #
 from app.database.class_factory import implementation_classes
 from app.database.graph_schema import *
-from app.endpoints.data_api.errors.custom_exceptions import NotFoundError, CrudError
+from app.endpoints.data_api.errors.custom_exceptions import NotFoundError, CrudError, ValidationError
 
 from app.database.queries.evidence.create import SUB_NODE_MAP
 
@@ -162,3 +162,45 @@ def delete_year_success_evidence(year_success_identifier: str) -> bool:
     except Exception as e:
         raise CrudError(f"Failed to delete Year Success Evidence: {e}")
 
+
+
+def delete_admin_reviewer_note(note_unique_id: str) -> bool:
+    """
+    Delete an administrative review note outright.
+
+    Unlike supporting documentation — where the app's convention is that "delete"
+    means unlink, because the document has a life of its own — an admin review
+    note is minted by add_admin_reviewer_note for exactly one YSE and is reachable
+    only through that YSE's admin_review_note edge. Unlinking it would leave an
+    unreachable orphan, so the node goes.
+
+    Guarded on that edge: a note with no inbound admin_review_note is not an
+    admin review note, and this is not a general note-deletion endpoint.
+    """
+    from neomodel import db
+
+    if not note_unique_id:
+        raise ValidationError("note_unique_id is required.")
+
+    rows, _ = db.cypher_query(
+        """
+        MATCH (y:YearSuccessEvidence)-[:admin_review_note]->(n:Note {unique_id: $uid})
+        RETURN y.year_identifier AS yid
+        """,
+        {"uid": note_unique_id},
+    )
+    if not rows:
+        raise NotFoundError(
+            f"No administrative review note with unique_id '{note_unique_id}' found. "
+            "(This endpoint only deletes notes attached via admin_review_note.)"
+        )
+
+    try:
+        db.cypher_query(
+            "MATCH (n:Note {unique_id: $uid}) DETACH DELETE n",
+            {"uid": note_unique_id},
+        )
+        print(f"Admin reviewer note '{note_unique_id}' deleted from {rows[0][0]}")
+        return True
+    except Exception as e:
+        raise CrudError(f"Failed to delete admin reviewer note: {e}")

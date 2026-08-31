@@ -1,4 +1,5 @@
 # Interview: J. Paul Leonard Library — internal alternative-access process
+graph: ddff97b37ec34584a8351f840ecd99a8
 Generated 2026-08-07 · SF State (sfsu) · Zoom, **recorded** → transcript feeds `/ontology-ingest`
 Anchor year: **2025-2026** (current reporting)
 Working groups: Procurement (`pro`) · Instructional Materials (`ins`) · Web (`web`) · Communication (`com`)

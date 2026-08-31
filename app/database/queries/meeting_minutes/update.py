@@ -4,7 +4,11 @@
 from datetime import date, datetime
 
 from app.database.graph_schema import *
-from app.database.queries.meeting_minutes.create import _parse_date
+from app.database.queries.meeting_minutes.create import (
+    _parse_date,
+    resolve_communities,
+    resolve_people,
+)
 from app.database.queries.meeting_minutes.read import get_meeting_minutes
 from app.endpoints.data_api.errors.custom_exceptions import (
     CrudError,
@@ -64,6 +68,40 @@ def set_ontology_ingested(unique_id: str, ingested: bool = True, note=_UNSET) ->
         m.save()
     except Exception as e:
         raise CrudError(f"Failed to set ontology-ingest flag on MeetingMinutes {unique_id!r}: {e}")
+    return get_meeting_minutes(unique_id)
+
+
+def set_minutes_participants(unique_id: str, person_unique_ids: list) -> dict:
+    """Full-replace the participant set: Person -[participated_in]-> minutes.
+
+    Participation is a transcript-derived fact (the person was in the room), never an
+    idle mention. The caller sends the complete list; an empty list clears everyone.
+    Returns the refreshed record.
+    """
+    m = _get(unique_id)
+    people = resolve_people(person_unique_ids)
+    try:
+        m.participants.disconnect_all()
+        for person in people:
+            m.participants.connect(person)
+    except Exception as e:
+        raise CrudError(f"Failed to set participants on MeetingMinutes {unique_id!r}: {e}")
+    return get_meeting_minutes(unique_id)
+
+
+def set_minutes_communities(unique_id: str, community_unique_ids: list) -> dict:
+    """Full-replace the minutes -[pertains_to]-> CommunityOfPractice set (multiple
+    expected). The caller sends the complete list; an empty list clears the edges.
+    Returns the refreshed record.
+    """
+    m = _get(unique_id)
+    communities = resolve_communities(community_unique_ids)
+    try:
+        m.pertains_to.disconnect_all()
+        for community in communities:
+            m.pertains_to.connect(community)
+    except Exception as e:
+        raise CrudError(f"Failed to set pertains_to on MeetingMinutes {unique_id!r}: {e}")
     return get_meeting_minutes(unique_id)
 
 

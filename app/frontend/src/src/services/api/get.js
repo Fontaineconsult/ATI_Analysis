@@ -1077,3 +1077,40 @@ export const fetchMeetingMinutes = async (uniqueId) => {
         throw error;
     }
 };
+
+// --- Interview guides (stakeholder-interview preps as graph nodes) ---
+export const fetchInterviewGuidesForCampusYear = async (campusAbbrev, academicYear) => {
+    try {
+        const response = await axios.get(
+            `${process.env.REACT_APP_API_URL}/interview-guides/campus/${campusAbbrev}/${academicYear}`
+        );
+        return response.data;
+    } catch (error) {
+        console.error('Error fetching interview guides:', error.message);
+        throw error;
+    }
+};
+
+export const fetchInterviewGuide = async (uniqueId) => {
+    try {
+        const response = await axios.get(
+            `${process.env.REACT_APP_API_URL}/interview-guides/item/${uniqueId}`
+        );
+        return response.data;
+    } catch (error) {
+        console.error('Error fetching interview guide:', error.message);
+        throw error;
+    }
+};
+
+export const fetchGuidesForCommunity = async (communityUniqueId) => {
+    try {
+        const response = await axios.get(
+            `${process.env.REACT_APP_API_URL}/interview-guides/community/${communityUniqueId}`
+        );
+        return response.data;
+    } catch (error) {
+        console.error('Error fetching community interview guides:', error.message);
+        throw error;
+    }
+};

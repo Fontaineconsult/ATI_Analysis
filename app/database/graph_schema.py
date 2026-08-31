@@ -13,7 +13,8 @@ import os
 from app.data_config import (trajectory_choices, asset_classes, asset_scopes, taap_outcomes,
                              functions, component_kinds, coverage_domains, audiences, interface_provenances,
                              descriptor_kinds, query_categories, query_statuses, evidence_control_choices,
-                             recommendation_statuses, concern_statuses)
+                             recommendation_statuses, concern_statuses,
+                             evidence_requirement_levels, evidence_requirement_elements)
 
 # Configuration enters through the single gateway (app/config_gateway.py). Importing
 # it hydrates os.environ from web.config (production) / .env.<FLASK_ENV> (development),
@@ -253,6 +254,36 @@ The descending cascade of specificity across the whole model:
     Governance -[:drives]--> SuccessIndicator          the stated requirement
     SuccessIndicator -[:directs]-> Plan/Process/...    the work that answers it
 
+SUPERSESSION — (Governance)-[:supersedes]->(Governance)
+
+Governance instruments replace one another over time, and which one is CURRENT is
+a question the graph has to be able to answer. Without this edge the answer lives
+only in prose — a title reading "(states it supersedes EO 926)", a description
+paragraph — where nothing can query it and an obsolete instrument looks exactly
+like a live one. That is not hypothetical: the March 2021 ATI memo supersedes
+eight numbered coded memos, several of which are still wired into evidence.
+
+HETEROGENEOUS on BOTH sides (any of the six governance labels can supersede any
+other), so — like Principle.derives_from — these edges are managed in queries via
+Cypher rather than a typed neomodel RelationshipTo. There is no accessor to add
+to the six classes; write and read it through the governance query module.
+
+Edge properties, following DrivesRel's principle that an unfalsifiable claim is
+worth less than a cited one:
+
+    quote      : the superseding sentence, verbatim from the superseding
+                 instrument's raw_text ("This memo supersedes all previous
+                 memos."). The instrument declares its own supersession; the
+                 graph should carry that declaration, not an inference about it.
+    scope      : 'full' when the later instrument replaces the earlier outright,
+                 'partial' when it replaces only a named section (AA-2015-22
+                 replaced only the Implementation section of AA-2013-03).
+    note       : what changed, when the delta is not obvious from the quote.
+    added_date : when the assertion was made.
+
+Direction is always NEWER -[:supersedes]-> OLDER. A node with no inbound
+`supersedes` edge is current; anything with one is historical, and the read layer
+should say so rather than leaving callers to compare dates.
 """
 
 
@@ -590,6 +621,10 @@ class SuccessIndicator(StructuredNode):
     introduced_in_year = StringProperty()
 
     notes = RelationshipTo("Note", "has_note")
+    # The companion bar, decomposed. The *_example strings above stay as the authored
+    # source; these are the same content broken into individually addressable pieces so
+    # an evidence link can say WHICH part of the bar it satisfies.
+    evidence_requirements = RelationshipTo("EvidenceRequirement", "has_evidence_requirement")
     date_added = DateProperty()
     tracked_by = RelationshipFrom("SuccessIndicator", "tracks")
     directed_plans = RelationshipTo("Plan", "directs")
@@ -613,6 +648,56 @@ class SuccessIndicator(StructuredNode):
             'introduced_in_year': self.introduced_in_year,
             'date_added': self.date_added,
             "unique_id": self.unique_id
+        }
+
+
+class EvidenceRequirement(StructuredNode):
+    """One element of a success indicator's companion-guide bar.
+
+    The companion guides were authored as prose on the SuccessIndicator itself
+    (`established_example` / `managed_example` / `optimizing_example`) — a bar written
+    as a bullet list. That form is readable but not addressable: nothing can point at
+    "the Output requirement of 4.6-pro" to say an implementation satisfies it. This
+    node is that same content broken into pieces so `IsEvidenceForRel.satisfies` can
+    reference them by handle.
+
+    The `*_example` strings remain on the SI as the authored source, the way `raw_text`
+    sits beside a `url` — these nodes are derived from them, not a replacement.
+
+    handle: 'evidence:<composite_key>:<level>:<seq>' — see
+    identifiers.make_evidence_requirement_handle for why the sequence number rather
+    than the element name.
+
+    element is OPTIONAL. Eight indicators state their Established bar as unlabelled
+    prose bullets under a lead-in sentence; those requirements carry element=None
+    rather than a guess. `lead_in` preserves the sentence that introduced them, which
+    is often where the actual scope statement lives.
+    """
+    unique_id = UniqueIdProperty()
+
+    handle = StringProperty(unique_index=True, required=True)
+    composite_key = StringProperty(required=True, index=True)   # the SI this belongs to
+    level = StringProperty(required=True, choices=evidence_requirement_levels)
+    seq = IntegerProperty(required=True)                        # order within composite_key+level
+
+    element = StringProperty(choices=evidence_requirement_elements)
+    requirement = StringProperty(required=True)
+    rubric_dimension = StringProperty()   # resources | procedures | documentation_evidence
+    lead_in = StringProperty()            # scope sentence the bar's bullets hang under
+
+    indicator = RelationshipFrom("SuccessIndicator", "has_evidence_requirement")
+
+    def serialize(self):
+        return {
+            "unique_id": self.unique_id,
+            "handle": self.handle,
+            "composite_key": self.composite_key,
+            "level": self.level,
+            "seq": self.seq,
+            "element": self.element,
+            "requirement": self.requirement,
+            "rubric_dimension": self.rubric_dimension,
+            "lead_in": self.lead_in,
         }
 
 
@@ -662,9 +747,34 @@ class IsEvidenceForRel(StructuredRel):
     rely on a practice they don't directly control (another unit, SFBRN, the
     CO, a vendor) — the formal statement that a duty is discharged elsewhere;
     maturity reviews grade the owners' interface to it, not the practice.
+
+    satisfies: which EvidenceRequirement handles this work actually clears. `strength`
+    rates the LINK (how well the implementation addresses the indicator as a whole);
+    satisfies names the specific parts of the companion bar it answers for, so a
+    coverage view can show which requirements have evidence and which are bare.
+
+    Handles rather than edges because EvidenceRequirement hangs off the SuccessIndicator,
+    which is year- and campus-agnostic: a direct (impl)-[:satisfies]->(er) edge would
+    claim the requirement is met everywhere, always. The claim is per-year, per-campus,
+    which is exactly the scope this rel already has. Same array-of-strings-on-a-rel
+    pattern as DocumentedByRel.included_in_years above.
+
+    Every handle must belong to the indicator this YSE tracks; the write path enforces
+    that, and deleting an EvidenceRequirement strips its handle from every rel carrying
+    it, because a dangling handle silently under-reports coverage.
+
+    rationale: prose saying HOW this work answers THIS indicator. The other three
+    properties quantify the link — how much, who controls it, which bar elements — and
+    none of them can carry an argument. It belongs on the edge rather than on the
+    implementation because one implementation evidences many indicators for different
+    reasons: "SFBRN Service Catalog Routing for Accessibility" is wired to nine YSEs
+    across two campuses and two years, and its node description explains none of the
+    nine. Writing the reason once on the node would be writing it for the wrong scope.
     """
     strength = IntegerProperty()
     control = StringProperty(choices=evidence_control_choices)
+    satisfies = ArrayProperty(StringProperty(), default=list)
+    rationale = StringProperty()
 
 
 
@@ -690,8 +800,16 @@ class ParticipationRel(StructuredRel):
 
 
 class CommunityMembershipRel(StructuredRel):
-    """A person's membership in a community of practice."""
+    """A person's membership in a community of practice.
+
+    `campuses` scopes WHERE the person is active in this community. Empty/None means
+    the home-campus fallback (Person.works_at_campus) — today's behavior for every
+    pre-existing edge. A non-empty list is AUTHORITATIVE: active at exactly those
+    campuses, home included only if listed (so "active only away from home" is
+    representable). Decided 2026-09-04.
+    """
     note = StringProperty()             # optional: the person's stake in the area
+    campuses = ArrayProperty(StringProperty())  # campus abbrevs; empty = home fallback
     added_date = DateProperty()
 
 
@@ -723,7 +841,14 @@ def serialize_role_holdings(person):
 
 
 def serialize_community_memberships(person):
-    """Project a Person's in_communities edges → [{unique_id, name, note}]."""
+    """Project a Person's in_communities edges → [{unique_id, name, note, campuses, added_date}].
+
+    Every edge property MUST be projected here: the MCP assign_person_to_community
+    tool (and the CommunityDetailPanel writeMembership rebuild) reconstruct the FULL
+    membership list from this projection and replay it through replace-semantics
+    set_person_communities — a field missing here is silently wiped on every
+    incremental assign.
+    """
     rows = []
     for community in person.in_communities.all():
         rel = person.in_communities.relationship(community)
@@ -731,6 +856,8 @@ def serialize_community_memberships(person):
             "unique_id": community.unique_id,
             "name": community.name,
             "note": rel.note if rel else None,
+            "campuses": (rel.campuses if rel else None) or [],
+            "added_date": rel.added_date.isoformat() if rel and rel.added_date else None,
         })
     return rows
 
@@ -1065,6 +1192,10 @@ class InternalPolicy(StructuredNode):
     is_evidence_for = RelationshipTo("YearSuccessEvidence", "is_evidence_for", model=IsEvidenceForRel)
     owned_by = RelationshipTo("Person", "owned_by")
     classified_under = RelationshipTo("Dimension", "classified_under")  # cross-cutting AMM dimension(s) of the work
+    # The operating community that answers for this policy — that it is current and
+    # enforced. See Guidance for why reference types carry community but not
+    # working-group accountability.
+    accountable_community = RelationshipTo("CommunityOfPractice", "accountable_community")
 
 
     #serialize
@@ -1324,6 +1455,11 @@ class Guidance(StructuredNode):
     references_service = RelationshipTo("Service", "references_service")
     references_project = RelationshipTo("Project", "references_project")
     classified_under = RelationshipTo("Dimension", "classified_under")  # cross-cutting AMM dimension(s) of the work
+    # The operating community that answers for this guidance — that it exists, is
+    # current, and is the advice the campus stands behind. Reference types carry
+    # community accountability but NOT accountable_working_group: the committee edge
+    # is about who answers for remediation WORK, which guidance does not perform.
+    accountable_community = RelationshipTo("CommunityOfPractice", "accountable_community")
 
 
 
@@ -1365,6 +1501,10 @@ class Tracking(StructuredNode):
     supporting_metrics = RelationshipTo("Metric", "has_metric")
     is_evidence_for = RelationshipTo("YearSuccessEvidence", "is_evidence_for", model=IsEvidenceForRel)
     owned_by = RelationshipTo("Person", "owned_by")
+    # The operating community that answers for this tracking — that the register or
+    # dashboard is maintained and its numbers are trustworthy. See Guidance for why
+    # reference types carry community but not working-group accountability.
+    accountable_community = RelationshipTo("CommunityOfPractice", "accountable_community")
 
     #serialize
     def serialize(self):
@@ -1776,6 +1916,24 @@ class MeetingMinutes(StructuredNode):
     supporting_webpages  = RelationshipTo("Webpage", "is_documented_by", model=DocumentedByRel)
     notes                = RelationshipTo("Note", "has_note")
 
+    # Communities of practice this meeting pertains to. Multiple links expected — a
+    # single meeting routinely touches several communities' ground. An ASSERTED edge,
+    # not derived from participant membership: a meeting can pertain to a community
+    # none of whose members were in the room.
+    pertains_to = RelationshipTo("CommunityOfPractice", "pertains_to")
+
+    # People who PARTICIPATED — derivable from the transcript (they spoke, or the
+    # record places them in the meeting), as opposed to people merely mentioned in
+    # passing, who stay in the prose. The edge points Person -> minutes; this is the
+    # record-side accessor.
+    participants = RelationshipFrom("Person", "participated_in")
+
+    # The prep guide(s) this meeting closed (reverse of InterviewGuide.resulted_in).
+    # A guide preps ONE meeting (guide-side ZeroOrOne), but one meeting can be
+    # prepped by several documents — the 2026-08-07 library meeting had a background
+    # guide AND a runsheet — so this side is unbounded.
+    prepared_by_guides = RelationshipFrom("InterviewGuide", "resulted_in")
+
     def serialize(self):
         return {
             "unique_id": self.unique_id,
@@ -1786,6 +1944,61 @@ class MeetingMinutes(StructuredNode):
             "ontology_ingested": bool(self.ontology_ingested),
             "ontology_ingest_date": self.ontology_ingest_date.isoformat() if self.ontology_ingest_date else None,
             "ontology_ingest_note": self.ontology_ingest_note,
+        }
+
+
+class InterviewGuide(StructuredNode):
+    """
+    A stakeholder-interview prep document — the upstream twin of MeetingMinutes: the
+    PLAN for a conversation where minutes are the record of one. Generated by the
+    /stakeholder-interview skill (content is the Markdown guide; source_path names its
+    ontology/interviews/ file twin), saved here so preps are recallable, linkable, and
+    walkable as a cycle: guide -> resulted_in -> minutes -> ontology-ingest -> review.
+
+    Anchoring is campus + academic year DIRECTLY (not a WorkingGroupPlan, deliberately):
+    real guides span working groups — the 2026-08-04 library guide covers pro + ins +
+    web — so the working-group footprint DERIVES from the targets' YSEs. Targets link
+    to YearSuccessEvidence, not SuccessIndicator, because a prep is aimed at a specific
+    campus-year bar; the year-agnostic view derives via yse->tracks->si. Both decisions
+    2026-09-08. The campus/year anchors are required-by-create
+    (queries/interview_guides/create.py — neomodel can't require edges at save time).
+    """
+    unique_id    = UniqueIdProperty()
+    title        = StringProperty(required=True)
+    content      = StringProperty()          # the guide body, as Markdown
+    meeting_date = DateProperty()            # PLANNED date (the minutes carry the actual)
+    date_created = DateProperty()
+    source_path  = StringProperty()          # the ontology/interviews/<file>.md twin
+
+    # Required anchors (enforced in create).
+    prepared_at_campus = RelationshipTo("Campus", "prepared_at_campus", cardinality=ZeroOrOne)
+    prepared_in_year   = RelationshipTo("AcademicYear", "prepared_in_year", cardinality=ZeroOrOne)
+
+    # The intended interviewees — the PLANNED mirror of minutes' transcript-derived
+    # participated_in. Also the identity-round roster (people to verify live).
+    prepared_for = RelationshipTo("Person", "prepared_for")
+
+    # The ranked coverage targets: which campus-year evidence the questions were
+    # built against (the bar decomposition in the guide body addresses these).
+    targets = RelationshipTo("YearSuccessEvidence", "targets")
+
+    # Same vocabulary as MeetingMinutes — the community whose ground the prep works,
+    # e.g. when a prep is commissioned from a CoP ("start from Disability Services").
+    pertains_to = RelationshipTo("CommunityOfPractice", "pertains_to")
+
+    # Closure: the meeting happened and these minutes record it. An unclosed guide
+    # past its meeting_date is a visible loose end; ingest sets this when it stamps
+    # the minutes.
+    resulted_in = RelationshipTo("MeetingMinutes", "resulted_in", cardinality=ZeroOrOne)
+
+    def serialize(self):
+        return {
+            "unique_id": self.unique_id,
+            "title": self.title,
+            "content": self.content,
+            "meeting_date": self.meeting_date.isoformat() if self.meeting_date else None,
+            "date_created": self.date_created.isoformat() if self.date_created else None,
+            "source_path": self.source_path,
         }
 
 
@@ -1932,6 +2145,12 @@ class CommunityOfPractice(StructuredNode):
 
     # Reverse of Person.in_communities; the membership edge carries an optional note.
     members = RelationshipFrom("Person", "member_of_community", model=CommunityMembershipRel)
+    # Meetings asserted to pertain to this community — counterpart of
+    # MeetingMinutes.pertains_to.
+    pertaining_minutes = RelationshipFrom("MeetingMinutes", "pertains_to")
+    # Interview preps working this community's ground (reverse of
+    # InterviewGuide.pertains_to; same rel type as minutes, disambiguated by class).
+    pertaining_guides = RelationshipFrom("InterviewGuide", "pertains_to")
 
     # The indicators this community's practice area has stakes in (agentive: its
     # members are the stakeholders for that indicator's evidence). Declared here on
@@ -1988,6 +2207,13 @@ class Person(StructuredNode):
     host_campus = RelationshipTo("Campus", "works_at_campus", cardinality=ZeroOrOne)
     holds_role = RelationshipTo("Role", "holds_role", model=RoleHoldingRel)  # capacities the person provides (PD tracking lives on the edge)
     in_communities = RelationshipTo("CommunityOfPractice", "member_of_community", model=CommunityMembershipRel)  # cross-campus shared-interest groupings
+    # Meetings this person participated in — a transcript-derived fact (they spoke, or
+    # the record places them there), never an idle mention. Note the tense: distinct
+    # from `participates_in` (ATIWorkingGroup membership) above.
+    participated_in_meetings = RelationshipTo("MeetingMinutes", "participated_in")
+    # Interview preps naming this person as an intended interviewee (reverse of
+    # InterviewGuide.prepared_for) — the PLANNED counterpart of participated_in.
+    interview_guides = RelationshipFrom("InterviewGuide", "prepared_for")
     # Participatory "working team" edges to the four doing-implementations — the role
     # acted in is a property on the edge (ParticipationRel.role_handle); distinct from
     # owned_by (custodial). One shared rel-type "worked_on" across the four.

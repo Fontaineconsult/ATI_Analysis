@@ -7,6 +7,7 @@ import {
     Button,
     Heading,
     HStack,
+    Link,
     Spinner,
     Text,
     useToast,
@@ -16,16 +17,23 @@ import {
 } from '@chakra-ui/react';
 import { DeleteIcon, EditIcon } from '@chakra-ui/icons';
 import { Input, Select } from '@chakra-ui/react';
+import { Link as RouterLink, useParams } from 'react-router-dom';
+import { getGoalViewUrlFromCompositeKey } from '../../../services/utils/tools';
 import { UserContext } from '../../../context/UserContext';
 import { DataContext } from '../../../context/DataContext';
-import { fetchCommunity } from '../../../services/api/get';
+import { useSettings } from '../../../context/SettingsContext';
+import { fetchCommunity, fetchGuidesForCommunity } from '../../../services/api/get';
 import { addCommunityStake, removeCommunityStake, setPersonCommunities } from '../../../services/api/put';
 import { deleteCommunity } from '../../../services/api/delete';
 import Card from '../common/Card';
 import Section from '../common/Section';
 import PersonAssignmentSelector from '../../functional_components/PersonAssignmentSelector';
 import CopyCommunityReportButton from './CopyCommunityReportButton';
-import { personCommunities } from './peopleConfig';
+import CopyCommunityStakesButton from './CopyCommunityStakesButton';
+import { guideClosure } from './InterviewGuidesPanel';
+import MemberCampusScopePicker from './MemberCampusScopePicker';
+import { buildMembershipWrite, personCommunities } from './peopleConfig';
+import { ALL_WORKING_GROUPS } from '../../../styles/workingGroupIdentity';
 
 /**
  * Right-column detail for a community of practice. Fetches its own detail by
@@ -46,8 +54,10 @@ import { personCommunities } from './peopleConfig';
  *   onDeleted()      Called after a successful delete (clear selection).
  */
 function CommunityDetailPanel({ communityId, onAfterChange, onEdit, onDeleted }) {
+    const { campus } = useParams();
     const { individuals, refreshAllIndividuals } = useContext(UserContext);
     const { data } = useContext(DataContext);
+    const { currentAcademicYear } = useSettings();
     const [detail, setDetail] = useState(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
@@ -74,6 +84,18 @@ function CommunityDetailPanel({ communityId, onAfterChange, onEdit, onDeleted })
 
     useEffect(() => { loadDetail(); }, [loadDetail]);
 
+    // Interview preps working this community's ground (read-only card; guides
+    // are managed on the People area's Interview Guides tab).
+    const [guides, setGuides] = useState([]);
+    useEffect(() => {
+        let cancelled = false;
+        if (!communityId) { setGuides([]); return undefined; }
+        fetchGuidesForCommunity(communityId)
+            .then((resp) => { if (!cancelled) setGuides(resp?.data?.guides || []); })
+            .catch(() => { if (!cancelled) setGuides([]); });
+        return () => { cancelled = true; };
+    }, [communityId]);
+
     const activePeople = useMemo(() => {
         if (!Array.isArray(individuals)) return [];
         return individuals
@@ -86,7 +108,11 @@ function CommunityDetailPanel({ communityId, onAfterChange, onEdit, onDeleted })
     const campuses = useMemo(() => {
         const counts = new Map();
         members.forEach((m) => {
-            if (m.host_campus) counts.set(m.host_campus, (counts.get(m.host_campus) || 0) + 1);
+            // Effective scope: the membership's own list when set, else home.
+            const active = (m.active_campuses && m.active_campuses.length)
+                ? m.active_campuses
+                : (m.host_campus ? [m.host_campus] : []);
+            active.forEach((a) => counts.set(a, (counts.get(a) || 0) + 1));
         });
         return [...counts.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
     }, [members]);
@@ -95,41 +121,73 @@ function CommunityDetailPanel({ communityId, onAfterChange, onEdit, onDeleted })
     // set_communities is replace-semantics, so the person's OTHER memberships
     // (and their notes) must be carried over — the full roster provides them
     // (full, not active-only: a member may be inactive and still unassignable).
-    const writeMembership = useCallback(async (personUniqueId, include) => {
+    const resolveRosterPerson = useCallback((personUniqueId) => {
         const rosterPerson = (Array.isArray(individuals) ? individuals : [])
             .find((p) => p.unique_id === personUniqueId);
         if (!rosterPerson?.employee_id) {
             throw new Error('Cannot resolve this person in the roster — refresh and try again.');
         }
-        const current = personCommunities(rosterPerson)
-            .map((c) => ({ community_id: c.unique_id, note: c.note }));
-        const without = current.filter((c) => c.community_id !== communityId);
-        const next = include ? [...without, { community_id: communityId }] : without;
-        await setPersonCommunities(rosterPerson.employee_id, next);
-    }, [individuals, communityId]);
+        return rosterPerson;
+    }, [individuals]);
+
+    const writeMembership = useCallback(async (personUniqueId, include) => {
+        const rosterPerson = resolveRosterPerson(personUniqueId);
+        await setPersonCommunities(
+            rosterPerson.employee_id,
+            buildMembershipWrite(rosterPerson, communityId, { include }),
+        );
+    }, [resolveRosterPerson, communityId]);
 
     const handleAfterChange = useCallback(async () => {
         await Promise.all([loadDetail(), refreshAllIndividuals()]);
         if (onAfterChange) await onAfterChange();
     }, [loadDetail, refreshAllIndividuals, onAfterChange]);
 
+    // Set one membership's campus scope (the picker's Save / Follow-home). The
+    // builder carries every other membership verbatim and applies the no-freeze
+    // rule; the refresh is explicit here because the picker sits outside the
+    // selector's own afterChange flow.
+    const writeMembershipCampuses = useCallback(async (personUniqueId, campuses) => {
+        const rosterPerson = resolveRosterPerson(personUniqueId);
+        await setPersonCommunities(
+            rosterPerson.employee_id,
+            buildMembershipWrite(rosterPerson, communityId, { include: true, campuses }),
+        );
+        await handleAfterChange();
+    }, [resolveRosterPerson, communityId, handleAfterChange]);
+
     // Indicator stakes (has_stake_in). The picker is fed from the indicators payload
     // already in DataContext (WG -> goals -> SIs), flattened to composite_key + text;
     // already-staked indicators are excluded from the options.
     const stakes = useMemo(() => (Array.isArray(detail?.stakes) ? detail.stakes : []), [detail]);
-    const indicatorOptions = useMemo(() => {
+    // One section per working group (registry order), indicators ordered by
+    // goal.indicator number within — the flat alphabetical list hid which group
+    // an indicator belonged to and interleaved 1.19 with 10.2.
+    const indicatorGroups = useMemo(() => {
         const staked = new Set(stakes.map((s) => s.composite_key));
-        const flat = [];
+        const registryOrder = new Map(ALL_WORKING_GROUPS.map((w, idx) => [w.name, idx]));
+        const groups = [];
         (Array.isArray(data?.indicators) ? data.indicators : []).forEach((wg) => {
+            const options = [];
             (wg.goals || []).forEach((goal) => {
                 (goal.successIndicators || []).forEach((si) => {
-                    if (si?.composite_key && !staked.has(si.composite_key)) {
-                        flat.push({ key: si.composite_key, text: si.success_indicator || '' });
+                    // The payload keeps removed SIs (settings manages them there);
+                    // a retired indicator is not a valid new stake target.
+                    if (si?.composite_key && !si.removed && !staked.has(si.composite_key)) {
+                        options.push({ key: si.composite_key, text: si.success_indicator || '' });
                     }
                 });
             });
+            if (options.length) {
+                options.sort((a, b) => a.key.localeCompare(b.key, undefined, { numeric: true }));
+                groups.push({ name: wg.name || 'Other', options });
+            }
         });
-        return flat.sort((a, b) => a.key.localeCompare(b.key, undefined, { numeric: true }));
+        return groups.sort((a, b) => {
+            const ai = registryOrder.has(a.name) ? registryOrder.get(a.name) : 99;
+            const bi = registryOrder.has(b.name) ? registryOrder.get(b.name) : 99;
+            return ai - bi || a.name.localeCompare(b.name);
+        });
     }, [data, stakes]);
 
     const handleAddStake = useCallback(async () => {
@@ -290,12 +348,56 @@ function CommunityDetailPanel({ communityId, onAfterChange, onEdit, onDeleted })
                     afterChange={handleAfterChange}
                     placeholder="Select person to add"
                     assignLabel="Add member"
+                    extraColumnHeader="Campuses"
+                    renderExtraColumn={(m) => (
+                        <MemberCampusScopePicker
+                            member={m}
+                            onSave={(campuses) => writeMembershipCampuses(m.unique_id, campuses)}
+                        />
+                    )}
                 />
             </Card>
 
             <Card
                 title={`Indicator Stakes (${stakes.length})`}
-                action={<Text fontSize="2xs" color="gray.600">indicators this community's practice area has a stake in</Text>}
+                action={
+                    /* The review spread: the same stakes as a shareable public page,
+                       grouped by review state, each row linking to its public evidence
+                       report. Server-rendered, so Open is a plain full-page link —
+                       React Router must never swallow it. */
+                    <HStack spacing={1.5}>
+                        <CopyCommunityStakesButton
+                            detail={detail}
+                            reviewSpreadUrl={`${window.location.origin}/ati/reports/public/community/${campus}/${currentAcademicYear}/${communityId}`}
+                        />
+                        <Button
+                            size="xs"
+                            colorScheme="teal"
+                            onClick={() => {
+                                const url = `${window.location.origin}/ati/reports/public/community/${campus}/${currentAcademicYear}/${communityId}`;
+                                navigator.clipboard.writeText(url);
+                                toast({
+                                    title: 'Review spread link copied!',
+                                    description: 'Shareable read-only list of the stakes and their review state.',
+                                    status: 'success', duration: 2500, isClosable: true,
+                                });
+                            }}
+                        >
+                            Copy review spread
+                        </Button>
+                        <Button
+                            size="xs"
+                            variant="outline"
+                            colorScheme="teal"
+                            as="a"
+                            href={`/ati/reports/public/community/${campus}/${currentAcademicYear}/${communityId}`}
+                            target="_blank"
+                            rel="noopener"
+                        >
+                            Open
+                        </Button>
+                    </HStack>
+                }
             >
                 <VStack align="stretch" spacing={2}>
                     {stakes.length === 0 && (
@@ -308,7 +410,23 @@ function CommunityDetailPanel({ communityId, onAfterChange, onEdit, onDeleted })
                                 borderWidth="1px" borderColor="gray.200" borderRadius="md" align="start">
                             <Badge colorScheme="purple" variant="subtle" flexShrink={0}>{s.composite_key}</Badge>
                             <Box minW={0} flex="1">
-                                <Text fontSize="xs" color="gray.800" noOfLines={2}>{s.success_indicator}</Text>
+                                {campus ? (
+                                    <Link
+                                        as={RouterLink}
+                                        to={getGoalViewUrlFromCompositeKey(s.composite_key, campus)}
+                                        display="block"
+                                        textAlign="left"
+                                        fontSize="xs"
+                                        color="teal.700"
+                                        noOfLines={2}
+                                        _hover={{ textDecoration: 'underline' }}
+                                        _focusVisible={{ outline: '2px solid', outlineColor: 'teal.500', borderRadius: 'sm' }}
+                                    >
+                                        {s.success_indicator}
+                                    </Link>
+                                ) : (
+                                    <Text fontSize="xs" color="gray.800" noOfLines={2}>{s.success_indicator}</Text>
+                                )}
                                 {s.note && <Text fontSize="2xs" color="gray.600">{s.note}</Text>}
                             </Box>
                             <Button
@@ -329,12 +447,16 @@ function CommunityDetailPanel({ communityId, onAfterChange, onEdit, onDeleted })
                             value={stakeKey}
                             onChange={(e) => setStakeKey(e.target.value)}
                             aria-label="Success indicator to add as a stake"
-                            maxW="220px"
+                            maxW="420px"
                         >
-                            {indicatorOptions.map((o) => (
-                                <option key={o.key} value={o.key}>
-                                    {o.key} — {o.text.slice(0, 70)}
-                                </option>
+                            {indicatorGroups.map((g) => (
+                                <optgroup key={g.name} label={g.name}>
+                                    {g.options.map((o) => (
+                                        <option key={o.key} value={o.key}>
+                                            {o.key} — {o.text}
+                                        </option>
+                                    ))}
+                                </optgroup>
                             ))}
                         </Select>
                         <Input
@@ -357,6 +479,32 @@ function CommunityDetailPanel({ communityId, onAfterChange, onEdit, onDeleted })
                     </HStack>
                 </VStack>
             </Card>
+
+            {guides.length > 0 && (
+                <Card title={`Interview Guides (${guides.length})`}
+                      action={<Text fontSize="2xs" color="gray.600">managed on the Interview Guides tab</Text>}>
+                    <VStack align="stretch" spacing={1.5}>
+                        {guides.map((g) => {
+                            const closure = guideClosure(g);
+                            return (
+                                <HStack key={g.unique_id} spacing={2} px={2} py={1.5}
+                                        borderWidth="1px" borderColor="gray.200" borderRadius="md" align="center">
+                                    <Text fontSize="sm" color="gray.800" flex="1" minW={0} noOfLines={1}>{g.title}</Text>
+                                    {g.meeting_date && (
+                                        <Text fontFamily="mono" fontSize="2xs" color="gray.600">{g.meeting_date}</Text>
+                                    )}
+                                    <Badge
+                                        colorScheme={closure === 'held' ? 'green' : closure === 'unclosed' ? 'orange' : 'blue'}
+                                        variant="subtle" fontSize="2xs"
+                                    >
+                                        {closure}
+                                    </Badge>
+                                </HStack>
+                            );
+                        })}
+                    </VStack>
+                </Card>
+            )}
 
             {membersWithNotes.length > 0 && (
                 <Section title="Membership Notes">
