@@ -96,21 +96,21 @@ describe('DocumentationDetailPanel — never lies about a flag', () => {
     });
 });
 
-describe('DocumentationDetailPanel — integrity is surfaced, not hidden', () => {
-    it('names the defect and echoes what is actually stored', () => {
+describe('DocumentationDetailPanel — no integrity card', () => {
+    it('does not render one, even for a defective record', () => {
+        // The card was removed: the panel is an editing surface, and a record's
+        // defects are visible in the controls themselves — a flag that reads
+        // "No" against a stored 'False' is the same information, in the place
+        // you would fix it. The server still emits the codes, and the list still
+        // filters on them.
         renderPanel({
             item: item({
                 integrity: ['string_boolean:depreciated'],
                 stored: { depreciated: 'False' },
             }),
         });
-        expect(screen.getByText(/Stored as text, not a boolean — depreciated/)).toBeInTheDocument();
-        expect(screen.getByText(/stored as "False"/)).toBeInTheDocument();
-    });
-
-    it('shows no integrity card for a clean record', () => {
-        renderPanel();
         expect(screen.queryByText('Data integrity')).not.toBeInTheDocument();
+        expect(screen.queryByText(/stored as/)).not.toBeInTheDocument();
     });
 });
 

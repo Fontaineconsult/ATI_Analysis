@@ -1,10 +1,11 @@
 /**
  * Editing on the detail panel itself.
  *
- * The controls are exposed rather than behind a dialog because the job is
- * working down a filtered list fixing records, so these tests are mostly about
- * that job: the fields are there without opening anything, an edit survives
- * jumping to another record and back, and nothing is written until you say so.
+ * The controls are exposed rather than behind a dialog, and the form contract is
+ * the one the implementation explorer's document editor uses: fill the fields,
+ * then Cancel or Update. These cover that contract — the fields are there
+ * without opening anything, Cancel puts the record back, and nothing is written
+ * until Update.
  */
 import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
@@ -49,7 +50,8 @@ const renderPanel = (props = {}) => {
     return { onSave, ...utils };
 };
 
-const saveBar = () => screen.queryByRole('button', { name: 'Save' });
+const updateButton = () => screen.getByRole('button', { name: /^Update / });
+const cancelButton = () => screen.getByRole('button', { name: 'Cancel' });
 
 describe('editing on the panel', () => {
     it('shows the fields without opening anything', () => {
@@ -62,109 +64,80 @@ describe('editing on the panel', () => {
         expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     });
 
-    it('offers no save bar until something changes', async () => {
+    it('offers Cancel and Update, always, like the implementations editor', () => {
         renderPanel();
-        expect(saveBar()).not.toBeInTheDocument();
-
-        await userEvent.type(screen.getByLabelText('Name'), '!');
-        await waitFor(() => expect(saveBar()).toBeInTheDocument());
-    });
-
-    it('counts the unsaved changes and marks the fields that changed', async () => {
-        renderPanel();
-        await userEvent.type(screen.getByLabelText('Name'), '!');
-
-        await waitFor(() => expect(screen.getByText('1 unsaved')).toBeInTheDocument());
-        expect(screen.getByText('changed')).toBeInTheDocument();
-
-        await userEvent.selectOptions(screen.getByLabelText('Deprecated'), 'true');
-        await waitFor(() => expect(screen.getByText('2 unsaved')).toBeInTheDocument());
+        expect(updateButton()).toBeInTheDocument();
+        expect(cancelButton()).toBeInTheDocument();
     });
 
     it('writes only what changed', async () => {
         const { onSave } = renderPanel();
         await userEvent.type(screen.getByLabelText('Name'), '!');
-        await userEvent.click(saveBar());
+        await userEvent.click(updateButton());
 
         await waitFor(() => expect(onSave).toHaveBeenCalledTimes(1));
         expect(onSave).toHaveBeenCalledWith({ unique_id: 'd1', name: 'A doc!' });
     });
 
-    it('reverts to the stored values', async () => {
+    it('Cancel puts the record back', async () => {
         const { onSave } = renderPanel();
         await userEvent.type(screen.getByLabelText('Name'), '!');
-        await userEvent.click(screen.getByRole('button', { name: 'Revert' }));
+        await userEvent.click(cancelButton());
 
-        await waitFor(() => expect(saveBar()).not.toBeInTheDocument());
-        expect(screen.getByLabelText('Name')).toHaveValue('A doc');
+        await waitFor(() => expect(screen.getByLabelText('Name')).toHaveValue('A doc'));
         expect(onSave).not.toHaveBeenCalled();
     });
 
-    /** The property that makes it safe to jump around a list while working. */
-    it('keeps an unsaved edit when you move to another record and back', async () => {
+    it('says so rather than writing when nothing was changed', async () => {
+        const { onSave } = renderPanel();
+        await userEvent.click(updateButton());
+
+        await waitFor(() => expect(screen.getByText(/Nothing to update/i)).toBeInTheDocument());
+        expect(onSave).not.toHaveBeenCalled();
+    });
+
+    it('shows the newly selected record, not the previous one', async () => {
         const { rerender } = renderPanel();
         await userEvent.type(screen.getByLabelText('Name'), '!');
         await waitFor(() => expect(screen.getByLabelText('Name')).toHaveValue('A doc!'));
 
-        const other = doc({ unique_id: 'd2', name: 'Another doc', title: 'Another doc' });
-        const back = doc();
-        const wrap = (item) => (
-            <ChakraProvider>
-                <MemoryRouter>
-                    <DocumentationDetailPanel item={item} campus="sfsu" onSave={jest.fn()} />
-                </MemoryRouter>
-            </ChakraProvider>
-        );
-
-        rerender(wrap(other));
-        await waitFor(() => expect(screen.getByLabelText('Name')).toHaveValue('Another doc'));
-        // The other record is clean — the draft belongs to d1, not to the panel.
-        expect(saveBar()).not.toBeInTheDocument();
-
-        rerender(wrap(back));
-        await waitFor(() => expect(screen.getByLabelText('Name')).toHaveValue('A doc!'));
-        expect(saveBar()).toBeInTheDocument();
-    });
-
-    it('clears the draft once saved', async () => {
-        const { onSave, rerender } = renderPanel();
-        await userEvent.type(screen.getByLabelText('Name'), '!');
-        await userEvent.click(saveBar());
-        await waitFor(() => expect(onSave).toHaveBeenCalled());
-
-        // The container refetches; the saved record comes back with the new name.
         rerender(
             <ChakraProvider>
                 <MemoryRouter>
                     <DocumentationDetailPanel
-                        item={doc({ name: 'A doc!', title: 'A doc!' })}
+                        item={doc({ unique_id: 'd2', name: 'Another doc', title: 'Another doc' })}
                         campus="sfsu"
-                        onSave={onSave}
+                        onSave={jest.fn()}
                     />
                 </MemoryRouter>
             </ChakraProvider>,
         );
-        await waitFor(() => expect(saveBar()).not.toBeInTheDocument());
+        await waitFor(() => expect(screen.getByLabelText('Name')).toHaveValue('Another doc'));
     });
 
-    it('keeps the edit on screen when the save fails', async () => {
+    it('keeps the edit on screen when the update fails', async () => {
         const onSave = jest.fn().mockRejectedValue(new Error('Neo4j said no'));
         renderPanel({ onSave });
 
         await userEvent.type(screen.getByLabelText('Name'), '!');
-        await userEvent.click(saveBar());
+        await userEvent.click(updateButton());
 
         await waitFor(() => expect(screen.getByText('Neo4j said no')).toBeInTheDocument());
         expect(screen.getByLabelText('Name')).toHaveValue('A doc!');
-        // Awaited, not asserted inline: the toast fires in the catch and the
-        // button leaves its "Saving" state in the finally, so the button is
-        // still named "Saving" at the instant the toast appears.
-        await waitFor(() => expect(saveBar()).toBeInTheDocument());
     });
 
     it('states the blast radius for a shared record', () => {
         renderPanel({ item: doc({ parent_count: 7 }) });
         expect(screen.getByText(/Attached to 7 records/i)).toBeInTheDocument();
+    });
+
+    it('puts Referenced by below the editor', () => {
+        renderPanel();
+        const headings = screen.getAllByRole('heading')
+            .map((h) => h.textContent)
+            .filter((t) => t === 'Fields' || t.startsWith('Referenced by'));
+        expect(headings[0]).toBe('Fields');
+        expect(headings[1]).toMatch(/^Referenced by/);
     });
 
     it('renders read-only with no save handler', () => {
@@ -177,6 +150,7 @@ describe('editing on the panel', () => {
         );
         expect(screen.getByText('Read-only in this context.')).toBeInTheDocument();
         expect(screen.getByLabelText('Name')).toBeDisabled();
+        expect(screen.queryByRole('button', { name: /^Update / })).not.toBeInTheDocument();
     });
 
     it('does not offer deprecation for a Metric', () => {

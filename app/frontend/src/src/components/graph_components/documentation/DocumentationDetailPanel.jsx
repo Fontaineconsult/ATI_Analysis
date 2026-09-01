@@ -1,10 +1,8 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
     Alert,
     AlertIcon,
-    Badge,
     Box,
-    Button,
     Divider,
     HStack,
     Heading,
@@ -19,14 +17,13 @@ import {
 import Card from '../common/Card';
 import { Loading } from '../common/Loading';
 import DocumentationFields from './DocumentationFields';
+import { FormActions, FormShell } from '../../implementation_explorer/doc_components/docPrimitives';
 import Section from '../common/Section';
 import ReferencedByList from './ReferencedByList';
 import { DocumentationBadgeRow, TypeBadge } from './DocumentationBadges';
 import {
     DOC_TYPES,
     buildEditPayload,
-    changedFieldNames,
-    describeIntegrityCode,
     editableFieldsFor,
     getTypeLabel,
     initialEditValues,
@@ -110,14 +107,14 @@ function LocationSection({ item }) {
  * the panel, and the read-only renderings of the same values are gone rather
  * than duplicated beside them.
  *
- * DRAFTS ARE KEPT PER RECORD, in a ref keyed by unique_id. Moving to another
- * record and back does not lose an edit, which is what makes it safe to jump
- * around a list while working — and nothing is written until you say so.
+ * It is the same form contract as the document editor in the implementation
+ * explorer (doc_components/DocumentsViewer): fill the fields, then Cancel or
+ * Update at the bottom. It reuses that editor's own FormShell and FormActions
+ * rather than restating them, so the two cannot drift apart.
  *
- * Ordering is deliberate. "Referenced by" comes before the fields, because the
- * question this view exists to answer is what a record is doing in the graph —
- * and for a shared record, that section is also the blast radius of the edit
- * you are about to make.
+ * Ordering: the record and its fields first, because editing is the job here;
+ * then Referenced by, which is context for the edit you just made — and, for a
+ * shared record, its blast radius.
  */
 function DocumentationDetailPanel({
     item, loading = false, error = null, campus, capabilities = null, onSave,
@@ -130,72 +127,58 @@ function DocumentationDetailPanel({
         [item, capabilities],
     );
 
-    // One draft per record, so switching away and back keeps an unsaved edit.
-    // A ref rather than state: it must survive the record changing without
-    // itself causing a render, and `values` below is what renders.
-    const draftsRef = useRef({});
     const [values, setValues] = useState({});
-    const [saving, setSaving] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
+    // Reset to the record whenever a different one is selected, so the form
+    // never shows the previous record's values against this one.
     const recordId = item?.unique_id || null;
     useEffect(() => {
-        if (!recordId) { setValues({}); return; }
-        const draft = draftsRef.current[recordId];
-        setValues(draft || initialEditValues(item, fields));
+        setValues(item ? initialEditValues(item, fields) : {});
     }, [recordId, item, fields]);
 
     const handleFieldChange = useCallback((name, value) => {
-        setValues((prev) => {
-            const next = { ...prev, [name]: value };
-            if (recordId) draftsRef.current[recordId] = next;
-            return next;
-        });
-    }, [recordId]);
+        setValues((prev) => ({ ...prev, [name]: value }));
+    }, []);
 
-    const changed = useMemo(
-        () => (item && fields.length ? changedFieldNames(item, fields, values) : []),
-        [item, fields, values],
-    );
-    const isDirty = changed.length > 0;
+    const handleCancel = useCallback(() => {
+        if (item) setValues(initialEditValues(item, fields));
+    }, [item, fields]);
 
-    const revert = useCallback(() => {
-        if (!item) return;
-        if (recordId) delete draftsRef.current[recordId];
-        setValues(initialEditValues(item, fields));
-    }, [item, fields, recordId]);
-
-    const handleSave = useCallback(async () => {
+    const handleSubmit = useCallback(async (e) => {
+        e.preventDefault();
         if (!item || !onSave) return;
-        const payload = buildEditPayload(item, fields, values);
-        if (isNoOpPayload(payload)) return;
 
-        setSaving(true);
+        // Still a diff of what changed, which is invisible here but load-bearing:
+        // update.py compares any date it IS given against the stored one with
+        // .isoformat(), and its association arguments would connect the record to
+        // a new parent. See buildEditPayload.
+        const payload = buildEditPayload(item, fields, values);
+        if (isNoOpPayload(payload)) {
+            toast({
+                title: 'Nothing to update.',
+                status: 'info', duration: 2000, isClosable: true,
+            });
+            return;
+        }
+
+        setIsSubmitting(true);
         try {
             await onSave(payload);
-            if (recordId) delete draftsRef.current[recordId];
             toast({
-                title: `${getTypeLabel(item.doc_type)} saved.`,
+                title: `${getTypeLabel(item.doc_type)} updated.`,
                 status: 'success', duration: 2000, isClosable: true,
             });
-        } catch (e) {
+        } catch (err) {
             toast({
-                title: 'Save failed.',
-                description: e?.response?.data?.error || e?.message || 'Please try again.',
+                title: 'Update failed.',
+                description: err?.response?.data?.error || err?.message || 'Please try again.',
                 status: 'error', duration: 3500, isClosable: true,
             });
         } finally {
-            setSaving(false);
+            setIsSubmitting(false);
         }
-    }, [item, fields, values, onSave, recordId, toast]);
-
-    // Ctrl/Cmd+S saves without reaching for the mouse. Scoped to this panel, and
-    // it only claims the shortcut when there is actually something to save.
-    const handleKeyDown = useCallback((e) => {
-        if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 's' && isDirty && !saving) {
-            e.preventDefault();
-            handleSave();
-        }
-    }, [isDirty, saving, handleSave]);
+    }, [item, fields, values, onSave, toast]);
     if (loading) {
         return <Card><Loading label="Loading record…" /></Card>;
     }
@@ -231,7 +214,7 @@ function DocumentationDetailPanel({
     const shared = (item.parent_count || 0) > 1;
 
     return (
-        <VStack align="stretch" spacing={4} onKeyDown={handleKeyDown}>
+        <VStack align="stretch" spacing={4}>
             <Card>
                 <Wrap spacing={2} mb={2}>
                     <WrapItem><TypeBadge docType={item.doc_type} size="md" /></WrapItem>
@@ -242,16 +225,9 @@ function DocumentationDetailPanel({
                     </WrapItem>
                 </Wrap>
 
-                <HStack align="flex-start" justify="space-between" spacing={3} mb={1}>
-                    <Heading as="h2" size="md" color="gray.800">
-                        {item.title || <em>Untitled</em>}
-                    </Heading>
-                    {isDirty && (
-                        <Badge colorScheme="orange" borderRadius="full" flexShrink={0}>
-                            {changed.length} unsaved
-                        </Badge>
-                    )}
-                </HStack>
+                <Heading as="h2" size="md" color="gray.800" mb={1}>
+                    {item.title || <em>Untitled</em>}
+                </Heading>
                 <Text fontSize="2xs" color="gray.600" fontFamily="mono" mb={3}>
                     {item.unique_id}
                 </Text>
@@ -285,39 +261,12 @@ function DocumentationDetailPanel({
                 </Alert>
             )}
 
-            {Boolean(item.integrity?.length) && (
-                <Card title="Data integrity">
-                    <Text fontSize="xs" color="gray.600" mb={2}>
-                        The values below were read defensively. What is stored is shown as-is so the
-                        defect stays visible rather than being quietly normalised.
-                    </Text>
-                    <VStack align="stretch" spacing={1}>
-                        {item.integrity.map((code) => {
-                            const field = String(code).split(':')[1];
-                            const stored = field ? item.stored?.[field] : undefined;
-                            return (
-                                <HStack key={code} spacing={2} fontSize="sm">
-                                    <Text color="yellow.800">{describeIntegrityCode(code)}</Text>
-                                    {stored !== undefined && (
-                                        <Text color="gray.600" fontFamily="mono" fontSize="xs">
-                                            stored as {JSON.stringify(stored)}
-                                        </Text>
-                                    )}
-                                </HStack>
-                            );
-                        })}
-                    </VStack>
-                </Card>
-            )}
-
-            <Card title={`Referenced by (${item.reference_count || 0})`}>
-                <ReferencedByList references={item.referenced_by} campus={campus} />
-            </Card>
-
             {/* The fields themselves. Every value they carry used to be
                 rendered read-only here as well; showing both would mean two
                 places to look and two places to disagree. What survives below is
                 only what is NOT editable: the managed file, and provenance. */}
+            {/* Same form contract as the implementation explorer's document
+                editor, using its own shell and footer. */}
             <Card title="Fields">
                 {!editable && (
                     <Text fontSize="xs" color="gray.600" mb={3} fontStyle="italic">
@@ -327,16 +276,33 @@ function DocumentationDetailPanel({
                 {item.include_in_report_set === false && (
                     <Text fontSize="xs" color="gray.600" mb={3}>
                         The report flag has never been explicitly set on this record — it is
-                        included by default, not by anyone's decision. Saving here makes it one.
+                        included by default, not by anyone's decision. Updating here makes it one.
                     </Text>
                 )}
-                <DocumentationFields
-                    fields={fields}
-                    values={values}
-                    changed={changed}
-                    onChange={handleFieldChange}
-                    isDisabled={!editable || saving}
-                />
+
+                {editable ? (
+                    <FormShell onSubmit={handleSubmit}>
+                        <DocumentationFields
+                            fields={fields}
+                            values={values}
+                            onChange={handleFieldChange}
+                            isDisabled={isSubmitting}
+                        />
+                        <FormActions
+                            isSubmitting={isSubmitting}
+                            onCancel={handleCancel}
+                            submitLabel={`Update ${getTypeLabel(item.doc_type)}`}
+                            loadingText="Updating…"
+                        />
+                    </FormShell>
+                ) : (
+                    <DocumentationFields
+                        fields={fields}
+                        values={values}
+                        onChange={handleFieldChange}
+                        isDisabled
+                    />
+                )}
             </Card>
 
             <Card title="Details">
@@ -356,44 +322,12 @@ function DocumentationDetailPanel({
                 </Section>
             </Card>
 
-            {/* Sticky, so it is reachable however far down the record you are —
-                the source-text field alone can be pages long. It appears only
-                when there is something to write, so it never sits there inviting
-                a save that would do nothing. */}
-            {editable && isDirty && (
-                <HStack
-                    position="sticky"
-                    bottom={0}
-                    zIndex={1}
-                    bg="white"
-                    borderWidth="1px"
-                    borderColor="orange.200"
-                    borderRadius="lg"
-                    boxShadow="md"
-                    px={4}
-                    py={3}
-                    spacing={3}
-                    justify="space-between"
-                >
-                    <Text fontSize="sm" color="gray.800">
-                        {changed.length} unsaved {changed.length === 1 ? 'change' : 'changes'}
-                    </Text>
-                    <HStack spacing={2}>
-                        <Button size="sm" variant="ghost" onClick={revert} isDisabled={saving}>
-                            Revert
-                        </Button>
-                        <Button
-                            size="sm"
-                            colorScheme="teal"
-                            onClick={handleSave}
-                            isLoading={saving}
-                            loadingText="Saving"
-                        >
-                            Save
-                        </Button>
-                    </HStack>
-                </HStack>
-            )}
+            {/* Below the editor: this is context for the record you are working
+                on — what it is doing in the graph, and for a shared record the
+                blast radius of the edit above. */}
+            <Card title={`Referenced by (${item.reference_count || 0})`}>
+                <ReferencedByList references={item.referenced_by} campus={campus} />
+            </Card>
         </VStack>
     );
 }
