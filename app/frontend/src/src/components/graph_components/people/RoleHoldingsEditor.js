@@ -15,6 +15,8 @@ import {
 } from '@chakra-ui/react';
 import { AddIcon, CloseIcon } from '@chakra-ui/icons';
 import { fetchAllRoles } from '../../../services/api/get';
+import useResource from '../../../hooks/useResource';
+import { KEYS } from '../../../context/resourceKeys';
 import { setPersonRoleHoldings } from '../../../services/api/put';
 import { NotInPdBadge } from './PersonBadges';
 
@@ -33,21 +35,15 @@ import { NotInPdBadge } from './PersonBadges';
  */
 function RoleHoldingsEditor({ employeeId, roles = [], participatedRoleHandles = [], onChange }) {
     const toast = useToast();
-    const [catalog, setCatalog] = useState([]);
+
     const [rows, setRows] = useState([]);
     const [picker, setPicker] = useState('');
     const [saving, setSaving] = useState(false);
 
-    useEffect(() => {
-        let cancelled = false;
-        (async () => {
-            try {
-                const resp = await fetchAllRoles();
-                if (!cancelled) setCatalog(resp?.data?.items || []);
-            } catch (_) { /* non-fatal */ }
-        })();
-        return () => { cancelled = true; };
-    }, []);
+    // The role catalogue is reference data, read by this editor and by the
+    // participants editor. One key, one request, however many are on screen.
+    const { data: rolesResp } = useResource(KEYS.rolesAll, fetchAllRoles);
+    const catalog = useMemo(() => rolesResp?.data?.items || [], [rolesResp]);
 
     // Build the combined list from held ∪ participated, with participation counts.
     useEffect(() => {

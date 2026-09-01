@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useMemo, useState, useEffect, useContext } from 'react';
 import {
     Box,
     Flex,
@@ -46,6 +46,8 @@ import {
     setImplementationDimensions,
 } from '../../services/api/put';
 import { fetchAllDimensions } from '../../services/api/get';
+import useResource from '../../hooks/useResource';
+import { KEYS } from '../../context/resourceKeys';
 import { useDescriptors } from '../../hooks/useDescriptors';
 import ParticipantsEditor from './ParticipantsEditor';
 import { DataContext } from '../../context/DataContext';
@@ -75,7 +77,7 @@ function ImplementationTypeOverview({ implementationType, initialImplementationI
 
     const isDimensioned = DIMENSION_TYPES.includes(implementationType);
     const isParticipantType = PARTICIPANT_TYPES.includes(implementationType);
-    const [dimensionOptions, setDimensionOptions] = useState([]);
+
 
     // Make sure the individuals list is loaded for the Owners tab dropdown.
     useEffect(() => {
@@ -84,18 +86,14 @@ function ImplementationTypeOverview({ implementationType, initialImplementationI
         }
     }, [individuals, loadAllIndividuals]);
 
-    // Load the seven AMM dimension options for the Details multi-select (doing-impls only).
-    useEffect(() => {
-        if (!isDimensioned) return;
-        let cancelled = false;
-        (async () => {
-            try {
-                const resp = await fetchAllDimensions();
-                if (!cancelled) setDimensionOptions(resp?.data?.items || []);
-            } catch (_) { /* non-fatal: the control just shows no options */ }
-        })();
-        return () => { cancelled = true; };
-    }, [isDimensioned]);
+    // The seven AMM dimension options for the Details multi-select (doing-impls
+    // only). The catalogue is fixed reference data — nothing in the app writes it,
+    // only an implementation's LINKS to it — so it never needs invalidating, and
+    // it is the same key the implementation detail panel reads.
+    const { data: dimensionsResp } = useResource(
+        KEYS.dimensionsAll, fetchAllDimensions, { enabled: Boolean(isDimensioned) },
+    );
+    const dimensionOptions = useMemo(() => dimensionsResp?.data?.items || [], [dimensionsResp]);
 
     const [selectedImplId, setSelectedImplId] = useState(null);
     const [isEditing, setIsEditing] = useState(false);

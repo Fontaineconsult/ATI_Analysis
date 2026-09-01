@@ -13,6 +13,9 @@ import {
 } from '@chakra-ui/react';
 import { UserContext } from '../../context/UserContext';
 import { fetchPersonImplementationDetails } from '../../services/api/get';
+import useResource from '../../hooks/useResource';
+import useInvalidateResources from '../../hooks/useInvalidateResources';
+import { KEYS } from '../../context/resourceKeys';
 import PeopleList from '../graph_components/people/PeopleList';
 import PersonDetailPanel from '../graph_components/people/PersonDetailPanel';
 import PeopleStatStrip from '../graph_components/people/PeopleStatStrip';
@@ -37,9 +40,16 @@ function PeopleMasterContainer() {
     const navigate = useNavigate();
     const { individuals, loadAllIndividuals, refreshAllIndividuals } = useContext(UserContext);
     const [selectedPerson, setSelectedPerson] = useState(null);
-    const [detail, setDetail] = useState(null);
-    const [detailLoading, setDetailLoading] = useState(false);
-    const [detailError, setDetailError] = useState(null);
+    // One cache entry per person, keyed off the selection, so walking back
+    // through a roster you have already clicked through costs nothing. Selection
+    // alone drives the fetch — the key follows selectedPerson.
+    const {
+        data: detailResp, loading: detailLoading, error: detailError,
+    } = useResource(
+        selectedPerson?.employee_id ? KEYS.personDetail(selectedPerson.employee_id) : null,
+        () => fetchPersonImplementationDetails(selectedPerson.employee_id),
+    );
+    const detail = detailResp?.data?.person || null;
     const [activeFilter, setActiveFilter] = useState('all');
     const addModal = useDisclosure();
     const editModal = useDisclosure();
@@ -63,20 +73,16 @@ function PeopleMasterContainer() {
         [activePeople, activeFilter],
     );
 
+    // Now only about FORCING a refresh: selecting a person already changes the
+    // key, and the callers that pass an id after a save want that person's entry
+    // dropped. Invalidating by explicit id rather than reloading "the current
+    // one" keeps it correct when it is called in the same tick as the selection
+    // change, before the new key has taken effect.
+    const { invalidateKey } = useInvalidateResources();
     const loadDetail = useCallback(async (employeeId) => {
         if (!employeeId) return;
-        setDetailLoading(true);
-        setDetailError(null);
-        try {
-            const response = await fetchPersonImplementationDetails(employeeId);
-            setDetail(response?.data?.person || null);
-        } catch (error) {
-            setDetailError(error?.message || 'Failed to load person details.');
-            setDetail(null);
-        } finally {
-            setDetailLoading(false);
-        }
-    }, []);
+        invalidateKey(KEYS.personDetail(employeeId));
+    }, [invalidateKey]);
 
     const handleSelect = useCallback((person) => {
         setSelectedPerson(person);

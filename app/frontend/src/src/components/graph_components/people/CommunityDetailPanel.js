@@ -1,4 +1,4 @@
-import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useContext, useMemo, useState } from 'react';
 import {
     Alert,
     AlertIcon,
@@ -23,6 +23,9 @@ import { UserContext } from '../../../context/UserContext';
 import { DataContext } from '../../../context/DataContext';
 import { useSettings } from '../../../context/SettingsContext';
 import { fetchCommunity, fetchGuidesForCommunity } from '../../../services/api/get';
+import useResource from '../../../hooks/useResource';
+import useInvalidateResources from '../../../hooks/useInvalidateResources';
+import { KEYS, NS } from '../../../context/resourceKeys';
 import { addCommunityStake, removeCommunityStake, setPersonCommunities } from '../../../services/api/put';
 import { deleteCommunity } from '../../../services/api/delete';
 import Card from '../common/Card';
@@ -58,43 +61,35 @@ function CommunityDetailPanel({ communityId, onAfterChange, onEdit, onDeleted })
     const { individuals, refreshAllIndividuals } = useContext(UserContext);
     const { data } = useContext(DataContext);
     const { currentAcademicYear } = useSettings();
-    const [detail, setDetail] = useState(null);
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState(null);
+    // Detail and the guides card are two keys, both invalidated by the writes
+    // below. The guides one is filed under guides: rather than communities:, so
+    // that saving a guide on the People area's own tab drops it here too.
+    const {
+        data: detailResp, loading, error, reload: reloadDetail,
+    } = useResource(
+        communityId ? KEYS.communityDetail(communityId) : null,
+        () => fetchCommunity(communityId),
+    );
+    const detail = detailResp?.data?.community || null;
+
+    const { data: guidesResp } = useResource(
+        communityId ? KEYS.guidesForCommunity(communityId) : null,
+        () => fetchGuidesForCommunity(communityId),
+    );
+    const guides = useMemo(() => guidesResp?.data?.guides || [], [guidesResp]);
     const [deleting, setDeleting] = useState(false);
     const [stakeKey, setStakeKey] = useState('');
     const [stakeNote, setStakeNote] = useState('');
     const [stakeSaving, setStakeSaving] = useState(false);
     const toast = useToast();
 
+    // Membership and stake writes change the roster counts on the list as well as
+    // this record, so the whole namespace goes.
+    const { invalidateNamespace } = useInvalidateResources();
     const loadDetail = useCallback(async () => {
-        if (!communityId) return;
-        setLoading(true);
-        setError(null);
-        try {
-            const response = await fetchCommunity(communityId);
-            setDetail(response?.data?.community || null);
-        } catch (e) {
-            setError(e?.response?.data?.error || e?.message || 'Failed to load community.');
-            setDetail(null);
-        } finally {
-            setLoading(false);
-        }
-    }, [communityId]);
-
-    useEffect(() => { loadDetail(); }, [loadDetail]);
-
-    // Interview preps working this community's ground (read-only card; guides
-    // are managed on the People area's Interview Guides tab).
-    const [guides, setGuides] = useState([]);
-    useEffect(() => {
-        let cancelled = false;
-        if (!communityId) { setGuides([]); return undefined; }
-        fetchGuidesForCommunity(communityId)
-            .then((resp) => { if (!cancelled) setGuides(resp?.data?.guides || []); })
-            .catch(() => { if (!cancelled) setGuides([]); });
-        return () => { cancelled = true; };
-    }, [communityId]);
+        invalidateNamespace(NS.communities);
+        await reloadDetail();
+    }, [invalidateNamespace, reloadDetail]);
 
     const activePeople = useMemo(() => {
         if (!Array.isArray(individuals)) return [];

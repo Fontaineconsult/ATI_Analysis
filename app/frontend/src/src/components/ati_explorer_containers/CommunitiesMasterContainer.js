@@ -13,6 +13,9 @@ import {
 } from '@chakra-ui/react';
 import { UserContext } from '../../context/UserContext';
 import { fetchAllCommunities } from '../../services/api/get';
+import useResource from '../../hooks/useResource';
+import useInvalidateResources from '../../hooks/useInvalidateResources';
+import { KEYS, NS } from '../../context/resourceKeys';
 import CommunityList from '../graph_components/people/CommunityList';
 import CommunityDetailPanel from '../graph_components/people/CommunityDetailPanel';
 import CommunitiesStatStrip from '../graph_components/people/CommunitiesStatStrip';
@@ -30,8 +33,19 @@ function CommunitiesMasterContainer() {
     const { campus, communityId } = useParams();
     const navigate = useNavigate();
     const { individuals, loadAllIndividuals } = useContext(UserContext);
-    const [communities, setCommunities] = useState(null);
-    const [error, setError] = useState(null);
+    // The list lives in the shared store: MeetingMinutesForm, the interview-guide
+    // panel and the implementation panel all read the same key, so between them
+    // this is one request instead of four.
+    const {
+        data: communitiesResp, error, reload: reloadCommunities,
+    } = useResource(KEYS.communitiesAll, fetchAllCommunities);
+    // Memoized because null-until-loaded is meaningful here (the empty state
+    // renders differently from "loaded, none"), and a fresh array each render
+    // would churn every downstream memo.
+    const communities = useMemo(
+        () => (communitiesResp ? (communitiesResp?.data?.items || []) : null),
+        [communitiesResp],
+    );
     const [selectedId, setSelectedId] = useState(null);
     const [activeFilter, setActiveFilter] = useState('all');
     const [editTarget, setEditTarget] = useState(null);
@@ -42,21 +56,16 @@ function CommunitiesMasterContainer() {
         if (!individuals) loadAllIndividuals();
     }, [individuals, loadAllIndividuals]);
 
+    // Same contract as the loader it replaces — callers use the returned list to
+    // pick the next selection. Membership and stake edits happen in the detail
+    // panel, which drops the whole communities namespace, so this reload only
+    // has to cover creates and deletes started here.
+    const { invalidateNamespace } = useInvalidateResources();
     const loadCommunities = useCallback(async () => {
-        setError(null);
-        try {
-            const response = await fetchAllCommunities();
-            const items = response?.data?.items || [];
-            setCommunities(items);
-            return items;
-        } catch (e) {
-            setError(e?.message || 'Failed to load communities.');
-            setCommunities([]);
-            return [];
-        }
-    }, []);
-
-    useEffect(() => { loadCommunities(); }, [loadCommunities]);
+        invalidateNamespace(NS.communities);
+        const response = await reloadCommunities();
+        return response?.data?.items || [];
+    }, [invalidateNamespace, reloadCommunities]);
 
     const activePeople = useMemo(() => {
         if (!Array.isArray(individuals)) return [];

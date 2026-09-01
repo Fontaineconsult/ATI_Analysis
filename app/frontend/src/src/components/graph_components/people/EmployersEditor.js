@@ -12,6 +12,8 @@ import {
 } from '@chakra-ui/react';
 import { AddIcon, CloseIcon } from '@chakra-ui/icons';
 import { fetchDepartments, fetchColleges, fetchVendors } from '../../../services/api/get';
+import useResource from '../../../hooks/useResource';
+import { orgUnitsKeyForType } from '../../../context/resourceKeys';
 import { assignEmployeeToOrgUnit, unassignEmployeeFromOrgUnit } from '../../../services/api/put';
 
 const UNIT_TYPES = [
@@ -37,38 +39,35 @@ const typeMeta = (type) =>
 function EmployersEditor({ personUniqueId, employers = [], onChange }) {
     const toast = useToast();
     const [unitType, setUnitType] = useState('department');
-    const [catalog, setCatalog] = useState([]);
     const [picker, setPicker] = useState('');
     const [busy, setBusy] = useState(false);
 
-    // Reload the unit catalog when the type picker changes. A failed load is
-    // surfaced, not swallowed — an empty picker must mean "no units", never a
-    // hidden 500 (that ambiguity masked the OrgUnit back-label bug).
+    // The catalogue for the selected unit type. All three lists are shared with
+    // the assets area (StewardshipCard, AssetForm, ToolForm), so switching the
+    // dropdown back and forth costs nothing after the first look at each.
+    const typeConfig = UNIT_TYPES.find((t) => t.value === unitType) || null;
+    const { data: catalogResp, error: catalogError } = useResource(
+        orgUnitsKeyForType(unitType),
+        () => typeConfig.fetch(),
+    );
+    const catalog = useMemo(() => catalogResp?.data || [], [catalogResp]);
+
+    // A failed load is surfaced, not swallowed — an empty picker must mean "no
+    // units", never a hidden 500 (that ambiguity masked the OrgUnit back-label
+    // bug). Reset the picker when the type changes so a stale selection from the
+    // previous catalogue cannot be submitted.
+    useEffect(() => { setPicker(''); }, [unitType]);
     useEffect(() => {
-        let cancelled = false;
-        setCatalog([]);
-        setPicker('');
-        const meta = UNIT_TYPES.find((t) => t.value === unitType);
-        if (!meta) return undefined;
-        (async () => {
-            try {
-                const resp = await meta.fetch();
-                if (!cancelled) setCatalog(resp?.data || []);
-            } catch (e) {
-                if (!cancelled) {
-                    toast({
-                        title: `Failed to load ${meta.label.toLowerCase()}s`,
-                        description: e?.response?.data?.error || e?.message,
-                        status: 'error',
-                        duration: 4000,
-                        isClosable: true,
-                        position: 'top-right',
-                    });
-                }
-            }
-        })();
-        return () => { cancelled = true; };
-    }, [unitType, toast]);
+        if (!catalogError || !typeConfig) return;
+        toast({
+            title: `Failed to load ${typeConfig.label.toLowerCase()}s`,
+            description: catalogError,
+            status: 'error',
+            duration: 4000,
+            isClosable: true,
+            position: 'top-right',
+        });
+    }, [catalogError, typeConfig, toast]);
 
     const current = useMemo(
         () => new Set(employers.map((e) => `${String(e.type || '').toLowerCase()}:${e.name}`)),

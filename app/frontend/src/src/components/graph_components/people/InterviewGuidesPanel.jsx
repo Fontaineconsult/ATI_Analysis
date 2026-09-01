@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import {
     Badge, Box, Button, Flex, HStack, Modal, ModalBody, ModalCloseButton, ModalContent,
     ModalFooter, ModalHeader, ModalOverlay, Spinner, Text, VStack, useDisclosure, useToast,
@@ -10,6 +10,9 @@ import Section from '../common/Section';
 import {
     fetchAllCommunities, fetchInterviewGuidesForCampusYear, fetchYsesByCampusForYear,
 } from '../../../services/api/get';
+import useResource from '../../../hooks/useResource';
+import useInvalidateResources from '../../../hooks/useInvalidateResources';
+import { KEYS, NS } from '../../../context/resourceKeys';
 import { deleteInterviewGuide } from '../../../services/api/delete';
 import InterviewGuideForm from './InterviewGuideForm';
 
@@ -134,61 +137,60 @@ export default function InterviewGuidesPanel() {
     const { currentAcademicYear } = useSettings();
     const toast = useToast();
 
-    const [panel, setPanel] = useState(null);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
     const [openGuide, setOpenGuide] = useState(null);
     const [editing, setEditing] = useState(null);
     const formDisc = useDisclosure();
 
-    // Picker pools for the edit modal (loaded once).
-    const [yseOptions, setYseOptions] = useState([]);
-    const [communityOptions, setCommunityOptions] = useState([]);
+    // The panel itself, scoped by campus and year — both belong in the key, since
+    // the fetcher is not part of a resource's identity.
+    const {
+        data: panelResp, loading, error, reload: reloadPanel,
+    } = useResource(
+        campus && currentAcademicYear ? KEYS.interviewGuides(campus, currentAcademicYear) : null,
+        () => fetchInterviewGuidesForCampusYear(campus, currentAcademicYear),
+    );
+    const panel = panelResp?.data || null;
 
+    // A guide write moves this listing AND the guides card on the community
+    // panel, which reads guides:for-community:<id>. One namespace covers both.
+    const { invalidateNamespace } = useInvalidateResources();
     const load = useCallback(async () => {
-        if (!campus || !currentAcademicYear) return;
-        setLoading(true);
-        setError(null);
-        try {
-            const resp = await fetchInterviewGuidesForCampusYear(campus, currentAcademicYear);
-            setPanel(resp.data);
-        } catch (err) {
-            setError(err?.response?.data?.error || err?.message || 'Failed to load interview guides');
-        } finally {
-            setLoading(false);
-        }
-    }, [campus, currentAcademicYear]);
+        invalidateNamespace(NS.guides);
+        await reloadPanel();
+    }, [invalidateNamespace, reloadPanel]);
 
-    useEffect(() => { load(); }, [load]);
+    // Picker pools for the edit modal. Both are shared keys — communities with
+    // three other screens, the YSE tree with the plan evidence picker and the YSE
+    // assignment selector — so opening this panel after any of them costs nothing.
+    // The narrowing to this campus stays here: the response deliberately carries
+    // every campus, and the other callers want it whole.
+    const { data: communitiesResp } = useResource(KEYS.communitiesAll, fetchAllCommunities);
+    const communityOptions = useMemo(
+        () => (communitiesResp?.data?.items || [])
+            .map((c) => ({ value: c.unique_id, label: c.name })),
+        [communitiesResp],
+    );
 
-    useEffect(() => {
-        let cancelled = false;
-        fetchAllCommunities()
-            .then((resp) => { if (!cancelled) setCommunityOptions((resp?.data?.items || []).map((c) => ({ value: c.unique_id, label: c.name }))); })
-            .catch(() => {});
-        if (currentAcademicYear) {
-            fetchYsesByCampusForYear(currentAcademicYear)
-                .then((resp) => {
-                    if (cancelled) return;
-                    // Payload: campuses -> working_groups -> yses. Only the URL campus.
-                    const wrapper = resp?.data || resp;
-                    const forCampus = (wrapper?.campuses || []).find((c) => c.abbreviation === campus);
-                    const options = [];
-                    (forCampus?.working_groups || []).forEach((wg) => {
-                        (wg.yses || []).forEach((y) => {
-                            options.push({
-                                value: y.year_identifier,
-                                label: `${y.indicator_composite_key} — ${(y.indicator_description || '').slice(0, 80)}`,
-                            });
-                        });
-                    });
-                    options.sort((a, b) => a.label.localeCompare(b.label, undefined, { numeric: true }));
-                    setYseOptions(options);
-                })
-                .catch(() => {});
-        }
-        return () => { cancelled = true; };
-    }, [campus, currentAcademicYear]);
+    const { data: yseResp } = useResource(
+        currentAcademicYear ? KEYS.ysesByCampus(currentAcademicYear) : null,
+        () => fetchYsesByCampusForYear(currentAcademicYear),
+    );
+    const yseOptions = useMemo(() => {
+        // Payload: campuses -> working_groups -> yses. Only the URL campus.
+        const wrapper = yseResp?.data || yseResp;
+        const forCampus = (wrapper?.campuses || []).find((c) => c.abbreviation === campus);
+        const options = [];
+        (forCampus?.working_groups || []).forEach((wg) => {
+            (wg.yses || []).forEach((y) => {
+                options.push({
+                    value: y.year_identifier,
+                    label: `${y.indicator_composite_key} — ${(y.indicator_description || '').slice(0, 80)}`,
+                });
+            });
+        });
+        options.sort((a, b) => a.label.localeCompare(b.label, undefined, { numeric: true }));
+        return options;
+    }, [yseResp, campus]);
 
     const guides = useMemo(() => panel?.guides || [], [panel]);
 

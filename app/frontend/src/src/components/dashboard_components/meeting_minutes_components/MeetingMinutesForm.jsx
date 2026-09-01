@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useContext, useEffect, useMemo, useState } from 'react';
 import {
     Badge, Box, Button, FormControl, FormLabel, HStack, Input, Modal, ModalBody,
     ModalCloseButton, ModalContent, ModalFooter, ModalHeader, ModalOverlay, Select, Tab,
@@ -7,6 +7,8 @@ import {
 } from '@chakra-ui/react';
 import { UserContext } from '../../../context/UserContext';
 import { fetchAllCommunities } from '../../../services/api/get';
+import useResource from '../../../hooks/useResource';
+import { KEYS } from '../../../context/resourceKeys';
 import { createMeetingMinutes } from '../../../services/api/post';
 import {
     setMinutesCommunities, setMinutesParticipants, updateMeetingMinutes,
@@ -41,16 +43,13 @@ export default function MeetingMinutesForm({
     const [communityIds, setCommunityIds] = useState(
         (initial?.pertains_to_communities || []).map((c) => c.unique_id),
     );
-    const [communities, setCommunities] = useState([]);
     const [saving, setSaving] = useState(false);
 
-    useEffect(() => {
-        let cancelled = false;
-        fetchAllCommunities()
-            .then((resp) => { if (!cancelled) setCommunities(resp?.data?.items || []); })
-            .catch(() => { if (!cancelled) setCommunities([]); });
-        return () => { cancelled = true; };
-    }, []);
+    // Shared key with the Communities area, the interview-guide panel and the
+    // implementation panel: opening this modal after visiting any of them costs
+    // no request at all.
+    const { data: communitiesResp } = useResource(KEYS.communitiesAll, fetchAllCommunities);
+    const communities = useMemo(() => communitiesResp?.data?.items || [], [communitiesResp]);
 
     const people = (individuals || []).filter((p) => p.active || p.non_committee_member_active);
     const personOptions = people.map((p) => ({

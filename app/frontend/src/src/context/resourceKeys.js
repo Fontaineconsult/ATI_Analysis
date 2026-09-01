@@ -33,6 +33,12 @@ export const NS = {
     components: 'components:',
     implementations: 'implementations:',
     governance: 'governance:',
+    communities: 'communities:',
+    people: 'people:',
+    roles: 'roles:',
+    dimensions: 'dimensions:',
+    yse: 'yse:',
+    guides: 'guides:',
     documentation: 'documentation:',
     report: 'report:',
     plan: 'plan:',
@@ -76,9 +82,44 @@ export const KEYS = {
     componentsAll: 'components:all',
     componentDetail: (identifier) => `components:detail:${identifier}`,
 
+    // --- Communities of practice ---
+    communitiesAll: 'communities:all',
+    communityDetail: (uniqueId) => `communities:detail:${uniqueId}`,
+
+    // --- People ---
+    /** The roster itself lives in UserContext; this is the per-person detail read. */
+    personDetail: (employeeId) => `people:detail:${employeeId}`,
+
+    // --- Interview guides ---
+    // Filed under guides:, not communities:, even though the community panel shows
+    // them: a guide WRITE should drop both listings, and one namespace does that.
+    interviewGuides: (campus, year) => `guides:campus:${campus}:${year}`,
+    guidesForCommunity: (communityId) => `guides:for-community:${communityId}`,
+
+    // --- Reference vocabularies ---
+    rolesAll: 'roles:all',
+    dimensionsAll: 'dimensions:all',
+
+    // --- Year success evidence ---
+    // fetchYsesByCampusForYear takes ONLY the year despite its name: it returns
+    // every campus and callers filter client-side. So the key is year-scoped, and
+    // the three components that call it genuinely share one request.
+    ysesByCampus: (academicYear) => `yse:by-campus:${academicYear}`,
+    planYses: (planId) => `yse:for-plan:${planId}`,
+
     // --- Cross-domain reads ---
     implementationsAll: 'implementations:all',
     governanceAll: 'governance:all',
 };
+
+/**
+ * The org-unit list for one unit type. EmployersEditor picks its fetcher from a
+ * type dropdown, so it needs the key by the same token rather than by name.
+ */
+export const orgUnitsKeyForType = (unitType) => ({
+    department: KEYS.orgUnitsDepartments,
+    college: KEYS.orgUnitsColleges,
+    vendor: KEYS.orgUnitsVendors,
+}[unitType] || null);
 
 export default KEYS;

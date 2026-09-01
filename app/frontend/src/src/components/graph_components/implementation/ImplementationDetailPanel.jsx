@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useRef, useState } from 'react';
+import React, { useContext, useEffect, useRef, useMemo, useState } from 'react';
 import {
     Alert,
     AlertIcon,
@@ -55,6 +55,8 @@ import {
     updateImplementation,
 } from '../../../services/api/put';
 import { fetchAllCommunities, fetchAllDimensions } from '../../../services/api/get';
+import useResource from '../../../hooks/useResource';
+import { KEYS } from '../../../context/resourceKeys';
 import { unassignImplementationFromYSE } from '../../../services/api/delete';
 import { navigateToIndicator } from '../../../services/utils/tools';
 import { useDescriptors } from '../../../hooks/useDescriptors';
@@ -102,7 +104,6 @@ function ImplementationDetailPanel({ implementation, onAfterChange }) {
 
     const [isEditing, setIsEditing] = useState(false);
     const [editForm, setEditForm] = useState({ title: '', description: '', dimensions: [] });
-    const [dimensionOptions, setDimensionOptions] = useState([]);
     const [removingYse, setRemovingYse] = useState(null);
 
     // Retirement lifecycle (retire modal + unretire confirm).
@@ -124,32 +125,24 @@ function ImplementationDetailPanel({ implementation, onAfterChange }) {
         if (!individuals && loadAllIndividuals) loadAllIndividuals();
     }, [individuals, loadAllIndividuals]);
 
-    // AMM dimension options for the Details multi-select (classifiable types only).
-    useEffect(() => {
-        if (!dimensioned) return;
-        let cancelled = false;
-        (async () => {
-            try {
-                const resp = await fetchAllDimensions();
-                if (!cancelled) setDimensionOptions(resp?.data?.items || []);
-            } catch (_) { /* non-fatal: control just shows no options */ }
-        })();
-        return () => { cancelled = true; };
-    }, [dimensioned]);
+    // AMM dimension options for the Details multi-select (classifiable types
+    // only), and community options for the accountable-community picker. Both
+    // are reference vocabularies on shared keys, still loaded only for the types
+    // that can use them — `enabled` keeps that laziness while the cache makes the
+    // second implementation you open free. A failure leaves the option list
+    // empty, exactly as the swallowed catch did.
+    const { data: dimensionsResp } = useResource(
+        KEYS.dimensionsAll, fetchAllDimensions, { enabled: Boolean(dimensioned) },
+    );
+    const dimensionOptions = useMemo(() => dimensionsResp?.data?.items || [], [dimensionsResp]);
 
-    // Community options for the accountable-community picker.
-    const [communityOptions, setCommunityOptions] = useState([]);
-    useEffect(() => {
-        if (!communityAccountableType) return;
-        let cancelled = false;
-        (async () => {
-            try {
-                const resp = await fetchAllCommunities();
-                if (!cancelled) setCommunityOptions(resp?.data?.items || resp?.items || []);
-            } catch (_) { /* non-fatal: picker just shows no options */ }
-        })();
-        return () => { cancelled = true; };
-    }, [communityAccountableType]);
+    const { data: communitiesResp } = useResource(
+        KEYS.communitiesAll, fetchAllCommunities,
+        { enabled: Boolean(communityAccountableType) },
+    );
+    const communityOptions = useMemo(
+        () => communitiesResp?.data?.items || communitiesResp?.items || [], [communitiesResp],
+    );
 
     // Drop out of edit mode whenever the selection changes.
     useEffect(() => { setIsEditing(false); }, [implementation?.unique_id]);

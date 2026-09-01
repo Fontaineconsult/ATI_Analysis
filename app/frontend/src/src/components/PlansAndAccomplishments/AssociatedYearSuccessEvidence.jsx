@@ -1,4 +1,4 @@
-import React, { useCallback, useContext, useEffect, useState } from 'react';
+import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import {
     Badge,
     Box,
@@ -24,6 +24,8 @@ import { AddIcon, CloseIcon, MinusIcon } from '@chakra-ui/icons';
 import { useNavigate, useParams } from 'react-router-dom';
 import { SettingsContext } from '../../context/SettingsContext';
 import { fetchPlanYses, fetchYsesByCampusForYear } from '../../services/api/get';
+import useResource from '../../hooks/useResource';
+import { KEYS } from '../../context/resourceKeys';
 import {
     assignPlanToCampus,
     attachPlanToYse,
@@ -72,8 +74,17 @@ function AssociatedYearSuccessEvidence({ plan, onChanged }) {
     // "Add evidence" picker: which campus column opened it, the year's full
     // YSE catalog (fetched once per open), and the chosen YSE.
     const [addTarget, setAddTarget] = useState(null);
-    const [yseCatalog, setYseCatalog] = useState(null);
-    const [catalogLoading, setCatalogLoading] = useState(false);
+    // The year's campus -> WG -> indicator catalogue. Still loaded lazily — only
+    // once a picker is actually opened — but on the shared key, so it is the same
+    // entry the interview-guide panel and the YSE assignment selector read. This
+    // was the third independent copy of one large request.
+    const { data: yseCatalogResp, loading: catalogLoading, error: catalogError } = useResource(
+        addTarget && currentAcademicYear ? KEYS.ysesByCampus(currentAcademicYear) : null,
+        () => fetchYsesByCampusForYear(currentAcademicYear),
+    );
+    const yseCatalog = useMemo(
+        () => yseCatalogResp?.data || yseCatalogResp || null, [yseCatalogResp],
+    );
     const [selectedYseId, setSelectedYseId] = useState('');
     const [attaching, setAttaching] = useState(false);
 
@@ -167,27 +178,25 @@ function AssociatedYearSuccessEvidence({ plan, onChanged }) {
         }
     };
 
-    // Open the picker for one campus column, lazily loading the year's
-    // campus->WG->indicator catalog the first time.
-    const openAddEvidence = async (campusEntry) => {
+    // Opening the picker sets the target; the catalogue read above follows from
+    // it. The "already loaded, don't refetch" guard that used to live here is now
+    // the cache's job, and it holds across components rather than just this one.
+    const openAddEvidence = (campusEntry) => {
         setAddTarget(campusEntry);
         setSelectedYseId('');
-        if (yseCatalog) return;
-        setCatalogLoading(true);
-        try {
-            const wrapper = await fetchYsesByCampusForYear(currentAcademicYear);
-            setYseCatalog(wrapper?.data || wrapper);
-        } catch (e) {
-            toast({
-                title: "Couldn't load the evidence catalog",
-                description: e.response?.data?.error || e.message,
-                status: 'error', duration: 6000, isClosable: true,
-            });
-            setAddTarget(null);
-        } finally {
-            setCatalogLoading(false);
-        }
     };
+
+    // Failure closes the picker, as before — an open picker with no catalogue is
+    // a dead end.
+    useEffect(() => {
+        if (!catalogError) return;
+        toast({
+            title: "Couldn't load the evidence catalog",
+            description: catalogError,
+            status: 'error', duration: 6000, isClosable: true,
+        });
+        setAddTarget(null);
+    }, [catalogError, toast]);
 
     const handleAttachYse = async () => {
         if (!selectedYseId) return;

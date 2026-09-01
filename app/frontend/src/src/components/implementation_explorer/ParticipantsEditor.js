@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
     Button,
     Flex,
@@ -12,6 +12,8 @@ import {
 } from '@chakra-ui/react';
 import { AddIcon } from '@chakra-ui/icons';
 import { fetchAllRoles } from '../../services/api/get';
+import useResource from '../../hooks/useResource';
+import { KEYS } from '../../context/resourceKeys';
 import { setImplementationParticipants } from '../../services/api/put';
 
 /**
@@ -25,23 +27,17 @@ import { setImplementationParticipants } from '../../services/api/put';
  */
 function ParticipantsEditor({ implementationType, implementationUniqueId, participants = [], individuals = [], onSaved }) {
     const toast = useToast();
-    const [roles, setRoles] = useState([]);
+
     const [rows, setRows] = useState([]);
     const [pPerson, setPPerson] = useState('');
     const [pRole, setPRole] = useState('');
     const [pNote, setPNote] = useState('');
     const [saving, setSaving] = useState(false);
 
-    useEffect(() => {
-        let cancelled = false;
-        (async () => {
-            try {
-                const resp = await fetchAllRoles();
-                if (!cancelled) setRoles(resp?.data?.items || []);
-            } catch (_) { /* non-fatal */ }
-        })();
-        return () => { cancelled = true; };
-    }, []);
+    // The role catalogue is reference data, read by this editor and by the
+    // participants editor. One key, one request, however many are on screen.
+    const { data: rolesResp } = useResource(KEYS.rolesAll, fetchAllRoles);
+    const roles = useMemo(() => rolesResp?.data?.items || [], [rolesResp]);
 
     useEffect(() => {
         setRows((participants || []).map((p) => ({

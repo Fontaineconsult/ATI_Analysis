@@ -14,6 +14,8 @@ import {
 } from '@chakra-ui/react';
 
 import { fetchYsesByCampusForYear } from '../../services/api/get';
+import useResource from '../../hooks/useResource';
+import { KEYS } from '../../context/resourceKeys';
 import {
     assignImplementationToYSE,
     assignPersonAsImplementor,
@@ -56,9 +58,6 @@ function YseAssignmentSelector({
                                    scopeCampus,
                                    onChange,
                                }) {
-    const [data, setData] = useState(null);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
 
     // Optimistic local state — initialized from props, mutated on toggle.
     const initialIdentifiers = useMemo(
@@ -73,24 +72,14 @@ function YseAssignmentSelector({
         setLinkedSet(new Set(initialIdentifiers));
     }, [initialIdentifiers]);
 
-    useEffect(() => {
-        let cancelled = false;
-        setLoading(true);
-        setError(null);
-        fetchYsesByCampusForYear(academicYear)
-            .then((response) => {
-                if (cancelled) return;
-                setData(response?.data || null);
-            })
-            .catch((err) => {
-                if (cancelled) return;
-                setError(err.message || 'Failed to load YSEs');
-            })
-            .finally(() => {
-                if (!cancelled) setLoading(false);
-            });
-        return () => { cancelled = true; };
-    }, [academicYear]);
+    // The whole-year YSE tree, shared verbatim with the interview-guide panel and
+    // the plan evidence picker. It is a big read and all three want the identical
+    // payload, so it is one request per year for the session.
+    const { data: yseResp, loading, error } = useResource(
+        KEYS.ysesByCampus(academicYear),
+        () => fetchYsesByCampusForYear(academicYear),
+    );
+    const data = yseResp?.data || null;
 
     // composite_key -> Set of campus abbreviations currently linked to this entity.
     // Drives the peer-campus badges shown per row.
