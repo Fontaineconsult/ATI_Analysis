@@ -58,31 +58,41 @@ describe('DocumentationDetailPanel — states', () => {
     });
 });
 
+/**
+ * These assert on the BADGES, and they are scoped to the badge row rather than
+ * to the document. Since the panel became the editing surface, the same words
+ * legitimately appear elsewhere on it — "Deprecated" as a field label, "Not
+ * assessed" as one of that field's options — so an unscoped query would match
+ * the control instead of the badge and stop testing what it means to.
+ */
 describe('DocumentationDetailPanel — never lies about a flag', () => {
+    const badgeText = (text) => screen.queryAllByText(text)
+        .filter((el) => el.className.includes('badge'));
+
     it('a stored string "False" does not render as deprecated', () => {
         // The regression this whole coercion layer exists to prevent: neomodel
         // serves 'False' as true, so an uncoerced panel would show Deprecated.
         renderPanel({ item: item({ depreciated: 'False' }) });
-        expect(screen.queryByText('Deprecated')).not.toBeInTheDocument();
+        expect(badgeText('Deprecated')).toHaveLength(0);
     });
 
     it('an unassessed null renders as "Not assessed", not as deprecated or clean', () => {
         renderPanel({ item: item({ depreciated: null }) });
-        expect(screen.getByText('Not assessed')).toBeInTheDocument();
-        expect(screen.queryByText('Deprecated')).not.toBeInTheDocument();
+        expect(badgeText('Not assessed')).toHaveLength(1);
+        expect(badgeText('Deprecated')).toHaveLength(0);
     });
 
     it('a genuine true renders as deprecated', () => {
         renderPanel({ item: item({ depreciated: true }) });
-        expect(screen.getByText('Deprecated')).toBeInTheDocument();
+        expect(badgeText('Deprecated')).toHaveLength(1);
     });
 
-    it('distinguishes "never set" from "explicitly excluded" for report visibility', () => {
+    it('says when the report flag was never explicitly set', () => {
+        // The read-only "Report status" section is gone — the flag is a switch
+        // now — but the distinction it drew still has to be stated, because
+        // "included because nobody decided" is not "included on purpose".
         renderPanel({ item: item({ include_in_report: true, include_in_report_set: false }) });
-        expect(screen.getByText(/Never explicitly set/)).toBeInTheDocument();
-
-        renderPanel({ item: item({ include_in_report: false }) });
-        expect(screen.getByText('Excluded from reports.')).toBeInTheDocument();
+        expect(screen.getByText(/never been explicitly set/i)).toBeInTheDocument();
     });
 });
 

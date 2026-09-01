@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
     Alert,
     AlertIcon,
+    Badge,
     Box,
     Button,
     Divider,
@@ -12,20 +13,24 @@ import {
     VStack,
     Wrap,
     WrapItem,
-    useDisclosure,
+    useToast,
 } from '@chakra-ui/react';
-import { ExternalLinkIcon } from '@chakra-ui/icons';
 
 import Card from '../common/Card';
 import { Loading } from '../common/Loading';
-import DocumentationEditForm from './DocumentationEditForm';
+import DocumentationFields from './DocumentationFields';
 import Section from '../common/Section';
 import ReferencedByList from './ReferencedByList';
 import { DocumentationBadgeRow, TypeBadge } from './DocumentationBadges';
 import {
     DOC_TYPES,
+    buildEditPayload,
+    changedFieldNames,
     describeIntegrityCode,
+    editableFieldsFor,
     getTypeLabel,
+    initialEditValues,
+    isNoOpPayload,
 } from './documentationConfig';
 
 function Field({ label, children, mono = false }) {
@@ -42,10 +47,15 @@ function Field({ label, children, mono = false }) {
     );
 }
 
+/**
+ * What is NOT editable about where a record lives.
+ *
+ * The URL, URI and file path are inputs in the Fields card above — each with its
+ * own open-in-a-new-tab button — so they are deliberately not repeated here.
+ * What remains is the managed upload, which this form cannot change, and the
+ * warning for a record nothing can reach.
+ */
 function LocationSection({ item }) {
-    const locator = item.url || item.uri_path || item.file_path;
-    const isUrl = /^https?:\/\//i.test(locator || '');
-
     if (item.has_location === false) {
         return (
             <Section title="Location">
@@ -55,31 +65,13 @@ function LocationSection({ item }) {
             </Section>
         );
     }
-    if (!locator && !item.file) return null;
+    if (!item.file) return null;
 
     return (
-        <Section title="Location">
-            {locator && (
-                isUrl ? (
-                    <Link
-                        href={locator}
-                        isExternal
-                        fontSize="sm"
-                        color="teal.700"
-                        textDecoration="underline"
-                        wordBreak="break-all"
-                    >
-                        {locator} <ExternalLinkIcon mx="2px" boxSize={3} />
-                    </Link>
-                ) : (
-                    <Text fontSize="sm" fontFamily="mono" color="gray.800" wordBreak="break-all">
-                        {locator}
-                    </Text>
-                )
-            )}
+        <Section title="Uploaded file">
             {item.file && (
-                <Box mt={2} pt={2} borderTopWidth="1px" borderTopColor="gray.200">
-                    <Field label="Uploaded file">{item.file.original_filename}</Field>
+                <Box>
+                    <Field label="File">{item.file.original_filename}</Field>
                     <HStack spacing={3}>
                         <Link
                             href={item.file.download_url}
@@ -109,16 +101,101 @@ function LocationSection({ item }) {
 }
 
 /**
- * Detail for one documentation record.
+ * Detail for one documentation record — and the surface you edit it on.
  *
- * Ordering is deliberate. "Referenced by" comes before content, because the
+ * The controls are exposed directly rather than behind a dialog. This area
+ * exists to curate documentation, and the job it serves is "work down a
+ * filtered list fixing records": a dialog puts an open and a close between you
+ * and every edit and hides the list you are working through. So the fields ARE
+ * the panel, and the read-only renderings of the same values are gone rather
+ * than duplicated beside them.
+ *
+ * DRAFTS ARE KEPT PER RECORD, in a ref keyed by unique_id. Moving to another
+ * record and back does not lose an edit, which is what makes it safe to jump
+ * around a list while working — and nothing is written until you say so.
+ *
+ * Ordering is deliberate. "Referenced by" comes before the fields, because the
  * question this view exists to answer is what a record is doing in the graph —
- * and for a shared record, that section is also the blast radius.
+ * and for a shared record, that section is also the blast radius of the edit
+ * you are about to make.
  */
 function DocumentationDetailPanel({
     item, loading = false, error = null, campus, capabilities = null, onSave,
 }) {
-    const editDisclosure = useDisclosure();
+    const toast = useToast();
+    const editable = Boolean(onSave);
+
+    const fields = useMemo(
+        () => (item ? editableFieldsFor(item.doc_type, capabilities) : []),
+        [item, capabilities],
+    );
+
+    // One draft per record, so switching away and back keeps an unsaved edit.
+    // A ref rather than state: it must survive the record changing without
+    // itself causing a render, and `values` below is what renders.
+    const draftsRef = useRef({});
+    const [values, setValues] = useState({});
+    const [saving, setSaving] = useState(false);
+
+    const recordId = item?.unique_id || null;
+    useEffect(() => {
+        if (!recordId) { setValues({}); return; }
+        const draft = draftsRef.current[recordId];
+        setValues(draft || initialEditValues(item, fields));
+    }, [recordId, item, fields]);
+
+    const handleFieldChange = useCallback((name, value) => {
+        setValues((prev) => {
+            const next = { ...prev, [name]: value };
+            if (recordId) draftsRef.current[recordId] = next;
+            return next;
+        });
+    }, [recordId]);
+
+    const changed = useMemo(
+        () => (item && fields.length ? changedFieldNames(item, fields, values) : []),
+        [item, fields, values],
+    );
+    const isDirty = changed.length > 0;
+
+    const revert = useCallback(() => {
+        if (!item) return;
+        if (recordId) delete draftsRef.current[recordId];
+        setValues(initialEditValues(item, fields));
+    }, [item, fields, recordId]);
+
+    const handleSave = useCallback(async () => {
+        if (!item || !onSave) return;
+        const payload = buildEditPayload(item, fields, values);
+        if (isNoOpPayload(payload)) return;
+
+        setSaving(true);
+        try {
+            await onSave(payload);
+            if (recordId) delete draftsRef.current[recordId];
+            toast({
+                title: `${getTypeLabel(item.doc_type)} saved.`,
+                status: 'success', duration: 2000, isClosable: true,
+            });
+        } catch (e) {
+            toast({
+                title: 'Save failed.',
+                description: e?.response?.data?.error || e?.message || 'Please try again.',
+                status: 'error', duration: 3500, isClosable: true,
+            });
+        } finally {
+            setSaving(false);
+        }
+    }, [item, fields, values, onSave, recordId, toast]);
+
+    // Ctrl/Cmd+S saves without reaching for the mouse. Scoped to this panel, and
+    // it only claims the shortcut when there is actually something to save.
+    const handleKeyDown = useCallback((e) => {
+        if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 's' && isDirty && !saving) {
+            e.preventDefault();
+            handleSave();
+        }
+    }, [isDirty, saving, handleSave]);
     if (loading) {
         return <Card><Loading label="Loading record…" /></Card>;
     }
@@ -154,14 +231,7 @@ function DocumentationDetailPanel({
     const shared = (item.parent_count || 0) > 1;
 
     return (
-        <VStack align="stretch" spacing={4}>
-            <DocumentationEditForm
-                item={item}
-                capabilities={capabilities}
-                isOpen={editDisclosure.isOpen}
-                onClose={editDisclosure.onClose}
-                onSave={onSave}
-            />
+        <VStack align="stretch" spacing={4} onKeyDown={handleKeyDown}>
             <Card>
                 <Wrap spacing={2} mb={2}>
                     <WrapItem><TypeBadge docType={item.doc_type} size="md" /></WrapItem>
@@ -176,19 +246,10 @@ function DocumentationDetailPanel({
                     <Heading as="h2" size="md" color="gray.800">
                         {item.title || <em>Untitled</em>}
                     </Heading>
-                    {/* Editing is offered only when the container passes a save
-                        handler, so this panel stays usable read-only wherever
-                        that is what is wanted. */}
-                    {onSave && (
-                        <Button
-                            size="xs"
-                            variant="outline"
-                            colorScheme="teal"
-                            flexShrink={0}
-                            onClick={editDisclosure.onOpen}
-                        >
-                            Edit
-                        </Button>
+                    {isDirty && (
+                        <Badge colorScheme="orange" borderRadius="full" flexShrink={0}>
+                            {changed.length} unsaved
+                        </Badge>
                     )}
                 </HStack>
                 <Text fontSize="2xs" color="gray.600" fontFamily="mono" mb={3}>
@@ -196,19 +257,6 @@ function DocumentationDetailPanel({
                 </Text>
 
                 <Divider mb={3} />
-
-                <Field label="Description">{item.description}</Field>
-                {item.doc_type === 'messages' && <Field label="Message type">{item.message_type}</Field>}
-                {item.doc_type === 'metrics' && (
-                    <>
-                        <Field label="Metric type">{item.metric_type}</Field>
-                        <Field label="Value">{item.single_value}</Field>
-                        <Field label="Comment">{item.comment}</Field>
-                    </>
-                )}
-                {(item.doc_type === 'notes' || item.doc_type === 'messages') && (
-                    <Field label="Created">{item.date_created}</Field>
-                )}
 
                 {typeConfig.incompleteConcept && (
                     <Alert status="info" borderRadius="md" fontSize="xs" mt={2}>
@@ -266,34 +314,33 @@ function DocumentationDetailPanel({
                 <ReferencedByList references={item.referenced_by} campus={campus} />
             </Card>
 
+            {/* The fields themselves. Every value they carry used to be
+                rendered read-only here as well; showing both would mean two
+                places to look and two places to disagree. What survives below is
+                only what is NOT editable: the managed file, and provenance. */}
+            <Card title="Fields">
+                {!editable && (
+                    <Text fontSize="xs" color="gray.600" mb={3} fontStyle="italic">
+                        Read-only in this context.
+                    </Text>
+                )}
+                {item.include_in_report_set === false && (
+                    <Text fontSize="xs" color="gray.600" mb={3}>
+                        The report flag has never been explicitly set on this record — it is
+                        included by default, not by anyone's decision. Saving here makes it one.
+                    </Text>
+                )}
+                <DocumentationFields
+                    fields={fields}
+                    values={values}
+                    changed={changed}
+                    onChange={handleFieldChange}
+                    isDisabled={!editable || saving}
+                />
+            </Card>
+
             <Card title="Details">
                 <LocationSection item={item} />
-
-                {(item.content || item.content_preview) && (
-                    <Section title="Content">
-                        <Text fontSize="sm" color="gray.800" whiteSpace="pre-wrap">
-                            {item.content || item.content_preview}
-                        </Text>
-                        {!item.content && item.content_length > 240 && (
-                            <Text fontSize="xs" color="gray.600" mt={1}>
-                                Preview only — {item.content_length} characters in full.
-                            </Text>
-                        )}
-                    </Section>
-                )}
-
-                <Section title="Report status">
-                    <Text fontSize="sm" color="gray.800">
-                        {item.include_in_report === false
-                            ? 'Excluded from reports.'
-                            : 'Included in reports.'}
-                    </Text>
-                    {item.include_in_report_set === false && (
-                        <Text fontSize="xs" color="gray.600" mt={1}>
-                            Never explicitly set — this is the default, not a decision anyone made.
-                        </Text>
-                    )}
-                </Section>
 
                 <Section title="Provenance">
                     <Field label="Maintained by">{item.maintained_by?.name}</Field>
@@ -308,6 +355,45 @@ function DocumentationDetailPanel({
                     )}
                 </Section>
             </Card>
+
+            {/* Sticky, so it is reachable however far down the record you are —
+                the source-text field alone can be pages long. It appears only
+                when there is something to write, so it never sits there inviting
+                a save that would do nothing. */}
+            {editable && isDirty && (
+                <HStack
+                    position="sticky"
+                    bottom={0}
+                    zIndex={1}
+                    bg="white"
+                    borderWidth="1px"
+                    borderColor="orange.200"
+                    borderRadius="lg"
+                    boxShadow="md"
+                    px={4}
+                    py={3}
+                    spacing={3}
+                    justify="space-between"
+                >
+                    <Text fontSize="sm" color="gray.800">
+                        {changed.length} unsaved {changed.length === 1 ? 'change' : 'changes'}
+                    </Text>
+                    <HStack spacing={2}>
+                        <Button size="sm" variant="ghost" onClick={revert} isDisabled={saving}>
+                            Revert
+                        </Button>
+                        <Button
+                            size="sm"
+                            colorScheme="teal"
+                            onClick={handleSave}
+                            isLoading={saving}
+                            loadingText="Saving"
+                        >
+                            Save
+                        </Button>
+                    </HStack>
+                </HStack>
+            )}
         </VStack>
     );
 }

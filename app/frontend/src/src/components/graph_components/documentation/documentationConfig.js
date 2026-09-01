@@ -534,33 +534,36 @@ export function describeIntegrityCode(code) {
  */
 
 const FIELD = {
-    name: { name: 'name', label: 'Name', type: 'text' },
-    description: { name: 'description', label: 'Description', type: 'textarea' },
-    content: { name: 'content', label: 'Content', type: 'textarea', rows: 8 },
-    url: { name: 'url', label: 'URL', type: 'text' },
-    uriPath: { name: 'uri_path', label: 'Link (URI)', type: 'text' },
-    filePath: { name: 'file_path', label: 'File path', type: 'text' },
-    dateCreated: { name: 'date_created', label: 'Created', type: 'date' },
+    name: { name: 'name', label: 'Name', type: 'text', group: 'identity' },
+    description: { name: 'description', label: 'Description', type: 'textarea', group: 'identity' },
+    content: { name: 'content', label: 'Content', type: 'textarea', rows: 8, group: 'identity' },
+    url: { name: 'url', label: 'URL', type: 'text', group: 'location', openable: true },
+    uriPath: { name: 'uri_path', label: 'Link (URI)', type: 'text', group: 'location', openable: true },
+    filePath: { name: 'file_path', label: 'File path', type: 'text', group: 'location' },
+    dateCreated: { name: 'date_created', label: 'Created', type: 'date', group: 'identity' },
     includeInReport: {
         name: 'include_in_report',
         label: 'Include in reports',
         type: 'boolean',
         // Matches the schema default: absent means included.
         default: true,
+        group: 'status',
         help: 'Published reports show this record.',
     },
     depreciated: {
         name: 'depreciated',
         label: 'Deprecated',
         type: 'tristate',
+        group: 'status',
         help: 'No longer used to direct or describe work, but kept as historical evidence.',
     },
-    depreciatedDate: { name: 'depreciated_date', label: 'Deprecated on', type: 'date' },
+    depreciatedDate: { name: 'depreciated_date', label: 'Deprecated on', type: 'date', group: 'status' },
     rawText: {
         name: 'raw_text',
         label: 'Source text',
         type: 'textarea',
         rows: 10,
+        group: 'source',
         help: 'A mirror of what the source says, for sources that cannot be fetched. '
             + 'The captured date moves only when this text changes.',
     },
@@ -576,11 +579,13 @@ export const DOC_EDIT_FIELDS = {
             name: 'is_administrative_review_documentation',
             label: 'Administrative review documentation',
             type: 'boolean',
+            group: 'status',
         },
         {
             name: 'is_milestone_and_measures_documentation',
             label: 'Milestone and measures documentation',
             type: 'boolean',
+            group: 'status',
         },
         FIELD.includeInReport,
         FIELD.depreciated,
@@ -595,6 +600,7 @@ export const DOC_EDIT_FIELDS = {
             name: 'no_longer_exists',
             label: 'Dead link',
             type: 'tristate',
+            group: 'status',
             help: 'The page at this URL no longer exists.',
         },
         FIELD.includeInReport,
@@ -614,7 +620,7 @@ export const DOC_EDIT_FIELDS = {
     ],
     messages: [
         FIELD.name,
-        { name: 'type', label: 'Message type', type: 'text' },
+        { name: 'type', label: 'Message type', type: 'text', group: 'identity' },
         FIELD.content,
         FIELD.dateCreated,
         FIELD.uriPath,
@@ -625,11 +631,11 @@ export const DOC_EDIT_FIELDS = {
     ],
     metrics: [
         FIELD.name,
-        { name: 'composite_key', label: 'Composite key', type: 'text' },
-        { name: 'metric_type', label: 'Metric type', type: 'text' },
+        { name: 'composite_key', label: 'Composite key', type: 'text', group: 'identity' },
+        { name: 'metric_type', label: 'Metric type', type: 'text', group: 'identity' },
         FIELD.description,
-        { name: 'single_value', label: 'Value', type: 'text' },
-        { name: 'comment', label: 'Comment', type: 'textarea' },
+        { name: 'single_value', label: 'Value', type: 'text', group: 'identity' },
+        { name: 'comment', label: 'Comment', type: 'textarea', group: 'identity' },
         FIELD.uriPath,
         FIELD.filePath,
         FIELD.includeInReport,
@@ -725,3 +731,28 @@ export function buildEditPayload(item, fields, values) {
 
 /** True when the payload carries nothing but the id — nothing to save. */
 export const isNoOpPayload = (payload) => Object.keys(payload || {}).length <= 1;
+
+/**
+ * Inline field grouping. The area is a working surface for curating these
+ * records, so the controls are exposed directly rather than behind a dialog —
+ * these groups are what keeps a flat list of up to ten inputs scannable while
+ * you move between records.
+ */
+export const EDIT_GROUPS = [
+    { key: 'identity', label: 'Record' },
+    { key: 'location', label: 'Location' },
+    { key: 'status', label: 'Status' },
+    { key: 'source', label: 'Source text' },
+];
+
+export function groupEditFields(fields) {
+    return EDIT_GROUPS
+        .map((g) => ({ ...g, fields: (fields || []).filter((f) => (f.group || 'identity') === g.key) }))
+        .filter((g) => g.fields.length);
+}
+
+/** Which fields differ from the record — drives the per-field changed marks. */
+export function changedFieldNames(item, fields, values) {
+    const before = initialEditValues(item, fields);
+    return (fields || []).filter((f) => values[f.name] !== before[f.name]).map((f) => f.name);
+}
