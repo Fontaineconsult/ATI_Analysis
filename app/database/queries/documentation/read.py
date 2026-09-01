@@ -355,7 +355,17 @@ def _derive(row):
 
 def _summarize(items):
     """Counts computed over the SAME rows that are returned, so
-    summary['total'] == len(items) is an invariant rather than a hope."""
+    summary['total'] == len(items) is an invariant rather than a hope.
+
+    NOT what the Documentation UI renders. That view recomputes its own counts
+    client-side from the same items (summarizeDocumentation in
+    documentationConfig.js), because its tiles double as live filters and a
+    server count would go stale the moment anything is narrowed. The two are
+    therefore allowed to differ, and do: `dead` here stays in exact parity with
+    app/public_reports/sanitize.py, while the client also treats an artifact with
+    no location as dead. This summary is for consumers that want the corpus
+    shape in one call without walking `items` themselves.
+    """
     summary = {
         "total": len(items),
         "by_type": {t: 0 for t in DOC_TYPES},
