@@ -15,11 +15,16 @@ bare array of serialize() dicts and has live callers. This one returns
 {items, summary, meta}. Giving one URL two response shapes is how the two dead
 routes in documents.py came about.
 
-READ-ONLY BY DESIGN. There is deliberately no POST, PUT or DELETE here. The
-Documentation view curates and reconciles records; creating, deleting and
-re-pointing documentation stay with the surfaces that own the parent context
-(the implementation explorer, the governance panel). Editing a node's own fields
-is specified in the plan but is not part of this pass.
+READ-ONLY BY DESIGN, and it stayed that way when the view gained editing. The
+Documentation area now edits a record's own fields, but those writes go to
+PUT /documents/<type>, which already owns every documentation write and
+dispatches on an `action`. Adding a second write surface for the same nodes
+would give one resource two contracts — exactly how the two dead routes in
+documents.py came about.
+
+Creating, deleting and re-pointing documentation still stay with the surfaces
+that own the parent context (the implementation explorer, the governance panel),
+because those change what a record MEANS in the graph rather than what it says.
 """
 from flask import request
 from flask.views import MethodView

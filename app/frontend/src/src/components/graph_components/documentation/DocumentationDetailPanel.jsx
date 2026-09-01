@@ -3,6 +3,7 @@ import {
     Alert,
     AlertIcon,
     Box,
+    Button,
     Divider,
     HStack,
     Heading,
@@ -11,11 +12,13 @@ import {
     VStack,
     Wrap,
     WrapItem,
+    useDisclosure,
 } from '@chakra-ui/react';
 import { ExternalLinkIcon } from '@chakra-ui/icons';
 
 import Card from '../common/Card';
 import { Loading } from '../common/Loading';
+import DocumentationEditForm from './DocumentationEditForm';
 import Section from '../common/Section';
 import ReferencedByList from './ReferencedByList';
 import { DocumentationBadgeRow, TypeBadge } from './DocumentationBadges';
@@ -112,7 +115,10 @@ function LocationSection({ item }) {
  * question this view exists to answer is what a record is doing in the graph —
  * and for a shared record, that section is also the blast radius.
  */
-function DocumentationDetailPanel({ item, loading = false, error = null, campus }) {
+function DocumentationDetailPanel({
+    item, loading = false, error = null, campus, capabilities = null, onSave,
+}) {
+    const editDisclosure = useDisclosure();
     if (loading) {
         return <Card><Loading label="Loading record…" /></Card>;
     }
@@ -149,6 +155,13 @@ function DocumentationDetailPanel({ item, loading = false, error = null, campus 
 
     return (
         <VStack align="stretch" spacing={4}>
+            <DocumentationEditForm
+                item={item}
+                capabilities={capabilities}
+                isOpen={editDisclosure.isOpen}
+                onClose={editDisclosure.onClose}
+                onSave={onSave}
+            />
             <Card>
                 <Wrap spacing={2} mb={2}>
                     <WrapItem><TypeBadge docType={item.doc_type} size="md" /></WrapItem>
@@ -159,9 +172,25 @@ function DocumentationDetailPanel({ item, loading = false, error = null, campus 
                     </WrapItem>
                 </Wrap>
 
-                <Heading as="h2" size="md" color="gray.800" mb={1}>
-                    {item.title || <em>Untitled</em>}
-                </Heading>
+                <HStack align="flex-start" justify="space-between" spacing={3} mb={1}>
+                    <Heading as="h2" size="md" color="gray.800">
+                        {item.title || <em>Untitled</em>}
+                    </Heading>
+                    {/* Editing is offered only when the container passes a save
+                        handler, so this panel stays usable read-only wherever
+                        that is what is wanted. */}
+                    {onSave && (
+                        <Button
+                            size="xs"
+                            variant="outline"
+                            colorScheme="teal"
+                            flexShrink={0}
+                            onClick={editDisclosure.onOpen}
+                        >
+                            Edit
+                        </Button>
+                    )}
+                </HStack>
                 <Text fontSize="2xs" color="gray.600" fontFamily="mono" mb={3}>
                     {item.unique_id}
                 </Text>

@@ -292,6 +292,49 @@ export const updateAdminReviewerNote = async (noteUniqueId, content) => {
     }
 };
 
+/**
+ * Update one documentation record's OWN FIELDS, from the central Documentation
+ * area. `docType` is the plural key ('documents', 'webpages', 'notes',
+ * 'messages', 'metrics'); `recordDict` must carry unique_id plus only the fields
+ * that changed.
+ *
+ * DELIBERATELY SENDS NOTHING BUT THE DICT. Every update_* on the server takes
+ * optional association arguments — year_success_evidence, implementation_id,
+ * implementation_type, maintainer_id / created_by, academic_year — and each of
+ * them has a side effect: they CONNECT the record to that parent, or reassign
+ * the maintainer to whoever is editing. Passing them from a view that edits a
+ * record in isolation would silently give it a new home or a new owner. Same
+ * reasoning as updateAdminReviewerNote above, which is the existing precedent
+ * for a fields-only write.
+ *
+ * Re-pointing a record at a different parent, and creating or deleting one,
+ * stay with the surfaces that own the parent context. This is field editing
+ * only.
+ */
+export const updateDocumentationRecord = async (docType, recordDict) => {
+    const spec = {
+        documents: { action: 'update_document', dictKey: 'document_dict' },
+        webpages: { action: 'update_webpage', dictKey: 'webpage_dict' },
+        notes: { action: 'update_note', dictKey: 'note_dict' },
+        messages: { action: 'update_message', dictKey: 'message_dict' },
+        metrics: { action: 'update_metric', dictKey: 'metric_dict' },
+    }[docType];
+
+    if (!spec) throw new Error(`Unknown documentation type: ${docType}`);
+    if (!recordDict?.unique_id) throw new Error('unique_id is required to update a record.');
+
+    try {
+        const response = await axios.put(
+            `${process.env.REACT_APP_API_URL}/documents/${docType}`,
+            { action: spec.action, [spec.dictKey]: recordDict },
+        );
+        return response.data;
+    } catch (error) {
+        console.error(`Error updating ${docType} record:`, error.message);
+        throw error;
+    }
+};
+
 // Delete an administrative review note outright. Unlike supporting
 // documentation, where delete means unlink, the note exists only for this YSE.
 export const deleteAdminReviewerNote = async (noteUniqueId) => {

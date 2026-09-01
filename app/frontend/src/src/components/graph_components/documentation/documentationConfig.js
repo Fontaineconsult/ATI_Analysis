@@ -500,3 +500,228 @@ export function describeIntegrityCode(code) {
     const label = INTEGRITY_LABELS[family] || family;
     return field ? `${label} — ${field}` : label;
 }
+
+// --------------------------------------------------------------------------- //
+// Editing                                                                     //
+// --------------------------------------------------------------------------- //
+
+/**
+ * The editable field schema per type.
+ *
+ * These MIRROR app/database/queries/documentation/update.py EXACTLY. Every field
+ * here is one the matching update_* function actually reads; a field that is not
+ * would render a control that silently does nothing on save, which is worse than
+ * not offering it at all. When update.py grows a field, add it here — and when
+ * it does not have one, do not.
+ *
+ * The absences are the load-bearing part:
+ *   - Note and Message have no `description`; the property does not exist.
+ *   - Metric has no deprecation at all — not in its update loop, not handled
+ *     explicitly. A Deprecate control there would report success and change
+ *     nothing.
+ *   - Only Document and Webpage carry `raw_text`, the agent-readable mirror.
+ *   - Webpage alone carries `no_longer_exists`.
+ *
+ * `tristate` is deliberate rather than a checkbox: `depreciated` and
+ * `no_longer_exists` have no schema default, so null means NEVER ASSESSED, which
+ * is a different answer from "assessed, and not deprecated". A checkbox can only
+ * say two things and would quietly collapse the two — and recording "I looked,
+ * it is fine" is exactly what a reconciliation pass produces.
+ *
+ * `include_in_report` is a plain boolean instead, because once someone opens
+ * this form and saves, a decision HAS been made. There is no honest way back to
+ * "nobody has decided".
+ */
+
+const FIELD = {
+    name: { name: 'name', label: 'Name', type: 'text' },
+    description: { name: 'description', label: 'Description', type: 'textarea' },
+    content: { name: 'content', label: 'Content', type: 'textarea', rows: 8 },
+    url: { name: 'url', label: 'URL', type: 'text' },
+    uriPath: { name: 'uri_path', label: 'Link (URI)', type: 'text' },
+    filePath: { name: 'file_path', label: 'File path', type: 'text' },
+    dateCreated: { name: 'date_created', label: 'Created', type: 'date' },
+    includeInReport: {
+        name: 'include_in_report',
+        label: 'Include in reports',
+        type: 'boolean',
+        // Matches the schema default: absent means included.
+        default: true,
+        help: 'Published reports show this record.',
+    },
+    depreciated: {
+        name: 'depreciated',
+        label: 'Deprecated',
+        type: 'tristate',
+        help: 'No longer used to direct or describe work, but kept as historical evidence.',
+    },
+    depreciatedDate: { name: 'depreciated_date', label: 'Deprecated on', type: 'date' },
+    rawText: {
+        name: 'raw_text',
+        label: 'Source text',
+        type: 'textarea',
+        rows: 10,
+        help: 'A mirror of what the source says, for sources that cannot be fetched. '
+            + 'The captured date moves only when this text changes.',
+    },
+};
+
+export const DOC_EDIT_FIELDS = {
+    documents: [
+        FIELD.name,
+        FIELD.description,
+        FIELD.uriPath,
+        FIELD.filePath,
+        {
+            name: 'is_administrative_review_documentation',
+            label: 'Administrative review documentation',
+            type: 'boolean',
+        },
+        {
+            name: 'is_milestone_and_measures_documentation',
+            label: 'Milestone and measures documentation',
+            type: 'boolean',
+        },
+        FIELD.includeInReport,
+        FIELD.depreciated,
+        FIELD.depreciatedDate,
+        FIELD.rawText,
+    ],
+    webpages: [
+        FIELD.name,
+        FIELD.url,
+        FIELD.description,
+        {
+            name: 'no_longer_exists',
+            label: 'Dead link',
+            type: 'tristate',
+            help: 'The page at this URL no longer exists.',
+        },
+        FIELD.includeInReport,
+        FIELD.depreciated,
+        FIELD.depreciatedDate,
+        FIELD.rawText,
+    ],
+    notes: [
+        FIELD.name,
+        FIELD.content,
+        FIELD.dateCreated,
+        FIELD.uriPath,
+        FIELD.filePath,
+        FIELD.includeInReport,
+        FIELD.depreciated,
+        FIELD.depreciatedDate,
+    ],
+    messages: [
+        FIELD.name,
+        { name: 'type', label: 'Message type', type: 'text' },
+        FIELD.content,
+        FIELD.dateCreated,
+        FIELD.uriPath,
+        FIELD.filePath,
+        FIELD.includeInReport,
+        FIELD.depreciated,
+        FIELD.depreciatedDate,
+    ],
+    metrics: [
+        FIELD.name,
+        { name: 'composite_key', label: 'Composite key', type: 'text' },
+        { name: 'metric_type', label: 'Metric type', type: 'text' },
+        FIELD.description,
+        { name: 'single_value', label: 'Value', type: 'text' },
+        { name: 'comment', label: 'Comment', type: 'textarea' },
+        FIELD.uriPath,
+        FIELD.filePath,
+        FIELD.includeInReport,
+    ],
+};
+
+/**
+ * The fields to render for a type, narrowed by what the SERVER says the schema
+ * supports (meta.type_capabilities, derived from the neomodel classes rather
+ * than hardcoded anywhere). Belt and braces: the schema above should already
+ * agree, and if the two ever disagree the server wins, because it is the one
+ * reading the classes.
+ */
+export function editableFieldsFor(docType, capabilities = null) {
+    const fields = DOC_EDIT_FIELDS[docType] || [];
+    const cap = capabilities ? capabilities[docType] : null;
+    if (!cap) return fields;
+    return fields.filter((f) => {
+        if (f.name === 'depreciated' || f.name === 'depreciated_date') {
+            return cap.supports_depreciation !== false;
+        }
+        if (f.name === 'no_longer_exists') return cap.supports_no_longer_exists !== false;
+        return true;
+    });
+}
+
+/** The API action and payload key per type, as documents.py dispatches them. */
+export const UPDATE_ACTIONS = {
+    documents: { action: 'update_document', dictKey: 'document_dict' },
+    webpages: { action: 'update_webpage', dictKey: 'webpage_dict' },
+    notes: { action: 'update_note', dictKey: 'note_dict' },
+    messages: { action: 'update_message', dictKey: 'message_dict' },
+    metrics: { action: 'update_metric', dictKey: 'metric_dict' },
+};
+
+/** Form values read off a record. Everything is a string except booleans. */
+export function initialEditValues(item, fields) {
+    const values = {};
+    (fields || []).forEach((f) => {
+        const raw = item ? item[f.name] : undefined;
+        if (f.type === 'tristate') {
+            values[f.name] = raw === null || raw === undefined ? '' : String(truthyFlag(raw));
+        } else if (f.type === 'boolean') {
+            // truthyFlag, not `raw !== false`: 48 Documents store the STRING
+            // 'False' on their two review flags, and a bare truthiness check
+            // would render those switches on — telling the user the opposite of
+            // what the record says. Absent falls back to the schema default,
+            // which is true only for include_in_report.
+            if (raw === null || raw === undefined) values[f.name] = Boolean(f.default);
+            else values[f.name] = typeof raw === 'boolean' ? raw : truthyFlag(raw);
+        } else {
+            values[f.name] = raw === null || raw === undefined ? '' : String(raw);
+        }
+    });
+    return values;
+}
+
+/**
+ * The changed subset, in the shape the update layer wants.
+ *
+ * ONLY CHANGED FIELDS ARE SENT, and that is a correctness requirement rather
+ * than an optimisation. update.py guards each field with `if field in dict`, so
+ * an omitted field is left alone — but a field that IS present is compared
+ * against the stored value, and for dates that comparison calls .isoformat() on
+ * whatever is stored. Sending back an untouched date on a record whose date is
+ * malformed would throw, where not sending it cannot.
+ *
+ * It is also what keeps the scope honest. The association arguments on every
+ * update_* (year_success_evidence, implementation_id, maintainer_id) silently
+ * ADD edges or reassign the maintainer, so this payload never carries them and
+ * the service call omits them too.
+ */
+export function buildEditPayload(item, fields, values) {
+    const payload = { unique_id: item.unique_id };
+    const before = initialEditValues(item, fields);
+
+    (fields || []).forEach((f) => {
+        const next = values[f.name];
+        if (next === before[f.name]) return;
+
+        if (f.type === 'tristate') {
+            payload[f.name] = next === '' ? null : next === 'true';
+        } else if (f.type === 'boolean') {
+            payload[f.name] = Boolean(next);
+        } else {
+            // '' means the field was cleared, which the update layer should read
+            // as null rather than as an empty string.
+            payload[f.name] = next === '' ? null : next;
+        }
+    });
+    return payload;
+}
+
+/** True when the payload carries nothing but the id — nothing to save. */
+export const isNoOpPayload = (payload) => Object.keys(payload || {}).length <= 1;

@@ -15,11 +15,14 @@ import {
 } from '@chakra-ui/react';
 
 import { fetchDocumentationIndex, fetchDocumentationItem } from '../../services/api/get';
+import { updateDocumentationRecord } from '../../services/api/put';
 import useResource from '../../hooks/useResource';
+import useInvalidateResources from '../../hooks/useInvalidateResources';
 import DocumentationStatStrip from '../graph_components/documentation/DocumentationStatStrip';
 import DocumentationList from '../graph_components/documentation/DocumentationList';
 import DocumentationDetailPanel from '../graph_components/documentation/DocumentationDetailPanel';
 import useDocumentationFilters from '../graph_components/documentation/useDocumentationFilters';
+import { NS } from '../../context/resourceKeys';
 import {
     DOC_GROUPS,
     DOC_GROUP_ORDER,
@@ -149,6 +152,15 @@ function DocumentationMasterContainer() {
     );
     const detail = detailBody?.data || selectedRow || null;
 
+    // Saving a record changes the row in the index as well as the record itself
+    // — the title, the badges, every derived count on the stat strip — so the
+    // whole documentation namespace goes rather than the two keys involved.
+    const { invalidateNamespace } = useInvalidateResources();
+    const handleSave = useCallback(async (payload) => {
+        await updateDocumentationRecord(selection.docType, payload);
+        invalidateNamespace(NS.documentation);
+    }, [selection, invalidateNamespace]);
+
     const handleSelect = useCallback((item) => {
         if (!item) return;
         setSelection({ docType: item.doc_type, uniqueId: item.unique_id });
@@ -257,6 +269,8 @@ function DocumentationMasterContainer() {
                                         loading={detailLoading && !detail}
                                         error={detailError}
                                         campus={campus}
+                                        capabilities={meta?.type_capabilities}
+                                        onSave={handleSave}
                                     />
                                 </Box>
                             </Flex>
