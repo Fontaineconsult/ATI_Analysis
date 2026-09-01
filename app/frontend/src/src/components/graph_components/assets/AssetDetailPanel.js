@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import {
     Alert,
     AlertIcon,
@@ -17,6 +17,9 @@ import {
 } from '@chakra-ui/react';
 import { useSettings } from '../../../context/SettingsContext';
 import { fetchAssetDetail, fetchVendors } from '../../../services/api/get';
+import useResource from '../../../hooks/useResource';
+import useInvalidateResources from '../../../hooks/useInvalidateResources';
+import { KEYS, NS } from '../../../context/resourceKeys';
 import {
     assignVendorToAsset,
     unassignVendorFromAsset,
@@ -65,43 +68,40 @@ function AssetDetailPanel({ assetIdentifier, onAfterMutate, onAddTaapForAsset, o
     const { campuses } = useSettings();
     const toast = useToast();
     const editDisclosure = useDisclosure();
-    const [asset, setAsset] = useState(null);
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState(null);
+    // One cache entry per record, keyed by its business key, so re-opening a
+    // record you already looked at is free and the parent's list and this panel
+    // read one store rather than two copies of the truth.
+    const { data: detailResp, loading, error, reload } = useResource(
+        assetIdentifier ? KEYS.assetDetail(assetIdentifier) : null,
+        () => fetchAssetDetail(assetIdentifier),
+    );
+    const asset = detailResp?.data || null;
     const [deleting, setDeleting] = useState(false);
-    const [vendors, setVendors] = useState([]);
 
-    const reload = useCallback(async () => {
-        if (!assetIdentifier) { setAsset(null); return; }
-        setLoading(true);
-        setError(null);
-        try {
-            const resp = await fetchAssetDetail(assetIdentifier);
-            setAsset(resp?.data || null);
-        } catch (e) {
-            setError(e?.message || 'Failed to load asset.');
-        } finally {
-            setLoading(false);
-        }
-    }, [assetIdentifier]);
 
-    useEffect(() => { reload(); }, [reload]);
+    // Vendor candidates: reference data, shared with AssetForm, ToolForm and the
+    // people editor. One key means one request between all of them, and a vendor
+    // write invalidates NS.orgUnits so none of them keeps a stale list.
+    const { data: vendorsResp } = useResource(KEYS.orgUnitsVendors, fetchVendors);
+    const vendors = useMemo(
+        () => (Array.isArray(vendorsResp?.data) ? vendorsResp.data : []), [vendorsResp],
+    );
 
-    useEffect(() => {
-        let cancelled = false;
-        (async () => {
-            try {
-                const r = await fetchVendors();
-                if (!cancelled) setVendors(Array.isArray(r?.data) ? r.data : []);
-            } catch (_) { /* non-fatal */ }
-        })();
-        return () => { cancelled = true; };
-    }, []);
+    const { invalidateNamespace } = useInvalidateResources();
+
+    // A write here can move list badges and stat counts as well as this one
+    // record, so whole namespaces go rather than just this key. Refetching an
+    // extra list costs a request nobody waits for; showing a stale one costs
+    // trust in the screen.
+    const invalidateDomain = useCallback(() => {
+        [NS.assets, NS.vendors, NS.taaps].forEach(invalidateNamespace);
+    }, [invalidateNamespace]);
 
     const refreshAll = useCallback(async () => {
+        invalidateDomain();
         await reload();
         if (onAfterMutate) await onAfterMutate();
-    }, [reload, onAfterMutate]);
+    }, [invalidateDomain, reload, onAfterMutate]);
 
     // assign_vendor / unassign_vendor take a vendor NAME; the selector keys on
     // unique_id, so resolve name from the candidate + attached lists.
@@ -139,6 +139,7 @@ function AssetDetailPanel({ assetIdentifier, onAfterMutate, onAddTaapForAsset, o
         try {
             await deleteAsset(asset.asset_identifier);
             toast({ title: 'Asset deleted.', status: 'success', duration: 2000, isClosable: true });
+            invalidateDomain();
             if (onAfterMutate) await onAfterMutate(asset.asset_identifier);
         } catch (e) {
             toast({ title: 'Delete failed.', description: e?.message, status: 'error', duration: 3000, isClosable: true });

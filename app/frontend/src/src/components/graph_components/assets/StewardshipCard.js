@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useMemo, useState } from 'react';
+import React, { useContext, useMemo, useState } from 'react';
 import {
     Box,
     Button,
@@ -17,6 +17,8 @@ import {
 import { UserContext } from '../../../context/UserContext';
 import { STEWARDSHIP_CAPACITIES, HOLDER_TYPES } from './assetConfig';
 import { fetchDepartments, fetchColleges } from '../../../services/api/get';
+import useResource from '../../../hooks/useResource';
+import { KEYS } from '../../../context/resourceKeys';
 import { assignStewardToAsset, unassignStewardFromAsset } from '../../../services/api/put';
 
 /**
@@ -131,20 +133,16 @@ function StewardshipCard({ asset, onChanged }) {
             .map((p) => ({ unique_id: p.unique_id, name: p.name })),
         [userCtx],
     );
-    const [orgUnits, setOrgUnits] = useState([]);
-
-    useEffect(() => {
-        let cancelled = false;
-        (async () => {
-            try {
-                const [deps, cols] = await Promise.all([fetchDepartments(), fetchColleges()]);
-                const merged = [...((deps?.data) || []), ...((cols?.data) || [])]
-                    .map((u) => ({ unique_id: u.unique_id, name: u.name }));
-                if (!cancelled) setOrgUnits(merged);
-            } catch (_) { /* non-fatal */ }
-        })();
-        return () => { cancelled = true; };
-    }, []);
+    // Departments and colleges are two separate reference lists, so they get two
+    // keys and are merged here rather than cached as one blended list — the
+    // people editor wants exactly the same two, and a blend would not be reusable.
+    const { data: depsResp } = useResource(KEYS.orgUnitsDepartments, fetchDepartments);
+    const { data: colsResp } = useResource(KEYS.orgUnitsColleges, fetchColleges);
+    const orgUnits = useMemo(
+        () => [...(depsResp?.data || []), ...(colsResp?.data || [])]
+            .map((u) => ({ unique_id: u.unique_id, name: u.name })),
+        [depsResp, colsResp],
+    );
 
     const stewardship = asset?.stewardship || {};
 

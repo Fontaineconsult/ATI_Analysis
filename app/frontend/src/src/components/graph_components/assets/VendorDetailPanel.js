@@ -1,4 +1,4 @@
-import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useContext, useMemo, useState } from 'react';
 import {
     Alert,
     AlertIcon,
@@ -16,6 +16,9 @@ import {
 } from '@chakra-ui/react';
 import { UserContext } from '../../../context/UserContext';
 import { fetchVendorDetail } from '../../../services/api/get';
+import useResource from '../../../hooks/useResource';
+import useInvalidateResources from '../../../hooks/useInvalidateResources';
+import { KEYS, NS } from '../../../context/resourceKeys';
 import { assignEmployeeToVendor, unassignEmployeeFromVendor } from '../../../services/api/put';
 import { deleteVendor } from '../../../services/api/delete';
 import PersonAssignmentSelector from '../../functional_components/PersonAssignmentSelector';
@@ -44,9 +47,14 @@ function VendorDetailPanel({ vendorName, onAfterMutate, onReselect, onGoToAsset 
     const userCtx = useContext(UserContext);
     const toast = useToast();
     const editDisclosure = useDisclosure();
-    const [vendor, setVendor] = useState(null);
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState(null);
+    // One cache entry per record, keyed by its business key, so re-opening a
+    // record you already looked at is free and the parent's list and this panel
+    // read one store rather than two copies of the truth.
+    const { data: detailResp, loading, error, reload } = useResource(
+        vendorName ? KEYS.vendorDetail(vendorName) : null,
+        () => fetchVendorDetail(vendorName),
+    );
+    const vendor = detailResp?.data || null;
     const [deleting, setDeleting] = useState(false);
 
     const candidatePersons = useMemo(
@@ -56,26 +64,21 @@ function VendorDetailPanel({ vendorName, onAfterMutate, onReselect, onGoToAsset 
         [userCtx],
     );
 
-    const reload = useCallback(async () => {
-        if (!vendorName) { setVendor(null); return; }
-        setLoading(true);
-        setError(null);
-        try {
-            const resp = await fetchVendorDetail(vendorName);
-            setVendor(resp?.data || null);
-        } catch (e) {
-            setError(e?.message || 'Failed to load vendor.');
-        } finally {
-            setLoading(false);
-        }
-    }, [vendorName]);
+    const { invalidateNamespace } = useInvalidateResources();
 
-    useEffect(() => { reload(); }, [reload]);
+    // A write here can move list badges and stat counts as well as this one
+    // record, so whole namespaces go rather than just this key. Refetching an
+    // extra list costs a request nobody waits for; showing a stale one costs
+    // trust in the screen.
+    const invalidateDomain = useCallback(() => {
+        [NS.vendors, NS.orgUnits, NS.assets].forEach(invalidateNamespace);
+    }, [invalidateNamespace]);
 
     const refreshAll = useCallback(async () => {
+        invalidateDomain();
         await reload();
         if (onAfterMutate) await onAfterMutate();
-    }, [reload, onAfterMutate]);
+    }, [invalidateDomain, reload, onAfterMutate]);
 
     if (!vendorName) {
         return (
@@ -109,6 +112,7 @@ function VendorDetailPanel({ vendorName, onAfterMutate, onReselect, onGoToAsset 
         try {
             await deleteVendor(vendor.name);
             toast({ title: 'Vendor deleted.', status: 'success', duration: 2000, isClosable: true });
+            invalidateDomain();
             if (onAfterMutate) await onAfterMutate(vendor.name);
         } catch (e) {
             toast({ title: 'Delete failed.', description: e?.message, status: 'error', duration: 3000, isClosable: true });

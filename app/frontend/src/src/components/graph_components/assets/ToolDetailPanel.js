@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import {
     Alert,
     AlertIcon,
@@ -15,6 +15,9 @@ import {
     VStack,
 } from '@chakra-ui/react';
 import { fetchToolDetail } from '../../../services/api/get';
+import useResource from '../../../hooks/useResource';
+import useInvalidateResources from '../../../hooks/useInvalidateResources';
+import { KEYS, NS } from '../../../context/resourceKeys';
 import {
     assignVendorToTool,
     unassignVendorFromTool,
@@ -62,31 +65,31 @@ function Field({ label, value }) {
 function ToolDetailPanel({ toolIdentifier, assets = [], vendors = [], implementations = [], onAfterMutate, onGoToAsset }) {
     const toast = useToast();
     const editDisclosure = useDisclosure();
-    const [tool, setTool] = useState(null);
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState(null);
+    // One cache entry per record, keyed by its business key, so re-opening a
+    // record you already looked at is free and the parent's list and this panel
+    // read one store rather than two copies of the truth.
+    const { data: detailResp, loading, error, reload } = useResource(
+        toolIdentifier ? KEYS.toolDetail(toolIdentifier) : null,
+        () => fetchToolDetail(toolIdentifier),
+    );
+    const tool = detailResp?.data || null;
     const [deleting, setDeleting] = useState(false);
 
-    const reload = useCallback(async () => {
-        if (!toolIdentifier) { setTool(null); return; }
-        setLoading(true);
-        setError(null);
-        try {
-            const resp = await fetchToolDetail(toolIdentifier);
-            setTool(resp?.data || null);
-        } catch (e) {
-            setError(e?.message || 'Failed to load tool.');
-        } finally {
-            setLoading(false);
-        }
-    }, [toolIdentifier]);
+    const { invalidateNamespace } = useInvalidateResources();
 
-    useEffect(() => { reload(); }, [reload]);
+    // A write here can move list badges and stat counts as well as this one
+    // record, so whole namespaces go rather than just this key. Refetching an
+    // extra list costs a request nobody waits for; showing a stale one costs
+    // trust in the screen.
+    const invalidateDomain = useCallback(() => {
+        [NS.tools].forEach(invalidateNamespace);
+    }, [invalidateNamespace]);
 
     const refreshAll = useCallback(async () => {
+        invalidateDomain();
         await reload();
         if (onAfterMutate) await onAfterMutate();
-    }, [reload, onAfterMutate]);
+    }, [invalidateDomain, reload, onAfterMutate]);
 
     // The selector keys on unique_id; resolve the value each API expects (vendor name,
     // asset_identifier, implementation type) from the candidate + attached lists.
@@ -138,6 +141,7 @@ function ToolDetailPanel({ toolIdentifier, assets = [], vendors = [], implementa
         try {
             await deleteTool(tool.tool_identifier);
             toast({ title: 'Tool deleted.', status: 'success', duration: 2000, isClosable: true });
+            invalidateDomain();
             if (onAfterMutate) await onAfterMutate(tool.tool_identifier);
         } catch (e) {
             toast({ title: 'Delete failed.', description: e?.message, status: 'error', duration: 3000, isClosable: true });

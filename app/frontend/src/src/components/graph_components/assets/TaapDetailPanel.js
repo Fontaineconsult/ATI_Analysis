@@ -1,4 +1,4 @@
-import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useContext, useMemo, useState } from 'react';
 import {
     Alert,
     AlertIcon,
@@ -19,6 +19,9 @@ import {
 } from '@chakra-ui/react';
 import { UserContext } from '../../../context/UserContext';
 import { fetchTaapDetail } from '../../../services/api/get';
+import useResource from '../../../hooks/useResource';
+import useInvalidateResources from '../../../hooks/useInvalidateResources';
+import { KEYS, NS } from '../../../context/resourceKeys';
 import {
     assignOwnerToTaap,
     unassignOwnerFromTaap,
@@ -65,9 +68,14 @@ function TaapDetailPanel({ title, onAfterMutate, onGoToAsset }) {
     const userCtx = useContext(UserContext);
     const toast = useToast();
     const editDisclosure = useDisclosure();
-    const [taap, setTaap] = useState(null);
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState(null);
+    // One cache entry per record, keyed by its business key, so re-opening a
+    // record you already looked at is free and the parent's list and this panel
+    // read one store rather than two copies of the truth.
+    const { data: detailResp, loading, error, reload } = useResource(
+        title ? KEYS.taapDetail(title) : null,
+        () => fetchTaapDetail(title),
+    );
+    const taap = detailResp?.data || null;
     const [deleting, setDeleting] = useState(false);
     const [yseInput, setYseInput] = useState('');
     const [connectingYse, setConnectingYse] = useState(false);
@@ -80,26 +88,21 @@ function TaapDetailPanel({ title, onAfterMutate, onGoToAsset }) {
         [userCtx],
     );
 
-    const reload = useCallback(async () => {
-        if (!title) { setTaap(null); return; }
-        setLoading(true);
-        setError(null);
-        try {
-            const resp = await fetchTaapDetail(title);
-            setTaap(resp?.data || null);
-        } catch (e) {
-            setError(e?.message || 'Failed to load TAAP.');
-        } finally {
-            setLoading(false);
-        }
-    }, [title]);
+    const { invalidateNamespace } = useInvalidateResources();
 
-    useEffect(() => { reload(); }, [reload]);
+    // A write here can move list badges and stat counts as well as this one
+    // record, so whole namespaces go rather than just this key. Refetching an
+    // extra list costs a request nobody waits for; showing a stale one costs
+    // trust in the screen.
+    const invalidateDomain = useCallback(() => {
+        [NS.taaps, NS.assets].forEach(invalidateNamespace);
+    }, [invalidateNamespace]);
 
     const refreshAll = useCallback(async () => {
+        invalidateDomain();
         await reload();
         if (onAfterMutate) await onAfterMutate();
-    }, [reload, onAfterMutate]);
+    }, [invalidateDomain, reload, onAfterMutate]);
 
     if (!title) {
         return (
@@ -130,6 +133,7 @@ function TaapDetailPanel({ title, onAfterMutate, onGoToAsset }) {
         try {
             await deleteTaap(taap.title);
             toast({ title: 'TAAP deleted.', status: 'success', duration: 2000, isClosable: true });
+            invalidateDomain();
             if (onAfterMutate) await onAfterMutate(taap.title);
         } catch (e) {
             toast({ title: 'Delete failed.', description: e?.message, status: 'error', duration: 3000, isClosable: true });

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
     Button,
     FormControl,
@@ -20,6 +20,8 @@ import {
 import { useSettings } from '../../../context/SettingsContext';
 import { getScopeOptions, getClassOptions } from './assetConfig';
 import { fetchVendors } from '../../../services/api/get';
+import useResource from '../../../hooks/useResource';
+import { KEYS } from '../../../context/resourceKeys';
 import { createAsset } from '../../../services/api/post';
 import { updateAsset } from '../../../services/api/put';
 
@@ -40,7 +42,7 @@ function AssetForm({ isOpen, onClose, existingAsset, onSaved }) {
     const toast = useToast();
     const [form, setForm] = useState({ title: '', scope: '', asset_class: '', version: '', description: '', locus: '' });
     const [submitting, setSubmitting] = useState(false);
-    const [vendors, setVendors] = useState([]);
+
 
     useEffect(() => {
         if (!isOpen) return;
@@ -55,17 +57,16 @@ function AssetForm({ isOpen, onClose, existingAsset, onSaved }) {
     }, [isOpen, existingAsset]);
 
     // Vendors only needed when choosing a vendor-scoped locus on create.
-    useEffect(() => {
-        if (!isOpen || isEdit) return;
-        let cancelled = false;
-        (async () => {
-            try {
-                const resp = await fetchVendors();
-                if (!cancelled) setVendors(Array.isArray(resp?.data) ? resp.data : []);
-            } catch (_) { /* non-fatal: user can still pick another scope */ }
-        })();
-        return () => { cancelled = true; };
-    }, [isOpen, isEdit]);
+    // Still only fetched when the create form is open, but now against the
+    // shared key — so the second form to open it pays nothing, and a vendor
+    // write elsewhere drops it for everyone. Failure is non-fatal exactly as
+    // before: no list, and the field is simply empty.
+    const { data: vendorsResp } = useResource(
+        KEYS.orgUnitsVendors, fetchVendors, { enabled: isOpen && !isEdit },
+    );
+    const vendors = useMemo(
+        () => (Array.isArray(vendorsResp?.data) ? vendorsResp.data : []), [vendorsResp],
+    );
 
     const set = (k) => (e) => setForm((p) => ({ ...p, [k]: e.target.value }));
 

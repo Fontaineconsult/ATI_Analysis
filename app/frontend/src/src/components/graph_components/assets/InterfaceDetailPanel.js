@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import {
     Alert,
     AlertIcon,
@@ -16,6 +16,9 @@ import {
 } from '@chakra-ui/react';
 import { useSettings } from '../../../context/SettingsContext';
 import { fetchInterfaceDetail } from '../../../services/api/get';
+import useResource from '../../../hooks/useResource';
+import useInvalidateResources from '../../../hooks/useInvalidateResources';
+import { KEYS, NS } from '../../../context/resourceKeys';
 import {
     assignAssetToInterface,
     unassignAssetFromInterface,
@@ -70,31 +73,31 @@ function InterfaceDetailPanel({ interfaceIdentifier, assets = [], implementation
     const { vocab } = useSettings();
     const toast = useToast();
     const editDisclosure = useDisclosure();
-    const [iface, setIface] = useState(null);
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState(null);
+    // One cache entry per record, keyed by its business key, so re-opening a
+    // record you already looked at is free and the parent's list and this panel
+    // read one store rather than two copies of the truth.
+    const { data: detailResp, loading, error, reload } = useResource(
+        interfaceIdentifier ? KEYS.interfaceDetail(interfaceIdentifier) : null,
+        () => fetchInterfaceDetail(interfaceIdentifier),
+    );
+    const iface = detailResp?.data || null;
     const [deleting, setDeleting] = useState(false);
 
-    const reload = useCallback(async () => {
-        if (!interfaceIdentifier) { setIface(null); return; }
-        setLoading(true);
-        setError(null);
-        try {
-            const resp = await fetchInterfaceDetail(interfaceIdentifier);
-            setIface(resp?.data || null);
-        } catch (e) {
-            setError(e?.message || 'Failed to load interface.');
-        } finally {
-            setLoading(false);
-        }
-    }, [interfaceIdentifier]);
+    const { invalidateNamespace } = useInvalidateResources();
 
-    useEffect(() => { reload(); }, [reload]);
+    // A write here can move list badges and stat counts as well as this one
+    // record, so whole namespaces go rather than just this key. Refetching an
+    // extra list costs a request nobody waits for; showing a stale one costs
+    // trust in the screen.
+    const invalidateDomain = useCallback(() => {
+        [NS.interfaces, NS.components].forEach(invalidateNamespace);
+    }, [invalidateNamespace]);
 
     const refreshAll = useCallback(async () => {
+        invalidateDomain();
         await reload();
         if (onAfterMutate) await onAfterMutate();
-    }, [reload, onAfterMutate]);
+    }, [invalidateDomain, reload, onAfterMutate]);
 
     // assign_asset / unassign_asset take an asset_identifier; the selector keys on
     // unique_id, so resolve the identifier from the candidate + attached lists.
@@ -141,6 +144,7 @@ function InterfaceDetailPanel({ interfaceIdentifier, assets = [], implementation
         try {
             await deleteInterface(iface.interface_identifier);
             toast({ title: 'Interface deleted.', status: 'success', duration: 2000, isClosable: true });
+            invalidateDomain();
             if (onAfterMutate) await onAfterMutate(iface.interface_identifier);
         } catch (e) {
             toast({ title: 'Delete failed.', description: e?.message, status: 'error', duration: 3000, isClosable: true });

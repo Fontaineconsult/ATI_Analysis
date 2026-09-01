@@ -161,8 +161,27 @@ describe('useResource', () => {
         const { result } = renderHook(() => useResource('k', fetcher), { wrapper: Provider });
         await waitFor(() => expect(result.current.data).toBe('first'));
 
-        act(() => result.current.reload());
+        await act(async () => {
+            // reload resolves with the fresh value, which is what save/delete
+            // handlers need in order to pick the next selection.
+            await expect(result.current.reload()).resolves.toBe('second');
+        });
         await waitFor(() => expect(result.current.data).toBe('second'));
+        expect(fetcher).toHaveBeenCalledTimes(2);
+    });
+
+    it('reload does not double-fetch despite also re-running the effect', async () => {
+        const { Provider } = makeWrapper();
+        const fetcher = jest.fn().mockResolvedValue('v');
+
+        const { result } = renderHook(() => useResource('k', fetcher), { wrapper: Provider });
+        await waitFor(() => expect(result.current.data).toBe('v'));
+
+        await act(async () => { await result.current.reload(); });
+
+        // Once for the mount, once for the reload — the effect that
+        // resourceVersion re-runs joins the in-flight request rather than
+        // starting a second one.
         expect(fetcher).toHaveBeenCalledTimes(2);
     });
 

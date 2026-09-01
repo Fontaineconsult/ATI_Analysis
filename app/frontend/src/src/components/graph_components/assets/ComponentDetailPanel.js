@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import {
     Alert,
     AlertIcon,
@@ -15,6 +15,9 @@ import {
     VStack,
 } from '@chakra-ui/react';
 import { fetchComponentDetail } from '../../../services/api/get';
+import useResource from '../../../hooks/useResource';
+import useInvalidateResources from '../../../hooks/useInvalidateResources';
+import { KEYS, NS } from '../../../context/resourceKeys';
 import {
     assignGuidelineToComponent,
     unassignGuidelineFromComponent,
@@ -59,31 +62,31 @@ function Field({ label, value }) {
 function ComponentDetailPanel({ componentIdentifier, interfaces = [], guidelines = [], onAfterMutate, onGoToInterface }) {
     const toast = useToast();
     const editDisclosure = useDisclosure();
-    const [component, setComponent] = useState(null);
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState(null);
+    // One cache entry per record, keyed by its business key, so re-opening a
+    // record you already looked at is free and the parent's list and this panel
+    // read one store rather than two copies of the truth.
+    const { data: detailResp, loading, error, reload } = useResource(
+        componentIdentifier ? KEYS.componentDetail(componentIdentifier) : null,
+        () => fetchComponentDetail(componentIdentifier),
+    );
+    const component = detailResp?.data || null;
     const [deleting, setDeleting] = useState(false);
 
-    const reload = useCallback(async () => {
-        if (!componentIdentifier) { setComponent(null); return; }
-        setLoading(true);
-        setError(null);
-        try {
-            const resp = await fetchComponentDetail(componentIdentifier);
-            setComponent(resp?.data || null);
-        } catch (e) {
-            setError(e?.message || 'Failed to load component.');
-        } finally {
-            setLoading(false);
-        }
-    }, [componentIdentifier]);
+    const { invalidateNamespace } = useInvalidateResources();
 
-    useEffect(() => { reload(); }, [reload]);
+    // A write here can move list badges and stat counts as well as this one
+    // record, so whole namespaces go rather than just this key. Refetching an
+    // extra list costs a request nobody waits for; showing a stale one costs
+    // trust in the screen.
+    const invalidateDomain = useCallback(() => {
+        [NS.components, NS.interfaces].forEach(invalidateNamespace);
+    }, [invalidateNamespace]);
 
     const refreshAll = useCallback(async () => {
+        invalidateDomain();
         await reload();
         if (onAfterMutate) await onAfterMutate();
-    }, [reload, onAfterMutate]);
+    }, [invalidateDomain, reload, onAfterMutate]);
 
     if (!componentIdentifier) {
         return (
@@ -112,6 +115,7 @@ function ComponentDetailPanel({ componentIdentifier, interfaces = [], guidelines
         try {
             await deleteComponent(component.component_identifier);
             toast({ title: 'Component deleted.', status: 'success', duration: 2000, isClosable: true });
+            invalidateDomain();
             if (onAfterMutate) await onAfterMutate(component.component_identifier);
         } catch (e) {
             toast({ title: 'Delete failed.', description: e?.message, status: 'error', duration: 3000, isClosable: true });

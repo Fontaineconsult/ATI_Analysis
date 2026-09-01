@@ -89,10 +89,27 @@ export default function useResource(key, fetcher, { enabled = true } = {}) {
         // actually refetches — the rest hit the cache above.
     }, [key, active, peekResource, getOrFetchResource, resourceVersion]);
 
-    /** Drop this key and refetch. Call after a mutation that changes it. */
-    const reload = useCallback(() => {
-        if (key && invalidateResource) invalidateResource(key);
-    }, [key, invalidateResource]);
+    /**
+     * Drop this key and refetch, RESOLVING WITH THE FRESH VALUE.
+     *
+     * Returning the value matters: the callers are save/delete handlers that
+     * have to pick the next selection out of the list they just reloaded
+     * ("select the record I created", "clear the selection I deleted"), and
+     * they cannot wait for a re-render to do it.
+     *
+     * The invalidate below also bumps resourceVersion, which re-runs the effect
+     * above. That is not a second request: this call has already put the fetch
+     * in flight under the same key, so the effect's getOrFetch joins it. One
+     * request, and the subscriber's state is updated by the effect as usual.
+     */
+    const reload = useCallback(async () => {
+        if (!key) return undefined;
+        if (invalidateResource) invalidateResource(key);
+        const run = getOrFetchResource
+            ? getOrFetchResource(key, () => fetcherRef.current())
+            : Promise.resolve().then(() => fetcherRef.current());
+        return run;
+    }, [key, invalidateResource, getOrFetchResource]);
 
     return { ...state, reload };
 }

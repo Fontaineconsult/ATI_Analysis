@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
     Alert,
@@ -48,6 +48,9 @@ import ComponentList from '../graph_components/assets/ComponentList';
 import ComponentForm from '../graph_components/assets/ComponentForm';
 import ComponentDetailPanel from '../graph_components/assets/ComponentDetailPanel';
 import { toISODate } from '../graph_components/assets/assetConfig';
+import useResource from '../../hooks/useResource';
+import useInvalidateResources from '../../hooks/useInvalidateResources';
+import { KEYS, NS } from '../../context/resourceKeys';
 
 /**
  * Assets category for the ATI Explorer. Dashboard + two-tab master-detail:
@@ -56,10 +59,22 @@ import { toISODate } from '../graph_components/assets/assetConfig';
  *   Assets tab — AssetList (scope-grouped, ⚠ badges) + AssetDetailPanel.
  *   TAAPs tab  — TaapList + TaapDetailPanel (asset-scoped coverage).
  *
- * Owns: data loading for both domains, selection per tab, the active tab, and
- * the create flows. Edge mutations inside the detail panels call back here to
- * refresh the lists / stat counts. Assets are keyed by asset_identifier; TAAPs
- * by title.
+ * Owns: selection per tab, the active tab, and the create flows. Edge mutations
+ * inside the detail panels call back here to refresh the lists / stat counts.
+ * Assets are keyed by asset_identifier; TAAPs by title.
+ *
+ * It does NOT own the data. All eleven reads go through useResource, so they sit
+ * in the shared store on DataContext and survive leaving the area — this
+ * container used to refire every one of them on each visit. The `loadX`
+ * functions below are kept, with their old signatures, because the mutation
+ * handlers need the refreshed list in hand to pick the next selection; they are
+ * now invalidate-and-refetch against the cache rather than local setState.
+ *
+ * Two of the reads are foreign to this area: implementations (for the interface
+ * "Remediated by" and tool "Used by" pickers) and governance (for the component
+ * must_satisfy picker, filtered to guidelines). They use the shared keys, so
+ * they are the same cache entries the implementation and governance areas read,
+ * and those areas invalidate them on write.
  */
 function AssetsMasterContainer() {
     // Deep-link: /{campus}/ati-explorer/assets/:assetTab/:itemId arrives with a tab
@@ -78,217 +93,143 @@ function AssetsMasterContainer() {
         navigate(`/${campus}/ati-explorer/assets/${TAB_SLUGS[index]}`);
     };
 
-    // Assets
-    const [assets, setAssets] = useState([]);
-    const [elevationSet, setElevationSet] = useState(new Set());
-    const [assetsLoading, setAssetsLoading] = useState(true);
-    const [assetsError, setAssetsError] = useState(null);
+    // Stable empty list, so the derivations below don't churn while loading.
+    const EMPTY = useMemo(() => [], []);
+    const itemsOf = (resp) => resp?.data?.items || [];
+
+    // ---- Assets ----
+    const assetsRes = useResource(KEYS.assetsAll, fetchAllAssets);
+    const elevationRes = useResource(KEYS.assetsElevation, fetchElevationSignalAssets);
+
+    const assets = useMemo(() => itemsOf(assetsRes.data) || EMPTY, [assetsRes.data, EMPTY]);
+    const elevationSet = useMemo(
+        () => new Set(itemsOf(elevationRes.data).map((a) => a.asset_identifier)),
+        [elevationRes.data],
+    );
+    const assetsLoading = assetsRes.loading || elevationRes.loading;
+    const assetsError = assetsRes.error || elevationRes.error;
     const [selectedAssetId, setSelectedAssetId] = useState(null);
     const [assetFormOpen, setAssetFormOpen] = useState(false);
 
-    // TAAPs
-    const [taaps, setTaaps] = useState([]);
-    const [taapsLoading, setTaapsLoading] = useState(true);
-    const [taapsError, setTaapsError] = useState(null);
+    // ---- TAAPs ----
+    const taapsRes = useResource(KEYS.taapsAll, fetchAllTaaps);
+    // "Due as of" is a different answer tomorrow, so the date is in the key.
+    // Fixed at mount rather than recomputed per render — a session left open
+    // across midnight re-keys on its next mount, which is soon enough.
+    const today = useMemo(() => toISODate(new Date()), []);
+    const taapsDueRes = useResource(KEYS.taapsDue(today), () => fetchTaapsDueForReview(today));
+
+    const taaps = useMemo(() => itemsOf(taapsRes.data) || EMPTY, [taapsRes.data, EMPTY]);
+    const taapsLoading = taapsRes.loading;
+    const taapsError = taapsRes.error;
+    const taapsDueCount = itemsOf(taapsDueRes.data).length;
     const [selectedTaapTitle, setSelectedTaapTitle] = useState(null);
     const [taapFormOpen, setTaapFormOpen] = useState(false);
     const [taapPresetAsset, setTaapPresetAsset] = useState(null);
 
-    // Vendors
-    const [vendors, setVendors] = useState([]);
-    const [vendorsLoading, setVendorsLoading] = useState(true);
-    const [vendorsError, setVendorsError] = useState(null);
+    // ---- Vendors ----
+    const vendorsRes = useResource(KEYS.vendorsList, fetchVendorsList);
+    const vendors = useMemo(() => itemsOf(vendorsRes.data) || EMPTY, [vendorsRes.data, EMPTY]);
+    const vendorsLoading = vendorsRes.loading;
+    const vendorsError = vendorsRes.error;
     const [selectedVendorName, setSelectedVendorName] = useState(null);
     const [vendorFormOpen, setVendorFormOpen] = useState(false);
 
-    // Interfaces
-    const [interfaces, setInterfaces] = useState([]);
-    const [uncoveredSet, setUncoveredSet] = useState(new Set());
-    const [interfacesLoading, setInterfacesLoading] = useState(true);
-    const [interfacesError, setInterfacesError] = useState(null);
+    // ---- Interfaces ----
+    const interfacesRes = useResource(KEYS.interfacesAll, fetchAllInterfaces);
+    const uncoveredRes = useResource(KEYS.interfacesUncovered, fetchUncoveredInterfaces);
+
+    const interfaces = useMemo(
+        () => itemsOf(interfacesRes.data) || EMPTY, [interfacesRes.data, EMPTY],
+    );
+    const uncoveredSet = useMemo(
+        () => new Set(itemsOf(uncoveredRes.data).map((i) => i.interface_identifier)),
+        [uncoveredRes.data],
+    );
+    const interfacesLoading = interfacesRes.loading || uncoveredRes.loading;
+    const interfacesError = interfacesRes.error || uncoveredRes.error;
     const [selectedInterfaceId, setSelectedInterfaceId] = useState(null);
     const [interfaceFormOpen, setInterfaceFormOpen] = useState(false);
 
-    // Remediating implementations (Process/Project/Procedure/Service), flattened for
-    // the Interface "Remediated by" and Tool "Used by" pickers.
-    const [implementations, setImplementations] = useState([]);
-
-    // Tools
-    const [tools, setTools] = useState([]);
-    const [toolsLoading, setToolsLoading] = useState(true);
-    const [toolsError, setToolsError] = useState(null);
+    // ---- Tools ----
+    const toolsRes = useResource(KEYS.toolsAll, fetchAllTools);
+    const tools = useMemo(() => itemsOf(toolsRes.data) || EMPTY, [toolsRes.data, EMPTY]);
+    const toolsLoading = toolsRes.loading;
+    const toolsError = toolsRes.error;
     const [selectedToolId, setSelectedToolId] = useState(null);
     const [toolFormOpen, setToolFormOpen] = useState(false);
 
-    // Components
-    const [components, setComponents] = useState([]);
-    const [componentsLoading, setComponentsLoading] = useState(true);
-    const [componentsError, setComponentsError] = useState(null);
+    // ---- Components ----
+    const componentsRes = useResource(KEYS.componentsAll, fetchAllComponents);
+    const components = useMemo(
+        () => itemsOf(componentsRes.data) || EMPTY, [componentsRes.data, EMPTY],
+    );
+    const componentsLoading = componentsRes.loading;
+    const componentsError = componentsRes.error;
     const [selectedComponentId, setSelectedComponentId] = useState(null);
     const [componentFormOpen, setComponentFormOpen] = useState(false);
 
-    // WCAG guidelines (governance items of type 'guideline'), for the component must_satisfy picker.
-    const [guidelines, setGuidelines] = useState([]);
-
-    // Stat
-    const [taapsDueCount, setTaapsDueCount] = useState(0);
-
-    const loadAssets = useCallback(async () => {
-        setAssetsLoading(true);
-        setAssetsError(null);
-        try {
-            const [allResp, elevResp] = await Promise.all([fetchAllAssets(), fetchElevationSignalAssets()]);
-            const list = allResp?.data?.items || [];
-            const elevated = (elevResp?.data?.items || []).map((a) => a.asset_identifier);
-            setAssets(list);
-            setElevationSet(new Set(elevated));
-            return list;
-        } catch (e) {
-            setAssetsError(e?.message || 'Failed to load assets.');
-            return [];
-        } finally {
-            setAssetsLoading(false);
-        }
-    }, []);
-
-    const loadTaaps = useCallback(async () => {
-        setTaapsLoading(true);
-        setTaapsError(null);
-        try {
-            const resp = await fetchAllTaaps();
-            const list = resp?.data?.items || [];
-            setTaaps(list);
-            return list;
-        } catch (e) {
-            setTaapsError(e?.message || 'Failed to load TAAPs.');
-            return [];
-        } finally {
-            setTaapsLoading(false);
-        }
-    }, []);
-
-    const loadTaapsDue = useCallback(async () => {
-        try {
-            const today = toISODate(new Date());
-            const resp = await fetchTaapsDueForReview(today);
-            setTaapsDueCount((resp?.data?.items || []).length);
-        } catch (_) {
-            setTaapsDueCount(0);
-        }
-    }, []);
-
-    const loadVendors = useCallback(async () => {
-        setVendorsLoading(true);
-        setVendorsError(null);
-        try {
-            const resp = await fetchVendorsList();
-            const list = resp?.data?.items || [];
-            setVendors(list);
-            return list;
-        } catch (e) {
-            setVendorsError(e?.message || 'Failed to load vendors.');
-            return [];
-        } finally {
-            setVendorsLoading(false);
-        }
-    }, []);
-
-    const loadInterfaces = useCallback(async () => {
-        setInterfacesLoading(true);
-        setInterfacesError(null);
-        try {
-            const [allResp, uncovResp] = await Promise.all([fetchAllInterfaces(), fetchUncoveredInterfaces()]);
-            const list = allResp?.data?.items || [];
-            const uncovered = (uncovResp?.data?.items || []).map((i) => i.interface_identifier);
-            setInterfaces(list);
-            setUncoveredSet(new Set(uncovered));
-            return list;
-        } catch (e) {
-            setInterfacesError(e?.message || 'Failed to load interfaces.');
-            return [];
-        } finally {
-            setInterfacesLoading(false);
-        }
-    }, []);
-
-    // Remediating implementation types only (these carry remediates_interface).
-    const REMEDIATING_TYPES = ['Process', 'Project', 'Procedure', 'Service'];
-    const loadImplementations = useCallback(async () => {
-        try {
-            const resp = await fetchAllImplementations();
-            const grouped = resp?.status?.data || resp?.data || {};
-            const flat = REMEDIATING_TYPES.flatMap((t) =>
-                (grouped[t] || []).map((impl) => ({
-                    unique_id: impl.unique_id,
-                    title: impl.title,
-                    type: impl.type || t,
-                })),
-            );
-            setImplementations(flat);
-        } catch (_) {
-            setImplementations([]);
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
-
-    const loadTools = useCallback(async () => {
-        setToolsLoading(true);
-        setToolsError(null);
-        try {
-            const resp = await fetchAllTools();
-            const list = resp?.data?.items || [];
-            setTools(list);
-            return list;
-        } catch (e) {
-            setToolsError(e?.message || 'Failed to load tools.');
-            return [];
-        } finally {
-            setToolsLoading(false);
-        }
-    }, []);
-
-    const loadComponents = useCallback(async () => {
-        setComponentsLoading(true);
-        setComponentsError(null);
-        try {
-            const resp = await fetchAllComponents();
-            const list = resp?.data?.items || [];
-            setComponents(list);
-            return list;
-        } catch (e) {
-            setComponentsError(e?.message || 'Failed to load components.');
-            return [];
-        } finally {
-            setComponentsLoading(false);
-        }
-    }, []);
+    // ---- Foreign reads: implementations and governance ----
+    // Remediating implementation types only (these carry remediates_interface),
+    // flattened for the Interface "Remediated by" and Tool "Used by" pickers.
+    const REMEDIATING_TYPES = useMemo(() => ['Process', 'Project', 'Procedure', 'Service'], []);
+    const implementationsRes = useResource(KEYS.implementationsAll, fetchAllImplementations);
+    const implementations = useMemo(() => {
+        const grouped = implementationsRes.data?.status?.data || implementationsRes.data?.data || {};
+        return REMEDIATING_TYPES.flatMap((t) => (grouped[t] || []).map((impl) => ({
+            unique_id: impl.unique_id,
+            title: impl.title,
+            type: impl.type || t,
+        })));
+    }, [implementationsRes.data, REMEDIATING_TYPES]);
 
     // Guidelines come from the governance store (type === 'guideline'); used as the
     // candidate list for a component's must_satisfy picker.
-    const loadGuidelines = useCallback(async () => {
-        try {
-            const resp = await fetchAllGovernance();
-            const raw = resp?.data;
-            const list = Array.isArray(raw) ? raw : (Array.isArray(raw?.items) ? raw.items : []);
-            setGuidelines(
-                list.filter((g) => g.type === 'guideline').map((g) => ({ unique_id: g.unique_id, title: g.title })),
-            );
-        } catch (_) {
-            setGuidelines([]);
-        }
-    }, []);
+    const governanceRes = useResource(KEYS.governanceAll, fetchAllGovernance);
+    const guidelines = useMemo(() => {
+        const raw = governanceRes.data?.data;
+        const list = Array.isArray(raw) ? raw : (Array.isArray(raw?.items) ? raw.items : []);
+        return list
+            .filter((g) => g.type === 'guideline')
+            .map((g) => ({ unique_id: g.unique_id, title: g.title }));
+    }, [governanceRes.data]);
 
-    useEffect(() => {
-        loadAssets();
-        loadTaaps();
-        loadTaapsDue();
-        loadVendors();
-        loadInterfaces();
-        loadImplementations();
-        loadTools();
-        loadComponents();
-        loadGuidelines();
-    }, [loadAssets, loadTaaps, loadTaapsDue, loadVendors, loadInterfaces, loadImplementations, loadTools, loadComponents, loadGuidelines]);
+    // ---- Refresh helpers ----
+    // Same names and same contract as the loaders they replace: invalidate, refetch,
+    // and RESOLVE WITH THE LIST, because every caller below picks the next selection
+    // out of it. A create/delete can move the elevation and uncovered signals too, so
+    // those are reloaded alongside their list rather than left to go stale.
+    const { reload: reloadAssets } = assetsRes;
+    const { reload: reloadElevation } = elevationRes;
+    const loadAssets = useCallback(async () => {
+        const [allResp] = await Promise.all([reloadAssets(), reloadElevation()]);
+        return itemsOf(allResp);
+    }, [reloadAssets, reloadElevation]);
+
+    const { reload: reloadTaaps } = taapsRes;
+    const loadTaaps = useCallback(async () => itemsOf(await reloadTaaps()), [reloadTaaps]);
+
+    const { reload: reloadTaapsDue } = taapsDueRes;
+    const loadTaapsDue = useCallback(async () => { await reloadTaapsDue(); }, [reloadTaapsDue]);
+
+    const { reload: reloadVendors } = vendorsRes;
+    const loadVendors = useCallback(async () => itemsOf(await reloadVendors()), [reloadVendors]);
+
+    const { reload: reloadInterfaces } = interfacesRes;
+    const { reload: reloadUncovered } = uncoveredRes;
+    const loadInterfaces = useCallback(async () => {
+        const [allResp] = await Promise.all([reloadInterfaces(), reloadUncovered()]);
+        return itemsOf(allResp);
+    }, [reloadInterfaces, reloadUncovered]);
+
+    const { reload: reloadTools } = toolsRes;
+    const loadTools = useCallback(async () => itemsOf(await reloadTools()), [reloadTools]);
+
+    const { reload: reloadComponents } = componentsRes;
+    const loadComponents = useCallback(
+        async () => itemsOf(await reloadComponents()), [reloadComponents],
+    );
+
 
     // Apply the deep-link tab + selection when the URL params are present. Detail
     // panels fetch their own detail by identifier, so this works even before the
@@ -342,13 +283,22 @@ function AssetsMasterContainer() {
     };
 
     // ---- Vendor handlers ----
+    // A vendor is served by TWO endpoints under two keys: /vendors (this tab's
+    // list) and /organizational-units?type=vendors (the candidate picker in
+    // AssetForm, ToolForm and the asset panel). Reloading only the first would
+    // leave a vendor created here missing from every picker until a reload —
+    // the exact staleness that caching a list buys you if you skip this.
+    const { invalidateNamespace } = useInvalidateResources();
+
     const handleVendorCreated = async (created) => {
+        invalidateNamespace(NS.orgUnits);
         const list = await loadVendors();
         if (created?.name) setSelectedVendorName(created.name);
         else if (list.length) setSelectedVendorName(list[0].name);
     };
 
     const handleVendorMutate = async (deletedName) => {
+        invalidateNamespace(NS.orgUnits);
         const list = await loadVendors();
         if (deletedName && deletedName === selectedVendorName) {
             setSelectedVendorName(null);
