@@ -164,11 +164,18 @@ function DocumentationMasterContainer() {
     const handleSelect = useCallback((item) => {
         if (!item) return;
         setSelection({ docType: item.doc_type, uniqueId: item.unique_id });
+        // CARRY THE SEARCH STRING. Every filter in this area lives in the query
+        // string — the diagnostic filter, the type chips, the attachment facet,
+        // the sort and the search box — so a navigate that drops it silently
+        // clears all of them. That is what selecting a row used to do: the
+        // record opened correctly and the list underneath reset to unfiltered,
+        // with the facet button popping back out.
         navigate(
-            `/${campus}/ati-explorer/documentation/${activeGroup}/${item.doc_type}/${encodeURIComponent(item.unique_id)}`,
+            `/${campus}/ati-explorer/documentation/${activeGroup}/${item.doc_type}`
+            + `/${encodeURIComponent(item.unique_id)}${location.search}`,
             { replace: true },
         );
-    }, [campus, activeGroup, navigate]);
+    }, [campus, activeGroup, navigate, location.search]);
 
     const handleGroupChange = (index) => {
         const next = DOC_GROUP_ORDER[index];
