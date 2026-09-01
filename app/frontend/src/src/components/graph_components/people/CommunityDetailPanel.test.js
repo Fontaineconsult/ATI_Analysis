@@ -1,5 +1,13 @@
 import React from 'react';
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { configure, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+
+// This suite is the slowest in the repo (~14s on its own: a full roster,
+// a membership matrix and several modals). Under the whole suite running in
+// parallel its findBy* calls were exceeding RTL's 1s default and failing
+// intermittently — a timing artefact, not a behavioural one; it has always
+// passed serially and in isolation. The wait is a ceiling, not a delay:
+// a passing assertion still resolves as soon as the element appears.
+configure({ asyncUtilTimeout: 5000 });
 import { ChakraProvider } from '@chakra-ui/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 

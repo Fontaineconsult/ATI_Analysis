@@ -1,4 +1,4 @@
-import React, { useCallback, useContext, useEffect, useState } from 'react';
+import React, { useCallback, useContext, useMemo, useState } from 'react';
 import {
     Box,
     Button,
@@ -27,6 +27,9 @@ import DocumentForm from '../documentation/DocumentForm';
 import WebsiteForm from '../documentation/WebsiteForm';
 import GovernanceIndicatorLinks from './GovernanceIndicatorLinks';
 import { fetchAllDocuments, fetchAllWebpages, fetchGovernanceLinkTargets } from '../../../services/api/get';
+import useResource from '../../../hooks/useResource';
+import useInvalidateResources from '../../../hooks/useInvalidateResources';
+import { KEYS, NS } from '../../../context/resourceKeys';
 import { createStandaloneDocument, createStandaloneWebpage } from '../../../services/api/post';
 import {
     attachDocumentToGovernance,
@@ -111,29 +114,48 @@ function GovernanceDetailPanel({ item, onAfterEdit, onAfterDelete, placeholder }
     const toast = useToast();
     const { user } = useContext(UserContext);
 
-    // Candidate caches — fetched once on first use, not per selection.
-    const [documentCandidates, setDocumentCandidates] = useState([]);
-    const [webpageCandidates, setWebpageCandidates] = useState([]);
-    const [linkTargets, setLinkTargets] = useState({ goals: [], success_indicators: [] });
-    const [candidatesLoaded, setCandidatesLoaded] = useState(false);
+    // Candidate pools. Still loaded on first use rather than on mount — that is
+    // what `enabled` preserves — but now on shared keys, so the pools survive
+    // switching between instruments instead of being refetched per panel, and the
+    // goals/indicators pool is one entry for the whole session.
+    const candidatesEnabled = Boolean(item);
+    const { data: docsResp, reload: reloadDocuments } = useResource(
+        KEYS.documentsList, fetchAllDocuments, { enabled: candidatesEnabled },
+    );
+    const { data: pagesResp, reload: reloadWebpages } = useResource(
+        KEYS.webpagesList, fetchAllWebpages, { enabled: candidatesEnabled },
+    );
+    const { data: targetsResp } = useResource(
+        KEYS.governanceLinkTargets, fetchGovernanceLinkTargets, { enabled: candidatesEnabled },
+    );
 
+    const documentCandidates = useMemo(
+        () => (Array.isArray(docsResp?.data) ? docsResp.data : []), [docsResp],
+    );
+    const webpageCandidates = useMemo(
+        () => (Array.isArray(pagesResp?.data) ? pagesResp.data : []), [pagesResp],
+    );
+    const linkTargets = useMemo(() => ({
+        goals: Array.isArray(targetsResp?.data?.goals) ? targetsResp.data.goals : [],
+        success_indicators: Array.isArray(targetsResp?.data?.success_indicators)
+            ? targetsResp.data.success_indicators
+            : [],
+    }), [targetsResp]);
+
+    const { invalidateNamespace } = useInvalidateResources();
+
+    /**
+     * Refetch after creating a Document or Webpage here. The result MUST be
+     * fresh, not cached: the caller matches the node it just created out of the
+     * returned list, because the create endpoint answers success-only.
+     *
+     * The whole documentation namespace goes, not just these two lists — a
+     * Document created here is a new row in the central Documentation area too.
+     */
     const refetchCandidates = useCallback(async () => {
         try {
-            const [docResp, pageResp, targetResp] = await Promise.all([
-                fetchAllDocuments(),
-                fetchAllWebpages(),
-                fetchGovernanceLinkTargets(),
-            ]);
-            setDocumentCandidates(Array.isArray(docResp?.data) ? docResp.data : []);
-            setWebpageCandidates(Array.isArray(pageResp?.data) ? pageResp.data : []);
-            // Goals and indicators are shared reference data — the same pool for every
-            // instrument — so this rides the existing fetch-once-on-first-selection cache.
-            setLinkTargets({
-                goals: Array.isArray(targetResp?.data?.goals) ? targetResp.data.goals : [],
-                success_indicators: Array.isArray(targetResp?.data?.success_indicators)
-                    ? targetResp.data.success_indicators
-                    : [],
-            });
+            invalidateNamespace(NS.documentation);
+            const [docResp, pageResp] = await Promise.all([reloadDocuments(), reloadWebpages()]);
             return {
                 documents: Array.isArray(docResp?.data) ? docResp.data : [],
                 webpages: Array.isArray(pageResp?.data) ? pageResp.data : [],
@@ -148,17 +170,7 @@ function GovernanceDetailPanel({ item, onAfterEdit, onAfterDelete, placeholder }
             });
             return { documents: [], webpages: [] };
         }
-    }, [toast]);
-
-    useEffect(() => {
-        if (candidatesLoaded || !item) return;
-        let cancelled = false;
-        (async () => {
-            await refetchCandidates();
-            if (!cancelled) setCandidatesLoaded(true);
-        })();
-        return () => { cancelled = true; };
-    }, [item, candidatesLoaded, refetchCandidates]);
+    }, [invalidateNamespace, reloadDocuments, reloadWebpages, toast]);
 
     const refreshAfterAttach = useCallback(async () => {
         if (onAfterEdit) await onAfterEdit(item);

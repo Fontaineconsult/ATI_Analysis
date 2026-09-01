@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
     Alert,
@@ -12,6 +12,9 @@ import {
     useDisclosure,
 } from '@chakra-ui/react';
 import { fetchAllGovernance } from '../../services/api/get';
+import useResource from '../../hooks/useResource';
+import useInvalidateResources from '../../hooks/useInvalidateResources';
+import { KEYS, NS } from '../../context/resourceKeys';
 import GovernanceList from '../graph_components/governance/GovernanceList';
 import GovernanceDetailPanel from '../graph_components/governance/GovernanceDetailPanel';
 import GovernanceTypePicker from '../graph_components/governance/GovernanceTypePicker';
@@ -33,9 +36,6 @@ import GovernanceForm from '../graph_components/governance/GovernanceForm';
 function GovernanceMasterContainer() {
     const { campus, governanceId } = useParams();
     const navigate = useNavigate();
-    const [items, setItems] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
 
     const typePicker = useDisclosure();
     const [pendingType, setPendingType] = useState(null);
@@ -45,25 +45,22 @@ function GovernanceMasterContainer() {
     // Governance items are keyed (and deep-linked) by unique_id.
     const goTo = (id) => navigate(id ? `${basePath}/${encodeURIComponent(id)}` : basePath);
 
-    const loadAll = useCallback(async () => {
-        setLoading(true);
-        setError(null);
-        try {
-            const response = await fetchAllGovernance();
-            const list = response?.data?.items || [];
-            setItems(list);
-            return list;
-        } catch (e) {
-            setError(e?.message || 'Failed to load governance items.');
-            return [];
-        } finally {
-            setLoading(false);
-        }
-    }, []);
+    // The governance store, on the key the assets area (guideline picker) and the
+    // principle panel also read — three screens, one request.
+    const {
+        data: governanceResp, loading, error, reload: reloadGovernance,
+    } = useResource(KEYS.governanceAll, fetchAllGovernance);
+    const items = useMemo(() => governanceResp?.data?.items || [], [governanceResp]);
 
-    useEffect(() => {
-        loadAll();
-    }, [loadAll]);
+    // Same contract as the loader it replaces: callers use the returned list to
+    // pick the next selection. An instrument write can move the guideline picker
+    // in Assets and the candidate pool in Principles, so the namespace goes.
+    const { invalidateNamespace } = useInvalidateResources();
+    const loadAll = useCallback(async () => {
+        invalidateNamespace(NS.governance);
+        const response = await reloadGovernance();
+        return response?.data?.items || [];
+    }, [invalidateNamespace, reloadGovernance]);
 
     const selectedItem = items.find((it) => it.unique_id === governanceId) || null;
 

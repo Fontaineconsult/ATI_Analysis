@@ -107,6 +107,24 @@ export const KEYS = {
     ysesByCampus: (academicYear) => `yse:by-campus:${academicYear}`,
     planYses: (planId) => `yse:for-plan:${planId}`,
 
+    // --- Governance ---
+    /** The picker pool of goals + success indicators an instrument can link to. */
+    governanceLinkTargets: 'governance:link-targets',
+    /**
+     * Governance for one indicator. `withCandidates` is IN THE KEY because it
+     * changes the payload — the picker pool is about 93% of it — so the collapsed
+     * and expanded reads are two entries and expanding is a one-time cost.
+     */
+    governanceForIndicator: (compositeKey, withCandidates) =>
+        `governance:for-indicator:${compositeKey}:${withCandidates ? 'full' : 'compact'}`,
+
+    // --- Legacy documentation lists ---
+    // The bare-array /documents/<type> routes, distinct from the Documentation
+    // index (documentation:index) which returns {items, summary, meta}. Same
+    // namespace so a documentation write drops both.
+    documentsList: 'documentation:documents-list',
+    webpagesList: 'documentation:webpages-list',
+
     // --- Cross-domain reads ---
     implementationsAll: 'implementations:all',
     governanceAll: 'governance:all',

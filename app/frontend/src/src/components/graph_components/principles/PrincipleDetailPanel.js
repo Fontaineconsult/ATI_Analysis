@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import {
     Box,
     Button,
@@ -20,6 +20,8 @@ import GovernanceTypeBadge from '../governance/GovernanceTypeBadge';
 import { getGovernanceTypeLabel } from '../governance/governanceTypes';
 import { deletePrinciple } from '../../../services/api/delete';
 import { fetchAllGovernance } from '../../../services/api/get';
+import useResource from '../../../hooks/useResource';
+import { KEYS } from '../../../context/resourceKeys';
 import {
     attachGovernanceToPrinciple,
     detachGovernanceFromPrinciple,
@@ -50,15 +52,15 @@ function PrincipleDetailPanel({ item, onAfterEdit, onAfterDelete, placeholder })
     const { intellectualSources } = useMetaScaffold();
     const { descriptors } = useDescriptors();
 
-    // Governance candidates aren't in the meta-scaffold context; fetch once and cache.
-    const [governanceItems, setGovernanceItems] = useState([]);
-    useEffect(() => {
-        let active = true;
-        fetchAllGovernance()
-            .then((resp) => { if (active) setGovernanceItems(resp?.data?.items || []); })
-            .catch(() => { /* leave empty; selector just shows no candidates */ });
-        return () => { active = false; };
-    }, []);
+    // Governance candidates aren't in the meta-scaffold context. They are now on
+    // the shared key rather than a private fetch-once — same effect within this
+    // panel, but the governance area and the assets guideline picker share it,
+    // and a governance write invalidates it for all three. A failure leaves the
+    // list empty and the selector shows no candidates, exactly as before.
+    const { data: governanceResp } = useResource(KEYS.governanceAll, fetchAllGovernance);
+    const governanceItems = useMemo(
+        () => governanceResp?.data?.items || [], [governanceResp],
+    );
 
     const refresh = useCallback(async () => {
         if (onAfterEdit) await onAfterEdit(item);

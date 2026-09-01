@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
     Accordion,
     AccordionButton,
@@ -16,6 +16,9 @@ import {
 } from '@chakra-ui/react';
 import AnnotatedAttachmentSelector from '../../functional_components/AnnotatedAttachmentSelector';
 import { fetchGovernanceForIndicator } from '../../../services/api/get';
+import useResource from '../../../hooks/useResource';
+import useInvalidateResources from '../../../hooks/useInvalidateResources';
+import { KEYS, NS } from '../../../context/resourceKeys';
 import {
     attachIndicatorToGovernance,
     detachIndicatorFromGovernance,
@@ -41,37 +44,31 @@ import GovernanceSources from '../governance/GovernanceSources';
  *                    docstring describes, derived rather than materialized.
  */
 function IndicatorGovernancePanel({ compositeKey }) {
-    const [data, setData] = useState(null);
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState(null);
-
     // Starts collapsed, so the picker pool (~93% of the payload) is not requested
-    // until the panel is actually opened. Once opened for a given indicator it stays
-    // opted in, so later refetches after a write keep the picker populated.
-    const wantCandidates = useRef(false);
-
-    const load = useCallback(async (withCandidates) => {
-        if (!compositeKey) return;
-        if (withCandidates) wantCandidates.current = true;
-        setLoading(true);
-        setError(null);
-        try {
-            const resp = await fetchGovernanceForIndicator(compositeKey, wantCandidates.current);
-            setData(resp?.data || null);
-        } catch (e) {
-            setError(e?.message || 'Could not load governance for this indicator.');
-        } finally {
-            setLoading(false);
-        }
-    }, [compositeKey]);
+    // until the panel is actually opened. This was a ref; it is state now because
+    // it belongs IN THE KEY — the compact and full reads are different payloads
+    // and therefore different resources. Expanding an indicator you have already
+    // expanded is free, and the compact read is reused when you collapse back.
+    const [withCandidates, setWithCandidates] = useState(false);
 
     // Selecting a different indicator re-collapses the picker's opt-in along with it.
-    useEffect(() => { wantCandidates.current = false; }, [compositeKey]);
-    useEffect(() => { load(false); }, [load]);
+    useEffect(() => { setWithCandidates(false); }, [compositeKey]);
 
-    const handleExpand = useCallback(() => {
-        if (!wantCandidates.current) load(true);
-    }, [load]);
+    const { data: resp, loading, error, reload } = useResource(
+        compositeKey ? KEYS.governanceForIndicator(compositeKey, withCandidates) : null,
+        () => fetchGovernanceForIndicator(compositeKey, withCandidates),
+    );
+    const data = resp?.data || null;
+
+    // Writes here attach or detach instruments, which changes both variants of
+    // this indicator's payload as well as the pools other panels read.
+    const { invalidateNamespace } = useInvalidateResources();
+    const load = useCallback(async () => {
+        invalidateNamespace(NS.governance);
+        await reload();
+    }, [invalidateNamespace, reload]);
+
+    const handleExpand = useCallback(() => setWithCandidates(true), []);
 
     // The picker needs the governance TYPE alongside the id, because the write actions
     // are type-dispatched. AnnotatedAttachmentSelector hands back only a unique_id, so
