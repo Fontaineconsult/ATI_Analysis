@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import {
     Badge, Box, Button, Collapse, Flex, HStack, IconButton, Spinner, Text, Tooltip,
     VStack, useDisclosure, useToast,
@@ -7,6 +7,9 @@ import { AddIcon, ChevronDownIcon, ChevronUpIcon, DeleteIcon, EditIcon } from '@
 import Section from '../../graph_components/common/Section';
 import { useSettings } from '../../../context/SettingsContext';
 import { fetchQueryPanelForPlan, fetchQueryPanelForWorkingGroup } from '../../../services/api/get';
+import useResource from '../../../hooks/useResource';
+import useInvalidateResources from '../../../hooks/useInvalidateResources';
+import { KEYS, NS } from '../../../context/resourceKeys';
 import { deleteQuery } from '../../../services/api/delete';
 import { getStatusMeta, getCategoryMeta, summarizeQueries } from './queriesConfig';
 import QueryForm from './QueryForm';
@@ -108,28 +111,34 @@ export default function QueriesPanel({
     title = 'Queries',
 }) {
     const { vocab } = useSettings();
-    const [panel, setPanel] = useState(null);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
     const formDisc = useDisclosure();
     const [editing, setEditing] = useState(null);
 
-    const load = useCallback(async () => {
-        setLoading(true);
-        setError(null);
-        try {
-            const resp = workingGroupPlanIdentifier
-                ? await fetchQueryPanelForPlan(workingGroupPlanIdentifier)
-                : await fetchQueryPanelForWorkingGroup(campusAbbrev, academicYear, workingGroup);
-            setPanel(resp.data);
-        } catch (err) {
-            setError(err?.response?.data?.error || err?.message || 'Failed to load queries');
-        } finally {
-            setLoading(false);
-        }
-    }, [workingGroupPlanIdentifier, campusAbbrev, academicYear, workingGroup]);
+    // Two reads, one panel: with a plan identifier this is the same key the
+    // campus plan's WgQueriesSection uses; without one it falls back to the
+    // working-group variant, which needs all three of campus, year and group in
+    // its key because all three shape the answer.
+    const queryKey = workingGroupPlanIdentifier
+        ? KEYS.queriesForPlan(workingGroupPlanIdentifier)
+        : KEYS.queriesForWorkingGroup(campusAbbrev, academicYear, workingGroup);
+    const {
+        data: panelResp, loading, error, reload: reloadPanel,
+    } = useResource(
+        queryKey,
+        () => (workingGroupPlanIdentifier
+            ? fetchQueryPanelForPlan(workingGroupPlanIdentifier)
+            : fetchQueryPanelForWorkingGroup(campusAbbrev, academicYear, workingGroup)),
+    );
+    const panel = panelResp?.data || null;
 
-    useEffect(() => { load(); }, [load]);
+    // A query write can move both variants — creating one against a working
+    // group with no plan yet changes what the plan view will show once it has
+    // one — so the namespace goes rather than this key.
+    const { invalidateNamespace } = useInvalidateResources();
+    const load = useCallback(async () => {
+        invalidateNamespace(NS.queries);
+        await reloadPanel();
+    }, [invalidateNamespace, reloadPanel]);
 
     const queries = panel?.queries || [];
     const summary = summarizeQueries(queries);

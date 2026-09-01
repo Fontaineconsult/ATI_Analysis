@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import {
     Badge, Box, Button, Collapse, Flex, HStack, IconButton, Spinner, Text, Tooltip, VStack,
     useDisclosure, useToast,
@@ -6,6 +6,9 @@ import {
 import { AddIcon, ChevronDownIcon, ChevronUpIcon, DeleteIcon, EditIcon } from '@chakra-ui/icons';
 import Section from '../../graph_components/common/Section';
 import { fetchMinutesPanelForPlan } from '../../../services/api/get';
+import useResource from '../../../hooks/useResource';
+import useInvalidateResources from '../../../hooks/useInvalidateResources';
+import { KEYS, NS } from '../../../context/resourceKeys';
 import { deleteMeetingMinutes } from '../../../services/api/delete';
 import MeetingMinutesForm from './MeetingMinutesForm';
 import MeetingMinutesDetail from './MeetingMinutesDetail';
@@ -83,26 +86,24 @@ function MinutesRow({ minutes, onChanged, onEdit }) {
  * mutation. Renders pasted Markdown minutes readably.
  */
 export default function MeetingMinutesPanel({ workingGroupPlanIdentifier, title = 'Meeting Minutes' }) {
-    const [panel, setPanel] = useState(null);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
     const formDisc = useDisclosure();
     const [editing, setEditing] = useState(null);
 
-    const load = useCallback(async () => {
-        setLoading(true);
-        setError(null);
-        try {
-            const resp = await fetchMinutesPanelForPlan(workingGroupPlanIdentifier);
-            setPanel(resp.data);
-        } catch (err) {
-            setError(err?.response?.data?.error || err?.message || 'Failed to load meeting minutes');
-        } finally {
-            setLoading(false);
-        }
-    }, [workingGroupPlanIdentifier]);
+    // Both this and the campus plan's WgMinutesSection read the same key, so whichever
+    // you open second costs nothing, and a write in either refreshes both.
+    const {
+        data: panelResp, loading, error, reload: reloadPanel,
+    } = useResource(
+        workingGroupPlanIdentifier ? KEYS.minutesForPlan(workingGroupPlanIdentifier) : null,
+        () => fetchMinutesPanelForPlan(workingGroupPlanIdentifier),
+    );
+    const panel = panelResp?.data || null;
 
-    useEffect(() => { load(); }, [load]);
+    const { invalidateNamespace } = useInvalidateResources();
+    const load = useCallback(async () => {
+        invalidateNamespace(NS.minutes);
+        await reloadPanel();
+    }, [invalidateNamespace, reloadPanel]);
 
     const minutes = panel?.minutes || [];
     const planExists = panel?.exists !== false;

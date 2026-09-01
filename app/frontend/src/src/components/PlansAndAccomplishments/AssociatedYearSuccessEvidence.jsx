@@ -25,7 +25,8 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { SettingsContext } from '../../context/SettingsContext';
 import { fetchPlanYses, fetchYsesByCampusForYear } from '../../services/api/get';
 import useResource from '../../hooks/useResource';
-import { KEYS } from '../../context/resourceKeys';
+import useInvalidateResources from '../../hooks/useInvalidateResources';
+import { KEYS, NS } from '../../context/resourceKeys';
 import {
     assignPlanToCampus,
     attachPlanToYse,
@@ -66,8 +67,6 @@ function AssociatedYearSuccessEvidence({ plan, onChanged }) {
     const { campuses, currentAcademicYear } = useContext(SettingsContext);
     const toast = useToast();
 
-    const [evidences, setEvidences] = useState([]);
-    const [loading, setLoading] = useState(true);
     const [savingCampus, setSavingCampus] = useState(null);
     const [removingYse, setRemovingYse] = useState(null);
 
@@ -88,19 +87,20 @@ function AssociatedYearSuccessEvidence({ plan, onChanged }) {
     const [selectedYseId, setSelectedYseId] = useState('');
     const [attaching, setAttaching] = useState(false);
 
-    const load = useCallback(async () => {
-        if (!plan?.unique_id) return;
-        setLoading(true);
-        try {
-            setEvidences(await fetchPlanYses(plan.unique_id));
-        } catch (e) {
-            setEvidences([]);
-        } finally {
-            setLoading(false);
-        }
-    }, [plan?.unique_id]);
+    // This plan's attached evidence. Attaching or detaching below invalidates the
+    // yse namespace, which also drops the year catalogue above — correct, since
+    // the picker should stop offering something already attached.
+    const { data: evidencesResp, loading, reload: reloadEvidences } = useResource(
+        plan?.unique_id ? KEYS.planYses(plan.unique_id) : null,
+        () => fetchPlanYses(plan.unique_id),
+    );
+    const evidences = useMemo(() => evidencesResp || [], [evidencesResp]);
 
-    useEffect(() => { load(); }, [load]);
+    const { invalidateNamespace } = useInvalidateResources();
+    const load = useCallback(async () => {
+        invalidateNamespace(NS.yse);
+        await reloadEvidences();
+    }, [invalidateNamespace, reloadEvidences]);
 
     // Uses the evidence's OWN campus so a cross-campus YSE opens in that campus's
     // explorer (falls back to the current campus).

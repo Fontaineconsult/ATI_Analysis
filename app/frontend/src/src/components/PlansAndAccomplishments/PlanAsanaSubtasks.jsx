@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useMemo } from 'react';
 import {
     Badge,
     Box,
@@ -14,6 +14,8 @@ import {
 import { ExternalLinkIcon } from '@chakra-ui/icons';
 import { FaCheckCircle, FaRegCircle } from 'react-icons/fa';
 import { fetchPlanAsanaSubtasks } from '../../services/api/get';
+import useResource from '../../hooks/useResource';
+import { KEYS } from '../../context/resourceKeys';
 
 /**
  * Read-only list of a plan's Asana subtasks (AsanaSubtask mirror nodes).
@@ -24,24 +26,14 @@ import { fetchPlanAsanaSubtasks } from '../../services/api/get';
  *   planUniqueId   The plan whose subtasks to fetch. Refetches on change.
  */
 function PlanAsanaSubtasks({ planUniqueId }) {
-    const [subtasks, setSubtasks] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
-
-    const load = useCallback(async () => {
-        if (!planUniqueId) return;
-        setLoading(true);
-        setError(null);
-        try {
-            setSubtasks(await fetchPlanAsanaSubtasks(planUniqueId));
-        } catch (e) {
-            setError(e.response?.data?.error || e.message);
-        } finally {
-            setLoading(false);
-        }
-    }, [planUniqueId]);
-
-    useEffect(() => { load(); }, [load]);
+    // Asana is an external system, so this sits in its own namespace: refreshing
+    // subtasks must never drag the campus-plan cache along with it, and a plan
+    // edit here must never look like it changed Asana.
+    const { data: subtasksResp, loading, error } = useResource(
+        planUniqueId ? KEYS.planAsanaSubtasks(planUniqueId) : null,
+        () => fetchPlanAsanaSubtasks(planUniqueId),
+    );
+    const subtasks = useMemo(() => subtasksResp || [], [subtasksResp]);
 
     if (loading) {
         return (

@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useMemo, useState } from 'react';
+import React, { useContext, useMemo, useState } from 'react';
 import {
     Alert,
     AlertIcon,
@@ -40,6 +40,8 @@ import {
     updateCampusPlanSummary,
 } from '../../../services/api/post';
 import { fetchCommunitiesByWorkingGroup } from '../../../services/api/get';
+import useResource from '../../../hooks/useResource';
+import { KEYS } from '../../../context/resourceKeys';
 import PersonAssignmentSelector from '../../functional_components/PersonAssignmentSelector';
 import Card from '../../graph_components/common/Card';
 import CampusPlanStatStrip from './CampusPlanStatStrip';
@@ -100,22 +102,20 @@ function CampusPlanContainer() {
     // Communities of practice per working group (derived from indicator stakes) —
     // one fetch feeds every card's people band. A failure leaves the map empty;
     // the cards render without the community stack.
-    const [communitiesByWg, setCommunitiesByWg] = useState({});
-    useEffect(() => {
-        let cancelled = false;
-        (async () => {
-            try {
-                const resp = await fetchCommunitiesByWorkingGroup();
-                if (cancelled) return;
-                const map = {};
-                for (const row of resp?.data?.items || []) {
-                    map[row.working_group] = row.communities || [];
-                }
-                setCommunitiesByWg(map);
-            } catch (_) { /* non-fatal: cards render without the community stack */ }
-        })();
-        return () => { cancelled = true; };
-    }, []);
+    // A different shape from communities:all, but the same underlying records —
+    // filed in the communities namespace so a community write drops both. A
+    // failure leaves the map empty and the cards render without the community
+    // stack, exactly as the swallowed catch did.
+    const { data: communitiesByWgResp } = useResource(
+        KEYS.communitiesByWorkingGroup, fetchCommunitiesByWorkingGroup,
+    );
+    const communitiesByWg = useMemo(() => {
+        const map = {};
+        for (const row of communitiesByWgResp?.data?.items || []) {
+            map[row.working_group] = row.communities || [];
+        }
+        return map;
+    }, [communitiesByWgResp]);
 
     const allCampusAbbrevs = useMemo(() => {
         if (!currentCampus) return [];

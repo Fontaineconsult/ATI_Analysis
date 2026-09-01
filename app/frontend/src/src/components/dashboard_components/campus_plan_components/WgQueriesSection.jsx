@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import {
     Badge, Box, Button, HStack, Modal, ModalBody, ModalCloseButton, ModalContent,
     ModalFooter, ModalHeader, ModalOverlay, Spinner, Text, VStack, useDisclosure, useToast,
@@ -6,6 +6,9 @@ import {
 
 import { useSettings } from '../../../context/SettingsContext';
 import { fetchQueryPanelForPlan } from '../../../services/api/get';
+import useResource from '../../../hooks/useResource';
+import useInvalidateResources from '../../../hooks/useInvalidateResources';
+import { KEYS, NS } from '../../../context/resourceKeys';
 import { deleteQuery } from '../../../services/api/delete';
 import { getStatusMeta, getCategoryMeta } from '../query_components/queriesConfig';
 import QueryForm from '../query_components/QueryForm';
@@ -77,27 +80,25 @@ function QueryModal({ query, candidateEvidence, vocab, accentColor, workingGroup
  */
 export default function WgQueriesSection({ workingGroupPlanIdentifier, workingGroupName, accentColor }) {
     const { vocab } = useSettings();
-    const [panel, setPanel] = useState(null);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
     const formDisc = useDisclosure();
     const [editing, setEditing] = useState(null);
     const [openId, setOpenId] = useState(null);
 
-    const load = useCallback(async () => {
-        setLoading(true);
-        setError(null);
-        try {
-            const resp = await fetchQueryPanelForPlan(workingGroupPlanIdentifier);
-            setPanel(resp.data);
-        } catch (err) {
-            setError(err?.response?.data?.error || err?.message || 'Failed to load queries');
-        } finally {
-            setLoading(false);
-        }
-    }, [workingGroupPlanIdentifier]);
+    // Both this and the standalone QueriesPanel read the same key, so whichever
+    // you open second costs nothing, and a write in either refreshes both.
+    const {
+        data: panelResp, loading, error, reload: reloadPanel,
+    } = useResource(
+        workingGroupPlanIdentifier ? KEYS.queriesForPlan(workingGroupPlanIdentifier) : null,
+        () => fetchQueryPanelForPlan(workingGroupPlanIdentifier),
+    );
+    const panel = panelResp?.data || null;
 
-    useEffect(() => { load(); }, [load]);
+    const { invalidateNamespace } = useInvalidateResources();
+    const load = useCallback(async () => {
+        invalidateNamespace(NS.queries);
+        await reloadPanel();
+    }, [invalidateNamespace, reloadPanel]);
 
     const queries = panel?.queries || [];
     const candidateEvidence = panel?.candidate_evidence || [];

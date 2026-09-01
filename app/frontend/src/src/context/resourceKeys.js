@@ -40,6 +40,9 @@ export const NS = {
     yse: 'yse:',
     guides: 'guides:',
     documentation: 'documentation:',
+    minutes: 'minutes:',
+    queries: 'queries:',
+    asana: 'asana:',
     report: 'report:',
     plan: 'plan:',
 };
@@ -124,6 +127,24 @@ export const KEYS = {
     // namespace so a documentation write drops both.
     documentsList: 'documentation:documents-list',
     webpagesList: 'documentation:webpages-list',
+
+    // --- Meeting minutes and queries ---
+    // Both panels of each pair read one key: the campus plan's working-group
+    // section and the standalone panel show the same records.
+    minutesForPlan: (planIdentifier) => `minutes:for-plan:${planIdentifier}`,
+    queriesForPlan: (planIdentifier) => `queries:for-plan:${planIdentifier}`,
+    /** The plan-less variant, when a working group has no plan record yet. */
+    queriesForWorkingGroup: (campus, year, workingGroup) =>
+        `queries:for-wg:${campus}:${year}:${workingGroup}`,
+
+    // --- Plans ---
+    /** Communities grouped by working group — a different shape from
+     *  communities:all, but the same underlying records, so a community write
+     *  drops both. */
+    communitiesByWorkingGroup: 'communities:by-working-group',
+    /** Asana is an external system; its own namespace, so refreshing subtasks
+     *  never drags the campus-plan cache with it. */
+    planAsanaSubtasks: (planUniqueId) => `asana:subtasks:${planUniqueId}`,
 
     // --- Cross-domain reads ---
     implementationsAll: 'implementations:all',
