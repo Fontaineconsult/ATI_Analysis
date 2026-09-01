@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import {
     Button,
     Modal,
@@ -30,6 +30,8 @@ import { CloseIcon, AddIcon } from '@chakra-ui/icons';
 import { createStatusLevel, addStatusLevelSubNode, connectStatusLevelSubNode } from '../../../services/api/post';
 import { updateStatusLevelNode, removeStatusLevelSubNode } from '../../../services/api/put';
 import { fetchSubNodes } from '../../../services/api/get';
+import useResource from '../../../hooks/useResource';
+import { KEYS } from '../../../context/resourceKeys';
 
 const SUB_NODE_CATEGORIES = [
     {
@@ -55,25 +57,22 @@ const SUB_NODE_CATEGORIES = [
 ];
 
 const SubNodeList = ({ items, textField, onRemove, onConnect, onCreate, category, statusLevelId }) => {
-    const [allNodes, setAllNodes] = useState([]);
     const [selectedNodeId, setSelectedNodeId] = useState('');
     const [newText, setNewText] = useState('');
     const [showCreateInput, setShowCreateInput] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
 
-    // Fetch all existing nodes of this type
-    useEffect(() => {
-        loadAllNodes();
-    }, [category]);
+    // Existing nodes of this category, keyed by it — reopening the linker for a
+    // category you have already used costs nothing.
+    const { data: subNodesResp, reload: reloadSubNodes } = useResource(
+        category ? KEYS.settingsSubNodes(category) : null,
+        () => fetchSubNodes(category),
+    );
+    const allNodes = useMemo(() => subNodesResp?.data || [], [subNodesResp]);
 
-    const loadAllNodes = async () => {
-        try {
-            const response = await fetchSubNodes(category);
-            setAllNodes(response.data || []);
-        } catch (error) {
-            console.error('Error loading sub-nodes:', error);
-        }
-    };
+    // Connecting or creating a node changes this category's catalogue. reload()
+    // drops just this key and refetches — the other categories keep theirs.
+    const loadAllNodes = reloadSubNodes;
 
     // Filter out nodes already connected to this status level
     const connectedIds = new Set((items || []).map(i => i.unique_id));

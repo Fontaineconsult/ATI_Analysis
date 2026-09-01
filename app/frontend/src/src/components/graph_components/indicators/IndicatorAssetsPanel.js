@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import {
     Badge,
     Box,
@@ -15,6 +15,8 @@ import {
 import { Link as RouterLink, useParams } from 'react-router-dom';
 import { HelpBox } from '../../functional_components/DescriptorHelp';
 import { fetchStewardedIct } from '../../../services/api/get';
+import useResource from '../../../hooks/useResource';
+import { KEYS } from '../../../context/resourceKeys';
 
 /**
  * Per–success-indicator view of the Assets, Interfaces, and Tools that touch it —
@@ -37,19 +39,15 @@ import { fetchStewardedIct } from '../../../services/api/get';
 function IndicatorAssetsPanel({ assets = [], interfaces = [], tools = [], yearIdentifier = null }) {
     const { campus } = useParams();
 
-    const [stewarded, setStewarded] = useState(null);
-    useEffect(() => {
-        let cancelled = false;
-        setStewarded(null);
-        if (!yearIdentifier) return undefined;
-        (async () => {
-            try {
-                const resp = await fetchStewardedIct(yearIdentifier);
-                if (!cancelled) setStewarded(resp?.data || null);
-            } catch (_) { /* non-fatal: the derived section just doesn't render */ }
-        })();
-        return () => { cancelled = true; };
-    }, [yearIdentifier]);
+    // Keyed by the year identifier, and filed under assets: because what is
+    // stewarded is derived from assets and interfaces — a write to either should
+    // drop it. A failure leaves it null and the derived section simply does not
+    // render, exactly as the swallowed catch did.
+    const { data: stewardedResp } = useResource(
+        yearIdentifier ? KEYS.stewardedIct(yearIdentifier) : null,
+        () => fetchStewardedIct(yearIdentifier),
+    );
+    const stewarded = stewardedResp?.data || null;
 
     const stewardedAssets = stewarded?.assets || [];
     const stewardUnits = (stewarded?.units || []).map((u) => u.name).join(', ');

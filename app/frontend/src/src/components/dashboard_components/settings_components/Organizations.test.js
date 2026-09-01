@@ -66,8 +66,11 @@ describe('Organizations settings section', () => {
                 campus: 'sfsu',
             })
         );
-        // Reloaded after the create.
-        expect(fetchLocalOrgUnits).toHaveBeenCalledTimes(2);
+        // Reloaded after the create. Awaited rather than asserted inline: the
+        // reload resolves through the shared store, which costs one extra
+        // microtask, so the assertion has to wait for it rather than assume it
+        // has already happened by the time createOrgUnit was seen.
+        await waitFor(() => expect(fetchLocalOrgUnits).toHaveBeenCalledTimes(2));
     });
 
     it('shows the empty state when the campus has no units', async () => {

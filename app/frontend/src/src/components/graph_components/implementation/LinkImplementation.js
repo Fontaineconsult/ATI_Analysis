@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
     VStack,
     FormControl,
@@ -12,6 +12,8 @@ import {
 } from '@chakra-ui/react';
 import { assignImplementationToYSE } from '../../../services/api/put';
 import { fetchImplementationsByType } from '../../../services/api/get';
+import useResource from '../../../hooks/useResource';
+import { KEYS } from '../../../context/resourceKeys';
 import { EVIDENCE_STRENGTH_LEVELS, strengthConfig } from './implementationConfig';
 
 function LinkImplementationModal({
@@ -23,35 +25,24 @@ function LinkImplementationModal({
                                      loadSingleWorkingGroupData
                                  }) {
     const [selectedType, setSelectedType] = useState('');
-    const [existingImplementations, setExistingImplementations] = useState([]);
     const [selectedExisting, setSelectedExisting] = useState('');
     const [selectedDescription, setSelectedDescription] = useState('');
     const [selectedStrength, setSelectedStrength] = useState('');
-    const [isLoadingExisting, setIsLoadingExisting] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const toast = useToast();
 
-    useEffect(() => {
-        if (selectedType) {
-            loadExistingImplementations(selectedType);
-        }
-    }, [selectedType]);
-
-    const loadExistingImplementations = async (type) => {
-        setIsLoadingExisting(true);
-        try {
-            const response = await fetchImplementationsByType(type);
-            const implementations = response?.status?.data || response?.data || [];
-            // Retired implementations are closed to new evidence assignment
-            // (the backend enforces this too).
-            setExistingImplementations(implementations.filter((impl) => !impl.retired));
-        } catch (error) {
-            console.error('Error loading implementations:', error);
-            setExistingImplementations([]);
-        } finally {
-            setIsLoadingExisting(false);
-        }
-    };
+    // One key per type, so flicking through the type dropdown fetches each list
+    // once rather than once per look.
+    const { data: existingResp, loading: isLoadingExisting } = useResource(
+        selectedType ? KEYS.implementationsByType(selectedType) : null,
+        () => fetchImplementationsByType(selectedType),
+    );
+    const existingImplementations = useMemo(() => {
+        const list = existingResp?.status?.data || existingResp?.data || [];
+        // Retired implementations are closed to new evidence assignment
+        // (the backend enforces this too).
+        return list.filter((impl) => !impl.retired);
+    }, [existingResp]);
 
     const handleLink = async () => {
         if (!selectedType || !selectedExisting) {

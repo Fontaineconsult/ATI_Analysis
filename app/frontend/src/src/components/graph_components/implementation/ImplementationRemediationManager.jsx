@@ -1,7 +1,9 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useMemo } from 'react';
 import { VStack, Box, Heading, HStack, Spinner, Text } from '@chakra-ui/react';
 import EntityAttachmentSelector from '../../functional_components/EntityAttachmentSelector';
 import { fetchAllInterfaces, fetchAllTools } from '../../../services/api/get';
+import useResource from '../../../hooks/useResource';
+import { KEYS } from '../../../context/resourceKeys';
 import {
     assignRemediationToInterface,
     unassignRemediationFromInterface,
@@ -30,29 +32,19 @@ function ImplementationRemediationManager({
     tools = [],
     onChanged,
 }) {
-    const [allInterfaces, setAllInterfaces] = useState([]);
-    const [allTools, setAllTools] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
 
-    useEffect(() => {
-        let active = true;
-        (async () => {
-            setLoading(true);
-            setError(null);
-            try {
-                const [ifaces, tls] = await Promise.all([fetchAllInterfaces(), fetchAllTools()]);
-                if (!active) return;
-                setAllInterfaces(items(ifaces));
-                setAllTools(items(tls));
-            } catch (e) {
-                if (active) setError(e?.message || 'Failed to load interfaces and tools.');
-            } finally {
-                if (active) setLoading(false);
-            }
-        })();
-        return () => { active = false; };
-    }, []);
+    // The same two keys the assets area reads. Opening this manager after
+    // visiting Assets — or opening it on a second implementation — costs nothing,
+    // and an interface or tool write there drops it here.
+    const { data: ifacesResp, loading: ifacesLoading, error: ifacesError } =
+        useResource(KEYS.interfacesAll, fetchAllInterfaces);
+    const { data: toolsResp, loading: toolsLoading, error: toolsError } =
+        useResource(KEYS.toolsAll, fetchAllTools);
+
+    const allInterfaces = useMemo(() => items(ifacesResp), [ifacesResp]);
+    const allTools = useMemo(() => items(toolsResp), [toolsResp]);
+    const loading = ifacesLoading || toolsLoading;
+    const error = ifacesError || toolsError;
 
     // EntityAttachmentSelector matches attached vs candidates by unique_id, but the link
     // services key on the business identifier — so map {unique_id -> identifier}.

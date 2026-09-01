@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useMemo, useState } from 'react';
 import {
     AlertDialog,
     AlertDialogBody,
@@ -29,6 +29,9 @@ import {
 import { AddIcon } from '@chakra-ui/icons';
 import { useParams } from 'react-router-dom';
 import { fetchLocalOrgUnits } from '../../../services/api/get';
+import useResource from '../../../hooks/useResource';
+import useInvalidateResources from '../../../hooks/useInvalidateResources';
+import { KEYS, NS } from '../../../context/resourceKeys';
 import { createOrgUnit } from '../../../services/api/post';
 import { deleteOrgUnit } from '../../../services/api/delete';
 
@@ -46,8 +49,6 @@ function Organizations() {
     const { campus } = useParams();
     const toast = useToast();
 
-    const [units, setUnits] = useState([]);
-    const [loading, setLoading] = useState(true);
     const [busy, setBusy] = useState(false);
 
     // Add-form state
@@ -59,21 +60,34 @@ function Organizations() {
     const [pendingDelete, setPendingDelete] = useState(null);
     const cancelRef = useRef();
 
+    // Campus-scoped, so the campus is in the key: switching campus and back does
+    // not refetch, and the two campuses cannot share one entry.
+    const {
+        data: unitsResp, loading, error: unitsError, reload: reloadUnits,
+    } = useResource(
+        campus ? KEYS.localOrgUnits(campus) : null,
+        () => fetchLocalOrgUnits(campus),
+    );
+    const units = useMemo(() => unitsResp?.data || [], [unitsResp]);
+
+    // Creating or deleting a unit here also changes the department/college
+    // catalogues the assets and people editors read, so the namespace goes.
+    const { invalidateNamespace } = useInvalidateResources();
     const load = useCallback(async () => {
-        try {
-            const resp = await fetchLocalOrgUnits(campus);
-            setUnits(resp?.data || []);
-        } catch (e) {
-            toast({ title: 'Failed to load organizations', description: e?.message, status: 'error', duration: 3000, isClosable: true });
-        } finally {
-            setLoading(false);
-        }
-    }, [campus, toast]);
+        invalidateNamespace(NS.orgUnits);
+        await reloadUnits();
+    }, [invalidateNamespace, reloadUnits]);
 
     useEffect(() => {
-        setLoading(true);
-        load();
-    }, [load]);
+        if (!unitsError) return;
+        toast({
+            title: 'Failed to load organizations',
+            description: unitsError,
+            status: 'error',
+            duration: 3000,
+            isClosable: true,
+        });
+    }, [unitsError, toast]);
 
     const handleAdd = async (e) => {
         e.preventDefault();

@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import {
     Alert,
     AlertIcon,
@@ -10,6 +10,8 @@ import {
     Text,
 } from '@chakra-ui/react';
 import { fetchOntology, fetchOntologyHealth } from '../../../services/api/get';
+import useResource from '../../../hooks/useResource';
+import { KEYS } from '../../../context/resourceKeys';
 import OntologyStatStrip from '../../graph_components/ontology/OntologyStatStrip';
 import OntologyList from '../../graph_components/ontology/OntologyList';
 import OntologyDetailPanel from '../../graph_components/ontology/OntologyDetailPanel';
@@ -25,28 +27,24 @@ import { HelpTip } from '../../functional_components/DescriptorHelp';
  * the list flags gaps per node type.
  */
 function OntologyBrowser() {
-    const [ontology, setOntology] = useState(null);
-    const [health, setHealth] = useState(null);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
     const [selectedLabel, setSelectedLabel] = useState(null);
 
-    // Initial load shows the spinner; refreshes (after an edit) update in place silently.
-    const load = useCallback(async ({ initial = false } = {}) => {
-        if (initial) setLoading(true);
-        setError(null);
-        try {
-            const [ont, hlth] = await Promise.all([fetchOntology(), fetchOntologyHealth()]);
-            setOntology(ont?.data || null);
-            setHealth(hlth?.data || null);
-        } catch (e) {
-            setError(e?.message || 'Failed to load the ontology.');
-        } finally {
-            if (initial) setLoading(false);
-        }
-    }, []);
+    // The tree and its health report are two keys, refreshed together after an
+    // edit. The old "initial" flag distinguished first load from silent refresh;
+    // the cache does that on its own — a refresh keeps the previous value on
+    // screen and swaps it when the new one lands.
+    const { data: ontologyResp, loading, error, reload: reloadOntology } = useResource(
+        KEYS.ontologyTree, fetchOntology,
+    );
+    const { data: healthResp, reload: reloadHealth } = useResource(
+        KEYS.ontologyHealth, fetchOntologyHealth,
+    );
+    const ontology = ontologyResp?.data || null;
+    const health = healthResp?.data || null;
 
-    useEffect(() => { load({ initial: true }); }, [load]);
+    const load = useCallback(async () => {
+        await Promise.all([reloadOntology(), reloadHealth()]);
+    }, [reloadOntology, reloadHealth]);
 
     const nodeTypes = useMemo(() => ontology?.node_types || [], [ontology]);
     const selected = useMemo(

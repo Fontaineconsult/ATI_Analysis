@@ -43,6 +43,8 @@ export const NS = {
     minutes: 'minutes:',
     queries: 'queries:',
     asana: 'asana:',
+    settings: 'settings:',
+    ontology: 'ontology:',
     report: 'report:',
     plan: 'plan:',
 };
@@ -145,6 +147,26 @@ export const KEYS = {
     /** Asana is an external system; its own namespace, so refreshing subtasks
      *  never drags the campus-plan cache with it. */
     planAsanaSubtasks: (planUniqueId) => `asana:subtasks:${planUniqueId}`,
+
+    // --- Settings and ontology ---
+    /** The whole settings payload; several forms want one vocabulary out of it. */
+    settingsAll: 'settings:all',
+    /** Existing nodes of one descriptor category, for the status-level linker. */
+    settingsSubNodes: (category) => `settings:sub-nodes:${category}`,
+    ontologyTree: 'ontology:tree',
+    ontologyHealth: 'ontology:health',
+    /** Org units for one campus — distinct from the type-scoped catalogues. */
+    localOrgUnits: (campus) => `orgunits:local:${campus}`,
+
+    // --- Implementations ---
+    implementationsByType: (type) => `implementations:by-type:${type}`,
+
+    // --- Indicators ---
+    /** ICT stewarded under one year's evidence. */
+    stewardedIct: (yearIdentifier) => `assets:stewarded-ict:${yearIdentifier}`,
+
+    /** The legacy five-way documentation bundle behind the older Documents area. */
+    documentationBundle: 'documentation:legacy-bundle',
 
     // --- Cross-domain reads ---
     implementationsAll: 'implementations:all',
