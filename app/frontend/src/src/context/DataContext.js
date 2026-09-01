@@ -4,6 +4,7 @@ import { useToast } from '@chakra-ui/react';
 import {year_difference} from "../services/utils/tools";
 import { useSettings } from './SettingsContext';
 import { WORKING_GROUP_LIST, SLUG_TO_DATAKEY, makeInitialWgState } from '../styles/workingGroupIdentity';
+import { createResourceStore } from './resourceStore';
 
 // Slug -> DataContext state key, derived from the WG single-source-of-truth. Keeps the
 // passthrough fallback so an unknown slug maps to itself, exactly as before.
@@ -29,76 +30,74 @@ export const DataProvider = ({ children }) => {
     // Add a simple version counter to force re-renders
     const [dataVersion, setDataVersion] = useState(0);
 
-    // Goal report cache (the dashboard "View" report fetches a whole goal). Kept in a ref so
-    // it survives route unmounts and never triggers re-renders. Keyed by group|goal|year|campus
-    // so once a goal is fetched, revisiting reads from here instead of refetching.
-    const reportCacheRef = useRef({});
-    // In-flight requests, keyed the same way. Ensures concurrent callers for the same key share
-    // ONE network request — so React 18 StrictMode's double-invoked effect (and any genuine
-    // double-mount) never fires the (slow) report fetch twice.
-    const reportInflightRef = useRef({});
+    // ----------------------------------------------------------------- //
+    // Shared resource cache                                              //
+    // ----------------------------------------------------------------- //
+    //
+    // ONE keyed store behind every cached read in the app (see resourceStore.js).
+    // It exists because fetched data held in a component's useState dies with
+    // the route: the Documentation index (2.6 MB) was refetched on every visit
+    // to the area, and twice per visit in development, because StrictMode
+    // double-invokes effects.
+    //
+    // The store lives in a ref, so it survives route unmounts and writing to it
+    // re-renders nobody. `resourceVersion` is the only state: bumped on
+    // invalidation — which is rare, since it follows a mutation — and it is what
+    // tells mounted subscribers to re-read.
+    //
+    // Keys are namespaced ('report:...', 'plan:...', 'documentation:...'). The
+    // report and campus-plan helpers below are thin views over this one store.
+    // They used to be two hand-rolled copies of it, which is how the
+    // Documentation area came to have neither.
+    const storeRef = useRef(null);
+    if (storeRef.current === null) storeRef.current = createResourceStore();
+    const store = storeRef.current;
 
-    const getCachedReport = useCallback((key) => reportCacheRef.current[key], []);
-    const setCachedReport = useCallback((key, value) => { reportCacheRef.current[key] = value; }, []);
-    const invalidateReport = useCallback((key) => {
-        delete reportCacheRef.current[key];
-        delete reportInflightRef.current[key];
-    }, []);
-    const clearReportCache = useCallback(() => {
-        reportCacheRef.current = {};
-        reportInflightRef.current = {};
-    }, []);
+    const [resourceVersion, setResourceVersion] = useState(0);
+    const bump = useCallback(() => setResourceVersion((v) => v + 1), []);
 
-    // Cache-and-dedupe: resolves to cached data if present; otherwise runs `fetcher` once and
-    // shares that single promise with any concurrent caller for the same key, caching the
-    // result on success. This is what makes the double-effect under StrictMode a single fetch.
-    const getOrFetchReport = useCallback((key, fetcher) => {
-        if (reportCacheRef.current[key]) return Promise.resolve(reportCacheRef.current[key]);
-        if (reportInflightRef.current[key]) return reportInflightRef.current[key];
-        const pending = Promise.resolve()
-            .then(fetcher)
-            .then((data) => {
-                if (data) reportCacheRef.current[key] = data;
-                delete reportInflightRef.current[key];
-                return data;
-            })
-            .catch((err) => {
-                delete reportInflightRef.current[key];
-                throw err;
-            });
-        reportInflightRef.current[key] = pending;
-        return pending;
-    }, []);
+    /** Synchronous read. undefined means "not cached", which is deliberately
+     *  distinct from a cached null — subscribers use it to paint immediately on
+     *  a revisit instead of flashing a spinner. */
+    const peekResource = useCallback((key) => store.peek(key), [store]);
+    const setResource = useCallback((key, value) => store.set(key, value), [store]);
+    const getOrFetchResource = useCallback(
+        (key, fetcher) => store.getOrFetch(key, fetcher), [store],
+    );
+    const invalidateResource = useCallback((key) => {
+        store.invalidate(key);
+        bump();
+    }, [store, bump]);
+    const invalidateResourcePrefix = useCallback((prefix) => {
+        store.invalidatePrefix(prefix);
+        bump();
+    }, [store, bump]);
 
-    // Campus-plan cache. Same route-surviving, dedupe-on-inflight pattern as the report
-    // cache above, keyed by `${abbrev}|${year}`. Lets useCampusPlans render a once-loaded
-    // plan instantly on route revisit instead of refetching. Mutations go through the
-    // hook's refreshOne, which invalidates the key so the next load refetches.
-    const campusPlanCacheRef = useRef({});
-    const campusPlanInflightRef = useRef({});
+    // --- Report cache: a view over the store, keyed report:<group|goal|year|campus>.
+    // Names and signatures are unchanged from when this was its own pair of refs,
+    // because ApprovalPage, SingleReportMasterContainer and their tests bind to them.
+    const getCachedReport = useCallback((key) => peekResource(`report:${key}`), [peekResource]);
+    const setCachedReport = useCallback(
+        (key, value) => setResource(`report:${key}`, value), [setResource],
+    );
+    const invalidateReport = useCallback(
+        (key) => invalidateResource(`report:${key}`), [invalidateResource],
+    );
+    const clearReportCache = useCallback(
+        () => invalidateResourcePrefix('report:'), [invalidateResourcePrefix],
+    );
+    const getOrFetchReport = useCallback(
+        (key, fetcher) => getOrFetchResource(`report:${key}`, fetcher), [getOrFetchResource],
+    );
 
-    const getCachedCampusPlan = useCallback((key) => campusPlanCacheRef.current[key], []);
-    const invalidateCampusPlan = useCallback((key) => {
-        delete campusPlanCacheRef.current[key];
-        delete campusPlanInflightRef.current[key];
-    }, []);
-    const getOrFetchCampusPlan = useCallback((key, fetcher) => {
-        if (campusPlanCacheRef.current[key]) return Promise.resolve(campusPlanCacheRef.current[key]);
-        if (campusPlanInflightRef.current[key]) return campusPlanInflightRef.current[key];
-        const pending = Promise.resolve()
-            .then(fetcher)
-            .then((data) => {
-                if (data) campusPlanCacheRef.current[key] = data;
-                delete campusPlanInflightRef.current[key];
-                return data;
-            })
-            .catch((err) => {
-                delete campusPlanInflightRef.current[key];
-                throw err;
-            });
-        campusPlanInflightRef.current[key] = pending;
-        return pending;
-    }, []);
+    // --- Campus-plan cache: same, keyed plan:<abbrev|year>.
+    const getCachedCampusPlan = useCallback((key) => peekResource(`plan:${key}`), [peekResource]);
+    const invalidateCampusPlan = useCallback(
+        (key) => invalidateResource(`plan:${key}`), [invalidateResource],
+    );
+    const getOrFetchCampusPlan = useCallback(
+        (key, fetcher) => getOrFetchResource(`plan:${key}`, fetcher), [getOrFetchResource],
+    );
 
     const toast = useToast();
 
@@ -260,6 +259,11 @@ export const DataProvider = ({ children }) => {
             refreshIndicators,
             refreshImplementations,
             dataVersion,
+            peekResource,
+            getOrFetchResource,
+            invalidateResource,
+            invalidateResourcePrefix,
+            resourceVersion,
             getCachedReport,
             setCachedReport,
             invalidateReport,

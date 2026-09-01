@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import {
     Alert,
@@ -15,6 +15,7 @@ import {
 } from '@chakra-ui/react';
 
 import { fetchDocumentationIndex, fetchDocumentationItem } from '../../services/api/get';
+import useResource from '../../hooks/useResource';
 import DocumentationStatStrip from '../graph_components/documentation/DocumentationStatStrip';
 import DocumentationList from '../graph_components/documentation/DocumentationList';
 import DocumentationDetailPanel from '../graph_components/documentation/DocumentationDetailPanel';
@@ -28,6 +29,10 @@ import {
     summarizeDocumentation,
     typesInGroup,
 } from '../graph_components/documentation/documentationConfig';
+
+// Stable empty array so the memo chain below doesn't churn on every render
+// while the index is still loading.
+const EMPTY_ITEMS = [];
 
 /**
  * The central Documentation area — every Document, Webpage, Note, Message and
@@ -47,16 +52,24 @@ import {
  *
  * Filter state lives here, not in the list, so the stat-strip counts and the
  * rows always come from the same predicate over the same array.
+ *
+ * The DATA does not live here. Both reads go through useResource, so the index
+ * and each opened record sit in the shared cache on DataContext rather than in
+ * this component's state. That is not tidiness: the index is 2.6 MB, and while
+ * it was local state it was refetched on every visit to the area and twice per
+ * visit in development, because StrictMode double-invokes effects.
  */
 function DocumentationMasterContainer() {
     const navigate = useNavigate();
     const location = useLocation();
     const { campus, docGroup, docType: routeDocType, docId } = useParams();
 
-    const [items, setItems] = useState([]);
-    const [meta, setMeta] = useState(null);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
+    // The index: one shared entry, fetched once and reused for the life of the
+    // session. Documentation is campus- and year-agnostic, so a single key is
+    // the whole cache — nothing about the current campus or year changes it.
+    const { data: indexBody, loading, error } = useResource(
+        'documentation:index', fetchDocumentationIndex,
+    );
 
     // Filter state lives in the URL, not here, so a filtered view can be shared.
     // It still lives at the container level as far as the children are concerned,
@@ -70,30 +83,18 @@ function DocumentationMasterContainer() {
         sort: sortKey, search: query,
     } = filters;
 
-    const [selected, setSelected] = useState(null);
-    const [detail, setDetail] = useState(null);
-    const [detailLoading, setDetailLoading] = useState(false);
-    const [detailError, setDetailError] = useState(null);
+    // Selection is a route concern, so it seeds from the URL and is the only
+    // thing this component still holds. It identifies a record; it is not the
+    // record.
+    const [selection, setSelection] = useState(
+        () => (docId && routeDocType ? { docType: routeDocType, uniqueId: docId } : null),
+    );
 
     const groupIndex = Math.max(0, DOC_GROUP_ORDER.indexOf(docGroup || 'artifacts'));
     const activeGroup = DOC_GROUP_ORDER[groupIndex];
 
-    const load = useCallback(async () => {
-        setLoading(true);
-        setError(null);
-        try {
-            const body = await fetchDocumentationIndex();
-            setItems(body?.data?.items || []);
-            setMeta(body?.data?.meta || null);
-        } catch (e) {
-            setError(e?.message || 'Failed to load documentation.');
-            setItems([]);
-        } finally {
-            setLoading(false);
-        }
-    }, []);
-
-    useEffect(() => { load(); }, [load]);
+    const items = useMemo(() => indexBody?.data?.items || EMPTY_ITEMS, [indexBody]);
+    const meta = indexBody?.data?.meta || null;
 
     // Summary is computed over every item, so the tiles describe the whole
     // corpus rather than whichever tab happens to be open.
@@ -127,51 +128,35 @@ function DocumentationMasterContainer() {
         return counts;
     }, [items, activeFilter, activeAttachments]);
 
-    const loadDetail = useCallback(async (docType, uniqueId) => {
-        setDetailLoading(true);
-        setDetailError(null);
-        try {
-            const body = await fetchDocumentationItem(docType, uniqueId);
-            setDetail(body?.data || null);
-        } catch (e) {
-            setDetailError(e?.message || 'Failed to load this record.');
-            setDetail(null);
-        } finally {
-            setDetailLoading(false);
-        }
-    }, []);
+    // One cache entry per opened record, so re-opening a record you already
+    // looked at is free. The key carries both parts because the fetcher needs
+    // both, and the key is what identifies a resource.
+    const detailKey = selection
+        ? `documentation:item:${selection.docType}:${selection.uniqueId}`
+        : null;
+    const { data: detailBody, loading: detailLoading, error: detailError } = useResource(
+        detailKey,
+        () => fetchDocumentationItem(selection.docType, selection.uniqueId),
+    );
+
+    // The index row stands in until the full record lands, so opening a record
+    // paints immediately instead of flashing a spinner. A deep link to a record
+    // that is not in the index (deleted, or a bad link) has no stand-in and
+    // simply loads — the fetch is by id, so it does not depend on the index.
+    const selectedRow = useMemo(
+        () => (selection ? items.find((i) => i.unique_id === selection.uniqueId) : null),
+        [items, selection],
+    );
+    const detail = detailBody?.data || selectedRow || null;
 
     const handleSelect = useCallback((item) => {
         if (!item) return;
-        setSelected(item);
-        setDetail(item);            // show the index row immediately…
-        loadDetail(item.doc_type, item.unique_id);   // …then swap in the full record
+        setSelection({ docType: item.doc_type, uniqueId: item.unique_id });
         navigate(
             `/${campus}/ati-explorer/documentation/${activeGroup}/${item.doc_type}/${encodeURIComponent(item.unique_id)}`,
             { replace: true },
         );
-    }, [campus, activeGroup, navigate, loadDetail]);
-
-    // Deep link applied exactly once, so later navigation doesn't fight the user's
-    // selection. The effect re-runs as items arrive, since the row may not exist
-    // on the first pass.
-    const appliedDeepLink = useRef(false);
-    useEffect(() => {
-        if (appliedDeepLink.current) return;
-        if (!docId || !routeDocType) { appliedDeepLink.current = true; return; }
-        const match = items.find((i) => i.unique_id === docId);
-        if (match) {
-            appliedDeepLink.current = true;
-            setSelected(match);
-            setDetail(match);
-            loadDetail(match.doc_type, match.unique_id);
-        } else if (items.length && !loading) {
-            // Row isn't in the index (deleted, or a bad link) — fetch it directly
-            // rather than silently showing nothing.
-            appliedDeepLink.current = true;
-            loadDetail(routeDocType, docId);
-        }
-    }, [docId, routeDocType, items, loading, loadDetail]);
+    }, [campus, activeGroup, navigate]);
 
     const handleGroupChange = (index) => {
         const next = DOC_GROUP_ORDER[index];
@@ -251,7 +236,7 @@ function DocumentationMasterContainer() {
                                         group={key}
                                         activeTypes={activeTypes}
                                         onToggleType={toggleType}
-                                        selectedId={selected?.unique_id || docId || null}
+                                        selectedId={selection?.uniqueId || null}
                                         onSelect={handleSelect}
                                         query={query}
                                         onQueryChange={setSearch}
