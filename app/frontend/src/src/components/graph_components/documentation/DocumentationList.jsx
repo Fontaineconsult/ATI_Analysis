@@ -18,6 +18,7 @@ import { SearchIcon } from '@chakra-ui/icons';
 
 import useListboxNavigation from '../../../hooks/useListboxNavigation';
 import DocumentationAttachmentFilter from './DocumentationAttachmentFilter';
+import { Loading } from '../common/Loading';
 import { DocumentationBadgeRow } from './DocumentationBadges';
 import {
     DOC_SORTS,
@@ -149,11 +150,19 @@ function DocumentationList({
                 onClear={onClearAttachments}
             />
 
-            <Text fontSize="xs" color="gray.600" mb={2} aria-live="polite">
+            {/* One live region, two states. The spinner replaces the count
+                rather than sitting beside it, and Loading is rendered with
+                live={false} so we do not nest a second aria-live inside this
+                one — design-sense §5 (loading, inline). */}
+            <Box mb={2} role="status" aria-live="polite">
                 {loading
-                    ? 'Loading…'
-                    : `${visible.length} ${visible.length === 1 ? 'record' : 'records'}`}
-            </Text>
+                    ? <Loading label="Loading documentation…" live={false} />
+                    : (
+                        <Text fontSize="xs" color="gray.600">
+                            {`${visible.length} ${visible.length === 1 ? 'record' : 'records'}`}
+                        </Text>
+                    )}
+            </Box>
 
             <Box
                 borderWidth="1px"

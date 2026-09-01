@@ -73,6 +73,13 @@ export const DataProvider = ({ children }) => {
         bump();
     }, [store, bump]);
 
+    // The activity surface, for useIsFetching. Passed through as the store's own
+    // functions rather than mirrored into state: a subscriber that wants to know
+    // about in-flight requests subscribes to them directly, so the rest of the
+    // context does not re-render every time one starts or finishes.
+    const subscribeResources = useCallback((listener) => store.subscribe(listener), [store]);
+    const inflightCount = useCallback((prefix) => store.inflightCount(prefix), [store]);
+
     // --- Report cache: a view over the store, keyed report:<group|goal|year|campus>.
     // Names and signatures are unchanged from when this was its own pair of refs,
     // because ApprovalPage, SingleReportMasterContainer and their tests bind to them.
@@ -263,6 +270,8 @@ export const DataProvider = ({ children }) => {
             getOrFetchResource,
             invalidateResource,
             invalidateResourcePrefix,
+            subscribeResources,
+            inflightCount,
             resourceVersion,
             getCachedReport,
             setCachedReport,

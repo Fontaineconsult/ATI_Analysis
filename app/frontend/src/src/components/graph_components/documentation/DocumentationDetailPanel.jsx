@@ -7,7 +7,6 @@ import {
     HStack,
     Heading,
     Link,
-    Spinner,
     Text,
     VStack,
     Wrap,
@@ -16,6 +15,7 @@ import {
 import { ExternalLinkIcon } from '@chakra-ui/icons';
 
 import Card from '../common/Card';
+import { Loading } from '../common/Loading';
 import Section from '../common/Section';
 import ReferencedByList from './ReferencedByList';
 import { DocumentationBadgeRow, TypeBadge } from './DocumentationBadges';
@@ -114,14 +114,7 @@ function LocationSection({ item }) {
  */
 function DocumentationDetailPanel({ item, loading = false, error = null, campus }) {
     if (loading) {
-        return (
-            <Card>
-                <HStack spacing={2}>
-                    <Spinner size="sm" color="teal.500" />
-                    <Text fontSize="sm" color="gray.600">Loading record…</Text>
-                </HStack>
-            </Card>
-        );
+        return <Card><Loading label="Loading record…" /></Card>;
     }
 
     if (error) {

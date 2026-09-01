@@ -25,6 +25,7 @@ import AtiExplorer from './components/AtiExplorer';
 import Dashboard from './components/Dashboard';
 import About from './components/About';
 import SubNavbar from './components/SubNavbar';
+import GlobalActivityIndicator from './components/functional_components/GlobalActivityIndicator';
 import YseAvailabilityBanner from './components/functional_components/YseAvailabilityBanner';
 import './styles/App.css';
 import { useSettings } from "./context/SettingsContext";
@@ -481,6 +482,9 @@ function AppContent() {
                     {/* Global "no Year Success Evidence for this campus/year" banner — shows
                         on every YSE-displaying view; renders nothing when evidence exists. */}
                     <YseAvailabilityBanner />
+                    {/* One per app: subscribes to the shared store's in-flight
+                        count, so every read anywhere reports through it. */}
+                    <GlobalActivityIndicator />
                     <Routes>
                         <Route path="ati-explorer/*" element={<AtiExplorer />} />
                         <Route path="dashboard/*" element={<Dashboard />} />

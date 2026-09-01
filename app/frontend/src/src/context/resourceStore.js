@@ -21,6 +21,13 @@ export function createResourceStore() {
     let cache = Object.create(null);
     let inflight = Object.create(null);
 
+    // Subscribers to in-flight changes. This is what makes a global "is anything
+    // loading?" indicator possible at all: before every read went through here,
+    // the answer was scattered across 48 components' private useState flags and
+    // nothing could see all of it at once.
+    const listeners = new Set();
+    const notify = () => { listeners.forEach((listener) => listener()); };
+
     const peek = (key) => cache[key];
 
     const has = (key) => key in cache;
@@ -38,20 +45,49 @@ export function createResourceStore() {
                 // fetcher that resolves to nothing caches nothing.
                 if (value !== undefined) cache[key] = value;
                 delete inflight[key];
+                notify();
                 return value;
             })
             .catch((err) => {
                 delete inflight[key];
+                notify();
                 throw err;
             });
 
         inflight[key] = pending;
+        notify();
         return pending;
+    };
+
+    /**
+     * Subscribe to in-flight changes. Returns an unsubscribe.
+     *
+     * Deliberately NOT a React state update in the provider: bumping context
+     * state on every request start and finish would re-render every consumer of
+     * DataContext several times a page load. Subscribers opt in individually
+     * (useIsFetching does it with useSyncExternalStore).
+     */
+    const subscribe = (listener) => {
+        listeners.add(listener);
+        return () => { listeners.delete(listener); };
+    };
+
+    /**
+     * How many requests are in flight, optionally within one namespace.
+     *
+     * A NUMBER, not a boolean, because it has to be a stable snapshot for
+     * useSyncExternalStore — and because "3 requests out" is more useful than
+     * "something is loading" when you are looking at why a screen is slow.
+     */
+    const inflightCount = (prefix) => {
+        const keys = Object.keys(inflight);
+        return prefix ? keys.filter((k) => k.startsWith(prefix)).length : keys.length;
     };
 
     const invalidate = (key) => {
         delete cache[key];
         delete inflight[key];
+        notify();
     };
 
     /** Drop a whole namespace — "every report", "every campus plan". */
@@ -61,17 +97,22 @@ export function createResourceStore() {
                 if (k.startsWith(prefix)) delete bucket[k];
             });
         });
+        notify();
     };
 
     const clear = () => {
         cache = Object.create(null);
         inflight = Object.create(null);
+        notify();
     };
 
     /** Test/diagnostic helper — the keys currently held. */
     const keys = () => Object.keys(cache);
 
-    return { peek, has, set, getOrFetch, invalidate, invalidatePrefix, clear, keys };
+    return {
+        peek, has, set, getOrFetch, invalidate, invalidatePrefix, clear, keys,
+        subscribe, inflightCount,
+    };
 }
 
 export default createResourceStore;
