@@ -1,6 +1,5 @@
-import React, { useMemo } from 'react';
+import React, { useCallback, useMemo, useRef } from 'react';
 import {
-    Badge,
     Box,
     Button,
     HStack,
@@ -8,7 +7,6 @@ import {
     InputGroup,
     InputLeftElement,
     List,
-    ListItem,
     Select,
     Text,
     Wrap,
@@ -19,12 +17,11 @@ import { SearchIcon } from '@chakra-ui/icons';
 import useListboxNavigation from '../../../hooks/useListboxNavigation';
 import DocumentationAttachmentFilter from './DocumentationAttachmentFilter';
 import { Loading } from '../common/Loading';
-import { DocumentationBadgeRow } from './DocumentationBadges';
+import DocumentationListRow from './DocumentationListRow';
 import {
     DOC_SORTS,
     DOC_SORT_ORDER,
     DOC_TYPES,
-    getTypeLabel,
     searchDocumentation,
     sortDocumentation,
     typesInGroup,
@@ -45,6 +42,12 @@ import {
  *  3. The "Attached to" facet narrows by what a record documents rather than by
  *     what it is — the one question that crosses types, and the reason two
  *     Documents can be the same type and have nothing to do with each other.
+ *
+ * Rows are a separate memoized component and the keyboard handlers come from
+ * useListboxNavigation's STABLE `itemHandlers`, not from getItemProps. With 418
+ * rows carrying ~600 tooltips between them, rendering them inline meant every
+ * row re-rendered on every list render — and a click causes several. See
+ * DocumentationListRow for the measurements.
  *
  * Keyboard behaviour comes from useListboxNavigation — one tab stop, arrows move
  * focus without selecting, Enter/Space select (design-sense §6.1, APG Listbox).
@@ -79,13 +82,21 @@ function DocumentationList({
 
     const selectedIndex = visible.findIndex((i) => i.unique_id === selectedId);
 
-    const { getItemProps } = useListboxNavigation({
+    const { focusedIndex, itemHandlers } = useListboxNavigation({
         itemCount: visible.length,
         selectedIndex,
         onActivate: (i) => onSelect?.(visible[i]),
     });
 
-    const locatorOf = (item) => item.url || item.uri_path || item.file_path || '';
+    // Stable for the life of the list, so the memoized rows are not invalidated
+    // by their own handlers changing identity.
+    const { registerItem, onItemFocus, onItemKeyDown } = itemHandlers;
+
+    // onSelect arrives inline from the container, so it changes identity every
+    // render; pinning it here keeps that from reaching the rows.
+    const onSelectRef = useRef(onSelect);
+    onSelectRef.current = onSelect;
+    const handleSelect = useCallback((item) => onSelectRef.current?.(item), []);
 
     return (
         <Box>
@@ -181,76 +192,19 @@ function DocumentationList({
                     </Text>
                 ) : (
                     <List role="listbox" aria-label={`${group} documentation`}>
-                        {visible.map((item, index) => {
-                            const isSelected = item.unique_id === selectedId;
-                            const locator = locatorOf(item);
-                            return (
-                                <ListItem
-                                    key={item.unique_id}
-                                    {...getItemProps(index)}
-                                    role="option"
-                                    aria-selected={isSelected}
-                                    onClick={() => onSelect?.(item)}
-                                    px={3}
-                                    py={2}
-                                    cursor="pointer"
-                                    bg={isSelected ? 'teal.50' : 'white'}
-                                    borderLeftWidth="3px"
-                                    borderLeftColor={isSelected ? 'teal.500' : 'transparent'}
-                                    borderBottomWidth="1px"
-                                    borderBottomColor="gray.100"
-                                    _hover={{ bg: isSelected ? 'teal.50' : 'gray.50', boxShadow: 'md' }}
-                                    _focusVisible={{ outline: '2px solid', outlineColor: 'teal.500' }}
-                                >
-                                    <HStack justify="space-between" align="flex-start" spacing={2}>
-                                        <Box minW="0" flex="1">
-                                            <Text fontSize="sm" fontWeight="medium" color="gray.800" noOfLines={2}>
-                                                {item.title || <em>Untitled</em>}
-                                            </Text>
-                                            {locator && (
-                                                <Text
-                                                    fontSize="2xs"
-                                                    color="gray.600"
-                                                    fontFamily="mono"
-                                                    noOfLines={1}
-                                                    title={locator}
-                                                >
-                                                    {locator}
-                                                </Text>
-                                            )}
-                                        </Box>
-                                        {/* Reference count is red at zero — an orphan is the
-                                            thing you most need to notice while scanning. */}
-                                        <Badge
-                                            flexShrink={0}
-                                            colorScheme={item.reference_count ? 'gray' : 'red'}
-                                            borderRadius="full"
-                                            fontSize="2xs"
-                                            title={`${item.reference_count} reference(s), ${item.parent_count} record(s)`}
-                                        >
-                                            {item.reference_count}
-                                        </Badge>
-                                    </HStack>
-                                    <Wrap spacing={1} mt={1}>
-                                        <WrapItem>
-                                            <Badge
-                                                colorScheme={DOC_TYPES[item.doc_type]?.colorScheme || 'gray'}
-                                                borderRadius="md"
-                                                fontSize="2xs"
-                                                textTransform="uppercase"
-                                            >
-                                                {getTypeLabel(item.doc_type)}
-                                            </Badge>
-                                        </WrapItem>
-                                        <WrapItem>
-                                            <HStack spacing={1}>
-                                                <DocumentationBadgeRow item={item} />
-                                            </HStack>
-                                        </WrapItem>
-                                    </Wrap>
-                                </ListItem>
-                            );
-                        })}
+                        {visible.map((item, index) => (
+                            <DocumentationListRow
+                                key={item.unique_id}
+                                item={item}
+                                index={index}
+                                isSelected={item.unique_id === selectedId}
+                                isFocused={index === focusedIndex}
+                                onSelect={handleSelect}
+                                registerItem={registerItem}
+                                onItemFocus={onItemFocus}
+                                onItemKeyDown={onItemKeyDown}
+                            />
+                        ))}
                     </List>
                 )}
             </Box>
