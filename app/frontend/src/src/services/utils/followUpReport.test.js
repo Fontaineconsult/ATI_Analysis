@@ -69,6 +69,20 @@ describe('buildFollowUpReport', () => {
         expect(html).not.toContain('<table');
     });
 
+    it('puts real air between a heading and the table under it', () => {
+        // Outlook's Word engine drops margins on <table>, so the rhythm has to be
+        // a real element with a real height or the message reads as a wall.
+        const { html } = buildFollowUpReport('## Heading\n\n| H |\n| --- |\n| v |');
+        const spacers = html.match(/height:\d+px;line-height:\d+px;font-size:0/g) || [];
+        expect(spacers.length).toBeGreaterThanOrEqual(3); // before heading, before + after table
+    });
+
+    it('keeps spacers out of the plain-text fallback', () => {
+        const { plainText } = buildFollowUpReport('## Heading\n\n| H |\n| --- |\n| v |');
+        expect(plainText).not.toContain('nbsp');
+        expect(plainText).not.toContain('font-size');
+    });
+
     it('produces a plain-text fallback with no markup', () => {
         const { plainText } = buildFollowUpReport(SAVED);
         expect(plainText).toContain('8.11-ins');

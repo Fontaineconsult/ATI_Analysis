@@ -41,6 +41,12 @@ const plainInline = (text) => String(text ?? '')
     .replace(/(^|[\s(])_([^_]+)_(?=[\s.,;:)]|$)/g, '$1$2')
     .replace(/`([^`]+)`/g, '$1');
 
+// Outlook's Word engine ignores margins on <table>, so the air around one has to
+// be a real element with a real height. font-size:0 and matching line-height stop
+// the &nbsp; from adding its own leading on top.
+const spacer = (px) =>
+    `<div style="height:${px}px;line-height:${px}px;font-size:0;">&nbsp;</div>`;
+
 const isTableRow = (line) => /^\s*\|.*\|\s*$/.test(line);
 const isDivider = (line) => /^\s*\|?[\s:-]*-{2,}[\s:|-]*\|?\s*$/.test(line) && line.includes('-');
 
@@ -67,11 +73,13 @@ function tableHtml(rows) {
     const td = (content) =>
         `<td style="border:1px solid ${BORDER};padding:6px 8px;font-size:12px;color:${TEXT};`
         + `vertical-align:top;${FONT}">${inline(content)}</td>`;
-    return '<table cellpadding="0" cellspacing="0" width="100%" '
-        + 'style="border-collapse:collapse;margin:6px 0 10px 0;">'
+    return spacer(10)
+        + '<table cellpadding="0" cellspacing="0" width="100%" '
+        + 'style="border-collapse:collapse;">'
         + `<tr>${header.map(th).join('')}</tr>`
         + body.map((r) => `<tr>${r.map(td).join('')}</tr>`).join('')
-        + '</table>';
+        + '</table>'
+        + spacer(14);
 }
 
 /**
@@ -85,7 +93,7 @@ export function buildFollowUpReport(markdown) {
     let i = 0;
     let blockCount = 0;
 
-    const para = (t) => `<p style="margin:6px 0;font-size:12px;color:${TEXT};line-height:1.5;${FONT}">${inline(t)}</p>`;
+    const para = (t) => `<p style="margin:0 0 12px 0;font-size:12px;color:${TEXT};line-height:1.6;${FONT}">${inline(t)}</p>`;
 
     while (i < lines.length) {
         const line = lines[i];
@@ -94,7 +102,7 @@ export function buildFollowUpReport(markdown) {
 
         // Horizontal rule — the separator between indicators.
         if (/^\s*---+\s*$/.test(line) && !isTableRow(line)) {
-            html.push(`<hr style="border:0;border-top:1px solid ${BORDER};margin:14px 0;" />`);
+            html.push(spacer(8) + `<hr style="border:0;border-top:1px solid ${BORDER};margin:0;" />` + spacer(16));
             plain.push('', '—'.repeat(40), '');
             i += 1; blockCount += 1;
             continue;
@@ -106,7 +114,8 @@ export function buildFollowUpReport(markdown) {
             const level = heading[1].length;
             const size = level <= 2 ? 14 : 13;
             html.push(
-                `<p style="margin:14px 0 4px 0;font-size:${size}px;font-weight:bold;`
+                spacer(level <= 2 ? 18 : 12)
+                + `<p style="margin:0 0 10px 0;font-size:${size}px;font-weight:bold;`
                 + `color:${NAVY};${FONT}">${inline(heading[2])}</p>`
             );
             plain.push('', plainInline(heading[2]), '='.repeat(plainInline(heading[2]).length));
@@ -138,8 +147,8 @@ export function buildFollowUpReport(markdown) {
                 i += 1;
             }
             html.push(
-                `<ul style="margin:6px 0 10px 18px;padding:0;font-size:12px;color:${TEXT};${FONT}">`
-                + items.map((it) => `<li style="margin:3px 0;line-height:1.5;">${inline(it)}</li>`).join('')
+                `<ul style="margin:0 0 14px 20px;padding:0;font-size:12px;color:${TEXT};${FONT}">`
+                + items.map((it) => `<li style="margin:0 0 6px 0;line-height:1.6;">${inline(it)}</li>`).join('')
                 + '</ul>'
             );
             items.forEach((it) => plain.push(`  - ${plainInline(it)}`));

@@ -74,22 +74,44 @@ first; that inference is exactly the bug this skill replaced.
 
 ## Step 2 — Write it
 
-A real message to colleagues, not a report dump.
+A real message to colleagues, not a report dump. **Brevity is the constraint that
+matters most** — a director who stops reading halfway sends nothing, so a shorter
+message that gets answered beats a complete one that does not.
 
-- Open with what you are asking for, not with a status summary.
-- Group by indicator when the asks are indicator-shaped; group by PERSON when one
-  attendee owns most of them. The reader should see their own name near their ask.
-- Quote the record when it helps: *"my notes say the Back to the Bay accessibility
-  session has run for two years"* invites a correction that a bare question does not.
-- Include the evidence table only where it earns its place — an indicator you are
-  asking nothing about rarely needs its table reproduced.
-- Ask for corrections explicitly. A follow-up that only extracts is a worse
-  instrument than one that also invites *"that is wrong, actually"*.
-- Keep it short enough that a busy director reads to the end.
+**Budget: one screen per indicator, and no more than six indicators.** If the
+draft runs past roughly 400 words, the problem is not formatting, it is that too
+many asks are in it. Cut asks, not words.
+
+- **One ask per indicator.** Pick the single thing that would move it furthest and
+  drop the rest — they keep, and they will be there next cycle. Three asks under
+  one heading reads as a to-do list and gets triaged to nothing.
+- **Two sentences per ask.** What you need, and why it changes the grade. The
+  reasoning that justified the ask to YOU belongs in the graph, not the email; the
+  recipient already knows their own programme.
+- **Lead with the ask, not the context.** "Cheryl — the attendee list you offered"
+  before any explanation of what it evidences. Never open a section with a status
+  recap; the reader can follow the link.
+- **Name the person in bold at the ask.** With `answerable_by` set, each ask has an
+  owner: address them directly so nobody has to work out which parts are theirs.
+- **Cut every sentence that only proves you did the reading.** "Since we spoke I
+  have read through the pages properly" earns nothing. So does restating what they
+  told you, unless you are inviting a correction to it.
+- Quote the record ONLY where you want it challenged: *"my notes say the session has
+  run for two years"* invites a correction that a bare question does not. Elsewhere
+  it is padding.
+- **Include a table only where you are asking about the evidence itself.** An
+  indicator whose ask is "please send X" does not need its evidence reproduced —
+  the link carries it.
+- Ask for corrections once, at the end. Not in every section.
+- Anything time-critical goes at the top, in one sentence, with the date.
 
 Markdown, in the subset the renderer handles: headings, paragraphs, bullets, pipe
 tables, horizontal rules, bold, italic, links. Escape a literal `|` inside a table
 cell as `\|`.
+
+**Not supported — do not reach for them:** blockquotes (`>`) and ordered lists
+(`1.`) render as literal text in the email. Use a bold lead-in instead of a
+blockquote, and bullets instead of numbers.
 
 ## Verify before writing — required gate
 
