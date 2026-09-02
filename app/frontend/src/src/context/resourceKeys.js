@@ -39,6 +39,7 @@ export const NS = {
     dimensions: 'dimensions:',
     yse: 'yse:',
     guides: 'guides:',
+    followUps: 'follow-ups:',
     documentation: 'documentation:',
     minutes: 'minutes:',
     queries: 'queries:',
@@ -100,6 +101,13 @@ export const KEYS = {
     // them: a guide WRITE should drop both listings, and one namespace does that.
     interviewGuides: (campus, year) => `guides:campus:${campus}:${year}`,
     guidesForCommunity: (communityId) => `guides:for-community:${communityId}`,
+
+    // --- Follow-ups ---
+    // Keyed by the meeting they chase, since that is the only way in. The table
+    // is a live derivation and the list is the saved record, so they invalidate
+    // together whenever a follow-up is written.
+    followUpTable: (meetingId) => `follow-ups:table:${meetingId}`,
+    followUpsForMeeting: (meetingId) => `follow-ups:for-meeting:${meetingId}`,
 
     // --- Reference vocabularies ---
     rolesAll: 'roles:all',
