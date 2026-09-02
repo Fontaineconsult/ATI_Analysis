@@ -136,17 +136,24 @@ def get_follow_up(unique_id: str) -> dict:
 
 
 def follow_ups_for_meeting(meeting_minutes_id: str) -> list:
-    """Every FollowUp chasing one meeting — one per community x campus slice."""
+    """Every FollowUp chasing one meeting - one per community x campus slice.
+
+    Carries the body, because this listing IS the display surface: follow-ups are
+    composed by an agent and saved, and the app reads them back rather than
+    generating anything itself.
+    """
     rows, meta = db.cypher_query(
         """
         MATCH (f:FollowUp)-[:follows_up_on]->(:MeetingMinutes {unique_id: $mid})
         OPTIONAL MATCH (f)-[:pertains_to]->(cop:CommunityOfPractice)
         OPTIONAL MATCH (f)-[:for_campus]->(c:Campus)
         RETURN f.unique_id AS unique_id, f.subject AS subject, f.status AS status,
+               f.body_markdown AS body_markdown,
                toString(f.date_created) AS date_created,
                toString(f.date_sent) AS date_sent,
+               toString(f.generated_at) AS generated_at,
                cop.name AS community, c.abbreviation AS campus
-        ORDER BY f.date_created DESC, f.subject
+        ORDER BY coalesce(f.generated_at, datetime({epochSeconds: 0})) DESC, f.subject
         """,
         {"mid": meeting_minutes_id},
     )

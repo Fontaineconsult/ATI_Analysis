@@ -1,17 +1,15 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useMemo } from 'react';
 import {
-    Badge, Box, Button, Flex, HStack, Modal, ModalBody, ModalCloseButton, ModalContent,
-    ModalFooter, ModalHeader, ModalOverlay, Spinner, Text, Textarea, VStack, useToast,
+    Badge, Box, Button, Flex, Modal, ModalBody, ModalCloseButton, ModalContent,
+    ModalFooter, ModalHeader, ModalOverlay, Spinner, Text, VStack,
 } from '@chakra-ui/react';
+import Markdown from '../common/Markdown';
 import Section from '../common/Section';
 import StatusLevelLadder from '../../functional_components/StatusLevelLadder';
 import CopyFollowUpButton from './CopyFollowUpButton';
 import { fetchFollowUpTable, fetchFollowUpsForMeeting } from '../../../services/api/get';
-import { createFollowUp } from '../../../services/api/post';
-import { buildFollowUpMarkdown } from '../../../services/utils/followUpMarkdown';
 import useResource from '../../../hooks/useResource';
-import useInvalidateResources from '../../../hooks/useInvalidateResources';
-import { KEYS, NS } from '../../../context/resourceKeys';
+import { KEYS } from '../../../context/resourceKeys';
 
 /** Total open asks recorded against one indicator row. */
 export function askCount(row) {
@@ -20,7 +18,7 @@ export function askCount(row) {
         + (row.concerns?.length || 0);
 }
 
-/** One indicator's line in the gap table. */
+/** One indicator's line in the live gap table. */
 function IndicatorRow({ row }) {
     const asks = askCount(row);
     return (
@@ -56,48 +54,63 @@ function IndicatorRow({ row }) {
     );
 }
 
-/** A previously saved follow-up. */
-function SavedRow({ item }) {
+/** One saved follow-up, rendered as it was written. */
+function SavedFollowUp({ item }) {
     return (
-        <Flex
-            borderWidth="1px" borderColor="gray.200" borderRadius="md"
-            bg="white" px={3} py={2} gap={2} align="center" wrap="wrap"
-        >
-            <Text fontSize="sm" color="gray.800" flex="1" minW={0} noOfLines={1}>
-                {item.subject}
-            </Text>
-            <Badge
-                colorScheme={item.status === 'sent' ? 'green' : 'gray'}
-                variant="subtle" fontSize="2xs"
-            >
-                {item.status}
-            </Badge>
-            {item.community && (
-                <Badge colorScheme="purple" variant="subtle" fontSize="2xs" textTransform="none">
-                    {item.community}
+        <Box borderWidth="1px" borderColor="gray.200" borderRadius="md" bg="white" p={3}>
+            <Flex gap={2} align="center" wrap="wrap" mb={2}>
+                <Text fontSize="sm" fontWeight="medium" color="gray.800" flex="1" minW={0}>
+                    {item.subject}
+                </Text>
+                <Badge
+                    colorScheme={item.status === 'sent' ? 'green' : 'gray'}
+                    variant="subtle" fontSize="2xs"
+                >
+                    {item.status}
                 </Badge>
+                {item.community && (
+                    <Badge colorScheme="purple" variant="subtle" fontSize="2xs" textTransform="none">
+                        {item.community}
+                    </Badge>
+                )}
+                <CopyFollowUpButton markdown={item.body_markdown} subject={item.subject} />
+            </Flex>
+
+            {/* The table above is live; this text is a snapshot. The timestamp is
+                how a reader tells whether it still describes the same graph. */}
+            <Text fontFamily="mono" fontSize="2xs" color="gray.600" mb={2}>
+                generated {item.generated_at || item.date_created || 'date unknown'}
+            </Text>
+
+            {item.body_markdown ? (
+                <Box borderTopWidth="1px" borderColor="gray.200" pt={2}>
+                    <Markdown>{item.body_markdown}</Markdown>
+                </Box>
+            ) : (
+                <Text fontSize="sm" color="gray.600" fontStyle="italic">
+                    This follow-up has no body saved.
+                </Text>
             )}
-            {item.date_created && (
-                <Text fontFamily="mono" fontSize="2xs" color="gray.600">{item.date_created}</Text>
-            )}
-        </Flex>
+        </Box>
     );
 }
 
 /**
- * Generate and save the follow-up for one held interview guide.
+ * The follow-ups chasing one held interview guide.
  *
- * The gap table is a LIVE read of the graph; the markdown draft is generated
- * from it, edited here, and saved on the FollowUp node. What is saved is what
- * gets copied later, so a message reworded before sending stays reworded.
+ * This view does NOT compose anything. Follow-ups are written by Claude Code
+ * against the notes, source text and bar elements behind these indicators — the
+ * same way interview guides are authored — and saved through the follow-ups
+ * API. A template here could only mail-merge the structured nodes, which would
+ * miss every gap recorded as prose, including artifacts a stakeholder offered
+ * in the room.
+ *
+ * What the app owns is the rest of the loop: showing the live gap table beside
+ * the saved messages, timestamping them so staleness is visible, and getting
+ * one onto the clipboard as an email.
  */
 export default function FollowUpModal({ guide, onClose }) {
-    const toast = useToast();
     const meetingId = guide?.resulted_in?.unique_id || null;
-
-    const [draft, setDraft] = useState('');
-    const [subject, setSubject] = useState('');
-    const [saving, setSaving] = useState(false);
 
     const { data: tableResp, loading: tableLoading, error: tableError } = useResource(
         meetingId ? KEYS.followUpTable(meetingId) : null,
@@ -105,63 +118,13 @@ export default function FollowUpModal({ guide, onClose }) {
     );
     const rows = useMemo(() => tableResp?.data?.rows || [], [tableResp]);
 
-    const {
-        data: savedResp, loading: savedLoading, reload: reloadSaved,
-    } = useResource(
+    const { data: savedResp, loading: savedLoading } = useResource(
         meetingId ? KEYS.followUpsForMeeting(meetingId) : null,
         () => fetchFollowUpsForMeeting(meetingId),
     );
     const saved = savedResp?.data?.follow_ups || [];
 
-    const { invalidateNamespace } = useInvalidateResources();
-
     const community = (guide?.pertains_to_communities || [])[0]?.name || '';
-    const recipients = useMemo(() => guide?.prepared_for || [], [guide]);
-
-    const handleGenerate = useCallback(() => {
-        const { subject: generatedSubject, markdown } = buildFollowUpMarkdown(rows, {
-            meetingTitle: guide?.resulted_in?.title || guide?.title,
-            meetingDate: guide?.resulted_in?.meeting_date || guide?.meeting_date,
-            recipients,
-            community,
-            campus: guide?.campus || '',
-        });
-        setSubject(generatedSubject);
-        setDraft(markdown);
-    }, [rows, guide, recipients, community]);
-
-    const handleSave = useCallback(async () => {
-        setSaving(true);
-        try {
-            await createFollowUp({
-                subject,
-                meeting_minutes_id: meetingId,
-                body_markdown: draft,
-                community_name: community || undefined,
-                campus_abbreviation: guide?.campus || undefined,
-                interview_guide_id: guide?.unique_id,
-                addressed_to_ids: recipients.map((p) => p.unique_id),
-                covers_evidence_identifiers: rows.map((r) => r.year_identifier),
-            });
-            invalidateNamespace(NS.followUps);
-            await reloadSaved();
-            toast({
-                title: 'Follow-up saved',
-                description: 'Copy it when you are ready to send.',
-                status: 'success', duration: 3000, isClosable: true,
-            });
-        } catch (e) {
-            toast({
-                title: 'Could not save the follow-up',
-                description: e?.message || 'Unknown error.',
-                status: 'error', duration: 4000, isClosable: true,
-            });
-        } finally {
-            setSaving(false);
-        }
-    }, [subject, draft, meetingId, community, guide, recipients, rows,
-        invalidateNamespace, reloadSaved, toast]);
-
     const totalAsks = rows.reduce((n, r) => n + askCount(r), 0);
 
     return (
@@ -198,6 +161,7 @@ export default function FollowUpModal({ guide, onClose }) {
                                         {rows.length} indicator{rows.length === 1 ? '' : 's'}
                                         {' · '}
                                         {totalAsks} open ask{totalAsks === 1 ? '' : 's'}
+                                        {' · live'}
                                     </Text>
                                 }
                             >
@@ -217,60 +181,23 @@ export default function FollowUpModal({ guide, onClose }) {
                                 </VStack>
                             </Section>
 
-                            <Section
-                                title="Draft"
-                                action={
-                                    <HStack spacing={2}>
-                                        <Button
-                                            size="xs" variant="outline" colorScheme="teal"
-                                            onClick={handleGenerate} isDisabled={!rows.length}
-                                        >
-                                            {draft ? 'Regenerate' : 'Generate'}
-                                        </Button>
-                                        {draft && <CopyFollowUpButton markdown={draft} subject={subject} />}
-                                    </HStack>
-                                }
-                            >
-                                {draft ? (
-                                    <Textarea
-                                        value={draft}
-                                        onChange={(e) => setDraft(e.target.value)}
-                                        fontFamily="mono"
-                                        fontSize="xs"
-                                        rows={18}
-                                        aria-label="Follow-up message, markdown"
-                                    />
-                                ) : (
-                                    <Text fontSize="sm" color="gray.600" fontStyle="italic">
-                                        Generate a draft from the table above, then edit it before saving.
-                                        What you save is what gets copied.
-                                    </Text>
-                                )}
-                            </Section>
-
-                            <Section title={`Saved follow-ups (${saved.length})`}>
+                            <Section title={`Follow-ups (${saved.length})`}>
                                 {savedLoading && <Spinner size="sm" />}
                                 {!savedLoading && !saved.length && (
                                     <Text fontSize="sm" color="gray.600" fontStyle="italic">
-                                        None saved for this meeting yet.
+                                        None written for this meeting yet. Follow-ups are composed with
+                                        Claude Code against the notes and source text behind these
+                                        indicators, then saved here to read, copy and track.
                                     </Text>
                                 )}
-                                <VStack align="stretch" spacing={1.5}>
-                                    {saved.map((f) => <SavedRow key={f.unique_id} item={f} />)}
+                                <VStack align="stretch" spacing={2}>
+                                    {saved.map((f) => <SavedFollowUp key={f.unique_id} item={f} />)}
                                 </VStack>
                             </Section>
                         </VStack>
                     )}
                 </ModalBody>
                 <ModalFooter>
-                    <Button
-                        size="sm" colorScheme="teal" variant="outline"
-                        onClick={handleSave}
-                        isLoading={saving} loadingText="Saving…"
-                        isDisabled={!draft || !subject}
-                    >
-                        Save follow-up
-                    </Button>
                     <Box flex="1" />
                     <Button size="sm" colorScheme="teal" onClick={onClose}>Close</Button>
                 </ModalFooter>

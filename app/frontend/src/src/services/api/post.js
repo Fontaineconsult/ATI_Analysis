@@ -267,22 +267,6 @@ export const createCommunity = async ({ name, description }) => {
     }
 };
 
-// Save a generated follow-up. The body is stored as MARKDOWN; the email-ready
-// HTML is built in the browser at copy time (services/utils/followUpReport.js),
-// so the saved record stays readable and the rendering can change freely.
-export const createFollowUp = async (payload) => {
-    try {
-        const response = await axios.post(`${process.env.REACT_APP_API_URL}/follow-ups`, {
-            action: 'create_follow_up',
-            ...payload,
-        });
-        return response.data;
-    } catch (error) {
-        console.error('Error creating follow-up:', error);
-        throw error;
-    }
-};
-
 export const createPlan = async (formData) => {
     try {
         const response = await axios.post(`${process.env.REACT_APP_API_URL}/implementations/plans`, createPlanPayload(formData));

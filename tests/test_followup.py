@@ -3,15 +3,17 @@
 Layered per the project's build order: vocabulary (no DB), then the create
 invariant and the gap table (DB).
 
-All test data is scoped to the sentinel academic year and a sentinel meeting
-title, and torn down by title/identifier prefix, so nothing here can touch
-production records even if a real campus or indicator is referenced.
+All test data is scoped to a sentinel meeting title and torn down by prefix, so
+nothing here can touch production records even if a real campus or indicator is
+referenced.
 """
+import re
+
 import pytest
 from neomodel import db
 
 from app.data_config import query_categories, followup_statuses
-from app.database.graph_schema import FollowUp, MeetingMinutes, Note, Person
+from app.database.graph_schema import FollowUp, MeetingMinutes
 from app.database.queries.followup.create import create_follow_up
 from app.database.queries.followup.read import (
     build_follow_up_table,
@@ -45,7 +47,7 @@ def test_followup_statuses_vocabulary():
 # --------------------------------------------------------------------------- #
 @pytest.fixture
 def sentinel_meeting(neo4j_connection):
-    """A throwaway meeting with one note shared with a throwaway YSE-less graph."""
+    """A throwaway meeting, with every follow-up hung off it cleaned up after."""
     minutes = MeetingMinutes(title=SENTINEL_MEETING).save()
     yield minutes
     db.cypher_query(
@@ -67,12 +69,30 @@ def test_create_follow_up_wires_the_required_anchor(sentinel_meeting):
     data = create_follow_up(
         subject=SENTINEL_SUBJECT,
         meeting_minutes_id=sentinel_meeting.unique_id,
-        body_markdown="## Gaps\n\nNothing yet.",
+        body_markdown="Gaps: the attendee list, please.",
     )
     node = FollowUp.nodes.get(unique_id=data["unique_id"])
     assert node.follows_up_on.single().unique_id == sentinel_meeting.unique_id
     assert node.status == "draft"
     assert node.date_created is not None
+
+
+@pytest.mark.integration
+def test_create_stamps_a_generation_timestamp(sentinel_meeting):
+    """The gap table a follow-up was written against keeps moving, so the text
+    needs a moment attached to it. A date alone cannot separate two drafts
+    written either side of an evidence change on the same day.
+
+    Stored as an ISO-8601 string rather than a DateTimeProperty: neomodel
+    inflates that through zoneinfo, which raises "No time zone found with key
+    UTC" on Windows without the tzdata package — and this app is IIS-hosted.
+    """
+    data = create_follow_up(subject=SENTINEL_SUBJECT,
+                            meeting_minutes_id=sentinel_meeting.unique_id)
+    node = FollowUp.nodes.get(unique_id=data["unique_id"])
+    assert node.generated_at is not None
+    assert re.match(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}", node.generated_at)
+    assert data["generated_at"] == node.generated_at
 
 
 @pytest.mark.integration
@@ -100,7 +120,8 @@ def test_create_follow_up_rejects_a_missing_meeting():
 @pytest.mark.integration
 def test_a_bad_edge_leaves_no_orphan_followup(sentinel_meeting):
     """If any edge fails to wire, the node is removed rather than left anchored
-    to nothing — an unanchored FollowUp is exactly the invariant being protected."""
+    to nothing — an unanchored FollowUp is exactly the invariant being
+    protected."""
     before = len(FollowUp.nodes.filter(subject=SENTINEL_SUBJECT))
     with pytest.raises(NotFoundError):
         create_follow_up(
@@ -109,6 +130,21 @@ def test_a_bad_edge_leaves_no_orphan_followup(sentinel_meeting):
             addressed_to_ids=["definitely-not-a-person"],
         )
     assert len(FollowUp.nodes.filter(subject=SENTINEL_SUBJECT)) == before
+
+
+# --------------------------------------------------------------------------- #
+# Layer 4 — reads                                                              #
+# --------------------------------------------------------------------------- #
+@pytest.mark.integration
+def test_listing_carries_the_body_and_timestamp(sentinel_meeting):
+    """The listing IS the display surface — follow-ups are composed elsewhere
+    and read back here, so the message has to come with it."""
+    create_follow_up(subject=SENTINEL_SUBJECT,
+                     meeting_minutes_id=sentinel_meeting.unique_id,
+                     body_markdown="Gaps: the attendee list, please.")
+    row = follow_ups_for_meeting(sentinel_meeting.unique_id)[0]
+    assert "attendee list" in row["body_markdown"]
+    assert row["generated_at"] is not None
 
 
 @pytest.mark.integration
@@ -150,8 +186,8 @@ def test_table_is_empty_for_a_meeting_with_no_notes(sentinel_meeting):
 @pytest.mark.integration
 def test_table_returns_one_row_per_indicator_not_per_note(sentinel_meeting):
     """An indicator discussed at length shares SEVERAL notes with the meeting.
-    Without DISTINCT the row fans out once per note, which silently triples the
-    indicator in a generated email."""
+    Without DISTINCT the row fans out once per note, which silently multiplies
+    the indicator in a generated message."""
     yse_id = "9999-9999-ZZZ-followup-test"
     db.cypher_query(
         """

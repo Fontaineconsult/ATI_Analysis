@@ -5,14 +5,15 @@
 // Outlook desktop uses the Word engine, so: <table> layout with inline styles
 // AND bgcolor attributes, web-safe fonts, no flex/grid, no <style> blocks.
 //
-// This renders FROM the markdown rather than from the gap-table rows, because
-// the message is editable: a follow-up that was reworded before sending must
-// copy as the reworded version, not regenerate from the graph.
+// This renders FROM the saved markdown, which is the only source: follow-ups
+// are composed by an agent against the notes and source text behind the
+// indicators, then saved. The app never regenerates them.
 //
-// The markdown subset is deliberately the one buildFollowUpMarkdown emits, plus
-// what someone plausibly hand-writes: headings, paragraphs, bullets, pipe
-// tables, horizontal rules, bold, italic and links. Anything else passes
-// through as escaped text rather than being silently dropped.
+// The markdown subset is the one a follow-up is actually written in: headings,
+// paragraphs, bullets, pipe tables, horizontal rules, bold, italic and links.
+// Anything else passes through as escaped text rather than being silently
+// dropped, because this renders text the app did not author and must not
+// quietly lose part of.
 
 const NAVY = '#354A7A';
 const BORDER = '#CBD5E0';

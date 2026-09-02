@@ -2038,6 +2038,18 @@ class FollowUp(StructuredNode):
     date_created = DateProperty()
     date_sent = DateProperty()
 
+    # WHEN the message was composed, to the second, as ISO-8601. Distinct from
+    # date_created, and the reason it needs to be: the gap table this text was
+    # written against keeps moving, so a follow-up generated before an indicator
+    # gained evidence is stale, and only a timestamp makes that visible beside
+    # the live table.
+    #
+    # A string, not DateTimeProperty: neomodel inflates that through zoneinfo,
+    # which raises "No time zone found with key UTC" on Windows without the
+    # tzdata package — and this app is IIS-hosted. ISO-8601 sorts lexically and
+    # serialises straight to JSON, which is all this field needs to do.
+    generated_at = StringProperty()
+
     # Required anchor (enforced in queries/followup/create.py — neomodel cannot
     # enforce a required RelationshipTo at save time).
     follows_up_on = RelationshipTo("MeetingMinutes", "follows_up_on", cardinality=ZeroOrOne)
@@ -2070,6 +2082,7 @@ class FollowUp(StructuredNode):
             "status": self.status,
             "date_created": self.date_created.isoformat() if self.date_created else None,
             "date_sent": self.date_sent.isoformat() if self.date_sent else None,
+            "generated_at": self.generated_at,
         }
 
 

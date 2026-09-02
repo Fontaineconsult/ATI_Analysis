@@ -9,7 +9,7 @@
 # Scope is ONE community of practice at ONE campus — the audience that shares the
 # ground being chased. A meeting spanning two communities gets two follow-ups.
 #
-from datetime import date
+from datetime import date, datetime
 
 from app.database.graph_schema import (
     FollowUp,
@@ -77,6 +77,10 @@ def create_follow_up(subject: str,
             body_markdown=body_markdown,
             status=status,
             date_created=date.today(),
+            # Stamped at composition, so a reader can tell whether the saved text
+            # predates changes to the evidence it describes. Seconds resolution
+            # is enough and keeps the string readable.
+            generated_at=datetime.now().replace(microsecond=0).isoformat(),
         ).save()
     except Exception as e:
         raise CrudError(f"Failed to create FollowUp: {e}")

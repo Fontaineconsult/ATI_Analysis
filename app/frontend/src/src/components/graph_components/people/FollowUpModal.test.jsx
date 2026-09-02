@@ -1,6 +1,5 @@
 import React from 'react';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import { render, screen } from '@testing-library/react';
 import { ChakraProvider } from '@chakra-ui/react';
 
 // CRA's resetMocks wipes factory implementations, so they are set in beforeEach.
@@ -9,13 +8,8 @@ jest.mock('../../../services/api/get', () => ({
     fetchFollowUpTable: jest.fn(),
     fetchFollowUpsForMeeting: jest.fn(),
 }));
-jest.mock('../../../services/api/post', () => ({
-    __esModule: true,
-    createFollowUp: jest.fn(),
-}));
 
 import { fetchFollowUpTable, fetchFollowUpsForMeeting } from '../../../services/api/get';
-import { createFollowUp } from '../../../services/api/post';
 import FollowUpModal, { askCount } from './FollowUpModal';
 
 const ROWS = [
@@ -39,6 +33,16 @@ const ROWS = [
     },
 ];
 
+const SAVED = [{
+    unique_id: 'f1',
+    subject: 'Follow-up: Faculty Development CoP',
+    status: 'draft',
+    community: 'Faculty Development',
+    body_markdown: '## 8.11-ins\n\n- **Please send:** the attendee list you offered.',
+    generated_at: '2026-09-02T09:15:00',
+    date_created: '2026-09-02',
+}];
+
 const GUIDE = {
     unique_id: 'g1',
     title: 'Interview: Faculty Development',
@@ -57,8 +61,7 @@ const renderModal = (guide = GUIDE) => render(
 
 beforeEach(() => {
     fetchFollowUpTable.mockResolvedValue({ data: { rows: ROWS } });
-    fetchFollowUpsForMeeting.mockResolvedValue({ data: { follow_ups: [] } });
-    createFollowUp.mockResolvedValue({ data: { unique_id: 'f1' } });
+    fetchFollowUpsForMeeting.mockResolvedValue({ data: { follow_ups: SAVED } });
 });
 
 describe('askCount', () => {
@@ -75,59 +78,53 @@ describe('askCount', () => {
 describe('FollowUpModal', () => {
     it('lists every indicator the meeting touched', async () => {
         renderModal();
-        expect(await screen.findByText('8.11-ins')).toBeInTheDocument();
+        // The saved message cites 8.11-ins too, so both the badge and the
+        // rendered body match — the table row is the one that must exist.
+        expect(await screen.findAllByText('8.11-ins')).not.toHaveLength(0);
         expect(screen.getByText('8.12-ins')).toBeInTheDocument();
     });
 
     it('summarises the open asks across the table', async () => {
         renderModal();
-        await screen.findByText('8.11-ins');
-        expect(screen.getByText(/2 indicators/)).toBeInTheDocument();
+        expect(await screen.findByText(/2 indicators/)).toBeInTheDocument();
         expect(screen.getByText(/2 open asks/)).toBeInTheDocument();
     });
 
-    it('refuses to save before a draft exists', async () => {
+    it('displays a saved follow-up body rather than composing one', async () => {
         renderModal();
-        await screen.findByText('8.11-ins');
-        expect(screen.getByRole('button', { name: /save follow-up/i })).toBeDisabled();
+        expect(await screen.findByText(/the attendee list you offered/)).toBeInTheDocument();
     });
 
-    it('generates a draft into an editable field', async () => {
+    it('offers no way to generate a message from the app', async () => {
         renderModal();
-        await screen.findByText('8.11-ins');
-        await userEvent.click(screen.getByRole('button', { name: /^generate$/i }));
-        const box = await screen.findByLabelText(/follow-up message/i);
-        expect(box.value).toContain('8.11-ins');
-        expect(box.value).toContain('Hi Dawna,');
+        await screen.findByText(/2 indicators/);
+        expect(screen.queryByRole('button', { name: /generate/i })).not.toBeInTheDocument();
+        expect(screen.queryByRole('button', { name: /save follow-up/i })).not.toBeInTheDocument();
+        expect(screen.queryByLabelText(/follow-up message/i)).not.toBeInTheDocument();
     });
 
-    it('saves the EDITED text, not a regenerated one', async () => {
+    it('shows when the message was generated, so staleness is visible', async () => {
         renderModal();
-        await screen.findByText('8.11-ins');
-        await userEvent.click(screen.getByRole('button', { name: /^generate$/i }));
-        const box = await screen.findByLabelText(/follow-up message/i);
-        // fireEvent.change sets a controlled textarea in one commit; typing
-        // character-by-character after clear() leaves it mid-render.
-        fireEvent.change(box, { target: { value: 'Reworded by hand.' } });
-        const save = screen.getByRole('button', { name: /save follow-up/i });
-        await waitFor(() => expect(save).toBeEnabled());
-        await userEvent.click(save);
-        await waitFor(() => expect(createFollowUp).toHaveBeenCalled());
-        expect(createFollowUp.mock.calls[0][0].body_markdown).toBe('Reworded by hand.');
+        expect(await screen.findByText(/generated 2026-09-02T09:15:00/)).toBeInTheDocument();
     });
 
-    it('carries the guide, community and recipients onto the saved record', async () => {
+    it('falls back to the created date when no timestamp was stamped', async () => {
+        fetchFollowUpsForMeeting.mockResolvedValue({
+            data: { follow_ups: [{ ...SAVED[0], generated_at: null }] },
+        });
         renderModal();
-        await screen.findByText('8.11-ins');
-        await userEvent.click(screen.getByRole('button', { name: /^generate$/i }));
-        await userEvent.click(await screen.findByRole('button', { name: /save follow-up/i }));
-        await waitFor(() => expect(createFollowUp).toHaveBeenCalled());
-        const payload = createFollowUp.mock.calls[0][0];
-        expect(payload.meeting_minutes_id).toBe('m1');
-        expect(payload.interview_guide_id).toBe('g1');
-        expect(payload.community_name).toBe('Faculty Development');
-        expect(payload.addressed_to_ids).toEqual(['p1']);
-        expect(payload.covers_evidence_identifiers).toHaveLength(2);
+        expect(await screen.findByText(/generated 2026-09-02$/)).toBeInTheDocument();
+    });
+
+    it('offers a copy button per saved follow-up', async () => {
+        renderModal();
+        expect(await screen.findByRole('button', { name: /copy/i })).toBeInTheDocument();
+    });
+
+    it('says where follow-ups come from when none exist yet', async () => {
+        fetchFollowUpsForMeeting.mockResolvedValue({ data: { follow_ups: [] } });
+        renderModal();
+        expect(await screen.findByText(/composed with/i)).toBeInTheDocument();
     });
 
     it('explains itself when the guide has no minutes linked', async () => {
