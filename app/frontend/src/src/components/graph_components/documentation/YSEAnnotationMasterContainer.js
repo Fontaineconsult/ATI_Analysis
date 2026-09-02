@@ -4,6 +4,7 @@ import NoteViewer from './NoteViewer';
 import MessageViewer from './MessageViewer';
 import MetricViewer from './MetricViewer';
 import PlanViewer from '../implementation/PlanViewer';
+import QueryViewer from './QueryViewer';
 import RecommendationsPanel from '../../dashboard_components/report_components/RecommendationsPanel';
 import ConcernsPanel from '../../dashboard_components/report_components/ConcernsPanel';
 
@@ -15,6 +16,7 @@ const HELP = {
     Plan: 'Specific actions, timelines, and responsibilities for this indicator.',
     Recommendation: 'End-of-review-cycle improvements — what should change before the next cycle. Items resolve (addressed/dismissed), never delete.',
     Concern: 'Issues raised with no path to resolution yet — each should become a recommendation or a plan, or be dismissed with a reason.',
+    Query: 'Pending questions whose answer would unblock this evidence. Raised under a working-group plan, so they are read-only here — settle them in the Queries area.',
 };
 
 const TabLabel = ({ label, count }) => (
@@ -29,13 +31,19 @@ const TabLabel = ({ label, count }) => (
  * there at a glance and reach each in one click). Each tab renders its viewer, which handles
  * add/edit inline.
  */
-function YSEAnnotationMasterContainer({ hasNotes, hasMessages, hasMetrics, plans, recommendations, concerns, year_identifier, onRecommendationsChange }) {
+function YSEAnnotationMasterContainer({ hasNotes, hasMessages, hasMetrics, plans, recommendations, concerns, queries, year_identifier, onRecommendationsChange }) {
     const notes = hasNotes?.filter((item) => item.note?.labels?.includes('Note')) || [];
     const messages = hasMessages?.filter((item) => item.message?.labels?.includes('Message')) || [];
     const metrics = hasMetrics?.filter((item) => item.metric?.labels?.includes('Metric')) || [];
     const planItems = plans?.filter((item) => item.labels?.includes('Plan')) || [];
     const recItems = recommendations?.filter((item) => item.recommendation) || [];
     const concernItems = concerns?.filter((item) => item.concern) || [];
+    // Pattern-comprehension rows from the working-group query — already flat
+    // maps, so no .properties unwrapping like the note/message collections.
+    const queryItems = queries?.filter((item) => item?.question) || [];
+    // The count that matters is what is still outstanding; a settled question is
+    // history, and counting it would make the tab look busier than the work is.
+    const openQueryCount = queryItems.filter((q) => q.status !== 'settled').length;
 
     return (
         <Box aria-label="Annotations">
@@ -47,6 +55,7 @@ function YSEAnnotationMasterContainer({ hasNotes, hasMessages, hasMetrics, plans
                     <Tab><TabLabel label="Plans" count={planItems.length} /></Tab>
                     <Tab><TabLabel label="Concerns" count={concernItems.length} /></Tab>
                     <Tab><TabLabel label="Recommendations" count={recItems.length} /></Tab>
+                    <Tab><TabLabel label="Queries" count={openQueryCount} /></Tab>
                 </TabList>
                 <TabPanels>
                     <TabPanel px={0}>
@@ -80,6 +89,10 @@ function YSEAnnotationMasterContainer({ hasNotes, hasMessages, hasMetrics, plans
                             recommendations={recItems}
                             onUpdate={onRecommendationsChange}
                         />
+                    </TabPanel>
+                    <TabPanel px={0}>
+                        <Text fontSize="xs" color="gray.600" mb={2}>{HELP.Query}</Text>
+                        <QueryViewer queries={queryItems} />
                     </TabPanel>
                 </TabPanels>
             </Tabs>

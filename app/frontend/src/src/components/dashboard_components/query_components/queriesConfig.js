@@ -14,6 +14,10 @@ export const CATEGORY_META = {
     technical_clarification: { label: 'Technical Clarification', colorScheme: 'cyan' },
     risk_compliance:         { label: 'Risk / Compliance',       colorScheme: 'red' },
     information_gap:         { label: 'Information Gap',          colorScheme: 'gray' },
+    // A document someone OFFERED and has not sent. Not an information gap: the
+    // answer is not unknown, the artifact simply has not arrived, so the ask is
+    // "please send it" rather than "please find out".
+    artifact_request:        { label: 'Artifact Request',        colorScheme: 'yellow' },
 };
 
 export const STATUS_ORDER = ['open', 'in_progress', 'settled'];
