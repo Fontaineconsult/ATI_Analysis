@@ -406,6 +406,10 @@ def _type_capabilities():
             "label": DOC_TYPE_TO_LABEL[doc_type],
             "supports_depreciation": "depreciated" in props,
             "supports_no_longer_exists": "no_longer_exists" in props,
+            # Only Document and Webpage carry the agent-readable source mirror.
+            # A UI that showed "no source text" on a Note would be reporting an
+            # absence the schema makes impossible.
+            "supports_raw_text": "raw_text" in props,
             "supports_file": "has_file" in cls.defined_properties(properties=False, rels=True),
             "has_url": "url" in props,
             "has_content": "content" in props,

@@ -6,6 +6,7 @@ import {
     getTypeLabel,
     isDeprecated,
     isDeprecationUnset,
+    sourceTextState,
     truthyFlag,
     describeIntegrityCode,
 } from './documentationConfig';
@@ -117,6 +118,44 @@ export function SharedBadge({ item }) {
 }
 
 /**
+ * Whether the agent-readable source mirror has been captured.
+ *
+ * BOTH STATES SHOW, which is unlike every other badge here — the rest announce
+ * an exception and render nothing when a record is fine. This one is a coverage
+ * signal rather than a fault: 29 of 418 artifacts have their source text today,
+ * so "missing" is the norm and the badge is how you see the backlog while
+ * scanning, and how you confirm a capture landed without opening the record.
+ *
+ * Silent on Notes, Messages and Metrics. Those classes have no `raw_text` at
+ * all, so reporting them as missing it would announce an absence the schema
+ * makes impossible.
+ */
+export function SourceTextBadge({ item }) {
+    const state = sourceTextState(item);
+    if (!state) return null;
+
+    if (state === 'present') {
+        return (
+            <Tooltip
+                label={item?.raw_text_captured
+                    ? `Source text captured ${item.raw_text_captured}. The published source stays authoritative; this is a snapshot.`
+                    : 'The source text has been mirrored onto this record.'}
+            >
+                <Badge colorScheme="green" borderRadius="full" fontSize="2xs">Source text</Badge>
+            </Tooltip>
+        );
+    }
+
+    return (
+        <Tooltip label="No source text captured — the link is titled but not readable without fetching it.">
+            <Badge colorScheme="gray" borderRadius="full" fontSize="2xs" variant="outline">
+                No source text
+            </Badge>
+        </Tooltip>
+    );
+}
+
+/**
  * Data-integrity codes from the server. These exist because the read layer
  * coerces defective values rather than passing them through — and coercing
  * silently would make the defect invisible, which is the opposite of what a
@@ -144,6 +183,7 @@ export function DocumentationBadgeRow({ item, includeType = false }) {
         <>
             {includeType && <TypeBadge docType={item?.doc_type} />}
             <ReportBadge item={item} />
+            <SourceTextBadge item={item} />
             <DeprecationBadge item={item} />
             <GoneBadge item={item} />
             <NoLocationBadge item={item} />

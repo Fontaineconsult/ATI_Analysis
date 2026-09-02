@@ -115,11 +115,18 @@ def test_capabilities_are_derived_from_the_schema():
     assert caps["webpages"]["supports_no_longer_exists"] is True
     assert caps["notes"]["supports_no_longer_exists"] is False
 
+    # The source-text mirror exists only on the two artifact types.
+    assert caps["documents"]["supports_raw_text"] is True
+    assert caps["webpages"]["supports_raw_text"] is True
+    for doc_type in ("notes", "messages", "metrics"):
+        assert caps[doc_type]["supports_raw_text"] is False
+
     for doc_type, cap in caps.items():
         cls = DOC_TYPE_TO_CLASS[doc_type]
         props = set(cls.defined_properties(aliases=False, rels=False).keys())
         assert cap["label"] == DOC_TYPE_TO_LABEL[doc_type]
         assert cap["supports_depreciation"] == ("depreciated" in props)
+        assert cap["supports_raw_text"] == ("raw_text" in props)
         assert set(cap["editable_flags"]) <= props
 
 

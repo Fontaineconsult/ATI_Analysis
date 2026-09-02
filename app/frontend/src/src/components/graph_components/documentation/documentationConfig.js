@@ -25,28 +25,34 @@ import { GOVERNANCE_TYPE_ORDER } from '../governance/governanceTypes';
 // --------------------------------------------------------------------------- //
 
 /**
- * `supportsDepreciation` mirrors the schema, not a preference: Metric has no
- * `depreciated` property at all, and update_metric never writes one, so a
- * Deprecate control there would be a no-op that reports success. The server
- * sends the authoritative version of this in meta.type_capabilities; this copy
- * exists so the UI can render before that arrives.
+ * `supportsDepreciation` and `supportsRawText` mirror the schema, not a
+ * preference. Metric has no `depreciated` property at all and update_metric
+ * never writes one, so a Deprecate control there would be a no-op that reports
+ * success; only Document and Webpage carry `raw_text`, so reporting "no source
+ * text" on a Note would announce an absence the schema makes impossible. The
+ * server sends the authoritative version of both in meta.type_capabilities;
+ * this copy exists so the UI can render before that arrives.
  */
 export const DOC_TYPES = {
     documents: {
         key: 'documents', label: 'Document', plural: 'Documents',
         group: 'artifacts', colorScheme: 'blue', supportsDepreciation: true,
+        supportsRawText: true,
     },
     webpages: {
         key: 'webpages', label: 'Webpage', plural: 'Webpages',
         group: 'artifacts', colorScheme: 'teal', supportsDepreciation: true,
+        supportsRawText: true,
     },
     notes: {
         key: 'notes', label: 'Note', plural: 'Notes',
         group: 'annotations', colorScheme: 'purple', supportsDepreciation: true,
+        supportsRawText: false,
     },
     messages: {
         key: 'messages', label: 'Message', plural: 'Messages',
         group: 'annotations', colorScheme: 'orange', supportsDepreciation: true,
+        supportsRawText: false,
     },
     /**
      * Metric is an INCOMPLETE CONCEPT in the ontology, not merely a rare type.
@@ -58,6 +64,7 @@ export const DOC_TYPES = {
     metrics: {
         key: 'metrics', label: 'Metric', plural: 'Metrics',
         group: 'annotations', colorScheme: 'gray', supportsDepreciation: false,
+        supportsRawText: false,
         incompleteConcept: true,
     },
 };
@@ -86,6 +93,24 @@ export const DOC_GROUPS = {
 };
 
 export const DOC_GROUP_ORDER = ['artifacts', 'annotations'];
+
+/**
+ * Whether a type can hold the agent-readable source mirror at all — which is a
+ * different question from whether this record has one. Only the artifact types
+ * do, so the badge is silent on annotations rather than reporting them all as
+ * missing something they cannot have.
+ */
+export const supportsRawText = (docType) => Boolean(DOC_TYPES[docType]?.supportsRawText);
+
+/**
+ * Source-text state for one record: 'present', 'missing', or null when the type
+ * has no such concept. Three answers, because "this Note has no source text" is
+ * not a gap — it is a category error.
+ */
+export function sourceTextState(item) {
+    if (!supportsRawText(item?.doc_type)) return null;
+    return item?.has_raw_text ? 'present' : 'missing';
+}
 
 export const getTypeConfig = (docType) => DOC_TYPES[docType] || null;
 export const getTypeLabel = (docType) => DOC_TYPES[docType]?.label || docType;
