@@ -1,15 +1,22 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { ChakraProvider } from '@chakra-ui/react';
 
 // CRA's resetMocks wipes factory implementations, so they are set in beforeEach.
+jest.mock('../../../services/utils/tools', () => ({
+    __esModule: true,
+    navigateToIndicator: jest.fn(),
+}));
 jest.mock('../../../services/api/get', () => ({
     __esModule: true,
     fetchFollowUpTable: jest.fn(),
     fetchFollowUpsForMeeting: jest.fn(),
 }));
 
+import { MemoryRouter } from 'react-router-dom';
 import { fetchFollowUpTable, fetchFollowUpsForMeeting } from '../../../services/api/get';
+import { navigateToIndicator } from '../../../services/utils/tools';
 import FollowUpModal, { askCount } from './FollowUpModal';
 
 const ROWS = [
@@ -54,9 +61,11 @@ const GUIDE = {
 };
 
 const renderModal = (guide = GUIDE) => render(
-    <ChakraProvider>
-        <FollowUpModal guide={guide} onClose={() => {}} />
-    </ChakraProvider>,
+    <MemoryRouter>
+        <ChakraProvider>
+            <FollowUpModal guide={guide} campus="csueb" onClose={() => {}} />
+        </ChakraProvider>
+    </MemoryRouter>,
 );
 
 beforeEach(() => {
@@ -138,5 +147,24 @@ describe('FollowUpModal', () => {
         fetchFollowUpTable.mockResolvedValue({ data: { rows: [] } });
         renderModal();
         expect(await screen.findByText(/have not been ingested yet/i)).toBeInTheDocument();
+    });
+
+    it('opens an indicator for editing through the shared navigation helper', async () => {
+        renderModal();
+        const row = await screen.findByRole('button', { name: /open 8\.11-ins/i });
+        await userEvent.click(row);
+        expect(navigateToIndicator).toHaveBeenCalledWith(
+            expect.anything(), '8.11-ins', 'csueb',
+        );
+    });
+
+    it('opens an indicator from the keyboard', async () => {
+        renderModal();
+        const row = await screen.findByRole('button', { name: /open 8\.12-ins/i });
+        row.focus();
+        await userEvent.keyboard('{Enter}');
+        expect(navigateToIndicator).toHaveBeenCalledWith(
+            expect.anything(), '8.12-ins', 'csueb',
+        );
     });
 });

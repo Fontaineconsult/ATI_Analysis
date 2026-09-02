@@ -3,7 +3,7 @@ import {
     Badge, Box, Button, Flex, HStack, Modal, ModalBody, ModalCloseButton, ModalContent,
     ModalFooter, ModalHeader, ModalOverlay, Spinner, Text, VStack, useDisclosure, useToast,
 } from '@chakra-ui/react';
-import { useParams } from 'react-router-dom';
+import { useParams, useSearchParams } from 'react-router-dom';
 import { useSettings } from '../../../context/SettingsContext';
 import Markdown from '../common/Markdown';
 import Section from '../common/Section';
@@ -146,7 +146,12 @@ export default function InterviewGuidesPanel() {
 
     const [openGuide, setOpenGuide] = useState(null);
     const [editing, setEditing] = useState(null);
-    const [followUpGuide, setFollowUpGuide] = useState(null);
+    // The follow-up view is URL-DRIVEN (?followup=<guide unique_id>), not local
+    // state: its whole purpose is to send you off to an indicator and have you
+    // come back, and component state does not survive that round trip. Browser
+    // Back returns to this URL and the modal reopens where it was.
+    const [searchParams, setSearchParams] = useSearchParams();
+    const followUpGuideId = searchParams.get('followup');
     const formDisc = useDisclosure();
 
     // The panel itself, scoped by campus and year — both belong in the key, since
@@ -201,6 +206,10 @@ export default function InterviewGuidesPanel() {
     }, [yseResp, campus]);
 
     const guides = useMemo(() => panel?.guides || [], [panel]);
+    const followUpGuide = useMemo(
+        () => guides.find((g) => g.unique_id === followUpGuideId) || null,
+        [guides, followUpGuideId],
+    );
 
     const handleDelete = async (guide) => {
         if (!window.confirm(`Delete the guide "${guide.title}"? People, indicators, and minutes are untouched.`)) return;
@@ -215,7 +224,14 @@ export default function InterviewGuidesPanel() {
     };
 
     const openEdit = (guide) => { setOpenGuide(null); setEditing(guide); formDisc.onOpen(); };
-    const openFollowUp = (guide) => { setOpenGuide(null); setFollowUpGuide(guide); };
+    const openFollowUp = (guide) => {
+        setOpenGuide(null);
+        setSearchParams({ followup: guide.unique_id });
+    };
+    const closeFollowUp = () => {
+        searchParams.delete('followup');
+        setSearchParams(searchParams, { replace: true });
+    };
 
     return (
         <Section
@@ -253,7 +269,7 @@ export default function InterviewGuidesPanel() {
             )}
 
             {followUpGuide && (
-                <FollowUpModal guide={followUpGuide} onClose={() => setFollowUpGuide(null)} />
+                <FollowUpModal guide={followUpGuide} campus={campus} onClose={closeFollowUp} />
             )}
 
             {formDisc.isOpen && editing && (

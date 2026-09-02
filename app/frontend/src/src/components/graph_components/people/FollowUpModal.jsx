@@ -1,8 +1,9 @@
-import React, { useMemo } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import {
     Badge, Box, Button, Flex, Modal, ModalBody, ModalCloseButton, ModalContent,
     ModalFooter, ModalHeader, ModalOverlay, Spinner, Text, VStack,
 } from '@chakra-ui/react';
+import { useNavigate } from 'react-router-dom';
 import Markdown from '../common/Markdown';
 import Section from '../common/Section';
 import StatusLevelLadder from '../../functional_components/StatusLevelLadder';
@@ -10,6 +11,7 @@ import CopyFollowUpButton from './CopyFollowUpButton';
 import { fetchFollowUpTable, fetchFollowUpsForMeeting } from '../../../services/api/get';
 import useResource from '../../../hooks/useResource';
 import { KEYS } from '../../../context/resourceKeys';
+import { navigateToIndicator } from '../../../services/utils/tools';
 
 /** Total open asks recorded against one indicator row. */
 export function askCount(row) {
@@ -18,14 +20,23 @@ export function askCount(row) {
         + (row.concerns?.length || 0);
 }
 
-/** One indicator's line in the live gap table. */
-function IndicatorRow({ row }) {
+/** One indicator's line in the live gap table — opens its dashboard goal view,
+ *  which is where the evidence behind it actually gets edited. */
+function IndicatorRow({ row, onOpen }) {
     const asks = askCount(row);
     return (
         <Box
             borderWidth="1px" borderColor="gray.200" borderRadius="md" borderLeftWidth="3px"
             borderLeftColor={asks ? 'orange.400' : 'gray.300'}
-            bg="white" px={3} py={2}
+            bg="white" px={3} py={2} textAlign="left"
+            cursor="pointer" _hover={{ bg: 'gray.50' }}
+            _focusVisible={{ outline: '2px solid', outlineColor: 'teal.500', outlineOffset: '-2px' }}
+            onClick={() => onOpen(row)}
+            onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onOpen(row); }
+            }}
+            role="button" tabIndex={0}
+            aria-label={`Open ${row.composite_key} to update its evidence`}
         >
             <Flex gap={2} align="center" wrap="wrap">
                 <Badge colorScheme="blue" variant="subtle" fontSize="2xs" textTransform="none">
@@ -46,6 +57,7 @@ function IndicatorRow({ row }) {
                 >
                     {asks} {asks === 1 ? 'ask' : 'asks'}
                 </Badge>
+                <Text fontSize="2xs" color="gray.600" aria-hidden="true">&#9656;</Text>
             </Flex>
             <Text fontSize="xs" color="gray.700" mt={1} noOfLines={2}>
                 {row.success_indicator}
@@ -109,8 +121,18 @@ function SavedFollowUp({ item }) {
  * the saved messages, timestamping them so staleness is visible, and getting
  * one onto the clipboard as an email.
  */
-export default function FollowUpModal({ guide, onClose }) {
+export default function FollowUpModal({ guide, campus, onClose }) {
+    const navigate = useNavigate();
     const meetingId = guide?.resulted_in?.unique_id || null;
+    const campusAbbrev = campus || guide?.campus || null;
+
+    // navigateToIndicator is the single sanctioned entry point for "go to a
+    // success indicator from its composite key" (services/utils/tools). Leaving
+    // this view is fine: it lives at ?followup=<guide id>, so Back brings it
+    // straight back with the table re-read.
+    const openIndicator = useCallback((row) => {
+        navigateToIndicator(navigate, row.composite_key, campusAbbrev);
+    }, [navigate, campusAbbrev]);
 
     const { data: tableResp, loading: tableLoading, error: tableError } = useResource(
         meetingId ? KEYS.followUpTable(meetingId) : null,
@@ -161,7 +183,7 @@ export default function FollowUpModal({ guide, onClose }) {
                                         {rows.length} indicator{rows.length === 1 ? '' : 's'}
                                         {' · '}
                                         {totalAsks} open ask{totalAsks === 1 ? '' : 's'}
-                                        {' · live'}
+                                        {' · live · click to edit'}
                                     </Text>
                                 }
                             >
@@ -177,7 +199,10 @@ export default function FollowUpModal({ guide, onClose }) {
                                     </Text>
                                 )}
                                 <VStack align="stretch" spacing={1.5}>
-                                    {rows.map((r) => <IndicatorRow key={r.year_identifier} row={r} />)}
+                                    {rows.map((r) => (
+                                        <IndicatorRow
+                                            key={r.year_identifier} row={r} onOpen={openIndicator} />
+                                    ))}
                                 </VStack>
                             </Section>
 
