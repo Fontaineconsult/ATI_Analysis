@@ -704,7 +704,10 @@
     each Note to both the YSE and the MeetingMinutes, so the indicators
     discussed are those sharing a Note with the meeting. An empty queries list
     does not mean an indicator is settled; it can mean its gaps were written as
-    prose notes rather than as asks. param meeting_minutes_id.
+    prose notes rather than as asks. Every ask carries its unique_id so a saved
+    follow-up can record WHICH asks it actually sent (FollowUp.includes_query
+    and friends), which is what makes the chase loop measurable.
+    param meeting_minutes_id.
   mode: read
   params: [meeting_minutes_id]
   cypher: |
@@ -722,18 +725,21 @@
         MATCH (q:Query)-[:addresses_evidence]->(y)
         WHERE q.status <> 'settled'
         OPTIONAL MATCH (q)-[:answerable_by]->(owner:Person)
-        RETURN collect(DISTINCT {question: q.question, category: q.category,
+        RETURN collect(DISTINCT {unique_id: q.unique_id, question: q.question,
+                                 detail: q.detail, category: q.category,
                                  status: q.status, answerable_by: owner.name}) AS queries
     }
     CALL (y) {
         MATCH (y)-[:has_recommendation]->(r:Recommendation)
         WHERE r.status = 'open'
-        RETURN collect(r.recommendation) AS recommendations
+        RETURN collect({unique_id: r.unique_id, recommendation: r.recommendation,
+                        detail: r.detail}) AS recommendations
     }
     CALL (y) {
         MATCH (y)-[:has_concern]->(c:Concern)
         WHERE c.status = 'open'
-        RETURN collect(c.concern) AS concerns
+        RETURN collect({unique_id: c.unique_id, concern: c.concern,
+                        detail: c.detail}) AS concerns
     }
     RETURN si.composite_key AS composite_key, si.success_indicator AS success_indicator,
            y.year_identifier AS year_identifier, sl.status_level AS status_level,

@@ -20,6 +20,11 @@ from app.database.queries.followup.read import (
     follow_ups_for_meeting,
     get_follow_up,
 )
+from app.database.queries.followup.update import (
+    mark_follow_up_sent,
+    set_follow_up_status,
+    update_follow_up,
+)
 from app.endpoints.data_api.errors.custom_exceptions import NotFoundError, ValidationError
 
 SENTINEL_MEETING = "ZZZ-TEST Follow-up meeting 9999-9999"
@@ -171,6 +176,67 @@ def test_get_follow_up_resolves_relationships(sentinel_meeting):
 def test_get_follow_up_raises_for_unknown_id():
     with pytest.raises(NotFoundError):
         get_follow_up("no-such-followup")
+
+
+# --------------------------------------------------------------------------- #
+# Layer 4 — the narrow update surface                                          #
+# --------------------------------------------------------------------------- #
+@pytest.mark.integration
+def test_marking_sent_records_the_date_and_status(sentinel_meeting):
+    """Sent-ness is load-bearing: an ask still open under a SENT follow-up is a
+    non-response, while the same ask on a draft is an unfinished chase."""
+    data = create_follow_up(subject=SENTINEL_SUBJECT,
+                            meeting_minutes_id=sentinel_meeting.unique_id)
+    sent = mark_follow_up_sent(data["unique_id"], date_sent="2026-09-02")
+    assert sent["status"] == "sent"
+    assert sent["date_sent"] == "2026-09-02"
+
+
+@pytest.mark.integration
+def test_marking_sent_rejects_a_malformed_date(sentinel_meeting):
+    data = create_follow_up(subject=SENTINEL_SUBJECT,
+                            meeting_minutes_id=sentinel_meeting.unique_id)
+    with pytest.raises(ValidationError):
+        mark_follow_up_sent(data["unique_id"], date_sent="02-09-2026")
+
+
+@pytest.mark.integration
+def test_pulling_back_to_draft_clears_the_sent_date(sentinel_meeting):
+    """Leaving the date behind would keep asserting it went out."""
+    data = create_follow_up(subject=SENTINEL_SUBJECT,
+                            meeting_minutes_id=sentinel_meeting.unique_id)
+    mark_follow_up_sent(data["unique_id"])
+    back = set_follow_up_status(data["unique_id"], "draft")
+    assert back["status"] == "draft"
+    assert back["date_sent"] is None
+
+
+@pytest.mark.integration
+def test_update_can_restamp_when_the_body_is_recomposed(sentinel_meeting):
+    """A rewritten body keeping its old timestamp would claim to describe
+    evidence it never saw."""
+    data = create_follow_up(subject=SENTINEL_SUBJECT,
+                            meeting_minutes_id=sentinel_meeting.unique_id,
+                            body_markdown="first pass")
+    updated = update_follow_up(data["unique_id"],
+                               body_markdown="second pass",
+                               generated_at="2026-09-03T11:00:00")
+    assert updated["body_markdown"] == "second pass"
+    assert updated["generated_at"] == "2026-09-03T11:00:00"
+
+
+@pytest.mark.integration
+def test_update_requires_something_to_change(sentinel_meeting):
+    data = create_follow_up(subject=SENTINEL_SUBJECT,
+                            meeting_minutes_id=sentinel_meeting.unique_id)
+    with pytest.raises(ValidationError):
+        update_follow_up(data["unique_id"])
+
+
+@pytest.mark.integration
+def test_update_rejects_an_unknown_follow_up():
+    with pytest.raises(NotFoundError):
+        update_follow_up("no-such-followup", subject="x")
 
 
 # --------------------------------------------------------------------------- #
