@@ -38,14 +38,17 @@ CALL (y) {
 CALL (y) {
     MATCH (q:Query)-[:addresses_evidence]->(y)
     WHERE q.status <> 'settled'
-    OPTIONAL MATCH (q)-[:answerable_by]->(owner:Person)
-    RETURN collect(DISTINCT {
+    // The owners come from a pattern comprehension, NOT an OPTIONAL MATCH: a
+    // question with two people on the hook would fan out to one row per person,
+    // so the same query would appear twice in the table and count twice in the
+    // ask badge. Same failure as the note fan-out this file already guards.
+    RETURN collect({
         unique_id: q.unique_id,
         question: q.question,
         detail: q.detail,
         category: q.category,
         status: q.status,
-        answerable_by: owner.name
+        answerable_by: [ (q)-[:answerable_by]->(p:Person) | p.name ]
     }) AS queries
 }
 CALL (y) {

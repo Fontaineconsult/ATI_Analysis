@@ -724,10 +724,11 @@
     CALL (y) {
         MATCH (q:Query)-[:addresses_evidence]->(y)
         WHERE q.status <> 'settled'
-        OPTIONAL MATCH (q)-[:answerable_by]->(owner:Person)
-        RETURN collect(DISTINCT {unique_id: q.unique_id, question: q.question,
-                                 detail: q.detail, category: q.category,
-                                 status: q.status, answerable_by: owner.name}) AS queries
+        // Owners via pattern comprehension, not OPTIONAL MATCH: two people on one
+        // question would otherwise fan out to two identical rows.
+        RETURN collect({unique_id: q.unique_id, question: q.question,
+                        detail: q.detail, category: q.category, status: q.status,
+                        answerable_by: [ (q)-[:answerable_by]->(p:Person) | p.name ]}) AS queries
     }
     CALL (y) {
         MATCH (y)-[:has_recommendation]->(r:Recommendation)

@@ -26,6 +26,7 @@ from app.database.queries.query.update import (
     settle_query,
     attach_evidence,
     detach_evidence,
+    set_query_answerable_by,
 )
 from app.database.queries.query.delete import delete_query
 from app.endpoints.data_api.errors.custom_exceptions import NotFoundError, ValidationError
@@ -161,6 +162,97 @@ def test_attach_and_detach_evidence(sentinel_web_plan, cleanup_queries, cleanup_
 
     after_detach = detach_evidence(q.unique_id, yse_id)
     assert all(e["year_identifier"] != yse_id for e in after_detach["addresses_evidence"])
+
+
+def _sentinel_person(name):
+    """A throwaway Person for owner-assignment tests."""
+    from app.database.graph_schema import Person
+    person = Person.nodes.get_or_none(name=name)
+    if person is None:
+        person = Person(name=name, active=True, can_approve_yse=False,
+                        non_committee_member_active=False).save()
+    return person
+
+
+def test_answerable_by_is_empty_until_someone_is_named(sentinel_web_plan, cleanup_queries):
+    """A question with no named owner is the default, and the read has to say so
+    rather than omitting the key — the follow-up groups by this field."""
+    q = create_query(question="Who owns timely adoption?",
+                     working_group_plan_identifier=sentinel_web_plan["wgp_identifier"])
+    cleanup_queries.append(q.unique_id)
+    assert get_query(q.unique_id)["answerable_by"] == []
+
+
+def test_create_query_can_name_who_owes_the_answer(sentinel_web_plan, cleanup_queries):
+    person = _sentinel_person("ZZZ-TEST Answerer")
+    try:
+        q = create_query(question="Did the series run again?",
+                         working_group_plan_identifier=sentinel_web_plan["wgp_identifier"],
+                         answerable_by_unique_ids=[person.unique_id])
+        cleanup_queries.append(q.unique_id)
+        names = [p["name"] for p in get_query(q.unique_id)["answerable_by"]]
+        assert names == ["ZZZ-TEST Answerer"]
+    finally:
+        person.delete()
+
+
+def test_set_answerable_by_replaces_the_whole_set(sentinel_web_plan, cleanup_queries):
+    """Replace semantics, not append: reassigning an owner must not leave the
+    previous one still on the hook."""
+    first = _sentinel_person("ZZZ-TEST Owner One")
+    second = _sentinel_person("ZZZ-TEST Owner Two")
+    try:
+        q = create_query(question="Who enforces the policy?",
+                         working_group_plan_identifier=sentinel_web_plan["wgp_identifier"],
+                         answerable_by_unique_ids=[first.unique_id])
+        cleanup_queries.append(q.unique_id)
+
+        data = set_query_answerable_by(q.unique_id, [second.unique_id])
+        assert [p["name"] for p in data["answerable_by"]] == ["ZZZ-TEST Owner Two"]
+    finally:
+        first.delete()
+        second.delete()
+
+
+def test_set_answerable_by_can_clear_a_wrong_assignment(sentinel_web_plan, cleanup_queries):
+    """An owner assigned from a mis-read transcript has to be removable without
+    deleting the question."""
+    person = _sentinel_person("ZZZ-TEST Mistaken Owner")
+    try:
+        q = create_query(question="Who owns this?",
+                         working_group_plan_identifier=sentinel_web_plan["wgp_identifier"],
+                         answerable_by_unique_ids=[person.unique_id])
+        cleanup_queries.append(q.unique_id)
+        assert set_query_answerable_by(q.unique_id, [])["answerable_by"] == []
+    finally:
+        person.delete()
+
+
+def test_answerable_by_is_distinct_from_raised_by(sentinel_web_plan, cleanup_queries):
+    """Who asked and who owes the answer are different people and different edges;
+    conflating them would send every chase back to the person who raised it."""
+    asker = _sentinel_person("ZZZ-TEST Asker")
+    owner = _sentinel_person("ZZZ-TEST Owner")
+    try:
+        q = create_query(question="Has the policy been adopted?",
+                         working_group_plan_identifier=sentinel_web_plan["wgp_identifier"],
+                         raised_by_unique_id=asker.unique_id,
+                         answerable_by_unique_ids=[owner.unique_id])
+        cleanup_queries.append(q.unique_id)
+        data = get_query(q.unique_id)
+        assert data["raised_by"]["name"] == "ZZZ-TEST Asker"
+        assert [p["name"] for p in data["answerable_by"]] == ["ZZZ-TEST Owner"]
+    finally:
+        asker.delete()
+        owner.delete()
+
+
+def test_set_answerable_by_rejects_an_unknown_person(sentinel_web_plan, cleanup_queries):
+    q = create_query(question="Who owns this?",
+                     working_group_plan_identifier=sentinel_web_plan["wgp_identifier"])
+    cleanup_queries.append(q.unique_id)
+    with pytest.raises(NotFoundError):
+        set_query_answerable_by(q.unique_id, ["definitely-not-a-person"])
 
 
 def test_panel_for_plan_lists_queries(sentinel_web_plan, cleanup_queries):

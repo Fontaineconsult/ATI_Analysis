@@ -250,6 +250,47 @@ def test_table_is_empty_for_a_meeting_with_no_notes(sentinel_meeting):
 
 
 @pytest.mark.integration
+def test_a_query_with_two_owners_appears_once(sentinel_meeting):
+    """Two people can owe one answer. Collecting them with an OPTIONAL MATCH fans
+    the query out to one row per person, which double-counts it in the ask badge
+    and prints it twice in a follow-up. The owners are a pattern comprehension so
+    the query stays one row carrying both names."""
+    yse_id = "9999-9999-ZZZ-owners-test"
+    db.cypher_query(
+        """
+        MATCH (m:MeetingMinutes {unique_id: $mid})
+        CREATE (y:YearSuccessEvidence {unique_id: 'zzzowneryse', year_identifier: $yid})
+        CREATE (si:SuccessIndicator {unique_id: 'zzzownersi', composite_key: $yid,
+                                     success_indicator: 'ZZZ owners indicator'})
+        CREATE (y)-[:tracks]->(si)
+        CREATE (n:Note {unique_id: 'zzzownernote', name: 'ZZZ-TEST owners note'})
+        CREATE (m)-[:has_note]->(n)
+        CREATE (y)-[:has_note]->(n)
+        CREATE (q:Query {unique_id: 'zzzownerq', question: 'Who settles this?', status: 'open'})
+        CREATE (q)-[:addresses_evidence]->(y)
+        CREATE (p1:Person {unique_id: 'zzzowner1', name: 'ZZZ Owner One'})
+        CREATE (p2:Person {unique_id: 'zzzowner2', name: 'ZZZ Owner Two'})
+        CREATE (q)-[:answerable_by]->(p1)
+        CREATE (q)-[:answerable_by]->(p2)
+        """,
+        {"mid": sentinel_meeting.unique_id, "yid": yse_id},
+    )
+    try:
+        rows = build_follow_up_table(sentinel_meeting.unique_id)
+        row = [r for r in rows if r["composite_key"] == yse_id][0]
+        assert len(row["queries"]) == 1
+        assert sorted(row["queries"][0]["answerable_by"]) == ["ZZZ Owner One", "ZZZ Owner Two"]
+    finally:
+        db.cypher_query(
+            """
+            MATCH (n) WHERE n.unique_id IN
+              ['zzzowneryse','zzzownersi','zzzownernote','zzzownerq','zzzowner1','zzzowner2']
+            DETACH DELETE n
+            """
+        )
+
+
+@pytest.mark.integration
 def test_table_returns_one_row_per_indicator_not_per_note(sentinel_meeting):
     """An indicator discussed at length shares SEVERAL notes with the meeting.
     Without DISTINCT the row fans out once per note, which silently multiplies

@@ -65,7 +65,8 @@ def create_query(question: str,
                  working_group: str = None,
                  category: str = None,
                  detail: str = None,
-                 raised_by_unique_id: str = None) -> Query:
+                 raised_by_unique_id: str = None,
+                 answerable_by_unique_ids: list = None) -> Query:
     """
     Create a Query anchored to a WorkingGroupPlan.
 
@@ -89,6 +90,13 @@ def create_query(question: str,
         working_group_plan_identifier, campus_abbrev, year_name, working_group
     )
 
+    answerers = []
+    for person_id in answerable_by_unique_ids or []:
+        person = Person.nodes.get_or_none(unique_id=person_id)
+        if person is None:
+            raise NotFoundError(f"Person {person_id!r} not found")
+        answerers.append(person)
+
     raiser = None
     if raised_by_unique_id:
         try:
@@ -108,6 +116,8 @@ def create_query(question: str,
         query.working_group_plan.connect(wgp)
         if raiser:
             query.query_raised_by.connect(raiser)
+        for answerer in answerers:
+            query.answerable_by.connect(answerer)
         return query
     except Exception as e:
         raise CrudError(f"Failed to create Query: {e}")

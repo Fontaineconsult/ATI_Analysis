@@ -27,6 +27,7 @@ from app.database.queries.query.update import (
     update_query,
     settle_query,
     attach_evidence,
+    set_query_answerable_by,
     detach_evidence,
     add_query_note,
 )
@@ -85,6 +86,7 @@ class QueriesAPI(MethodView):
                     category=data.get("category"),
                     detail=data.get("detail"),
                     raised_by_unique_id=data.get("raised_by_unique_id"),
+                    answerable_by_unique_ids=data.get("answerable_by_unique_ids"),
                 )
                 return make_response(
                     status="success",
@@ -133,6 +135,17 @@ class QueriesAPI(MethodView):
                 result = fn(unique_id, data["yse_identifier"])
                 verb = "attached" if action == "attach_evidence" else "detached"
                 return make_response(status="success", data=result, message=f"Evidence {verb}."), 200
+
+            if action == "set_answerable_by":
+                # Replace semantics: the list IS the set, [] clears it. An owner
+                # assigned from a mis-read source must be removable without
+                # deleting the question.
+                result = set_query_answerable_by(
+                    unique_id, data.get("person_unique_ids") or []
+                )
+                return make_response(
+                    status="success", data=result, message="Answerable-by set."
+                ), 200
 
             if action == "add_query_note":
                 if not data.get("content"):

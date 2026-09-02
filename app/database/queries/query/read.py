@@ -83,6 +83,10 @@ def _serialize_query(query) -> dict:
     ]
     data["raised_by"] = _person_min(query.query_raised_by.single())
     data["settled_by"] = _person_min(query.query_settled_by.single())
+    # Who OWES the answer — distinct from who asked (raised_by) and from who
+    # eventually gave it (settled_by, set at settle time). A list, because a
+    # question can legitimately sit with two people until one of them takes it.
+    data["answerable_by"] = [_person_min(p) for p in query.answerable_by.all()]
     data["notes"] = [_serialize_note_with_author(n) for n in query.notes.all()]
     return data
 
