@@ -74,35 +74,42 @@ first; that inference is exactly the bug this skill replaced.
 
 ## Step 2 — Write it
 
-A real message to colleagues, not a report dump. **Brevity is the constraint that
-matters most** — a director who stops reading halfway sends nothing, so a shorter
-message that gets answered beats a complete one that does not.
+A real message to colleagues, not a report dump.
 
-**Budget: one screen per indicator, and no more than six indicators.** If the
-draft runs past roughly 400 words, the problem is not formatting, it is that too
-many asks are in it. Cut asks, not words.
+**Formatting carries the density — not brevity.** A three-column table states six
+facts in the vertical space of one sentence, with the links inside it. Cutting
+tables to shorten a message is backwards: it removes the compression and leaves
+undifferentiated prose, which is what actually reads as a wall. Calibration
+(2026-09-02): a draft was tightened from 8,456 to 5,492 characters by deleting
+its evidence tables, and came back as *"much worse — there are NO tables,
+everything is just separated by a br"*. Length was never the complaint.
 
-- **One ask per indicator.** Pick the single thing that would move it furthest and
-  drop the rest — they keep, and they will be there next cycle. Three asks under
-  one heading reads as a to-do list and gets triaged to nothing.
-- **Two sentences per ask.** What you need, and why it changes the grade. The
-  reasoning that justified the ask to YOU belongs in the graph, not the email; the
-  recipient already knows their own programme.
-- **Lead with the ask, not the context.** "Cheryl — the attendee list you offered"
-  before any explanation of what it evidences. Never open a section with a status
-  recap; the reader can follow the link.
-- **Name the person in bold at the ask.** With `answerable_by` set, each ask has an
-  owner: address them directly so nobody has to work out which parts are theirs.
-- **Cut every sentence that only proves you did the reading.** "Since we spoke I
-  have read through the pages properly" earns nothing. So does restating what they
-  told you, unless you are inviting a correction to it.
-- Quote the record ONLY where you want it challenged: *"my notes say the session has
-  run for two years"* invites a correction that a bare question does not. Elsewhere
-  it is padding.
-- **Include a table only where you are asking about the evidence itself.** An
-  indicator whose ask is "please send X" does not need its evidence reproduced —
-  the link carries it.
-- Ask for corrections once, at the end. Not in every section.
+**Lead with a summary table.** Indicator, what you need, who from — one row per
+ask, names in bold. A reader who opens this on a phone should know within two
+seconds whether anything is theirs.
+
+**Then one section per indicator**, in this shape:
+- an `##` heading naming the indicator and what it covers
+- the current grade with a link to the public record
+- an evidence table: what is on file, its strength, and links to the live
+  documentation behind it
+- the ask in bold, addressed to a named person
+- two or three short paragraphs of context
+
+**Prose earns its place by doing something the table cannot.** Say why the ask
+changes the grade, what you could not settle from the record, or what you suspect
+is wrong. Cut sentences that only prove you did the reading, or restate what the
+recipient already knows about their own programme.
+
+- **One ask per indicator.** Pick the thing that moves it furthest; the rest keep.
+- **Name the person in bold at the ask.** With `answerable_by` set, every ask has
+  an owner — address them so nobody has to work out which parts are theirs.
+- **Link every claim.** The public record for each YSE, the public page for each
+  implementation, and the live documentation URL for each claimed artifact. A
+  reader who cannot check a claim cannot correct it.
+- Quote the record where you want it challenged: *"my notes say the session has
+  run for two years"* invites a correction a bare question does not.
+- Ask for corrections once, at the end.
 - Anything time-critical goes at the top, in one sentence, with the date.
 
 Markdown, in the subset the renderer handles: headings, paragraphs, bullets, pipe
