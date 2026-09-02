@@ -689,3 +689,53 @@
            type(st) AS capacity, h.name AS steward,
            CASE WHEN h:Person THEN 'Person' WHEN h:College THEN 'College' ELSE 'Department' END AS steward_type
     ORDER BY toLower(a.title)
+
+# ---------------------------------------------------------------------------
+# FOLLOW-UP  (post-meeting gap chasing)
+# ---------------------------------------------------------------------------
+- name: meeting_followup_table
+  category: followup
+  description: >-
+    The per-indicator gap table for ONE meeting - the data a follow-up email is
+    generated from. One row per success indicator the meeting touched, with its
+    current status level, the live (non-retired) evidence behind it, and every
+    open ask against it: queries to answer, recommendations to act on, concerns
+    with no path yet. "Discussed" is DERIVED, not stored - an ingest attaches
+    each Note to both the YSE and the MeetingMinutes, so the indicators
+    discussed are those sharing a Note with the meeting. An empty queries list
+    does not mean an indicator is settled; it can mean its gaps were written as
+    prose notes rather than as asks. param meeting_minutes_id.
+  mode: read
+  params: [meeting_minutes_id]
+  cypher: |
+    MATCH (mm:MeetingMinutes {unique_id: $meeting_minutes_id})-[:has_note]->(:Note)<-[:has_note]-(y:YearSuccessEvidence)
+    WITH DISTINCT y
+    MATCH (y)-[:tracks]->(si:SuccessIndicator)
+    OPTIONAL MATCH (y)-[:status_is]->(sl:StatusLevel)
+    CALL (y) {
+        MATCH (impl)-[ev:is_evidence_for]->(y)
+        WHERE coalesce(impl.retired, false) = false
+        RETURN collect({title: coalesce(impl.title, impl.name),
+                        type: labels(impl)[0], strength: ev.strength}) AS evidence
+    }
+    CALL (y) {
+        MATCH (q:Query)-[:addresses_evidence]->(y)
+        WHERE q.status <> 'settled'
+        OPTIONAL MATCH (q)-[:answerable_by]->(owner:Person)
+        RETURN collect(DISTINCT {question: q.question, category: q.category,
+                                 status: q.status, answerable_by: owner.name}) AS queries
+    }
+    CALL (y) {
+        MATCH (y)-[:has_recommendation]->(r:Recommendation)
+        WHERE r.status = 'open'
+        RETURN collect(r.recommendation) AS recommendations
+    }
+    CALL (y) {
+        MATCH (y)-[:has_concern]->(c:Concern)
+        WHERE c.status = 'open'
+        RETURN collect(c.concern) AS concerns
+    }
+    RETURN si.composite_key AS composite_key, si.success_indicator AS success_indicator,
+           y.year_identifier AS year_identifier, sl.status_level AS status_level,
+           evidence, queries, recommendations, concerns
+    ORDER BY composite_key
