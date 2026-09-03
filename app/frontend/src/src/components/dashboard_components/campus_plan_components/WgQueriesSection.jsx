@@ -126,7 +126,10 @@ export default function WgQueriesSection({ workingGroupPlanIdentifier, workingGr
             ) : queries.length === 0 ? (
                 <Text fontSize="sm" color="gray.600" fontStyle="italic">No questions yet.</Text>
             ) : (
-                <VStack align="stretch" spacing={2}>
+                // Capped height, then scroll, matching WgMinutesSection: a working
+                // group with a long question backlog otherwise stretches its card
+                // past every sibling and breaks the row.
+                <VStack align="stretch" spacing={2} maxH="300px" overflowY="auto" pr={1}>
                     {queries.map((q) => (
                         <Box
                             key={q.unique_id}
