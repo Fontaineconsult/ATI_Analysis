@@ -309,3 +309,7 @@ because it is next year's work order.
    interview supplies the evidence; that skill decides the level and files the
    blocking gaps as Recommendations. If the review lands lower than the room hoped,
    that is the process working — the guide's next edition starts from its gap list.
+
+## Prose style
+
+**All prose here follows `app/database/ontology/writing-style.md`** (the project writing style): no marketing vocabulary, no em dashes, one claim per sentence, name the relation instead of gesturing at it, no throat-clearing. Quoted material and success-indicator text are exempt and go in verbatim.

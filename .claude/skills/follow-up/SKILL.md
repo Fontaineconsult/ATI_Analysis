@@ -74,6 +74,9 @@ first; that inference is exactly the bug this skill replaced.
 
 ## Step 2 — Write it
 
+**All prose here follows `app/database/ontology/writing-style.md`** (the project writing style): no marketing vocabulary, no em dashes, one claim per sentence, name the relation instead of gesturing at it, no throat-clearing. Quoted material and success-indicator text are exempt and go in verbatim.
+
+
 A real message to colleagues, not a report dump.
 
 **Formatting carries the density — not brevity.** A three-column table states six

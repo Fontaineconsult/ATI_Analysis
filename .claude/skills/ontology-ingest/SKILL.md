@@ -164,6 +164,9 @@ yourself — the empty resolution path is the fact being recorded.
 
 ### Writing Recommendation and Concern detail
 
+**All prose here follows `app/database/ontology/writing-style.md`** (the project writing style): no marketing vocabulary, no em dashes, one claim per sentence, name the relation instead of gesturing at it, no throat-clearing. Quoted material and success-indicator text are exempt and go in verbatim.
+
+
 State the thing. Do not narrate the meeting. Four or five plain sentences, each
 asserting one condition that should hold.
 

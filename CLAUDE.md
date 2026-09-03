@@ -18,6 +18,22 @@ badges, state treatments, accessibility conventions, and a "build a new area" re
 the legacy patterns to avoid. Read it before adding UI; keep it updated when design decisions
 change.
 
+## Writing style
+
+All prose written for this project follows **`app/database/ontology/writing-style.md`**
+(the "writing style"). It is the prose counterpart to the design sense: node text
+(Recommendation/Concern detail, Plan description, Notes), follow-up emails, interview
+guides, reports, commit messages, and code comments. It bans marketing vocabulary
+outright, separates words that are fine as facts from the same words used as praise
+(`robust` is a WCAG principle; "a robust pipeline" is puffery), forbids em dashes as an
+anti-tell, and sets sentence rules: one claim per sentence, name the relation instead of
+gesturing at it, no throat-clearing.
+
+Quoted material is exempt and never edited. Success indicator text is quoted verbatim
+because the Chancellor's Office wrote it, which is why `integrated` and `alignment` appear
+in indicators 8.11-ins and 1.21-web. Skills that produce prose reference the guide rather
+than restating it.
+
 ## Run quick reference
 
 ```bash
