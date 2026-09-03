@@ -93,7 +93,14 @@ export function buildFollowUpReport(markdown) {
     let i = 0;
     let blockCount = 0;
 
-    const para = (t) => `<p style="margin:0 0 12px 0;font-size:12px;color:${TEXT};line-height:1.6;${FONT}">${inline(t)}</p>`;
+    // A question is where the reader is expected to do something, so it gets its
+    // own line — a question buried mid-paragraph reads as commentary and gets
+    // skimmed past. Applied only in paragraphs: a '?' inside a table cell or a
+    // heading is not a sentence boundary.
+    const breakAfterQuestions = (h) => h.replace(/\?\s+(?=[A-Z"'(‘“])/g, '?<br />');
+    const para = (t) =>
+        `<p style="margin:0 0 12px 0;font-size:12px;color:${TEXT};line-height:1.6;${FONT}">`
+        + breakAfterQuestions(inline(t)) + '</p>';
 
     while (i < lines.length) {
         const line = lines[i];
@@ -169,7 +176,10 @@ export function buildFollowUpReport(markdown) {
         }
         if (buf.length) {
             html.push(para(buf.join(' ')));
-            plain.push(plainInline(buf.join(' ')), '');
+            plain.push(
+                plainInline(buf.join(' ')).replace(/\?\s+(?=[A-Z"'(])/g, '?\n'),
+                '',
+            );
             blockCount += 1;
         }
     }

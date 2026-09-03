@@ -83,6 +83,30 @@ describe('buildFollowUpReport', () => {
         expect(plainText).not.toContain('font-size');
     });
 
+    it('starts a new line after a question', () => {
+        // A question is where the reader has to do something; buried mid-paragraph
+        // it reads as commentary and gets skimmed past.
+        const { html } = buildFollowUpReport('Can this be a theme? The Circles already pay.');
+        expect(html).toContain('theme?<br />The Circles');
+    });
+
+    it('breaks after questions in the plain-text fallback too', () => {
+        const { plainText } = buildFollowUpReport('Who owns this? Nobody does.');
+        expect(plainText).toBe('Who owns this?\nNobody does.');
+    });
+
+    it('does NOT break inside a table cell', () => {
+        // A '?' in a cell is not a sentence boundary, and a <br> there would
+        // wreck the row.
+        const { html } = buildFollowUpReport('| Q |\n| --- |\n| Who owns this? Nobody |');
+        expect(html).not.toContain('<br />');
+    });
+
+    it('leaves a question that ends a paragraph alone', () => {
+        const { html } = buildFollowUpReport('Who approves this?');
+        expect(html).not.toContain('<br />');
+    });
+
     it('produces a plain-text fallback with no markup', () => {
         const { plainText } = buildFollowUpReport(SAVED);
         expect(plainText).toContain('8.11-ins');
