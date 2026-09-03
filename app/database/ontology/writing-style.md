@@ -99,6 +99,29 @@ ride along with the thing it qualifies. Splitting "the page returns 404, which i
 link rot rather than an outage" into two sentences makes it worse, because the
 second half is not a separate claim.
 
+**Contrast belongs in one sentence.** When the second clause cuts against the
+first, join it with "but" or "though". Splitting the pair into two sentences
+deletes the relationship between them and leaves the reader to reconstruct it.
+
+Wrong: "The content is good. It only reaches people who turn up."
+Right: "The content is good, but it only reaches people who turn up."
+
+The same applies to cause. "It is graded Defined because the attendance list is
+missing" beats two sentences that leave the reader to infer the link.
+
+**State a request as a request.** Anything you want someone to do is an
+imperative or a direct question, with the actor named. A noun phrase is not an
+ask, and the reader has to guess what to do with it.
+
+Wrong: "Cheryl, the attendee list and the slide deck you offered."
+Right: "Cheryl, please send the attendee list and the slide deck you offered."
+
+Wrong: "A correction I have already made, which you may want to argue with."
+Right: "Tell me if I have this wrong, and I will change it back."
+
+This is the most common failure in a message someone is supposed to act on. A
+noun phrase reads as a topic heading, so it gets filed rather than answered.
+
 **Each sentence should license the next.** If sentence three would still make
 sense with sentence two deleted, sentence two was decoration.
 

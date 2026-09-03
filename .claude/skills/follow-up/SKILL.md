@@ -105,6 +105,11 @@ is wrong. Cut sentences that only prove you did the reading, or restate what the
 recipient already knows about their own programme.
 
 - **One ask per indicator.** Pick the thing that moves it furthest; the rest keep.
+- **Every ask is an imperative or a direct question, with the person named.**
+  "Cheryl, please send the attendee list" is an ask. "Cheryl, the attendee
+  list you offered" is a topic heading, and it gets filed rather than
+  answered. The summary table follows the same rule: each row is an action,
+  not a noun phrase.
 - **Name the person in bold at the ask.** With `answerable_by` set, every ask has
   an owner — address them so nobody has to work out which parts are theirs.
 - **Link every claim.** The public record for each YSE, the public page for each
