@@ -350,3 +350,17 @@ MERGE (tim)-[:implements]->(y);
 MATCH (ca:Person {name:'Cristian Alvarado'}), (y:YearSuccessEvidence)
 WHERE y.year_identifier IN ['2025-2026-6.8-ins-sfsu','2025-2026-6.7-ins-sfsu']
 MERGE (ca)-[:implements]->(y);
+
+
+// ---------------------------------------------------------------------------
+// 9. STAMP THE SOURCE MINUTES
+// ---------------------------------------------------------------------------
+// Added 2026-09-03. The original file ran without this step, so the ingest was
+// complete in the graph while ontology_ingested stayed unset, and later recon
+// read the meeting as never processed. Verified before stamping: a re-run of
+// this file on 2026-09-03 created 0 nodes and 0 relationships, so every MERGE
+// matched and nothing here is a duplicate.
+MATCH (mm:MeetingMinutes {unique_id: "56f1bceb45904db8978c7cc594e6a06b"})
+SET mm.ontology_ingested = true,
+    mm.ontology_ingest_date = date("2026-07-24"),
+    mm.ontology_ingest_note = "Ingested 2026-07-24 via ingest_2026_07_24_canvas_remediation_ins.cypher: role holdings for Tim Hensel, 5 Tools (equidox, adobe-acrobat-pro, servicenow, panopto, jaws), 5 SSU CTET implementations (Canvas Course Remediation, PDF Remediation via Equidox and Acrobat, In-House Video Caption Correction, Student Remediation Team, Canvas Remediation Manual), 1 Plan, 2 information_gap Queries, 6 Notes across ssu and sfsu, and implements assignments. Kristen Denver deliberately not created (departed, owns no current work). SFSU AT Canvas Remediation was added by the user directly and left untouched. Stamp added 2026-09-03 after an idempotent re-run confirmed 0 writes; the original file omitted the stamp step.";
