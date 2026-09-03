@@ -18,6 +18,22 @@ badges, state treatments, accessibility conventions, and a "build a new area" re
 the legacy patterns to avoid. Read it before adding UI; keep it updated when design decisions
 change.
 
+## Writing style
+
+All prose written for this project follows **`app/database/ontology/writing-style.md`**
+(the "writing style"). It is the prose counterpart to the design sense: node text
+(Recommendation/Concern detail, Plan description, Notes), follow-up emails, interview
+guides, reports, commit messages, and code comments. It bans marketing vocabulary
+outright, separates words that are fine as facts from the same words used as praise
+(`robust` is a WCAG principle; "a robust pipeline" is puffery), forbids em dashes as an
+anti-tell, and sets sentence rules: one claim per sentence, name the relation instead of
+gesturing at it, no throat-clearing.
+
+Quoted material is exempt and never edited. Success indicator text is quoted verbatim
+because the Chancellor's Office wrote it, which is why `integrated` and `alignment` appear
+in indicators 8.11-ins and 1.21-web. Skills that produce prose reference the guide rather
+than restating it.
+
 ## Run quick reference
 
 ```bash
@@ -179,5 +195,7 @@ Established preferences from prior sessions live in `.claude/projects/<project>/
 `/ontology-ingest` — turns source material (transcripts in `app/database/ontology/raw_transcripts/`, documents, emails) into idempotent batch Cypher saved to `app/database/batch/auto-assignments/`. Encodes the routing rubric (which ontology element a fact maps to) and the signal-strength scale (how strong the evidence must be per node/edge type), plus person-identity resolution and recon protocol. A verify-before-commit gate presents every decision under clear headings with reasoning for user approval before any Cypher is written or executed. Triggered by "ingest this transcript", "graph this meeting", "turn this into cypher".
 
 `/implementation-rectify` — audits and repairs how implementations are wired, from either end. **CoP mode**: start at a Community of Practice, walk its `has_stake_in` indicators, and fix `accountable_community` coverage — with the standing rule that a stake is NOT ownership, so work belonging to another unit is reported, never overwritten. **YSE mode**: start at a YearSuccessEvidence and find implementations that should carry `is_evidence_for` and do not, via four searches (cross-campus peer, sibling indicator under the same goal, subject match, orphans). Proposes with a strength rating; writes only on approval. Triggered by "rectify", "audit community accountability", "what implementations are we missing on X".
+
+`/follow-up` — composes the post-meeting message that chases what a meeting left open, one per community-of-practice × campus. Reads the gap table (`meeting_followup_table`) **plus the prose the table cannot see** — note bodies, the interview guide's bar elements, source text, prior follow-ups — because artifacts a stakeholder OFFERED live in prose, not in Query nodes. Saves a `FollowUp` node wired to the asks it carries (`includes_query`/`_recommendation`/`_concern`), which is what makes "what did we chase, and what came back" answerable. The app never composes these; it displays, timestamps and copies them. Triggered by "draft the follow-up", "chase the gaps from X", "what do we still need from Y".
 
 `/get-source-text` — fetches the live content behind a Webpage or Document and stores it as **Source Text** (`raw_text`), so a link is readable rather than just titled. Entry points: an implementation (fills every live page it is documented by), a single page/document, or a campus backlog — via the `source_text_candidates_for_implementation` and `documentation_missing_source_text` registry queries. Writes ONLY `{unique_id, raw_text}`, because the other arguments on `update_webpage`/`update_document` silently reassign the maintainer or add association edges; `raw_text_captured` is stamped by the query layer and moves only when the text changes. 403s and 404s are reported as manual-paste and link-rot findings, never summarised from the title. Triggered by "get the source text", "pull the live content", "mirror this page".

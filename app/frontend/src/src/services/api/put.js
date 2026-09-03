@@ -21,6 +21,24 @@ import {
     addProgressNoteToPlanPayload
 } from "../response_templates";
 
+// Record that a follow-up actually went out. Deliberately a separate call from
+// saving it: an ask still open under a SENT follow-up is a non-response worth
+// chasing, while the same ask on a draft is an unfinished chase, and only the
+// person who sent it knows which.
+export const markFollowUpSent = async (uniqueId, dateSent = null) => {
+    try {
+        const response = await axios.put(`${process.env.REACT_APP_API_URL}/follow-ups`, {
+            action: 'mark_sent',
+            unique_id: uniqueId,
+            ...(dateSent ? { date_sent: dateSent } : {}),
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error marking follow-up sent:', error);
+        throw error;
+    }
+};
+
 export const updateStatusLevel = async (yse, statusLevel) => {
     try {
         await axios.put(`${process.env.REACT_APP_API_URL}/evidence/status-levels`,

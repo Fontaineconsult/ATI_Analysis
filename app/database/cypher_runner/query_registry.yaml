@@ -689,3 +689,105 @@
            type(st) AS capacity, h.name AS steward,
            CASE WHEN h:Person THEN 'Person' WHEN h:College THEN 'College' ELSE 'Department' END AS steward_type
     ORDER BY toLower(a.title)
+
+# ---------------------------------------------------------------------------
+# FOLLOW-UP  (post-meeting gap chasing)
+# ---------------------------------------------------------------------------
+- name: meeting_followup_table
+  category: followup
+  description: >-
+    The per-indicator gap table for ONE meeting - the data a follow-up email is
+    generated from. One row per success indicator the meeting touched, with its
+    current status level, the live (non-retired) evidence behind it, and every
+    open ask against it: queries to answer, recommendations to act on, concerns
+    with no path yet. "Discussed" is DERIVED, not stored - an ingest attaches
+    each Note to both the YSE and the MeetingMinutes, so the indicators
+    discussed are those sharing a Note with the meeting. An empty queries list
+    does not mean an indicator is settled; it can mean its gaps were written as
+    prose notes rather than as asks. Every ask carries its unique_id so a saved
+    follow-up can record WHICH asks it actually sent (FollowUp.includes_query
+    and friends), which is what makes the chase loop measurable.
+    param meeting_minutes_id.
+  mode: read
+  params: [meeting_minutes_id]
+  cypher: |
+    MATCH (mm:MeetingMinutes {unique_id: $meeting_minutes_id})-[:has_note]->(:Note)<-[:has_note]-(y:YearSuccessEvidence)
+    WITH DISTINCT y
+    MATCH (y)-[:tracks]->(si:SuccessIndicator)
+    OPTIONAL MATCH (y)-[:status_is]->(sl:StatusLevel)
+    CALL (y) {
+        MATCH (impl)-[ev:is_evidence_for]->(y)
+        WHERE coalesce(impl.retired, false) = false
+        RETURN collect({title: coalesce(impl.title, impl.name),
+                        type: labels(impl)[0], strength: ev.strength}) AS evidence
+    }
+    CALL (y) {
+        MATCH (q:Query)-[:addresses_evidence]->(y)
+        WHERE q.status <> 'settled'
+        // Owners via pattern comprehension, not OPTIONAL MATCH: two people on one
+        // question would otherwise fan out to two identical rows.
+        RETURN collect({unique_id: q.unique_id, question: q.question,
+                        detail: q.detail, category: q.category, status: q.status,
+                        answerable_by: [ (q)-[:answerable_by]->(p:Person) | p.name ]}) AS queries
+    }
+    CALL (y) {
+        MATCH (y)-[:has_recommendation]->(r:Recommendation)
+        WHERE r.status = 'open'
+        RETURN collect({unique_id: r.unique_id, recommendation: r.recommendation,
+                        detail: r.detail}) AS recommendations
+    }
+    CALL (y) {
+        MATCH (y)-[:has_concern]->(c:Concern)
+        WHERE c.status = 'open'
+        RETURN collect({unique_id: c.unique_id, concern: c.concern,
+                        detail: c.detail}) AS concerns
+    }
+    RETURN si.composite_key AS composite_key, si.success_indicator AS success_indicator,
+           y.year_identifier AS year_identifier, sl.status_level AS status_level,
+           evidence, queries, recommendations, concerns
+    ORDER BY composite_key
+
+- name: overdue_followups
+  category: followup
+  description: >-
+    Follow-ups that were SENT, are older than $days_sent days, and still carry
+    asks nobody has answered. The nag list. Needs no schema of its own: date_sent
+    plus the current status of the asks the follow-up carries already encode
+    staleness. Distinguishes two states that need different next moves -
+    'awaiting_reply' means the message went out and nothing came back at all,
+    'partially_answered' means somebody replied but left these asks untouched.
+    Drafts never appear, because an open ask on an unsent message is an
+    unfinished chase rather than a non-response. params days_sent.
+  mode: read
+  params: [days_sent]
+  cypher: |
+    MATCH (f:FollowUp)
+    WHERE f.status = 'sent' AND f.date_sent IS NOT NULL
+      AND duration.inDays(f.date_sent, date()).days >= toInteger($days_sent)
+    OPTIONAL MATCH (f)-[:pertains_to]->(cop:CommunityOfPractice)
+    OPTIONAL MATCH (f)-[:for_campus]->(c:Campus)
+    CALL (f) {
+        MATCH (f)-[:includes_query]->(q:Query) WHERE q.status <> 'settled'
+        RETURN collect({question: q.question,
+                        answerable_by: [ (q)-[:answerable_by]->(p:Person) | p.name ]}) AS open_queries
+    }
+    CALL (f) {
+        MATCH (f)-[:includes_recommendation]->(r:Recommendation) WHERE r.status = 'open'
+        RETURN collect(r.recommendation) AS open_recommendations
+    }
+    CALL (f) {
+        MATCH (m:Message)-[:replies_to]->(f)
+        OPTIONAL MATCH (m)-[:from_person]->(s:Person)
+        RETURN collect(DISTINCT coalesce(s.name, m.name)) AS replies
+    }
+    WITH f, cop, c, open_queries, open_recommendations, replies,
+         size(open_queries) + size(open_recommendations) AS outstanding
+    WHERE outstanding > 0
+    RETURN f.unique_id AS unique_id, f.subject AS subject,
+           toString(f.date_sent) AS date_sent,
+           duration.inDays(f.date_sent, date()).days AS days_since_sent,
+           cop.name AS community, c.abbreviation AS campus,
+           outstanding,
+           CASE WHEN size(replies) = 0 THEN 'awaiting_reply' ELSE 'partially_answered' END AS state,
+           replies, open_queries, open_recommendations
+    ORDER BY days_since_sent DESC

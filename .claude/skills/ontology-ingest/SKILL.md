@@ -132,7 +132,7 @@ degraded version of the same node.
 |---|---|---|
 | **Implementation** (Process/Procedure/Service/Guidance/Project/InternalPolicy) | S1 | The work EXISTS and operates today. Never from intent. |
 | **Plan** | S2 | Future/ongoing work with commitment language from its owner. Name it as a completable task, describe the WORK not the subject (see below). `plan_status` "In Progress" if started, else "Not Started". |
-| **Query** | S3 | A decision someone must make, WITH a decider. Awaiting authority = `resource_request`; method choice = `technical_clarification`. Already decided → Note or Plan. |
+| **Query** | S3 | A decision someone must make, WITH a decider. Awaiting authority = `resource_request`; method choice = `technical_clarification`; a document someone OFFERED and has not sent = `artifact_request`. Already decided → Note or Plan. **Set `answerable_by` whenever the source names who can settle it.** |
 | **Concern** | S1–S3 | A problem with NO path to resolution — no owner, no decider, no agreed change. Anchors to a YSE (`has_concern`). Converting to a Recommendation or Plan later is a first-class outcome; the `became_*` edge keeps provenance. |
 | **Recommendation** | S2–S3 | A stated improvement — the path IS "make this change". If nobody said what should change, it is a Concern. |
 | **Note** | S1–S4 | Default sink: history, background, status colour, tooling gaps, metrics-in-passing, action items. |
@@ -163,6 +163,9 @@ provost to reissue the policy"* = Plan. Never upgrade a Concern by inventing the
 yourself — the empty resolution path is the fact being recorded.
 
 ### Writing Recommendation and Concern detail
+
+**All prose here follows `app/database/ontology/writing-style.md`** (the project writing style): no marketing vocabulary, no em dashes, one claim per sentence, name the relation instead of gesturing at it, no throat-clearing. Quoted material and success-indicator text are exempt and go in verbatim.
+
 
 State the thing. Do not narrate the meeting. Four or five plain sentences, each
 asserting one condition that should hold.
@@ -242,6 +245,16 @@ Edges assert harder claims than nodes; grade them separately.
 - **`owned_by`**: custodial, usually exactly one.
 - **`uses_tool` / `remediates`**: S1 use as described by the operator.
 - **`addresses_evidence`** (Query → YSE): the YSE the answer would unblock.
+- **`answerable_by`** (Query → Person): who OWES the answer — distinct from
+  `query_raised_by` (who asked) and `query_settled_by` (who eventually answered).
+  Set it whenever the source names someone who can settle the question, even
+  loosely: *"Dawna would know via FDEC"*, *"Zach can answer that directly"*. Two
+  people is fine when the source is genuinely unsure which of them owns it.
+  **Why it matters:** the follow-up that chases this question groups by this
+  edge. Left unset the owner survives only inside `detail` prose, which reads
+  fine to a person and cannot be grouped by — so the chase goes to the whole
+  room instead of the one person who can end it. Writing "Zach can answer this"
+  into the detail and skipping the edge is the specific mistake to avoid.
 
 ## Anchoring
 
@@ -269,7 +282,8 @@ reviewing judgment, not syntax — lead with WHY. Omit empty sections except whe
 ## Plans                 WGP anchor, plan_status + the commitment language, furthers_yse
 ## Questions settled     each open Query the source ANSWERS + the answer text. Settle
                          them in this ingest. ALWAYS PRESENT, even if "none of N".
-## Queries               category, the open decision, who raised it, which YSE
+## Queries               category, the open decision, who raised it, WHO OWES THE
+                        ANSWER (answerable_by), which YSE
 ## Concerns              the issue, its YSE, who raised it, and why it is a Concern
                          rather than a Recommendation or Plan — i.e. what the source
                          does NOT say about resolving it

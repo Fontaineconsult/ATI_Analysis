@@ -256,7 +256,19 @@ def fetch_evidence_for_working_group(working_group, academic_year):
            has_messages: evidenceMessages,
            has_metrics: evidenceMetrics,
            plans: plans,
-           plans_with_notes: plansWithNotes
+           plans_with_notes: plansWithNotes,
+           // Pending questions pointed at THIS evidence (Query-addresses_evidence->YSE).
+           // Built as a pattern comprehension rather than threaded through the WITH
+           // chain above: the chain is long, and every variable added to it has to be
+           // carried by hand through a dozen stages, which is how a projection silently
+           // loses a field. Nested comprehensions resolve the people, so an unanswered
+           // question can show who raised it and who owes the answer.
+           queries: [ (q:Query)-[:addresses_evidence]->(evidence) | q {
+             .unique_id, .question, .detail, .category, .status, .answer,
+             .date_raised, .date_settled,
+             raised_by: head([ (q)-[:query_raised_by]->(rp:Person) | rp.name ]),
+             answerable_by: [ (q)-[:answerable_by]->(ap:Person) | ap.name ]
+           } ]
          } AS evidenceData
     
     // Collect all evidences under each indicator

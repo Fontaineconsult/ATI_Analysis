@@ -13,7 +13,7 @@ A Query anchors to a WorkingGroupPlan, which encodes campus + academic year + wo
 campus + year (created with the campus plan) — otherwise create raises NotFoundError.
 """
 
-from typing import Optional
+from typing import List, Optional
 
 from ._appbootstrap import ensure_app
 
@@ -34,11 +34,16 @@ def register(mcp, ctx) -> None:
         category: Optional[str] = None,
         detail: Optional[str] = None,
         raised_by_unique_id: Optional[str] = None,
+        answerable_by_unique_ids: Optional[List[str]] = None,
     ) -> dict:
         """Create a pending question anchored to a WorkingGroupPlan. Identify the anchor with
         `working_group_plan_identifier` ('<year>-<campus>-<wg>') OR the (campus_abbrev, year_name,
         working_group) triple. `category` (optional) is one of policy_decision / resource_request /
-        technical_clarification / risk_compliance / information_gap. Returns the created query."""
+        technical_clarification / risk_compliance / information_gap / artifact_request (a document
+        someone offered and has not sent). `answerable_by_unique_ids` names who OWES the answer —
+        set it whenever the source says who can settle the question, because it is the edge a
+        follow-up groups by; left unset, the owner survives only as detail prose that cannot be
+        queried. Returns the created query."""
         ensure_app()
         from app.database.queries.query.create import create_query as _create
         from app.database.queries.query.read import get_query as _get
@@ -51,6 +56,7 @@ def register(mcp, ctx) -> None:
             category=category,
             detail=detail,
             raised_by_unique_id=raised_by_unique_id,
+            answerable_by_unique_ids=answerable_by_unique_ids,
         )
         return _get(created.unique_id)
 
@@ -103,6 +109,18 @@ def register(mcp, ctx) -> None:
         from app.database.queries.query.update import add_query_note as _add_note
         return _add_note(unique_id, content, created_by_unique_id)
 
+    def set_query_answerable_by(unique_id: str, person_unique_ids: List[str]) -> dict:
+        """Replace the set of people who OWE this question's answer.
+
+        Replace semantics: the list becomes the whole set, and [] clears it — an
+        owner assigned from a mis-read transcript has to be removable without
+        deleting the question. Distinct from raised_by (who asked) and settled_by
+        (who eventually answered). This is the edge a follow-up groups by, so a
+        question with a named owner reaches one person instead of the whole room."""
+        ensure_app()
+        from app.database.queries.query.update import set_query_answerable_by as _set
+        return _set(unique_id, person_unique_ids)
+
     def delete_query(unique_id: str) -> dict:
         """Delete a pending question and its private notes (shared reference nodes are left intact).
         Returns {ok, deleted}."""
@@ -124,6 +142,8 @@ def register(mcp, ctx) -> None:
          "Unlink a pending question from a YearSuccessEvidence."),
         (add_query_note, "add_query_note",
          "Attach a note to a pending question."),
+        (set_query_answerable_by, "set_query_answerable_by",
+         "Set who owes a pending question's answer (replace semantics; [] clears)."),
         (delete_query, "delete_query",
          "Delete a pending question and its private notes."),
     ]

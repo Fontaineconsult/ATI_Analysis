@@ -282,6 +282,12 @@ query_categories = {
     "technical_clarification": "Technical Clarification",
     "risk_compliance":         "Risk / Compliance",
     "information_gap":          "Information Gap",
+    # Someone in the room OFFERED a document and it has not arrived — an agenda,
+    # an attendance list, a slide deck, a policy text. Distinct from an
+    # information gap: the answer is not unknown, the artifact is simply not in
+    # hand yet, and the ask is "please send it" rather than "please find out".
+    # These are what a post-meeting follow-up chases.
+    "artifact_request":        "Artifact Request",
 }
 
 # Query status: lifecycle of a pending question from raised to answered. Settling is
@@ -302,6 +308,17 @@ recommendation_statuses = {
     "open":      "Open",
     "addressed": "Addressed",
     "dismissed": "Dismissed",
+}
+
+
+# ---------------------------------------------------------------------------
+# FollowUp lifecycle — the post-meeting message that chases the gaps a meeting
+# left open (graph_schema.FollowUp). One per community-of-practice x campus
+# slice, because that is the audience that shares the ground being chased.
+# ---------------------------------------------------------------------------
+followup_statuses = {
+    "draft": "Draft",
+    "sent":  "Sent",
 }
 
 
@@ -437,6 +454,7 @@ PUBLIC_VOCABULARIES = {
     "query_statuses":        query_statuses,
     "recommendation_statuses": recommendation_statuses,
     "concern_statuses":        concern_statuses,
+    "followup_statuses":       followup_statuses,
 }
 
 yse_priority_level = {

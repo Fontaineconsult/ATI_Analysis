@@ -1091,6 +1091,48 @@ export const fetchInterviewGuidesForCampusYear = async (campusAbbrev, academicYe
     }
 };
 
+// --- Follow-ups (the post-meeting chase) ------------------------------------
+
+// The per-indicator gap table for one meeting: what was discussed, the evidence
+// behind it, and every open ask. This is a live READ over the graph — the draft
+// a follow-up is generated from, not the message that was sent.
+export const fetchFollowUpTable = async (meetingMinutesId) => {
+    try {
+        const response = await axios.get(
+            `${process.env.REACT_APP_API_URL}/follow-ups/table/${meetingMinutesId}`
+        );
+        return response.data;
+    } catch (error) {
+        console.error('Error fetching follow-up table:', error.message);
+        throw error;
+    }
+};
+
+// The saved follow-ups chasing one meeting — one per community x campus slice.
+export const fetchFollowUpsForMeeting = async (meetingMinutesId) => {
+    try {
+        const response = await axios.get(
+            `${process.env.REACT_APP_API_URL}/follow-ups/meeting/${meetingMinutesId}`
+        );
+        return response.data;
+    } catch (error) {
+        console.error('Error fetching follow-ups for meeting:', error.message);
+        throw error;
+    }
+};
+
+export const fetchFollowUp = async (uniqueId) => {
+    try {
+        const response = await axios.get(
+            `${process.env.REACT_APP_API_URL}/follow-ups/item/${uniqueId}`
+        );
+        return response.data;
+    } catch (error) {
+        console.error('Error fetching follow-up:', error.message);
+        throw error;
+    }
+};
+
 export const fetchInterviewGuide = async (uniqueId) => {
     try {
         const response = await axios.get(

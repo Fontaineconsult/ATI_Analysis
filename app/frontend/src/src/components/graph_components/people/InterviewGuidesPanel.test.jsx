@@ -24,6 +24,12 @@ jest.mock('../../../context/SettingsContext', () => ({
 }));
 // The edit form pulls UserContext + put services; it opens only on Edit.
 jest.mock('./InterviewGuideForm', () => ({ __esModule: true, default: () => null }));
+jest.mock('./FollowUpModal', () => ({
+    __esModule: true,
+    default: ({ guide, campus }) => (
+        <div data-testid="follow-up-modal">follow-up for {guide.unique_id} at {campus}</div>
+    ),
+}));
 
 import {
     fetchAllCommunities, fetchInterviewGuidesForCampusYear, fetchYsesByCampusForYear,
@@ -58,9 +64,9 @@ const GUIDES = [
     },
 ];
 
-const renderPanel = () => render(
+const renderPanel = (entry = '/ati/sfsu/ati-explorer/people/interview-guides') => render(
     <ChakraProvider>
-        <MemoryRouter initialEntries={['/ati/sfsu/ati-explorer/people/interview-guides']}>
+        <MemoryRouter initialEntries={[entry]}>
             <Routes>
                 <Route path="/ati/:campus/ati-explorer/people/interview-guides" element={<InterviewGuidesPanel />} />
             </Routes>
@@ -105,6 +111,34 @@ describe('InterviewGuidesPanel', () => {
         expect(dialog).toHaveTextContent('The guide body');
         expect(dialog).toHaveTextContent('Library minutes');
         expect(dialog).toHaveTextContent('Instructional Materials');
+    });
+
+    it('opens the follow-up from a guide that has minutes', async () => {
+        renderPanel();
+        fireEvent.click(await screen.findByRole('button', { name: /open interview guide: prep: library/i }));
+        fireEvent.click(await screen.findByRole('button', { name: /^follow-up$/i }));
+        expect(await screen.findByTestId('follow-up-modal')).toHaveTextContent('follow-up for g1 at sfsu');
+    });
+
+    it('offers no follow-up on a guide with no minutes linked', async () => {
+        renderPanel();
+        fireEvent.click(await screen.findByRole('button', { name: /open interview guide: prep: overdue/i }));
+        await screen.findByRole('dialog');
+        expect(screen.queryByRole('button', { name: /^follow-up$/i })).not.toBeInTheDocument();
+    });
+
+    it('restores the follow-up from the URL, so returning from an indicator works', async () => {
+        // The whole point of the view is to send you off to edit an indicator and
+        // have you come back. Component state would not survive that navigation;
+        // ?followup= does.
+        renderPanel('/ati/sfsu/ati-explorer/people/interview-guides?followup=g1');
+        expect(await screen.findByTestId('follow-up-modal')).toHaveTextContent('follow-up for g1');
+    });
+
+    it('ignores a followup param naming a guide that is not here', async () => {
+        renderPanel('/ati/sfsu/ati-explorer/people/interview-guides?followup=nope');
+        await screen.findByText('Prep: Library alternative-access process');
+        expect(screen.queryByTestId('follow-up-modal')).not.toBeInTheDocument();
     });
 
     it('shows the empty state when the campus/year has no guides', async () => {

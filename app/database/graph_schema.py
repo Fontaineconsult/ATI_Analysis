@@ -13,7 +13,7 @@ import os
 from app.data_config import (trajectory_choices, asset_classes, asset_scopes, taap_outcomes,
                              functions, component_kinds, coverage_domains, audiences, interface_provenances,
                              descriptor_kinds, query_categories, query_statuses, evidence_control_choices,
-                             recommendation_statuses, concern_statuses,
+                             recommendation_statuses, concern_statuses, followup_statuses,
                              evidence_requirement_levels, evidence_requirement_elements)
 
 # Configuration enters through the single gateway (app/config_gateway.py). Importing
@@ -1867,6 +1867,11 @@ class Query(StructuredNode):
     addresses_evidence = RelationshipTo("YearSuccessEvidence", "addresses_evidence")
     query_raised_by = RelationshipTo("Person", "query_raised_by")
     query_settled_by = RelationshipTo("Person", "query_settled_by")
+    # Who owes the answer. Distinct from raised_by (who asked) and settled_by
+    # (who eventually did answer, set at settle time). This is the edge a
+    # follow-up groups by: without it the owner lives only in detail prose,
+    # which reads fine and cannot be queried, so every chase goes to everyone.
+    answerable_by = RelationshipTo("Person", "answerable_by")
     notes = RelationshipTo("Note", "has_note")
 
     def serialize(self):
@@ -1999,6 +2004,85 @@ class InterviewGuide(StructuredNode):
             "meeting_date": self.meeting_date.isoformat() if self.meeting_date else None,
             "date_created": self.date_created.isoformat() if self.date_created else None,
             "source_path": self.source_path,
+        }
+
+
+class FollowUp(StructuredNode):
+    """The message that chases what a meeting left open — the third corner of the
+    prep / record / chase loop that InterviewGuide and MeetingMinutes begin.
+
+    A guide plans the questions, the minutes record what was actually said, and a
+    FollowUp carries the gaps back out to the people who can close them. When its
+    asks come back settled, the next guide is prepared against a stronger graph.
+    That loop is meant to run more than once per indicator.
+
+    Scoped to ONE community of practice at ONE campus, because that is the
+    audience which shares the ground being chased — a meeting spanning two
+    communities produces two follow-ups to two different rooms, not one message
+    nobody owns.
+
+    The body is stored as MARKDOWN. The email-ready HTML is generated in the
+    browser at copy time (services/utils/followUpReport.js), the same way the
+    community and status reports are built, so the stored record stays readable
+    and diffable while the rendering can improve without a migration.
+
+    `includes_query` / `includes_recommendation` / `includes_concern` are the
+    point of the node: they record which asks actually went out, so "what have we
+    chased, and what came back" is a query rather than an archaeology exercise.
+    """
+    unique_id = UniqueIdProperty()
+
+    subject = StringProperty(required=True)
+    body_markdown = StringProperty()          # the saved message; HTML is rendered client-side
+    status = StringProperty(choices=followup_statuses, default="draft")
+    date_created = DateProperty()
+    date_sent = DateProperty()
+
+    # WHEN the message was composed, to the second, as ISO-8601. Distinct from
+    # date_created, and the reason it needs to be: the gap table this text was
+    # written against keeps moving, so a follow-up generated before an indicator
+    # gained evidence is stale, and only a timestamp makes that visible beside
+    # the live table.
+    #
+    # A string, not DateTimeProperty: neomodel inflates that through zoneinfo,
+    # which raises "No time zone found with key UTC" on Windows without the
+    # tzdata package — and this app is IIS-hosted. ISO-8601 sorts lexically and
+    # serialises straight to JSON, which is all this field needs to do.
+    generated_at = StringProperty()
+
+    # Required anchor (enforced in queries/followup/create.py — neomodel cannot
+    # enforce a required RelationshipTo at save time).
+    follows_up_on = RelationshipTo("MeetingMinutes", "follows_up_on", cardinality=ZeroOrOne)
+
+    # The prep this cycle started from, when there was one. Completes the loop.
+    derived_from = RelationshipTo("InterviewGuide", "derived_from", cardinality=ZeroOrOne)
+
+    # The slice: which community's ground, at which campus.
+    pertains_to = RelationshipTo("CommunityOfPractice", "pertains_to", cardinality=ZeroOrOne)
+    for_campus = RelationshipTo("Campus", "for_campus", cardinality=ZeroOrOne)
+
+    # Recipients. Defaults from the guide's prepared_for roster.
+    addressed_to = RelationshipTo("Person", "addressed_to")
+
+    # The success indicators the message tabulates.
+    covers_evidence = RelationshipTo("YearSuccessEvidence", "covers_evidence")
+
+    # What was actually asked for — the measurable half of the loop.
+    includes_query = RelationshipTo("Query", "includes_query")
+    includes_recommendation = RelationshipTo("Recommendation", "includes_recommendation")
+    includes_concern = RelationshipTo("Concern", "includes_concern")
+
+    created_by = RelationshipTo("Person", "created_by")
+
+    def serialize(self):
+        return {
+            "unique_id": self.unique_id,
+            "subject": self.subject,
+            "body_markdown": self.body_markdown,
+            "status": self.status,
+            "date_created": self.date_created.isoformat() if self.date_created else None,
+            "date_sent": self.date_sent.isoformat() if self.date_sent else None,
+            "generated_at": self.generated_at,
         }
 
 
@@ -2547,6 +2631,17 @@ class Message(StructuredNode):
     created_by = RelationshipTo("Person", "created_by")
     include_in_report = BooleanProperty(default=True)
     has_file = RelationshipTo("StoredFile", "has_file", cardinality=ZeroOrOne)  # managed (uploaded) blob
+
+    # Who actually wrote it. Distinct from created_by, which is whoever entered
+    # it into the app: on a reply to a follow-up those are different people, and
+    # the sender is the one worth knowing, because it is the counterpart to the
+    # Query's answerable_by.
+    from_person = RelationshipTo("Person", "from_person")
+
+    # The chase this answers. Without it a reply is filed against a YSE and the
+    # follow-up that prompted it has no idea anything came back, which makes
+    # "sent and ignored" indistinguishable from "sent and answered".
+    replies_to = RelationshipTo("FollowUp", "replies_to", cardinality=ZeroOrOne)
 
 
     def serialize(self):

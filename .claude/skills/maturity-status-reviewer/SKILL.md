@@ -275,3 +275,7 @@ of calibration, both instructive:
    the surviving in-scope gaps (intake documentation/telemetry, PD
    formalization, Output records). The lesson: formal edges replace prose
    inference round by round; the review gets sharper as the model does.
+
+## Prose style
+
+**All prose here follows `app/database/ontology/writing-style.md`** (the project writing style): no marketing vocabulary, no em dashes, one claim per sentence, name the relation instead of gesturing at it, no throat-clearing. Quoted material and success-indicator text are exempt and go in verbatim.

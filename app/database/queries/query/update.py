@@ -93,6 +93,38 @@ def settle_query(unique_id: str, answer: str, settled_by_unique_id: str = None) 
     return get_query(unique_id)
 
 
+def set_query_answerable_by(unique_id: str, person_unique_ids: list) -> dict:
+    """Replace the set of people who owe this question's answer.
+
+    Replace semantics (like set_guide_people): the supplied list becomes the
+    whole set, and [] clears it. That is what makes it correctable — an owner
+    assigned from a mis-read transcript has to be removable without deleting
+    the question.
+
+    This is the edge a follow-up groups by. Without it the owner exists only in
+    `detail` prose, which reads fine to a person and cannot be queried, so every
+    chase goes to everyone in the room.
+    """
+    from app.database.graph_schema import Person
+
+    query = _get(unique_id)
+
+    people = []
+    for person_id in person_unique_ids or []:
+        person = Person.nodes.get_or_none(unique_id=person_id)
+        if person is None:
+            raise NotFoundError(f"Person {person_id!r} not found")
+        people.append(person)
+
+    try:
+        query.answerable_by.disconnect_all()
+        for person in people:
+            query.answerable_by.connect(person)
+    except Exception as e:
+        raise CrudError(f"Failed to set answerable_by on Query {unique_id!r}: {e}")
+    return get_query(unique_id)
+
+
 def attach_evidence(unique_id: str, yse_identifier: str) -> dict:
     """Connect a Query to a YearSuccessEvidence it addresses (idempotent)."""
     query = _get(unique_id)

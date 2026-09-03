@@ -1,0 +1,287 @@
+---
+name: follow-up
+description: Compose the post-meeting follow-up that chases what a meeting left open — a message per community-of-practice × campus, built from the gap table PLUS the prose the table cannot see (notes, source text, the guide's bar elements). Saves it as a FollowUp node wired to the asks it carries. Triggered by "draft the follow-up", "follow up on that meeting", "what do we still need from X", "chase the gaps from the CSUEB interview".
+---
+
+# Follow-up — chase what the meeting left open
+
+The third corner of the loop: a guide plans the questions, minutes record what was
+said, and a follow-up carries the gaps back to the people who can close them. When
+its asks come back settled, the next guide is prepared against a stronger graph.
+
+**The app does not compose this.** It used to, and the failure is the reason this
+skill exists — see *Why a template cannot do this* below. The app displays saved
+follow-ups, timestamps them, and copies them into an email.
+
+## Step 0 — Recon (read-only)
+
+### 0.1 The gap table — necessary, not sufficient
+
+```
+meeting_followup_table(meeting_minutes_id)
+```
+
+One row per success indicator the meeting touched, with status, live evidence, and
+every open ask (each with its `unique_id` — you need those to wire the message).
+"Discussed" is derived: indicators sharing a Note with the minutes.
+
+**An empty ask list does not mean an indicator is settled.** It usually means its
+gaps were written as prose. That is the whole reason the next step is mandatory.
+
+### 0.2 The prose the table cannot see — MANDATORY
+
+Read, for every indicator in the table:
+
+- **The notes on the YSE** (`notes_for_yse`) and on the minutes. Artifacts someone
+  OFFERED live here, in sentences like *"Cheryl confirmed an attendee list and a
+  slide deck exist and can be provided."* That is the highest-value ask in most
+  meetings and it is invisible to the table.
+- **The minutes body itself** — commitments, hesitations, who deferred to whom.
+- **The interview guide** (`get_interview_guide`) — its bar-element tables say what
+  each indicator still needs (Position / Budget / Procedures / Output). An element
+  probed and found empty is a real gap even with no Query node behind it.
+- **Source text** on the implementations' documentation, where a claim can be
+  checked against what a page actually says before you ask about it.
+- **Prior follow-ups** (`list_follow_ups`) — never re-ask what a previous message
+  already asked and got answered. Check `includes_query` status on the old one.
+
+### 0.3 Resolve the slice and the room
+
+One follow-up per **community of practice × campus** — that is the audience sharing
+the ground being chased. A meeting spanning two communities gets two messages.
+Recipients default to the guide's `prepared_for`.
+
+## Step 1 — Decide what to ask
+
+Ask for the thing that would move the indicator, not for everything outstanding.
+
+| Signal in the record | What to put in the message |
+|---|---|
+| Someone **offered** an artifact and it has not arrived | Ask for it by name — the strongest ask you have |
+| A bar element is empty and one artifact would fill it | Ask for that artifact |
+| An open **Query** with a named `answerable_by` | Put it to that person |
+| An open **Recommendation** | State it and ask whether they agree it is the right change |
+| An open **Concern** | Say the problem, ask who would own the fix |
+| Evidence is rated but the rating looks wrong | Ask them to confirm what it covers |
+| Nothing outstanding, honestly | Say the indicator looks settled and ask them to correct you |
+
+**Never invent an ask to fill a section.** An indicator with nothing to chase gets a
+sentence saying the record looks complete and inviting correction — which is itself
+useful, because it is how a wrong Established gets caught.
+
+**Never claim an indicator is fine because its ask list is empty.** Check the prose
+first; that inference is exactly the bug this skill replaced.
+
+**Every ask must ask about their programme, not about your bookkeeping.** An ask
+whose payload is "confirm I recorded this correctly" spends a colleague's
+attention on our record instead of their work, and it is the first thing a
+sender cuts. Calibration (2026-09-03): a draft carried six asks and went out
+with five. The one cut was *"Confirm I was right to remove the ScreenSteps
+guides from this indicator"*, along with the whole indicator section built
+around it. Make the correction, record the reasoning in the graph, and let the
+closing invitation to correct you carry it.
+
+## Step 2 — Write it
+
+**All prose here follows `app/database/ontology/writing-style.md`** (the project writing style): no marketing vocabulary, no em dashes, one claim per sentence, name the relation instead of gesturing at it, no throat-clearing. Quoted material and success-indicator text are exempt and go in verbatim.
+
+
+A real message to colleagues, not a report dump.
+
+**Formatting carries the density — not brevity.** A three-column table states six
+facts in the vertical space of one sentence, with the links inside it. Cutting
+tables to shorten a message is backwards: it removes the compression and leaves
+undifferentiated prose, which is what actually reads as a wall. Calibration
+(2026-09-02): a draft was tightened from 8,456 to 5,492 characters by deleting
+its evidence tables, and came back as *"much worse — there are NO tables,
+everything is just separated by a br"*. Length was never the complaint.
+
+**Lead with a summary table.** Indicator, what you need, who from: one row per
+ask, names in bold. A reader who opens this on a phone should know within two
+seconds whether anything is theirs.
+
+**Anything time-critical is a date inside its action row, not a banner above the
+table.** A separate time-sensitive paragraph sitting over a table that already
+carries the date says it twice, and the reader has to work out which one to act
+on.
+
+**No sentence that announces the structure.** *"Everything below is the
+reasoning behind those six"* tells the reader what they can already see. Go
+straight from the action table to the first indicator.
+
+**Then one section per indicator**, in this shape:
+- an `##` heading naming the indicator and what it covers
+- the current grade with a link to the public record, and nothing else on that
+  line. No verdict on whether the grade is right
+- an evidence table headed **Implementation Evidence | Documentation**: what is
+  on file, and the live links behind it. Two columns, and no strength ratings
+- the ask in bold, addressed to a named person
+- one paragraph of context, not three. See *one claim per sentence is not one
+  sentence per paragraph* in the writing style
+
+**Prose earns its place by doing something the table cannot.** Say why the ask
+changes the grade, what you could not settle from the record, or what you suspect
+is wrong. Cut sentences that only prove you did the reading, or restate what the
+recipient already knows about their own programme.
+
+- **One ask per indicator.** Pick the thing that moves it furthest; the rest keep.
+- **Every ask is an imperative or a direct question, with the person named.**
+  "Cheryl, please send the attendee list" is an ask. "Cheryl, the attendee
+  list you offered" is a topic heading, and it gets filed rather than
+  answered. The summary table follows the same rule: each row is an action,
+  not a noun phrase.
+- **Name the person in bold at the ask.** With `answerable_by` set, every ask has
+  an owner — address them so nobody has to work out which parts are theirs.
+- **Link every claim.** The public record for each YSE, the public page for each
+  implementation, and the live documentation URL for each claimed artifact. A
+  reader who cannot check a claim cannot correct it.
+- **Keep internal machinery out of the message.** Evidence strength ratings
+  (0-3, unrated, "no contribution") are how WE decide what to chase. They mean
+  nothing to a recipient, and explaining them costs more than they are worth.
+  Use them to pick the asks, then write the ask in plain terms: "I took
+  ScreenSteps off this indicator, confirm I was right" rather than "ScreenSteps
+  was carrying this at full strength". The same applies to signal tiers, node
+  labels, and edge names.
+- **The action-items table is the contract.** Head it "Action items", one row
+  per ask, and start every row with a verb: Send, Tell me, Confirm. A row that
+  starts with a noun is a topic, and the reader will not know what to do.
+- Quote the record where you want it challenged: *"my notes say the session has
+  run for two years"* invites a correction a bare question does not.
+- **Three or more parallel items are a bullet list, not a sentence.** Prose
+  that enumerates makes the reader hold the count. The three example categories
+  at 7.3-ins were drafted inline and sent as three bullets.
+- **Do not assign yourself work the reader might want to share.** *"which I will
+  raise with Benjamin Smith"* was sent as *"which I or you can raise with
+  Benjamin Smith"*. If either of you could do it, say so.
+- **Close in this order:** the items you are chasing elsewhere that they should
+  know about but need not action, as bullets under a plain lead-in; one
+  invitation to correct you; one conventional sign-off line; the sender's full
+  signature block. Do not argue for the value of the record on the way out. *"This
+  record is what a Chancellor's Office review reads"* was cut before sending,
+  because a message that has just asked five people for favours does not also
+  lecture them.
+
+Markdown, in the subset the renderer handles: headings, paragraphs, bullets, pipe
+tables, horizontal rules, bold, italic, links. Escape a literal `|` inside a table
+cell as `\|`.
+
+**Not supported — do not reach for them:** blockquotes (`>`) and ordered lists
+(`1.`) render as literal text in the email. Use a bold lead-in instead of a
+blockquote, and bullets instead of numbers.
+
+## Verify before writing — required gate
+
+Present, and STOP:
+
+```
+## Slice            community × campus, recipients, and why them
+## Asks             each ask, its source (table row / note prose / bar element /
+                    guide), and the unique_id it will be wired to
+## Not asking       what was outstanding and deliberately left out, one line each
+## Corrections      what you are inviting them to correct, and why you suspect it
+## The message      the full markdown, as it will be saved
+```
+
+The user is reviewing judgment and tone — this goes to real colleagues under their
+name. Any change after approval → re-present the delta.
+
+## Step 3 — Save
+
+```
+save_follow_up(
+  subject, meeting_minutes_id, body_markdown,
+  community_name, campus_abbreviation, interview_guide_id,
+  recipient_employee_ids,
+  covers_year_identifiers,
+  query_unique_ids, recommendation_unique_ids, concern_unique_ids,
+  created_by_employee_id,
+)
+```
+
+**Wire every ask you actually made.** Skipping `query_unique_ids` leaves an inert
+blob of text and makes "what came back" unanswerable. `generated_at` is stamped
+automatically.
+
+Saves as a **draft**. Call `mark_follow_up_sent(unique_id, date_sent)` only once it
+has genuinely gone out — an ask still open under a SENT follow-up is a non-response
+worth escalating, while the same ask on a draft is just an unfinished chase.
+
+## Step 4 — Process the reply
+
+The same skill, second mode. Triggered by "here is Cheryl's reply", "log this
+response", "they got back to me".
+
+**4.1 Record the reply as a Message.** Type `e-mail`, content pasted verbatim,
+attached to the YearSuccessEvidence it concerns by `has_message`. Then link it:
+
+```
+link_reply_to_follow_up(message_unique_id, follow_up_unique_id, from_person_unique_id)
+```
+
+`from_person` is who WROTE it. `created_by` is whoever entered it, and on a
+reply those are different people. Without `from_person` you cannot ask whether
+the person who owed the answer is the one who gave it.
+
+**4.2 Match the reply against the asks the follow-up carried.** Read them with
+`replies_for_follow_up`, which returns every ask with its current status. For
+each one the reply touches, decide:
+
+| The reply says | Do |
+|---|---|
+| the answer | `settle_query` with the answer text, verbatim where it is quotable |
+| they will do the thing | leave the Query open, add a Note saying when they said they would |
+| the artifact is attached | see 4.3 |
+| they disagree with a Recommendation | leave it open, record the disagreement as a Note. A rejected recommendation is a considered decision, not a failure |
+| nothing about an ask | leave it. Silence is not a no, and it is what the next chase is for |
+
+**4.3 An artifact that arrives becomes documentation, not a stored blob.** Add
+it with `add_document` or `add_webpage`, attach it to the implementation it
+evidences, and pull its Source Text with `/get-source-text` if it is a link.
+Then re-run `/ontology-ingest` over it: an attendee list may be evidence, may
+justify a strength change, and may answer a bar element nobody asked about. Do
+not decide that here. The ingest skill has the routing rubric.
+
+**4.4 Do not re-grade in this step.** A reply changes what the graph holds.
+Whether that changes a status level is `/maturity-status-reviewer`'s judgment,
+made against the rubric, not a side effect of logging a response.
+
+## Step 5 — Chase what did not come back
+
+```
+overdue_followups(days_sent)
+```
+
+Sent follow-ups older than N days that still carry unanswered asks. Two states,
+and they need different messages:
+
+- `awaiting_reply`: it went out and nothing came back. Re-send, or ask whether
+  it reached the right person.
+- `partially_answered`: somebody replied and left these asks untouched. Name the
+  specific gap. Do not resend the whole message, which reads as if you did not
+  read theirs.
+
+Drafts never appear here. An open ask on a message that was never sent is an
+unfinished chase, and the fix is to send it.
+
+**Carrying forward.** Asks still open when the next cycle's follow-up is written
+carry forward by default, because an unanswered question does not stop
+mattering. Say so in the message rather than repeating it silently: "still
+chasing the attendee list from August" is honest and gets a faster answer than
+asking again as though for the first time. Prune anything that has been
+overtaken.
+
+## Why a template cannot do this
+
+Calibration, 2026-09-02. A generator in the app filled a fixed template from the
+table. For `8.11-ins` at CSU East Bay it produced:
+
+> *Nothing is recorded as outstanding against this indicator.*
+
+The note on that same YSE read:
+
+> *"Cheryl confirmed an attendee list and a slide deck exist and can be provided —
+> both are still outstanding as artifacts."*
+
+Someone had **offered the evidence in the room** and the message would have gone out
+asking for nothing. The gap was in prose, and prose is exactly what a mail-merge
+cannot read. That is why composition sits here and not in the application.

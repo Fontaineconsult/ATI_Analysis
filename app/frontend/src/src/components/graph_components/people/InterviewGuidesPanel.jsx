@@ -3,7 +3,7 @@ import {
     Badge, Box, Button, Flex, HStack, Modal, ModalBody, ModalCloseButton, ModalContent,
     ModalFooter, ModalHeader, ModalOverlay, Spinner, Text, VStack, useDisclosure, useToast,
 } from '@chakra-ui/react';
-import { useParams } from 'react-router-dom';
+import { useParams, useSearchParams } from 'react-router-dom';
 import { useSettings } from '../../../context/SettingsContext';
 import Markdown from '../common/Markdown';
 import Section from '../common/Section';
@@ -15,6 +15,7 @@ import useInvalidateResources from '../../../hooks/useInvalidateResources';
 import { KEYS, NS } from '../../../context/resourceKeys';
 import { deleteInterviewGuide } from '../../../services/api/delete';
 import InterviewGuideForm from './InterviewGuideForm';
+import FollowUpModal from './FollowUpModal';
 
 /** Closure state of one guide: held (minutes linked) / unclosed (planned date
  * passed, no minutes) / upcoming. The unclosed state is the loose end the
@@ -82,7 +83,7 @@ function GuideRow({ guide, onOpen }) {
 }
 
 /** Read modal: the guide body rendered as Markdown, edges in the header. */
-function GuideModal({ guide, onEdit, onDelete, onClose }) {
+function GuideModal({ guide, onEdit, onDelete, onFollowUp, onClose }) {
     return (
         <Modal isOpen onClose={onClose} size="4xl" scrollBehavior="inside">
             <ModalOverlay />
@@ -116,6 +117,12 @@ function GuideModal({ guide, onEdit, onDelete, onClose }) {
                     </Box>
                 </ModalBody>
                 <ModalFooter>
+                    {guide.resulted_in && (
+                        <Button size="sm" variant="outline" colorScheme="orange" mr={2}
+                                onClick={() => onFollowUp(guide)}>
+                            Follow-up
+                        </Button>
+                    )}
                     <Button size="sm" variant="outline" colorScheme="teal" onClick={() => onEdit(guide)}>Edit</Button>
                     <Button size="sm" variant="ghost" colorScheme="red" ml={2} onClick={() => onDelete(guide)}>Delete</Button>
                     <Box flex="1" />
@@ -139,6 +146,12 @@ export default function InterviewGuidesPanel() {
 
     const [openGuide, setOpenGuide] = useState(null);
     const [editing, setEditing] = useState(null);
+    // The follow-up view is URL-DRIVEN (?followup=<guide unique_id>), not local
+    // state: its whole purpose is to send you off to an indicator and have you
+    // come back, and component state does not survive that round trip. Browser
+    // Back returns to this URL and the modal reopens where it was.
+    const [searchParams, setSearchParams] = useSearchParams();
+    const followUpGuideId = searchParams.get('followup');
     const formDisc = useDisclosure();
 
     // The panel itself, scoped by campus and year — both belong in the key, since
@@ -193,6 +206,10 @@ export default function InterviewGuidesPanel() {
     }, [yseResp, campus]);
 
     const guides = useMemo(() => panel?.guides || [], [panel]);
+    const followUpGuide = useMemo(
+        () => guides.find((g) => g.unique_id === followUpGuideId) || null,
+        [guides, followUpGuideId],
+    );
 
     const handleDelete = async (guide) => {
         if (!window.confirm(`Delete the guide "${guide.title}"? People, indicators, and minutes are untouched.`)) return;
@@ -207,6 +224,14 @@ export default function InterviewGuidesPanel() {
     };
 
     const openEdit = (guide) => { setOpenGuide(null); setEditing(guide); formDisc.onOpen(); };
+    const openFollowUp = (guide) => {
+        setOpenGuide(null);
+        setSearchParams({ followup: guide.unique_id });
+    };
+    const closeFollowUp = () => {
+        searchParams.delete('followup');
+        setSearchParams(searchParams, { replace: true });
+    };
 
     return (
         <Section
@@ -238,8 +263,13 @@ export default function InterviewGuidesPanel() {
                     guide={openGuide}
                     onEdit={openEdit}
                     onDelete={handleDelete}
+                    onFollowUp={openFollowUp}
                     onClose={() => setOpenGuide(null)}
                 />
+            )}
+
+            {followUpGuide && (
+                <FollowUpModal guide={followUpGuide} campus={campus} onClose={closeFollowUp} />
             )}
 
             {formDisc.isOpen && editing && (
