@@ -134,6 +134,19 @@ rating" is literally true. "This carries our commitment to access" is not.
 **Definitions before uses.** Do not use a term in paragraph one and define it in
 paragraph three.
 
+**Keep internal vocabulary out of anything a stakeholder reads.** Evidence
+strength ratings, signal tiers, node labels, and edge names are how the system
+thinks. A recipient has no way to interpret them, and explaining them costs more
+than they are worth. Use them to decide what to say, then say it in the reader's
+terms.
+
+Wrong: "ScreenSteps was carrying this indicator at full strength."
+Right: "I took ScreenSteps off this indicator."
+
+**Prefer the present tense.** Past-perfect constructions about the state of a
+record read as bureaucracy. "The record says no formal process exists" beats "it
+had been recorded as having no formal process".
+
 **State facts, not framings.** "Attendance is not tracked per individual" beats
 "there is an opportunity to improve attendance tracking."
 

@@ -115,6 +115,16 @@ recipient already knows about their own programme.
 - **Link every claim.** The public record for each YSE, the public page for each
   implementation, and the live documentation URL for each claimed artifact. A
   reader who cannot check a claim cannot correct it.
+- **Keep internal machinery out of the message.** Evidence strength ratings
+  (0-3, unrated, "no contribution") are how WE decide what to chase. They mean
+  nothing to a recipient, and explaining them costs more than they are worth.
+  Use them to pick the asks, then write the ask in plain terms: "I took
+  ScreenSteps off this indicator, confirm I was right" rather than "ScreenSteps
+  was carrying this at full strength". The same applies to signal tiers, node
+  labels, and edge names.
+- **The action-items table is the contract.** Head it "Action items", one row
+  per ask, and start every row with a verb: Send, Tell me, Confirm. A row that
+  starts with a noun is a topic, and the reader will not know what to do.
 - Quote the record where you want it challenged: *"my notes say the session has
   run for two years"* invites a correction a bare question does not.
 - Ask for corrections once, at the end.
