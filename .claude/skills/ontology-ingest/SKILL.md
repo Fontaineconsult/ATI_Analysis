@@ -220,6 +220,48 @@ it, and how the stipends are funded. Every sentence was true and none of it was 
 plan — the programme description belonged on the Guidance node, and the name named
 a topic nobody could ever mark complete.
 
+### Writing implementation descriptions
+
+**Two or three sentences saying what the thing IS.** An implementation description
+is a standing definition, not a record of how we came to know about it. Written
+right, it reads the same whether it was captured today or three years ago, and it
+does not age when the next meeting happens.
+
+Ask of every sentence: *would this still be true and still belong if I had learned
+it from the campus website instead of a meeting?* If no, it is a Note.
+
+Keep:
+- what the work is, who runs it, and who it serves
+- its standing structure — the levels, the strands, the cadence, the eligibility chain
+- the durable facts a reader needs to recognise it
+
+Move to a **Note** on the same YSE:
+- **attestation** — "Attested by X on <date>", "X confirmed on <date>", "Recorded
+  <date> from the CTET page". The Note already carries its own date and author
+- **history and origin stories** — how the programme started, who chaired it before,
+  what it replaced
+- **corrections and their reasoning** — "Corrected <date>: completion letters are no
+  longer issued. The earlier description claimed…". Correct the sentence and let the
+  Note explain. A description that argues with its own previous version is a
+  changelog wearing the wrong label
+- **naming disputes, verification flags, as-heard caveats**
+- **specific instances** — individual cohort date ranges, one session in one March,
+  this year's dollar amounts, who attended
+- **anything scoped to one reporting year.** The node outlives the year
+
+Do not append. The failure mode is additive: each ingest adds a paragraph about what
+that meeting said, and after three cycles the description is a meeting log with a
+definition buried at the top. Rewrite the sentence instead, and put the change in a
+Note.
+
+Calibration (2026-09-03 SSU): `CTET Canvas Professional Development Ladder (Levels
+1-3)` reached 2,093 characters across sixteen sentences — three Fall 2025 cohort
+date ranges, a paragraph correcting the completion-letter claim, and a paragraph
+disputing the word "Ladder". Every sentence was true. Three of sixteen said what the
+programme is. The same ingest wrote six new implementations averaging 800 characters
+each, all carrying "Attested by … on 2026-09-03" and their own origin stories, all of
+which was already recorded in the Notes attached to the same YSEs.
+
 ### Implementation sub-routing (all S1)
 
 Repeatable workflow, no endpoint → **Process** · documented step-by-step method →
