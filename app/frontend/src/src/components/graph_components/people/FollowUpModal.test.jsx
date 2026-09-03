@@ -4,6 +4,10 @@ import userEvent from '@testing-library/user-event';
 import { ChakraProvider } from '@chakra-ui/react';
 
 // CRA's resetMocks wipes factory implementations, so they are set in beforeEach.
+jest.mock('../../../services/api/put', () => ({
+    __esModule: true,
+    markFollowUpSent: jest.fn(),
+}));
 jest.mock('../../../services/utils/tools', () => ({
     __esModule: true,
     navigateToIndicator: jest.fn(),
@@ -17,6 +21,7 @@ jest.mock('../../../services/api/get', () => ({
 import { MemoryRouter } from 'react-router-dom';
 import { fetchFollowUpTable, fetchFollowUpsForMeeting } from '../../../services/api/get';
 import { navigateToIndicator } from '../../../services/utils/tools';
+import { markFollowUpSent } from '../../../services/api/put';
 import FollowUpModal, { askCount } from './FollowUpModal';
 
 const ROWS = [
@@ -71,6 +76,7 @@ const renderModal = (guide = GUIDE) => render(
 beforeEach(() => {
     fetchFollowUpTable.mockResolvedValue({ data: { rows: ROWS } });
     fetchFollowUpsForMeeting.mockResolvedValue({ data: { follow_ups: SAVED } });
+    markFollowUpSent.mockResolvedValue({ data: { status: 'sent' } });
 });
 
 describe('askCount', () => {
@@ -147,6 +153,29 @@ describe('FollowUpModal', () => {
         fetchFollowUpTable.mockResolvedValue({ data: { rows: [] } });
         renderModal();
         expect(await screen.findByText(/have not been ingested yet/i)).toBeInTheDocument();
+    });
+
+    it('offers Mark sent on a draft, because nothing else sets it', async () => {
+        renderModal();
+        await userEvent.click(await screen.findByRole('button', { name: /mark sent/i }));
+        expect(markFollowUpSent).toHaveBeenCalledWith('f1');
+    });
+
+    it('hides Mark sent once it has gone out', async () => {
+        fetchFollowUpsForMeeting.mockResolvedValue({
+            data: { follow_ups: [{ ...SAVED[0], status: 'sent', date_sent: '2026-09-03' }] },
+        });
+        renderModal();
+        await screen.findByText(/2 indicators/);
+        expect(screen.queryByRole('button', { name: /mark sent/i })).not.toBeInTheDocument();
+    });
+
+    it('shows the sent date once it is set', async () => {
+        fetchFollowUpsForMeeting.mockResolvedValue({
+            data: { follow_ups: [{ ...SAVED[0], status: 'sent', date_sent: '2026-09-03' }] },
+        });
+        renderModal();
+        expect(await screen.findByText(/sent 2026-09-03/)).toBeInTheDocument();
     });
 
     it('opens an indicator for editing through the shared navigation helper', async () => {

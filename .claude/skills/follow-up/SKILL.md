@@ -175,12 +175,69 @@ Saves as a **draft**. Call `mark_follow_up_sent(unique_id, date_sent)` only once
 has genuinely gone out — an ask still open under a SENT follow-up is a non-response
 worth escalating, while the same ask on a draft is just an unfinished chase.
 
-## Step 4 — Close the loop next cycle
+## Step 4 — Process the reply
 
-When a reply lands: settle the Query (`settle_query`), attach any artifact received
-(`/get-source-text` for a link, or the documentation tools for a file), and re-rate
-evidence the reply changes. The next `meeting_followup_table` should be visibly
-shorter — that shrinkage is the measure of whether this is working.
+The same skill, second mode. Triggered by "here is Cheryl's reply", "log this
+response", "they got back to me".
+
+**4.1 Record the reply as a Message.** Type `e-mail`, content pasted verbatim,
+attached to the YearSuccessEvidence it concerns by `has_message`. Then link it:
+
+```
+link_reply_to_follow_up(message_unique_id, follow_up_unique_id, from_person_unique_id)
+```
+
+`from_person` is who WROTE it. `created_by` is whoever entered it, and on a
+reply those are different people. Without `from_person` you cannot ask whether
+the person who owed the answer is the one who gave it.
+
+**4.2 Match the reply against the asks the follow-up carried.** Read them with
+`replies_for_follow_up`, which returns every ask with its current status. For
+each one the reply touches, decide:
+
+| The reply says | Do |
+|---|---|
+| the answer | `settle_query` with the answer text, verbatim where it is quotable |
+| they will do the thing | leave the Query open, add a Note saying when they said they would |
+| the artifact is attached | see 4.3 |
+| they disagree with a Recommendation | leave it open, record the disagreement as a Note. A rejected recommendation is a considered decision, not a failure |
+| nothing about an ask | leave it. Silence is not a no, and it is what the next chase is for |
+
+**4.3 An artifact that arrives becomes documentation, not a stored blob.** Add
+it with `add_document` or `add_webpage`, attach it to the implementation it
+evidences, and pull its Source Text with `/get-source-text` if it is a link.
+Then re-run `/ontology-ingest` over it: an attendee list may be evidence, may
+justify a strength change, and may answer a bar element nobody asked about. Do
+not decide that here. The ingest skill has the routing rubric.
+
+**4.4 Do not re-grade in this step.** A reply changes what the graph holds.
+Whether that changes a status level is `/maturity-status-reviewer`'s judgment,
+made against the rubric, not a side effect of logging a response.
+
+## Step 5 — Chase what did not come back
+
+```
+overdue_followups(days_sent)
+```
+
+Sent follow-ups older than N days that still carry unanswered asks. Two states,
+and they need different messages:
+
+- `awaiting_reply`: it went out and nothing came back. Re-send, or ask whether
+  it reached the right person.
+- `partially_answered`: somebody replied and left these asks untouched. Name the
+  specific gap. Do not resend the whole message, which reads as if you did not
+  read theirs.
+
+Drafts never appear here. An open ask on a message that was never sent is an
+unfinished chase, and the fix is to send it.
+
+**Carrying forward.** Asks still open when the next cycle's follow-up is written
+carry forward by default, because an unanswered question does not stop
+mattering. Say so in the message rather than repeating it silently: "still
+chasing the attendee list from August" is honest and gets a faster answer than
+asking again as though for the first time. Prune anything that has been
+overtaken.
 
 ## Why a template cannot do this
 

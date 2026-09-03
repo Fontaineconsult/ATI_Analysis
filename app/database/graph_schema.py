@@ -2632,6 +2632,17 @@ class Message(StructuredNode):
     include_in_report = BooleanProperty(default=True)
     has_file = RelationshipTo("StoredFile", "has_file", cardinality=ZeroOrOne)  # managed (uploaded) blob
 
+    # Who actually wrote it. Distinct from created_by, which is whoever entered
+    # it into the app: on a reply to a follow-up those are different people, and
+    # the sender is the one worth knowing, because it is the counterpart to the
+    # Query's answerable_by.
+    from_person = RelationshipTo("Person", "from_person")
+
+    # The chase this answers. Without it a reply is filed against a YSE and the
+    # follow-up that prompted it has no idea anything came back, which makes
+    # "sent and ignored" indistinguishable from "sent and answered".
+    replies_to = RelationshipTo("FollowUp", "replies_to", cardinality=ZeroOrOne)
+
 
     def serialize(self):
         """

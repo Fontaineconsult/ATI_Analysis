@@ -49,7 +49,21 @@ def register(mcp, ctx) -> None:
         from app.database.queries.followup.read import get_follow_up as _get
         return _get(unique_id)
 
+    def follow_up_replies(unique_id: str) -> dict:
+        """What came back from one chase. Returns the replies with their senders,
+        every ask the follow-up carried with its CURRENT status, and two derived
+        flags: `awaiting_reply` (sent, nothing came back, asks still open) and
+        `partially_answered` (somebody replied but left asks untouched). Those
+        need different next moves: the first is a re-send, the second names the
+        specific gap. A draft is never awaiting a reply, because nobody has
+        failed to answer a message that did not go out."""
+        ensure_app()
+        from app.database.queries.followup.reply import replies_for_follow_up
+        return replies_for_follow_up(unique_id)
+
     for fn, name, description in (
+        (follow_up_replies, "follow_up_replies",
+         "What came back from one chase, and which asks are still unanswered."),
         (list_follow_ups, "list_follow_ups",
          "Follow-ups chasing one meeting (subject, status, community, body, generated_at)."),
         (get_follow_up, "get_follow_up",

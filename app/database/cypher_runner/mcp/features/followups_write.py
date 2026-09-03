@@ -137,6 +137,24 @@ def register(mcp, ctx) -> None:
             )
         return _get(unique_id)
 
+    def link_reply_to_follow_up(
+        message_unique_id: str,
+        follow_up_unique_id: str,
+        from_person_unique_id: Optional[str] = None,
+    ) -> dict:
+        """Record that a Message is a reply to a FollowUp, and who sent it.
+
+        `from_person_unique_id` is who WROTE the reply. The Message's created_by
+        is whoever entered it into the app, and on an inbound reply those are
+        different people; the sender is the one worth knowing, because it is the
+        counterpart to the Query's answerable_by. Idempotent. Returns the chase's
+        reply state, including which asks are still unanswered."""
+        ensure_app()
+        from app.database.queries.followup.reply import link_reply_to_follow_up as _link
+
+        with _quiet():
+            return _link(message_unique_id, follow_up_unique_id, from_person_unique_id)
+
     def mark_follow_up_sent(unique_id: str, date_sent: Optional[str] = None) -> dict:
         """Record that a follow-up actually went out (YYYY-MM-DD; defaults to
         today). Only call this once it has genuinely been sent — the distinction
@@ -157,5 +175,7 @@ def register(mcp, ctx) -> None:
          "[WRITE] Correct a follow-up's subject or body; optionally re-stamp when it was re-composed."),
         (mark_follow_up_sent, "mark_follow_up_sent",
          "[WRITE] Record that a follow-up actually went out."),
+        (link_reply_to_follow_up, "link_reply_to_follow_up",
+         "[WRITE] Link an inbound Message to the follow-up it answers, with its sender."),
     ):
         mcp.add_tool(fn, name=name, description=description)

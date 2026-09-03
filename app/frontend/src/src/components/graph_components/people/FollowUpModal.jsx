@@ -1,7 +1,7 @@
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import {
     Badge, Box, Button, Flex, Modal, ModalBody, ModalCloseButton, ModalContent,
-    ModalFooter, ModalHeader, ModalOverlay, Spinner, Text, VStack,
+    ModalFooter, ModalHeader, ModalOverlay, Spinner, Text, VStack, useToast,
 } from '@chakra-ui/react';
 import { useNavigate } from 'react-router-dom';
 import Markdown from '../common/Markdown';
@@ -9,6 +9,7 @@ import Section from '../common/Section';
 import StatusLevelLadder from '../../functional_components/StatusLevelLadder';
 import CopyFollowUpButton from './CopyFollowUpButton';
 import { fetchFollowUpTable, fetchFollowUpsForMeeting } from '../../../services/api/get';
+import { markFollowUpSent } from '../../../services/api/put';
 import useResource from '../../../hooks/useResource';
 import { KEYS } from '../../../context/resourceKeys';
 import { navigateToIndicator } from '../../../services/utils/tools';
@@ -67,7 +68,8 @@ function IndicatorRow({ row, onOpen }) {
 }
 
 /** One saved follow-up, rendered as it was written. */
-function SavedFollowUp({ item }) {
+function SavedFollowUp({ item, onMarkSent, marking }) {
+    const sent = item.status === 'sent';
     return (
         <Box borderWidth="1px" borderColor="gray.200" borderRadius="md" bg="white" p={3}>
             <Flex gap={2} align="center" wrap="wrap" mb={2}>
@@ -86,12 +88,23 @@ function SavedFollowUp({ item }) {
                     </Badge>
                 )}
                 <CopyFollowUpButton markdown={item.body_markdown} subject={item.subject} />
+                {!sent && (
+                    <Button
+                        size="xs" variant="outline" colorScheme="green"
+                        isLoading={marking} loadingText="Marking…"
+                        onClick={() => onMarkSent(item)}
+                        title="Record that this actually went out"
+                    >
+                        Mark sent
+                    </Button>
+                )}
             </Flex>
 
             {/* The table above is live; this text is a snapshot. The timestamp is
                 how a reader tells whether it still describes the same graph. */}
             <Text fontFamily="mono" fontSize="2xs" color="gray.600" mb={2}>
                 generated {item.generated_at || item.date_created || 'date unknown'}
+                {item.date_sent ? ` · sent ${item.date_sent}` : ''}
             </Text>
 
             {item.body_markdown ? (
@@ -140,11 +153,35 @@ export default function FollowUpModal({ guide, campus, onClose }) {
     );
     const rows = useMemo(() => tableResp?.data?.rows || [], [tableResp]);
 
-    const { data: savedResp, loading: savedLoading } = useResource(
+    const toast = useToast();
+    const [markingId, setMarkingId] = useState(null);
+
+    const { data: savedResp, loading: savedLoading, reload: reloadSaved } = useResource(
         meetingId ? KEYS.followUpsForMeeting(meetingId) : null,
         () => fetchFollowUpsForMeeting(meetingId),
     );
     const saved = savedResp?.data?.follow_ups || [];
+
+    const handleMarkSent = useCallback(async (item) => {
+        setMarkingId(item.unique_id);
+        try {
+            await markFollowUpSent(item.unique_id);
+            await reloadSaved();
+            toast({
+                title: 'Marked sent',
+                description: 'Open asks on it now count as unanswered.',
+                status: 'success', duration: 3000, isClosable: true,
+            });
+        } catch (e) {
+            toast({
+                title: 'Could not mark it sent',
+                description: e?.message || 'Unknown error.',
+                status: 'error', duration: 4000, isClosable: true,
+            });
+        } finally {
+            setMarkingId(null);
+        }
+    }, [reloadSaved, toast]);
 
     const community = (guide?.pertains_to_communities || [])[0]?.name || '';
     const totalAsks = rows.reduce((n, r) => n + askCount(r), 0);
@@ -216,7 +253,12 @@ export default function FollowUpModal({ guide, campus, onClose }) {
                                     </Text>
                                 )}
                                 <VStack align="stretch" spacing={2}>
-                                    {saved.map((f) => <SavedFollowUp key={f.unique_id} item={f} />)}
+                                    {saved.map((f) => (
+                                        <SavedFollowUp
+                                            key={f.unique_id} item={f}
+                                            onMarkSent={handleMarkSent}
+                                            marking={markingId === f.unique_id} />
+                                    ))}
                                 </VStack>
                             </Section>
                         </VStack>

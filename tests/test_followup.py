@@ -20,6 +20,10 @@ from app.database.queries.followup.read import (
     follow_ups_for_meeting,
     get_follow_up,
 )
+from app.database.queries.followup.reply import (
+    link_reply_to_follow_up,
+    replies_for_follow_up,
+)
 from app.database.queries.followup.update import (
     mark_follow_up_sent,
     set_follow_up_status,
@@ -237,6 +241,82 @@ def test_update_requires_something_to_change(sentinel_meeting):
 def test_update_rejects_an_unknown_follow_up():
     with pytest.raises(NotFoundError):
         update_follow_up("no-such-followup", subject="x")
+
+
+# --------------------------------------------------------------------------- #
+# Layer 4 — replies coming back                                                #
+# --------------------------------------------------------------------------- #
+@pytest.fixture
+def sentinel_reply(neo4j_connection):
+    """A throwaway Message and Person to stand in for an inbound reply."""
+    db.cypher_query(
+        """
+        CREATE (m:Message {unique_id: 'zzzreplymsg', name: 'ZZZ-TEST reply',
+                           type: 'e-mail'})
+        CREATE (p:Person {unique_id: 'zzzreplyperson', name: 'ZZZ-TEST Sender'})
+        """
+    )
+    yield {"message": "zzzreplymsg", "person": "zzzreplyperson"}
+    db.cypher_query(
+        "MATCH (n) WHERE n.unique_id IN ['zzzreplymsg','zzzreplyperson'] DETACH DELETE n"
+    )
+
+
+@pytest.mark.integration
+def test_a_draft_with_open_asks_is_not_awaiting_a_reply(sentinel_meeting):
+    """Nobody has failed to answer a message that was never sent. This is the
+    distinction the sent/draft split exists for."""
+    data = create_follow_up(subject=SENTINEL_SUBJECT,
+                            meeting_minutes_id=sentinel_meeting.unique_id)
+    state = replies_for_follow_up(data["unique_id"])
+    assert state["status"] == "draft"
+    assert state["awaiting_reply"] is False
+
+
+@pytest.mark.integration
+def test_linking_a_reply_records_the_sender(sentinel_meeting, sentinel_reply):
+    """created_by is whoever typed it in. from_person is who wrote it, and on a
+    reply those differ."""
+    data = create_follow_up(subject=SENTINEL_SUBJECT,
+                            meeting_minutes_id=sentinel_meeting.unique_id)
+    mark_follow_up_sent(data["unique_id"])
+    state = link_reply_to_follow_up(
+        sentinel_reply["message"], data["unique_id"], sentinel_reply["person"]
+    )
+    assert len(state["replies"]) == 1
+    assert state["replies"][0]["from_person"] == "ZZZ-TEST Sender"
+
+
+@pytest.mark.integration
+def test_linking_a_reply_is_idempotent(sentinel_meeting, sentinel_reply):
+    data = create_follow_up(subject=SENTINEL_SUBJECT,
+                            meeting_minutes_id=sentinel_meeting.unique_id)
+    link_reply_to_follow_up(sentinel_reply["message"], data["unique_id"])
+    state = link_reply_to_follow_up(sentinel_reply["message"], data["unique_id"])
+    assert len(state["replies"]) == 1
+
+
+@pytest.mark.integration
+def test_a_sent_follow_up_with_no_reply_is_awaiting_one(sentinel_meeting):
+    data = create_follow_up(subject=SENTINEL_SUBJECT,
+                            meeting_minutes_id=sentinel_meeting.unique_id)
+    mark_follow_up_sent(data["unique_id"])
+    # no asks wired, so nothing is outstanding and nothing is awaited
+    assert replies_for_follow_up(data["unique_id"])["awaiting_reply"] is False
+
+
+@pytest.mark.integration
+def test_link_reply_rejects_an_unknown_message(sentinel_meeting):
+    data = create_follow_up(subject=SENTINEL_SUBJECT,
+                            meeting_minutes_id=sentinel_meeting.unique_id)
+    with pytest.raises(NotFoundError):
+        link_reply_to_follow_up("no-such-message", data["unique_id"])
+
+
+@pytest.mark.integration
+def test_link_reply_rejects_an_unknown_follow_up(sentinel_reply):
+    with pytest.raises(NotFoundError):
+        link_reply_to_follow_up(sentinel_reply["message"], "no-such-followup")
 
 
 # --------------------------------------------------------------------------- #

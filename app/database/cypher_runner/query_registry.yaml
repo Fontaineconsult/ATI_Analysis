@@ -746,3 +746,48 @@
            y.year_identifier AS year_identifier, sl.status_level AS status_level,
            evidence, queries, recommendations, concerns
     ORDER BY composite_key
+
+- name: overdue_followups
+  category: followup
+  description: >-
+    Follow-ups that were SENT, are older than $days_sent days, and still carry
+    asks nobody has answered. The nag list. Needs no schema of its own: date_sent
+    plus the current status of the asks the follow-up carries already encode
+    staleness. Distinguishes two states that need different next moves -
+    'awaiting_reply' means the message went out and nothing came back at all,
+    'partially_answered' means somebody replied but left these asks untouched.
+    Drafts never appear, because an open ask on an unsent message is an
+    unfinished chase rather than a non-response. params days_sent.
+  mode: read
+  params: [days_sent]
+  cypher: |
+    MATCH (f:FollowUp)
+    WHERE f.status = 'sent' AND f.date_sent IS NOT NULL
+      AND duration.inDays(f.date_sent, date()).days >= toInteger($days_sent)
+    OPTIONAL MATCH (f)-[:pertains_to]->(cop:CommunityOfPractice)
+    OPTIONAL MATCH (f)-[:for_campus]->(c:Campus)
+    CALL (f) {
+        MATCH (f)-[:includes_query]->(q:Query) WHERE q.status <> 'settled'
+        RETURN collect({question: q.question,
+                        answerable_by: [ (q)-[:answerable_by]->(p:Person) | p.name ]}) AS open_queries
+    }
+    CALL (f) {
+        MATCH (f)-[:includes_recommendation]->(r:Recommendation) WHERE r.status = 'open'
+        RETURN collect(r.recommendation) AS open_recommendations
+    }
+    CALL (f) {
+        MATCH (m:Message)-[:replies_to]->(f)
+        OPTIONAL MATCH (m)-[:from_person]->(s:Person)
+        RETURN collect(DISTINCT coalesce(s.name, m.name)) AS replies
+    }
+    WITH f, cop, c, open_queries, open_recommendations, replies,
+         size(open_queries) + size(open_recommendations) AS outstanding
+    WHERE outstanding > 0
+    RETURN f.unique_id AS unique_id, f.subject AS subject,
+           toString(f.date_sent) AS date_sent,
+           duration.inDays(f.date_sent, date()).days AS days_since_sent,
+           cop.name AS community, c.abbreviation AS campus,
+           outstanding,
+           CASE WHEN size(replies) = 0 THEN 'awaiting_reply' ELSE 'partially_answered' END AS state,
+           replies, open_queries, open_recommendations
+    ORDER BY days_since_sent DESC
