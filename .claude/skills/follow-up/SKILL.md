@@ -72,6 +72,15 @@ useful, because it is how a wrong Established gets caught.
 **Never claim an indicator is fine because its ask list is empty.** Check the prose
 first; that inference is exactly the bug this skill replaced.
 
+**Every ask must ask about their programme, not about your bookkeeping.** An ask
+whose payload is "confirm I recorded this correctly" spends a colleague's
+attention on our record instead of their work, and it is the first thing a
+sender cuts. Calibration (2026-09-03): a draft carried six asks and went out
+with five. The one cut was *"Confirm I was right to remove the ScreenSteps
+guides from this indicator"*, along with the whole indicator section built
+around it. Make the correction, record the reasoning in the graph, and let the
+closing invitation to correct you carry it.
+
 ## Step 2 — Write it
 
 **All prose here follows `app/database/ontology/writing-style.md`** (the project writing style): no marketing vocabulary, no em dashes, one claim per sentence, name the relation instead of gesturing at it, no throat-clearing. Quoted material and success-indicator text are exempt and go in verbatim.
@@ -87,17 +96,28 @@ undifferentiated prose, which is what actually reads as a wall. Calibration
 its evidence tables, and came back as *"much worse — there are NO tables,
 everything is just separated by a br"*. Length was never the complaint.
 
-**Lead with a summary table.** Indicator, what you need, who from — one row per
+**Lead with a summary table.** Indicator, what you need, who from: one row per
 ask, names in bold. A reader who opens this on a phone should know within two
 seconds whether anything is theirs.
 
+**Anything time-critical is a date inside its action row, not a banner above the
+table.** A separate time-sensitive paragraph sitting over a table that already
+carries the date says it twice, and the reader has to work out which one to act
+on.
+
+**No sentence that announces the structure.** *"Everything below is the
+reasoning behind those six"* tells the reader what they can already see. Go
+straight from the action table to the first indicator.
+
 **Then one section per indicator**, in this shape:
 - an `##` heading naming the indicator and what it covers
-- the current grade with a link to the public record
-- an evidence table: what is on file, its strength, and links to the live
-  documentation behind it
+- the current grade with a link to the public record, and nothing else on that
+  line. No verdict on whether the grade is right
+- an evidence table headed **Implementation Evidence | Documentation**: what is
+  on file, and the live links behind it. Two columns, and no strength ratings
 - the ask in bold, addressed to a named person
-- two or three short paragraphs of context
+- one paragraph of context, not three. See *one claim per sentence is not one
+  sentence per paragraph* in the writing style
 
 **Prose earns its place by doing something the table cannot.** Say why the ask
 changes the grade, what you could not settle from the record, or what you suspect
@@ -127,8 +147,19 @@ recipient already knows about their own programme.
   starts with a noun is a topic, and the reader will not know what to do.
 - Quote the record where you want it challenged: *"my notes say the session has
   run for two years"* invites a correction a bare question does not.
-- Ask for corrections once, at the end.
-- Anything time-critical goes at the top, in one sentence, with the date.
+- **Three or more parallel items are a bullet list, not a sentence.** Prose
+  that enumerates makes the reader hold the count. The three example categories
+  at 7.3-ins were drafted inline and sent as three bullets.
+- **Do not assign yourself work the reader might want to share.** *"which I will
+  raise with Benjamin Smith"* was sent as *"which I or you can raise with
+  Benjamin Smith"*. If either of you could do it, say so.
+- **Close in this order:** the items you are chasing elsewhere that they should
+  know about but need not action, as bullets under a plain lead-in; one
+  invitation to correct you; one conventional sign-off line; the sender's full
+  signature block. Do not argue for the value of the record on the way out. *"This
+  record is what a Chancellor's Office review reads"* was cut before sending,
+  because a message that has just asked five people for favours does not also
+  lecture them.
 
 Markdown, in the subset the renderer handles: headings, paragraphs, bullets, pipe
 tables, horizontal rules, bold, italic, links. Escape a literal `|` inside a table

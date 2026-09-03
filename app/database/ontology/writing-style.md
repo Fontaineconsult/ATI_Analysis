@@ -122,8 +122,36 @@ Right: "Tell me if I have this wrong, and I will change it back."
 This is the most common failure in a message someone is supposed to act on. A
 noun phrase reads as a topic heading, so it gets filed rather than answered.
 
+**An inference from the record is a question, not a statement.** When you worked
+something out by reading their pages rather than hearing it from them, write it
+as a question. Stating it announces that you have already decided, and the
+correction you were hoping for becomes an argument the reader has to start.
+
+Wrong: "The Learning Circles already solve that."
+Right: "Do the Learning Circles already solve that?"
+
+Wrong: "Nobody mentioned it on the call, and it is the strongest thing on that page."
+Right: "Is there a reason nobody mentioned it on the call?"
+
+The checkable facts around the inference stay as statements. "They pay 800
+dollars a semester to a lead facilitator" is printed on the page, so it is a
+fact. Whether that mechanism solves the problem is a reading of the page, so it
+is a question.
+
+**Do not pre-empt the answer.** Stating your verdict before asking closes the
+question you just opened, and invites a defence instead of a correction.
+
+Wrong: "Graded Defined, and I think that is now wrong."
+Right: "Graded Defined."
+
 **Each sentence should license the next.** If sentence three would still make
 sense with sentence two deleted, sentence two was decoration.
+
+**One claim per sentence is not one sentence per paragraph.** Sentences that
+build a single argument belong in one paragraph. Breaking each onto its own line
+puts white space where the reasoning should be, and the reader has to rebuild
+the thread that joined them. Start a new paragraph when the subject changes, not
+when the sentence ends.
 
 **Name the relation instead of gesturing at it.** Weak: "the note sits under the
 YSE." Specific: "the note is attached to the YSE by has_note." Gesture verbs
