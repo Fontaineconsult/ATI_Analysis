@@ -13,6 +13,7 @@ import { deleteQuery } from '../../../services/api/delete';
 import { getStatusMeta, getCategoryMeta } from '../query_components/queriesConfig';
 import QueryForm from '../query_components/QueryForm';
 import QueryDetail from '../query_components/QueryDetail';
+import AnswerableBy from '../query_components/AnswerableBy';
 
 function StatusBadge({ status, vocab }) {
     const meta = getStatusMeta(status);
@@ -55,6 +56,7 @@ function QueryModal({ query, candidateEvidence, vocab, accentColor, workingGroup
                         <Text fontSize="xs" color="gray.600">
                             raised by {query.raised_by?.name || '—'}{query.date_raised ? ` · ${query.date_raised}` : ''}
                         </Text>
+                        <AnswerableBy people={query.answerable_by} size="xs" />
                         <Box w="9px" h="9px" borderRadius="full" bg={accentColor} />
                         <Text fontSize="xs" color="gray.600">{workingGroupName}</Text>
                     </HStack>
@@ -159,6 +161,7 @@ export default function WgQueriesSection({ workingGroupPlanIdentifier, workingGr
                                 <Text fontSize="2xs" color="gray.600">
                                     {q.raised_by?.name || '—'}{q.date_raised ? ` · ${q.date_raised}` : ''}
                                 </Text>
+                                <AnswerableBy people={q.answerable_by} />
                             </HStack>
                         </Box>
                     ))}

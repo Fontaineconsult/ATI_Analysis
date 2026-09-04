@@ -7,6 +7,7 @@ import EntityAttachmentSelector from '../../functional_components/EntityAttachme
 import {
     settleQuery, attachEvidenceToQuery, detachEvidenceFromQuery, addQueryNote,
 } from '../../../services/api/put';
+import AnswerableBy from './AnswerableBy';
 
 /**
  * Expanded detail for a single Query: detail text, the YSE it addresses (attach/detach via
@@ -65,6 +66,15 @@ export default function QueryDetail({ query, candidateEvidence = [], onChanged }
         <VStack align="stretch" spacing={3} pt={2}>
             {query.detail && (
                 <Text fontSize="sm" color="gray.700" whiteSpace="pre-wrap">{query.detail}</Text>
+            )}
+
+            {/* Who owes the answer. Sits above the settle box because it is the thing
+                that decides who acts on it, and it stays visible once settled so the
+                record shows whether the person who owed the answer is the one who gave it. */}
+            {(query.answerable_by || []).length > 0 && (
+                <HStack spacing={2} flexWrap="wrap">
+                    <AnswerableBy people={query.answerable_by} size="xs" />
+                </HStack>
             )}
 
             {/* Answer / settle */}

@@ -14,6 +14,7 @@ import { deleteQuery } from '../../../services/api/delete';
 import { getStatusMeta, getCategoryMeta, summarizeQueries } from './queriesConfig';
 import QueryForm from './QueryForm';
 import QueryDetail from './QueryDetail';
+import AnswerableBy from './AnswerableBy';
 
 function StatusBadge({ status, vocab }) {
     const meta = getStatusMeta(status);
@@ -72,6 +73,7 @@ function QueryRow({ query, vocab, candidateEvidence, onChanged, onEdit }) {
                         <CategoryBadge category={query.category} vocab={vocab} />
                         <StatusBadge status={query.status} vocab={vocab} />
                         {query.raised_by && <Text fontSize="2xs" color="gray.600">{query.raised_by.name}</Text>}
+                        <AnswerableBy people={query.answerable_by} />
                         {query.date_raised && <Text fontSize="2xs" color="gray.600" fontFamily="mono">{query.date_raised}</Text>}
                         {(query.addresses_evidence || []).length > 0 && (
                             <Text fontSize="2xs" color="teal.600">{query.addresses_evidence.length} YSE</Text>

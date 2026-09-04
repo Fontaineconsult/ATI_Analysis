@@ -1,6 +1,7 @@
 import React from 'react';
 import { Badge, Box, Flex, HStack, Text, VStack } from '@chakra-ui/react';
 import { getCategoryMeta, getStatusMeta } from '../../dashboard_components/query_components/queriesConfig';
+import AnswerableBy from '../../dashboard_components/query_components/AnswerableBy';
 
 /**
  * The pending questions pointed at ONE year's evidence, read-only.
@@ -63,14 +64,15 @@ function QueryRow({ query }) {
             )}
 
             <HStack spacing={2} mt={1.5} wrap="wrap">
+                {/* The working-group payload sends raised_by as a name, the Query read
+                    layer sends the whole person. Handle both: an object reaching a JSX
+                    child throws rather than rendering blank. */}
                 {query.raised_by && (
-                    <Text fontSize="2xs" color="gray.600">raised by {query.raised_by}</Text>
+                    <Text fontSize="2xs" color="gray.600">
+                        raised by {typeof query.raised_by === 'string' ? query.raised_by : query.raised_by.name}
+                    </Text>
                 )}
-                {(query.answerable_by || []).map((name) => (
-                    <Badge key={name} colorScheme="blue" variant="subtle" fontSize="2xs" textTransform="none">
-                        {name} owes the answer
-                    </Badge>
-                ))}
+                <AnswerableBy people={query.answerable_by} />
                 {query.date_raised && (
                     <Text fontFamily="mono" fontSize="2xs" color="gray.600">{query.date_raised}</Text>
                 )}
