@@ -1,6 +1,6 @@
 import React, { useCallback, useState } from 'react';
 import {
-    Badge, Box, Button, HStack, Modal, ModalBody, ModalCloseButton, ModalContent,
+    Badge, Box, Button, Flex, HStack, Modal, ModalBody, ModalCloseButton, ModalContent,
     ModalFooter, ModalHeader, ModalOverlay, Spinner, Text, VStack, useDisclosure, useToast,
 } from '@chakra-ui/react';
 
@@ -131,21 +131,22 @@ export default function WgQueriesSection({ workingGroupPlanIdentifier, workingGr
                 // Capped height, then scroll, matching WgMinutesSection: a working
                 // group with a long question backlog otherwise stretches its card
                 // past every sibling and breaks the row.
-                <VStack align="stretch" spacing={2} maxH="300px" overflowY="auto" pr={1}>
+                <VStack align="stretch" spacing={2} maxH="300px" overflowY="auto" pr={1} data-testid="wg-queries-list">
                     {queries.map((q) => (
                         <Box
                             key={q.unique_id}
                             borderWidth="1px"
-                            borderColor="gray.200"
+                            borderColor="gray.300"
                             borderLeftWidth="3px"
-                            borderLeftColor={q.status === 'settled' ? 'green.400' : 'teal.200'}
+                            borderLeftColor={q.status === 'settled' ? 'green.400' : 'teal.400'}
                             borderRadius="md"
-                            bg="white"
+                            bg="gray.100"
                             px={2.5}
                             py={2}
+                            textAlign="left"
                             cursor="pointer"
-                            _hover={{ bg: 'gray.50' }}
-                            _focusVisible={{ outline: '2px solid', outlineColor: 'teal.500', outlineOffset: '1px' }}
+                            _hover={{ bg: 'gray.200' }}
+                            _focusVisible={{ outline: '2px solid', outlineColor: 'teal.500', outlineOffset: '-2px' }}
                             onClick={() => setOpenId(q.unique_id)}
                             onKeyDown={(e) => {
                                 if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setOpenId(q.unique_id); }
@@ -154,15 +155,24 @@ export default function WgQueriesSection({ workingGroupPlanIdentifier, workingGr
                             tabIndex={0}
                             aria-label={`Open query: ${q.question}`}
                         >
-                            <Text fontSize="sm" color="gray.800" lineHeight="1.45" noOfLines={2}>{q.question}</Text>
-                            <HStack spacing={2} mt={1.5} flexWrap="wrap">
+                            {/* Title row mirrors the minutes list: text takes the space, the
+                                chevron sits at the end as the affordance that this opens. Two
+                                lines rather than the minutes' one, because a question is a
+                                sentence and truncating it to a line loses the ask. */}
+                            <HStack spacing={2.5} align="start">
+                                <Text fontSize="sm" fontWeight="medium" color="gray.800" lineHeight="1.45" flex="1" minW={0} noOfLines={2}>
+                                    {q.question}
+                                </Text>
+                                <Text fontSize="2xs" color="gray.600">▸</Text>
+                            </HStack>
+                            <Flex mt={1} gap={1.5} wrap="wrap" align="center">
                                 <CategoryBadge category={q.category} vocab={vocab} />
                                 <StatusBadge status={q.status} vocab={vocab} />
                                 <Text fontSize="2xs" color="gray.600">
                                     {q.raised_by?.name || '—'}{q.date_raised ? ` · ${q.date_raised}` : ''}
                                 </Text>
                                 <AnswerableBy people={q.answerable_by} size="sm" />
-                            </HStack>
+                            </Flex>
                         </Box>
                     ))}
                 </VStack>

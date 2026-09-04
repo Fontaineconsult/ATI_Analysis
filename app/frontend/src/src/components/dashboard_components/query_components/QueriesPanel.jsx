@@ -51,19 +51,23 @@ function QueryRow({ query, vocab, candidateEvidence, onChanged, onEdit }) {
     return (
         <Box
             borderWidth="1px"
-            borderColor="gray.200"
+            borderColor="gray.300"
             borderRadius="md"
             borderLeftWidth="3px"
             borderLeftColor={query.status === 'settled' ? 'green.400' : 'teal.400'}
             bg="white"
+            overflow="hidden"
         >
+            {/* Tint sits on the row, not the wrapper, so the expanded detail below stays
+                white. Matches the meeting minutes list. */}
             <Flex
                 align="center"
                 gap={2}
                 p={2}
+                bg="gray.100"
                 cursor="pointer"
                 onClick={onToggle}
-                _hover={{ bg: 'gray.50' }}
+                _hover={{ bg: 'gray.200' }}
                 role="button"
                 aria-expanded={isOpen}
             >

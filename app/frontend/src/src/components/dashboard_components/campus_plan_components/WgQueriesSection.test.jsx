@@ -46,10 +46,12 @@ describe('WgQueriesSection', () => {
         // A working group with a long question backlog otherwise stretches its
         // card past every sibling and breaks the row. 300px is the same cap the
         // minutes list uses; the two are meant to stay equal.
+        // Targeted by test id rather than by walking up to the nearest chakra-stack:
+        // the row now wraps its question in an HStack for the chevron, which that walk
+        // would stop at.
         renderSection();
-        const firstRow = await screen.findByText('Question number 0');
-        const list = firstRow.closest('[class*="chakra-stack"]');
-        expect(list).toHaveStyle({ maxHeight: '300px', overflowY: 'auto' });
+        await screen.findByText('Question number 0');
+        expect(screen.getByTestId('wg-queries-list')).toHaveStyle({ maxHeight: '300px', overflowY: 'auto' });
     });
 
     it('renders every query inside the scroll container rather than truncating', async () => {

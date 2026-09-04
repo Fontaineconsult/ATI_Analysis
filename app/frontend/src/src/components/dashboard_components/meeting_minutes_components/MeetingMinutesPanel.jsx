@@ -34,9 +34,11 @@ function MinutesRow({ minutes, onChanged, onEdit }) {
 
     const attachedCount = (minutes.documents || []).length + (minutes.webpages || []).length;
 
+    // The row is tinted and the expanded body stays white, so the list reads as rows
+    // rather than as one pale block. overflow hidden keeps the tint inside the corners.
     return (
-        <Box borderWidth="1px" borderColor="gray.200" borderRadius="md" borderLeftWidth="3px" borderLeftColor="teal.400" bg="white">
-            <Flex align="center" gap={2} p={2} cursor="pointer" onClick={onToggle} _hover={{ bg: 'gray.50' }} role="button" aria-expanded={isOpen}>
+        <Box borderWidth="1px" borderColor="gray.300" borderRadius="md" borderLeftWidth="3px" borderLeftColor="teal.400" bg="white" overflow="hidden">
+            <Flex align="center" gap={2} p={2} bg="gray.100" cursor="pointer" onClick={onToggle} _hover={{ bg: 'gray.200' }} role="button" aria-expanded={isOpen}>
                 <VStack align="stretch" spacing={0} flex={1} minW={0}>
                     <Text fontSize="sm" fontWeight="medium" color="gray.800" noOfLines={1}>{minutes.title}</Text>
                     <HStack spacing={2}>

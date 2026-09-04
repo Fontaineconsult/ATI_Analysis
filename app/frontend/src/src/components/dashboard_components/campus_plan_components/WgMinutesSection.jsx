@@ -153,14 +153,14 @@ export default function WgMinutesSection({ workingGroupPlanIdentifier, workingGr
                             <Box
                                 key={m.unique_id}
                                 borderWidth="1px"
-                                borderColor="gray.200"
+                                borderColor="gray.300"
                                 borderRadius="md"
-                                bg="white"
+                                bg="gray.100"
                                 px={2.5}
                                 py={2}
                                 textAlign="left"
                                 cursor="pointer"
-                                _hover={{ bg: 'gray.50' }}
+                                _hover={{ bg: 'gray.200' }}
                                 _focusVisible={{ outline: '2px solid', outlineColor: 'teal.500', outlineOffset: '-2px' }}
                                 onClick={() => setOpenId(m.unique_id)}
                                 onKeyDown={(e) => {
