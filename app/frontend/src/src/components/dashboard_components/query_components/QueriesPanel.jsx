@@ -51,7 +51,7 @@ function QueryRow({ query, vocab, candidateEvidence, onChanged, onEdit }) {
     return (
         <Box
             borderWidth="1px"
-            borderColor="gray.300"
+            borderColor="gray.200"
             borderRadius="md"
             borderLeftWidth="3px"
             borderLeftColor={query.status === 'settled' ? 'green.400' : 'teal.400'}
@@ -64,10 +64,10 @@ function QueryRow({ query, vocab, candidateEvidence, onChanged, onEdit }) {
                 align="center"
                 gap={2}
                 p={2}
-                bg="gray.100"
+                bg="gray.50"
                 cursor="pointer"
                 onClick={onToggle}
-                _hover={{ bg: 'gray.200' }}
+                _hover={{ bg: 'gray.100' }}
                 role="button"
                 aria-expanded={isOpen}
             >

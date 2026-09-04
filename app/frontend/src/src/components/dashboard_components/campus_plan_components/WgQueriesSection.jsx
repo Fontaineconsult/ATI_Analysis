@@ -136,16 +136,16 @@ export default function WgQueriesSection({ workingGroupPlanIdentifier, workingGr
                         <Box
                             key={q.unique_id}
                             borderWidth="1px"
-                            borderColor="gray.300"
+                            borderColor="gray.200"
                             borderLeftWidth="3px"
                             borderLeftColor={q.status === 'settled' ? 'green.400' : 'teal.400'}
                             borderRadius="md"
-                            bg="gray.100"
+                            bg="gray.50"
                             px={2.5}
                             py={2}
                             textAlign="left"
                             cursor="pointer"
-                            _hover={{ bg: 'gray.200' }}
+                            _hover={{ bg: 'gray.100' }}
                             _focusVisible={{ outline: '2px solid', outlineColor: 'teal.500', outlineOffset: '-2px' }}
                             onClick={() => setOpenId(q.unique_id)}
                             onKeyDown={(e) => {
