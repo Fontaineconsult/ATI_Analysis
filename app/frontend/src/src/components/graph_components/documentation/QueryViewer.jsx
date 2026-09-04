@@ -72,7 +72,7 @@ function QueryRow({ query }) {
                         raised by {typeof query.raised_by === 'string' ? query.raised_by : query.raised_by.name}
                     </Text>
                 )}
-                <AnswerableBy people={query.answerable_by} />
+                <AnswerableBy people={query.answerable_by} size="sm" />
                 {query.date_raised && (
                     <Text fontFamily="mono" fontSize="2xs" color="gray.600">{query.date_raised}</Text>
                 )}

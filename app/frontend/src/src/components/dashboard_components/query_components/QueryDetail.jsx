@@ -73,7 +73,7 @@ export default function QueryDetail({ query, candidateEvidence = [], onChanged }
                 record shows whether the person who owed the answer is the one who gave it. */}
             {(query.answerable_by || []).length > 0 && (
                 <HStack spacing={2} flexWrap="wrap">
-                    <AnswerableBy people={query.answerable_by} size="xs" />
+                    <AnswerableBy people={query.answerable_by} />
                 </HStack>
             )}
 

@@ -68,7 +68,7 @@ describe('QueryViewer', () => {
 
     it('names who owes the answer when that is recorded', () => {
         renderViewer();
-        expect(screen.getByText(/Dawna Komorosky owes the answer/)).toBeInTheDocument();
+        expect(screen.getByTitle(/Dawna Komorosky owes the answer/)).toBeInTheDocument();
     });
 
     it('attributes who raised it', () => {
