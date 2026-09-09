@@ -1188,7 +1188,7 @@ class InternalPolicy(StructuredNode):
     supporting_webpages = RelationshipTo("Webpage", "is_documented_by", model=DocumentedByRel)
     supporting_notes = RelationshipTo("Note", "is_documented_by", model=DocumentedByRel)
     supporting_messages = RelationshipTo("Message", "is_documented_by", model=DocumentedByRel)
-    supporting_metrics = RelationshipTo("Metric", "has_metric")
+    supporting_metrics = RelationshipTo("Metric", "has_metric", model=DocumentedByRel)
     is_evidence_for = RelationshipTo("YearSuccessEvidence", "is_evidence_for", model=IsEvidenceForRel)
     owned_by = RelationshipTo("Person", "owned_by")
     classified_under = RelationshipTo("Dimension", "classified_under")  # cross-cutting AMM dimension(s) of the work
@@ -1240,7 +1240,7 @@ class Process(StructuredNode):
     supporting_webpages = RelationshipTo("Webpage", "is_documented_by", model=DocumentedByRel)
     supporting_notes = RelationshipTo("Note", "is_documented_by", model=DocumentedByRel)
     supporting_messages = RelationshipTo("Message", "is_documented_by", model=DocumentedByRel)
-    supporting_metrics = RelationshipTo("Metric", "has_metric")
+    supporting_metrics = RelationshipTo("Metric", "has_metric", model=DocumentedByRel)
     is_evidence_for = RelationshipTo("YearSuccessEvidence", "is_evidence_for", model=IsEvidenceForRel)
     owned_by = RelationshipTo("Person", "owned_by")
     includes_procedures = RelationshipTo("Procedure", "includes_procedure")
@@ -1293,7 +1293,7 @@ class Project(StructuredNode):
     supporting_webpages = RelationshipTo("Webpage", "is_documented_by", model=DocumentedByRel)
     supporting_notes = RelationshipTo("Note", "is_documented_by", model=DocumentedByRel)
     supporting_messages = RelationshipTo("Message", "is_documented_by", model=DocumentedByRel)
-    supporting_metrics = RelationshipTo("Metric", "has_metric")
+    supporting_metrics = RelationshipTo("Metric", "has_metric", model=DocumentedByRel)
     is_evidence_for = RelationshipTo("YearSuccessEvidence", "is_evidence_for", model=IsEvidenceForRel)
     owned_by = RelationshipTo("Person", "owned_by")
     includes_procedures = RelationshipTo("Procedure", "includes_procedure")
@@ -1346,7 +1346,7 @@ class Procedure(StructuredNode):
     supporting_webpages = RelationshipTo("Webpage", "is_documented_by", model=DocumentedByRel)
     supporting_notes = RelationshipTo("Note", "is_documented_by", model=DocumentedByRel)
     supporting_messages = RelationshipTo("Message", "is_documented_by", model=DocumentedByRel)
-    supporting_metrics = RelationshipTo("Metric", "has_metric")
+    supporting_metrics = RelationshipTo("Metric", "has_metric", model=DocumentedByRel)
     is_evidence_for = RelationshipTo("YearSuccessEvidence", "is_evidence_for", model=IsEvidenceForRel)
     owned_by = RelationshipTo("Person", "owned_by")
     remediates_interface = RelationshipTo("Interface", "remediates_interface")
@@ -1395,7 +1395,7 @@ class Service(StructuredNode):
     supporting_webpages = RelationshipTo("Webpage", "is_documented_by", model=DocumentedByRel)
     supporting_notes = RelationshipTo("Note", "is_documented_by", model=DocumentedByRel)
     supporting_messages = RelationshipTo("Message", "is_documented_by", model=DocumentedByRel)
-    supporting_metrics = RelationshipTo("Metric", "has_metric")
+    supporting_metrics = RelationshipTo("Metric", "has_metric", model=DocumentedByRel)
     is_evidence_for = RelationshipTo("YearSuccessEvidence", "is_evidence_for", model=IsEvidenceForRel)
     owned_by = RelationshipTo("Person", "owned_by")
     includes_procedures = RelationshipTo("Procedure", "includes_procedure")
@@ -1447,7 +1447,7 @@ class Guidance(StructuredNode):
     supporting_webpages = RelationshipTo("Webpage", "is_documented_by", model=DocumentedByRel)
     supporting_notes = RelationshipTo("Note", "is_documented_by", model=DocumentedByRel)
     supporting_messages = RelationshipTo("Message", "is_documented_by", model=DocumentedByRel)
-    supporting_metrics = RelationshipTo("Metric", "has_metric")
+    supporting_metrics = RelationshipTo("Metric", "has_metric", model=DocumentedByRel)
     is_evidence_for = RelationshipTo("YearSuccessEvidence", "is_evidence_for", model=IsEvidenceForRel)
     owned_by = RelationshipTo("Person", "owned_by")
     references_procedure = RelationshipTo("Procedure", "references_procedure")
@@ -1498,7 +1498,7 @@ class Tracking(StructuredNode):
     supporting_webpages = RelationshipTo("Webpage", "is_documented_by", model=DocumentedByRel)
     supporting_notes = RelationshipTo("Note", "is_documented_by", model=DocumentedByRel)
     supporting_messages = RelationshipTo("Message", "is_documented_by", model=DocumentedByRel)
-    supporting_metrics = RelationshipTo("Metric", "has_metric")
+    supporting_metrics = RelationshipTo("Metric", "has_metric", model=DocumentedByRel)
     is_evidence_for = RelationshipTo("YearSuccessEvidence", "is_evidence_for", model=IsEvidenceForRel)
     owned_by = RelationshipTo("Person", "owned_by")
     # The operating community that answers for this tracking — that the register or
@@ -2061,8 +2061,22 @@ class FollowUp(StructuredNode):
     pertains_to = RelationshipTo("CommunityOfPractice", "pertains_to", cardinality=ZeroOrOne)
     for_campus = RelationshipTo("Campus", "for_campus", cardinality=ZeroOrOne)
 
+    # The tickler: when to re-contact, and about what. A chase that got no
+    # answer needs a date on which somebody picks it back up, or "awaiting
+    # reply" quietly becomes "forgotten". One active reminder per follow-up;
+    # re-contacting either clears it or re-dates it. WHO to contact is the
+    # next_contact_with edge below.
+    next_contact_date = DateProperty()
+    next_contact_note = StringProperty()
+
     # Recipients. Defaults from the guide's prepared_for roster.
     addressed_to = RelationshipTo("Person", "addressed_to")
+
+    # Who the next contact goes to — usually a subset of addressed_to (the
+    # person who owes the answer), but a separate edge because the reminder can
+    # target someone the original message never went to (a supervisor, a
+    # replacement after turnover).
+    next_contact_with = RelationshipTo("Person", "next_contact_with")
 
     # The success indicators the message tabulates.
     covers_evidence = RelationshipTo("YearSuccessEvidence", "covers_evidence")
@@ -2083,6 +2097,8 @@ class FollowUp(StructuredNode):
             "date_created": self.date_created.isoformat() if self.date_created else None,
             "date_sent": self.date_sent.isoformat() if self.date_sent else None,
             "generated_at": self.generated_at,
+            "next_contact_date": self.next_contact_date.isoformat() if self.next_contact_date else None,
+            "next_contact_note": self.next_contact_note,
         }
 
 
@@ -2289,7 +2305,11 @@ class Person(StructuredNode):
     in_ati_working_group = RelationshipTo('ATIWorkingGroup', 'participates_in')
     implements_yse = RelationshipTo("YearSuccessEvidence", "implements")
     host_campus = RelationshipTo("Campus", "works_at_campus", cardinality=ZeroOrOne)
-    holds_role = RelationshipTo("Role", "holds_role", model=RoleHoldingRel)  # capacities the person provides (PD tracking lives on the edge)
+    holds_role = RelationshipTo("Role", "holds_role", model=RoleHoldingRel)  # capacities the person provides (PD coverage lives on the edge; the PD record itself is a PositionDescription node)
+    # The person's position-description records (reverse of
+    # PositionDescription.describes_position_of). Each holds the PD document(s)
+    # and job notes; usually one current record plus depreciated predecessors.
+    position_descriptions = RelationshipFrom("PositionDescription", "describes_position_of")
     in_communities = RelationshipTo("CommunityOfPractice", "member_of_community", model=CommunityMembershipRel)  # cross-campus shared-interest groupings
     # Meetings this person participated in — a transcript-derived fact (they spoke, or
     # the record places them there), never an idle mention. Note the tense: distinct
@@ -2322,6 +2342,12 @@ class Person(StructuredNode):
             "host_campus": host_campus_node.abbreviation if host_campus_node else None,
             "roles": serialize_role_holdings(self),
             "communities": serialize_community_memberships(self),
+            # Light projection only. The full record (documents, notes) is served
+            # by the /position-descriptions endpoint.
+            "position_descriptions": [
+                {"unique_id": pd.unique_id, "name": pd.name, "depreciated": pd.depreciated}
+                for pd in self.position_descriptions.all()
+            ],
         }
 
 
@@ -2665,6 +2691,65 @@ class Message(StructuredNode):
         }
 
 
+class PositionDescription(StructuredNode):
+
+    """    Class representing a PositionDescription node.
+
+    A PositionDescription is the record of a person's job: it holds the PD
+    document and any notes about what the position covers. The PD file uploads
+    directly onto this node (has_file, from the Edit Individual form in
+    Settings); an existing Document or Webpage record can link via has_document
+    instead, and free-form observations attach as Notes. A person usually has
+    one current record, with superseded PDs kept and marked depreciated.
+
+    Complementary to RoleHoldingRel: the holds_role edge records WHETHER a
+    capacity is covered by the person's PD (in_position_description /
+    pd_description); this node holds the PD record itself.
+
+    The describes_position_of edge is required. neomodel cannot require an edge
+    at save time, so add_position_description in queries/individuals/create.py
+    is the only sanctioned creation path (cardinality stays ZeroOrOne so reads
+    of a malformed node do not raise).
+    """
+    unique_id = UniqueIdProperty()
+
+    name = StringProperty(required=True)   # e.g. "Alt Media Coordinator PD (2026)"
+    description = StringProperty()         # free text about the job or the PD itself
+    effective_date = DateProperty()        # when this PD took effect
+    depreciated = BooleanProperty(default=False)   # superseded by a newer PD
+    depreciated_date = DateProperty()
+    include_in_report = BooleanProperty(default=True)
+
+    describes_position_of = RelationshipTo("Person", "describes_position_of", cardinality=ZeroOrOne)
+    has_file = RelationshipTo("StoredFile", "has_file", cardinality=ZeroOrOne)  # the uploaded PD itself
+    documents = RelationshipTo("Document", "has_document")   # alternative: an already-cataloged PD artifact
+    notes = RelationshipTo("Note", "has_note")
+
+    def serialize(self):
+        """
+        Serializes the PositionDescription object to a dictionary format, making it
+        suitable for JSON representation, storage, or API response.
+        """
+        person = self.describes_position_of.single()
+        return {
+            "unique_id": self.unique_id,
+            "name": self.name,
+            "description": self.description,
+            "effective_date": str(self.effective_date) if self.effective_date else None,
+            "depreciated": self.depreciated,
+            "depreciated_date": str(self.depreciated_date) if self.depreciated_date else None,
+            "include_in_report": self.include_in_report,
+            "person": {
+                "unique_id": person.unique_id,
+                "name": person.name,
+                "employee_id": person.employee_id,
+            } if person else None,
+            "file": serialize_has_file(self),
+            "documents": [d.serialize() for d in self.documents.all()],
+            "notes": [n.serialize() for n in self.notes.all()],
+        }
+
+
 class Metric(StructuredNode):
 
     """
@@ -2743,7 +2828,7 @@ class StoredFile(StructuredNode):
     Content-addressed: ``storage_key`` is the SHA-256 the bytes are stored under (the
     app/fs key), so there is one StoredFile per unique content — registering the same
     bytes again MERGEs onto the existing node. Records that have an uploaded file point
-    at it via ``has_file`` (Document / Message / Metric). The blob itself is NOT deleted
+    at it via ``has_file`` (Document / Message / Metric / PositionDescription). The blob itself is NOT deleted
     when a node is removed (blobs can be shared); orphans are reclaimed by
     app/database/tools/gc_orphan_files.py.
     """
@@ -2761,6 +2846,7 @@ class StoredFile(StructuredNode):
     documents = RelationshipFrom("Document", "has_file")
     messages = RelationshipFrom("Message", "has_file")
     metrics = RelationshipFrom("Metric", "has_file")
+    position_descriptions = RelationshipFrom("PositionDescription", "has_file")
 
     def serialize(self):
         from urllib.parse import quote
