@@ -3,8 +3,9 @@ import {
     Badge, Box, Button, Flex, HStack, Modal, ModalBody, ModalCloseButton, ModalContent,
     ModalFooter, ModalHeader, ModalOverlay, Spinner, Text, VStack, useDisclosure, useToast,
 } from '@chakra-ui/react';
-import { useParams, useSearchParams } from 'react-router-dom';
+import { Link as RouterLink, useParams, useSearchParams } from 'react-router-dom';
 import { useSettings } from '../../../context/SettingsContext';
+import { getGoalViewUrlFromCompositeKey } from '../../../services/utils/tools';
 import Markdown from '../common/Markdown';
 import Section from '../common/Section';
 import {
@@ -37,53 +38,116 @@ function ClosureBadge({ guide }) {
     return <Badge colorScheme={c.colorScheme} variant="subtle" fontSize="2xs">{c.label}</Badge>;
 }
 
-function GuideRow({ guide, onOpen }) {
+/** A badge that is a real link. stopPropagation so a click on it never also
+ *  triggers the surrounding row's open-the-guide handler. */
+function LinkBadge({ to, colorScheme, label, children }) {
+    return (
+        <Badge
+            as={RouterLink}
+            to={to}
+            colorScheme={colorScheme}
+            variant="subtle"
+            fontSize="2xs"
+            textTransform="none"
+            aria-label={label}
+            onClick={(e) => e.stopPropagation()}
+            _hover={{ textDecoration: 'underline' }}
+            _focusVisible={{ outline: '2px solid', outlineColor: 'teal.500' }}
+        >
+            {children}
+        </Badge>
+    );
+}
+
+/** The guide's edge badges: each target opens its indicator's goal view (the
+ *  shared URL helper every other view uses), each community its detail panel,
+ *  each person their people-explorer entry. Rendered plain when the link key
+ *  is missing rather than producing a dead link. */
+function GuideEdgeBadges({ guide, campus }) {
+    return (
+        <>
+            {(guide.targets || []).map((t) => (
+                t.composite_key && campus ? (
+                    <LinkBadge
+                        key={t.year_identifier} colorScheme="blue"
+                        to={getGoalViewUrlFromCompositeKey(t.composite_key, campus)}
+                        label={`Open indicator ${t.composite_key}`}
+                    >
+                        {t.composite_key}
+                    </LinkBadge>
+                ) : (
+                    <Badge key={t.year_identifier} colorScheme="blue" variant="subtle" fontSize="2xs" textTransform="none">
+                        {t.composite_key}
+                    </Badge>
+                )
+            ))}
+            {(guide.pertains_to_communities || []).map((c) => (
+                <LinkBadge
+                    key={c.unique_id} colorScheme="purple"
+                    to={`/${campus}/ati-explorer/people/communities/${c.unique_id}`}
+                    label={`Open community ${c.name}`}
+                >
+                    {c.name}
+                </LinkBadge>
+            ))}
+            {(guide.prepared_for || []).map((p) => (
+                p.employee_id ? (
+                    <LinkBadge
+                        key={p.unique_id} colorScheme="gray"
+                        to={`/${campus}/ati-explorer/people/${encodeURIComponent(p.employee_id)}`}
+                        label={`Open person ${p.name}`}
+                    >
+                        {p.name}
+                    </LinkBadge>
+                ) : (
+                    <Badge key={p.unique_id} colorScheme="gray" variant="subtle" fontSize="2xs" textTransform="none">
+                        {p.name}
+                    </Badge>
+                )
+            ))}
+        </>
+    );
+}
+
+function GuideRow({ guide, campus, onOpen }) {
+    // Clickable-card pattern: the title button is the semantic control, the
+    // whole-row onClick is a pointer convenience, and the badges are real
+    // links — no interactive elements nested inside a role="button".
     return (
         <Box
             borderWidth="1px" borderColor="gray.200" borderRadius="md" borderLeftWidth="3px"
             borderLeftColor="teal.400" bg="white" px={3} py={2} textAlign="left"
             cursor="pointer" _hover={{ bg: 'gray.50' }}
-            _focusVisible={{ outline: '2px solid', outlineColor: 'teal.500', outlineOffset: '-2px' }}
             onClick={() => onOpen(guide)}
-            onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onOpen(guide); }
-            }}
-            role="button" tabIndex={0}
-            aria-label={`Open interview guide: ${guide.title}`}
         >
             <HStack spacing={2.5} align="start">
-                <Text fontSize="sm" fontWeight="medium" color="gray.800" flex="1" minW={0} noOfLines={1}>
+                <Text
+                    as="button" type="button"
+                    onClick={(e) => { e.stopPropagation(); onOpen(guide); }}
+                    aria-label={`Open interview guide: ${guide.title}`}
+                    fontSize="sm" fontWeight="medium" color="gray.800"
+                    flex="1" minW={0} noOfLines={1} textAlign="left"
+                    _focusVisible={{ outline: '2px solid', outlineColor: 'teal.500', outlineOffset: '2px' }}
+                >
                     {guide.title}
                 </Text>
-                <Text fontSize="2xs" color="gray.600">▸</Text>
+                <Text fontSize="2xs" color="gray.600" aria-hidden="true">▸</Text>
             </HStack>
             <Flex mt={1} gap={1.5} wrap="wrap" align="center">
                 {guide.meeting_date && (
                     <Text fontFamily="mono" fontSize="2xs" color="gray.600">{guide.meeting_date}</Text>
                 )}
                 <ClosureBadge guide={guide} />
-                {(guide.targets || []).map((t) => (
-                    <Badge key={t.year_identifier} colorScheme="blue" variant="subtle" fontSize="2xs" textTransform="none">
-                        {t.composite_key}
-                    </Badge>
-                ))}
-                {(guide.pertains_to_communities || []).map((c) => (
-                    <Badge key={c.unique_id} colorScheme="purple" variant="subtle" fontSize="2xs" textTransform="none">
-                        {c.name}
-                    </Badge>
-                ))}
-                {(guide.prepared_for || []).map((p) => (
-                    <Badge key={p.unique_id} colorScheme="gray" variant="subtle" fontSize="2xs" textTransform="none">
-                        {p.name}
-                    </Badge>
-                ))}
+                <GuideEdgeBadges guide={guide} campus={campus} />
             </Flex>
         </Box>
     );
 }
 
-/** Read modal: the guide body rendered as Markdown, edges in the header. */
-function GuideModal({ guide, onEdit, onDelete, onFollowUp, onClose }) {
+/** Read modal: the guide body rendered as Markdown, edges in the header.
+ *  The edge badges are links; following one navigates away, which unmounts
+ *  the modal with the panel. */
+function GuideModal({ guide, campus, onEdit, onDelete, onFollowUp, onClose }) {
     return (
         <Modal isOpen onClose={onClose} size="4xl" scrollBehavior="inside">
             <ModalOverlay />
@@ -103,9 +167,7 @@ function GuideModal({ guide, onEdit, onDelete, onFollowUp, onClose }) {
                         {(guide.working_groups || []).map((wg) => (
                             <Badge key={wg} colorScheme="teal" variant="outline" fontSize="2xs" textTransform="none">{wg}</Badge>
                         ))}
-                        {(guide.prepared_for || []).map((p) => (
-                            <Badge key={p.unique_id} colorScheme="gray" variant="subtle" fontSize="2xs" textTransform="none">{p.name}</Badge>
-                        ))}
+                        <GuideEdgeBadges guide={guide} campus={campus} />
                     </Flex>
                 </ModalHeader>
                 <ModalCloseButton />
@@ -253,7 +315,7 @@ export default function InterviewGuidesPanel() {
             ) : (
                 <VStack align="stretch" spacing={2}>
                     {guides.map((g) => (
-                        <GuideRow key={g.unique_id} guide={g} onOpen={setOpenGuide} />
+                        <GuideRow key={g.unique_id} guide={g} campus={campus} onOpen={setOpenGuide} />
                     ))}
                 </VStack>
             )}
@@ -261,6 +323,7 @@ export default function InterviewGuidesPanel() {
             {openGuide && (
                 <GuideModal
                     guide={openGuide}
+                    campus={campus}
                     onEdit={openEdit}
                     onDelete={handleDelete}
                     onFollowUp={openFollowUp}

@@ -32,6 +32,9 @@ def _person_min(person):
         "name": person.name,
         "title": person.title,
         "email": person.email,
+        # The people explorer deep-links by employee_id, so a person chip
+        # anywhere in these payloads can link without a second lookup.
+        "employee_id": person.employee_id,
     }
 
 

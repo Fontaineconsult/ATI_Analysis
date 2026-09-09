@@ -42,7 +42,10 @@ const GUIDES = [
         title: 'Prep: Library alternative-access process',
         meeting_date: '2026-08-07',
         content: '# The guide body',
-        prepared_for: [{ unique_id: 'p1', name: 'Christy Stevens' }],
+        prepared_for: [
+            { unique_id: 'p1', name: 'Christy Stevens', employee_id: 'emp-cs' },
+            { unique_id: 'p2', name: 'No Id Person' },
+        ],
         targets: [{ year_identifier: '2025-2026-7.11-ins-sfsu', composite_key: '7.11-ins' }],
         pertains_to_communities: [{ unique_id: 'c1', name: 'Library' }],
         working_groups: ['Instructional Materials'],
@@ -102,6 +105,34 @@ describe('InterviewGuidesPanel', () => {
         expect(screen.getByText('7.11-ins')).toBeInTheDocument();
         expect(screen.getByText('Library')).toBeInTheDocument();
         expect(screen.getByText('Christy Stevens')).toBeInTheDocument();
+    });
+
+    it('links each edge badge to its home: indicator, community, person', async () => {
+        renderPanel();
+        await screen.findByText('Prep: Library alternative-access process');
+
+        // Target → the shared goal-view URL (7.11-ins at sfsu → goal 7, indicator 11).
+        const target = screen.getByRole('link', { name: 'Open indicator 7.11-ins' });
+        expect(target).toHaveAttribute('href', expect.stringMatching(/\/sfsu\/dashboard\/.+\/goal\/7\/11$/));
+
+        // Community → its detail panel; person → the people explorer, keyed by employee_id.
+        expect(screen.getByRole('link', { name: 'Open community Library' }))
+            .toHaveAttribute('href', '/sfsu/ati-explorer/people/communities/c1');
+        expect(screen.getByRole('link', { name: 'Open person Christy Stevens' }))
+            .toHaveAttribute('href', '/sfsu/ati-explorer/people/emp-cs');
+    });
+
+    it('renders a person with no employee_id as a plain badge, not a dead link', async () => {
+        renderPanel();
+        await screen.findByText('No Id Person');
+        expect(screen.queryByRole('link', { name: /no id person/i })).not.toBeInTheDocument();
+    });
+
+    it('a badge click navigates without also opening the guide modal', async () => {
+        renderPanel();
+        await screen.findByText('Prep: Library alternative-access process');
+        fireEvent.click(screen.getByRole('link', { name: 'Open community Library' }));
+        expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     });
 
     it('opens the read modal with the Markdown body and the closure pairing', async () => {
