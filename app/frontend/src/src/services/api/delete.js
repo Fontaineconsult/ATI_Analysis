@@ -389,3 +389,26 @@ export const deleteInterviewGuide = async (uniqueId) => {
         throw error;
     }
 };
+
+
+/**
+ * Delete a PositionDescription record. Linked documents, notes, and the uploaded
+ * file's StoredFile node survive (delete = unlink).
+ * @param {string} uniqueId - The unique ID of the position description
+ * @returns {Promise<Object>} Response object
+ */
+export const deletePositionDescription = async (uniqueId) => {
+    try {
+        const response = await fetch(`${API_URL}/position-descriptions/${uniqueId}`, {
+            method: 'DELETE',
+        });
+        const data = await response.json();
+        if (!response.ok) {
+            throw new Error(data?.error || 'Failed to delete position description');
+        }
+        return data;
+    } catch (error) {
+        console.error('Error deleting position description:', error);
+        throw error;
+    }
+};

@@ -39,6 +39,41 @@ export const markFollowUpSent = async (uniqueId, dateSent = null) => {
     }
 };
 
+// Schedule (or clear) the next contact on a chase — the future date on which
+// somebody re-contacts the person(s) who owe an answer. Passing no contactDate
+// clears the reminder entirely (date, note, and persons together).
+export const setFollowUpNextContact = async (uniqueId, { contactDate = null, note = null, personIds = null } = {}) => {
+    try {
+        const response = await axios.put(`${process.env.REACT_APP_API_URL}/follow-ups`, {
+            action: 'set_next_contact',
+            unique_id: uniqueId,
+            ...(contactDate ? { contact_date: contactDate } : {}),
+            ...(note ? { note } : {}),
+            ...(personIds ? { person_ids: personIds } : {}),
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error setting follow-up next contact:', error);
+        throw error;
+    }
+};
+
+// Set the lifecycle status directly — used to pull a follow-up back to draft
+// (which clears date_sent; a drafted-again message was not sent after all).
+export const setFollowUpStatus = async (uniqueId, status) => {
+    try {
+        const response = await axios.put(`${process.env.REACT_APP_API_URL}/follow-ups`, {
+            action: 'set_status',
+            unique_id: uniqueId,
+            status,
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error setting follow-up status:', error);
+        throw error;
+    }
+};
+
 export const updateStatusLevel = async (yse, statusLevel) => {
     try {
         await axios.put(`${process.env.REACT_APP_API_URL}/evidence/status-levels`,
@@ -1818,3 +1853,19 @@ export const setEvidenceRationale = async (yearIdentifier, implementationType, u
         throw error;
     }
 }
+
+
+// Update a PositionDescription. Absent keys preserve; storage_key replaces the
+// uploaded file (null unlinks it); document_ids / note_ids are replace-semantics.
+export const updatePositionDescription = async (uniqueId, changes) => {
+    try {
+        const response = await axios.put(`${process.env.REACT_APP_API_URL}/position-descriptions/${uniqueId}`, {
+            action: 'update_position_description',
+            ...changes,
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error updating position description:', error);
+        throw error;
+    }
+};

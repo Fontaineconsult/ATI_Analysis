@@ -70,6 +70,8 @@ ATTACHABLE_LABELS = {
     "Asset", "Interface", "Component", "Tool", "TAAP",
     # open questions
     "Query",
+    # people
+    "PositionDescription",
 }
 
 

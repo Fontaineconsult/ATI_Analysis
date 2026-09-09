@@ -303,7 +303,7 @@ describe('attachment families', () => {
             'Accomplishment', 'Asset', 'CampusPlan', 'Case', 'Component',
             'Directive', 'ExternalPolicy', 'Guidance', 'Guideline', 'Interface',
             'InternalPolicy', 'Law', 'MeetingMinutes', 'Memo', 'Plan',
-            'Procedure', 'Process', 'ProgressUpdate', 'Project', 'Query',
+            'PositionDescription', 'Procedure', 'Process', 'ProgressUpdate', 'Project', 'Query',
             'Service', 'StatusLevel', 'SuccessIndicator', 'TAAP', 'Tool',
             'Tracking', 'WorkingGroupPlan', 'YearSuccessEvidence',
         ]);

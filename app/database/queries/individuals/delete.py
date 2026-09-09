@@ -20,3 +20,21 @@ def delete_person(employee_id: str) -> bool:
         raise NotFoundError(f"Person with employee_id {employee_id} does not exist.")
     except Exception as e:
         raise CrudError(f"Failed to delete person: {str(e)}")
+
+
+def delete_position_description(unique_id: str) -> bool:
+    """
+    Deletes a PositionDescription node by unique_id. Detach-deletes the record
+    only: linked Document and Note nodes are shared documentation and survive
+    (delete = unlink, the documentation convention).
+    :param unique_id: The unique_id of the position description.
+    :return: True if deleted.
+    """
+    try:
+        pd = PositionDescription.nodes.get(unique_id=unique_id)
+        pd.delete()
+        return True
+    except PositionDescription.DoesNotExist:
+        raise NotFoundError(f"PositionDescription with unique_id {unique_id} does not exist.")
+    except Exception as e:
+        raise CrudError(f"Failed to delete position description: {str(e)}")

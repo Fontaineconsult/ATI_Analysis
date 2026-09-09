@@ -129,3 +129,30 @@ def get_person_implementation_details(employee_id: str) -> dict:
         raise NotFoundError(f"Person with employee_id {employee_id} does not exist.")
     import json
     return json.loads(results[0][0])
+
+
+def get_position_description(unique_id: str) -> PositionDescription:
+    """
+    Get a PositionDescription node by unique_id.
+    :param unique_id: The unique_id of the position description.
+    :return: PositionDescription node.
+    """
+    pd = PositionDescription.nodes.get_or_none(unique_id=unique_id)
+    if not pd:
+        raise NotFoundError(f"PositionDescription with unique_id {unique_id} does not exist.")
+    return pd
+
+
+def get_position_descriptions_for_person(employee_id: str) -> list:
+    """
+    All of a person's position-description records, serialized, current first
+    (non-depreciated before depreciated, then newest effective_date).
+    :param employee_id: Employee ID of the person.
+    :return: List of serialized PositionDescription dicts.
+    """
+    person = get_person_by_employee_id(employee_id)
+    records = [pd.serialize() for pd in person.position_descriptions.all()]
+    # Stable two-pass sort: newest effective_date first, then depreciated last.
+    records.sort(key=lambda r: r["effective_date"] or "", reverse=True)
+    records.sort(key=lambda r: bool(r["depreciated"]))
+    return records
