@@ -8,6 +8,7 @@ import Markdown from '../common/Markdown';
 import Section from '../common/Section';
 import StatusLevelLadder from '../../functional_components/StatusLevelLadder';
 import CopyFollowUpButton from './CopyFollowUpButton';
+import NextContactEditor from './NextContactEditor';
 import { fetchFollowUpTable, fetchFollowUpsForMeeting } from '../../../services/api/get';
 import { markFollowUpSent } from '../../../services/api/put';
 import useResource from '../../../hooks/useResource';
@@ -68,7 +69,7 @@ function IndicatorRow({ row, onOpen }) {
 }
 
 /** One saved follow-up, rendered as it was written. */
-function SavedFollowUp({ item, onMarkSent, marking }) {
+function SavedFollowUp({ item, onMarkSent, marking, onReload }) {
     const sent = item.status === 'sent';
     return (
         <Box borderWidth="1px" borderColor="gray.200" borderRadius="md" bg="white" p={3}>
@@ -106,6 +107,17 @@ function SavedFollowUp({ item, onMarkSent, marking }) {
                 generated {item.generated_at || item.date_created || 'date unknown'}
                 {item.date_sent ? ` · sent ${item.date_sent}` : ''}
             </Text>
+
+            {(item.addressed_to || []).length > 0 && (
+                <Text fontSize="xs" color="gray.700" mb={2}>
+                    To: {item.addressed_to.map((p) => p.name).join(', ')}
+                </Text>
+            )}
+
+            {/* The tickler: when somebody picks this chase back up. */}
+            <Box mb={2}>
+                <NextContactEditor followUp={item} onSaved={onReload} />
+            </Box>
 
             {item.body_markdown ? (
                 <Box borderTopWidth="1px" borderColor="gray.200" pt={2}>
@@ -257,7 +269,8 @@ export default function FollowUpModal({ guide, campus, onClose }) {
                                         <SavedFollowUp
                                             key={f.unique_id} item={f}
                                             onMarkSent={handleMarkSent}
-                                            marking={markingId === f.unique_id} />
+                                            marking={markingId === f.unique_id}
+                                            onReload={reloadSaved} />
                                     ))}
                                 </VStack>
                             </Section>

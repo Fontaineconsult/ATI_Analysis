@@ -7,7 +7,7 @@
 #
 from datetime import date
 
-from app.database.graph_schema import FollowUp
+from app.database.graph_schema import FollowUp, Person
 from app.data_config import followup_statuses
 from app.endpoints.data_api.errors.custom_exceptions import (
     CrudError,
@@ -79,6 +79,59 @@ def mark_follow_up_sent(unique_id: str, date_sent: str = None) -> dict:
         node.save()
     except Exception as e:
         raise CrudError(f"Failed to mark FollowUp {unique_id!r} sent: {e}")
+    return node.serialize()
+
+
+def set_next_contact(unique_id: str,
+                     contact_date: str = None,
+                     note: str = None,
+                     person_ids: list = None) -> dict:
+    """Schedule (or clear) the next contact on a chase.
+
+    `contact_date` (YYYY-MM-DD) sets the reminder; None clears it entirely —
+    date, note, and the next_contact_with persons together, because a note or
+    a person list with no date is a reminder that can never come due.
+
+    `person_ids` is the full intended set (replace-semantics, resolved before
+    any edge moves so a bad id fails clean). Usually a subset of addressed_to,
+    but any Person is allowed: the reminder can target a supervisor or a
+    replacement the original message never went to.
+    """
+    node = _get(unique_id)
+
+    if contact_date is None:
+        node.next_contact_date = None
+        node.next_contact_note = None
+        try:
+            node.next_contact_with.disconnect_all()
+            node.save()
+        except Exception as e:
+            raise CrudError(f"Failed to clear next contact on FollowUp {unique_id!r}: {e}")
+        return node.serialize()
+
+    try:
+        parsed = date.fromisoformat(contact_date)
+    except (TypeError, ValueError):
+        raise ValidationError(
+            f"Invalid contact_date (expected YYYY-MM-DD): {contact_date}"
+        )
+
+    persons = []
+    for pid in person_ids or []:
+        person = Person.nodes.get_or_none(unique_id=pid)
+        if person is None:
+            raise NotFoundError(f"Person {pid!r} not found")
+        persons.append(person)
+
+    node.next_contact_date = parsed
+    node.next_contact_note = (note or "").strip() or None
+    try:
+        node.save()
+        node.next_contact_with.disconnect_all()
+        for person in persons:
+            node.next_contact_with.connect(person)
+    except Exception as e:
+        raise CrudError(f"Failed to set next contact on FollowUp {unique_id!r}: {e}")
     return node.serialize()
 
 

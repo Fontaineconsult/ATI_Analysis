@@ -122,6 +122,10 @@ def get_follow_up(unique_id: str) -> dict:
         {"unique_id": p.unique_id, "name": p.name, "email": p.email}
         for p in node.addressed_to.all()
     ]
+    data["next_contact_with"] = [
+        {"unique_id": p.unique_id, "name": p.name, "email": p.email}
+        for p in node.next_contact_with.all()
+    ]
     data["covers_evidence"] = [y.year_identifier for y in node.covers_evidence.all()]
     data["includes_query"] = [
         {"unique_id": q.unique_id, "question": q.question, "status": q.status}
@@ -155,9 +159,89 @@ def follow_ups_for_meeting(meeting_minutes_id: str) -> list:
                toString(f.date_created) AS date_created,
                toString(f.date_sent) AS date_sent,
                toString(f.generated_at) AS generated_at,
+               toString(f.next_contact_date) AS next_contact_date,
+               f.next_contact_note AS next_contact_note,
+               [ (f)-[:next_contact_with]->(p:Person) | {unique_id: p.unique_id, name: p.name} ]
+                   AS next_contact_with,
+               [ (f)-[:addressed_to]->(p:Person) | {unique_id: p.unique_id, name: p.name} ]
+                   AS addressed_to,
                cop.name AS community, c.abbreviation AS campus
         ORDER BY coalesce(f.generated_at, datetime({epochSeconds: 0})) DESC, f.subject
         """,
         {"mid": meeting_minutes_id},
     )
     return [dict(zip(meta, row)) for row in rows]
+
+
+# One round trip across every chase. Counts come from pattern comprehensions on
+# the bound follow-up, not OPTIONAL MATCHes, for the same fan-out reason as the
+# table query above.
+_BOARD_CYPHER = """
+MATCH (f:FollowUp)-[:follows_up_on]->(mm:MeetingMinutes)
+OPTIONAL MATCH (f)-[:for_campus]->(c:Campus)
+WITH f, mm, c
+WHERE $campus IS NULL OR c IS NULL OR c.abbreviation = $campus
+OPTIONAL MATCH (f)-[:pertains_to]->(cop:CommunityOfPractice)
+RETURN f.unique_id AS unique_id, f.subject AS subject, f.status AS status,
+       toString(f.date_sent) AS date_sent,
+       toString(f.generated_at) AS generated_at,
+       toString(f.next_contact_date) AS next_contact_date,
+       f.next_contact_note AS next_contact_note,
+       [ (f)-[:next_contact_with]->(p:Person) | {unique_id: p.unique_id, name: p.name} ]
+           AS next_contact_with,
+       [ (f)-[:addressed_to]->(p:Person) | {unique_id: p.unique_id, name: p.name} ]
+           AS addressed_to,
+       cop.name AS community, c.abbreviation AS campus,
+       mm.unique_id AS meeting_id, mm.title AS meeting_title,
+       toString(mm.meeting_date) AS meeting_date,
+       [ (f)-[:includes_query]->(q:Query) | {
+           unique_id: q.unique_id, question: q.question, status: q.status,
+           answerable_by: [ (q)-[:answerable_by]->(p:Person) | p.name ]
+       } ] AS included_queries,
+       [ (f)-[:includes_recommendation]->(r:Recommendation) | {
+           unique_id: r.unique_id, recommendation: r.recommendation, status: r.status
+       } ] AS included_recommendations,
+       [ (f)-[:includes_concern]->(cn:Concern) | {
+           unique_id: cn.unique_id, concern: cn.concern, status: cn.status
+       } ] AS included_concerns,
+       size([ (f)<-[:replies_to]-(:Message) | 1 ]) AS reply_count
+ORDER BY f.next_contact_date IS NULL, f.next_contact_date,
+         f.date_sent DESC, coalesce(f.generated_at, '') DESC
+"""
+
+# What counts as resolved, per ask type. Reply arrival is NOT the measure —
+# many replies can arrive without settling anything, and one reply can settle
+# everything. The chase is done when the tasks it carried are closed.
+_RESOLVED = {
+    "included_queries": lambda a: a["status"] == "settled",
+    "included_recommendations": lambda a: a["status"] != "open",
+    "included_concerns": lambda a: a["status"] != "open",
+}
+
+
+def follow_up_board(campus_abbreviation: str = None) -> list:
+    """Every chase across every meeting — the aggregate the feature exists for.
+
+    One row per FollowUp with its slice, its meeting, the next-contact
+    reminder, how many replies came back (informational), and THE TASKS IT
+    CARRIED — the queries / recommendations / concerns that actually went out,
+    each with its current status. Progress is derived from those:
+    `resolved_asks` of `total_asks`, `open_asks` remaining, `all_resolved`
+    when a non-empty task set is fully closed. Rows with a next_contact_date
+    lead, soonest first; the frontend derives due/overdue against today.
+
+    Campus filtering keeps follow-ups with NO campus edge visible on every
+    campus: an unsliced chase hidden everywhere would never be picked back up.
+    """
+    rows, meta = db.cypher_query(_BOARD_CYPHER, {"campus": campus_abbreviation})
+    board = [dict(zip(meta, row)) for row in rows]
+    for row in board:
+        total = resolved = 0
+        for key, is_resolved in _RESOLVED.items():
+            total += len(row[key])
+            resolved += sum(1 for ask in row[key] if is_resolved(ask))
+        row["total_asks"] = total
+        row["resolved_asks"] = resolved
+        row["open_asks"] = total - resolved
+        row["all_resolved"] = bool(total and resolved == total)
+    return board
