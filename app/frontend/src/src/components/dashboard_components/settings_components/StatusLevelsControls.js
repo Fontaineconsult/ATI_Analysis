@@ -1,5 +1,7 @@
 import React, { useContext, useState } from 'react';
 import {
+    Alert,
+    AlertIcon,
     Box,
     Heading,
     Text,
@@ -11,6 +13,7 @@ import {
     Center,
     Divider,
 } from '@chakra-ui/react';
+import { AddIcon } from '@chakra-ui/icons';
 import { StatusLevelContext } from '../../../context/StatusLevelContext';
 import EditStatusLevel from './EditStatusLevel';
 
@@ -30,11 +33,11 @@ const SubNodeColumn = ({ label, descriptions, requirements, descField, reqField 
         <Box flex={1} minW="0">
             <Text fontSize="xs" fontWeight="bold" color="teal.700" mb={1}>{label}</Text>
             {!hasContent && (
-                <Text fontSize="xs" color="gray.600" fontStyle="italic">—</Text>
+                <Text fontSize="xs" color="gray.700" fontStyle="italic">—</Text>
             )}
             {descriptions?.length > 0 && (
                 <Box mb={requirements?.length > 0 ? 2 : 0}>
-                    <Text fontSize="2xs" fontWeight="semibold" color="gray.600" mb={1}>Descriptions</Text>
+                    <Text fontSize="2xs" fontWeight="semibold" color="gray.700" mb={1}>Descriptions</Text>
                     <VStack align="stretch" spacing={1}>
                         {descriptions.map((item) => (
                             <HStack key={item.unique_id} spacing={2} align="flex-start">
@@ -47,7 +50,7 @@ const SubNodeColumn = ({ label, descriptions, requirements, descField, reqField 
             )}
             {requirements?.length > 0 && (
                 <Box>
-                    <Text fontSize="2xs" fontWeight="semibold" color="gray.600" mb={1}>Requirements</Text>
+                    <Text fontSize="2xs" fontWeight="semibold" color="gray.700" mb={1}>Requirements</Text>
                     <VStack align="stretch" spacing={1}>
                         {requirements.map((item) => (
                             <HStack key={item.unique_id} spacing={2} align="flex-start">
@@ -91,9 +94,10 @@ function StatusLevels() {
 
     if (error) {
         return (
-            <Box p={4}>
-                <Text color="red.500" fontSize="sm">{error}</Text>
-            </Box>
+            <Alert status="error" borderRadius="md" fontSize="sm">
+                <AlertIcon />
+                {error}
+            </Alert>
         );
     }
 
@@ -103,9 +107,9 @@ function StatusLevels() {
 
     return (
         <Box textAlign="left">
-            <HStack justifyContent="space-between" mb={3}>
-                <Heading size="md" color="gray.800">Status Levels</Heading>
-                <Button colorScheme="teal" size="sm" onClick={openCreateModal}>
+            <HStack justifyContent="space-between" mb={4}>
+                <Heading as="h2" size="lg" color="gray.800">Status Levels</Heading>
+                <Button colorScheme="teal" size="sm" leftIcon={<AddIcon boxSize={3} />} onClick={openCreateModal}>
                     Add Status Level
                 </Button>
             </HStack>
@@ -135,7 +139,7 @@ function StatusLevels() {
                                     {level.status_level}
                                 </Text>
                             </HStack>
-                            <Button size="xs" colorScheme="teal" variant="ghost" onClick={() => openEditModal(level)}>
+                            <Button size="xs" colorScheme="teal" variant="outline" bg="white" onClick={() => openEditModal(level)}>
                                 Edit
                             </Button>
                         </HStack>
@@ -155,7 +159,7 @@ function StatusLevels() {
 
             {levels.length === 0 && (
                 <Box p={4} textAlign="center">
-                    <Text fontSize="sm" color="gray.600">No status levels available.</Text>
+                    <Text fontSize="sm" color="gray.700" fontStyle="italic">No status levels yet.</Text>
                 </Box>
             )}
 

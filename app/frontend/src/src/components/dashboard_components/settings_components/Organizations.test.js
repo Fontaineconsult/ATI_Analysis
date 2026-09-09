@@ -81,4 +81,25 @@ describe('Organizations settings section', () => {
             await screen.findByText(/No departments or colleges recorded/i)
         ).toBeInTheDocument();
     });
+
+    it('sorts the roster by column, toggling direction on a second click', async () => {
+        renderAtCampus();
+        await screen.findByText('History');
+
+        const rosterNames = () => screen.getAllByRole('row')
+            .slice(1)
+            .map((tr) => tr.querySelector('td:nth-child(2)')?.textContent);
+
+        // Default order is name-ascending.
+        expect(rosterNames()).toEqual(['College of Science', 'History']);
+
+        // Employees ascending: 0 before 2; descending flips it, and the header
+        // carries aria-sort for assistive tech.
+        const employeesHeader = screen.getByRole('button', { name: 'Employees' });
+        await userEvent.click(employeesHeader);
+        expect(rosterNames()).toEqual(['College of Science', 'History']);
+        await userEvent.click(employeesHeader);
+        expect(rosterNames()).toEqual(['History', 'College of Science']);
+        expect(employeesHeader.closest('th')).toHaveAttribute('aria-sort', 'descending');
+    });
 });

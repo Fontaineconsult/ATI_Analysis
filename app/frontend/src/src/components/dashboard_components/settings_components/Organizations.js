@@ -34,8 +34,17 @@ import useInvalidateResources from '../../../hooks/useInvalidateResources';
 import { KEYS, NS } from '../../../context/resourceKeys';
 import { createOrgUnit } from '../../../services/api/post';
 import { deleteOrgUnit } from '../../../services/api/delete';
+import { useColumnSort, SortableTh } from '../../functional_components/SortableTable';
 
 const TYPE_BADGE = { Department: 'blue', College: 'purple' };
+
+// Sort accessors, module-level so the sort memo's dependency is stable.
+const SORT_ACCESSORS = {
+    type: (u) => u.type,
+    name: (u) => u.name,
+    location: (u) => u.location,
+    employee_count: (u) => u.employee_count ?? 0,
+};
 
 /**
  * Settings → Organizations: the local org units (Departments and Colleges)
@@ -69,6 +78,7 @@ function Organizations() {
         () => fetchLocalOrgUnits(campus),
     );
     const units = useMemo(() => unitsResp?.data || [], [unitsResp]);
+    const { sorted: sortedUnits, sortKey, direction, toggleSort } = useColumnSort(units, SORT_ACCESSORS, 'name');
 
     // Creating or deleting a unit here also changes the department/college
     // catalogues the assets and people editors read, so the namespace goes.
@@ -139,10 +149,10 @@ function Organizations() {
     return (
         <Box>
             <HStack justifyContent="space-between" mb={1}>
-                <Heading size="md" color="gray.800">Organizations</Heading>
-                <Text fontSize="xs" color="gray.600" textTransform="uppercase">{campus}</Text>
+                <Heading as="h2" size="lg" color="gray.800">Organizations</Heading>
+                <Text fontSize="xs" color="gray.700" textTransform="uppercase">{campus}</Text>
             </HStack>
-            <Text fontSize="sm" color="gray.600" mb={4}>
+            <Text fontSize="sm" color="gray.700" mb={4}>
                 Local departments and colleges for this campus. They appear as employer and
                 steward options across the app. Vendors are managed in the Assets area.
             </Text>
@@ -180,7 +190,7 @@ function Organizations() {
 
             {/* Roster */}
             {units.length === 0 ? (
-                <Text fontSize="sm" color="gray.600" fontStyle="italic">
+                <Text fontSize="sm" color="gray.700" fontStyle="italic">
                     No departments or colleges recorded for this campus yet.
                 </Text>
             ) : (
@@ -189,15 +199,15 @@ function Organizations() {
                         <Table variant="simple" size="sm">
                             <Thead bg="gray.50">
                                 <Tr>
-                                    <Th color="gray.700" fontWeight="semibold" fontSize="xs">Type</Th>
-                                    <Th color="gray.700" fontWeight="semibold" fontSize="xs">Name</Th>
-                                    <Th color="gray.700" fontWeight="semibold" fontSize="xs">Location</Th>
-                                    <Th color="gray.700" fontWeight="semibold" fontSize="xs" isNumeric>Employees</Th>
+                                    <SortableTh columnKey="type" sortKey={sortKey} direction={direction} onSort={toggleSort}>Type</SortableTh>
+                                    <SortableTh columnKey="name" sortKey={sortKey} direction={direction} onSort={toggleSort}>Name</SortableTh>
+                                    <SortableTh columnKey="location" sortKey={sortKey} direction={direction} onSort={toggleSort}>Location</SortableTh>
+                                    <SortableTh columnKey="employee_count" sortKey={sortKey} direction={direction} onSort={toggleSort} isNumeric>Employees</SortableTh>
                                     <Th color="gray.700" fontWeight="semibold" fontSize="xs" aria-label="Actions" />
                                 </Tr>
                             </Thead>
                             <Tbody>
-                                {units.map((u) => (
+                                {sortedUnits.map((u) => (
                                     <Tr key={u.unique_id || `${u.type}-${u.name}`} _hover={{ bg: 'gray.50' }}>
                                         <Td>
                                             <Badge colorScheme={TYPE_BADGE[u.type] || 'gray'} variant="subtle" fontSize="2xs">
@@ -205,7 +215,7 @@ function Organizations() {
                                             </Badge>
                                         </Td>
                                         <Td fontSize="sm" color="gray.800" fontWeight="medium">{u.name}</Td>
-                                        <Td fontSize="xs" color="gray.600">{u.location || '—'}</Td>
+                                        <Td fontSize="xs" color="gray.700">{u.location || '—'}</Td>
                                         <Td fontSize="xs" color="gray.700" isNumeric>{u.employee_count}</Td>
                                         <Td textAlign="right">
                                             <Button size="xs" colorScheme="red" variant="ghost" isDisabled={busy}
