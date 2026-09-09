@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import {
+    Badge,
+    Box,
     Button,
+    HStack,
+    Link,
     Modal,
     ModalOverlay,
     ModalContent,
@@ -13,15 +17,21 @@ import {
     Input,
     Select,
     Checkbox,
+    Text,
+    Textarea,
     VStack,
     useToast,
     CheckboxGroup,
     Divider
 } from '@chakra-ui/react';
+import { ExternalLinkIcon } from '@chakra-ui/icons';
 import { updateIndividual } from '../../../services/api/put';
-import { createIndividual } from '../../../services/api/post';
+import { createIndividual, addPositionDescription } from '../../../services/api/post';
+import { getPositionDescriptions } from '../../../services/api/get';
+import { deletePositionDescription } from '../../../services/api/delete';
 import { useSettings } from '../../../context/SettingsContext';
 import { WORKING_GROUPS, WORKING_GROUP_ORDER } from '../../graph_components/people/peopleConfig';
+import FileUploadField from '../../implementation_explorer/doc_components/FileUploadField';
 
 const EditIndividual = ({ isOpen, onClose, individualData, onSave }) => {
     const [formData, setFormData] = useState({
@@ -41,6 +51,82 @@ const EditIndividual = ({ isOpen, onClose, individualData, onSave }) => {
     const { campuses, campusesLoading } = useSettings();
 
     const isEditMode = Boolean(individualData);
+
+    // Position descriptions attach directly to the person and save immediately,
+    // independent of the main form submit (the person must already exist).
+    const [positionDescriptions, setPositionDescriptions] = useState([]);
+    const [pdLoading, setPdLoading] = useState(false);
+    const [pdSaving, setPdSaving] = useState(false);
+    const [pdName, setPdName] = useState('');
+    const [pdEffectiveDate, setPdEffectiveDate] = useState('');
+    const [pdNotes, setPdNotes] = useState('');
+    const [pdFile, setPdFile] = useState(null);
+
+    const employeeId = individualData?.employee_id;
+
+    useEffect(() => {
+        if (!isOpen || !isEditMode || !employeeId) {
+            setPositionDescriptions([]);
+            return undefined;
+        }
+        let cancelled = false;
+        setPdLoading(true);
+        getPositionDescriptions(employeeId)
+            .then((items) => { if (!cancelled) setPositionDescriptions(items); })
+            .catch(() => { if (!cancelled) setPositionDescriptions([]); })
+            .finally(() => { if (!cancelled) setPdLoading(false); });
+        return () => { cancelled = true; };
+    }, [isOpen, isEditMode, employeeId]);
+
+    const handleAddPositionDescription = async () => {
+        const name = pdName.trim() || pdFile?.original_filename || '';
+        if (!name) return;
+        setPdSaving(true);
+        try {
+            await addPositionDescription(employeeId, {
+                name,
+                ...(pdNotes.trim() ? { description: pdNotes.trim() } : {}),
+                ...(pdEffectiveDate ? { effective_date: pdEffectiveDate } : {}),
+                ...(pdFile || {}),
+            });
+            toast({
+                title: 'Position description added.',
+                status: 'success',
+                duration: 2000,
+                isClosable: true,
+            });
+            setPdName('');
+            setPdEffectiveDate('');
+            setPdNotes('');
+            setPdFile(null);
+            setPositionDescriptions(await getPositionDescriptions(employeeId));
+        } catch (error) {
+            toast({
+                title: 'Error adding position description.',
+                description: error.message || 'An error occurred.',
+                status: 'error',
+                duration: 3000,
+                isClosable: true,
+            });
+        } finally {
+            setPdSaving(false);
+        }
+    };
+
+    const handleRemovePositionDescription = async (uniqueId) => {
+        try {
+            await deletePositionDescription(uniqueId);
+            setPositionDescriptions((prev) => prev.filter((pd) => pd.unique_id !== uniqueId));
+        } catch (error) {
+            toast({
+                title: 'Error removing position description.',
+                description: error.message || 'An error occurred.',
+                status: 'error',
+                duration: 3000,
+                isClosable: true,
+            });
+        }
+    };
 
     useEffect(() => {
         if (isEditMode) {
@@ -309,6 +395,146 @@ const EditIndividual = ({ isOpen, onClose, individualData, onSave }) => {
                                 })}
                             </VStack>
                         </CheckboxGroup>
+
+                        {isEditMode && (
+                            <>
+                                <Divider />
+
+                                <FormControl>
+                                    <FormLabel fontSize="sm" color="gray.800" fontWeight="bold" mb={3}>
+                                        Position Description
+                                    </FormLabel>
+                                    {pdLoading ? (
+                                        <Text fontSize="sm" color="gray.600">Loading…</Text>
+                                    ) : (
+                                        <VStack align="stretch" spacing={2}>
+                                            {positionDescriptions.length === 0 && (
+                                                <Text fontSize="sm" color="gray.600">
+                                                    No position description on file.
+                                                </Text>
+                                            )}
+                                            {positionDescriptions.map((pd) => (
+                                                <HStack
+                                                    key={pd.unique_id}
+                                                    justify="space-between"
+                                                    borderWidth="1px"
+                                                    borderColor="gray.200"
+                                                    borderRadius="md"
+                                                    px={2}
+                                                    py={1}
+                                                >
+                                                    <Box>
+                                                        <HStack spacing={2}>
+                                                            {pd.file?.download_url ? (
+                                                                <Link
+                                                                    href={pd.file.download_url}
+                                                                    isExternal
+                                                                    color="teal.600"
+                                                                    fontSize="sm"
+                                                                    display="flex"
+                                                                    alignItems="center"
+                                                                >
+                                                                    {pd.name}
+                                                                    <ExternalLinkIcon ml={1} />
+                                                                </Link>
+                                                            ) : (
+                                                                <Text fontSize="sm">{pd.name}</Text>
+                                                            )}
+                                                            {pd.depreciated && (
+                                                                <Badge colorScheme="gray" fontSize="xs">
+                                                                    Superseded
+                                                                </Badge>
+                                                            )}
+                                                        </HStack>
+                                                        {pd.effective_date && (
+                                                            <Text fontSize="xs" color="gray.600">
+                                                                Effective {pd.effective_date}
+                                                            </Text>
+                                                        )}
+                                                        {pd.description && (
+                                                            <Text fontSize="xs" color="gray.600" noOfLines={2}>
+                                                                {pd.description}
+                                                            </Text>
+                                                        )}
+                                                    </Box>
+                                                    <Button
+                                                        size="xs"
+                                                        variant="ghost"
+                                                        colorScheme="red"
+                                                        onClick={() => handleRemovePositionDescription(pd.unique_id)}
+                                                    >
+                                                        Remove
+                                                    </Button>
+                                                </HStack>
+                                            ))}
+                                        </VStack>
+                                    )}
+                                </FormControl>
+
+                                <Box borderWidth="1px" borderColor="gray.200" borderRadius="md" p={3}>
+                                    <VStack align="stretch" spacing={3}>
+                                        <FileUploadField
+                                            value={pdFile}
+                                            onUploaded={setPdFile}
+                                            onClear={() => setPdFile(null)}
+                                            label="PD Document"
+                                        />
+                                        <FormControl>
+                                            <FormLabel fontSize="sm" color="gray.800" fontWeight="bold">
+                                                Name
+                                            </FormLabel>
+                                            <Input
+                                                size="sm"
+                                                value={pdName}
+                                                onChange={(e) => setPdName(e.target.value)}
+                                                placeholder={pdFile?.original_filename || 'e.g. Alt Media Coordinator PD'}
+                                                borderColor="gray.300"
+                                                _hover={{ borderColor: "gray.400" }}
+                                                _focus={{ borderColor: "teal.500", boxShadow: "0 0 0 1px teal.500" }}
+                                            />
+                                        </FormControl>
+                                        <FormControl>
+                                            <FormLabel fontSize="sm" color="gray.800" fontWeight="bold">
+                                                Effective Date
+                                            </FormLabel>
+                                            <Input
+                                                size="sm"
+                                                type="date"
+                                                value={pdEffectiveDate}
+                                                onChange={(e) => setPdEffectiveDate(e.target.value)}
+                                                borderColor="gray.300"
+                                                _hover={{ borderColor: "gray.400" }}
+                                                _focus={{ borderColor: "teal.500", boxShadow: "0 0 0 1px teal.500" }}
+                                            />
+                                        </FormControl>
+                                        <FormControl>
+                                            <FormLabel fontSize="sm" color="gray.800" fontWeight="bold">
+                                                Notes About the Job
+                                            </FormLabel>
+                                            <Textarea
+                                                size="sm"
+                                                value={pdNotes}
+                                                onChange={(e) => setPdNotes(e.target.value)}
+                                                placeholder="What the position covers, context on the PD"
+                                                borderColor="gray.300"
+                                                _hover={{ borderColor: "gray.400" }}
+                                                _focus={{ borderColor: "teal.500", boxShadow: "0 0 0 1px teal.500" }}
+                                            />
+                                        </FormControl>
+                                        <Button
+                                            size="sm"
+                                            colorScheme="teal"
+                                            variant="outline"
+                                            onClick={handleAddPositionDescription}
+                                            isLoading={pdSaving}
+                                            isDisabled={!pdFile && !pdName.trim()}
+                                        >
+                                            Add Position Description
+                                        </Button>
+                                    </VStack>
+                                </Box>
+                            </>
+                        )}
                     </VStack>
                 </ModalBody>
 

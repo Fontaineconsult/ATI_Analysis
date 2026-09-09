@@ -17,6 +17,7 @@ from app.database.graph_schema import FollowUp, MeetingMinutes
 from app.database.queries.followup.create import create_follow_up
 from app.database.queries.followup.read import (
     build_follow_up_table,
+    follow_up_board,
     follow_ups_for_meeting,
     get_follow_up,
 )
@@ -27,6 +28,7 @@ from app.database.queries.followup.reply import (
 from app.database.queries.followup.update import (
     mark_follow_up_sent,
     set_follow_up_status,
+    set_next_contact,
     update_follow_up,
 )
 from app.endpoints.data_api.errors.custom_exceptions import NotFoundError, ValidationError
@@ -405,3 +407,213 @@ def test_table_returns_one_row_per_indicator_not_per_note(sentinel_meeting):
               ['zzztestyse','zzztestsi','zzztestn1','zzztestn2'] DETACH DELETE n
             """
         )
+
+
+# --------------------------------------------------------------------------- #
+# Layer 4 — the next-contact tickler                                           #
+# --------------------------------------------------------------------------- #
+@pytest.fixture
+def sentinel_contact(neo4j_connection):
+    """A throwaway person to schedule the next contact with."""
+    db.cypher_query(
+        "CREATE (p:Person {unique_id: 'zzzcontactperson', name: 'ZZZ-TEST Contact'})"
+    )
+    yield "zzzcontactperson"
+    db.cypher_query(
+        "MATCH (p:Person {unique_id: 'zzzcontactperson'}) DETACH DELETE p"
+    )
+
+
+@pytest.mark.integration
+def test_set_next_contact_records_date_note_and_person(sentinel_meeting, sentinel_contact):
+    """The reminder that keeps 'awaiting reply' from becoming 'forgotten'."""
+    data = create_follow_up(subject=SENTINEL_SUBJECT,
+                            meeting_minutes_id=sentinel_meeting.unique_id)
+    result = set_next_contact(data["unique_id"], contact_date="2026-10-01",
+                              note="Nudge about the attendee list.",
+                              person_ids=[sentinel_contact])
+    assert result["next_contact_date"] == "2026-10-01"
+    assert result["next_contact_note"] == "Nudge about the attendee list."
+
+    full = get_follow_up(data["unique_id"])
+    assert [p["name"] for p in full["next_contact_with"]] == ["ZZZ-TEST Contact"]
+
+
+@pytest.mark.integration
+def test_clearing_next_contact_removes_the_whole_reminder(sentinel_meeting, sentinel_contact):
+    """A note or a person list with no date is a reminder that can never come
+    due, so a clear takes all three together."""
+    data = create_follow_up(subject=SENTINEL_SUBJECT,
+                            meeting_minutes_id=sentinel_meeting.unique_id)
+    set_next_contact(data["unique_id"], contact_date="2026-10-01",
+                     note="nudge", person_ids=[sentinel_contact])
+    cleared = set_next_contact(data["unique_id"], contact_date=None)
+    assert cleared["next_contact_date"] is None
+    assert cleared["next_contact_note"] is None
+    assert get_follow_up(data["unique_id"])["next_contact_with"] == []
+
+
+@pytest.mark.integration
+def test_set_next_contact_rejects_a_malformed_date(sentinel_meeting):
+    data = create_follow_up(subject=SENTINEL_SUBJECT,
+                            meeting_minutes_id=sentinel_meeting.unique_id)
+    with pytest.raises(ValidationError):
+        set_next_contact(data["unique_id"], contact_date="10/01/2026")
+
+
+@pytest.mark.integration
+def test_set_next_contact_resolves_persons_before_mutating(sentinel_meeting, sentinel_contact):
+    """A bad person id fails the whole call; the standing reminder survives."""
+    data = create_follow_up(subject=SENTINEL_SUBJECT,
+                            meeting_minutes_id=sentinel_meeting.unique_id)
+    set_next_contact(data["unique_id"], contact_date="2026-10-01",
+                     person_ids=[sentinel_contact])
+    with pytest.raises(NotFoundError):
+        set_next_contact(data["unique_id"], contact_date="2026-11-01",
+                         person_ids=["no-such-person"])
+    full = get_follow_up(data["unique_id"])
+    assert [p["name"] for p in full["next_contact_with"]] == ["ZZZ-TEST Contact"]
+
+
+# --------------------------------------------------------------------------- #
+# Layer 4 — the chase board                                                    #
+# --------------------------------------------------------------------------- #
+def _board_row(unique_id, campus=None):
+    rows = [r for r in follow_up_board(campus) if r["unique_id"] == unique_id]
+    return rows[0] if rows else None
+
+
+@pytest.mark.integration
+def test_board_carries_the_chase_and_its_reminder(sentinel_meeting, sentinel_contact):
+    data = create_follow_up(subject=SENTINEL_SUBJECT,
+                            meeting_minutes_id=sentinel_meeting.unique_id)
+    mark_follow_up_sent(data["unique_id"])
+    set_next_contact(data["unique_id"], contact_date="2026-10-01",
+                     person_ids=[sentinel_contact])
+
+    row = _board_row(data["unique_id"])
+    assert row is not None
+    assert row["meeting_title"] == SENTINEL_MEETING
+    assert row["next_contact_date"] == "2026-10-01"
+    assert [p["name"] for p in row["next_contact_with"]] == ["ZZZ-TEST Contact"]
+    # No tasks were wired: nothing to resolve, and an empty set is not "all
+    # resolved" — that state is reserved for a chase that finished its work.
+    assert row["total_asks"] == 0
+    assert row["open_asks"] == 0
+    assert row["all_resolved"] is False
+
+
+@pytest.mark.integration
+def test_board_tracks_progress_by_task_resolution_not_replies(sentinel_meeting):
+    """Reply arrival is not the measure: many replies can settle nothing, one
+    can settle everything. The chase is done when its tasks are closed."""
+    db.cypher_query(
+        """
+        CREATE (q:Query {unique_id: 'zzzboardq', question: 'ZZZ board question?', status: 'open'})
+        CREATE (r:Recommendation {unique_id: 'zzzboardrec',
+                                  recommendation: 'ZZZ board recommendation', status: 'open'})
+        """
+    )
+    try:
+        data = create_follow_up(
+            subject=SENTINEL_SUBJECT,
+            meeting_minutes_id=sentinel_meeting.unique_id,
+            includes_query_ids=["zzzboardq"],
+            includes_recommendation_ids=["zzzboardrec"],
+        )
+        mark_follow_up_sent(data["unique_id"])
+
+        row = _board_row(data["unique_id"])
+        assert row["total_asks"] == 2
+        assert row["resolved_asks"] == 0
+        assert row["open_asks"] == 2
+        assert row["all_resolved"] is False
+        assert [q["question"] for q in row["included_queries"]] == ["ZZZ board question?"]
+        assert [r["recommendation"] for r in row["included_recommendations"]] \
+            == ["ZZZ board recommendation"]
+
+        # Resolving the tasks — not receiving replies — is what moves the chase.
+        db.cypher_query("MATCH (q:Query {unique_id: 'zzzboardq'}) SET q.status = 'settled'")
+        db.cypher_query(
+            "MATCH (r:Recommendation {unique_id: 'zzzboardrec'}) SET r.status = 'dismissed'"
+        )
+        row = _board_row(data["unique_id"])
+        assert row["resolved_asks"] == 2
+        assert row["open_asks"] == 0
+        assert row["all_resolved"] is True
+    finally:
+        db.cypher_query(
+            "MATCH (n) WHERE n.unique_id IN ['zzzboardq','zzzboardrec'] DETACH DELETE n"
+        )
+
+
+@pytest.mark.integration
+def test_board_puts_dated_reminders_first(sentinel_meeting):
+    dated = create_follow_up(subject=SENTINEL_SUBJECT + " dated",
+                             meeting_minutes_id=sentinel_meeting.unique_id)
+    undated = create_follow_up(subject=SENTINEL_SUBJECT + " undated",
+                               meeting_minutes_id=sentinel_meeting.unique_id)
+    set_next_contact(dated["unique_id"], contact_date="2026-10-01")
+
+    board = follow_up_board()
+    order = [r["unique_id"] for r in board]
+    assert order.index(dated["unique_id"]) < order.index(undated["unique_id"])
+
+
+@pytest.mark.integration
+def test_board_campus_filter_keeps_unsliced_chases(sentinel_meeting):
+    """A chase with no campus edge hidden on every campus would never be picked
+    back up, so the filter keeps it visible everywhere."""
+    db.cypher_query(
+        "CREATE (c:Campus {unique_id: 'zzzcampus', name: 'ZZZ-TEST Campus', abbreviation: 'zzz9'})"
+    )
+    try:
+        sliced = create_follow_up(subject=SENTINEL_SUBJECT + " sliced",
+                                  meeting_minutes_id=sentinel_meeting.unique_id,
+                                  campus_abbreviation="zzz9")
+        unsliced = create_follow_up(subject=SENTINEL_SUBJECT + " unsliced",
+                                    meeting_minutes_id=sentinel_meeting.unique_id)
+
+        assert _board_row(sliced["unique_id"], campus="zzz9") is not None
+        assert _board_row(unsliced["unique_id"], campus="zzz9") is not None
+        # A chase sliced to zzz9 does not belong on another campus board.
+        assert _board_row(sliced["unique_id"], campus="other-campus") is None
+    finally:
+        db.cypher_query("MATCH (c:Campus {unique_id: 'zzzcampus'}) DETACH DELETE c")
+
+
+# --------------------------------------------------------------------------- #
+# Layer 5 — endpoint smoke                                                     #
+# --------------------------------------------------------------------------- #
+@pytest.mark.api
+@pytest.mark.integration
+def test_next_contact_and_board_over_http(flask_client, sentinel_meeting, sentinel_contact):
+    created = flask_client.post("/ati/data-api/v1/follow-ups", json={
+        "action": "create_follow_up",
+        "subject": SENTINEL_SUBJECT,
+        "meeting_minutes_id": sentinel_meeting.unique_id,
+    })
+    assert created.status_code == 201
+    fid = created.get_json()["data"]["unique_id"]
+
+    set_resp = flask_client.put("/ati/data-api/v1/follow-ups", json={
+        "action": "set_next_contact",
+        "unique_id": fid,
+        "contact_date": "2026-10-01",
+        "note": "nudge",
+        "person_ids": [sentinel_contact],
+    })
+    assert set_resp.status_code == 200
+    assert set_resp.get_json()["data"]["next_contact_date"] == "2026-10-01"
+
+    board = flask_client.get("/ati/data-api/v1/follow-ups/board")
+    assert board.status_code == 200
+    mine = [r for r in board.get_json()["data"]["follow_ups"] if r["unique_id"] == fid]
+    assert mine and mine[0]["next_contact_note"] == "nudge"
+
+    cleared = flask_client.put("/ati/data-api/v1/follow-ups", json={
+        "action": "set_next_contact",
+        "unique_id": fid,
+    })
+    assert cleared.status_code == 200
+    assert cleared.get_json()["data"]["next_contact_date"] is None

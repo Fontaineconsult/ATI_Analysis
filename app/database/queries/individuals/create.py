@@ -1,10 +1,12 @@
 #
 # INDIVIDUAL CREATE QUERIES
 #
+from datetime import date
+
 from app.database.graph_schema import *
 from app.endpoints.data_api.errors.custom_exceptions import CrudError, ValidationError
 
-from app.database.graph_schema import Person, ATIWorkingGroup, Campus
+from app.database.graph_schema import Person, ATIWorkingGroup, Campus, PositionDescription, Document, Note
 from app.endpoints.data_api.errors.custom_exceptions import CrudError, ValidationError, NotFoundError
 from neomodel import db, DoesNotExist
 
@@ -101,3 +103,94 @@ def add_person(data: dict) -> Person:
         raise
     except Exception as e:
         raise CrudError(f"Failed to add person with employee_id '{employee_id}': {str(e)}")
+
+
+def _resolve_pd_attachments(document_ids, note_ids):
+    """Resolve document/note unique_ids to nodes up front, so a bad id fails
+    before any edge is written. Returns (documents, notes)."""
+    if not isinstance(document_ids, list) or not isinstance(note_ids, list):
+        raise ValidationError("document_ids and note_ids must be lists.")
+    documents = []
+    for doc_id in document_ids:
+        document = Document.nodes.get_or_none(unique_id=doc_id)
+        if not document:
+            raise NotFoundError(f"Document with unique_id '{doc_id}' not found.")
+        documents.append(document)
+    notes = []
+    for note_id in note_ids:
+        note = Note.nodes.get_or_none(unique_id=note_id)
+        if not note:
+            raise NotFoundError(f"Note with unique_id '{note_id}' not found.")
+        notes.append(note)
+    return documents, notes
+
+
+def add_position_description(data: dict) -> PositionDescription:
+    """
+    Creates a PositionDescription anchored to a Person. This is the only sanctioned
+    creation path: the describes_position_of edge is required, and neomodel cannot
+    enforce a required edge at save time, so it is enforced here.
+
+    :param data: {employee_id (required), name (required), description,
+                  effective_date (YYYY-MM-DD), depreciated, depreciated_date,
+                  include_in_report, storage_key (app/fs key of the uploaded PD
+                  file, with original_filename/content_type/size/uploaded_by),
+                  document_ids: [Document unique_id], note_ids: [Note unique_id]}
+    :return: The created PositionDescription node.
+    """
+    from app.database.queries.files.create import register_stored_file, link_file_to_node
+
+    employee_id = data.get('employee_id')
+    if not employee_id:
+        raise ValidationError("employee_id is required.")
+    name = (data.get('name') or '').strip()
+    if not name:
+        raise ValidationError("Name is required.")
+
+    person = Person.nodes.get_or_none(employee_id=employee_id)
+    if not person:
+        raise NotFoundError(f"Person with employee_id '{employee_id}' not found.")
+
+    documents, notes = _resolve_pd_attachments(
+        data.get('document_ids') or [],
+        data.get('note_ids') or [],
+    )
+
+    try:
+        with db.transaction:
+            pd = PositionDescription(
+                name=name,
+                description=data.get('description'),
+                effective_date=date.fromisoformat(data['effective_date']) if data.get('effective_date') else None,
+                depreciated=bool(data.get('depreciated', False)),
+                depreciated_date=date.fromisoformat(data['depreciated_date']) if data.get('depreciated_date') else None,
+                include_in_report=data.get('include_in_report', True),
+            )
+            pd.save()
+
+            pd.describes_position_of.connect(person)
+
+            # Register + link the uploaded PD file, if one was provided.
+            if data.get('storage_key'):
+                stored_file = register_stored_file(
+                    data['storage_key'],
+                    original_filename=data.get('original_filename'),
+                    content_type=data.get('content_type'),
+                    size=data.get('size'),
+                    uploaded_by=data.get('uploaded_by'),
+                )
+                link_file_to_node(pd, stored_file)
+
+            for document in documents:
+                pd.documents.connect(document)
+            for note in notes:
+                pd.notes.connect(note)
+
+            return pd
+    except ValueError as e:
+        # date.fromisoformat on a malformed date string
+        raise ValidationError(f"Invalid date: {e}")
+    except (ValidationError, NotFoundError):
+        raise
+    except Exception as e:
+        raise CrudError(f"Failed to add position description for '{employee_id}': {str(e)}")

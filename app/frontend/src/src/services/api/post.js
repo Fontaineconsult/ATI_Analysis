@@ -790,3 +790,21 @@ export const addEvidenceRequirement = async (payload) => {
         throw error;
     }
 };
+
+
+// Create a PositionDescription anchored to a person. `pd` carries name (required),
+// description, effective_date — and, for an uploaded PD file, the storage_key
+// block from uploadFile (storage_key, original_filename, content_type, size).
+export const addPositionDescription = async (employeeId, pd) => {
+    try {
+        const response = await axios.post(`${process.env.REACT_APP_API_URL}/position-descriptions`, {
+            action: 'add_position_description',
+            employee_id: employeeId,
+            ...pd,
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error adding position description:', error);
+        throw error;
+    }
+};

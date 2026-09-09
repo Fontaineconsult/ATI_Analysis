@@ -1133,6 +1133,35 @@ export const fetchFollowUp = async (uniqueId) => {
     }
 };
 
+// Every chase across every meeting, next-contact reminders first. The campus
+// filter keeps chases with NO campus slice visible on every campus.
+export const fetchFollowUpBoard = async (campus) => {
+    try {
+        const response = await axios.get(
+            `${process.env.REACT_APP_API_URL}/follow-ups/board`,
+            { params: campus ? { campus } : {} }
+        );
+        return response.data;
+    } catch (error) {
+        console.error('Error fetching the follow-up board:', error.message);
+        throw error;
+    }
+};
+
+// What came back from one chase: the linked replies with senders, plus every
+// ask it carried with its CURRENT status and the derived awaiting/partial flags.
+export const fetchFollowUpReplies = async (uniqueId) => {
+    try {
+        const response = await axios.get(
+            `${process.env.REACT_APP_API_URL}/follow-ups/replies/${uniqueId}`
+        );
+        return response.data;
+    } catch (error) {
+        console.error('Error fetching follow-up replies:', error.message);
+        throw error;
+    }
+};
+
 export const fetchInterviewGuide = async (uniqueId) => {
     try {
         const response = await axios.get(
@@ -1153,6 +1182,21 @@ export const fetchGuidesForCommunity = async (communityUniqueId) => {
         return response.data;
     } catch (error) {
         console.error('Error fetching community interview guides:', error.message);
+        throw error;
+    }
+};
+
+
+// A person's position-description records, current first, depreciated last.
+// Each item carries its uploaded file block (`file`), linked documents, and notes.
+export const getPositionDescriptions = async (employeeId) => {
+    try {
+        const response = await axios.get(`${process.env.REACT_APP_API_URL}/position-descriptions`, {
+            params: { employee_id: employeeId },
+        });
+        return response.data?.data?.items || [];
+    } catch (error) {
+        console.error('Error fetching position descriptions:', error.message);
         throw error;
     }
 };

@@ -346,7 +346,7 @@ export function parentHref(campus, reference) {
  * page; two Documents are the same type and unrelated when one documents a Law
  * and the other a Service.
  *
- * The 28 labels below are exhaustive against the schema: they are every label
+ * The 29 labels below are exhaustive against the schema: they are every label
  * that declares a RelationshipTo one of the five documentation classes (verified
  * by introspecting graph_schema, not by reading the graph — a family must not
  * disappear because today's data happens to be empty). StoredFile is excluded on
@@ -406,10 +406,17 @@ export const ATTACHMENT_FAMILIES = {
         blurb: 'Questions still being settled.',
         labels: ['Query'],
     },
+    people: {
+        key: 'people',
+        label: 'People',
+        colorScheme: 'cyan',
+        blurb: 'Records about the jobs people hold.',
+        labels: ['PositionDescription'],
+    },
 };
 
 export const ATTACHMENT_FAMILY_ORDER = [
-    'implementations', 'governance', 'evidence', 'planning', 'assets', 'inquiry',
+    'implementations', 'governance', 'evidence', 'planning', 'assets', 'inquiry', 'people',
 ];
 
 /** Anything the families don't claim still has to be selectable, never dropped. */

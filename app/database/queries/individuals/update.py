@@ -141,3 +141,86 @@ def set_person_role_holdings(employee_id: str, holdings: list) -> Person:
     except Exception as e:
         raise CrudError(f"Failed to set role holdings for {employee_id!r}: {e}")
 
+
+def update_position_description(unique_id: str, data: dict):
+    """
+    Update a PositionDescription's properties and attachments. Absent keys preserve
+    the current value. 'document_ids' / 'note_ids', when present, are the full
+    intended set (replace-semantics, matching set_person_role_holdings). The person
+    anchor is immutable: a PD describes one person's job, so re-anchoring is not
+    supported; create a new record instead.
+
+    'storage_key' present and truthy replaces the uploaded PD file (with
+    original_filename/content_type/size/uploaded_by); present and falsy unlinks
+    it (the StoredFile node survives for the orphan GC to judge).
+
+    :param unique_id: The unique_id of the position description.
+    :param data: {name, description, effective_date (YYYY-MM-DD), depreciated,
+                  depreciated_date, include_in_report, storage_key,
+                  document_ids, note_ids}
+    :return: The updated PositionDescription node.
+    """
+    from app.database.queries.individuals.create import _resolve_pd_attachments
+    from app.database.queries.files.create import register_stored_file, link_file_to_node
+
+    pd = PositionDescription.nodes.get_or_none(unique_id=unique_id)
+    if not pd:
+        raise NotFoundError(f"PositionDescription with unique_id {unique_id} does not exist.")
+
+    # Resolve attachment ids before mutating anything, so a bad id fails clean.
+    documents = notes = None
+    if 'document_ids' in data or 'note_ids' in data:
+        documents, notes = _resolve_pd_attachments(
+            data.get('document_ids') or [],
+            data.get('note_ids') or [],
+        )
+
+    try:
+        with db.transaction:
+            if 'name' in data:
+                name = (data.get('name') or '').strip()
+                if not name:
+                    raise ValidationError("Name cannot be empty.")
+                pd.name = name
+            if 'description' in data:
+                pd.description = data.get('description')
+            if 'effective_date' in data:
+                pd.effective_date = date.fromisoformat(data['effective_date']) if data.get('effective_date') else None
+            if 'depreciated' in data:
+                pd.depreciated = bool(data.get('depreciated'))
+            if 'depreciated_date' in data:
+                pd.depreciated_date = date.fromisoformat(data['depreciated_date']) if data.get('depreciated_date') else None
+            if 'include_in_report' in data:
+                pd.include_in_report = bool(data.get('include_in_report'))
+            pd.save()
+
+            if 'storage_key' in data:
+                if data.get('storage_key'):
+                    stored_file = register_stored_file(
+                        data['storage_key'],
+                        original_filename=data.get('original_filename'),
+                        content_type=data.get('content_type'),
+                        size=data.get('size'),
+                        uploaded_by=data.get('uploaded_by'),
+                    )
+                    link_file_to_node(pd, stored_file)
+                else:
+                    pd.has_file.disconnect_all()
+
+            if 'document_ids' in data:
+                pd.documents.disconnect_all()
+                for document in documents:
+                    pd.documents.connect(document)
+            if 'note_ids' in data:
+                pd.notes.disconnect_all()
+                for note in notes:
+                    pd.notes.connect(note)
+
+        return pd
+    except ValueError as e:
+        raise ValidationError(f"Invalid date: {e}")
+    except (ValidationError, NotFoundError):
+        raise
+    except Exception as e:
+        raise CrudError(f"Failed to update position description {unique_id!r}: {e}")
+

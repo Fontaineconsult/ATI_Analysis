@@ -7,6 +7,7 @@ import { ChakraProvider } from '@chakra-ui/react';
 jest.mock('../../../services/api/put', () => ({
     __esModule: true,
     markFollowUpSent: jest.fn(),
+    setFollowUpNextContact: jest.fn(),
 }));
 jest.mock('../../../services/utils/tools', () => ({
     __esModule: true,
@@ -176,6 +177,27 @@ describe('FollowUpModal', () => {
         });
         renderModal();
         expect(await screen.findByText(/sent 2026-09-03/)).toBeInTheDocument();
+    });
+
+    it('offers the next-contact reminder on a saved follow-up', async () => {
+        renderModal();
+        expect(await screen.findByText(/no next contact scheduled/i)).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: /schedule contact/i })).toBeInTheDocument();
+    });
+
+    it('shows a standing reminder with its due state and targets', async () => {
+        fetchFollowUpsForMeeting.mockResolvedValue({
+            data: { follow_ups: [{
+                ...SAVED[0],
+                next_contact_date: '2099-01-01',
+                next_contact_note: 'Nudge about the attendee list.',
+                next_contact_with: [{ unique_id: 'p1', name: 'Dawna Komorosky' }],
+            }] },
+        });
+        renderModal();
+        expect(await screen.findByText('Scheduled')).toBeInTheDocument();
+        expect(screen.getByText('2099-01-01')).toBeInTheDocument();
+        expect(screen.getByText(/contact Dawna Komorosky/)).toBeInTheDocument();
     });
 
     it('opens an indicator for editing through the shared navigation helper', async () => {

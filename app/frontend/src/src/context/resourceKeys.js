@@ -108,6 +108,7 @@ export const KEYS = {
     // together whenever a follow-up is written.
     followUpTable: (meetingId) => `follow-ups:table:${meetingId}`,
     followUpsForMeeting: (meetingId) => `follow-ups:for-meeting:${meetingId}`,
+    followUpBoard: (campus) => `follow-ups:board:${campus || 'all'}`,
 
     // --- Reference vocabularies ---
     rolesAll: 'roles:all',

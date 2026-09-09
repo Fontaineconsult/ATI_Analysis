@@ -8,8 +8,10 @@ URL surface (mounted at /ati/data-api/v1):
     GET    /follow-ups/meeting/<meeting_minutes_id>          saved follow-ups for a meeting
     GET    /follow-ups/table/<meeting_minutes_id>            the per-indicator gap table
     GET    /follow-ups/replies/<unique_id>                   what came back from one chase
+    GET    /follow-ups/board[?campus=<abbrev>]               every chase, next-contact first
     PUT    /follow-ups                                       (action: mark_sent / set_status /
-                                                              update_follow_up / link_reply)
+                                                              update_follow_up / link_reply /
+                                                              set_next_contact)
     POST   /follow-ups                                       (action: create_follow_up)
 
 The gap table is a READ over the graph, not a stored artifact: one row per
@@ -23,6 +25,7 @@ from flask.views import MethodView
 from app.database.queries.followup.create import create_follow_up
 from app.database.queries.followup.read import (
     build_follow_up_table,
+    follow_up_board,
     follow_ups_for_meeting,
     get_follow_up,
 )
@@ -33,6 +36,7 @@ from app.database.queries.followup.reply import (
 from app.database.queries.followup.update import (
     mark_follow_up_sent,
     set_follow_up_status,
+    set_next_contact,
     update_follow_up,
 )
 from app.endpoints.data_api.errors.custom_exceptions import (
@@ -47,8 +51,13 @@ from .util.response import make_response
 
 class FollowUpsAPI(MethodView):
     def get(self, unique_id=None, meeting_minutes_id=None, table_meeting_id=None,
-            replies_follow_up_id=None):
+            replies_follow_up_id=None, board=False):
         try:
+            if board:
+                return make_response(
+                    status="success",
+                    data={"follow_ups": follow_up_board(request.args.get("campus"))},
+                ), 200
             if unique_id is not None:
                 return make_response(status="success", data=get_follow_up(unique_id)), 200
             if meeting_minutes_id is not None:
@@ -148,6 +157,17 @@ class FollowUpsAPI(MethodView):
                 return make_response(status="success", data=result,
                                      message="Follow-up updated."), 200
 
+            if action == "set_next_contact":
+                # contact_date absent/null clears the reminder entirely.
+                result = set_next_contact(
+                    unique_id,
+                    contact_date=data.get("contact_date"),
+                    note=data.get("note"),
+                    person_ids=data.get("person_ids"),
+                )
+                return make_response(status="success", data=result,
+                                     message="Next contact set."), 200
+
             if action == "link_reply":
                 if not data.get("message_unique_id"):
                     return make_response(
@@ -183,8 +203,12 @@ data_api_endpoints.add_url_rule(
 data_api_endpoints.add_url_rule(
     "/follow-ups/table/<string:table_meeting_id>", view_func=follow_ups_view, methods=["GET"],
 )
-# Writes
 data_api_endpoints.add_url_rule(
     "/follow-ups/replies/<string:replies_follow_up_id>", view_func=follow_ups_view, methods=["GET"],
 )
+data_api_endpoints.add_url_rule(
+    "/follow-ups/board", view_func=follow_ups_view, methods=["GET"],
+    defaults={"board": True},
+)
+# Writes
 data_api_endpoints.add_url_rule("/follow-ups", view_func=follow_ups_view, methods=["POST", "PUT"])
