@@ -47,7 +47,7 @@ export const unassignImplementationFromYSE = async (yearSuccessIdentifier, imple
  */
 export const deletePlan = async (uniqueId) => {
     try {
-        const response = await fetch(`${API_URL}/implementations/plans`, {
+        const response = await fetch(`${API_URL}/plans`, {
             method: 'DELETE',
             headers: {
                 'Content-Type': 'application/json',
@@ -77,7 +77,7 @@ export const deletePlan = async (uniqueId) => {
  */
 export const deleteAccomplishment = async (uniqueId) => {
     try {
-        const response = await fetch(`${API_URL}/implementations/accomplishments`, {
+        const response = await fetch(`${API_URL}/accomplishments`, {
             method: 'DELETE',
             headers: {
                 'Content-Type': 'application/json',

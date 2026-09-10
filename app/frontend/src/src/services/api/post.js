@@ -269,7 +269,7 @@ export const createCommunity = async ({ name, description }) => {
 
 export const createPlan = async (formData) => {
     try {
-        const response = await axios.post(`${process.env.REACT_APP_API_URL}/implementations/plans`, createPlanPayload(formData));
+        const response = await axios.post(`${process.env.REACT_APP_API_URL}/plans`, createPlanPayload(formData));
         return response.data;
     } catch (error) {
         console.error('Error creating plan:', error);
@@ -319,7 +319,7 @@ export const createStatusLevel = async (formData) => {
 export const createAccomplishment = async (formData) => {
     try {
         const response = await axios.post(
-            `${process.env.REACT_APP_API_URL}/implementations/accomplishments`,
+            `${process.env.REACT_APP_API_URL}/accomplishments`,
             createAccomplishmentPayload(formData)
         );
         return response.data;
@@ -737,6 +737,26 @@ export const refreshAsanaPlans = async (campusAbbrev, yearName) => {
         return response.data;
     } catch (error) {
         console.error('Error refreshing plans to Asana:', error);
+        throw error;
+    }
+};
+
+// Add one progress subtask to a plan. Created in Asana first (the year names
+// the Asana project; an unlinked plan gets its task created on the way), then
+// recorded in the graph as the first-order row the app reads back.
+export const addPlanSubtask = async (planUid, { name, notes = null, dueOn = null, assigneePersonId = null, yearName, campusAbbrev = null }) => {
+    try {
+        const response = await axios.post(`${process.env.REACT_APP_API_URL}/asana/subtasks/${planUid}`, {
+            name,
+            ...(notes ? { notes } : {}),
+            ...(dueOn ? { due_on: dueOn } : {}),
+            ...(assigneePersonId ? { assignee_person_id: assigneePersonId } : {}),
+            year_name: yearName,
+            ...(campusAbbrev ? { campus_abbrev: campusAbbrev } : {}),
+        });
+        return response.data?.data;
+    } catch (error) {
+        console.error('Error adding plan subtask:', error);
         throw error;
     }
 };

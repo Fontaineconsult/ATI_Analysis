@@ -109,6 +109,9 @@ export const KEYS = {
     followUpTable: (meetingId) => `follow-ups:table:${meetingId}`,
     followUpsForMeeting: (meetingId) => `follow-ups:for-meeting:${meetingId}`,
     followUpBoard: (campus) => `follow-ups:board:${campus || 'all'}`,
+    plansBoard: (campus, year) => `plans:board:${campus}:${year}`,
+    plansTasks: (campus, year) => `plans:tasks:${campus}:${year}`,
+    accomplishmentsBoard: 'accomplishments:board',
 
     // --- Reference vocabularies ---
     rolesAll: 'roles:all',

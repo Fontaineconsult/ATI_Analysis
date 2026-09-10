@@ -17,8 +17,7 @@ import {
     updateMetricPayload,
     updateMessageForImplementationPayload,
     updateAccomplishmentPayload,
-    updateNoteForImplementationPayload,
-    addProgressNoteToPlanPayload
+    updateNoteForImplementationPayload
 } from "../response_templates";
 
 // Record that a follow-up actually went out. Deliberately a separate call from
@@ -539,7 +538,7 @@ export const updateIndividual = async (individual) => {
 
 export const updatePlan = async (formData) => {
     try {
-        await axios.put(`${process.env.REACT_APP_API_URL}/implementations/plans`, updatePlanPayload(formData));
+        await axios.put(`${process.env.REACT_APP_API_URL}/plans`, updatePlanPayload(formData));
     } catch (error) {
         console.error('Error updating plan:', error);
         throw error;
@@ -549,7 +548,7 @@ export const updatePlan = async (formData) => {
 export const updateAccomplishment = async (formData) => {
     try {
         const response = await axios.put(
-            `${process.env.REACT_APP_API_URL}/implementations/accomplishments`,
+            `${process.env.REACT_APP_API_URL}/accomplishments`,
             updateAccomplishmentPayload(formData)
         );
         return response.data;
@@ -787,15 +786,73 @@ export const assignImplementationToYSE = async (yearIdentifier, implementationTy
     }
 }
 
-export const addProgressNoteToPlan = async (planId, noteName, noteContent, createdById = null) => {
+// Complete (or reopen) one plan progress subtask. Asana receives the write
+// first; the returned row is what Asana actually recorded.
+export const setPlanSubtaskCompleted = async (planUid, asanaGid, completed) => {
     try {
         const response = await axios.put(
-            `${process.env.REACT_APP_API_URL}/implementations/plans`,
-            addProgressNoteToPlanPayload(planId, noteName, noteContent, createdById)
+            `${process.env.REACT_APP_API_URL}/asana/subtasks/${planUid}`,
+            { asana_gid: asanaGid, completed },
         );
-        return response.data;
+        return response.data?.data;
     } catch (error) {
-        console.error('Error adding progress note to plan:', error);
+        console.error('Error updating plan subtask:', error);
+        throw error;
+    }
+}
+
+// Assign (or with null, unassign) one plan progress subtask. Asana is written
+// first, by the person's email; the graph then carries the assigned_to edge
+// to the exact Person chosen.
+export const setPlanSubtaskAssignee = async (planUid, asanaGid, personUniqueId) => {
+    try {
+        const response = await axios.put(
+            `${process.env.REACT_APP_API_URL}/asana/subtasks/${planUid}`,
+            { asana_gid: asanaGid, assignee_person_id: personUniqueId },
+        );
+        return response.data?.data;
+    } catch (error) {
+        console.error('Error assigning plan subtask:', error);
+        throw error;
+    }
+}
+
+// Set the app-side state tracker and/or resolution note on one subtask.
+// Local fields (Asana holds neither), except that 'Completed' completes the
+// Asana subtask and leaving 'Completed' reopens it.
+export const setPlanSubtaskStatus = async (planUid, asanaGid, { status, resolutionNote } = {}) => {
+    try {
+        const response = await axios.put(
+            `${process.env.REACT_APP_API_URL}/asana/subtasks/${planUid}`,
+            {
+                asana_gid: asanaGid,
+                ...(status !== undefined ? { status } : {}),
+                ...(resolutionNote !== undefined ? { resolution_note: resolutionNote } : {}),
+            },
+        );
+        return response.data?.data;
+    } catch (error) {
+        console.error('Error setting plan subtask status:', error);
+        throw error;
+    }
+}
+
+// Edit one subtask's name / description / due date. Absent fields are left
+// alone; Asana receives the write first.
+export const updatePlanSubtask = async (planUid, asanaGid, { name, notes, dueOn } = {}) => {
+    try {
+        const response = await axios.put(
+            `${process.env.REACT_APP_API_URL}/asana/subtasks/${planUid}`,
+            {
+                asana_gid: asanaGid,
+                ...(name !== undefined ? { name } : {}),
+                ...(notes !== undefined ? { notes } : {}),
+                ...(dueOn !== undefined ? { due_on: dueOn } : {}),
+            },
+        );
+        return response.data?.data;
+    } catch (error) {
+        console.error('Error editing plan subtask:', error);
         throw error;
     }
 }
@@ -1580,7 +1637,7 @@ export const setImplementationParticipants = async (implementationType, implemen
 //
 
 export const assignPlanToCampus = async (planUid, campusAbbrev, yearName) => {
-    const response = await axios.put(`${process.env.REACT_APP_API_URL}/implementations/plans`, {
+    const response = await axios.put(`${process.env.REACT_APP_API_URL}/plans`, {
         action: 'assign_campus',
         unique_id: planUid,
         campus_abbrev: campusAbbrev,
@@ -1590,7 +1647,7 @@ export const assignPlanToCampus = async (planUid, campusAbbrev, yearName) => {
 };
 
 export const unassignPlanFromCampus = async (planUid, campusAbbrev, yearName) => {
-    const response = await axios.put(`${process.env.REACT_APP_API_URL}/implementations/plans`, {
+    const response = await axios.put(`${process.env.REACT_APP_API_URL}/plans`, {
         action: 'unassign_campus',
         unique_id: planUid,
         campus_abbrev: campusAbbrev,
@@ -1600,7 +1657,7 @@ export const unassignPlanFromCampus = async (planUid, campusAbbrev, yearName) =>
 };
 
 export const detachPlanFromYse = async (planUid, yseUniqueId) => {
-    const response = await axios.put(`${process.env.REACT_APP_API_URL}/implementations/plans`, {
+    const response = await axios.put(`${process.env.REACT_APP_API_URL}/plans`, {
         action: 'detach_yse',
         unique_id: planUid,
         yse_unique_id: yseUniqueId,
@@ -1609,7 +1666,7 @@ export const detachPlanFromYse = async (planUid, yseUniqueId) => {
 };
 
 export const attachPlanToYse = async (planUid, yseUniqueId) => {
-    const response = await axios.put(`${process.env.REACT_APP_API_URL}/implementations/plans`, {
+    const response = await axios.put(`${process.env.REACT_APP_API_URL}/plans`, {
         action: 'attach_yse',
         unique_id: planUid,
         yse_unique_id: yseUniqueId,

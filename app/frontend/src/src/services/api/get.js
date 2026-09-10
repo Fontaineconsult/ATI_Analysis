@@ -968,6 +968,46 @@ export const fetchOntologyHealth = async () => {
     }
 };
 
+// The /plans board: every plan visible at a campus + year, each with its
+// working-group / goal context, legacy progress notes, and the task rollups
+// (open / overdue / unowned counts, no-next-step flag).
+export const fetchPlansBoard = async (campus, year) => {
+    try {
+        const response = await axios.get(`${process.env.REACT_APP_API_URL}/plans/board`, {
+            params: { campus, year },
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error fetching the plans board:', error.message);
+        throw error;
+    }
+};
+
+// Every progress subtask across the campus+year's visible plans — the
+// cross-plan task list, each row with its plan, owner, and overdue flag.
+export const fetchPlansTasks = async (campus, year) => {
+    try {
+        const response = await axios.get(`${process.env.REACT_APP_API_URL}/plans/tasks`, {
+            params: { campus, year },
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error fetching the plans task list:', error.message);
+        throw error;
+    }
+};
+
+// Every accomplishment with its working-group / goal / year / plan context.
+export const fetchAccomplishmentsBoard = async () => {
+    try {
+        const response = await axios.get(`${process.env.REACT_APP_API_URL}/accomplishments/board`);
+        return response.data;
+    } catch (error) {
+        console.error('Error fetching the accomplishments board:', error.message);
+        throw error;
+    }
+};
+
 // A plan's mirrored Asana subtasks (AsanaSubtask nodes written by the Asana
 // Refresh sync). Open subtasks first, then by due date. Returns the list
 // directly (already unwrapped from the response envelope).
@@ -986,7 +1026,7 @@ export const fetchPlanAsanaSubtasks = async (planUid) => {
 // furthers_yse anchors). Each entry: {abbreviation, name, yse_count}.
 export const fetchPlanCampuses = async (planUid, yearName) => {
     try {
-        const response = await axios.get(`${process.env.REACT_APP_API_URL}/implementations/plans`, {
+        const response = await axios.get(`${process.env.REACT_APP_API_URL}/plans`, {
             params: { campuses_for: planUid, academic_year: yearName },
         });
         if (response.status === 200) return response.data?.data || [];
@@ -1001,7 +1041,7 @@ export const fetchPlanCampuses = async (planUid, yearName) => {
 // campus, status level, indicator, and total plan count per evidence.
 export const fetchPlanYses = async (planUid) => {
     try {
-        const response = await axios.get(`${process.env.REACT_APP_API_URL}/implementations/plans`, {
+        const response = await axios.get(`${process.env.REACT_APP_API_URL}/plans`, {
             params: { yses_for: planUid },
         });
         if (response.status === 200) return response.data?.data || [];

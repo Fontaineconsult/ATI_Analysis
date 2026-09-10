@@ -143,20 +143,23 @@ class AsanaClient:
             params={"opt_fields": "name,permalink_url,gid,completed"},
         )
 
-    def update_task(self, task_gid, *, name=None, notes=None, custom_fields=None):
+    def update_task(self, task_gid, *, name=None, notes=None, due_on=None,
+                    custom_fields=None):
         """PUT /tasks/{gid} — update only the fields given (None = leave alone)."""
         data = {}
         if name is not None:
             data["name"] = name
         if notes is not None:
             data["notes"] = notes
+        if due_on is not None:
+            data["due_on"] = due_on
         if custom_fields:
             data["custom_fields"] = custom_fields
         if not data:
             return None
         return self._data(
             "PUT", f"/tasks/{task_gid}",
-            params={"opt_fields": "name,permalink_url,gid,completed"},
+            params={"opt_fields": self._SUBTASK_FIELDS},
             json_body={"data": data},
         )
 
@@ -177,12 +180,54 @@ class AsanaClient:
             json_body={"data": {"name": name}},
         )
 
+    # One field list for every subtask read and write, so the graph row can
+    # always be filled from any response. `notes` is the description body;
+    # `assignee.email` is the key the graph uses to resolve a Person.
+    _SUBTASK_FIELDS = ("name,notes,completed,completed_at,due_on,"
+                       "assignee.name,assignee.email,permalink_url,gid")
+
     def list_subtasks(self, task_gid):
-        """All subtasks of a task, with the fields the graph mirror stores."""
+        """All subtasks of a task, with the fields the graph row stores."""
         return list(self._paginate(
             f"/tasks/{task_gid}/subtasks",
-            opt_fields="name,completed,completed_at,due_on,assignee.name,permalink_url",
+            opt_fields=self._SUBTASK_FIELDS,
         ))
+
+    # ---- subtask writes (the app-side progress updates) ------------------
+
+    def create_subtask(self, parent_task_gid, name, *, notes=None, due_on=None,
+                       assignee=None):
+        """POST /tasks/{gid}/subtasks — returns the new subtask with the
+        fields the graph node stores, so the caller can persist it directly.
+        `assignee` is an Asana user gid or an email address."""
+        data = {"name": name}
+        if notes is not None:
+            data["notes"] = notes
+        if due_on is not None:
+            data["due_on"] = due_on
+        if assignee is not None:
+            data["assignee"] = assignee
+        return self._data(
+            "POST", f"/tasks/{parent_task_gid}/subtasks",
+            params={"opt_fields": self._SUBTASK_FIELDS},
+            json_body={"data": data},
+        )
+
+    def set_task_completed(self, task_gid, completed):
+        """PUT /tasks/{gid} completed — works on tasks and subtasks alike."""
+        return self._data(
+            "PUT", f"/tasks/{task_gid}",
+            params={"opt_fields": self._SUBTASK_FIELDS},
+            json_body={"data": {"completed": bool(completed)}},
+        )
+
+    def set_task_assignee(self, task_gid, assignee):
+        """PUT /tasks/{gid} assignee — gid or email; None unassigns."""
+        return self._data(
+            "PUT", f"/tasks/{task_gid}",
+            params={"opt_fields": self._SUBTASK_FIELDS},
+            json_body={"data": {"assignee": assignee}},
+        )
 
     # ---- helpers ---------------------------------------------------------
     def _paginate(self, path, **params):
