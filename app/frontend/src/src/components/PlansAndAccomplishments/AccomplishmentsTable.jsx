@@ -43,17 +43,25 @@ function AccomplishmentsTable({ accomplishments, onUpdate }) {
         setEditingRows(newEditing);
     };
 
+    if (!accomplishments || accomplishments.length === 0) {
+        return (
+            <Box p={4} color="gray.700" fontSize="sm" fontStyle="italic">
+                No accomplishments recorded yet.
+            </Box>
+        );
+    }
+
     return (
         <Table variant="simple" size="sm">
-            <Thead>
+            <Thead bg="gray.50">
                 <Tr>
-                    <Th width="40px">
+                    <Th width="40px" color="gray.700" fontWeight="semibold" fontSize="xs">
                         <span className="sr-only">Expand</span>
                     </Th>
-                    <Th>Name</Th>
-                    <Th>Working Group</Th>
-                    <Th>Goal</Th>
-                    <Th>Actions</Th>
+                    <Th color="gray.700" fontWeight="semibold" fontSize="xs">Name</Th>
+                    <Th color="gray.700" fontWeight="semibold" fontSize="xs">Working Group</Th>
+                    <Th color="gray.700" fontWeight="semibold" fontSize="xs">Goal</Th>
+                    <Th color="gray.700" fontWeight="semibold" fontSize="xs">Actions</Th>
                 </Tr>
             </Thead>
             <Tbody>

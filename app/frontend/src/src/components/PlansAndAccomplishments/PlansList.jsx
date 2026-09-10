@@ -29,10 +29,19 @@ const STATUS_ORDER = {
 const WG_SECTIONS = WORKING_GROUP_LIST.map((w) => ({ key: w.slug, label: w.name }));
 
 const SORT_OPTIONS = [
+    { value: 'attention', label: 'Needs attention' },
     { value: 'name', label: 'Name (A→Z)' },
     { value: 'status', label: 'Status' },
     { value: 'campus', label: 'Campus plans first' },
 ];
+
+// Higher = needs eyes sooner: overdue tasks first, then In Progress plans
+// with no recorded next step, then whoever has the most open work.
+const attentionRank = (p) => (
+    (p.tasks_overdue || 0) * 10000
+    + (p.no_next_step ? 1000 : 0)
+    + (p.tasks_open || 0)
+);
 
 /**
  * Reusable selectable plan list for the 1/3 column of the plans split view.
@@ -47,7 +56,7 @@ const SORT_OPTIONS = [
  *   emptyMessage       Shown when plans is empty. Defaults to a neutral msg.
  */
 function PlansList({ plans = [], selectedId, onSelect, emptyMessage = 'No plans to show.' }) {
-    const [sortBy, setSortBy] = useState('name');
+    const [sortBy, setSortBy] = useState('attention');
     // Default view: only plans actively being worked. The `abandoned` flag
     // overrides plan_status (same rule as getPlanStatusLabel).
     const [inProgressOnly, setInProgressOnly] = useState(true);
@@ -65,6 +74,12 @@ function PlansList({ plans = [], selectedId, onSelect, emptyMessage = 'No plans 
                 const aRank = STATUS_ORDER[aKey] ?? 99;
                 const bRank = STATUS_ORDER[bKey] ?? 99;
                 if (aRank !== bRank) return aRank - bRank;
+                return (a.name || '').localeCompare(b.name || '');
+            });
+        } else if (sortBy === 'attention') {
+            arr.sort((a, b) => {
+                const diff = attentionRank(b) - attentionRank(a);
+                if (diff !== 0) return diff;
                 return (a.name || '').localeCompare(b.name || '');
             });
         } else if (sortBy === 'campus') {
@@ -181,7 +196,7 @@ function PlansList({ plans = [], selectedId, onSelect, emptyMessage = 'No plans 
                                     No plans
                                 </Box>
                             ) : (
-                                <List spacing={0} aria-label={`${section.label} plans`}>
+                                <List spacing={0} role="listbox" aria-label={`${section.label} plans`}>
                                     {section.plans.map((plan) => {
                                         const isSelected = plan.unique_id === selectedId;
                                         const statusColor = getPlanStatusColor(plan);
@@ -189,6 +204,9 @@ function PlansList({ plans = [], selectedId, onSelect, emptyMessage = 'No plans 
                                         return (
                                             <ListItem
                                                 key={plan.unique_id}
+                                                role="option"
+                                                aria-selected={isSelected}
+                                                tabIndex={0}
                                                 px={3}
                                                 py={2.5}
                                                 cursor="pointer"
@@ -201,7 +219,14 @@ function PlansList({ plans = [], selectedId, onSelect, emptyMessage = 'No plans 
                                                 borderBottomColor="gray.300"
                                                 boxShadow={isSelected ? 'inset 0 0 0 1px var(--chakra-colors-teal-500)' : 'none'}
                                                 _hover={{ filter: 'brightness(0.96)' }}
+                                                _focusVisible={{ outline: '2px solid', outlineColor: 'teal.500', outlineOffset: '-2px' }}
                                                 onClick={() => onSelect && onSelect(plan)}
+                                                onKeyDown={(e) => {
+                                                    if (e.key === 'Enter' || e.key === ' ') {
+                                                        e.preventDefault();
+                                                        if (onSelect) onSelect(plan);
+                                                    }
+                                                }}
                                             >
                                                 {/* Title */}
                                                 <Text fontSize="sm" fontWeight={isSelected ? 'semibold' : 'medium'} color="gray.800" noOfLines={2}>
@@ -228,6 +253,30 @@ function PlansList({ plans = [], selectedId, onSelect, emptyMessage = 'No plans 
                                                         )}
                                                     </HStack>
                                                 </HStack>
+
+                                                {/* Task chips: the tracker's diagnostic read per plan */}
+                                                {(plan.tasks_total !== undefined) && (
+                                                    <HStack spacing={1.5} mt={1}>
+                                                        <Badge colorScheme="gray" variant="outline" fontSize="2xs" textTransform="none">
+                                                            {plan.tasks_open || 0} open of {plan.tasks_total || 0}
+                                                        </Badge>
+                                                        {(plan.tasks_overdue || 0) > 0 && (
+                                                            <Badge colorScheme="red" variant="subtle" fontSize="2xs" textTransform="none">
+                                                                {plan.tasks_overdue} overdue
+                                                            </Badge>
+                                                        )}
+                                                        {plan.no_next_step && (
+                                                            <Badge colorScheme="orange" variant="subtle" fontSize="2xs" textTransform="none">
+                                                                no next step
+                                                            </Badge>
+                                                        )}
+                                                        {(plan.tasks_unassigned_open || 0) > 0 && (
+                                                            <Badge colorScheme="purple" variant="outline" fontSize="2xs" textTransform="none">
+                                                                {plan.tasks_unassigned_open} unowned
+                                                            </Badge>
+                                                        )}
+                                                    </HStack>
+                                                )}
                                             </ListItem>
                                         );
                                     })}

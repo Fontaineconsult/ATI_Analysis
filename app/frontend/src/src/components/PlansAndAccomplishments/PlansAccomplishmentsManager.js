@@ -1,4 +1,4 @@
-import React, { useContext, useState } from 'react';
+import React, { useContext, useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { WORKING_GROUP_LIST } from '../../styles/workingGroupIdentity';
 import {
@@ -34,11 +34,29 @@ import {
 import { FaPlus, FaSyncAlt } from 'react-icons/fa';
 import { DataContext } from '../../context/DataContext';
 import { SettingsContext } from '../../context/SettingsContext';
-import PlansTable from './PlansTable';
 import PlansSplitView from './PlansSplitView';
 import AccomplishmentsTable from './AccomplishmentsTable';
+import PlanTasksBoard from './PlanTasksBoard';
 import { createPlan, refreshAsanaPlans } from '../../services/api/post';
+import { fetchAccomplishmentsBoard, fetchPlansBoard } from '../../services/api/get';
+import useResource from '../../hooks/useResource';
+import { KEYS } from '../../context/resourceKeys';
 import { workingGroupWebSafe } from "../../services/utils/tools";
+
+// Board working-group names -> the URL slugs PlansList buckets by.
+const WG_NAME_TO_SLUG = Object.fromEntries(
+    WORKING_GROUP_LIST.map((w) => [w.name, w.slug]),
+);
+
+function StatCard({ label, value, accent }) {
+    return (
+        <Box flex="1" bg="white" borderWidth="1px" borderColor="gray.200" borderRadius="lg"
+             boxShadow="sm" p={4} borderTopWidth="3px" borderTopColor={accent}>
+            <Text fontSize="xs" color="gray.700" textTransform="uppercase">{label}</Text>
+            <Text fontSize="2xl" fontWeight="bold" color="gray.800">{value}</Text>
+        </Box>
+    );
+}
 
 function PlansAccomplishmentsManager() {
     const { data, loading, loadSingleWorkingGroupData } = useContext(DataContext);
@@ -54,6 +72,45 @@ function PlansAccomplishmentsManager() {
     const { planId: initialPlanId } = useParams();
 
     const [activeTab, setActiveTab] = useState(0);
+
+    // The Plans tab reads its own board: one request carrying every visible
+    // plan WITH its task rollups (open / overdue / unowned / no-next-step),
+    // instead of walking the whole three-working-group dashboard payload
+    // client-side. The dashboard payload's one remaining job here is the
+    // add-plan form's YSE options.
+    const {
+        data: boardResp, loading: boardLoading, reload: reloadBoard,
+    } = useResource(
+        currentCampus && currentAcademicYear
+            ? KEYS.plansBoard(currentCampus, currentAcademicYear) : null,
+        () => fetchPlansBoard(currentCampus, currentAcademicYear),
+    );
+    const boardPlans = useMemo(() => (boardResp?.data?.plans || []).map((p) => ({
+        ...p,
+        workingGroup: WG_NAME_TO_SLUG[p.working_groups?.[0]] || p.working_groups?.[0] || null,
+        goalNumber: p.goal_numbers?.[0] ?? null,
+    })), [boardResp]);
+
+    const boardStats = useMemo(() => ({
+        total: boardPlans.length,
+        openTasks: boardPlans.reduce((n, p) => n + (p.tasks_open || 0), 0),
+        overdue: boardPlans.reduce((n, p) => n + (p.tasks_overdue || 0), 0),
+        noNextStep: boardPlans.filter((p) => p.no_next_step).length,
+    }), [boardPlans]);
+
+    // The Accomplishments tab reads its own board too (context columns
+    // included), so it no longer depends on the dashboard payload either.
+    const {
+        data: accResp, reload: reloadAccomplishments,
+    } = useResource(KEYS.accomplishmentsBoard, fetchAccomplishmentsBoard);
+    const accomplishmentRows = useMemo(
+        () => (accResp?.data?.accomplishments || []).map((a) => ({
+            ...a,
+            workingGroup: a.working_groups?.[0] || null,
+            goalNumber: a.goal_numbers?.[0] ?? null,
+        })),
+        [accResp],
+    );
     const { isOpen, onOpen, onClose } = useDisclosure();
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isAsanaRefreshing, setIsAsanaRefreshing] = useState(false);
@@ -189,6 +246,7 @@ function PlansAccomplishmentsManager() {
             // Reload data for the working group
             if (newPlanData.working_group) {
                 await loadSingleWorkingGroupData(workingGroupWebSafe(newPlanData.working_group));
+                await reloadBoard();
             }
 
             // Reset form and close modal
@@ -220,138 +278,9 @@ function PlansAccomplishmentsManager() {
         }
     };
 
-    const getAllPlans = () => {
-        const plans = [];
-        WORKING_GROUP_LIST.map((w) => w.dataKey).forEach(wg => {
-            if (data[wg]?.goals) {
-                data[wg].goals.forEach(goal => {
-                    // Goal-level plans with progress notes
-                    if (goal.plans_with_progress_notes && Array.isArray(goal.plans_with_progress_notes)) {
-                        goal.plans_with_progress_notes.forEach(planData => {
-                            if (planData.plan) {
-                                plans.push({
-                                    ...planData.plan.properties,
-                                    completed_year: planData.completed_year || null,
-                                    abandoned_year: planData.abandoned_year || null,
-                                    progress_notes: planData.progress_notes || [],
-                                    workingGroup: workingGroupWebSafe(wg),
-                                    goalNumber: goal.goal?.properties?.goal_number,
-                                    level: 'goal'
-                                });
-                            }
-                        });
-                    }
-                    // Fallback for backward compatibility
-                    else if (goal.plans && Array.isArray(goal.plans)) {
-                        goal.plans.forEach(plan => {
-                            plans.push({
-                                ...plan.properties,
-                                progress_notes: [],
-                                workingGroup: workingGroupWebSafe(wg),
-                                goalNumber: goal.goal?.properties?.goal_number,
-                                level: 'goal'
-                            });
-                        });
-                    }
-
-                    // Check indicator level
-                    if (goal.indicators && Array.isArray(goal.indicators)) {
-                        goal.indicators.forEach(indicator => {
-                            const indicatorInfo = indicator.indicator?.properties;
-
-                            // Check within evidences for plans
-                            if (indicator.evidences && Array.isArray(indicator.evidences)) {
-                                indicator.evidences.forEach(evidence => {
-                                    // Check for plans with notes first
-                                    if (evidence.plans_with_notes && Array.isArray(evidence.plans_with_notes)) {
-                                        evidence.plans_with_notes.forEach(planData => {
-                                            if (planData.plan) {
-                                                plans.push({
-                                                    ...planData.plan.properties,
-                                                    completed_year: planData.completed_year || null,
-                                                    abandoned_year: planData.abandoned_year || null,
-                                                    progress_notes: planData.progress_notes || [],
-                                                    workingGroup: workingGroupWebSafe(wg),
-                                                    goalNumber: goal.goal?.properties?.goal_number,
-                                                    yearIdentifier: evidence.evidence?.properties?.year_identifier,
-                                                    indicatorKey: indicatorInfo?.composite_key,
-                                                    indicatorDescription: indicatorInfo?.success_indicator,
-                                                    level: 'evidence'
-                                                });
-                                            }
-                                        });
-                                    }
-                                    // Fallback for backward compatibility
-                                    else if (evidence.plans && Array.isArray(evidence.plans)) {
-                                        evidence.plans.forEach(plan => {
-                                            plans.push({
-                                                ...plan.properties,
-                                                progress_notes: [],
-                                                workingGroup: workingGroupWebSafe(wg),
-                                                goalNumber: goal.goal?.properties?.goal_number,
-                                                yearIdentifier: evidence.evidence?.properties?.year_identifier,
-                                                indicatorKey: indicatorInfo?.composite_key,
-                                                indicatorDescription: indicatorInfo?.success_indicator,
-                                                level: 'evidence'
-                                            });
-                                        });
-                                    }
-                                });
-                            }
-                        });
-                    }
-                });
-            }
-        });
-
-        // Remove duplicates based on unique_id
-        const uniquePlans = plans.filter((plan, index, self) =>
-            index === self.findIndex((p) => p.unique_id === plan.unique_id)
-        );
-
-        // Year-scoped visibility. Hide plans that are completed or abandoned
-        // in a year other than the current selected year — they belong to
-        // some other year's books. Active plans (no completed/abandoned
-        // state) always pass through.
-        return uniquePlans.filter((plan) => {
-            // Completed in another year → hide
-            if (plan.completed_year && plan.completed_year !== currentAcademicYear) return false;
-            // Abandoned (with year) in another year → hide
-            if (plan.abandoned_year && plan.abandoned_year !== currentAcademicYear) return false;
-            // Legacy: abandoned=true with no abandoned_year edge → no year info, hide
-            if (plan.abandoned && !plan.abandoned_year) return false;
-            return true;
-        });
-    };
-
-    // Extract all accomplishments from data
-    const getAllAccomplishments = () => {
-        const accomplishments = [];
-        WORKING_GROUP_LIST.map((w) => w.dataKey).forEach(wg => {
-            if (data[wg]?.goals) {
-                data[wg].goals.forEach(goal => {
-                    // Goal-level accomplishments
-                    if (goal.accomplishments && Array.isArray(goal.accomplishments)) {
-                        goal.accomplishments.forEach(acc => {
-                            accomplishments.push({
-                                ...acc.properties,
-                                workingGroup: wg,
-                                goalNumber: goal.goal?.properties?.goal_number,
-                                level: 'goal'
-                            });
-                        });
-                    }
-                });
-            }
-        });
-
-        // Remove duplicates based on unique_id
-        const uniqueAccomplishments = accomplishments.filter((acc, index, self) =>
-            index === self.findIndex((a) => a.unique_id === acc.unique_id)
-        );
-
-        return uniqueAccomplishments;
-    };
+    // Plan rows come from the /plans/board read (boardPlans above); the old
+    // getAllPlans walk over the dashboard payload is gone with it.
+    // Accomplishment rows come from the /accomplishments/board read below.
 
     if (loading) {
         return (
@@ -370,8 +299,8 @@ function PlansAccomplishmentsManager() {
         );
     }
 
-    const plans = getAllPlans();
-    const accomplishments = getAllAccomplishments();
+    const plans = boardPlans;
+    const accomplishments = accomplishmentRows;
 
     return (
         <Box p={6} bg="gray.50" minH="100vh">
@@ -465,21 +394,58 @@ function PlansAccomplishmentsManager() {
                             >
                                 Accomplishments ({accomplishments.length})
                             </Tab>
+                            <Tab
+                                fontSize="sm"
+                                fontWeight="semibold"
+                                color="gray.600"
+                                _selected={{
+                                    color: 'teal.700',
+                                    borderBottomWidth: '2px',
+                                    borderBottomColor: 'teal.500',
+                                    bg: 'white'
+                                }}
+                                _hover={{
+                                    bg: 'white'
+                                }}
+                            >
+                                Tasks ({boardStats.openTasks})
+                            </Tab>
                         </TabList>
 
                         <TabPanels>
                             <TabPanel p={0}>
-                                <PlansSplitView
-                                    plans={plans}
-                                    onUpdate={loadSingleWorkingGroupData}
-                                    initialPlanId={initialPlanId}
-                                />
+                                {/* Diagnostic strip: what needs attention across every
+                                    visible plan, before any row is opened. */}
+                                <HStack spacing={4} p={4} pb={0} align="stretch">
+                                    <StatCard label="Plans" value={boardStats.total} accent="teal.400" />
+                                    <StatCard label="Open tasks" value={boardStats.openTasks}
+                                              accent={boardStats.openTasks > 0 ? 'blue.400' : 'gray.300'} />
+                                    <StatCard label="Overdue tasks" value={boardStats.overdue}
+                                              accent={boardStats.overdue > 0 ? 'red.400' : 'gray.300'} />
+                                    <StatCard label="No next step" value={boardStats.noNextStep}
+                                              accent={boardStats.noNextStep > 0 ? 'orange.400' : 'gray.300'} />
+                                </HStack>
+                                {boardLoading ? (
+                                    <HStack p={6} color="gray.700" fontSize="sm">
+                                        <Spinner size="sm" color="teal.500" />
+                                        <Text>Loading the plans board…</Text>
+                                    </HStack>
+                                ) : (
+                                    <PlansSplitView
+                                        plans={plans}
+                                        onUpdate={reloadBoard}
+                                        initialPlanId={initialPlanId}
+                                    />
+                                )}
                             </TabPanel>
                             <TabPanel p={0}>
                                 <AccomplishmentsTable
                                     accomplishments={accomplishments}
-                                    onUpdate={loadSingleWorkingGroupData}
+                                    onUpdate={reloadAccomplishments}
                                 />
+                            </TabPanel>
+                            <TabPanel p={0}>
+                                <PlanTasksBoard year={currentAcademicYear} />
                             </TabPanel>
                         </TabPanels>
                     </Tabs>

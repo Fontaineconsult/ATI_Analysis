@@ -1481,5 +1481,8 @@ implementations_view = ImplementationAPI.as_view('implementations_view')
 plans_view = ImplementationPlanAPI.as_view('plans_view')
 accomplishments_view = ImplementationAccomplishmentAPI.as_view('accomplishments_view')
 data_api_endpoints.add_url_rule('/implementations', view_func=implementations_view, methods=['GET', 'POST', 'PUT', 'DELETE'])
+# BACKWARD-COMPAT SHIMS: the canonical addresses are /plans and
+# /accomplishments (registered in plans.py against these same view
+# classes). These legacy rules stay so old callers keep working.
 data_api_endpoints.add_url_rule('/implementations/plans', view_func=plans_view, methods=['GET', 'POST', 'PUT', 'DELETE'])
 data_api_endpoints.add_url_rule('/implementations/accomplishments', view_func=accomplishments_view, methods=['GET', 'POST', 'PUT', 'DELETE'])
