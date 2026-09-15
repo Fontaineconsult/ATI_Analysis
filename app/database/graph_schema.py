@@ -1016,6 +1016,10 @@ class Plan(StructuredNode):
     asana_task_gid = StringProperty(index=True)
     asana_subtasks = RelationshipTo("AsanaSubtask", "has_asana_subtask")
 
+    # Meetings where this plan was on stage. Written by meeting mode's notes pad
+    # the first time a note lands under the plan (reverse of MeetingMinutes.discusses).
+    discussed_in = RelationshipFrom("MeetingMinutes", "discusses")
+
     #serialize
     def serialize(self):
         return {
@@ -1077,11 +1081,22 @@ class AsanaSubtask(StructuredNode):
     # then wins and resolves to a Person by email.
     assigned_to = RelationshipTo("Person", "assigned_to", cardinality=ZeroOrOne)
 
+    # The meeting whose note became this task. Set by meeting mode's "Make task"
+    # (a note typed on stage promoted to a subtask); a task added anywhere else
+    # has no such edge. Answers "which tasks came out of that meeting".
+    raised_in = RelationshipTo("MeetingMinutes", "raised_in", cardinality=ZeroOrOne)
+
     def serialize(self):
         person = self.assigned_to.single()
+        minutes = self.raised_in.single()
         return {
             "unique_id": self.unique_id,
             "asana_gid": self.asana_gid,
+            "raised_in": {
+                "unique_id": minutes.unique_id,
+                "title": minutes.title,
+                "meeting_date": minutes.meeting_date.isoformat() if minutes.meeting_date else None,
+            } if minutes else None,
             "name": self.name,
             "notes": self.notes,
             "completed": self.completed,
@@ -1977,6 +1992,12 @@ class MeetingMinutes(StructuredNode):
     # prepped by several documents — the 2026-08-07 library meeting had a background
     # guide AND a runsheet — so this side is unbounded.
     prepared_by_guides = RelationshipFrom("InterviewGuide", "resulted_in")
+
+    # Plans that were on stage during this meeting. An ASSERTED edge written by
+    # meeting mode when the first note lands under a plan's heading, so "which
+    # plans did the Web group discuss on Sep 12" is a graph query, not a text
+    # search over the Markdown body. Ingest may add more after the fact.
+    discusses = RelationshipTo("Plan", "discusses")
 
     def serialize(self):
         return {

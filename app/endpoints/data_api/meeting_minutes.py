@@ -5,8 +5,10 @@ URL surface (mounted at /ati/data-api/v1):
     GET    /meeting-minutes/plan/<wgp_identifier>
     GET    /meeting-minutes/working-group/<campus_abbrev>/<academic_year>/<working_group>
     GET    /meeting-minutes/item/<unique_id>
-    POST   /meeting-minutes                          (action-dispatch: create_meeting_minutes)
-    PUT    /meeting-minutes                          (action-dispatch: update / attach / detach / note)
+    POST   /meeting-minutes                          (action-dispatch: create_meeting_minutes,
+                                                      open_meeting_minutes_for_day)
+    PUT    /meeting-minutes                          (action-dispatch: update / attach / detach / note /
+                                                      append_entry)
     DELETE /meeting-minutes/<unique_id>
 
 A record anchors to a WorkingGroupPlan, which encodes campus + academic year + working group.
@@ -15,7 +17,10 @@ The `content` is Markdown (rendered readably on the frontend).
 from flask import request
 from flask.views import MethodView
 
-from app.database.queries.meeting_minutes.create import create_meeting_minutes
+from app.database.queries.meeting_minutes.create import (
+    create_meeting_minutes,
+    open_meeting_minutes_for_day,
+)
 from app.database.queries.meeting_minutes.read import (
     get_meeting_minutes,
     minutes_panel_for_plan,
@@ -28,6 +33,7 @@ from app.database.queries.meeting_minutes.update import (
     detach_document,
     detach_webpage,
     add_minutes_note,
+    append_minutes_entry,
     set_minutes_communities,
     set_minutes_participants,
     set_ontology_ingested,
@@ -91,6 +97,24 @@ class MeetingMinutesAPI(MethodView):
                     status="success", data=get_meeting_minutes(m.unique_id),
                     message="Meeting minutes created.",
                 ), 201
+
+            if action == "open_meeting_minutes_for_day":
+                # Meeting mode: today's record for a working group, created on
+                # first use. 200 when it already existed, 201 when made here.
+                missing = [k for k in ("campus_abbrev", "year_name", "working_group") if not data.get(k)]
+                if missing:
+                    return make_response(status="error", error=f"Missing required fields: {missing}"), 400
+                m, created = open_meeting_minutes_for_day(
+                    campus_abbrev=data["campus_abbrev"],
+                    year_name=data["year_name"],
+                    working_group=data["working_group"],
+                    meeting_date=data.get("meeting_date"),
+                    recorded_by_unique_id=data.get("recorded_by_unique_id"),
+                )
+                return make_response(
+                    status="success", data=get_meeting_minutes(m.unique_id),
+                    message="Meeting minutes created." if created else "Meeting minutes opened.",
+                ), (201 if created else 200)
 
             return make_response(status="error", error=f"Unknown action: {action}"), 400
 
@@ -165,6 +189,21 @@ class MeetingMinutesAPI(MethodView):
                     kwargs["note"] = data["note"]
                 result = set_ontology_ingested(unique_id, **kwargs)
                 return make_response(status="success", data=result, message="Ontology-ingest flag updated."), 200
+
+            if action == "append_entry":
+                # Meeting mode's notes pad: one timestamped line under the plan
+                # on stage; asserts minutes -[discusses]-> Plan on first use.
+                if not (data.get("text") or "").strip():
+                    return make_response(status="error", error="Missing required field: 'text'"), 400
+                result = append_minutes_entry(
+                    unique_id,
+                    data["text"],
+                    plan_unique_id=data.get("plan_unique_id"),
+                    author_unique_id=data.get("author_unique_id"),
+                    kind=data.get("kind") or "note",
+                    clock=data.get("clock"),
+                )
+                return make_response(status="success", data=result, message="Entry appended."), 200
 
             if action == "add_minutes_note":
                 if not data.get("content"):

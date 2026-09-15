@@ -132,12 +132,16 @@ def test_tasks_board_carries_plan_owner_and_overdue(board_fixture):
     sync_plan_subtasks(plan.unique_id, [
         {"gid": "zt1", "name": "overdue and open", "completed": False,
          "due_on": "2020-01-01"},
-        {"gid": "zt2", "name": "done", "completed": True, "due_on": "2020-01-01"},
+        {"gid": "zt2", "name": "done", "completed": True, "due_on": "2020-01-01",
+         "completed_at": "2026-09-01T17:00:00.000Z"},
     ])
 
     tasks = [t for t in tasks_board(CAMPUS, YEAR) if t["plan"]["unique_id"] == plan.unique_id]
     by_gid = {t["asana_gid"]: t for t in tasks}
     assert by_gid["zt1"]["overdue"] is True
+    # completed_at rides along so a "completed since last meeting" count needs no second read.
+    assert by_gid["zt2"]["completed_at"] == "2026-09-01T17:00:00.000Z"
+    assert by_gid["zt1"]["completed_at"] is None
     assert by_gid["zt1"]["plan"]["name"] == plan.name
     assert by_gid["zt2"]["overdue"] is False      # completed never counts as overdue
     # Rows from the hidden (other-year) plan never appear.

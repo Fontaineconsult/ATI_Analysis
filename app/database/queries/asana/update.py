@@ -125,3 +125,24 @@ def set_plan_asana_task_gid(plan_uid: str, task_gid: str) -> dict:
         return plan.serialize()
     except Exception as e:
         raise CrudError(f"Failed to set asana_task_gid on plan '{plan_uid}': {e}")
+
+
+def link_subtask_to_minutes(plan_uid: str, asana_gid: str, minutes_unique_id: str) -> dict:
+    """Record that a subtask came out of a meeting: subtask -[raised_in]-> MeetingMinutes.
+
+    Called after the Asana create when meeting mode's "Make task" promoted a
+    note. A subtask has at most one origin meeting; a repeat call with a
+    different meeting replaces the edge. Returns the refreshed row.
+    """
+    from app.database.graph_schema import MeetingMinutes
+
+    node = get_subtask_on_plan(plan_uid, asana_gid)
+    try:
+        minutes = MeetingMinutes.nodes.get(unique_id=minutes_unique_id)
+    except MeetingMinutes.DoesNotExist:
+        raise NotFoundError(f"MeetingMinutes {minutes_unique_id!r} not found")
+    try:
+        node.raised_in.replace(minutes)
+        return node.serialize()
+    except Exception as e:
+        raise CrudError(f"Failed to link subtask {asana_gid!r} to minutes: {e}")

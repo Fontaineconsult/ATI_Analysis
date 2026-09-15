@@ -59,6 +59,11 @@ def _serialize_minutes(m) -> dict:
     data["documents"] = [d.serialize() for d in m.supporting_documents.all()]
     data["webpages"] = [w.serialize() for w in m.supporting_webpages.all()]
     data["notes"] = [n.serialize() for n in m.notes.all()]
+    # Plans that were on stage (meeting mode's discusses edge), name-sorted.
+    data["discussed_plans"] = sorted(
+        ({"unique_id": p.unique_id, "name": p.name} for p in m.discusses.all()),
+        key=lambda p: (p["name"] or "").lower(),
+    )
     return data
 
 

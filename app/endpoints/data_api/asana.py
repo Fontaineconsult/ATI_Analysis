@@ -5,7 +5,7 @@ URL surface (mounted at /ati/data-api/v1):
     POST   /asana/refresh-plans          {campus_abbrev, year_name}
     GET    /asana/subtasks/<plan_uid>
     POST   /asana/subtasks/<plan_uid>    {name, notes?, due_on?, assignee_person_id?,
-                                          year_name, campus_abbrev?}
+                                          year_name, campus_abbrev?, minutes_unique_id?}
     PUT    /asana/subtasks/<plan_uid>    {asana_gid, completed? and/or name?/notes?/due_on?
                                           and/or assignee_person_id? (null unassigns)
                                           and/or status?/resolution_note? (the app-side
@@ -27,6 +27,7 @@ from flask import current_app, request
 from flask.views import MethodView
 
 from app.database.queries.asana.read import get_plan_subtasks
+from app.database.queries.asana.update import link_subtask_to_minutes
 from app.endpoints.data_api.errors.custom_exceptions import (
     CrudError,
     NotFoundError,
@@ -129,6 +130,12 @@ class AsanaSubtasksAPI(MethodView):
                     year_name=data["year_name"],
                     campus_abbrev=data.get("campus_abbrev"),
                     logger=lambda msg: current_app.logger.info("[asana] %s", msg),
+                )
+            if data.get("minutes_unique_id"):
+                # Meeting mode's "Make task": the note that became this subtask
+                # lives in a minutes record; keep the origin as an edge.
+                created = link_subtask_to_minutes(
+                    plan_uid, created["asana_gid"], data["minutes_unique_id"],
                 )
             return make_response(status="success", data=created), 201
         except Exception as e:
