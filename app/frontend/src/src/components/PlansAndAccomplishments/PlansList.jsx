@@ -37,7 +37,7 @@ const SORT_OPTIONS = [
 
 // Higher = needs eyes sooner: overdue tasks first, then In Progress plans
 // with no recorded next step, then whoever has the most open work.
-const attentionRank = (p) => (
+export const attentionRank = (p) => (
     (p.tasks_overdue || 0) * 10000
     + (p.no_next_step ? 1000 : 0)
     + (p.tasks_open || 0)

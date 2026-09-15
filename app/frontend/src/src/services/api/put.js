@@ -1724,6 +1724,21 @@ export const addQueryNote = async (uniqueId, content, createdByUniqueId = null) 
 };
 
 // --- Meeting minutes ---
+// Meeting mode's notes pad: one timestamped line under the plan on stage.
+// kind: 'note' | 'decision' | 'ask'. Returns the refreshed record with `appended_line`.
+export const appendMinutesEntry = async (uniqueId, { text, planUniqueId = null, authorUniqueId = null, kind = 'note', clock = null }) => {
+    const response = await axios.put(`${process.env.REACT_APP_API_URL}/meeting-minutes`, {
+        action: 'append_entry',
+        unique_id: uniqueId,
+        text,
+        ...(planUniqueId ? { plan_unique_id: planUniqueId } : {}),
+        ...(authorUniqueId ? { author_unique_id: authorUniqueId } : {}),
+        kind,
+        ...(clock ? { clock } : {}),
+    });
+    return response.data;
+};
+
 export const updateMeetingMinutes = async (uniqueId, fields) => {
     const response = await axios.put(`${process.env.REACT_APP_API_URL}/meeting-minutes`, {
         action: 'update_meeting_minutes',

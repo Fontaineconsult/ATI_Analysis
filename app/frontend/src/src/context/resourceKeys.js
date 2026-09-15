@@ -146,6 +146,8 @@ export const KEYS = {
     // Both panels of each pair read one key: the campus plan's working-group
     // section and the standalone panel show the same records.
     minutesForPlan: (planIdentifier) => `minutes:for-plan:${planIdentifier}`,
+    /** The same records resolved by coordinates (meeting mode's previous-meeting date). */
+    minutesForWorkingGroup: (campus, year, wg) => `minutes:for-wg:${campus}:${year}:${wg}`,
     queriesForPlan: (planIdentifier) => `queries:for-plan:${planIdentifier}`,
     /** The plan-less variant, when a working group has no plan record yet. */
     queriesForWorkingGroup: (campus, year, workingGroup) =>

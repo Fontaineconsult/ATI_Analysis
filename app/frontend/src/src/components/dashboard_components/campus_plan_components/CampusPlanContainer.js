@@ -1,4 +1,5 @@
 import React, { useContext, useMemo, useState } from 'react';
+import { Link as RouterLink } from 'react-router-dom';
 import {
     Alert,
     AlertIcon,
@@ -233,6 +234,10 @@ function CampusPlanContainer() {
             <HStack align="center" spacing={3} mb={4}>
                 <Heading as="h2" size="lg" color="gray.800">Campus Plan</Heading>
                 <Box flex="1" />
+                <Button as={RouterLink} to={`/${currentCampus}/present/plans`} size="sm" variant="outline" bg="white"
+                        colorScheme="teal" title="Open the plans deck for a shared screen">
+                    Meeting mode
+                </Button>
                 <Text fontSize="sm" color="gray.600">
                     {plan.campus?.name || currentCampus} · {plan.academic_year} ·{' '}
                     <Text as="span" fontFamily="mono" color="gray.600" whiteSpace="nowrap">{plan.plan_identifier}</Text>

@@ -1094,6 +1094,18 @@ export const fetchQuery = async (uniqueId) => {
 };
 
 // --- Meeting minutes ------------------------------------------------------------
+export const fetchMinutesPanelForWorkingGroup = async (campusAbbrev, academicYear, workingGroup) => {
+    try {
+        const response = await axios.get(
+            `${process.env.REACT_APP_API_URL}/meeting-minutes/working-group/${campusAbbrev}/${academicYear}/${encodeURIComponent(workingGroup)}`
+        );
+        return response.data;
+    } catch (error) {
+        console.error('Error fetching meeting minutes for working group:', error.message);
+        throw error;
+    }
+};
+
 export const fetchMinutesPanelForPlan = async (workingGroupPlanIdentifier) => {
     try {
         const response = await axios.get(

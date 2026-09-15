@@ -1,5 +1,5 @@
 import React, { useContext, useMemo, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { WORKING_GROUP_LIST } from '../../styles/workingGroupIdentity';
 import {
     Box,
@@ -31,7 +31,7 @@ import {
     useDisclosure,
     useToast
 } from '@chakra-ui/react';
-import { FaPlus, FaSyncAlt } from 'react-icons/fa';
+import { FaPlus, FaSyncAlt, FaDesktop } from 'react-icons/fa';
 import { DataContext } from '../../context/DataContext';
 import { SettingsContext } from '../../context/SettingsContext';
 import PlansSplitView from './PlansSplitView';
@@ -69,7 +69,8 @@ function PlansAccomplishmentsManager() {
     // FUTURE: when a dedicated single-plan detail view is built, this route
     // will instead mount that view (PlanDetailView or similar). The URL
     // shape stays the same; only the rendering swaps.
-    const { planId: initialPlanId } = useParams();
+    const { planId: initialPlanId, campus } = useParams();
+    const navigate = useNavigate();
 
     const [activeTab, setActiveTab] = useState(0);
 
@@ -318,6 +319,19 @@ function PlansAccomplishmentsManager() {
                             Plans & Accomplishments
                         </Heading>
                         <HStack spacing={3}>
+                            {activeTab === 0 && (
+                                <Button
+                                    size="sm"
+                                    variant="outline"
+                                    bg="white"
+                                    colorScheme="teal"
+                                    leftIcon={<FaDesktop />}
+                                    onClick={() => navigate(`/${campus}/present/plans${initialPlanId ? `/${initialPlanId}` : ''}`)}
+                                    title="Open the plans deck for a shared screen"
+                                >
+                                    Meeting mode
+                                </Button>
+                            )}
                             {activeTab === 0 && (
                                 <Button
                                     size="sm"
