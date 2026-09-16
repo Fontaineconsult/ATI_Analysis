@@ -1,86 +1,93 @@
 # Search guide: VPAT, ACR review, and ICT procurement review
 
-Compiled 2026-09-16. Scope is the external canon around accessibility conformance
-reporting and procurement review. This is deliberately NOT campus evidence. Nothing
-here is an Implementation, a Document, or a Webpage hanging off a campus YSE. These
-are the instruments and the methods the campuses are measured against, which is why
-they belong in the Governance area rather than in evidence.
+Compiled 2026-09-16, revised the same day after the routing rule was corrected.
 
-The findings below come from web search, not from fetching each page. Every entry is
-marked for whether its Source Text still has to be pulled. The ETL fetches; this guide
-decides what to fetch and where it lands.
+Scope is the external canon around accessibility conformance reporting and procurement
+review. This is deliberately NOT campus evidence. Nothing here is an Implementation, a
+Document, or a Webpage hanging off a campus YSE.
 
-## 1. The routing rule
+The findings come from web search, not from fetching each page. Every entry is marked for
+whether its Source Text still has to be pulled. The ETL fetches; this guide decides what
+to fetch and where it lands.
 
-Governance and IntellectualSource are both `derives_from` targets for a Principle.
-Governance grounds a principle in mandate. IntellectualSource grounds it in theory or
-method. The line that decides which one a source is:
+## 1. What an intellectual source is for
 
-> **Does this instrument have authority over the CSU, or is it a method we borrow?**
+An intellectual source carries **no authority**. Nothing in it obliges a campus to do
+anything. That is the whole distinction from Governance, and it is why the two are
+separate tabs rather than one list with a type filter.
 
-A source that binds us is Governance, under the type that matches its force. A source
-that teaches a way of working, with no authority over us, is an IntellectualSource,
-however official it is in its own jurisdiction. Massachusetts publishes an ACR review
-checklist that binds Commonwealth agencies. It does not bind the CSU. For this graph it
-is a borrowed method, so it lands as an IntellectualSource, and the guide says so out
-loud rather than inflating it into a directive.
+What it is instead: **read material a campus draws on when authoring a new
+implementation, or when an existing one turns out to be behind what the field knows.**
+The second half matters as much as the first. A campus Process written in 2019 against
+WCAG 2.0 is not wrong, it is dated, and the thing that reveals it as dated is a source
+like these rather than an audit finding. An intellectual source is how evidence gets
+updated rather than only graded.
 
-Two corollaries worth stating, because both are easy to get wrong.
+Three tests, all of which have to pass.
 
-- **A federal standard binds us; federal implementation guidance mostly does not.** The
-  Revised Section 508 Standards are a rule. Section508.gov's buying guidance is GSA
-  telling federal agencies how to comply. The CSU is not a federal agency, so that
-  guidance is a method, not a mandate.
-- **A template is not a standard.** The VPAT is an industry template published by a trade
-  association. It carries no legal force anywhere. It is in the Governance area as a
-  Guideline only because procurement practice treats it as the required artifact, and
-  because EN 301 549 and Section 508 are what it reports against.
+1. **No authority over the CSU.** If it binds us, it is Governance.
+2. **Read material, not a thing you join or buy.** A consortium's testing program is a
+   service. If the CSU joined it, participation would be a campus Implementation, and the
+   program would be its subject rather than its grounding. Same for a vendor product.
+3. **An idea: theory, model, method, or scholarship.** Not a description of someone's
+   operations.
 
-## 2. A schema gap the ETL will hit
+### Why Section 508 material is Governance, not theory
 
-`IntellectualSource` carries `unique_id`, `name` (unique, required), `description_short`
-and `description_full`. It has no URL field and no `raw_text`.
+California Government Code Section 7405 adopts Section 508 for California state entities,
+and the CSU is one. That statute is already a Law node in this graph. So the Section 508
+apparatus reaches us through California law, and everything in it that sets a requirement
+is Governance however procedural it reads. The Revised Standards, the ICT Testing
+Baseline, and the federal program's own buying guidance all sit on the Governance side
+for that reason. This corrects the first draft of this guide, which filed the federal
+buying guidance as a borrowed method.
 
-Every source in this guide is a web document. Without a URL the node cannot be traced
-back to what it says, and without `raw_text` it is unreadable to `/maturity-status-reviewer`
-and to vector search, which is the whole reason Governance types carry Source Text.
+The line does not run between "standard" and "method". It runs between what reaches us as
+a requirement and what we choose to read.
 
-The proposal, which the ETL depends on and which is not yet written:
+## 2. The schema change, now made
 
-```
-class IntellectualSource(StructuredNode):
-    ...
-    url        = StringProperty()   # where the source lives
-    raw_text   = StringProperty()   # agent-readable mirror, same contract as Governance
-    raw_text_captured = DateTimeProperty()   # stamped by the query layer, moves only on change
-```
+`IntellectualSource` previously carried `unique_id`, `name`, `description_short` and
+`description_full`. Every source in this guide is a document, so those four fields made
+the nodes names without sources.
 
-That mirrors the `RAW_TEXT_FIELD` the six Governance types already share, and it makes
-`/get-source-text` work against intellectual sources without a second code path. Until it
-lands, the ETL can only write `name` and the two descriptions, and every source text has
-to be re-fetched later.
+Added in `graph_schema.py`, with the query layer updated to match:
 
-Decide this before the ETL, not after. Adding `url` afterwards means backfilling by hand.
+| Field | Purpose |
+|---|---|
+| `url` | Where the source lives. The record of truth. |
+| `raw_text` | Agent-readable mirror, same contract as Webpage and Document. |
+| `raw_text_captured` | When the snapshot was taken. Stamped by the query layer, never accepted from the caller, and moves only when the text itself changes. |
+| `author` | Whose thinking this is. A principle grounded in scholarship has to say whose. |
+| `publisher` | The body that issued it. |
+| `published_date` | A source's age is what says whether the field has moved on. |
+| `citation` | The full formal citation, where author plus publisher does not let a reader find the work again. |
+
+`create.py` stamps `raw_text_captured` on create and coerces `published_date` through a
+`_coerce_date` that raises `ValidationError` rather than letting a client typo escape as a
+500. `update.py` handles `raw_text` outside the patch loop on the governance contract, so
+an unrelated edit cannot make a stale mirror look freshly captured, and clearing the text
+clears the date. Verified through a Flask boot: 11 properties present, bad dates rejected,
+read path intact.
+
+This means `/get-source-text` can fill these nodes with no second code path.
 
 ## 3. What is already in the graph
 
-70 governance items exist. Zero IntellectualSource nodes exist. Four governance items
-carry Source Text.
+70 governance items. Zero IntellectualSource nodes. Four governance items carry Source
+Text.
 
-Already present, so the ETL must MERGE rather than create:
+The ETL must MERGE rather than create against: Revised Section 508 Standards (36 CFR Part
+1194) (2017); Revised Section 508 Standards and Section 255 Guidelines (ICT Refresh); EN
+301 549 (V3.2.1, 2021); WCAG 2.0, 2.1 and 2.2; WCAG Evaluation Methodology (WCAG-EM) 2.0;
+California Government Code Section 7405; TAAP Authoring Template.
 
-- Revised Section 508 Standards (36 CFR Part 1194) (2017), a Guideline.
-- Revised Section 508 Standards and Section 255 Guidelines (ICT Refresh), a Directive.
-- EN 301 549 (V3.2.1, 2021), a Guideline.
-- WCAG 2.0, 2.1 and 2.2, Guidelines.
-- WCAG Evaluation Methodology (WCAG-EM) 2.0, a Guideline.
-- Section 508 of the Rehabilitation Act of 1973, a Law. Note the duplicate:
-  "Rehabilitation Act of 1973, Section 508" is a second node for the same statute. The
-  ETL should not add a third, and the duplicate is already on the graph work backlog.
-- TAAP Authoring Template, a Guideline, with 18,612 characters of Source Text.
+Note the duplicate: "Section 508 of the Rehabilitation Act of 1973" and "Rehabilitation
+Act of 1973, Section 508" are two nodes for one statute. Do not add a third. Already on
+the graph work backlog.
 
-Absent, which is the gap this guide fills: the VPAT itself, anything from Section508.gov,
-the ICT Testing Baseline, WCAG2ICT, and every ACR review method.
+Absent, which is the gap this guide fills: the VPAT itself, Section508.gov, the ICT
+Testing Baseline, WCAG2ICT, and every ACR review method.
 
 ## 4. Governance candidates
 
@@ -102,9 +109,11 @@ confidence: high
 source_text: REQUIRED, not yet fetched
 notes: >-
   Version 2.5Rev, April 2025, per ITI. Confirm the version at fetch time, because ITI
-  revises this without renaming the page. The template is distributed as .doc, so the
-  fetch will need the document rather than the landing page. This node is the anchor
-  every ACR review method below points back at.
+  revises this without renaming the page. Distributed as .doc, so the fetch needs the
+  document rather than the landing page. The template itself carries no legal force
+  anywhere, but it is Governance here because it is the required artifact in the
+  procurement chain that Section 508 and Gov Code 7405 put us in. This node is the anchor
+  every review method in section 5 points back at.
 ```
 
 ### 4.2 Section 508 ICT Testing Baseline
@@ -114,7 +123,7 @@ type: Guideline
 merge_key: title
 properties:
   title: "Section 508 ICT Testing Baseline"
-  description: "The minimum tests and evaluation guidance that determine whether content meets Section 508 requirements. Maintained by the U.S. Access Board. Covers a Baseline for Web and a Baseline for Documents, with software and hardware baselines in development. Reduces ambiguity about what a conformance claim was actually tested against."
+  description: "The minimum tests and evaluation guidance that determine whether content meets Section 508 requirements. Maintained by the U.S. Access Board. Covers a Baseline for Web and a Baseline for Documents, with software and hardware baselines in development. Establishes what a conformance claim was actually tested against."
 sources:
   - url: "https://ictbaseline.access-board.gov/"
     title: "Section 508 ICT Testing Baseline Portfolio, U.S. Access Board"
@@ -125,9 +134,8 @@ sources:
 confidence: high
 source_text: REQUIRED, not yet fetched
 notes: >-
-  Access Board authorship is what makes this Governance rather than method. It is the
-  test procedure behind a credible ACR, so it is the instrument an ACR review cites when
-  asking how a vendor tested. Pairs with WCAG-EM, already in the graph.
+  Access Board authorship, and it defines conformance to a standard that reaches us
+  through Gov Code 7405. Pairs with WCAG-EM, already in the graph.
 ```
 
 ### 4.3 WCAG2ICT
@@ -149,12 +157,10 @@ sources:
 confidence: high
 source_text: REQUIRED, not yet fetched
 notes: >-
-  Borderline case, resolved toward Governance because W3C is the body that publishes the
-  standard the CSU is measured against, and because WCAG 2.0 through 2.2 are already
-  Guideline nodes here. The note is explicitly informative, and the description says so,
-  which is the honest version. It matters for procurement because most purchased ICT is
-  not a website, and WCAG2ICT is what makes a WCAG claim meaningful for a desktop
-  application or a PDF.
+  W3C publishes the standard we are measured against, and WCAG 2.0 through 2.2 are already
+  Guideline nodes here. The note is explicitly informative and the description says so.
+  It matters because most purchased ICT is not a website, and WCAG2ICT is what makes a
+  WCAG claim meaningful for a desktop application or a PDF.
 ```
 
 ### 4.4 Section 508 program guidance on buying accessible ICT
@@ -164,7 +170,7 @@ type: Directive
 merge_key: title
 properties:
   title: "Section508.gov Guidance on Accessibility in Procurement"
-  description: "The U.S. federal Section 508 program's guidance for buying accessible ICT, covering how to define accessibility criteria in solicitations, pre-solicitation and post-solicitation review, and the tools that support it. Administered by GSA."
+  description: "The U.S. federal Section 508 program's guidance for buying accessible ICT: how to define accessibility criteria in solicitations, pre-solicitation and post-solicitation review, and the supporting tools. Includes the Accessibility Requirements Tool (ART), which generates the accessibility requirement statements belonging in a solicitation, and the Solicitation Review Tool (SRT), which checks a drafted solicitation for them. Administered by GSA."
 sources:
   - url: "https://www.section508.gov/buy/define-accessibility-criteria/"
     title: "Define Accessibility Criteria in Contracts, Section508.gov"
@@ -172,140 +178,114 @@ sources:
   - url: "https://www.section508.gov/buy/accessibility-in-procurement-pre-solicitation-2/"
     title: "Accessibility in Procurement II: Solicitation and Post-Solicitation"
     accessed: "2026-09-16"
-confidence: medium
+  - url: "https://www.section508.gov/tools/list-of-art-requirements/"
+    title: "Accessibility Requirements Tool (ART) Requirements Statements by ICT"
+    accessed: "2026-09-16"
+confidence: high
 source_text: REQUIRED, not yet fetched
 notes: >-
-  Filed as Directive because it is an official instruction guiding implementation, which
-  is the type's definition, and because GSA administers the federal 508 program. The
-  reservation, which the description should not hide: it instructs federal agencies, and
-  the CSU is a state entity. If the working group would rather not imply it binds us,
-  the alternative filing is IntellectualSource. Flagged for a decision rather than
-  decided here.
+  Governance, on the Gov Code 7405 reasoning in section 1. The first draft of this guide
+  had this as an open question and ART/SRT as a separate intellectual source; both are
+  resolved here. ART and SRT are tools within the federal program rather than theory, so
+  they are described on this node instead of getting nodes of their own. ART's generated
+  requirement statements are the concrete thing a campus procurement procedure would
+  borrow, which makes this the highest-value fetch in section 4.
 ```
 
 ## 5. IntellectualSource candidates
 
-These teach a method. None has authority over the CSU. This is the first content the new
-tab would hold, and it is also the honest answer to the question the CSUEB and SF State
-library interviews both raised, which is what a campus is actually expected to DO with a
-conformance report once it has one.
+Five. Each passes all three tests in section 1: no authority over us, read material, an
+idea rather than an operation. This is the first content the new tab would hold.
 
-### 5.1 Accessibility Requirements Tool and Solicitation Review Tool
-
-```yaml
-type: IntellectualSource
-merge_key: name
-properties:
-  name: "GSA Accessibility Requirements Tool (ART) and Solicitation Review Tool (SRT)"
-  description_short: "Two federal tools that generate accessibility requirement language for a solicitation and then check a draft solicitation for it."
-  description_full: >-
-    ART produces the accessibility requirement statements that belong in a solicitation,
-    selected by the kind of ICT being bought. SRT checks a drafted solicitation for
-    sufficient accessibility requirements before it goes out. Together they turn "include
-    accessibility requirements" from an instruction into a generated artifact, which is
-    the step most campus procurement processes are missing. The method transfers even
-    though the federal contracting vocabulary does not.
-sources:
-  - url: "https://www.section508.gov/tools/list-of-art-requirements/"
-    title: "Accessibility Requirements Tool (ART) Requirements Statements by ICT"
-    accessed: "2026-09-16"
-confidence: medium
-source_text: REQUIRED, not yet fetched
-notes: >-
-  Grounds a principle about requirements being generated rather than remembered. Relevant
-  to 1.9-pro and 4.6-pro.
-```
-
-### 5.2 Commonwealth of Massachusetts ACR Review Checklist
+### 5.1 Commonwealth of Massachusetts ACR Review Checklist
 
 ```yaml
 type: IntellectualSource
 merge_key: name
 properties:
   name: "Commonwealth of Massachusetts Accessibility Conformance Report Review Checklist"
-  description_short: "A yes/no checklist for judging whether a vendor's ACR is credible, published by the Commonwealth of Massachusetts."
+  description_short: "A yes/no method for judging whether a vendor's conformance report is credible."
   description_full: >-
     Each check is a yes/no question where "yes" supports the report's validity. The checks
     cover who completed the report and whether they had accessibility expertise or were a
     reputable third party, whether it measures conformance against WCAG 2.1 or 2.2 levels
     A and AA, and whether the Remarks and Explanations column carries detail for every
     criterion marked Partially Supports or Does Not Support. It is the clearest published
-    answer to the question of what reviewing an ACR means beyond collecting it.
+    answer to what reviewing a conformance report means beyond collecting one.
+  url: "https://www.mass.gov/info-details/accessibility-conformance-report-review"
+  publisher: "Commonwealth of Massachusetts"
 sources:
-  - url: "https://www.mass.gov/info-details/accessibility-conformance-report-review"
-    title: "Accessibility Conformance Report Review, Mass.gov"
-    accessed: "2026-09-16"
   - url: "https://www.mass.gov/doc/accessibility-conformance-report-review-checklist/download"
     title: "Accessibility Conformance Report Review Checklist (download)"
     accessed: "2026-09-16"
 confidence: high
 source_text: REQUIRED, not yet fetched
 notes: >-
-  The routing rule's worked example. This binds Massachusetts agencies and has no force
-  here, so it is method rather than mandate despite being a government instrument. The
-  highest-value item in this guide for the library and procurement interviews, because
-  SF State's library stated plainly that it performs no substantive review of conformance
-  reports, and this document is what substantive review would look like.
+  The worked example of test 1. A government instrument with real force in its own
+  jurisdiction and none over us, so it is read material here. The highest-value item in
+  this guide for authoring: SF State's library said plainly it performs no substantive
+  review of conformance reports, and this is what a substantive review procedure would be
+  written from.
 ```
 
-### 5.3 Harvard, How to Interpret a VPAT
+### 5.2 Harvard, How to Interpret a VPAT
 
 ```yaml
 type: IntellectualSource
 merge_key: name
 properties:
-  name: "Harvard University Digital Accessibility Services, How to Interpret a VPAT"
-  description_short: "A university guide to reading a conformance report, including the patterns that indicate a report was not taken seriously."
+  name: "How to Interpret a VPAT (Harvard Digital Accessibility Services)"
+  description_short: "A guide to reading a conformance report, including the patterns that show it was not taken seriously."
   description_full: >-
     Written for non-specialist buyers. Names the red flags directly: an empty Remarks
     column, a bare "Partially Supports" with no context, a document where nearly every row
     reads Supports or Not Applicable, missing version numbers, and an outdated report.
-    Peer-institution provenance makes it usable as a template for campus guidance.
-sources:
-  - url: "https://accessibility.huit.harvard.edu/interpret-vpat"
-    title: "How to Interpret a VPAT, Harvard Digital Accessibility Services"
-    accessed: "2026-09-16"
+  url: "https://accessibility.huit.harvard.edu/interpret-vpat"
+  publisher: "Harvard University Digital Accessibility Services"
 confidence: high
 source_text: REQUIRED, not yet fetched
+notes: >-
+  Teaching material rather than a description of Harvard's operations, which is what keeps
+  it on the right side of test 3.
 ```
 
-### 5.4 University of Michigan, Evaluate Compliance Documentation
+### 5.3 University of Michigan, Evaluate Compliance Documentation
 
 ```yaml
 type: IntellectualSource
 merge_key: name
 properties:
-  name: "University of Michigan, Evaluate Compliance Documentation"
-  description_short: "Michigan's published criteria for whether a VPAT is current, relevant, and sufficient for the product being bought."
+  name: "Evaluate Compliance Documentation (University of Michigan)"
+  description_short: "Three tests a conformance report must pass before it counts as evidence."
   description_full: >-
-    Sets three tests a report must pass before it counts: created or updated within the
-    past year, written against WCAG, and specific to the product and version under
-    consideration. The version test is the one campuses most often skip, because vendors
-    supply a report for a product line rather than the release being licensed.
-sources:
-  - url: "https://accessibility.umich.edu/how-to/procurement-vendors/evaluate-compliance"
-    title: "Evaluate Compliance Documentation, accessibility.umich.edu"
-    accessed: "2026-09-16"
+    A report must be created or updated within the past year, written against WCAG, and
+    specific to the product and version under consideration. The version test is the one
+    campuses most often skip, because vendors supply a report for a product line rather
+    than for the release being licensed.
+  url: "https://accessibility.umich.edu/how-to/procurement-vendors/evaluate-compliance"
+  publisher: "University of Michigan"
 confidence: high
 source_text: REQUIRED, not yet fetched
 ```
 
-### 5.5 Impact tiering and the review committee model
+### 5.4 Impact-tiered ICT accessibility review
 
 ```yaml
 type: IntellectualSource
 merge_key: name
 properties:
   name: "Impact-tiered ICT accessibility review"
-  description_short: "The practice of sizing an accessibility review to a product's reach, so that high-impact purchases get independent testing and low-impact ones do not."
+  description_short: "A model that sizes the depth of an accessibility review to a product's reach."
   description_full: >-
     High-impact products get an in-depth review, including testing that validates rather
     than accepts the vendor's claims. Medium-impact products are reviewed at a committee's
     discretion. Where barriers are found and the purchase proceeds, it proceeds on an
     Equally Effective Alternate Access Plan naming the barriers, the workaround, how
     barriers are communicated, the resources required, and who is responsible. The model
-    appears in substantially the same form at several universities, which is what makes it
-    a pattern rather than one campus's local arrangement.
+    resolves the problem that verifying every purchase is impossible and verifying none of
+    them is negligent, by making reach the thing that decides.
+confidence: medium
+source_text: REQUIRED for at least two of the sources, not yet fetched
 sources:
   - url: "https://www.mtu.edu/accessibility/policies/procedures/procurement/"
     title: "ICT Procurement Procedures, Michigan Technological University"
@@ -319,156 +299,126 @@ sources:
   - url: "https://www.section508.gov/blog/Accessibility-risk-management-and-model/"
     title: "Accessibility Risk Management and Risk Model for ICT, Section508.gov"
     accessed: "2026-09-16"
-confidence: medium
-source_text: REQUIRED for at least two of the four, not yet fetched
 notes: >-
-  A synthesized node rather than one document, which is a judgment call the ETL should
-  surface for approval. The alternative is four nodes, one per campus, which multiplies
-  near-identical content. Directly relevant to 4.6-pro, where CSUEB's own campus-level
-  EAP process is retired.
+  A synthesized node, which the ETL should surface for approval rather than assume. The
+  model is the intellectual source; each university's page is one instance of it, and
+  those pages are other campuses' evidence rather than ours. That is the reason to
+  synthesize instead of creating four nodes. Directly relevant to 4.6-pro, where CSUEB's
+  own campus-level EAP process is retired.
 ```
 
-### 5.6 Library Accessibility Alliance
-
-```yaml
-type: IntellectualSource
-merge_key: name
-properties:
-  name: "Library Accessibility Alliance"
-  description_short: "A library consortium that funds independent third-party accessibility evaluations of vendor e-resources and publishes the results with vendor responses."
-  description_full: >-
-    Formed from the Big Ten Academic Alliance e-resource accessibility group, which began
-    in 2015, partnered with ASERL in 2019, and expanded in 2021 with the Greater Western
-    Library Alliance and the Washington Research Library Consortium. Evaluations are
-    performed by outside firms against WCAG 2.1 AA, supplied to vendors at no charge, and
-    vendors may respond and attend a consultation. It is the working answer to the problem
-    a single library cannot solve, which is that verifying a vendor's accessibility claim
-    costs more expertise than any one library has.
-sources:
-  - url: "https://btaa.org/library/programs-and-services/reports"
-    title: "Library Accessibility Alliance, Big Ten Academic Alliance"
-    accessed: "2026-09-16"
-  - url: "https://btaa.org/library/programs-and-services/reports/library-e-resource-accessibility--testing"
-    title: "Library E-Resource Accessibility, Testing"
-    accessed: "2026-09-16"
-confidence: high
-source_text: REQUIRED, not yet fetched
-notes: >-
-  The single most useful item for 7.11-ins. SF State's library said it has no independent
-  capacity to verify a 40-page conformance report. This is the standing arrangement other
-  consortia built for exactly that, and the published evaluations are usable evidence
-  about named products. Ask in the CSUEB library interview whether the CSU participates.
-```
-
-### 5.7 Standardized e-resource accessibility license language
-
-```yaml
-type: IntellectualSource
-merge_key: name
-properties:
-  name: "Standardized accessibility license language for library e-resources"
-  description_short: "Model contract clauses obliging a vendor to warrant accessibility conformance, developed by library consortia."
-  description_full: >-
-    The clause obliges the licensor to warrant that licensed materials conform to WCAG at
-    level AA and comply with applicable federal and state disability law, bars the vendor
-    from disclaiming that warranty elsewhere in the contract, seeks indemnification for
-    breach, and requires a current completed VPAT. It moves accessibility from a document
-    collected before purchase to a term enforceable after it, which is a different and
-    stronger position than conformance reporting alone.
-sources:
-  - url: "https://btaa.org/library/reports/library-e-resource-accessibility---standardized-license-language"
-    title: "Library E-Resource Accessibility, Standardized License Language, BTAA"
-    accessed: "2026-09-16"
-  - url: "https://trln.org/wp-content/uploads/2022/12/TRLN-Guide-to-Negotiating-Accessibility-in-E-Resource-Licenses_December-2022.pdf"
-    title: "TRLN Guide to Negotiating Accessibility in E-Resource Licenses (2022)"
-    accessed: "2026-09-16"
-confidence: high
-source_text: REQUIRED, not yet fetched
-notes: >-
-  The TRLN guide is a PDF, so /get-source-text will need the document path rather than the
-  page. Relevant to 7.11-ins and to 1.9-pro, since consortial and systemwide database
-  licensing is where this language would be applied.
-```
-
-### 5.8 VPATs in the e-resource procurement lifecycle (peer-reviewed)
+### 5.5 Prioritizing Accessibility in the E-Resources Procurement Lifecycle
 
 ```yaml
 type: IntellectualSource
 merge_key: name
 properties:
   name: "Prioritizing Accessibility in the E-Resources Procurement Lifecycle"
-  description_short: "Peer-reviewed treatment of VPATs as a working tool across acquisition and remediation in academic libraries."
+  description_short: "Peer-reviewed treatment of conformance reports as a working tool across acquisition and remediation in academic libraries."
   description_full: >-
-    Published in Serials Review. Treats the conformance report as an instrument used
-    throughout an acquisition lifecycle rather than a gate passed once at purchase, and
-    connects acquisition decisions to the remediation work that follows them. It is the
-    only scholarly item in this guide, which makes it the clearest example of what
-    IntellectualSource was built for.
-sources:
-  - url: "https://www.tandfonline.com/doi/full/10.1080/0361526X.2020.1722020"
-    title: "Prioritizing Accessibility in the E-Resources Procurement Lifecycle, Serials Review (2020)"
-    accessed: "2026-09-16"
+    Treats the conformance report as an instrument used throughout an acquisition lifecycle
+    rather than a gate passed once at purchase, and connects acquisition decisions to the
+    remediation work that follows them.
+  url: "https://www.tandfonline.com/doi/full/10.1080/0361526X.2020.1722020"
+  publisher: "Serials Review (Taylor and Francis)"
+  published_date: "2020-01-01"
+  citation: "Serials Review, 2020. DOI 10.1080/0361526X.2020.1722020."
 confidence: medium
 source_text: LIKELY BLOCKED, publisher paywall
 notes: >-
-  Expect a 403 from Taylor and Francis. Per /get-source-text, a paywall is reported as a
-  manual-paste finding and never summarized from the abstract. The node is still worth
-  creating, because a citable scholarly grounding for a principle is exactly the case the
-  node type exists for, and the description above is drawn from the title and publication
-  rather than from claims about its contents.
+  The purest case for this node type: scholarship, no authority, read to author. Expect a
+  403 from Taylor and Francis. Per /get-source-text, a paywall is a manual-paste finding
+  and is never summarised from the abstract. The description above is drawn from the title
+  and publication rather than from claims about the contents. Confirm the exact issue,
+  volume and authors at fetch time before filling `citation`.
 ```
 
 ## 6. Deliberately excluded
 
-- **SF State's ATI procurement procedure and Sonoma's VPAT page.** Both surfaced in the
-  search. Both are campus evidence, already the subject of Implementation nodes, and they
-  belong on a YSE rather than in the Governance area. Putting a campus's own practice in
-  with the external canon would let a campus cite itself as the standard it is measured
-  against.
-- **Vendor and consultancy marketing.** Level Access, accessiBe, TestPros, BarrierBreak,
-  and similar pages ranked well and describe the VPAT accurately. They are commercial
-  content promoting a service. Excluded on provenance, not on accuracy.
-- **CSU Northridge and other CSU campus procurement pages.** Same reason as SF State and
-  Sonoma, with the added problem that a sibling CSU campus's practice reads as systemwide
-  when it is not.
+- **The Library Accessibility Alliance.** Reclassified out of this guide on test 2. It is
+  a program that funds third-party WCAG 2.1 AA evaluations of vendor e-resources and
+  publishes them, run by the Big Ten Academic Alliance with ASERL, GWLA and WRLC. That is
+  a service a library joins, not an idea a library reads. If the CSU or a campus library
+  participates, that participation is a campus Implementation and the Alliance is its
+  subject. **It is still worth asking about in the CSUEB library interview**, because SF
+  State's library said it has no capacity to verify a 40-page conformance report and this
+  is the standing arrangement other consortia built for exactly that. It belongs in the
+  interview guide, not in the ontology as theory.
+- **BTAA and TRLN model license language.** Dropped from the intellectual-source list on
+  the same test, with less certainty. Model contract clauses obliging a vendor to warrant
+  WCAG AA conformance, barring disclaimer, and seeking indemnification are read material a
+  campus would draw on. But they are the output of a consortium's licensing operation
+  rather than a theory, and the CSU's own licensing runs through the Chancellor's Office
+  rather than through these consortia. **Flagged for your call**: if you want it, it is one
+  node covering both, and the TRLN guide is a PDF the fetch will need directly.
+- **GSA ART and SRT.** Folded into section 4.4 as tools within the federal program. They
+  are software, not theory.
+- **SF State's ATI procurement procedure, Sonoma's VPAT page, CSU Northridge's procurement
+  pages.** Campus evidence. Putting a campus's practice in with the canon would let a
+  campus cite itself as the standard it is measured against.
+- **Vendor and consultancy content.** Level Access, accessiBe, TestPros, BarrierBreak.
+  Accurate and commercial. Excluded on provenance, not accuracy.
 - **Wikipedia.** Usable to confirm a date, not to ground a principle.
 
 ## 7. What the tab needs
 
-The backend is done. `IntellectualSource` has the node class, full CRUD in
-`app/database/queries/intellectual_sources/`, and a MethodView registered at
-`/intellectual-sources`. The API service functions exist in `services/api/{get,post,put}.js`.
+The backend is now complete: node class with provenance, full CRUD in
+`app/database/queries/intellectual_sources/`, a MethodView at `/intellectual-sources`, and
+the API service functions in `services/api/{get,post,put}.js`.
 
-Missing, in the order it has to be built:
+Missing, in build order:
 
 1. `components/graph_components/intellectual_sources/intellectualSourceTypes.js`, the
-   structural field registry, matching `principleTypes.js`. Add `url` and `raw_text` once
-   section 2 is decided.
-2. `IntellectualSourceList.js`, `IntellectualSourceDetailPanel.js`, `IntellectualSourceForm.js`,
-   following the principles trio.
+   structural field registry matching `principleTypes.js`. Eleven fields now, with
+   `raw_text` as a `markdown` type so it gets the same editor the governance Source Text
+   field uses.
+2. `IntellectualSourceList.js`, `IntellectualSourceDetailPanel.js`,
+   `IntellectualSourceForm.js`, following the principles trio.
 3. `IntellectualSourceMasterContainer.js` in `ati_explorer_containers/`.
-4. A third tab in `GovernanceArea.js`. The tab index is currently a binary, so
-   `activeTab === 'principles' ? 1 : 0` and the matching `handleTabChange` both need to
-   become a lookup over three route slugs.
-5. The `/:campus/ati-explorer/intellectual-sources` route in `App.js`, rendering
-   `GovernanceArea` with `activeTab="intellectual-sources"`.
-6. `PrincipleGroundingTags.js` and `PrincipleSourceBadge.js` already handle
+4. A third tab in `GovernanceArea.js`. The tab index is currently a binary
+   (`activeTab === 'principles' ? 1 : 0`), so it and `handleTabChange` both become a
+   lookup over three route slugs.
+5. The `/:campus/ati-explorer/intellectual-sources` route in `App.js`.
+6. Field descriptors. `seed_descriptors.py` line 62 already lists `IntellectualSource`
+   among the described labels, but `FIELD_DESCRIPTORS` has no entries for its fields, so
+   the form would render without prose. The seven new fields need descriptor text.
+7. `PrincipleGroundingTags.js` and `PrincipleSourceBadge.js` already handle
    IntellectualSource as a `derives_from` target. Verify rather than rebuild.
 
-## 8. Open decisions for the ETL
+## 8. Two principles this work would ground
 
-1. **Does `IntellectualSource` get `url` and `raw_text`?** Section 2. Everything else
-   waits on this, because without it these nodes are names without sources.
-2. **Is Section508.gov procurement guidance a Directive or an IntellectualSource?**
-   Section 4.4. It turns on whether we are willing to imply federal buying guidance
-   instructs the CSU.
-3. **Is impact tiering one synthesized node or four campus nodes?** Section 5.5.
-4. **Does the VPAT node supersede or sit beside the two duplicate Section 508 statute
-   nodes?** Neither, but the duplicate is on the graph work backlog and this ETL is a
+Checked against the live graph on 2026-09-16. All 16 principles are grounded, and every
+grounding is a Law, Directive, Memo or Guideline, because IntellectualSource has never had
+an instance to point at.
+
+**`graph-work-backlog.md` section 3 is stale here.** It says
+`universal-design-over-accommodation` "remains ungrounded and without a `description_full`,
+and it may want an `IntellectualSource` rather than a Law." That principle now has three
+groundings and a full description. The principle with no `description_full` today is
+`institution-wide-responsibility`. Correct the backlog when someone next touches it.
+
+The instinct behind it was right, and the live graph sharpens it.
+
+- **`principle:universal-design-over-accommodation`** is grounded in ADA Title II,
+  California Government Code Section 7405, and Section 508. All three are statutes.
+  Universal design is a design movement, not a statutory invention, so the principle cites
+  the mandate that adopted the idea and not the idea itself. The source is not in this
+  guide, because this guide is about procurement review. Ron Mace and the Center for
+  Universal Design at NC State is the target for a separate pass.
+- **`principle:vendor-leverage-procurement-as-accessibility-lever`** has exactly one
+  grounding, the ATI Directive, the thinnest in the graph. It is also the principle this
+  guide is about. Sections 5.1 and 5.4 ground it in method: judging a conformance claim
+  and sizing review to reach are two ways of exercising the leverage the principle
+  asserts. One CSU directive and nothing else understates what is known about how that
+  leverage works.
+
+## 9. Open decisions for the ETL
+
+1. **BTAA and TRLN model license language: in or out?** Section 6. The only genuine
+   borderline left after the routing rule was corrected.
+2. **Impact tiering as one synthesized node or four?** Section 5.4.
+3. **The duplicate Section 508 statute nodes.** Already on the backlog; this ETL is a
    reasonable moment to settle it.
-5. **Which of these ground which Principle?** No Principle currently derives from
-   anything in this guide, and no IntellectualSource exists to derive from. The
-   `derives_from` edges are a second pass, after the nodes exist and their Source Text is
-   in hand. Writing the edges from these descriptions instead of from the sources would
-   be reasoning from a summary, which the graph work backlog already names as the thing
-   not to do.
+4. **`derives_from` edges are a second pass.** After the nodes exist and their Source Text
+   is in hand. Writing them from the descriptions above rather than from the sources would
+   be reasoning from a summary, which the backlog already names as the thing not to do.

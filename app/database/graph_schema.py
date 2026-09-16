@@ -145,11 +145,43 @@ class IntellectualSource(StructuredNode):
     (e.g. Ostrom's commons design principles). Sits alongside Governance as a `derives_from`
     target — law/policy ground a principle DOWN to mandate; intellectual sources ground it
     DOWN to theory.
+
+    An intellectual source carries NO authority. Nothing here obliges a campus to do
+    anything, which is the whole distinction from Governance. It is read material: the
+    body of thinking a campus draws on when AUTHORING a new implementation, or when an
+    existing implementation turns out to be behind what the field knows. A conformance
+    standard that binds us is Governance even when it reads like a method; a theory or a
+    model stays here even when a government published it.
+
+    Two things this is not. It is not a service or a program you could join, because a
+    joined program becomes a campus Implementation. It is not a vendor's description of
+    its own offering.
+
+    Provenance mirrors the Webpage/Document contract (`url` + `raw_text` +
+    `raw_text_captured`) so /get-source-text works against these without a second code
+    path. `author`, `publisher`, `published_date` and `citation` carry the attribution a
+    theory needs and a webpage does not: a principle grounded in scholarship has to say
+    whose scholarship, and a source's age is what says whether the field has moved on.
     """
     unique_id = UniqueIdProperty()
     name = StringProperty(unique_index=True, required=True)
     description_short = StringProperty()
     description_full = StringProperty()
+
+    # Provenance. `url` is the record of truth; `raw_text` is a snapshot of it, and
+    # `raw_text_captured` says when the snapshot was taken. For sources behind a
+    # paywall or an SSO wall, paste the content as Markdown rather than summarising
+    # the abstract.
+    url = StringProperty()
+    raw_text = StringProperty()
+    raw_text_captured = DateProperty()
+
+    # Attribution. `citation` is the full formal citation for scholarly items, where a
+    # bare author plus publisher does not let a reader find the work again.
+    author = StringProperty()
+    publisher = StringProperty()
+    published_date = DateProperty()
+    citation = StringProperty()
 
     def serialize(self):
         return {
@@ -157,6 +189,13 @@ class IntellectualSource(StructuredNode):
             "name": self.name,
             "description_short": self.description_short,
             "description_full": self.description_full,
+            "url": self.url,
+            "raw_text": self.raw_text,
+            "raw_text_captured": self.raw_text_captured.isoformat() if self.raw_text_captured else None,
+            "author": self.author,
+            "publisher": self.publisher,
+            "published_date": self.published_date.isoformat() if self.published_date else None,
+            "citation": self.citation,
         }
 
 
