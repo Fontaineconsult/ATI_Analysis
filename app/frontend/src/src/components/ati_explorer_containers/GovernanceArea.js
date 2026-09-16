@@ -3,27 +3,33 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Tabs, TabList, TabPanels, Tab, TabPanel } from '@chakra-ui/react';
 import GovernanceMasterContainer from './GovernanceMasterContainer';
 import PrincipleMasterContainer from './PrincipleMasterContainer';
+import IntellectualSourceMasterContainer from './IntellectualSourceMasterContainer';
 
 /**
  * The Governance area of the ATI Explorer, tabbed into:
- *   - Governance Items  — laws / cases / directives / policies / memos / guidelines
- *   - Principles        — the framework's conceptual commitments, grounded in governance/theory
+ *   - Governance Items     — laws / cases / directives / policies / memos / guidelines
+ *   - Principles           — the framework's conceptual commitments, grounded in governance/theory
+ *   - Intellectual Sources — the theory and method a campus reads; carries NO authority
  *
- * The active tab is URL-DRIVEN (same pattern as the rest of the explorer): the
- * `/ati-explorer/governance...` routes render this with activeTab="governance" and the
- * `/ati-explorer/principles...` routes with activeTab="principles". Switching tabs navigates,
- * so each tab — and each selected item within it — is deep-linkable. `isLazy` mounts only the
- * active tab's container.
+ * The three sit together because a Principle grounds DOWN into either of the other two:
+ * governance grounds it in mandate, an intellectual source grounds it in theory.
  *
- * Props: activeTab — 'governance' | 'principles' (set by the route).
+ * The active tab is URL-DRIVEN (same pattern as the rest of the explorer): each tab has its
+ * own route slug, so both the tab and the item selected within it are deep-linkable.
+ * `isLazy` mounts only the active tab's container.
+ *
+ * Props: activeTab — 'governance' | 'principles' | 'intellectual-sources' (set by the route).
  */
+const TAB_SLUGS = ['governance', 'principles', 'intellectual-sources'];
+
 function GovernanceArea({ activeTab = 'governance' }) {
     const navigate = useNavigate();
     const { campus } = useParams();
-    const tabIndex = activeTab === 'principles' ? 1 : 0;
+    // An unrecognised slug falls back to the first tab rather than rendering nothing.
+    const tabIndex = Math.max(0, TAB_SLUGS.indexOf(activeTab));
 
     const handleTabChange = (index) => {
-        navigate(`/${campus}/ati-explorer/${index === 1 ? 'principles' : 'governance'}`);
+        navigate(`/${campus}/ati-explorer/${TAB_SLUGS[index] || TAB_SLUGS[0]}`);
     };
 
     return (
@@ -31,6 +37,7 @@ function GovernanceArea({ activeTab = 'governance' }) {
             <TabList>
                 <Tab>Governance Items</Tab>
                 <Tab>Principles</Tab>
+                <Tab>Intellectual Sources</Tab>
             </TabList>
             <TabPanels>
                 <TabPanel px={0}>
@@ -38,6 +45,9 @@ function GovernanceArea({ activeTab = 'governance' }) {
                 </TabPanel>
                 <TabPanel px={0}>
                     <PrincipleMasterContainer />
+                </TabPanel>
+                <TabPanel px={0}>
+                    <IntellectualSourceMasterContainer />
                 </TabPanel>
             </TabPanels>
         </Tabs>

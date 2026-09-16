@@ -1518,6 +1518,50 @@ export const attachShapeToPrinciple = (principleHandle, descriptorHandle) =>
 export const detachShapeFromPrinciple = (principleHandle, descriptorHandle) =>
     _principleAttachDetach('detach_shape', principleHandle, { descriptor_handle: descriptorHandle });
 
+
+//
+// INTELLECTUAL SOURCES
+//
+// Field patch sends no action, which is what this endpoint did before the informs edges
+// existed. raw_text is sent like any other field; the query layer stamps
+// raw_text_captured and moves it only when the text itself changes, so re-sending the
+// same text does not refresh the date.
+//
+export const updateIntellectualSource = async (uniqueId, fields) => {
+    try {
+        const response = await axios.put(`${process.env.REACT_APP_API_URL}/intellectual-sources`, {
+            unique_id: uniqueId,
+            ...fields,
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error updating intellectual source:', error);
+        throw error;
+    }
+};
+
+// informs — the source shaped what an implementation says. Heterogeneous target, so the
+// server resolves the label from the unique_id and refuses anything that is not an
+// implementation.
+const _sourceInformsAction = async (action, uniqueId, implementationUniqueId) => {
+    try {
+        const response = await axios.put(`${process.env.REACT_APP_API_URL}/intellectual-sources`, {
+            action,
+            unique_id: uniqueId,
+            implementation_unique_id: implementationUniqueId,
+        });
+        return response.data;
+    } catch (error) {
+        console.error(`Error on intellectual-source ${action}:`, error);
+        throw error;
+    }
+};
+
+export const attachInformedImplementation = (uniqueId, implementationUniqueId) =>
+    _sourceInformsAction('attach_informed_implementation', uniqueId, implementationUniqueId);
+export const detachInformedImplementation = (uniqueId, implementationUniqueId) =>
+    _sourceInformsAction('detach_informed_implementation', uniqueId, implementationUniqueId);
+
 // Replace a doing-implementation's AMM-dimension classification (replace-semantics:
 // dimensionHandles is the full intended set). Only Process/Project/Procedure/Service.
 export const setImplementationDimensions = async (implementationType, implementationUniqueId, dimensionHandles) => {
