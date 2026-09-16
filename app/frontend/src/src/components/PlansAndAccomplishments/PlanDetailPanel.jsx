@@ -17,16 +17,16 @@ import {
 import { LinkIcon } from '@chakra-ui/icons';
 import { useParams } from 'react-router-dom';
 import PlanEditForm from './PlanEditForm';
-import PlanProgressNotes from './PlanProgressNotes';
-import PlanAsanaSubtasks from './PlanAsanaSubtasks';
+import PlanProgress from './PlanProgress';
 import AssociatedYearSuccessEvidence from './AssociatedYearSuccessEvidence';
 import { getPlanStatusColorScheme } from '../../styles/planStatusColors';
 
 /**
  * Right-column detail/edit view for the plans split layout. Composes the
  * existing PlanEditForm (which already handles the related-YSE sidebar and
- * the abandoned/completed state) and PlanProgressNotes alongside a header
- * with the plan's identity badges.
+ * the abandoned/completed state) and the Progress section (Asana subtasks
+ * as the plan's first-order progress records) alongside a header with the
+ * plan's identity badges.
  *
  * Props:
  *   plan          The selected plan object (or null).
@@ -167,26 +167,17 @@ function PlanDetailPanel({ plan, onAfterEdit, placeholder }) {
                 />
             </Box>
 
-            {/* Asana subtasks (read-only mirror; Asana owns these) */}
+            {/* Progress — the plan's Asana subtasks, first-order and writable.
+                Pre-merge Note-based progress notes render read-only inside. */}
             <Box bg="white" borderWidth="1px" borderColor="gray.200" borderRadius="lg" boxShadow="sm" p={5}>
                 <Heading as="h3" size="sm" color="teal.700" mb={3}>
-                    Asana Subtasks
+                    Progress
                 </Heading>
                 <Divider mb={4} borderColor="gray.200" />
-                <PlanAsanaSubtasks key={plan.unique_id} planUniqueId={plan.unique_id} />
-            </Box>
-
-            {/* Progress notes */}
-            <Box bg="white" borderWidth="1px" borderColor="gray.200" borderRadius="lg" boxShadow="sm" p={5}>
-                <Heading as="h3" size="sm" color="teal.700" mb={3}>
-                    Progress Notes
-                </Heading>
-                <Divider mb={4} borderColor="gray.200" />
-                <PlanProgressNotes
+                <PlanProgress
                     key={plan.unique_id}
                     planUniqueId={plan.unique_id}
-                    planName={plan.name}
-                    progressNotesData={plan.progress_notes || []}
+                    legacyNotes={plan.progress_notes || []}
                 />
             </Box>
         </VStack>

@@ -269,7 +269,7 @@ export const createCommunity = async ({ name, description }) => {
 
 export const createPlan = async (formData) => {
     try {
-        const response = await axios.post(`${process.env.REACT_APP_API_URL}/implementations/plans`, createPlanPayload(formData));
+        const response = await axios.post(`${process.env.REACT_APP_API_URL}/plans`, createPlanPayload(formData));
         return response.data;
     } catch (error) {
         console.error('Error creating plan:', error);
@@ -319,7 +319,7 @@ export const createStatusLevel = async (formData) => {
 export const createAccomplishment = async (formData) => {
     try {
         const response = await axios.post(
-            `${process.env.REACT_APP_API_URL}/implementations/accomplishments`,
+            `${process.env.REACT_APP_API_URL}/accomplishments`,
             createAccomplishmentPayload(formData)
         );
         return response.data;
@@ -741,6 +741,28 @@ export const refreshAsanaPlans = async (campusAbbrev, yearName) => {
     }
 };
 
+// Add one progress subtask to a plan. Created in Asana first (the year names
+// the Asana project; an unlinked plan gets its task created on the way), then
+// recorded in the graph as the first-order row the app reads back.
+export const addPlanSubtask = async (planUid, { name, notes = null, dueOn = null, assigneePersonId = null, yearName, campusAbbrev = null, minutesUniqueId = null }) => {
+    try {
+        const response = await axios.post(`${process.env.REACT_APP_API_URL}/asana/subtasks/${planUid}`, {
+            name,
+            ...(notes ? { notes } : {}),
+            ...(dueOn ? { due_on: dueOn } : {}),
+            ...(assigneePersonId ? { assignee_person_id: assigneePersonId } : {}),
+            year_name: yearName,
+            ...(campusAbbrev ? { campus_abbrev: campusAbbrev } : {}),
+            // Meeting mode's Make task: the minutes the note came from (raised_in edge).
+            ...(minutesUniqueId ? { minutes_unique_id: minutesUniqueId } : {}),
+        });
+        return response.data?.data;
+    } catch (error) {
+        console.error('Error adding plan subtask:', error);
+        throw error;
+    }
+};
+
 // --- Queries (pending questions) ---
 // payload: { question, working_group_plan_identifier? | (campus_abbrev, year_name,
 // working_group), category?, detail?, raised_by_unique_id? }
@@ -769,6 +791,21 @@ export const createMeetingMinutes = async (payload) => {
         return response.data;
     } catch (error) {
         console.error('Error creating meeting minutes:', error);
+        throw error;
+    }
+};
+
+// Meeting mode: today's minutes for a working group, created on first use.
+// payload: { campus_abbrev, year_name, working_group, meeting_date?, recorded_by_unique_id? }
+export const openMeetingMinutesForDay = async (payload) => {
+    try {
+        const response = await axios.post(`${process.env.REACT_APP_API_URL}/meeting-minutes`, {
+            action: 'open_meeting_minutes_for_day',
+            ...payload,
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error opening meeting minutes for the day:', error);
         throw error;
     }
 };

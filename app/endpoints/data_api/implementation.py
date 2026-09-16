@@ -1024,14 +1024,18 @@ class ImplementationPlanAPI(MethodView):
                 if field not in data:
                     raise ValidationError(f"Missing required field: '{field}'")
 
-            # Call the add_plan function with the received data
-            add_plan(data)
+            # The created plan comes back so the caller can open it (meeting
+            # mode puts it on stage) without a second read.
+            plan = add_plan(data)
 
-            # Return a success response
-            return make_response({"status": "success", "message": "Plan added successfully"}), 201
+            return make_response(
+                status="success", data={"plan": plan}, message="Plan added successfully",
+            ), 201
 
         except ValidationError as e:
             return make_response(status="error", error=str(e)), 400
+        except NotFoundError as e:
+            return make_response(status="error", error=str(e)), 404
         except CrudError as e:
             return make_response(status="error", error=str(e)), 500
         except Exception as e:
@@ -1481,5 +1485,8 @@ implementations_view = ImplementationAPI.as_view('implementations_view')
 plans_view = ImplementationPlanAPI.as_view('plans_view')
 accomplishments_view = ImplementationAccomplishmentAPI.as_view('accomplishments_view')
 data_api_endpoints.add_url_rule('/implementations', view_func=implementations_view, methods=['GET', 'POST', 'PUT', 'DELETE'])
+# BACKWARD-COMPAT SHIMS: the canonical addresses are /plans and
+# /accomplishments (registered in plans.py against these same view
+# classes). These legacy rules stay so old callers keep working.
 data_api_endpoints.add_url_rule('/implementations/plans', view_func=plans_view, methods=['GET', 'POST', 'PUT', 'DELETE'])
 data_api_endpoints.add_url_rule('/implementations/accomplishments', view_func=accomplishments_view, methods=['GET', 'POST', 'PUT', 'DELETE'])

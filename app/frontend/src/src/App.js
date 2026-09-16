@@ -16,7 +16,7 @@ import {
     VisuallyHidden
 } from '@chakra-ui/react';
 import { ChevronDownIcon } from '@chakra-ui/icons';
-import { Routes, Route, NavLink as RouterNavLink, Navigate, useParams, useNavigate, useLocation } from 'react-router-dom';
+import { Routes, Route, NavLink as RouterNavLink, Navigate, useParams, useNavigate, useLocation, useMatch } from 'react-router-dom';
 import { useData } from './hooks/useData';
 import useRouteAnnouncer from './hooks/useRouteAnnouncer';
 import { UserContext } from './context/UserContext';
@@ -24,6 +24,7 @@ import { useAuth } from './context/AuthContext';
 import AtiExplorer from './components/AtiExplorer';
 import Dashboard from './components/Dashboard';
 import About from './components/About';
+import PresentShell from './components/present/PresentShell';
 import SubNavbar from './components/SubNavbar';
 import GlobalActivityIndicator from './components/functional_components/GlobalActivityIndicator';
 import YseAvailabilityBanner from './components/functional_components/YseAvailabilityBanner';
@@ -89,6 +90,22 @@ function AppContent() {
 
     const campusDisplayName = getCampusName(campus);
     const routeAnnouncement = useRouteAnnouncer();
+
+    // Meeting mode is its own shell: no header, no sub nav, no page container.
+    // Everything above (contexts, campus sync, the announcer) still applies.
+    const presenting = useMatch('/:campus/present/*');
+    if (presenting) {
+        return (
+            <>
+                <VisuallyHidden aria-live="polite" role="status">{routeAnnouncement}</VisuallyHidden>
+                <Routes>
+                    <Route path="present/plans" element={<PresentShell />} />
+                    <Route path="present/plans/:planId" element={<PresentShell />} />
+                    <Route path="present/*" element={<Navigate to="present/plans" replace />} />
+                </Routes>
+            </>
+        );
+    }
 
     return (
         <>

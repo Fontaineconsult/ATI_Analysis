@@ -149,3 +149,39 @@ def create_meeting_minutes(title: str,
         return minutes
     except Exception as e:
         raise CrudError(f"Failed to create MeetingMinutes: {e}")
+
+
+def open_meeting_minutes_for_day(campus_abbrev: str, year_name: str, working_group: str,
+                                 meeting_date: str = None,
+                                 recorded_by_unique_id: str = None) -> tuple:
+    """Find today's minutes record for a working group, or create it.
+
+    Meeting mode's notes pad calls this once per working group per meeting: the
+    grain is one MeetingMinutes per working group per calendar day, which is
+    the grain the Campus Plan minutes panel already shows. `meeting_date`
+    defaults to today. When a record for that day exists the most recently
+    created one is returned unchanged (the recorder is not reassigned), so
+    two presenters opening the same meeting share one record.
+
+    Returns (minutes, created) where created is True when a record was made.
+    Raises ValidationError / NotFoundError on bad coordinates.
+    """
+    wgp = _resolve_working_group_plan(None, campus_abbrev, year_name, working_group)
+    day = _parse_date(meeting_date) or date.today()
+
+    existing = [m for m in wgp.meeting_minutes.all() if m.meeting_date == day]
+    if existing:
+        existing.sort(key=lambda m: (m.date_created or date.min, m.unique_id), reverse=True)
+        return existing[0], False
+
+    wg_node = wgp.working_group.single()
+    wg_label = wg_node.name if wg_node else working_group
+    title = f"{wg_label} working group, {day.isoformat()}"
+    minutes = create_meeting_minutes(
+        title=title,
+        content=None,
+        working_group_plan_identifier=wgp.plan_identifier,
+        meeting_date=day.isoformat(),
+        recorded_by_unique_id=recorded_by_unique_id,
+    )
+    return minutes, True

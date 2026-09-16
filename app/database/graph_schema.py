@@ -14,7 +14,8 @@ from app.data_config import (trajectory_choices, asset_classes, asset_scopes, ta
                              functions, component_kinds, coverage_domains, audiences, interface_provenances,
                              descriptor_kinds, query_categories, query_statuses, evidence_control_choices,
                              recommendation_statuses, concern_statuses, followup_statuses,
-                             evidence_requirement_levels, evidence_requirement_elements)
+                             evidence_requirement_levels, evidence_requirement_elements,
+                             plan_statuses)
 
 # Configuration enters through the single gateway (app/config_gateway.py). Importing
 # it hydrates os.environ from web.config (production) / .env.<FLASK_ENV> (development),
@@ -995,7 +996,13 @@ class Plan(StructuredNode):
     # and stamping "today" would be a lie the graph then treats as fact.
     completed_date = DateProperty()
 
-    plan_status = StringProperty()
+    # Vocabulary-constrained since 2026-09-09: the free-form string carried
+    # historical variants ('Complete') that made status unreliable; the live
+    # values were normalized (batch/normalize_plan_status.cypher backfilled
+    # the NULLs) and the property now enforces data_config.plan_statuses,
+    # the same source the update validator and the FE options already use.
+    plan_status = StringProperty(choices={s: s for s in plan_statuses},
+                                 default="Not Started")
     progress_updates = RelationshipTo("Note", "progress_documented_by")
     abandoned_year = RelationshipTo("AcademicYear", "abandoned_in_year")
     completed_year = RelationshipTo("AcademicYear", "completed_in_year")
@@ -1008,6 +1015,17 @@ class Plan(StructuredNode):
     # (set by the connector on first push) and the subtasks mirrored back.
     asana_task_gid = StringProperty(index=True)
     asana_subtasks = RelationshipTo("AsanaSubtask", "has_asana_subtask")
+
+    # Meetings where this plan was on stage. Written by meeting mode's notes pad
+    # the first time a note lands under the plan (reverse of MeetingMinutes.discusses).
+    discussed_in = RelationshipFrom("MeetingMinutes", "discusses")
+
+    # The meeting in which this plan was proposed. Set by meeting mode's "New
+    # plan" when the form is sent minutes_unique_id (queries/implementation/
+    # create.add_plan); a plan created anywhere else has no such edge. The
+    # same predicate AsanaSubtask.raised_in uses, so "what came out of that
+    # meeting" is one pattern over both labels.
+    raised_in = RelationshipTo("MeetingMinutes", "raised_in", cardinality=ZeroOrOne)
 
     #serialize
     def serialize(self):
@@ -1039,24 +1057,67 @@ class AsanaSubtask(StructuredNode):
     asana_gid = StringProperty(unique_index=True, required=True)
 
     name = StringProperty()
+    notes = StringProperty()          # the description body, mirrored both ways
     completed = BooleanProperty(default=False)
     completed_at = StringProperty()   # ISO timestamp from Asana, verbatim
+
+    # The state tracker, same vocabulary and visuals as the plan's own status.
+    # LOCAL first-order fields: Asana carries no status enum and no resolution
+    # text, so sync never overwrites them. The one coupling is completion,
+    # which Asana does know: task_status 'Completed' and Asana's completed
+    # flag are kept in step in both directions (see _apply in
+    # queries/asana/create.py and set_plan_subtask_status in the connector).
+    # resolution_note mirrors the plan's completion/abandoned notes idea:
+    # how the task ended, in one field, whatever the terminal status was.
+    task_status = StringProperty(choices={s: s for s in plan_statuses},
+                                 default="Not Started")
+    resolution_note = StringProperty()
     due_on = StringProperty()         # ISO date from Asana, verbatim
-    assignee_name = StringProperty()
+    assignee_name = StringProperty()  # display mirror, whoever Asana reports
+    assignee_email = StringProperty() # the reconciliation key for assigned_to
     permalink_url = StringProperty()
     last_synced = StringProperty()    # ISO timestamp of the refresh that wrote this
 
     plan = RelationshipFrom("Plan", "has_asana_subtask")
 
+    # The Person on the hook — APP-SIDE data, like task_status. Asana accepts
+    # only workspace members as actors ("Not a valid actor ID" otherwise), so
+    # an in-app assignment writes the edge plus the name/email as generic
+    # text and sends nothing to Asana. The sync leaves it alone unless Asana
+    # itself reports an assignee (a workspace member assigned there), which
+    # then wins and resolves to a Person by email.
+    assigned_to = RelationshipTo("Person", "assigned_to", cardinality=ZeroOrOne)
+
+    # The meeting whose note became this task. Set by meeting mode's "Make task"
+    # (a note typed on stage promoted to a subtask); a task added anywhere else
+    # has no such edge. Answers "which tasks came out of that meeting".
+    raised_in = RelationshipTo("MeetingMinutes", "raised_in", cardinality=ZeroOrOne)
+
     def serialize(self):
+        person = self.assigned_to.single()
+        minutes = self.raised_in.single()
         return {
             "unique_id": self.unique_id,
             "asana_gid": self.asana_gid,
+            "raised_in": {
+                "unique_id": minutes.unique_id,
+                "title": minutes.title,
+                "meeting_date": minutes.meeting_date.isoformat() if minutes.meeting_date else None,
+            } if minutes else None,
             "name": self.name,
+            "notes": self.notes,
             "completed": self.completed,
             "completed_at": self.completed_at,
+            "task_status": self.task_status,
+            "resolution_note": self.resolution_note,
             "due_on": self.due_on,
             "assignee_name": self.assignee_name,
+            "assignee_email": self.assignee_email,
+            "assigned_to": {
+                "unique_id": person.unique_id,
+                "name": person.name,
+                "employee_id": person.employee_id,
+            } if person else None,
             "permalink_url": self.permalink_url,
             "last_synced": self.last_synced,
         }
@@ -1938,6 +1999,18 @@ class MeetingMinutes(StructuredNode):
     # prepped by several documents — the 2026-08-07 library meeting had a background
     # guide AND a runsheet — so this side is unbounded.
     prepared_by_guides = RelationshipFrom("InterviewGuide", "resulted_in")
+
+    # Plans that were on stage during this meeting. An ASSERTED edge written by
+    # meeting mode when the first note lands under a plan's heading, so "which
+    # plans did the Web group discuss on Sep 12" is a graph query, not a text
+    # search over the Markdown body. Ingest may add more after the fact.
+    discusses = RelationshipTo("Plan", "discusses")
+
+    # Plans proposed in this meeting (reverse of Plan.raised_in). Distinct from
+    # discusses: a plan can be discussed without having been raised here, and
+    # a plan raised here is normally also discussed (its "New plan" line lands
+    # under its heading).
+    raised_plans = RelationshipFrom("Plan", "raised_in")
 
     def serialize(self):
         return {

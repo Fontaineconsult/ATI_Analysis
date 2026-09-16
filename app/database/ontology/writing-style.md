@@ -109,6 +109,55 @@ Right: "The content is good, but it only reaches people who turn up."
 The same applies to cause. "It is graded Defined because the attendance list is
 missing" beats two sentences that leave the reader to infer the link.
 
+**Active voice. Name who acts.** Passive hides the actor, and in this project the
+actor is usually the finding. "The course is remediated" leaves out that a
+student assistant does it. "Responsibility has been assigned" leaves out whether
+anyone signed anything. Put the actor in the subject and let them act. Passive is
+right only when nobody knows who acted, or when the thing acted on is the subject
+of the paragraph and the actor genuinely does not matter.
+
+**Do not stack nouns.** Three or more abstractions in a row stop being a phrase
+and become a label the reader has to unpack.
+
+Wrong: "Accessibility Services publishes the term calendar and faculty
+obligations."
+Right: "Accessibility Services sets the deadlines faculty work to."
+
+The same fault wears a verb when a document is the one acting. A page that
+"states the obligation", "sets out the framework", "carries the program" or
+"holds the guidance" is a noun stack with a verb dropped in the middle. Say what
+it tells a person to do.
+
+Wrong: "CIC 47 states the faculty obligation for LMS course accessibility."
+Right: "CIC 47 tells faculty to build Canvas courses that meet WCAG."
+
+The tell is repetition of shape. If every sentence in a paragraph runs [document]
+[verb] [abstract noun phrase], the paragraph is a list of labels and no one in it
+is doing anything. Fix it by finding the people: who writes it, who runs it, who
+reads it, who is left out.
+
+**Stop compounding.** Two clauses joined by "and" is a sentence. Four is a list
+someone forgot to punctuate. When every sentence in a paragraph runs "X, and Y",
+the reader loses which pairs matter, because everything is joined at the same
+strength. Join with "and" only when the second clause depends on the first.
+Otherwise use a full stop.
+
+**Keep list items the same shape.** A list only reads as a list if its items are
+parallel. "Dated waves, a one-page checklist for this year, and workshops through
+the term" runs bare-plural, then singular-with-qualifier, then plural-with-
+qualifier, so the reader restarts three times. Either make them match or stop
+writing it as a list and say the thing in a sentence.
+
+**Vary the length.** A paragraph of medium sentences reads as one flat tone, and
+the reader has nowhere to rest. Put a short sentence where the point lands. This
+matters most in dense passages: a paragraph carrying WCAG, UDOIT and three
+product names needs a four-word sentence in it more than a plain one does.
+
+**Do not jump subjects.** Consecutive sentences that each open on a different
+actor make the reader rebuild the connection every time. Follow one person or one
+thing through the passage and let the others enter as they act on it. Where the
+subject has to change, name the relation in the sentence that changes it.
+
 **State a request as a request.** Anything you want someone to do is an
 imperative or a direct question, with the actor named. A noun phrase is not an
 ask, and the reader has to guess what to do with it.
@@ -188,6 +237,37 @@ because that is what a Concern is.
 **No throat-clearing.** Cut sentences that announce what the writing is about to
 do. "It is worth noting that" and "this section covers" advance nothing.
 
+## Register: write for the reader you have
+
+The rules above govern sentences. This one governs the shape of the whole piece,
+and getting it wrong wastes prose that passes every other test. Three readers
+recur in this project.
+
+**An executive** reads one thing and has to describe it afterwards, in a meeting,
+without opening what sits underneath. A provost, a vice president, a Chancellor's
+Office reviewer. Open with the assessment in one sentence they can repeat. Spend
+the middle earning it with named specifics, enough that a claim like
+"interconnected" is visible rather than asserted. Close by answering the question
+that follows any stated position: what is missing.
+
+Do not open on a scene. "There is one way to do this at East Bay, and faculty can
+look it up" is clean prose and tells a provost nothing in the second they spend
+on the first line. Narrative voice is a choice for a piece someone reads for
+pleasure or persuasion, and it is the wrong one for a piece someone reads to make
+a decision.
+
+**A practitioner** runs the work and already knows its shape. Lead with the
+change or the ask. Context they supplied is not worth their time.
+
+**Someone you are asking something of** gets the ask as an imperative with an
+actor named, and gets your inferences as questions, per the two rules above.
+
+**Gloss a proper name on first use when the reader is outside the work.** UDOIT,
+Verbit, Grackle, PopeTech, Ally, ScreenSteps: these are real product names, not
+internal vocabulary, so they stay as written. One clause makes them legible.
+"Running the UDOIT accessibility checker" costs three words and keeps the reader
+in the sentence, where a bare "running UDOIT" sends them out of it.
+
 ## Em dashes
 
 Do not use them. Use a colon when the second half explains the first, a full stop
@@ -202,5 +282,5 @@ this rule are not retrofitted unless a rewrite is asked for.
 Skills that write prose reference this file rather than restating it:
 `/ontology-ingest` (Recommendation, Concern, and Plan text), `/follow-up`
 (message body), `/stakeholder-interview` (guide body),
-`/maturity-status-reviewer` (rationale). Rules specific to one artifact stay in
-that skill. Rules that apply to all prose live here.
+`/maturity-status-reviewer` (rationale, and the Evidence Summary the public
+report publishes). Rules specific to one artifact stay in that skill. Rules that apply to all prose live here.

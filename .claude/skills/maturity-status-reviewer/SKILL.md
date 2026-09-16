@@ -205,45 +205,220 @@ what would defend the higher.
 
 ## Step 4 — The recommendation block (the deliverable)
 
-```
-## Maturity review — <yid>
-Current: <level>   Recommended: <level>   Verdict: HOLD | RAISE | LOWER   Confidence: high/med/low
+The deliverable is the ROUTE to the next level, not a verdict with a gap list
+appended. A campus reader acts on it without knowing the graph exists.
 
-Scope coverage        <verb/area>: <implementation(s) or GAP> …
-Bar coverage          <met>/<gradeable> requirements met. One line per row that
-                      is NOT plainly met: Bare (quote the requirement),
-                      Overclaimed (what claims it, why it doesn't deliver),
-                      Unclaimed-but-met (what delivers it, record the claim).
-                      Position/Budget graded from role holdings and allocation
-                      records, never from a claim. Note links carrying claims
-                      with NO rationale — an unexplained claim is the hardest
-                      kind to review and the easiest to get wrong.
-Procedures            <level earned> — findings w/ node citations
-Resources             <level earned> — owners/roles/PD status
-Documentation         <level earned> — active docs vs the practice
-Blocking gaps to <next level>   1… 2… 3…  (each: what evidence would close it)
-Adverse testimony     IN-SCOPE notes that cap the grade, quoted briefly
-Cross-boundary dependencies   weaknesses owned by another process (which one,
-                      and the suggested routing) — reported, never capping
+### Two hard rules on the output
+
+**At most three recommendations.** Consolidate by the dimension each one
+unblocks: one for Procedures, one for Resources, one for Documentation, and
+fewer when a dimension is already met. Related fixes belong INSIDE one
+recommendation as sentences, never split into their own numbered items. When
+more than three things are wrong, the least important are CUT, not appended.
+A reader acts on three and ignores nine.
+
+**No internal system vocabulary.** Node labels, relationship names, property
+names, registry query names, skill names and year identifiers stay out of the
+block. Say what the reader would say:
+
+| Not this | This |
+|---|---|
+| the YSE, year_identifier | the indicator, the entry for this year |
+| implementation node, is_evidence_for | the item, listed as evidence |
+| strength 3, control flag unset | rated as strong evidence, no boundary stated |
+| satisfies claim, rationale | a written reason explaining how it answers the indicator |
+| raw_text not captured, run /get-source-text | the page content has never been saved, capture the page |
+| holds_role, in_position_description=true | the position description names the work |
+| Metric nodes, Tracking implementation | counts and measures, the tracking tool |
+| retired=false, no_longer_exists | still listed, the page no longer exists |
+| wire it to, unwired | list it as evidence for, not listed anywhere |
+
+Rubric words (Defined, Established, Managed, procedures, resources,
+documentation, campus plan) are the Chancellor's Office's own vocabulary and go
+in as written. So do product names the campus uses (Canvas, UDOIT, Ally,
+Grackle) and the real titles of policies, pages, workshops and people.
+
+### Shape
+
+```
+## Maturity review: indicator <key>, <campus>, <year>
+Indicator <key>: "<verbatim indicator text>"
+Current status: <level> · What the evidence supports today: <level> · Confidence: high/med/low
+
+<One paragraph: how wide the gap is, what already counts toward it, and how
+many changes close it. Name the strongest evidence by its real title.>
+
+### Recommendations to reach <next level>
+**1. <imperative sentence>.**
+<What that level of the bar asks for. What is present. What is missing, each
+fix its own sentence, each traceable to something the reader can open.>
+**2. …**  **3. …**
+
+### What these <n> will not reach
+<The level above, and why it stays out of reach. One paragraph.>
+<Any standing judgment the user should be able to overrule, including a
+weakness routed to another area, as prose rather than as a fourth
+recommendation. Say who filed it and invite the correction.>
+
+<Closing: nothing has been changed, then the offers.>
 ```
 
-Cite graph nodes by name/title so the user can click through and disagree.
-Findings must trace to nodes — no vibes. If the user then wants the review on
-record, two offers (both only on explicit approval, attributed to the current
-user):
+The dimension-by-dimension grading from Step 3 still happens, and its findings
+surface INSIDE the recommendation that acts on them. Print a separate
+Procedures / Resources / Documentation breakdown only when the user asks for
+the full grading, or when the recommendation count drops below three and the
+reasoning would otherwise be invisible.
+
+Cite items by their real titles so the user can open them and disagree.
+Findings trace to something in the graph, never to impression. If the user then
+wants the review on record, three offers (each only on explicit approval,
+attributed to the current user; the endpoint names below are for the operator
+and never appear in the block):
+
 1. File the block as admin reviewer feedback (POST `add_admin_reviewer_note`).
-2. File each BLOCKING GAP as a **Recommendation** (POST `add_recommendation` —
-   one per gap, the imperative sentence as `recommendation`, the
-   what-closing-it-looks-like line as `detail`). This is the durable home for
-   improvement tracking: recommendations carry a lifecycle (open → addressed /
-   dismissed with resolution) and surface in the review window and the report,
-   so next cycle's review starts by checking THIS cycle's recommendations.
-3. Correct the `satisfies` claims the review found wrong — drop overclaims,
+2. File each recommendation as a **Recommendation** (POST `add_recommendation`,
+   the imperative sentence as `recommendation`, the closing condition as
+   `detail`). This is the durable home for improvement tracking: recommendations
+   carry a lifecycle (open → addressed / dismissed with resolution) and surface
+   in the review window and the report, so next cycle's review starts by
+   checking THIS cycle's recommendations.
+3. Correct the `satisfies` claims the review found wrong: drop overclaims,
    record unclaimed-but-met (PUT `set_evidence_satisfies`, full-replace). This
    is the one write that makes the NEXT review cheaper, because the coverage
-   view starts truthful. Still only on explicit approval.
+   view starts truthful.
+
 Never touch `status_is`, `ready_for_admin_review`, or the approve flow from
 this skill.
+
+## Step 5 — The Evidence Summary (a separate artifact, and it is public)
+
+The recommendation block above is internal. The **Evidence Summary** is the
+reviewer's own paragraph on the indicator, stored as `admin_review_description`
+on the YSE, and the public report renders it under that heading. Anyone reading
+the campus's published report sees it. Write it whenever the review is being put
+on record, and never write it as a condensed version of Step 4.
+
+### What it is for
+
+**An executive reading one indicator.** A provost, a vice president, a
+Chancellor's Office reviewer. Someone who will not open the implementations
+underneath and who needs to leave the paragraph able to describe the campus's
+position in a meeting. The report lists every implementation, document and
+recommendation below it. This is the paragraph that tells them what it adds up
+to.
+
+That audience sets the register. Write it as institutional prose, not as
+narrative. "There is one way to do this at East Bay, and faculty can look it up"
+is the wrong voice however clean it reads: an executive summary opens with the
+assessment, not with a scene.
+
+### Structure
+
+Three moves, in this order:
+
+1. **The assessment, in one sentence.** What the campus has, named as a whole.
+   "CSU East Bay has a developed and interconnected program supporting faculty in
+   making their Canvas courses accessible." This is the sentence they repeat.
+2. **How, in four to six sentences.** The named things that make the claim true:
+   the policy, the program, the instructions, the support, the automation, the
+   reinforcement. Enough that the picture is concrete and the first sentence is
+   earned.
+3. **Why this level, in one or two sentences.** Say what the campus reached and
+   name what holds it there. An executive's next question is always "so what is
+   missing", and answering it in the summary is cheaper than a meeting.
+
+### Hard limits
+
+**Six to eight sentences.** Break into paragraphs where the move changes, and
+the break before "why this level" is usually worth taking. No headings, no
+bullets.
+
+**Paint the shape, do not list the parts.** A reader should finish able to say
+what the campus does and why that adds up to the level. Facts in a row do not do
+that, and the report already holds the parts.
+
+### What stays out
+
+Everything the report shows elsewhere, and everything Step 4 exists to carry:
+
+- Strength ratings, control flags, item counts, and any per-item detail. The
+  report lists the items. Naming three of eight and rating them repeats the list
+  badly.
+- Recommendations, blocking gaps, next steps, and what would raise the level.
+  Those are Recommendation nodes and the review block.
+- The apparatus of the grade: dimension names, bar language, the rubric's own
+  wording, the case for the level argued point by point. The summary should make
+  the level obvious, not defend it. One clause naming what the campus has reached
+  and one naming what holds it there does that work; a paragraph of reasoning
+  turns the summary into a second review.
+- Any contradiction the review has not settled. Two campus sources disagreeing
+  about a date is a question for the owner, not published text. Report it in
+  Step 4 and leave it out here.
+- Internal vocabulary of every kind, per the writing style's own rule.
+
+### What earns its place
+
+The shape of the practice. Which instrument states the obligation, which one
+carries the operating program, which one holds the instructions people follow.
+What runs underneath the documentation. Who operates it. A limit that a reader
+would otherwise assume away, stated as a fact rather than as a gap to close.
+
+### Register
+
+Present tense, institutional, plain. Follow
+`app/database/ontology/writing-style.md` throughout. Five of its rules decide
+whether eight sentences read as a briefing or as a catalogue:
+
+- **Name who acts.** Units and people run this work. Write them as the subject,
+  and keep the faculty member visible as the person it happens to.
+- **Do not stack nouns**, and do not let documents do abstract work. A page that
+  "states the obligation" or "carries the program" is a noun stack with a verb
+  dropped in. Say what it requires of someone.
+- **Stop compounding.** Sentence after sentence of "X, and Y" joins everything at
+  the same strength, and the reader loses which pairs matter.
+- **Keep list items the same shape**, or drop the list and write the sentence.
+- **Definitions before uses.** An executive does not know what UDOIT is. One
+  clause of gloss where it first appears costs less than losing them.
+
+The failure mode is a flat middle: six facts of similar length and construction,
+each true, adding to nothing.
+
+### Worked example (2025-2026-4.3-ins-csueb, 2026-09-09)
+
+> CSU East Bay has a developed and interconnected program supporting faculty in
+> making their Canvas courses accessible. Academic Senate policy CIC 47 requires
+> instructors to design their courses to current WCAG standards, and the Online
+> Campus converts that requirement into a two-year readiness program with
+> scheduled phases, a course materials checklist for the current year, and a
+> workshop series each term. Faculty follow the ScreenSteps guide library for
+> step-by-step instructions, including running the UDOIT accessibility checker to
+> score their own course and correct what it identifies. Where faculty cannot
+> remediate their own content, a student assistant does it for them, either
+> working in the live course or returning remediated files. A nightly service
+> enables Verbit captioning on every new Canvas course shell, so course video is
+> captioned without anyone requesting it. Accessibility Services publishes the
+> term deadlines faculty work to, and the Office of Faculty Development teaches
+> the same material at Back to the Bay each August.
+>
+> The indicator sits at Established because this is a single standard practice,
+> documented in each of those places and running without individual intervention
+> rather than depending on who is asked. It has not reached Managed because
+> staffing is thin: five people across four units carry the work, and only the
+> ATI Coordinator's position description reflects it.
+
+Eight sentences. The first is the one an executive repeats. The next five earn
+it by naming the policy, the program, the instructions, the human backstop and
+the automation, so the claim of "interconnected" is visible rather than asserted.
+The last two answer the question that always comes next. UDOIT is glossed on
+first use. The Title II date contradiction found in the same review is absent,
+because it is unresolved.
+
+Three earlier drafts failed in ways worth keeping. The first made a document the
+subject of every sentence: accurate, and nobody was in it. The second put people
+back in but joined every clause with "and" at the same length, so it read as a
+list of true things and never said why any of it reached Established. The third
+fixed the rhythm by going narrative, opening "There is one way to do this at East
+Bay", which reads well and is the wrong voice for a provost.
 
 ## Calibration example (2026-08-11): 2025-2026-7.11-ins-sfsu
 
@@ -275,6 +450,33 @@ of calibration, both instructive:
    the surviving in-scope gaps (intake documentation/telemetry, PD
    formalization, Output records). The lesson: formal edges replace prose
    inference round by round; the review gets sharper as the model does.
+
+## Calibration example (2026-09-09): 2025-2026-4.3-ins-csueb
+
+Current Established; the evidence supported **Defined (medium confidence)**.
+The grading was never contested. Both corrections were about the OUTPUT, and
+they are why the two hard rules above exist:
+
+1. The first block ran nine recommendations across five headed sections, each
+   gap its own numbered item. **User correction**: cut to three and combine.
+   The consolidation is not cosmetic. Grouping by the dimension each one
+   unblocks (adoption date + the missing check + the empty guidelines item all
+   sit under Procedures) is what turns a defect list into a route, and it
+   forces the ranking that a nine-item list dodges. Items 8 and 9 were cut on
+   the same pass, which cost the reader nothing.
+2. The block cited nodes, properties and edge names throughout. **User
+   correction**: no internal system vocabulary. The audience is a campus
+   reader deciding whether to fund a position, not a curator of the graph.
+   "The page content has never been saved" says the same thing as "raw_text is
+   null" and survives being pasted into an email.
+
+Substance worth keeping: an indicator with no companion bar and no requirement
+nodes falls back to the generic rubric, and the review says so rather than
+inventing a bar. A formal policy with no approval or effective date recorded
+reads as a committee action request, which is what held Procedures at Defined
+while the policy itself was strong enough to carry the guidelines clause. And
+a strength-3 item with no description, no owner and a dead link is worse than
+no item at all, because the report renders it as coverage.
 
 ## Prose style
 

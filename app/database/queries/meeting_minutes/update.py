@@ -199,3 +199,89 @@ def add_minutes_note(unique_id: str, content: str, created_by_unique_id: str = N
     except Exception as e:
         raise CrudError(f"Failed to add note to MeetingMinutes {unique_id!r}: {e}")
     return get_meeting_minutes(unique_id)
+
+
+# Meeting mode's notes pad writes here. Each entry is one Markdown bullet under
+# a heading for the plan on stage, so the record reads as chronological
+# minutes and the Campus Plan panel renders it with no new renderer.
+ENTRY_KINDS = ("note", "decision", "ask")
+_KIND_PREFIX = {"decision": "Decision: ", "ask": "Ask: "}
+
+
+def _plan_heading(plan) -> str:
+    return f"### {plan.name or plan.description or plan.unique_id}"
+
+
+def _last_heading(content: str):
+    """The last '### ' heading in the body, or None."""
+    last = None
+    for line in (content or "").splitlines():
+        if line.startswith("### "):
+            last = line.rstrip()
+    return last
+
+
+def append_minutes_entry(unique_id: str, text: str, plan_unique_id: str = None,
+                         author_unique_id: str = None, kind: str = "note",
+                         clock: str = None) -> dict:
+    """Append one timestamped, attributed line to a record's Markdown body.
+
+    With `plan_unique_id`, the line lands under the plan's `###` heading. The
+    heading is written only when the body's last heading is a different plan,
+    so consecutive notes on one plan share a heading while moving back and
+    forth between plans stays chronological. The first entry under a plan also
+    asserts minutes -[discusses]-> Plan, the edge that makes "which plans did
+    this meeting discuss" a graph query.
+
+    `kind` is 'note' (default), 'decision' or 'ask'; the last two prefix the
+    line with the word, which the ontology-ingest rubric already routes.
+    `clock` is 'HH:MM'; the server's local time when omitted.
+
+    Returns the refreshed record plus the exact Markdown line appended under
+    `appended_line`. Raises ValidationError / NotFoundError / CrudError.
+    """
+    if not text or not text.strip():
+        raise ValidationError("entry text is required")
+    if kind not in ENTRY_KINDS:
+        raise ValidationError(f"kind must be one of {ENTRY_KINDS}; got {kind!r}")
+    m = _get(unique_id)
+
+    plan = None
+    if plan_unique_id:
+        try:
+            plan = Plan.nodes.get(unique_id=plan_unique_id)
+        except Plan.DoesNotExist:
+            raise NotFoundError(f"Plan {plan_unique_id!r} not found")
+
+    author_name = None
+    if author_unique_id:
+        try:
+            author_name = Person.nodes.get(unique_id=author_unique_id).name
+        except Person.DoesNotExist:
+            raise NotFoundError(f"Person {author_unique_id!r} not found")
+
+    stamp = clock or datetime.now().strftime("%H:%M")
+    body = " ".join(text.strip().split("\n"))
+    line = f"- {stamp} {author_name + ': ' if author_name else ''}{_KIND_PREFIX.get(kind, '')}{body}"
+
+    content = (m.content or "").rstrip()
+    heading = _plan_heading(plan) if plan is not None else None
+    needs_heading = heading is not None and _last_heading(content) != heading
+    if not content:
+        new_content = f"{heading}\n{line}" if needs_heading else line
+    elif needs_heading:
+        new_content = f"{content}\n\n{heading}\n{line}"
+    else:
+        new_content = f"{content}\n{line}"
+
+    try:
+        m.content = new_content
+        m.save()
+        if plan is not None and not m.discusses.is_connected(plan):
+            m.discusses.connect(plan)
+    except Exception as e:
+        raise CrudError(f"Failed to append to MeetingMinutes {unique_id!r}: {e}")
+
+    result = get_meeting_minutes(unique_id)
+    result["appended_line"] = line
+    return result
