@@ -8,7 +8,7 @@ from app.database.graph_schema import Process
 from app.database.queries.implementation.read import get_goal_node
 
 
-from app.endpoints.data_api.errors.custom_exceptions import CrudError, ValidationError
+from app.endpoints.data_api.errors.custom_exceptions import CrudError, NotFoundError, ValidationError
 
 
 def add_process(title: str, description: str) -> bool:
@@ -234,16 +234,22 @@ def add_plan(plan_data: dict) -> bool:
         - abandoned : bool - Whether the plan was abandoned (default: False)
         - abandoned_notes : str - Notes explaining why plan was abandoned
         - completed_year_name : str - Name of academic year when plan was completed
+        - minutes_unique_id : str - The MeetingMinutes the plan was proposed in
+          (meeting mode's "New plan"). Connects plan -[raised_in]-> minutes.
 
     Returns
     -------
-    bool
-        True if plan was successfully created
+    dict
+        The created plan, serialized (Plan.serialize), so the caller holds its
+        unique_id without a second lookup. Truthy, so older callers that
+        tested the former bool return still work.
 
     Raises
     ------
     ValidationError
         If none of the furthering fields are provided
+    NotFoundError
+        If minutes_unique_id names no MeetingMinutes
     CrudError
         If creation fails due to database issues
     AcademicYear.DoesNotExist
@@ -295,6 +301,7 @@ def add_plan(plan_data: dict) -> bool:
         furthered_goal_number = plan_data.get('furthered_goal_number', None)
         furthered_working_group = plan_data.get('furthered_working_group', None)
         furthered_yse_identifier = plan_data.get('furthered_yse_identifier', None)
+        minutes_unique_id = plan_data.get('minutes_unique_id', None)
 
         # Validate plan_status if provided
         if plan_status is not None and plan_status not in VALID_PLAN_STATUSES:
@@ -303,6 +310,16 @@ def add_plan(plan_data: dict) -> bool:
         # Validate that at least one of the furthering fields is provided
         if not (furthered_goal_number or furthered_working_group or furthered_yse_identifier):
             raise ValidationError("At least one of 'furthered_goal_number', 'furthered_working_group', or 'furthered_yse_identifier' must be specified.")
+
+        # Resolve the origin meeting BEFORE anything is written, so a wrong id
+        # fails with nothing created (the description index would otherwise
+        # block a retry with the same text).
+        raised_in_minutes = None
+        if minutes_unique_id:
+            try:
+                raised_in_minutes = MeetingMinutes.nodes.get(unique_id=minutes_unique_id)
+            except MeetingMinutes.DoesNotExist:
+                raise NotFoundError(f"MeetingMinutes {minutes_unique_id!r} not found")
 
         # Get or create the academic year node
         academic_year = AcademicYear.nodes.get(name=academic_year_name)
@@ -356,6 +373,10 @@ def add_plan(plan_data: dict) -> bool:
             abandoned_year = AcademicYear.nodes.get(name=abandoned_year_name)
             plan.abandoned_year.connect(abandoned_year)
 
+        # The meeting the plan was proposed in (meeting mode's "New plan").
+        if raised_in_minutes is not None:
+            plan.raised_in.connect(raised_in_minutes)
+
         # If this plan was created already-Completed, mirror it into an
         # Accomplishment immediately so the Accomplishments tab shows it
         # without needing a follow-up edit. Mirrors the update_plan flow.
@@ -374,11 +395,13 @@ def add_plan(plan_data: dict) -> bool:
                 print(f"Warning: Failed to create accomplishment automatically: {e}")
 
         print(f"Plan '{name}' added successfully")
-        return True
+        return plan.serialize()
 
     except ValidationError as e:
         print(f"Validation error: {e}")
         raise e
+    except NotFoundError:
+        raise
     except Exception as e:
         raise CrudError(f"Failed to add plan: {e}")
 

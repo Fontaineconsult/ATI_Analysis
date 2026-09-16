@@ -1,5 +1,5 @@
 import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
-import { Box, Grid, HStack, Spinner, Text, useToast } from '@chakra-ui/react';
+import { Box, Grid, HStack, Spinner, Text, useDisclosure, useToast } from '@chakra-ui/react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useSettings } from '../../context/SettingsContext';
 import { UserContext } from '../../context/UserContext';
@@ -24,6 +24,7 @@ import PlanStage from './decks/plans/PlanStage';
 import NotesPad from './decks/plans/NotesPad';
 import ProgressStrip from './decks/plans/ProgressStrip';
 import IndicatorsPanel from './decks/plans/IndicatorsPanel';
+import NewPlanForm from './decks/plans/NewPlanForm';
 
 /**
  * Meeting mode: the route-level shell for a shared screen.
@@ -148,13 +149,45 @@ function PresentShell() {
     }, [minutesPanels[0].data, minutesPanels[1].data, minutesPanels[2].data, groups, wgFilter, today]);
 
     // Selection lives in the URL. No id, or an id not on deck: open the first plan.
+    //
+    // A plan just created on stage is a pending selection: the board is
+    // reloading and the plan is not on deck yet, so the first-plan fallback
+    // must wait for the reload to land and then open the new plan. If the
+    // board comes back without it (it was created Not Started, say), the
+    // pending selection is dropped and the fallback applies.
     const selected = useMemo(() => plans.find((p) => p.unique_id === planId) || null, [plans, planId]);
+    const pendingPlan = useRef(null);
     useEffect(() => {
-        if (boardLoading) return;
+        if (boardLoading) {
+            if (pendingPlan.current) pendingPlan.current.reloading = true;
+            return;
+        }
+        const pending = pendingPlan.current;
+        if (pending) {
+            if (plans.some((p) => p.unique_id === pending.id)) {
+                pendingPlan.current = null;
+                navigate(`/${campus}/present/plans/${pending.id}`, { replace: true });
+                return;
+            }
+            if (!pending.reloading) return;
+            pendingPlan.current = null;
+        }
         if (!selected && plans.length > 0) {
             navigate(`/${campus}/present/plans/${plans[0].unique_id}`, { replace: true });
         }
     }, [boardLoading, selected, plans, campus, navigate]);
+
+    // The New plan form (the a shortcut and the agenda's button). A created
+    // plan goes on stage: its campus is switched on and a narrower working-
+    // group filter is widened, so the deck the board reload builds holds it.
+    const { isOpen: newPlanOpen, onOpen: openNewPlan, onClose: closeNewPlan } = useDisclosure();
+    const onPlanCreated = useCallback((plan, { campusAbbrev, workingGroupSlug, onDeck }) => {
+        if (campusAbbrev && !selectedCampuses.includes(campusAbbrev)) onToggleCampus(campusAbbrev);
+        if (wgFilter !== 'all' && workingGroupSlug && wgFilter !== workingGroupSlug) setWgFilter('all');
+        pendingPlan.current = onDeck ? { id: plan.unique_id, reloading: false } : null;
+        reloadBoard();
+        reloadTasks();
+    }, [selectedCampuses, onToggleCampus, wgFilter, reloadBoard, reloadTasks]);
 
     const select = useCallback((plan) => {
         if (plan) navigate(`/${campus}/present/plans/${plan.unique_id}`, { replace: true });
@@ -212,11 +245,13 @@ function PresentShell() {
         onNext: () => step(1),
         onPrev: () => step(-1),
         onAddStep: () => addStepRef.current?.click(),
+        onNewPlan: openNewPlan,
         onFocusNotes: () => notesRef.current?.focus(),
         onToggleRail: () => setRailCollapsed((v) => !v),
         onFullscreen,
-        onEscape: exit,
-    }), [step, onFullscreen, exit]);
+        // Escape closes the form when it is open (the modal does too; both agree), else exits.
+        onEscape: () => { if (newPlanOpen) closeNewPlan(); else exit(); },
+    }), [step, onFullscreen, exit, openNewPlan, closeNewPlan, newPlanOpen]);
     usePresentKeys(keyHandlers);
 
     const railWidth = railCollapsed ? '56px' : 'minmax(240px, 1fr)';
@@ -257,6 +292,7 @@ function PresentShell() {
                             campusOptions={campuses || []}
                             selectedCampuses={selectedCampuses}
                             onToggleCampus={onToggleCampus}
+                            onNewPlan={openNewPlan}
                         />
                         <PlanStage
                             key={selected?.unique_id || 'none'}
@@ -292,6 +328,22 @@ function PresentShell() {
                     </Grid>
                 )}
             </Box>
+
+            <NewPlanForm
+                isOpen={newPlanOpen}
+                onClose={closeNewPlan}
+                campus={campus}
+                year={year}
+                campusOptions={campuses || []}
+                workingGroups={groups}
+                defaultWorkingGroup={
+                    wgFilter !== 'all' ? (groups.find((g) => g.slug === wgFilter)?.name || wgName) : wgName
+                }
+                people={people}
+                ensureMinutes={minutes.ensure}
+                appendMinutes={minutes.append}
+                onCreated={onPlanCreated}
+            />
         </Box>
     );
 }

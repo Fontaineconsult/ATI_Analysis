@@ -1,6 +1,6 @@
 import React from 'react';
 import { Box, Button, Heading, HStack, List, ListItem, Text, VStack } from '@chakra-ui/react';
-import { ChevronLeftIcon, ChevronRightIcon } from '@chakra-ui/icons';
+import { AddIcon, ChevronLeftIcon, ChevronRightIcon } from '@chakra-ui/icons';
 import { WORKING_GROUP_LIST, getWorkingGroupIdentity } from '../../../../styles/workingGroupIdentity';
 import { getPlanStatusColor, getPlanStatusLabel } from '../../../../styles/planStatusColors';
 import { T } from '../../presentScale';
@@ -25,10 +25,12 @@ import { T } from '../../presentScale';
  *   collapsed        Boolean; onToggle() flips it.
  *   campusOptions    [{ abbreviation, name }] from settings.
  *   selectedCampuses Abbreviations currently shown; onToggleCampus(abbrev) flips one.
+ *   onNewPlan()      Opens the New plan form (the a shortcut); the button is
+ *                    omitted when absent.
  */
 function AgendaRail({
     plans = [], selectedId, onSelect, collapsed = false, onToggle,
-    campusOptions = [], selectedCampuses = [], onToggleCampus,
+    campusOptions = [], selectedCampuses = [], onToggleCampus, onNewPlan,
 }) {
     const multiCampus = selectedCampuses.length > 1;
     const position = Math.max(0, plans.findIndex((p) => p.unique_id === selectedId)) + 1;
@@ -41,6 +43,12 @@ function AgendaRail({
                         aria-label="Expand the agenda" title="Expand the agenda ([)" mb={1}>
                     <ChevronRightIcon />
                 </Button>
+                {onNewPlan && (
+                    <Button size="xs" variant="outline" bg="white" colorScheme="teal" onClick={onNewPlan}
+                            aria-label="New plan" title="New plan (a)" mb={1}>
+                        <AddIcon boxSize={2.5} />
+                    </Button>
+                )}
                 {plans.map((plan, i) => {
                     const selected = plan.unique_id === selectedId;
                     const status = getPlanStatusColor(plan);
@@ -88,6 +96,12 @@ function AgendaRail({
                     <Text fontSize={T.meta} color="gray.700" fontWeight="semibold" aria-live="polite">
                         {plans.length ? `${position} / ${plans.length}` : '0 plans'}
                     </Text>
+                    {onNewPlan && (
+                        <Button size="xs" variant="outline" bg="white" colorScheme="teal" onClick={onNewPlan}
+                                leftIcon={<AddIcon boxSize={2.5} />} title="New plan (a)">
+                            New plan
+                        </Button>
+                    )}
                     <Button size="xs" variant="outline" bg="white" colorScheme="teal" onClick={onToggle}
                             aria-label="Collapse the agenda" title="Collapse the agenda ([)">
                         <ChevronLeftIcon />

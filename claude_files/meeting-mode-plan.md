@@ -321,3 +321,47 @@ Tests: `presentScale.test.js`, `AgendaRail.test.jsx`, `NotesPad.test.jsx`.
   header (all on by default, remembered in localStorage, never below one) filter the deck; rows
   show campus tags when more than one campus is on. Notes and new tasks still write against the
   URL campus.
+
+### New plan on stage, 2026-09-15
+
+A plan proposed in the room had to wait for the desk: meeting mode could edit a
+plan and add its tasks but not create one, and the desk's Add Plan modal builds
+its indicator list by walking the three-working-group dashboard payload, which
+meeting mode does not load.
+
+`decks/plans/NewPlanForm.jsx` is the form, opened by `a` or the agenda's
+"New plan" button. It takes the plan (name, description, status, the two flags),
+the coordinates a meeting knows (campus, working group, the indicator the plan
+furthers, from the year's `/evidence/yses-by-campus` catalogue on the shared
+`yse:by-campus:<year>` key), the first next step with an owner and due date, and
+whether to record the decision in the minutes (on by default). Status defaults
+to In Progress because only plans in progress are on deck; Not Started is
+offered with a note that the plan will not appear until it is started.
+
+Write order: open today's minutes for the group; `POST /plans` with
+`minutes_unique_id`; the first step as a subtask on the new plan (`raised_in`
+the same minutes); a `Decision: New plan: <name>` line under the plan's heading,
+which asserts `discusses` the way any note does. The create failing keeps the
+form open with the error. The later writes failing after the create succeeded
+are reported in the toast, and the plan still goes on stage.
+
+The shell holds the created plan as a pending selection while the boards
+reload, switches its campus on and widens a narrower working-group filter, then
+opens it. If the board comes back without it (created Not Started), the pending
+selection is dropped and the first-plan fallback applies.
+
+Data model, one additive edge: `(:Plan)-[:raised_in]->(:MeetingMinutes)`
+(ZeroOrOne), set by `add_plan` when sent `minutes_unique_id`; the minutes read
+returns it as `raised_plans`, beside `discussed_plans`. Same predicate as
+`AsanaSubtask.raised_in`, so "what came out of that meeting" is one pattern over
+both labels. `add_plan` now returns the created plan (a dict, still truthy for
+the one caller that tested the old bool) and `POST /plans` returns it under
+`data.plan`, which is what lets the form put it on stage without a second read.
+A wrong minutes id is resolved before anything is written, so it fails with
+nothing created.
+
+Tests: `tests/test_meeting_mode.py` (four more: the edge and the read, no edge
+without minutes, nothing created on a bad minutes id, the endpoint contract),
+`NewPlanForm.test.jsx` (the indicator list follows campus and group, the write
+order, the first step, the unchecked minutes box, Not Started, a failed create,
+the required fields).

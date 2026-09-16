@@ -1024,14 +1024,18 @@ class ImplementationPlanAPI(MethodView):
                 if field not in data:
                     raise ValidationError(f"Missing required field: '{field}'")
 
-            # Call the add_plan function with the received data
-            add_plan(data)
+            # The created plan comes back so the caller can open it (meeting
+            # mode puts it on stage) without a second read.
+            plan = add_plan(data)
 
-            # Return a success response
-            return make_response({"status": "success", "message": "Plan added successfully"}), 201
+            return make_response(
+                status="success", data={"plan": plan}, message="Plan added successfully",
+            ), 201
 
         except ValidationError as e:
             return make_response(status="error", error=str(e)), 400
+        except NotFoundError as e:
+            return make_response(status="error", error=str(e)), 404
         except CrudError as e:
             return make_response(status="error", error=str(e)), 500
         except Exception as e:

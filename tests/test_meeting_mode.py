@@ -6,6 +6,8 @@ Meeting mode's data path: the two edges and the appends behind the notes pad.
   append_minutes_entry          a timestamped, attributed Markdown line under
                                 the plan's heading; asserts minutes -[discusses]-> Plan
   link_subtask_to_minutes       subtask -[raised_in]-> MeetingMinutes ("Make task")
+  add_plan(minutes_unique_id)   plan -[raised_in]-> MeetingMinutes ("New plan"), and the
+                                created plan comes back so it can go on stage
   tasks_board                   carries completed_at (the "since last meeting" count)
 
 Everything is sentinel-scoped (9999-9999 campus plan; ZZZ-TEST prefixed
@@ -16,10 +18,13 @@ from neomodel import db
 
 from conftest import TEST_ACADEMIC_YEAR_NAME
 
-from app.database.graph_schema import AsanaSubtask, Campus, Person, Plan
+from app.database.graph_schema import (
+    AcademicYear, AsanaSubtask, Campus, Person, Plan, YearSuccessEvidence,
+)
 from app.database.identifiers import make_working_group_plan_identifier
 from app.database.queries.committees.create import create_campus_plan
 from app.database.queries.asana.update import link_subtask_to_minutes
+from app.database.queries.implementation.create import add_plan
 from app.database.queries.meeting_minutes.create import (
     create_meeting_minutes,
     open_meeting_minutes_for_day,
@@ -262,3 +267,120 @@ def test_endpoint_open_and_append(flask_client, sentinel_web_plan, sentinel_plan
 
     resp = flask_client.post(base, json={"action": "open_meeting_minutes_for_day", "campus_abbrev": "x"})
     assert resp.status_code == 400
+
+
+# --- add_plan with minutes_unique_id ("New plan" on stage) ---------------------
+
+@pytest.fixture
+def sentinel_yse(sentinel_web_plan, sentinel_academic_year):
+    """A YearSuccessEvidence in the sentinel year at the fixture campus, so a
+    plan can be created through add_plan the way meeting mode does (by
+    furthered_yse_identifier). Plans with the SENTINEL description prefix are
+    torn down with it."""
+    campus = Campus.nodes.get(abbreviation=sentinel_web_plan["campus_abbrev"])
+    year = AcademicYear.nodes.get(name=TEST_ACADEMIC_YEAR_NAME)
+    identifier = f"{TEST_ACADEMIC_YEAR_NAME}-zz.9-zzz-{campus.abbreviation}"
+    db.cypher_query(
+        "MATCH (y:YearSuccessEvidence {year_identifier: $id}) DETACH DELETE y", {"id": identifier},
+    )
+    yse = YearSuccessEvidence(year_identifier=identifier).save()
+    yse.campus.connect(campus)
+    yse.academic_year.connect(year)
+    yield yse
+    db.cypher_query(
+        """
+        MATCH (p:Plan) WHERE p.description STARTS WITH $prefix
+        OPTIONAL MATCH (p)-[:has_asana_subtask]->(s:AsanaSubtask)
+        DETACH DELETE s, p
+        """,
+        {"prefix": SENTINEL},
+    )
+    db.cypher_query(
+        "MATCH (y:YearSuccessEvidence {year_identifier: $id}) DETACH DELETE y", {"id": identifier},
+    )
+
+
+def test_add_plan_records_the_meeting_it_was_raised_in(sentinel_web_plan, sentinel_yse, sentinel_person, cleanup_minutes):
+    m = _minutes(sentinel_web_plan, cleanup_minutes)
+
+    created = add_plan({
+        "name": f"{SENTINEL} raised plan",
+        "description": f"{SENTINEL} raised in the meeting",
+        "academic_year_name": TEST_ACADEMIC_YEAR_NAME,
+        "furthered_yse_identifier": sentinel_yse.year_identifier,
+        "plan_status": "In Progress",
+        "minutes_unique_id": m.unique_id,
+    })
+    # The created plan comes back, so the caller can put it on stage.
+    assert isinstance(created, dict)
+    assert created["unique_id"]
+    assert created["plan_status"] == "In Progress"
+
+    plan = Plan.nodes.get(unique_id=created["unique_id"])
+    assert plan.raised_in.single().unique_id == m.unique_id
+    assert [y.year_identifier for y in plan.furthered_year_success_indicators.all()] == [sentinel_yse.year_identifier]
+
+    data = get_meeting_minutes(m.unique_id)
+    assert [p["unique_id"] for p in data["raised_plans"]] == [plan.unique_id]
+    # Raised is not discussed until a line lands under the plan's heading.
+    assert data["discussed_plans"] == []
+
+    result = append_minutes_entry(
+        m.unique_id, "New plan: raised plan", plan_unique_id=plan.unique_id,
+        author_unique_id=sentinel_person.unique_id, kind="decision", clock="10:12",
+    )
+    assert result["appended_line"] == f"- 10:12 {sentinel_person.name}: Decision: New plan: raised plan"
+    assert [p["unique_id"] for p in result["discussed_plans"]] == [plan.unique_id]
+    assert [p["unique_id"] for p in result["raised_plans"]] == [plan.unique_id]
+
+
+def test_add_plan_without_minutes_has_no_origin(sentinel_yse):
+    created = add_plan({
+        "name": f"{SENTINEL} desk plan",
+        "description": f"{SENTINEL} created at the desk",
+        "academic_year_name": TEST_ACADEMIC_YEAR_NAME,
+        "furthered_yse_identifier": sentinel_yse.year_identifier,
+    })
+    plan = Plan.nodes.get(unique_id=created["unique_id"])
+    assert plan.raised_in.single() is None
+    assert plan.plan_status == "Not Started"
+
+
+def test_add_plan_with_unknown_minutes_creates_nothing(sentinel_yse):
+    description = f"{SENTINEL} never created"
+    with pytest.raises(NotFoundError):
+        add_plan({
+            "name": f"{SENTINEL} orphan",
+            "description": description,
+            "academic_year_name": TEST_ACADEMIC_YEAR_NAME,
+            "furthered_yse_identifier": sentinel_yse.year_identifier,
+            "minutes_unique_id": "no-such-minutes",
+        })
+    assert Plan.nodes.get_or_none(description=description) is None
+
+
+@pytest.mark.api
+def test_endpoint_create_plan_returns_the_plan(flask_client, sentinel_web_plan, sentinel_yse, cleanup_minutes):
+    m = _minutes(sentinel_web_plan, cleanup_minutes)
+    payload = {
+        "action": "add_plan",
+        "name": f"{SENTINEL} endpoint plan",
+        "description": f"{SENTINEL} created through POST /plans",
+        "academic_year_name": TEST_ACADEMIC_YEAR_NAME,
+        "furthered_yse_identifier": sentinel_yse.year_identifier,
+        "plan_status": "In Progress",
+        "minutes_unique_id": m.unique_id,
+    }
+    resp = flask_client.post("/ati/data-api/v1/plans", json=payload)
+    assert resp.status_code == 201, resp.get_json()
+    body = resp.get_json()
+    assert body["status"] == "success"
+    plan = body["data"]["plan"]
+    assert plan["unique_id"]
+    assert plan["name"] == payload["name"]
+    assert Plan.nodes.get(unique_id=plan["unique_id"]).raised_in.single().unique_id == m.unique_id
+
+    resp = flask_client.post("/ati/data-api/v1/plans", json={
+        **payload, "description": f"{SENTINEL} bad minutes", "minutes_unique_id": "no-such-minutes",
+    })
+    assert resp.status_code == 404

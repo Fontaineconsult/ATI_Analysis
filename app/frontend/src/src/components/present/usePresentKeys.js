@@ -6,6 +6,7 @@ import { useEffect } from 'react';
  *
  *   j / k, ArrowDown / ArrowUp   next / previous plan
  *   n                            focus "Add next step"
+ *   a                            open the New plan form
  *   m                            focus the notes input
  *   [                            collapse or expand the agenda rail
  *   f                            toggle browser fullscreen
@@ -18,6 +19,7 @@ import { useEffect } from 'react';
 export const PRESENT_KEYS = [
     { keys: 'j / k', what: 'Next / previous plan' },
     { keys: 'n', what: 'Add next step' },
+    { keys: 'a', what: 'New plan' },
     { keys: 'm', what: 'Type a note' },
     { keys: '[', what: 'Collapse or expand the agenda' },
     { keys: 'f', what: 'Fullscreen' },
@@ -48,6 +50,7 @@ export default function usePresentKeys(handlers) {
                 case 'j': case 'ArrowDown': e.preventDefault(); handlers.onNext?.(); break;
                 case 'k': case 'ArrowUp': e.preventDefault(); handlers.onPrev?.(); break;
                 case 'n': e.preventDefault(); handlers.onAddStep?.(); break;
+                case 'a': e.preventDefault(); handlers.onNewPlan?.(); break;
                 case 'm': e.preventDefault(); handlers.onFocusNotes?.(); break;
                 case '[': e.preventDefault(); handlers.onToggleRail?.(); break;
                 case 'f': e.preventDefault(); handlers.onFullscreen?.(); break;

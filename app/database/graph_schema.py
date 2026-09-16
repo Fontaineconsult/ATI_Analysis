@@ -1020,6 +1020,13 @@ class Plan(StructuredNode):
     # the first time a note lands under the plan (reverse of MeetingMinutes.discusses).
     discussed_in = RelationshipFrom("MeetingMinutes", "discusses")
 
+    # The meeting in which this plan was proposed. Set by meeting mode's "New
+    # plan" when the form is sent minutes_unique_id (queries/implementation/
+    # create.add_plan); a plan created anywhere else has no such edge. The
+    # same predicate AsanaSubtask.raised_in uses, so "what came out of that
+    # meeting" is one pattern over both labels.
+    raised_in = RelationshipTo("MeetingMinutes", "raised_in", cardinality=ZeroOrOne)
+
     #serialize
     def serialize(self):
         return {
@@ -1998,6 +2005,12 @@ class MeetingMinutes(StructuredNode):
     # plans did the Web group discuss on Sep 12" is a graph query, not a text
     # search over the Markdown body. Ingest may add more after the fact.
     discusses = RelationshipTo("Plan", "discusses")
+
+    # Plans proposed in this meeting (reverse of Plan.raised_in). Distinct from
+    # discusses: a plan can be discussed without having been raised here, and
+    # a plan raised here is normally also discussed (its "New plan" line lands
+    # under its heading).
+    raised_plans = RelationshipFrom("Plan", "raised_in")
 
     def serialize(self):
         return {
