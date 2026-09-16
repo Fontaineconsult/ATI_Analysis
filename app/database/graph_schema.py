@@ -183,6 +183,19 @@ class IntellectualSource(StructuredNode):
     published_date = DateProperty()
     citation = StringProperty()
 
+    # Where the source was drawn from, same predicate and shape the six governance types
+    # use. `url` holds the canonical location when a source has exactly one. These hold
+    # the rest: a synthesized source (a model observed at four institutions) has no single
+    # canonical URL, and a work republished in several places has several.
+    source_documents = RelationshipTo("Document", "is_sourced_from")
+    source_webpages = RelationshipTo("Webpage", "is_sourced_from")
+
+    # OUT link (`informs`) targets the implementation labels — heterogeneous, so those
+    # edges live in queries/intellectual_sources (Cypher), not a typed rel here. Same
+    # predicate governance uses to reach a Goal: this source shaped what that thing says.
+    # It is what makes "what did we author this procedure from" and "which implementations
+    # predate this source and may be behind it" answerable.
+
     def serialize(self):
         return {
             "unique_id": self.unique_id,
