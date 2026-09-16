@@ -1562,6 +1562,46 @@ export const attachInformedImplementation = (uniqueId, implementationUniqueId) =
 export const detachInformedImplementation = (uniqueId, implementationUniqueId) =>
     _sourceInformsAction('detach_informed_implementation', uniqueId, implementationUniqueId);
 
+/**
+ * Attach a page to an intellectual source BY URL.
+ *
+ * The server MERGEs on url, so a page already in the graph is cross-linked rather than
+ * duplicated, and the response says which happened under `data.item.attached_page.created`.
+ * That matters because a second node for the same page splits its Source Text: one copy
+ * gets captured and the other stays empty, and the backlog then reports a page somebody
+ * has already read.
+ */
+export const attachSourcePage = async (uniqueId, url, name) => {
+    try {
+        const response = await axios.put(`${process.env.REACT_APP_API_URL}/intellectual-sources`, {
+            action: 'attach_source_page',
+            unique_id: uniqueId,
+            url,
+            name: name || undefined,
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error attaching source page:', error);
+        throw error;
+    }
+};
+
+// Removes the edge only. The page may also be a governance instrument's source or an
+// implementation's documentation, and deleting it would take its captured text with it.
+export const detachSourcePage = async (uniqueId, pageUniqueId) => {
+    try {
+        const response = await axios.put(`${process.env.REACT_APP_API_URL}/intellectual-sources`, {
+            action: 'detach_source_page',
+            unique_id: uniqueId,
+            page_unique_id: pageUniqueId,
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error detaching source page:', error);
+        throw error;
+    }
+};
+
 
 /**
  * Set ONLY the Source Text on a webpage.

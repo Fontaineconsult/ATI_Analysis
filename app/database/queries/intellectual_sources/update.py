@@ -116,3 +116,80 @@ def attach_informed_implementation(source_unique_id, implementation_unique_id) -
 def detach_informed_implementation(source_unique_id, implementation_unique_id) -> dict:
     _set_informs(source_unique_id, implementation_unique_id, connect=False)
     return get_intellectual_source(source_unique_id)
+
+
+# --- is_sourced_from: the pages a source was drawn from -----------------------------------
+#
+# Same predicate and shape the six governance types use. `url` on the node holds a single
+# canonical location; these hold the rest, which is what a synthesized source needs.
+
+def attach_source_page(source_unique_id, url, name=None) -> dict:
+    """Attach a page to a source by URL, creating the Webpage only if the URL is new.
+
+    A URL already in the graph is CROSS-LINKED, never duplicated. That rule is not a
+    convenience: a second node for the same page splits its Source Text, so one copy gets
+    captured and the other stays empty, and the backlog then reports a page that has
+    already been read. Webpage.url is uniquely indexed, which makes the rule enforceable
+    rather than merely intended.
+
+    Returns the source read plus `attached_page`, which says whether the page was created
+    here or was already in the graph under something else.
+    """
+    from neomodel import db
+
+    _resolve(source_unique_id)
+
+    url = (url or "").strip()
+    if not url:
+        raise ValidationError("url is required")
+
+    name = (name or "").strip() or url
+
+    # MERGE on url, set identity only ON CREATE so an existing page keeps its own name,
+    # description, flags and captured text.
+    rows, _ = db.cypher_query(
+        """
+        MERGE (w:Webpage {url: $url})
+        ON CREATE SET w.unique_id = replace(randomUUID(), '-', ''),
+                      w.name = $name,
+                      w.include_in_report = true,
+                      w._was_created = true
+        WITH w, coalesce(w._was_created, false) AS created
+        REMOVE w._was_created
+        RETURN w.unique_id, w.name, w.url, created,
+               size(coalesce(w.raw_text, '')) AS text_length
+        """,
+        {"url": url, "name": name},
+    )
+    page_uid, page_name, page_url, created, text_length = rows[0]
+
+    db.cypher_query(
+        "MATCH (s:IntellectualSource {unique_id:$sid}) MATCH (w:Webpage {unique_id:$wid}) "
+        "MERGE (s)-[:is_sourced_from]->(w)",
+        {"sid": source_unique_id, "wid": page_uid},
+    )
+
+    data = get_intellectual_source(source_unique_id)
+    data["attached_page"] = {
+        "unique_id": page_uid,
+        "name": page_name,
+        "url": page_url,
+        "created": bool(created),
+        "text_length": text_length,
+    }
+    return data
+
+
+def detach_source_page(source_unique_id, page_unique_id) -> dict:
+    """Remove the is_sourced_from edge. The page itself is left alone, because it may be
+    the source of a governance instrument or the documentation of an implementation too,
+    and deleting it here would take its captured text with it."""
+    from neomodel import db
+
+    _resolve(source_unique_id)
+    db.cypher_query(
+        "MATCH (s:IntellectualSource {unique_id:$sid})-[r:is_sourced_from]->({unique_id:$pid}) "
+        "DELETE r",
+        {"sid": source_unique_id, "pid": page_unique_id},
+    )
+    return get_intellectual_source(source_unique_id)

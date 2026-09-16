@@ -308,3 +308,138 @@ def test_source_text_only_webpage_write_touches_nothing_else(cleanup_sources, se
     assert name == f"{SENTINEL} page"          # untouched
     assert url == f"https://example.invalid/{SENTINEL}"
     assert maintainer_edges == 0               # no maintainer was invented
+
+
+# --- adding and removing source pages -------------------------------------------------
+
+SENTINEL_URL = "https://example.invalid/ZZ-TEST-SOURCE/added-page"
+
+
+@pytest.fixture
+def cleanup_added_pages(neo4j_connection):
+    yield
+    from neomodel import db
+
+    db.cypher_query(
+        "MATCH (w:Webpage) WHERE w.url STARTS WITH $p DETACH DELETE w",
+        {"p": "https://example.invalid/ZZ-TEST-SOURCE"},
+    )
+
+
+@pytest.mark.integration
+def test_attach_source_page_creates_then_cross_links(cleanup_sources, cleanup_added_pages):
+    """A URL already in the graph must be linked, never duplicated. A second node for the
+    same page splits its Source Text, so one copy gets captured and the other stays empty."""
+    from neomodel import db
+
+    from app.database.queries.intellectual_sources.create import create_intellectual_source
+    from app.database.queries.intellectual_sources.update import attach_source_page
+
+    first = create_intellectual_source({"name": f"{SENTINEL} first"})
+    second = create_intellectual_source({"name": f"{SENTINEL} second"})
+    cleanup_sources.extend([first.unique_id, second.unique_id])
+
+    created = attach_source_page(first.unique_id, SENTINEL_URL, "A page")
+    assert created["attached_page"]["created"] is True
+    assert created["attached_page"]["name"] == "A page"
+    assert len(created["sources"]) == 1
+
+    # A different source, same URL: one page, two edges.
+    linked = attach_source_page(second.unique_id, SENTINEL_URL, "A DIFFERENT NAME")
+    assert linked["attached_page"]["created"] is False
+    # The existing page keeps its own name; the new name is ignored rather than overwriting.
+    assert linked["attached_page"]["name"] == "A page"
+
+    rows, _ = db.cypher_query(
+        "MATCH (w:Webpage {url:$u}) RETURN count(w), size([(w)<-[:is_sourced_from]-()|1])",
+        {"u": SENTINEL_URL},
+    )
+    assert rows[0][0] == 1, "the URL must not be duplicated"
+    assert rows[0][1] == 2, "both sources point at the one page"
+
+
+@pytest.mark.integration
+def test_attach_is_idempotent_and_preserves_captured_text(cleanup_sources, cleanup_added_pages):
+    from neomodel import db
+
+    from app.database.queries.documentation.update import update_webpage
+    from app.database.queries.intellectual_sources.create import create_intellectual_source
+    from app.database.queries.intellectual_sources.update import attach_source_page
+
+    node = create_intellectual_source({"name": f"{SENTINEL} idempotent"})
+    cleanup_sources.append(node.unique_id)
+
+    page = attach_source_page(node.unique_id, SENTINEL_URL)["attached_page"]
+    update_webpage({"unique_id": page["unique_id"], "raw_text": "captured already"})
+
+    again = attach_source_page(node.unique_id, SENTINEL_URL)
+    assert len(again["sources"]) == 1, "MERGE, so re-attaching does not double the edge"
+    assert again["sources"][0]["text_length"] == len("captured already")
+
+
+@pytest.mark.integration
+def test_attach_requires_a_url(cleanup_sources):
+    from app.database.queries.intellectual_sources.create import create_intellectual_source
+    from app.database.queries.intellectual_sources.update import attach_source_page
+    from app.endpoints.data_api.errors.custom_exceptions import ValidationError
+
+    node = create_intellectual_source({"name": f"{SENTINEL} no url"})
+    cleanup_sources.append(node.unique_id)
+    with pytest.raises(ValidationError):
+        attach_source_page(node.unique_id, "   ")
+
+
+@pytest.mark.integration
+def test_detach_removes_the_edge_and_keeps_the_page(cleanup_sources, cleanup_added_pages):
+    """The page may also be a governance instrument's source. Unlinking must not take its
+    captured text with it."""
+    from neomodel import db
+
+    from app.database.queries.documentation.update import update_webpage
+    from app.database.queries.intellectual_sources.create import create_intellectual_source
+    from app.database.queries.intellectual_sources.update import attach_source_page, detach_source_page
+
+    node = create_intellectual_source({"name": f"{SENTINEL} detach"})
+    cleanup_sources.append(node.unique_id)
+    page = attach_source_page(node.unique_id, SENTINEL_URL)["attached_page"]
+    update_webpage({"unique_id": page["unique_id"], "raw_text": "keep me"})
+
+    after = detach_source_page(node.unique_id, page["unique_id"])
+    assert after["sources"] == []
+
+    rows, _ = db.cypher_query(
+        "MATCH (w:Webpage {url:$u}) RETURN w.raw_text", {"u": SENTINEL_URL})
+    assert rows[0][0] == "keep me", "the page and its text survive the unlink"
+
+
+@pytest.mark.api
+@pytest.mark.integration
+def test_source_page_endpoint_actions(flask_client, cleanup_sources, cleanup_added_pages):
+    created = flask_client.post("/ati/data-api/v1/intellectual-sources",
+                                json={"name": f"{SENTINEL} endpoint pages"})
+    uid = created.get_json()["data"]["item"]["unique_id"]
+    cleanup_sources.append(uid)
+
+    attached = flask_client.put("/ati/data-api/v1/intellectual-sources", json={
+        "action": "attach_source_page", "unique_id": uid, "url": SENTINEL_URL, "name": "Endpoint page",
+    })
+    assert attached.status_code == 200
+    body = attached.get_json()
+    assert body["message"] == "Page created and linked."
+    page_uid = body["data"]["item"]["attached_page"]["unique_id"]
+
+    relinked = flask_client.put("/ati/data-api/v1/intellectual-sources", json={
+        "action": "attach_source_page", "unique_id": uid, "url": SENTINEL_URL,
+    })
+    assert relinked.get_json()["message"] == "Existing page linked."
+
+    missing_url = flask_client.put("/ati/data-api/v1/intellectual-sources", json={
+        "action": "attach_source_page", "unique_id": uid,
+    })
+    assert missing_url.status_code == 400
+
+    detached = flask_client.put("/ati/data-api/v1/intellectual-sources", json={
+        "action": "detach_source_page", "unique_id": uid, "page_unique_id": page_uid,
+    })
+    assert detached.status_code == 200
+    assert detached.get_json()["data"]["item"]["sources"] == []

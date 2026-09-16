@@ -18,6 +18,7 @@ import {
 import { ExternalLinkIcon } from '@chakra-ui/icons';
 import IntellectualSourceForm from './IntellectualSourceForm';
 import SourcePageTextModal from './SourcePageTextModal';
+import AddSourcePageForm from './AddSourcePageForm';
 import EntityAttachmentSelector from '../../functional_components/EntityAttachmentSelector';
 import { INTELLECTUAL_SOURCE_COLOR } from './intellectualSourceTypes';
 import { deleteIntellectualSource } from '../../../services/api/delete';
@@ -25,6 +26,7 @@ import { fetchAllImplementations } from '../../../services/api/get';
 import {
     attachInformedImplementation,
     detachInformedImplementation,
+    detachSourcePage,
 } from '../../../services/api/put';
 import useResource from '../../../hooks/useResource';
 import { KEYS } from '../../../context/resourceKeys';
@@ -36,8 +38,8 @@ import { useMetaScaffold } from '../../../hooks/useMetaScaffold';
  *   - Identity, attribution and the link out
  *   - Short description, with the full one behind a disclosure
  *   - Source Text, behind a disclosure because it can run to tens of thousands of characters
- *   - Sources (is_sourced_from) — the edges come from the ETL, but each page's own text is
- *     editable here, because a synthesized source keeps its text on the pages
+ *   - Sources (is_sourced_from) — add a page by URL, unlink one, and edit each page's own
+ *     text, because a synthesized source keeps its text on the pages rather than the node
  *   - Informs — Implementations (the editable relationship block)
  *   - Grounds these principles — read-only, the reverse of Principle.derives_from
  *
@@ -53,6 +55,8 @@ function IntellectualSourceDetailPanel({ item, onAfterEdit, onAfterDelete, place
     const textDisclosure = useDisclosure();
     const [deleting, setDeleting] = useState(false);
     const [pageBeingEdited, setPageBeingEdited] = useState(null);
+    const [removingPageId, setRemovingPageId] = useState(null);
+    const addPageDisclosure = useDisclosure();
     const toast = useToast();
     const { principles } = useMetaScaffold();
 
@@ -106,6 +110,30 @@ function IntellectualSourceDetailPanel({ item, onAfterEdit, onAfterDelete, place
             toast({ title: 'Delete failed.', description: error?.message, status: 'error', duration: 3000, isClosable: true });
         } finally {
             setDeleting(false);
+        }
+    };
+
+    // Unlinking a page never deletes it: the same page can be a governance instrument's
+    // source or an implementation's documentation, and deleting it would take its captured
+    // text with it. The confirm says so, because "Remove" next to a page reads like delete.
+    const handleDetachPage = async (page) => {
+        const warning = page.text_length
+            ? `Unlink "${page.name || page.url}" from this source?
+
+The page and its ${page.text_length.toLocaleString()} characters of text stay in the graph; only the link is removed.`
+            : `Unlink "${page.name || page.url}" from this source?
+
+The page stays in the graph; only the link is removed.`;
+        if (!window.confirm(warning)) return;
+        setRemovingPageId(page.unique_id);
+        try {
+            await detachSourcePage(item.unique_id, page.unique_id);
+            toast({ title: 'Page unlinked.', status: 'success', duration: 2000, isClosable: true });
+            await refresh();
+        } catch (error) {
+            toast({ title: 'Unlink failed.', description: error?.message, status: 'error', duration: 3000, isClosable: true });
+        } finally {
+            setRemovingPageId(null);
         }
     };
 
@@ -209,6 +237,10 @@ function IntellectualSourceDetailPanel({ item, onAfterEdit, onAfterDelete, place
                             {pagesMissingText} without text
                         </Badge>
                     )}
+                    <Button size="xs" colorScheme={INTELLECTUAL_SOURCE_COLOR} variant="outline"
+                        onClick={addPageDisclosure.onOpen}>
+                        Add page
+                    </Button>
                 </HStack>
                 {(item.sources || []).length === 0 ? (
                     <Text fontSize="sm" color="gray.600" fontStyle="italic">
@@ -238,16 +270,27 @@ function IntellectualSourceDetailPanel({ item, onAfterEdit, onAfterDelete, place
                                             )}
                                         </HStack>
                                     </Box>
-                                    {editable && (
+                                    <HStack spacing={1}>
+                                        {editable && (
+                                            <Button
+                                                size="xs"
+                                                variant="outline"
+                                                colorScheme={INTELLECTUAL_SOURCE_COLOR}
+                                                onClick={() => setPageBeingEdited(s)}
+                                            >
+                                                {chars ? 'Edit text' : 'Add text'}
+                                            </Button>
+                                        )}
                                         <Button
                                             size="xs"
-                                            variant="outline"
-                                            colorScheme={INTELLECTUAL_SOURCE_COLOR}
-                                            onClick={() => setPageBeingEdited(s)}
+                                            variant="ghost"
+                                            colorScheme="red"
+                                            isLoading={removingPageId === s.unique_id}
+                                            onClick={() => handleDetachPage(s)}
                                         >
-                                            {chars ? 'Edit text' : 'Add text'}
+                                            Remove
                                         </Button>
-                                    )}
+                                    </HStack>
                                 </HStack>
                             );
                         })}
@@ -299,6 +342,13 @@ function IntellectualSourceDetailPanel({ item, onAfterEdit, onAfterDelete, place
                     </HStack>
                 )}
             </Box>
+
+            <AddSourcePageForm
+                isOpen={addPageDisclosure.isOpen}
+                onClose={addPageDisclosure.onClose}
+                sourceUniqueId={item.unique_id}
+                onSaved={refresh}
+            />
 
             <SourcePageTextModal
                 isOpen={Boolean(pageBeingEdited)}

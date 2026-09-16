@@ -7,9 +7,12 @@ URL surface (mounted at /ati/data-api/v1):
     GET    /intellectual-sources                one list
     GET    /intellectual-sources/<unique_id>    one source
     POST   /intellectual-sources                create (name required)
-    PUT    /intellectual-sources                update (unique_id + fields), or an
-                                               action: attach_informed_implementation /
-                                               detach_informed_implementation
+    PUT    /intellectual-sources                update (unique_id + fields), or an action:
+                                               attach_informed_implementation,
+                                               detach_informed_implementation,
+                                               attach_source_page (by url; an existing url
+                                               is cross-linked, never duplicated),
+                                               detach_source_page
     DELETE /intellectual-sources                delete (unique_id in body)
 """
 import traceback
@@ -24,7 +27,9 @@ from app.database.queries.intellectual_sources.read import (
 )
 from app.database.queries.intellectual_sources.update import (
     attach_informed_implementation,
+    attach_source_page,
     detach_informed_implementation,
+    detach_source_page,
     update_intellectual_source,
 )
 from app.database.queries.intellectual_sources.delete import delete_intellectual_source
@@ -89,6 +94,20 @@ class IntellectualSourcesAPI(MethodView):
                 _require(data, "implementation_unique_id")
                 item = detach_informed_implementation(data["unique_id"], data["implementation_unique_id"])
                 return make_response(status="success", data={"item": item}, message="Implementation unlinked."), 200
+
+            if action == "attach_source_page":
+                _require(data, "url")
+                item = attach_source_page(data["unique_id"], data["url"], data.get("name"))
+                created = item.get("attached_page", {}).get("created")
+                return make_response(
+                    status="success", data={"item": item},
+                    message="Page created and linked." if created else "Existing page linked.",
+                ), 200
+
+            if action == "detach_source_page":
+                _require(data, "page_unique_id")
+                item = detach_source_page(data["unique_id"], data["page_unique_id"])
+                return make_response(status="success", data={"item": item}, message="Page unlinked."), 200
 
             if action:
                 raise ValidationError(f"Unknown action {action!r}")
