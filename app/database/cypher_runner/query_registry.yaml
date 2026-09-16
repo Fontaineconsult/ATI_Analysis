@@ -390,6 +390,128 @@
 # ---------------------------------------------------------------------------
 # COMPOUND / REPORTING
 # ---------------------------------------------------------------------------
+- name: corpus_source_text_status
+  category: documentation
+  description: >-
+    Corpus mode step 1. Every documentation item hanging off a set of implementations at
+    one campus, with whether it carries Source Text and when it was captured. Params:
+    implementation_label (a node label such as Guidance, Service, Process, or '' for every
+    implementation type) and campus_abbreviation. The readability baseline every later
+    corpus finding inherits — a member whose pages have no text is read from titles alone.
+  mode: read
+  params: [implementation_label, campus_abbreviation]
+  cypher: |
+    MATCH (n)-[:is_evidence_for]->(:YearSuccessEvidence)-[:evidence_at_campus]->(:Campus {abbreviation: $campus_abbreviation})
+    WHERE any(l IN labels(n) WHERE l IN
+      ['Process','Project','Procedure','Service','Guidance','Tracking','InternalPolicy','TAAP'])
+      AND ($implementation_label = '' OR $implementation_label IN labels(n))
+    WITH DISTINCT n
+    OPTIONAL MATCH (n)-[:is_documented_by]->(d)
+    WHERE d:Webpage OR d:Document
+    RETURN labels(n)[0] AS type,
+           coalesce(n.title, n.name) AS impl,
+           n.unique_id AS impl_id,
+           coalesce(n.retired, false) AS retired,
+           labels(d)[0] AS doc_kind,
+           d.unique_id AS doc_id,
+           coalesce(d.name, d.url) AS doc_name,
+           coalesce(d.url, d.uri_path, d.file_path) AS source,
+           d.raw_text IS NOT NULL AS has_source_text,
+           size(coalesce(d.raw_text, '')) AS source_text_chars,
+           toString(d.raw_text_captured) AS captured,
+           coalesce(d.depreciated, false) AS depreciated,
+           coalesce(d.no_longer_exists, false) AS no_longer_exists
+    ORDER BY retired, impl, doc_name
+
+- name: corpus_shared_documentation
+  category: documentation
+  description: >-
+    Corpus mode step 2, signal 1. Documentation cited by more than one implementation,
+    where at least one side is in the set. The strongest overlap signal, because someone
+    already treated one source as covering both. Shared documentation is NOT automatically
+    a defect: cross-campus parallel work and deliberate Guidance-over-Procedure layering
+    are correct. Only two live nodes at the same campus describing the same work are.
+    Params: implementation_label ('' for all) and campus_abbreviation.
+  mode: read
+  params: [implementation_label, campus_abbreviation]
+  cypher: |
+    MATCH (n)-[:is_evidence_for]->(:YearSuccessEvidence)-[:evidence_at_campus]->(:Campus {abbreviation: $campus_abbreviation})
+    WHERE any(l IN labels(n) WHERE l IN
+      ['Process','Project','Procedure','Service','Guidance','Tracking','InternalPolicy','TAAP'])
+      AND ($implementation_label = '' OR $implementation_label IN labels(n))
+    WITH DISTINCT n
+    MATCH (n)-[:is_documented_by]->(d)
+    MATCH (other)-[:is_documented_by]->(d)
+    WHERE other <> n
+      AND any(l IN labels(other) WHERE l IN
+        ['Process','Project','Procedure','Service','Guidance','Tracking','InternalPolicy','TAAP'])
+    RETURN coalesce(d.name, d.url) AS shared_doc,
+           d.unique_id AS doc_id,
+           coalesce(d.url, d.uri_path) AS url,
+           coalesce(n.title, n.name) AS member,
+           coalesce(n.retired, false) AS member_retired,
+           labels(other)[0] AS other_type,
+           coalesce(other.title, other.name) AS other_title,
+           coalesce(other.retired, false) AS other_retired,
+           other.unique_id AS other_id
+    ORDER BY shared_doc, member
+
+- name: corpus_host_urls_in_graph
+  category: documentation
+  description: >-
+    Corpus mode step 3. Every Webpage and Document in the graph whose URL contains a host
+    fragment, with the implementations each documents. Run this BEFORE proposing any page
+    the sweep found: a URL already in the graph under another implementation is a
+    cross-link (assign_documentation_to_implementation), never a second node. Param
+    host_fragment, e.g. 'csueastbay' or 'sonoma.edu'.
+  mode: read
+  params: [host_fragment]
+  cypher: |
+    MATCH (n)
+    WHERE (n:Webpage OR n:Document)
+      AND toLower(coalesce(n.url, n.uri_path, '')) CONTAINS toLower($host_fragment)
+    OPTIONAL MATCH (impl)-[:is_documented_by]->(n)
+    RETURN coalesce(n.url, n.uri_path) AS url,
+           labels(n)[0] AS kind,
+           coalesce(n.name, '') AS name,
+           n.unique_id AS unique_id,
+           coalesce(n.depreciated, false) AS depreciated,
+           coalesce(n.no_longer_exists, false) AS no_longer_exists,
+           collect(DISTINCT (labels(impl)[0] + ' :: ' + coalesce(impl.title, impl.name, ''))) AS documents_for
+    ORDER BY url
+
+- name: corpus_accountability_coverage
+  category: implementation
+  description: >-
+    Corpus mode feedback, and the CoP-mode five buckets read from the set end. For a set of
+    implementations at one campus: the accountable community, the owner and the owner's own
+    communities, the accountable working group, and the description length. Owner
+    membership is signal 1 and sufficient alone; a member with no owner and no unit named
+    anywhere is undecidable and the fix is naming an owner, not guessing a community.
+    Params: implementation_label ('' for all) and campus_abbreviation.
+  mode: read
+  params: [implementation_label, campus_abbreviation]
+  cypher: |
+    MATCH (n)-[:is_evidence_for]->(:YearSuccessEvidence)-[:evidence_at_campus]->(:Campus {abbreviation: $campus_abbreviation})
+    WHERE any(l IN labels(n) WHERE l IN
+      ['Process','Project','Procedure','Service','Guidance','Tracking','InternalPolicy','TAAP'])
+      AND ($implementation_label = '' OR $implementation_label IN labels(n))
+    WITH DISTINCT n
+    OPTIONAL MATCH (n)-[:accountable_community]->(ac:CommunityOfPractice)
+    OPTIONAL MATCH (n)-[:owned_by]->(o:Person)
+    OPTIONAL MATCH (o)-[:member_of_community]->(oc:CommunityOfPractice)
+    OPTIONAL MATCH (n)-[:accountable_working_group]->(wg:ATIWorkingGroup)
+    RETURN labels(n)[0] AS type,
+           coalesce(n.title, n.name) AS impl,
+           n.unique_id AS impl_id,
+           coalesce(n.retired, false) AS retired,
+           collect(DISTINCT ac.name) AS accountable_community,
+           collect(DISTINCT o.name) AS owners,
+           collect(DISTINCT oc.name) AS owner_communities,
+           collect(DISTINCT wg.name) AS working_groups,
+           size(coalesce(n.description, '')) AS description_chars
+    ORDER BY retired, impl
+
 - name: campus_plan_overview_for_year
   category: compound
   description: Campus plans for a year with their working-group plans.

@@ -20,6 +20,15 @@ lives there; this folder indexes the database-facing ones.
   interview protocol and transcript-hygiene habits. Invoke with
   `/stakeholder-interview` or "prep an interview with X".
 
+- **ontology-extract** (`.claude/skills/ontology-extract/SKILL.md`) — the inverse of
+  the ingest: pulls information OUT of the graph for an external consumer (another
+  repo, a Claude project, a report, an agent). Grades every claim before it leaves
+  (source text, administered fact, curated description, attested note, derived),
+  presents an extraction manifest for approval, then writes a dated packet to
+  `../../ontology/exports/` or adds a `read` query to the registry so the consumer
+  re-pulls live through the MCP server. Never writes to the graph. Invoke with
+  `/ontology-extract` or "pull this from the graph for X".
+
 Ingest output is validated and executed only through the standalone runner
 `python -m app.database.cypher_runner.run_file <file> [--execute]`; curated
 single-query recon lives in `app/database/cypher_runner/run_query.py`.
