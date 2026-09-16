@@ -413,10 +413,18 @@ export const ATTACHMENT_FAMILIES = {
         blurb: 'Records about the jobs people hold.',
         labels: ['PositionDescription'],
     },
+    theory: {
+        key: 'theory',
+        label: 'Intellectual sources',
+        colorScheme: 'pink',
+        blurb: 'Thinking the campus draws on. Carries no authority.',
+        labels: ['IntellectualSource'],
+    },
 };
 
 export const ATTACHMENT_FAMILY_ORDER = [
     'implementations', 'governance', 'evidence', 'planning', 'assets', 'inquiry', 'people',
+    'theory',
 ];
 
 /** Anything the families don't claim still has to be selectable, never dropped. */

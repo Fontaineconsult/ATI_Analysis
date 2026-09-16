@@ -1518,6 +1518,118 @@ export const attachShapeToPrinciple = (principleHandle, descriptorHandle) =>
 export const detachShapeFromPrinciple = (principleHandle, descriptorHandle) =>
     _principleAttachDetach('detach_shape', principleHandle, { descriptor_handle: descriptorHandle });
 
+
+//
+// INTELLECTUAL SOURCES
+//
+// Field patch sends no action, which is what this endpoint did before the informs edges
+// existed. raw_text is sent like any other field; the query layer stamps
+// raw_text_captured and moves it only when the text itself changes, so re-sending the
+// same text does not refresh the date.
+//
+export const updateIntellectualSource = async (uniqueId, fields) => {
+    try {
+        const response = await axios.put(`${process.env.REACT_APP_API_URL}/intellectual-sources`, {
+            unique_id: uniqueId,
+            ...fields,
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error updating intellectual source:', error);
+        throw error;
+    }
+};
+
+// informs — the source shaped what an implementation says. Heterogeneous target, so the
+// server resolves the label from the unique_id and refuses anything that is not an
+// implementation.
+const _sourceInformsAction = async (action, uniqueId, implementationUniqueId) => {
+    try {
+        const response = await axios.put(`${process.env.REACT_APP_API_URL}/intellectual-sources`, {
+            action,
+            unique_id: uniqueId,
+            implementation_unique_id: implementationUniqueId,
+        });
+        return response.data;
+    } catch (error) {
+        console.error(`Error on intellectual-source ${action}:`, error);
+        throw error;
+    }
+};
+
+export const attachInformedImplementation = (uniqueId, implementationUniqueId) =>
+    _sourceInformsAction('attach_informed_implementation', uniqueId, implementationUniqueId);
+export const detachInformedImplementation = (uniqueId, implementationUniqueId) =>
+    _sourceInformsAction('detach_informed_implementation', uniqueId, implementationUniqueId);
+
+/**
+ * Attach a page to an intellectual source BY URL.
+ *
+ * The server MERGEs on url, so a page already in the graph is cross-linked rather than
+ * duplicated, and the response says which happened under `data.item.attached_page.created`.
+ * That matters because a second node for the same page splits its Source Text: one copy
+ * gets captured and the other stays empty, and the backlog then reports a page somebody
+ * has already read.
+ */
+export const attachSourcePage = async (uniqueId, url, name) => {
+    try {
+        const response = await axios.put(`${process.env.REACT_APP_API_URL}/intellectual-sources`, {
+            action: 'attach_source_page',
+            unique_id: uniqueId,
+            url,
+            name: name || undefined,
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error attaching source page:', error);
+        throw error;
+    }
+};
+
+// Removes the edge only. The page may also be a governance instrument's source or an
+// implementation's documentation, and deleting it would take its captured text with it.
+export const detachSourcePage = async (uniqueId, pageUniqueId) => {
+    try {
+        const response = await axios.put(`${process.env.REACT_APP_API_URL}/intellectual-sources`, {
+            action: 'detach_source_page',
+            unique_id: uniqueId,
+            page_unique_id: pageUniqueId,
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error detaching source page:', error);
+        throw error;
+    }
+};
+
+
+/**
+ * Set ONLY the Source Text on a webpage.
+ *
+ * `updateWebpage` above takes six positional arguments, and three of them have side
+ * effects: a maintainer is reassigned, a year-inclusion edge is written, a YSE association
+ * is added. Each is guarded by truthiness in queries/documentation/update.update_webpage,
+ * so omitting them is safe — but calling the six-arg version to change one field means
+ * remembering that every time. This sends `{unique_id, raw_text}` and nothing else, which
+ * is the only shape a source-text edit needs.
+ *
+ * `raw_text_captured` is stamped by the query layer and moves only when the text itself
+ * changes, so re-saving identical text does not refresh the date. Sending an empty string
+ * clears both.
+ */
+export const updateWebpageSourceText = async (uniqueId, rawText) => {
+    try {
+        const response = await axios.put(`${process.env.REACT_APP_API_URL}/documents/webpages`, {
+            action: 'update_webpage',
+            webpage_dict: { unique_id: uniqueId, raw_text: rawText },
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error updating webpage source text:', error);
+        throw error;
+    }
+};
+
 // Replace a doing-implementation's AMM-dimension classification (replace-semantics:
 // dimensionHandles is the full intended set). Only Process/Project/Procedure/Service.
 export const setImplementationDimensions = async (implementationType, implementationUniqueId, dimensionHandles) => {

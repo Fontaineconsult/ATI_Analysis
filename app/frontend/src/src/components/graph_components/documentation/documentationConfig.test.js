@@ -301,8 +301,8 @@ describe('attachment families', () => {
     it('covers every label the schema allows to attach', () => {
         expect([...ATTACHMENT_LABELS].sort()).toEqual([
             'Accomplishment', 'Asset', 'CampusPlan', 'Case', 'Component',
-            'Directive', 'ExternalPolicy', 'Guidance', 'Guideline', 'Interface',
-            'InternalPolicy', 'Law', 'MeetingMinutes', 'Memo', 'Plan',
+            'Directive', 'ExternalPolicy', 'Guidance', 'Guideline', 'IntellectualSource',
+            'Interface', 'InternalPolicy', 'Law', 'MeetingMinutes', 'Memo', 'Plan',
             'PositionDescription', 'Procedure', 'Process', 'ProgressUpdate', 'Project', 'Query',
             'Service', 'StatusLevel', 'SuccessIndicator', 'TAAP', 'Tool',
             'Tracking', 'WorkingGroupPlan', 'YearSuccessEvidence',

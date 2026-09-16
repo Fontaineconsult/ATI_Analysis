@@ -304,6 +304,22 @@ export const deletePrinciple = async (handle) => {
     }
 };
 
+export const deleteIntellectualSource = async (uniqueId) => {
+    try {
+        const response = await fetch(`${API_URL}/intellectual-sources`, {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ unique_id: uniqueId }),
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Failed to delete intellectual source');
+        return data;
+    } catch (error) {
+        console.error('Error deleting intellectual source:', error);
+        throw error;
+    }
+};
+
 // --- Queries (pending questions) ---
 export const deleteQuery = async (uniqueId) => {
     try {

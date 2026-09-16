@@ -72,6 +72,8 @@ ATTACHABLE_LABELS = {
     "Query",
     # people
     "PositionDescription",
+    # theory — carries no authority, unlike the governance block above
+    "IntellectualSource",
 }
 
 

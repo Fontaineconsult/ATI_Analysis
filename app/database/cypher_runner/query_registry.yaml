@@ -368,9 +368,15 @@
 - name: documentation_missing_source_text
   category: documentation
   description: >
-    Every live Webpage with a URL and no Source Text (raw_text), with the implementations
-    it documents. The campus-wide backlog for /get-source-text. Excludes depreciated and
-    no_longer_exists pages. Optional campus filter by abbreviation ('' for all).
+    Every live Webpage with a URL and no Source Text (raw_text), with what it backs. A page
+    reaches the graph two ways and this reports both: `is_documented_by` from an
+    implementation (campus evidence) and `is_sourced_from` from a governance instrument or
+    an IntellectualSource (the external canon). Reporting only the first left roughly half
+    the backlog as nameless rows with no campus and no parent, which is why `sources_for`
+    and `attachment` exist. The campus-wide backlog for /get-source-text. Excludes
+    depreciated and no_longer_exists pages. `campus_abbreviation` filters to one campus
+    ('' for all); canon pages have no campus, so a campus filter excludes them by design,
+    and `attachment` tells them apart when it does not.
   mode: read
   params: [campus_abbreviation]
   cypher: |
@@ -382,10 +388,57 @@
     OPTIONAL MATCH (impl)-[:is_evidence_for]->(:YearSuccessEvidence)-[:evidence_at_campus]->(c:Campus)
     WITH w, collect(DISTINCT impl.title) AS documents_for,
          collect(DISTINCT c.abbreviation) AS campuses
+    OPTIONAL MATCH (parent)-[:is_sourced_from]->(w)
+    WITH w, documents_for, campuses,
+         collect(DISTINCT CASE WHEN parent IS NULL THEN NULL ELSE
+           labels(parent)[0] + ': ' + coalesce(parent.title, parent.name, '(untitled)') END)
+           AS sources_for_raw
+    WITH w, documents_for, campuses,
+         [x IN sources_for_raw WHERE x IS NOT NULL] AS sources_for
     WHERE $campus_abbreviation = '' OR $campus_abbreviation IN campuses
     RETURN coalesce(w.name, w.url) AS name, w.url AS url, w.unique_id AS unique_id,
-           [t IN documents_for WHERE t IS NOT NULL] AS documents_for, campuses
-    ORDER BY name
+           [t IN documents_for WHERE t IS NOT NULL] AS documents_for,
+           sources_for, campuses,
+           CASE WHEN size([t IN documents_for WHERE t IS NOT NULL]) > 0
+                     AND size(sources_for) > 0 THEN 'both'
+                WHEN size([t IN documents_for WHERE t IS NOT NULL]) > 0 THEN 'campus evidence'
+                WHEN size(sources_for) > 0 THEN 'external canon'
+                ELSE 'orphan' END AS attachment
+    ORDER BY attachment, name
+
+- name: intellectual_source_text_status
+  category: documentation
+  description: >-
+    Every IntellectualSource with whether its own Source Text is captured and whether each
+    page it is sourced from carries text. The /get-source-text worklist for the Intellectual
+    Sources tab. Two different states read as "no text" and need separating: a source with a
+    single canonical `url` holds its text ON THE NODE, while a synthesized source (a model
+    observed at several institutions) has no canonical url and its text lives on the pages
+    instead, so its node is empty by design and its pages are the real gap. `node_text`
+    and `pages_without_text` say which case a row is.
+  mode: read
+  params: []
+  cypher: |
+    MATCH (s:IntellectualSource)
+    OPTIONAL MATCH (s)-[:is_sourced_from]->(w)
+    WITH s, collect(DISTINCT CASE WHEN w IS NULL THEN NULL ELSE {
+           name: coalesce(w.name, w.title, w.url),
+           url: w.url,
+           unique_id: w.unique_id,
+           captured: toString(w.raw_text_captured),
+           characters: size(coalesce(w.raw_text, ''))
+         } END) AS pages_raw
+    WITH s, [p IN pages_raw WHERE p IS NOT NULL] AS pages
+    RETURN s.name AS name,
+           s.unique_id AS unique_id,
+           s.url AS url,
+           CASE WHEN s.raw_text IS NULL THEN 'none'
+                ELSE toString(size(s.raw_text)) + ' characters' END AS node_text,
+           toString(s.raw_text_captured) AS node_captured,
+           size(pages) AS page_count,
+           size([p IN pages WHERE p.characters = 0]) AS pages_without_text,
+           pages
+    ORDER BY pages_without_text DESC, name
 
 # ---------------------------------------------------------------------------
 # COMPOUND / REPORTING

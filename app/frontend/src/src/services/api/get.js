@@ -914,6 +914,21 @@ export const fetchAllIntellectualSources = async () => {
     }
 };
 
+// One source WITH its edges. The list read carries only counts, because a reading list
+// should show which sources are wired without pulling every implementation title; the
+// detail read carries `sources` (is_sourced_from) and `informed_implementations`.
+export const fetchIntellectualSource = async (uniqueId) => {
+    try {
+        const response = await axios.get(
+            `${process.env.REACT_APP_API_URL}/intellectual-sources/${uniqueId}`);
+        if (response.status === 200) return response.data;
+        throw new Error(`Failed to fetch intellectual source: ${response.data?.error}`);
+    } catch (error) {
+        console.error('Error fetching intellectual source:', error.message);
+        throw error;
+    }
+};
+
 // The seven W3C AMM dimensions (read-only) — options for the Implementation Details
 // dimension multi-select. Returns the wrapper; consumers read data.items.
 export const fetchAllDimensions = async () => {

@@ -47,14 +47,17 @@ function WorkingGroupMasterContainer() {
                 <Route path="people/about" element={<PeopleArea activeTab="about" />} />
                 <Route path="people/:personId" element={<PeopleArea activeTab="people" />} />
 
-                {/* Governance area = Governance items + Principles (tabbed). URL-driven: the
-                    route picks the active tab, and the optional selection param deep-links an
-                    item (governance unique_id / principle handle). Same useParams+navigate
-                    pattern as the implementations routes above. */}
+                {/* Governance area = Governance items + Principles + Intellectual Sources
+                    (tabbed). URL-driven: the route picks the active tab, and the optional
+                    selection param deep-links an item (governance unique_id / principle
+                    handle / source unique_id). Same useParams+navigate pattern as the
+                    implementations routes above. */}
                 <Route path="governance" element={<GovernanceArea activeTab="governance" />} />
                 <Route path="governance/:governanceId" element={<GovernanceArea activeTab="governance" />} />
                 <Route path="principles" element={<GovernanceArea activeTab="principles" />} />
                 <Route path="principles/:principleSlug" element={<GovernanceArea activeTab="principles" />} />
+                <Route path="intellectual-sources" element={<GovernanceArea activeTab="intellectual-sources" />} />
+                <Route path="intellectual-sources/:sourceId" element={<GovernanceArea activeTab="intellectual-sources" />} />
 
                 <Route path="assets" element={<AssetsMasterContainer />} />
                 <Route path="assets/:assetTab" element={<AssetsMasterContainer />} />
