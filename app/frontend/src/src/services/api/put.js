@@ -1562,6 +1562,34 @@ export const attachInformedImplementation = (uniqueId, implementationUniqueId) =
 export const detachInformedImplementation = (uniqueId, implementationUniqueId) =>
     _sourceInformsAction('detach_informed_implementation', uniqueId, implementationUniqueId);
 
+
+/**
+ * Set ONLY the Source Text on a webpage.
+ *
+ * `updateWebpage` above takes six positional arguments, and three of them have side
+ * effects: a maintainer is reassigned, a year-inclusion edge is written, a YSE association
+ * is added. Each is guarded by truthiness in queries/documentation/update.update_webpage,
+ * so omitting them is safe — but calling the six-arg version to change one field means
+ * remembering that every time. This sends `{unique_id, raw_text}` and nothing else, which
+ * is the only shape a source-text edit needs.
+ *
+ * `raw_text_captured` is stamped by the query layer and moves only when the text itself
+ * changes, so re-saving identical text does not refresh the date. Sending an empty string
+ * clears both.
+ */
+export const updateWebpageSourceText = async (uniqueId, rawText) => {
+    try {
+        const response = await axios.put(`${process.env.REACT_APP_API_URL}/documents/webpages`, {
+            action: 'update_webpage',
+            webpage_dict: { unique_id: uniqueId, raw_text: rawText },
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error updating webpage source text:', error);
+        throw error;
+    }
+};
+
 // Replace a doing-implementation's AMM-dimension classification (replace-semantics:
 // dimensionHandles is the full intended set). Only Process/Project/Procedure/Service.
 export const setImplementationDimensions = async (implementationType, implementationUniqueId, dimensionHandles) => {

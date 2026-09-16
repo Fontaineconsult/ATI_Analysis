@@ -16,7 +16,13 @@ WITH s, collect(DISTINCT CASE WHEN src IS NULL THEN NULL ELSE {
     unique_id: src.unique_id,
     label: labels(src)[0],
     name: coalesce(src.name, src.title),
-    url: src.url
+    url: src.url,
+    // A source page carries its own text, separately from the source node's. For a
+    // synthesized source there is no node-level text at all and these ARE the text, so
+    // the panel has to be able to see and set them one page at a time.
+    raw_text: src.raw_text,
+    raw_text_captured: toString(src.raw_text_captured),
+    text_length: size(coalesce(src.raw_text, ''))
 } END) AS sources
 OPTIONAL MATCH (s)-[:informs]->(impl)
 RETURN [x IN sources WHERE x IS NOT NULL] AS sources,
@@ -64,14 +70,29 @@ def get_all_intellectual_sources() -> list:
         MATCH (s:IntellectualSource)
         RETURN s.unique_id AS uid,
                size([(s)-[:is_sourced_from]->(x) | 1]) AS source_count,
-               size([(s)-[:informs]->(x) | 1]) AS informs_count
+               size([(s)-[:informs]->(x) | 1]) AS informs_count,
+               // Source pages still missing their text. A synthesized source reads as
+               // "No text" on the node forever, because its text lives on these pages,
+               // so the list needs this to tell unread from unreadable.
+               size([(s)-[:is_sourced_from]->(x) WHERE x.raw_text IS NULL | 1])
+                   AS sources_without_text
         """
     )
-    counts = {r[0]: {"source_count": r[1], "informs_count": r[2]} for r in rows}
+    counts = {
+        r[0]: {
+            "source_count": r[1],
+            "informs_count": r[2],
+            "sources_without_text": r[3],
+        }
+        for r in rows
+    }
     out = []
     for s in IntellectualSource.nodes.all():
         data = s.serialize()
-        data.update(counts.get(s.unique_id, {"source_count": 0, "informs_count": 0}))
+        data.update(counts.get(
+            s.unique_id,
+            {"source_count": 0, "informs_count": 0, "sources_without_text": 0},
+        ))
         out.append(data)
     return sorted(out, key=lambda s: (s.get("name") or "").lower())
 

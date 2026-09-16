@@ -12,6 +12,7 @@ const ITEMS = [
         raw_text_captured: '2026-09-16',
         informs_count: 2,
         source_count: 1,
+        sources_without_text: 0,
     },
     {
         unique_id: 'b2',
@@ -20,6 +21,7 @@ const ITEMS = [
         raw_text_captured: null,
         informs_count: 0,
         source_count: 4,
+        sources_without_text: 4,
     },
 ];
 
@@ -44,9 +46,51 @@ describe('IntellectualSourceList', () => {
     it('flags whether a source has text and whether anything is wired to it', () => {
         renderList();
         expect(screen.getByText('Has text')).toBeInTheDocument();
-        expect(screen.getByText('No text')).toBeInTheDocument();
         expect(screen.getByText('Informs 2')).toBeInTheDocument();
         expect(screen.getByText('Informs nothing')).toBeInTheDocument();
+    });
+
+    /**
+     * A synthesized source holds no text on the node by design; its text lives on the pages
+     * it was drawn from. Reading only the node would mark it unread forever, so the row
+     * counts the pages still missing text instead.
+     */
+    it('reports the page gap for a source whose text lives on its pages', () => {
+        renderList();
+        expect(screen.getByText('4 pages without text')).toBeInTheDocument();
+        expect(screen.queryByText('No text')).not.toBeInTheDocument();
+    });
+
+    it('counts a source with every page captured as having text', () => {
+        render(
+            <ChakraProvider>
+                <IntellectualSourceList items={[{
+                    unique_id: 'c3',
+                    name: 'All pages captured',
+                    raw_text_captured: null,
+                    source_count: 2,
+                    sources_without_text: 0,
+                    informs_count: 0,
+                }]} />
+            </ChakraProvider>,
+        );
+        expect(screen.getByText('Has text')).toBeInTheDocument();
+    });
+
+    it('says plainly when a source has neither node text nor pages', () => {
+        render(
+            <ChakraProvider>
+                <IntellectualSourceList items={[{
+                    unique_id: 'd4',
+                    name: 'Nothing at all',
+                    raw_text_captured: null,
+                    source_count: 0,
+                    sources_without_text: 0,
+                    informs_count: 0,
+                }]} />
+            </ChakraProvider>,
+        );
+        expect(screen.getByText('No text')).toBeInTheDocument();
     });
 
     it('filters on name, author and publisher', () => {

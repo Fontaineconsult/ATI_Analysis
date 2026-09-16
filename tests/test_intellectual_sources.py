@@ -226,3 +226,85 @@ def test_put_action_dispatch(flask_client, cleanup_sources, sentinel_implementat
         "unique_id": uid, "action": "not_a_real_action",
     })
     assert unknown.status_code == 400
+
+
+# --- source pages and their own text -------------------------------------------------
+
+@pytest.fixture
+def sentinel_page(neo4j_connection):
+    """A throwaway Webpage to hang is_sourced_from on."""
+    from neomodel import db
+
+    rows, _ = db.cypher_query(
+        "CREATE (w:Webpage {unique_id: randomUUID(), name: $n, url: $u}) RETURN w.unique_id",
+        {"n": f"{SENTINEL} page", "u": f"https://example.invalid/{SENTINEL}"},
+    )
+    uid = rows[0][0]
+    yield uid
+    db.cypher_query("MATCH (w:Webpage {unique_id:$u}) DETACH DELETE w", {"u": uid})
+
+
+@pytest.mark.integration
+def test_source_pages_carry_their_own_text_status(cleanup_sources, sentinel_page):
+    """A synthesized source keeps its text on its pages, so the read has to report each
+    page's text separately from the node's."""
+    from neomodel import db
+
+    from app.database.queries.intellectual_sources.create import create_intellectual_source
+    from app.database.queries.intellectual_sources.read import (
+        get_all_intellectual_sources,
+        get_intellectual_source,
+    )
+
+    node = create_intellectual_source({"name": f"{SENTINEL} synthesized"})
+    cleanup_sources.append(node.unique_id)
+    db.cypher_query(
+        "MATCH (s:IntellectualSource {unique_id:$s}) MATCH (w:Webpage {unique_id:$w}) "
+        "MERGE (s)-[:is_sourced_from]->(w)",
+        {"s": node.unique_id, "w": sentinel_page},
+    )
+
+    read = get_intellectual_source(node.unique_id)
+    assert len(read["sources"]) == 1
+    page = read["sources"][0]
+    assert page["label"] == "Webpage"
+    assert page["text_length"] == 0
+    assert page["raw_text_captured"] is None
+
+    # The list counts the gap, so a synthesized source is not marked unread forever.
+    row = next(s for s in get_all_intellectual_sources() if s["unique_id"] == node.unique_id)
+    assert row["source_count"] == 1
+    assert row["sources_without_text"] == 1
+
+    # Fill the page the way the modal does, then the gap closes.
+    from app.database.queries.documentation.update import update_webpage
+
+    update_webpage({"unique_id": sentinel_page, "raw_text": "what the page says"})
+
+    read = get_intellectual_source(node.unique_id)
+    assert read["sources"][0]["text_length"] == len("what the page says")
+    assert read["sources"][0]["raw_text_captured"] is not None
+    row = next(s for s in get_all_intellectual_sources() if s["unique_id"] == node.unique_id)
+    assert row["sources_without_text"] == 0
+
+
+@pytest.mark.integration
+def test_source_text_only_webpage_write_touches_nothing_else(cleanup_sources, sentinel_page):
+    """The narrow write the modal uses. update_webpage's maintainer, year-inclusion and YSE
+    side effects are all truthiness-guarded, so a text-only call must leave them alone."""
+    from neomodel import db
+
+    from app.database.queries.documentation.update import update_webpage
+
+    update_webpage({"unique_id": sentinel_page, "raw_text": "text only"})
+
+    rows, _ = db.cypher_query(
+        "MATCH (w:Webpage {unique_id:$u}) RETURN w.raw_text, w.name, w.url, "
+        "size([(w)<-[:maintained_by]-() | 1]) + size([(w)-[:maintained_by]->() | 1])",
+        {"u": sentinel_page},
+    )
+    raw_text, name, url, maintainer_edges = rows[0]
+    assert raw_text == "text only"
+    assert name == f"{SENTINEL} page"          # untouched
+    assert url == f"https://example.invalid/{SENTINEL}"
+    assert maintainer_edges == 0               # no maintainer was invented

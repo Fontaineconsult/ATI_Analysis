@@ -73,8 +73,16 @@ function IntellectualSourceList({ items = [], selectedId, onSelect, onAdd, empty
                 ) : (
                     filtered.map((item, index) => {
                         const isSelected = item.unique_id === selectedId;
-                        const hasText = Boolean(item.raw_text_captured);
                         const informs = item.informs_count || 0;
+                        // Text lives in one of two places. A source with a canonical url holds
+                        // it on the node; a synthesized one holds it on the pages it was drawn
+                        // from, so its node is empty by design. Reading only the node would
+                        // mark every synthesized source unread forever.
+                        const pagesMissing = item.sources_without_text || 0;
+                        const hasText = Boolean(item.raw_text_captured) || (item.source_count > 0 && pagesMissing === 0);
+                        const textLabel = hasText ? 'Has text'
+                            : pagesMissing ? `${pagesMissing} page${pagesMissing === 1 ? '' : 's'} without text`
+                                : 'No text';
                         return (
                             <Box
                                 key={item.unique_id}
@@ -102,8 +110,8 @@ function IntellectualSourceList({ items = [], selectedId, onSelect, onAdd, empty
                                     </Text>
                                 )}
                                 <HStack spacing={1} mt={1} flexWrap="wrap">
-                                    <Badge fontSize="2xs" colorScheme={hasText ? 'green' : 'gray'} variant="subtle">
-                                        {hasText ? 'Has text' : 'No text'}
+                                    <Badge fontSize="2xs" colorScheme={hasText ? 'green' : pagesMissing ? 'orange' : 'gray'} variant="subtle">
+                                        {textLabel}
                                     </Badge>
                                     <Badge fontSize="2xs" colorScheme={informs ? INTELLECTUAL_SOURCE_COLOR : 'gray'} variant="subtle">
                                         {informs ? `Informs ${informs}` : 'Informs nothing'}

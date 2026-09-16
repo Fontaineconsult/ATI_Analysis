@@ -17,6 +17,7 @@ import {
 } from '@chakra-ui/react';
 import { ExternalLinkIcon } from '@chakra-ui/icons';
 import IntellectualSourceForm from './IntellectualSourceForm';
+import SourcePageTextModal from './SourcePageTextModal';
 import EntityAttachmentSelector from '../../functional_components/EntityAttachmentSelector';
 import { INTELLECTUAL_SOURCE_COLOR } from './intellectualSourceTypes';
 import { deleteIntellectualSource } from '../../../services/api/delete';
@@ -35,8 +36,9 @@ import { useMetaScaffold } from '../../../hooks/useMetaScaffold';
  *   - Identity, attribution and the link out
  *   - Short description, with the full one behind a disclosure
  *   - Source Text, behind a disclosure because it can run to tens of thousands of characters
- *   - Sources (is_sourced_from) — read-only, written by the ETL
- *   - Informs — Implementations (the editable block)
+ *   - Sources (is_sourced_from) — the edges come from the ETL, but each page's own text is
+ *     editable here, because a synthesized source keeps its text on the pages
+ *   - Informs — Implementations (the editable relationship block)
  *   - Grounds these principles — read-only, the reverse of Principle.derives_from
  *
  * The informs block is the one that earns the tab. A source nothing is wired to is a
@@ -50,6 +52,7 @@ function IntellectualSourceDetailPanel({ item, onAfterEdit, onAfterDelete, place
     const fullDisclosure = useDisclosure();
     const textDisclosure = useDisclosure();
     const [deleting, setDeleting] = useState(false);
+    const [pageBeingEdited, setPageBeingEdited] = useState(null);
     const toast = useToast();
     const { principles } = useMetaScaffold();
 
@@ -108,6 +111,7 @@ function IntellectualSourceDetailPanel({ item, onAfterEdit, onAfterDelete, place
 
     const attribution = [item.author, item.publisher, item.published_date].filter(Boolean).join(' · ');
     const textLength = (item.raw_text || '').length;
+    const pagesMissingText = (item.sources || []).filter((s) => !s.text_length).length;
 
     return (
         <VStack align="stretch" spacing={4}>
@@ -120,7 +124,7 @@ function IntellectualSourceDetailPanel({ item, onAfterEdit, onAfterDelete, place
                             </Badge>
                             <Badge colorScheme="gray" variant="outline" fontSize="2xs">No authority</Badge>
                             <Badge colorScheme={textLength ? 'green' : 'gray'} variant="subtle" fontSize="2xs">
-                                {textLength ? `${textLength.toLocaleString()} characters` : 'No text'}
+                                {textLength ? `${textLength.toLocaleString()} characters` : 'No text on the node'}
                             </Badge>
                         </HStack>
                         <Heading as="h2" size="md" color="gray.800">{item.name}</Heading>
@@ -191,29 +195,62 @@ function IntellectualSourceDetailPanel({ item, onAfterEdit, onAfterDelete, place
                 )}
             </Box>
 
-            {/* is_sourced_from — read-only. `url` holds the canonical location; these hold the
-                rest, which is what a synthesized source drawn from several places needs. */}
+            {/* is_sourced_from. `url` holds the canonical location; these hold the rest, which
+                is what a synthesized source drawn from several places needs. Each page carries
+                its OWN text: for a synthesized source there is no node-level text and these
+                pages are the text, so each one is editable here rather than only from the
+                Documentation area. */}
             <Box bg="white" borderWidth="1px" borderColor="gray.200" borderRadius="lg" boxShadow="sm" p={5}>
-                <Heading as="h3" size="sm" color={`${INTELLECTUAL_SOURCE_COLOR}.700`} mb={3}>Sources</Heading>
+                <HStack mb={3}>
+                    <Heading as="h3" size="sm" color={`${INTELLECTUAL_SOURCE_COLOR}.700`}>Sources</Heading>
+                    <Spacer />
+                    {pagesMissingText > 0 && (
+                        <Badge fontSize="2xs" colorScheme="orange" variant="subtle">
+                            {pagesMissingText} without text
+                        </Badge>
+                    )}
+                </HStack>
                 {(item.sources || []).length === 0 ? (
                     <Text fontSize="sm" color="gray.600" fontStyle="italic">
                         {item.url ? 'One canonical location, recorded above.' : 'No sources recorded.'}
                     </Text>
                 ) : (
-                    <VStack align="stretch" spacing={2}>
-                        {item.sources.map((s) => (
-                            <HStack key={s.unique_id} spacing={2} align="start">
-                                <Badge fontSize="2xs" colorScheme="gray" variant="subtle">{s.label}</Badge>
-                                <Box minW="0">
-                                    <Text fontSize="sm" color="gray.800">{s.name || '(untitled)'}</Text>
-                                    {s.url && (
-                                        <Link href={s.url} isExternal fontSize="xs" color="gray.600" wordBreak="break-all">
-                                            {s.url} <ExternalLinkIcon mx="2px" aria-hidden="true" />
-                                        </Link>
+                    <VStack align="stretch" spacing={3}>
+                        {item.sources.map((s) => {
+                            const chars = s.text_length || 0;
+                            const editable = s.label === 'Webpage' || s.label === 'Document';
+                            return (
+                                <HStack key={s.unique_id} spacing={2} align="start">
+                                    <Badge fontSize="2xs" colorScheme="gray" variant="subtle">{s.label}</Badge>
+                                    <Box minW="0" flex="1">
+                                        <Text fontSize="sm" color="gray.800">{s.name || '(untitled)'}</Text>
+                                        {s.url && (
+                                            <Link href={s.url} isExternal fontSize="xs" color="gray.600" wordBreak="break-all">
+                                                {s.url} <ExternalLinkIcon mx="2px" aria-hidden="true" />
+                                            </Link>
+                                        )}
+                                        <HStack spacing={2} mt={1}>
+                                            <Badge fontSize="2xs" colorScheme={chars ? 'green' : 'gray'} variant="subtle">
+                                                {chars ? `${chars.toLocaleString()} characters` : 'No text'}
+                                            </Badge>
+                                            {s.raw_text_captured && (
+                                                <Text fontSize="2xs" color="gray.600">Captured {s.raw_text_captured}</Text>
+                                            )}
+                                        </HStack>
+                                    </Box>
+                                    {editable && (
+                                        <Button
+                                            size="xs"
+                                            variant="outline"
+                                            colorScheme={INTELLECTUAL_SOURCE_COLOR}
+                                            onClick={() => setPageBeingEdited(s)}
+                                        >
+                                            {chars ? 'Edit text' : 'Add text'}
+                                        </Button>
                                     )}
-                                </Box>
-                            </HStack>
-                        ))}
+                                </HStack>
+                            );
+                        })}
                     </VStack>
                 )}
             </Box>
@@ -262,6 +299,13 @@ function IntellectualSourceDetailPanel({ item, onAfterEdit, onAfterDelete, place
                     </HStack>
                 )}
             </Box>
+
+            <SourcePageTextModal
+                isOpen={Boolean(pageBeingEdited)}
+                onClose={() => setPageBeingEdited(null)}
+                page={pageBeingEdited}
+                onSaved={refresh}
+            />
 
             <IntellectualSourceForm
                 isOpen={editDisclosure.isOpen}
