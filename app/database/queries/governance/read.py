@@ -78,11 +78,20 @@ def get_all_governance_items() -> list:
           source_institution: n.source_institution,
           raw_text: n.raw_text,
           raw_text_captured: toString(n.raw_text_captured),
+          // text_length and raw_text_captured, but NOT raw_text. This is the LIST
+          // read across every instrument, and a mirrored source page runs to tens of
+          // thousands of characters, so inlining the text would make loading the
+          // governance tab proportional to how much source text has been captured.
+          // The editor fetches the text for one item when it opens.
           documents: [(n)-[:is_sourced_from]->(d:Document) |
-            {unique_id: d.unique_id, name: d.name, uri_path: d.uri_path, file_path: d.file_path}
+            {unique_id: d.unique_id, name: d.name, uri_path: d.uri_path, file_path: d.file_path,
+             text_length: size(coalesce(d.raw_text, '')),
+             raw_text_captured: toString(d.raw_text_captured)}
           ],
           webpages: [(n)-[:is_sourced_from]->(w:Webpage) |
-            {unique_id: w.unique_id, name: w.name, url: w.url}
+            {unique_id: w.unique_id, name: w.name, url: w.url,
+             text_length: size(coalesce(w.raw_text, '')),
+             raw_text_captured: toString(w.raw_text_captured)}
           ],
           // The two strengths of claim on the indicator framework (see the Governance
           // section docstring in graph_schema.py). Projected here rather than fetched

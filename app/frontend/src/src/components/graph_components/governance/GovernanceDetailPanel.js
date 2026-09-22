@@ -1,5 +1,6 @@
 import React, { useCallback, useContext, useMemo, useState } from 'react';
 import {
+    Badge,
     Box,
     Button,
     Collapse,
@@ -23,10 +24,16 @@ import GovernanceForm from './GovernanceForm';
 import { getGovernanceTypeConfig } from './governanceTypes';
 import { deleteGovernance } from '../../../services/api/delete';
 import EntityAttachmentSelector from '../../functional_components/EntityAttachmentSelector';
+import SourceTextModal from '../../functional_components/SourceTextModal';
 import DocumentForm from '../documentation/DocumentForm';
 import WebsiteForm from '../documentation/WebsiteForm';
 import GovernanceIndicatorLinks from './GovernanceIndicatorLinks';
-import { fetchAllDocuments, fetchAllWebpages, fetchGovernanceLinkTargets } from '../../../services/api/get';
+import {
+    fetchAllDocuments,
+    fetchAllWebpages,
+    fetchGovernanceLinkTargets,
+    fetchDocumentationItem,
+} from '../../../services/api/get';
 import useResource from '../../../hooks/useResource';
 import useInvalidateResources from '../../../hooks/useInvalidateResources';
 import { KEYS, NS } from '../../../context/resourceKeys';
@@ -36,6 +43,8 @@ import {
     detachDocumentFromGovernance,
     attachWebpageToGovernance,
     detachWebpageFromGovernance,
+    updateWebpageSourceText,
+    updateDocumentSourceText,
 } from '../../../services/api/put';
 import { UserContext } from '../../../context/UserContext';
 
@@ -143,6 +152,62 @@ function GovernanceDetailPanel({ item, onAfterEdit, onAfterDelete, placeholder }
     }), [targetsResp]);
 
     const { invalidateNamespace } = useInvalidateResources();
+
+    // The artifact whose Source Text is being edited, and which kind it is. The kind
+    // decides both the loader's doc_type and which narrow writer to call, so it travels
+    // with the item rather than being inferred at save time.
+    const [editingSource, setEditingSource] = useState(null);
+
+    // The governance read is a list across every instrument and carries only the length of
+    // each artifact's text, so the current text is fetched when the editor opens.
+    const loadSourceText = useCallback(async (uniqueId) => {
+        const docType = editingSource?.kind === 'document' ? 'documents' : 'webpages';
+        const response = await fetchDocumentationItem(docType, uniqueId);
+        return response?.data?.raw_text || '';
+    }, [editingSource]);
+
+    const saveSourceText = useCallback(
+        (uniqueId, text) => (editingSource?.kind === 'document'
+            ? updateDocumentSourceText(uniqueId, text)
+            : updateWebpageSourceText(uniqueId, text)),
+        [editingSource],
+    );
+
+    /**
+     * The per-row text status and its editor button. Identical for documents and webpages,
+     * which is the whole reason the artifact's kind is carried on the item.
+     */
+    const sourceTextSlots = useCallback((artifact, kind, name) => {
+        const chars = artifact.text_length || 0;
+        return {
+            meta: (
+                <HStack spacing={2}>
+                    <Badge fontSize="2xs" colorScheme={chars ? 'green' : 'gray'} variant="subtle">
+                        {chars ? `${chars.toLocaleString()} characters` : 'No text'}
+                    </Badge>
+                    {artifact.raw_text_captured && (
+                        <Text fontSize="2xs" color="gray.600">Captured {artifact.raw_text_captured}</Text>
+                    )}
+                </HStack>
+            ),
+            action: (
+                <Button
+                    size="xs"
+                    variant="outline"
+                    colorScheme="teal"
+                    onClick={() => setEditingSource({
+                        kind,
+                        unique_id: artifact.unique_id,
+                        name,
+                        url: artifact.url || null,
+                        raw_text_captured: artifact.raw_text_captured || null,
+                    })}
+                >
+                    {chars ? 'Edit text' : 'Add text'}
+                </Button>
+            ),
+        };
+    }, []);
 
     /**
      * Refetch after creating a Document or Webpage here. The result MUST be
@@ -332,10 +397,14 @@ function GovernanceDetailPanel({ item, onAfterEdit, onAfterDelete, placeholder }
                 <EntityAttachmentSelector
                     entityLabel="Document"
                     placeholder="Select a document to attach…"
-                    attached={(item.documents || []).map((d) => ({
-                        unique_id: d.unique_id,
-                        label: d.name || d.uri_path || d.file_path || '(untitled document)',
-                    }))}
+                    attached={(item.documents || []).map((d) => {
+                        const label = d.name || d.uri_path || d.file_path || '(untitled document)';
+                        return {
+                            unique_id: d.unique_id,
+                            label,
+                            ...sourceTextSlots(d, 'document', label),
+                        };
+                    })}
                     candidates={documentCandidates.map((d) => ({
                         unique_id: d.unique_id,
                         label: d.name || d.uri_path || d.file_path || '(untitled document)',
@@ -364,10 +433,12 @@ function GovernanceDetailPanel({ item, onAfterEdit, onAfterDelete, placeholder }
                         // `name` and the title in `url` (fields swapped). Pick
                         // whichever field actually looks like a URL.
                         const urlCandidate = looksLikeUrl(w.url) ? w.url : (looksLikeUrl(w.name) ? w.name : null);
+                        const label = urlCandidate || w.url || w.name || '(untitled webpage)';
                         return {
                             unique_id: w.unique_id,
-                            label: urlCandidate || w.url || w.name || '(untitled webpage)',
+                            label,
                             href: urlCandidate,
+                            ...sourceTextSlots({ ...w, url: urlCandidate }, 'webpage', label),
                         };
                     })}
                     candidates={webpageCandidates.map((w) => ({
@@ -385,6 +456,15 @@ function GovernanceDetailPanel({ item, onAfterEdit, onAfterDelete, placeholder }
                     onCreateNew={newWebpageDisclosure.onOpen}
                 />
             </Box>
+
+            <SourceTextModal
+                isOpen={Boolean(editingSource)}
+                onClose={() => setEditingSource(null)}
+                item={editingSource}
+                onSave={saveSourceText}
+                loadText={loadSourceText}
+                onSaved={refreshAfterAttach}
+            />
 
             <GovernanceForm
                 isOpen={editDisclosure.isOpen}
