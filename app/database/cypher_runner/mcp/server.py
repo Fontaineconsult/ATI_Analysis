@@ -39,7 +39,7 @@ def build_server():
     skipped, so a broken (or SDK-incompatible) feature degrades gracefully
     instead of taking the whole server down.
     """
-    from ..run_query import load_registry  # validated name -> entry dict
+    from ..registry import load_registry  # validated name -> entry dict
 
     settings = load_settings()
     ctx = ServerContext(

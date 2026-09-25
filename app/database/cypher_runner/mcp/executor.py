@@ -3,10 +3,11 @@ Neo4j execution for the MCP server.
 
 A thin wrapper that holds ONE driver open for the life of the server (the CLI
 runner opens/closes a driver per call, which is wrong for a long-lived process).
-Connection resolution is delegated to ``run_query.resolve_connection`` so the
-MCP server and the CLI agree on exactly how credentials are read — including the
-Aura case, where the embedded credentials in ``DATABASE_URL`` are stripped and
-passed as an auth tuple (the bare neo4j driver rejects creds inside the URI).
+Connection resolution lives in ``connection.resolve_connection``. This is the only
+driver the ``cypher_runner`` package opens: the terminal runners go through
+``neo4j-cli`` and never see a credential. The Aura case is handled here too, where
+the embedded credentials in ``DATABASE_URL`` are stripped and passed as an auth
+tuple (the bare neo4j driver rejects creds inside the URI).
 
 Connection is lazy: importing this module, building the server, and registering
 tools all work with no database present. The driver is created on first query,
@@ -26,9 +27,9 @@ class GraphExecutor:
         if self._driver is not None:
             return
 
-        # Imported lazily: keeps `import ...mcp` free of the yaml/neo4j chain,
-        # and lets us translate the CLI's sys.exit into a tool-friendly error.
-        from ..run_query import resolve_connection
+        # Imported lazily: keeps `import ...mcp` free of the neo4j chain, and lets
+        # us translate the resolver's SystemExit into a tool-friendly error.
+        from .connection import resolve_connection
 
         try:
             uri, auth, database = resolve_connection()

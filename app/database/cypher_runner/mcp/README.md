@@ -2,9 +2,12 @@
 
 Exposes the curated Cypher registry (`../query_registry.yaml`) to MCP clients
 (Claude Desktop, Claude Code, IDE extensions) as **safe, named tools**. The model
-picks from the vetted catalog instead of writing raw Cypher. Connection and
-registry handling are reused from `../run_query.py`, so the CLI and the MCP
-server always agree on credentials and on what queries exist.
+picks from the vetted catalog instead of writing raw Cypher. The registry loader
+is shared with the terminal runners (`../registry.py`), so both agree on what
+queries exist. The connection is this server's own (`connection.py`): the terminal
+runners go through `neo4j-cli` and hold no credential, while this server reads
+`DATABASE_URL` from its environment. See `../cli/README.md` for the three access
+paths.
 
 ## Install
 
