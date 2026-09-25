@@ -380,6 +380,8 @@ def test_gate_blocks_direct_graph_access(gate, command):
         "git log --oneline -5",
         "python -c \"import secrets; print(secrets.token_hex(32))\"",
         "npm test",
+        "git commit -m 'refuse cypher-shell and stray bolt:// URIs'",
+        "grep -rn cypher-shell .claude/hooks",
     ],
 )
 def test_gate_allows_sanctioned_paths(gate, command):
