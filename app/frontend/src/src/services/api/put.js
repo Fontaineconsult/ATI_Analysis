@@ -1630,6 +1630,24 @@ export const updateWebpageSourceText = async (uniqueId, rawText) => {
     }
 };
 
+/**
+ * The document equivalent. update_document carries the same maintainer, year-inclusion and
+ * YSE side effects as update_webpage, guarded the same way, so the same narrow shape
+ * applies: send the id and the text, nothing else.
+ */
+export const updateDocumentSourceText = async (uniqueId, rawText) => {
+    try {
+        const response = await axios.put(`${process.env.REACT_APP_API_URL}/documents`, {
+            action: 'update_document',
+            document_dict: { unique_id: uniqueId, raw_text: rawText },
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error updating document source text:', error);
+        throw error;
+    }
+};
+
 // Replace a doing-implementation's AMM-dimension classification (replace-semantics:
 // dimensionHandles is the full intended set). Only Process/Project/Procedure/Service.
 export const setImplementationDimensions = async (implementationType, implementationUniqueId, dimensionHandles) => {

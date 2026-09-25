@@ -186,7 +186,7 @@ function EntityAttachmentSelector({
                     <Thead>
                         <Tr bg="teal.50">
                             <Th color="teal.700" fontWeight="semibold" fontSize="xs">{entityLabel}</Th>
-                            <Th color="teal.700" fontWeight="semibold" fontSize="xs" w="80px">Actions</Th>
+                            <Th color="teal.700" fontWeight="semibold" fontSize="xs" w="180px">Actions</Th>
                         </Tr>
                     </Thead>
                     <Tbody>
@@ -210,18 +210,27 @@ function EntityAttachmentSelector({
                                             <span>{a.label}</span>
                                         )}
                                     </HStack>
+                                    {/* Optional second line: status a caller wants under the
+                                        label rather than beside it, such as whether the
+                                        artifact's text has been captured. */}
+                                    {a.meta ? <Box mt={1}>{a.meta}</Box> : null}
                                 </Td>
                                 <Td>
-                                    <Button
-                                        size="xs"
-                                        colorScheme="red"
-                                        variant="ghost"
-                                        onClick={() => handleDetach(a.unique_id)}
-                                        isLoading={removingId === a.unique_id}
-                                        isDisabled={removingId !== null}
-                                    >
-                                        {detachLabel}
-                                    </Button>
+                                    <HStack spacing={1} justify="flex-end">
+                                        {/* Optional per-row control, rendered before Remove so
+                                            the destructive action stays last. */}
+                                        {a.action}
+                                        <Button
+                                            size="xs"
+                                            colorScheme="red"
+                                            variant="ghost"
+                                            onClick={() => handleDetach(a.unique_id)}
+                                            isLoading={removingId === a.unique_id}
+                                            isDisabled={removingId !== null}
+                                        >
+                                            {detachLabel}
+                                        </Button>
+                                    </HStack>
                                 </Td>
                             </Tr>
                         ))}

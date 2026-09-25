@@ -56,21 +56,37 @@ reverse of how the current material is written.
 
 ### Held, but unreadable
 
-**Every governance instrument in the corpus has zero captured text**, on the node and on all
-of its source pages. That is thirteen items: the VPAT 2.5Rev template itself, the Section
-508 ICT Testing Baseline, WCAG2ICT, the Section508.gov procurement guidance, the Revised
-Section 508 Standards in both their Law and Guideline forms, EN 301 549, WCAG 2.0, 2.1 and
-2.2, and WCAG-EM 2.0.
+Rewritten 2026-09-23, after the capture run recorded in section 6. Eight of the thirteen
+governance instruments named here are now readable: the Revised Section 508 Standards in
+both their Guideline and Directive forms, WCAG 2.1, WCAG2ICT, WCAG-EM 2.0, the Section 508
+ICT Testing Baseline, the Section508.gov procurement guidance, and the VPAT 2.5Rev node.
+Section 3 is unblocked.
 
-This is the single biggest obstacle to writing the document. The method sources are
-readable and the mandate is not, so any statement this document makes about what the
-standard *requires* would currently be written from titles. Section 6 lists what to fetch.
+Five instruments remain at zero characters.
 
-Also unreadable: `VPAT/ACR Guidances` carries five documents and no text on any of them,
-which is notable because its title suggests it is the thing this document is meant to
-replace. `Public TAAP Guidance`, the purchase-card material, and `Pcard Purchase Process`
-are likewise empty. `LTI Accessibility Review and Approval Gate (CSUEB Online Campus)` has
-no documentation attached at all, despite being a live review gate.
+| Instrument | Sources | Bears on |
+|---|---|---|
+| `California Government Code Section 7405` | 2 | Section 3. This is the link that makes Section 508 bind the CSU |
+| `Rehabilitation Act of 1973, Section 508` | 2 | Section 3, as the statute 7405 adopts |
+| EN 301 549 (V3.2.1, 2021) | 1 | Section 2, where the VPAT editions are named. It does not bind the CSU |
+| WCAG 2.0 | 1 | Section 2 only, as a version the VPAT WCAG edition still reports against |
+| WCAG 2.2 | 1 | Same |
+
+The first two are the ones that matter. Section 3 states a chain running from 7405 to
+Section 508 to WCAG, and the two statutes at the head of that chain are now the only part of
+it still written from titles. Everything they point to is captured.
+
+The VPAT 2.5Rev node is readable but does not hold the VPAT. Its captured source is the ITI
+page describing the template, not the template. See section 6.
+
+A duplicate to settle while here: `Section 508 of the Rehabilitation Act of 1973` is a second
+Law node for the same statute, with no sources and no text. It is one of the duplicate-node
+decisions already blocking the `informs` edges.
+
+Still empty elsewhere: `Public TAAP Guidance`, `Pcard Purchase Process`, and the
+purchase-card material. `LTI Accessibility Review and Approval Gate (CSUEB Online Campus)`
+carries one document with no text, which is thin for a live review gate. `VPAT/ACR
+Guidances` has left this list: three of its five documents were captured on 2026-09-23.
 
 ## The outline
 
@@ -210,21 +226,58 @@ documented order, and writing them down is most of the work of this section.
 
 ## What must be obtained before drafting
 
-1. **Capture the governance text.** Section 3 cannot be written without it. Priority order:
-   the VPAT 2.5Rev template itself, the Revised Section 508 Standards, WCAG 2.1, and
-   WCAG2ICT. The Section 508 ICT Testing Baseline matters for section 4's evaluation-method
-   check, because it is what a credible test is measured against.
-2. **Capture `VPAT/ACR Guidances`.** Five documents, no text. Given the title, this may
-   already be part of what the new document supersedes, and that cannot be judged from a
-   title.
+1. **Capture the governance text.** Done 2026-09-23. Fourteen sources were written, and
+   fifteen of the eighteen sources on these items now carry Source Text, totalling 1,516,310
+   characters. The Revised 508 Standards and 255 Guidelines came in at 401,678 characters,
+   WCAG2ICT at 317,786, WCAG 2.1 at 264,354, and the ART requirements statements at 54,451.
+   Section 3 can be written against the text instead of against the titles. The Section 508
+   ICT Testing Baseline is captured at both its portfolio page and its web baseline, which is
+   what section 4's evaluation-method check measures a test against.
+2. **Capture `VPAT/ACR Guidances`.** Three of five documents now carry text. The one that
+   bears on supersession is the Chancellor's Office `Vendor Accessibility Roadmap`, revision
+   2.0 of Spring 2024: it is the format vendors use to commit to remediation timelines when
+   medium- or high-impact ICT is acquired with known barriers. The two SFSU pages cover vendor
+   requirements and impact determination. The remaining two are listed under Capture gaps.
 3. **Read `About ICT Purchases - VPAT`.** 35,699 characters already captured and not yet
    read for this purpose. It is the largest body of VPAT text we hold and probably contains
    material to reuse rather than rewrite.
-4. **Confirm the VPAT version.** ITI revises without renaming the page. Confirm 2.5Rev is
-   current at drafting time.
+4. **Confirm the VPAT version.** Done 2026-09-23, from the captured ITI text. The current
+   template is VPAT 2.5Rev, and ITI dates all four editions to 24 April 2025. The editions
+   are 508, WCAG, EU (EN 301 549) and INT, which matches the Governance node's description.
+   The node's `effective_date` of 2025-04-01 is close enough to leave; its `version` property
+   is empty and could carry `2.5Rev`.
+
+   One caveat, which bears on the template finding below. The copy in the repo is named
+   `VPAT2.5Rev_WCAG_February2025.docx` and carries no internal revision date, only the string
+   `Version 2.5Rev`. ITI's current WCAG edition is dated 24 April 2025, so ours may be two
+   months stale, and the file cannot answer that question about itself. Download the current
+   WCAG edition from ITI before attaching anything.
 5. **Gather the old EAP and TAAP-era material.** Daniel Fontaine asked the group for it, and
    the two retired nodes, `SF State Accessible Technology Procurement Process` and `CSUEB
    Equal Access Plan EAP`, both carry captured text and are the obvious starting point.
+
+### Capture gaps from the 2026-09-23 run
+
+| Source | State | What it needs |
+|---|---|---|
+| Federal Register 2017-04059, the ICT final rule | Bot-blocked. The host redirects to `unblock.federalregister.gov`, which answers 200 and refuses programmatic access | Manual paste. The Access Board text at `access-board.gov/ict/` is captured and carries the same standards |
+| `VPAT-ACR Review Quick Guide.docx` | SFSU Box login wall | Manual paste. No file is stored in the graph, so only the link is held |
+| `VPAT-ACR Review in Depth Guide.docx` | SFSU Box login wall | Manual paste. Same |
+
+Two findings from the same run are not capture gaps.
+
+- **The VPAT 2.5Rev node does not hold the VPAT.** Its only source is the ITI page that
+  describes the template. The repo copy,
+  `app/database/ontology/VPAT2.5Rev_WCAG_February2025.docx`, converts cleanly to 20,740
+  characters and carries both the Essential Requirements instructions and the blank
+  conformance tables down to the individual criteria. It is attached to nothing. Per item 4,
+  attach the April 2025 WCAG edition from ITI rather than this file, whose name says
+  February.
+- **One stored URL has rotted.** The node `Accessibility in Procurement II: Solicitation and
+  Post-Solicitation` is stored at `.../buy/accessibility-in-procurement-pre-solicitation-2/`,
+  which now serves a redirect stub. The live page is
+  `.../buy/accessibility-in-procurement-solicitation-post-2/`. The node's name already
+  matches the destination, so the name is right and the URL is wrong.
 
 ## Decisions for the working group, not for the drafter
 
@@ -241,4 +294,7 @@ Every intellectual source cited here carries no authority over the CSU. Massachu
 Commonwealth agencies, Harvard and Michigan describe their own campuses, and the impact
 tiering model is synthesized from four institutions. They are read material, and this
 document borrows method from them rather than obligation. The obligation comes from Section
-508 through California Government Code 7405, and that text is not yet captured.
+508 through California Government Code 7405. The Revised 508 Standards are now captured.
+The statute behind them is not. `Rehabilitation Act of 1973, Section 508` and `California
+Government Code Section 7405` both sit at zero characters, on the node and on every source
+page beneath them.

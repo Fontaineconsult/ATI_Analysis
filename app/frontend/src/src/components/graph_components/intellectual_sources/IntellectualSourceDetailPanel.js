@@ -17,7 +17,7 @@ import {
 } from '@chakra-ui/react';
 import { ExternalLinkIcon } from '@chakra-ui/icons';
 import IntellectualSourceForm from './IntellectualSourceForm';
-import SourcePageTextModal from './SourcePageTextModal';
+import SourceTextModal from '../../functional_components/SourceTextModal';
 import AddSourcePageForm from './AddSourcePageForm';
 import EntityAttachmentSelector from '../../functional_components/EntityAttachmentSelector';
 import { INTELLECTUAL_SOURCE_COLOR } from './intellectualSourceTypes';
@@ -27,6 +27,8 @@ import {
     attachInformedImplementation,
     detachInformedImplementation,
     detachSourcePage,
+    updateDocumentSourceText,
+    updateWebpageSourceText,
 } from '../../../services/api/put';
 import useResource from '../../../hooks/useResource';
 import { KEYS } from '../../../context/resourceKeys';
@@ -350,10 +352,13 @@ The page stays in the graph; only the link is removed.`;
                 onSaved={refresh}
             />
 
-            <SourcePageTextModal
+            <SourceTextModal
                 isOpen={Boolean(pageBeingEdited)}
                 onClose={() => setPageBeingEdited(null)}
-                page={pageBeingEdited}
+                item={pageBeingEdited}
+                onSave={(uid, text) => (pageBeingEdited?.label === 'Document'
+                    ? updateDocumentSourceText(uid, text)
+                    : updateWebpageSourceText(uid, text))}
                 onSaved={refresh}
             />
 
