@@ -53,11 +53,17 @@ CI=true npm test -- --testPathPattern=services/api  # filter
 python -m app.database.tools.create_new_ay_campus
 
 # Batch cypher files (e.g. ontology-ingest output in app/database/batch/auto-assignments/)
+# Both runners go through neo4j-cli (credential in the OS keyring); --execute is one atomic transaction
 python -m app.database.cypher_runner.run_file <file.cypher>            # EXPLAIN-validate only
 python -m app.database.cypher_runner.run_file <file.cypher> --execute  # validate, then run
 
 # Curated single queries against the graph (registry: app/database/cypher_runner/query_registry.yaml)
 python -m app.database.cypher_runner.run_query --list
+python -m app.database.cypher_runner.run_query --query <name> --param k=v [--table]
+
+# Direct Cypher from a terminal (reads need no flag; writes need --rw, ask first)
+neo4j-cli query :schema --format toon
+neo4j-cli query 'MATCH (c:Campus) RETURN c.abbreviation' --format toon
 
 # Run graph_schema.py to install neomodel constraints
 PYTHONPATH=. python app/database/graph_schema.py
@@ -96,6 +102,18 @@ deployment/               # IIS deploy tooling + docs (see deployment/README.md)
 ```
 
 ## Patterns to follow
+
+### Three graph access paths, and no fourth
+The graph is reached one of three ways. **HTTP API:** Flask endpoints over
+`app/database/queries/<domain>` (neomodel), the app's path. **MCP server:**
+`app/database/cypher_runner/mcp`, with its own driver and credential, for Claude Desktop
+and IDE clients. **neo4j-cli:** anyone in a terminal, including an agent session here;
+the credential lives in the OS keyring and `run_query.py` / `run_file.py` wrap the CLI.
+Nothing on the terminal path opens Bolt from Python or sees a password. Inline Python
+that imports the driver or the queries layer, a scratch query script, `cypher-shell`,
+or a direct hit on port 7687 is not an access path; the hook in
+`.claude/hooks/graph_access_gate.py` refuses them. Details and setup in
+`app/database/cypher_runner/cli/README.md`.
 
 ### Vocabularies live in `app/data_config.py`
 Add new choice maps (`status_levels`, `working_groups`, `trajectory_choices`, etc.) to `data_config.py` — never to `class_factory.py` or inline in `graph_schema.py`. The `data_config` module has zero project imports, so anything can read from it without triggering load cycles. `class_factory.py` re-exports vocabularies from `data_config` for backward compatibility with older callers.

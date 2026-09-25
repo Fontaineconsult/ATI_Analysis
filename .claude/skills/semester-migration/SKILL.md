@@ -10,7 +10,7 @@ Roll the ATI Analysis app to a new academic year. This procedure is idempotent �
 ## Preconditions
 
 1. Ask the user for `OLD_YEAR` and `NEW_YEAR` (format `YYYY-YYYY`, e.g. `2024-2025` → `2025-2026`) if not supplied.
-2. Confirm Neo4j is reachable — `.env.development` must define `DATABASE_URL` and `NEO4J_DATABASE`. The script loads them via `set_connection()` in `app/database/graph_schema.py`.
+2. Confirm Neo4j is reachable — `.env.development` must define `DATABASE_URL` and `NEO4J_DATABASE`. The script loads them via `set_connection()` in `app/database/graph_schema.py`. That script is an app admin tool under `app/database/tools/` and is the one sanctioned Python write path for the rollover; do not reimplement any of its steps in ad-hoc Python or ad-hoc Cypher. Recon reads before and after go through the registry runner or `neo4j-cli query`.
 3. APOC must be installed on the Neo4j server — the Cypher uses `apoc.create.relationship` to copy edges.
 4. Read the `ALL_CAMPUSES` constant near the top of `app/database/tools/create_new_ay_campus.py` and surface it to the user. If a campus has been added in Neo4j since the last migration but is not in this list, stop and prompt the user to add it before proceeding.
 

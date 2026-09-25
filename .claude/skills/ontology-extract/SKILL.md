@@ -71,8 +71,10 @@ become a live feed. The ones that carry most extracts:
 | the ICT a unit answers for | `stewarded_ict_for_yse` |
 | what a page or document actually says | `source_text_candidates_for_implementation` (then read `raw_text`) |
 
-Write ad-hoc Cypher only for the gap, and if the consumer will ask again, put it
-in the registry (see Delivery). Never interpolate values into Cypher; pass params.
+Write ad-hoc Cypher only for the gap, run it with `neo4j-cli query --param k=v
+'...' --format toon`, and if the consumer will ask again, put it in the registry
+(see Delivery). Never interpolate values into Cypher; pass params. Never run it
+from Python that opens a driver; the project hook refuses that.
 
 ### 2. Bind-check every anchor before believing a zero
 
