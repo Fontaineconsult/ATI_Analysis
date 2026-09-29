@@ -147,15 +147,23 @@ here, `neo4j-cli query :schema` does the same job.
 
 ### Step 7: prove the project runners use the CLI
 
-From the repository root, with the project virtualenv at `.venv` (create it with
-`python -m venv .venv` and `.venv\Scripts\pip install -r requirements-dev.txt` if it
-is missing; CLAUDE.md covers the environment):
+Check which virtualenv to use before you run anything. A repository can carry more
+than one, and the runners and pytest do not always want the same one. List what is
+there, ask the user which is current if more than one answers, and substitute it for
+`<venv>` below. CLAUDE.md covers the environment, and `python -m venv <venv>` plus
+`<venv>\Scripts\pip install -r requirements-dev.txt` creates one if none exists.
+
+From the repository root:
 
 ```powershell
-.venv\Scripts\python.exe -m app.database.cypher_runner.run_query --query list_campuses --table
-.venv\Scripts\python.exe -m app.database.cypher_runner.run_file app\database\batch\auto-assignments\<any file>.cypher
-.venv\Scripts\python.exe -m pytest tests\test_cypher_runner_cli.py -q
+<venv>\Scripts\python.exe -m app.database.cypher_runner.run_query --query list_campuses --table
+<venv>\Scripts\python.exe -m app.database.cypher_runner.run_file app\database\batch\auto-assignments\<any file>.cypher
+<venv>\Scripts\python.exe -m pytest tests\test_cypher_runner_cli.py -q
 ```
+
+An `ImportError` while loading `tests/conftest.py` means the pytest line is pointing at
+the wrong virtualenv, not that the install failed. Confirm which one holds the test
+dependencies and run pytest from that one.
 
 Expected: a campus table, `Validation: N/N statements OK` followed by
 `Validate-only mode`, and a green test run. The runners need no `.env`, no
