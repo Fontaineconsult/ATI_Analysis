@@ -77,8 +77,12 @@ PUT /ati/data-api/v1/documents/documents
 ```
 
 The type segment is required by the route (`/documents/<document_type>`); a bare
-`/documents` 500s on a missing positional argument. Calling `update_webpage` /
-`update_document` from `queries/documentation/update.py` directly works too.
+`/documents` 500s on a missing positional argument. The HTTP API is the write path
+from a terminal (the Flask dev server on :5000, or the deployed host). When the
+`ati-graph` MCP server is registered, its `update_*` tools are the other sanctioned
+path. Do not call `update_webpage` / `update_document` from Python directly, and do
+not write `raw_text` with ad-hoc Cypher; the project hook refuses the first, and the
+second skips the `raw_text_captured` stamp the query layer sets.
 
 **Pass NOTHING else.** The optional arguments on these functions are association
 side-effects, and every one of them is a silent bug in this context:

@@ -195,6 +195,27 @@ already gates.
 
 ---
 
+## 5c. Transport: where the gates plug in (landed 2026-09-25)
+
+The runners no longer open Bolt. `run_file` and `run_query` go through `neo4j-cli`
+(`app/database/cypher_runner/cli/transport.py`), which holds the credential in the OS
+keyring and refuses writes without `--rw`. Two consequences for this plan.
+
+- **The hook point exists.** `run_file.GATES` is a list of callables
+  `(statements) -> [failure messages]`, run after EXPLAIN validation and before
+  `--execute`. Gates 1, 2 and 4 register there. Nothing is registered yet, because
+  Phase 0 is still open. Gate 2 (bind-check) will read through the CLI like validation
+  does, so it stays free of the driver.
+- **Gate 3 is partly the CLI's.** The CLI's EXPLAIN preflight blocks write statements
+  unless `--rw` is passed, and `run_query` passes it only under `--allow-write`. What
+  remains of Gate 3 is the registry's `mode` field being honest, which `--validate`
+  cannot check and the audit test could.
+
+The gates plan's status line above stands: proposed, not started. The transport work
+was the CLI rollout, not this plan.
+
+---
+
 ## 5a. Phase 0: the schema has to be trustworthy before it can be a gate
 
 Audited 2026-09-23 against the live database. The finding that reorders this plan: **the

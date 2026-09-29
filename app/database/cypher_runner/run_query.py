@@ -1,29 +1,17 @@
 #!/usr/bin/env python3
 """
-ATI Cypher query runner.
+ATI Cypher query runner: the CLI-path front end for the curated registry.
 
-Runs curated Cypher queries from query_registry.yaml against the ATI Neo4j
-graph. Read queries run freely; write queries require an explicit --allow-write
-flag. Results print as JSON (default) or a simple table.
+Runs named queries from query_registry.yaml through ``neo4j-cli``. This process never
+opens Bolt and never sees a credential; the CLI holds the connection in the OS keyring
+and executes the Cypher. Read queries run freely. Write queries need ``--allow-write``,
+which is what passes the CLI's ``--rw`` flag; without it the CLI's EXPLAIN preflight
+refuses the statement.
 
-Connection
-----------
-Credentials are read from the environment / a .env file. Two supported styles:
-
-  1. Single neomodel-style URL (matches app/.env.development):
-         DATABASE_URL=bolt://<user>:<password>@<host>:7687
-     plus optional:
-         NEO4J_DATABASE=ati        # defaults to "neo4j" (Aura's default DB)
-
-  2. Split variables:
-         NEO4J_URI=bolt://<host>:7687
-         NEO4J_USERNAME=<user>
-         NEO4J_PASSWORD=<password>
-         NEO4J_DATABASE=ati
-
->>> CREDENTIALS: decide-later <<<
-No instance is wired up yet. Until DATABASE_URL (or NEO4J_URI + creds) is set,
---list, --show, and --validate work offline; only --query needs a live DB.
+Three access paths reach the graph, and this is the third:
+  1. the HTTP API (Flask endpoints over queries/<domain>, neomodel),
+  2. the MCP server (app.database.cypher_runner.mcp, its own driver),
+  3. neo4j-cli, for anyone working from a terminal. This module and run_file.py wrap it.
 
 Usage
 -----
@@ -35,131 +23,22 @@ Usage
         --param working_group=Web
     python -m app.database.cypher_runner.run_query --query set_yse_status \
         --param year_identifier="2025-2026 1.1-web" --param status_level=Initiated --allow-write
+    python -m app.database.cypher_runner.run_query --query list_campuses --print-command
 
-Dependencies: pyyaml, neo4j  (pip install neo4j pyyaml)
+``--list``, ``--show`` and ``--validate`` need neither the CLI nor a database.
+``--print-command`` shows the neo4j-cli invocation instead of running it; the Cypher is
+printed after it because the runner feeds it over stdin.
+
+Dependencies: pyyaml, and neo4j-cli on PATH (or NEO4J_CLI pointing at the binary).
 """
 
 import argparse
 import json
-import os
+import shlex
 import sys
-from pathlib import Path
-from urllib.parse import urlparse
 
-try:
-    import yaml
-except ImportError:
-    sys.exit("Missing dependency: pyyaml  ->  pip install pyyaml")
-
-REGISTRY_PATH = Path(__file__).with_name("query_registry.yaml")
-
-
-# --------------------------------------------------------------------------- #
-# Registry loading                                                            #
-# --------------------------------------------------------------------------- #
-def load_registry(path: Path = REGISTRY_PATH) -> dict:
-    """Load the YAML registry into a name -> entry dict, validating as we go."""
-    if not path.exists():
-        sys.exit(f"Registry not found: {path}")
-    with path.open(encoding="utf-8") as fh:
-        entries = yaml.safe_load(fh) or []
-
-    registry, errors = {}, []
-    for i, e in enumerate(entries):
-        name = e.get("name")
-        if not name:
-            errors.append(f"entry #{i} has no 'name'")
-            continue
-        if name in registry:
-            errors.append(f"duplicate name '{name}'")
-        mode = e.get("mode", "read")
-        if mode not in ("read", "write"):
-            errors.append(f"'{name}': mode must be read|write, got '{mode}'")
-        if not e.get("cypher", "").strip():
-            errors.append(f"'{name}': empty cypher")
-        e.setdefault("params", [])
-        e.setdefault("category", "uncategorized")
-        e.setdefault("description", "")
-        registry[name] = e
-
-    if errors:
-        sys.exit("Registry validation failed:\n  - " + "\n  - ".join(errors))
-    return registry
-
-
-# --------------------------------------------------------------------------- #
-# Connection                                                                  #
-# --------------------------------------------------------------------------- #
-def _load_dotenv_if_present():
-    """Best-effort load of app/.env.development without requiring python-dotenv."""
-    try:
-        from dotenv import load_dotenv
-    except ImportError:
-        return
-    # app/.env.development relative to this file: ../../.env.development
-    candidate = Path(__file__).resolve().parents[2] / ".env.development"
-    if candidate.exists():
-        load_dotenv(candidate)
-
-
-def resolve_connection():
-    """
-    Return (uri, auth, database) or exit with a clear message if not configured.
-    auth is a (user, password) tuple or None.
-    """
-    _load_dotenv_if_present()
-
-    # Default mirrors app/web_config.py (the "point to aura" change): Aura's
-    # only database is "neo4j". .env.development sets NEO4J_DATABASE explicitly,
-    # so this fallback only matters when it's left unset.
-    database = os.environ.get("NEO4J_DATABASE", "neo4j")
-
-    database_url = os.environ.get("DATABASE_URL")
-    if database_url:
-        parsed = urlparse(database_url)
-        user = parsed.username
-        password = parsed.password
-        # Rebuild a clean URI without embedded credentials for the driver.
-        netloc = parsed.hostname or ""
-        if parsed.port:
-            netloc += f":{parsed.port}"
-        clean_uri = f"{parsed.scheme}://{netloc}"
-        auth = (user, password) if user is not None else None
-        return clean_uri, auth, database
-
-    uri = os.environ.get("NEO4J_URI")
-    if uri:
-        user = os.environ.get("NEO4J_USERNAME")
-        password = os.environ.get("NEO4J_PASSWORD")
-        auth = (user, password) if user else None
-        return uri, auth, database
-
-    sys.exit(
-        "No connection configured.\n"
-        "Set DATABASE_URL=bolt://user:pass@host:7687 (neomodel style)\n"
-        "or NEO4J_URI + NEO4J_USERNAME + NEO4J_PASSWORD, then retry.\n"
-        "(Credentials are intentionally 'decide-later' — see the module docstring.)"
-    )
-
-
-def run_cypher(cypher: str, params: dict):
-    """Execute cypher against the configured DB and return a list of row dicts."""
-    # Resolve connection first so a missing/"decide-later" config produces a
-    # clear message even before the driver is installed.
-    uri, auth, database = resolve_connection()
-
-    try:
-        from neo4j import GraphDatabase
-    except ImportError:
-        sys.exit("Missing dependency: neo4j  ->  pip install neo4j")
-
-    driver = GraphDatabase.driver(uri, auth=auth)
-    try:
-        with driver.session(database=database) as session:
-            result = session.run(cypher, params or {})
-            return [r.data() for r in result]
-    finally:
-        driver.close()
+from .cli import transport
+from .registry import REGISTRY_PATH, load_registry  # noqa: F401  (re-exported for callers)
 
 
 # --------------------------------------------------------------------------- #
@@ -191,40 +70,82 @@ def _coerce(raw: str):
 
 
 # --------------------------------------------------------------------------- #
-# Output                                                                       #
+# Execution through neo4j-cli                                                 #
 # --------------------------------------------------------------------------- #
-def print_table(rows):
-    if not rows:
-        print("(no rows)")
-        return
-    cols = list(rows[0].keys())
-    widths = {c: max(len(c), *(len(str(r.get(c, ""))) for r in rows)) for c in cols}
-    print("  ".join(c.ljust(widths[c]) for c in cols))
-    print("  ".join("-" * widths[c] for c in cols))
-    for r in rows:
-        print("  ".join(str(r.get(c, "")).ljust(widths[c]) for c in cols))
+def run_registry_query(entry: dict, params: dict, *, allow_write: bool, table: bool) -> int:
+    """Run one registry entry through the CLI, stream its output, return the exit code."""
+    try:
+        result = transport.run(
+            entry["cypher"],
+            params,
+            rw=allow_write,
+            fmt="table" if table else "json",
+            check=False,
+        )
+    except transport.CliNotFound as exc:
+        print(f"ERROR: {exc}", file=sys.stderr)
+        return 2
+    sys.stdout.write(result.stdout)
+    if not result.stdout.endswith("\n"):
+        sys.stdout.write("\n")
+    if result.ok:
+        warnings = result.warnings()
+        if warnings:
+            print(warnings, file=sys.stderr)
+    else:
+        print(f"neo4j-cli failed: {result.error_message()}", file=sys.stderr)
+        if result.stderr.strip():
+            print(result.stderr.rstrip(), file=sys.stderr)
+    return result.returncode
+
+
+def print_command(entry: dict, params: dict, *, allow_write: bool, table: bool) -> None:
+    try:
+        cmd = transport.build_command(
+            params, rw=allow_write, fmt="table" if table else "json",
+        )
+    except transport.CliNotFound:
+        cmd = transport.build_command(
+            params, rw=allow_write, fmt="table" if table else "json", cli=transport.CLI_NAME,
+        )
+    print("# stdin carries the Cypher below")
+    print(" ".join(shlex.quote(part) for part in cmd))
+    print()
+    print(entry["cypher"].rstrip())
 
 
 # --------------------------------------------------------------------------- #
 # CLI                                                                          #
 # --------------------------------------------------------------------------- #
+def _utf8_console() -> None:
+    """The CLI's table format uses box-drawing characters; a cp1252 console cannot
+    print them. Output is UTF-8 regardless of the console code page."""
+    for stream in (sys.stdout, sys.stderr):
+        if hasattr(stream, "reconfigure"):
+            stream.reconfigure(encoding="utf-8", errors="replace")
+
+
 def main(argv=None):
-    ap = argparse.ArgumentParser(description="Run curated ATI Cypher queries.")
+    _utf8_console()
+    ap = argparse.ArgumentParser(description="Run curated ATI Cypher queries through neo4j-cli.")
     g = ap.add_mutually_exclusive_group(required=True)
     g.add_argument("--list", action="store_true", help="List all registered queries.")
     g.add_argument("--show", metavar="NAME", help="Print one query's Cypher and params.")
     g.add_argument("--validate", action="store_true", help="Validate the registry and exit.")
     g.add_argument("--query", metavar="NAME", help="Run a query by name.")
     ap.add_argument("--param", action="append", metavar="K=V", help="Query parameter (repeatable).")
-    ap.add_argument("--allow-write", action="store_true", help="Permit write-mode queries.")
+    ap.add_argument("--allow-write", action="store_true",
+                    help="Permit write-mode queries (passes --rw to neo4j-cli).")
     ap.add_argument("--table", action="store_true", help="Print rows as a table instead of JSON.")
+    ap.add_argument("--print-command", action="store_true",
+                    help="With --query: print the neo4j-cli invocation instead of running it.")
     args = ap.parse_args(argv)
 
     registry = load_registry()
 
     if args.validate:
         print(f"OK — {len(registry)} queries valid.")
-        return
+        return 0
 
     if args.list:
         by_cat = {}
@@ -236,7 +157,7 @@ def main(argv=None):
                 tag = " (write)" if e["mode"] == "write" else ""
                 params = f"  params: {', '.join(e['params'])}" if e["params"] else ""
                 print(f"  {e['name']}{tag} — {e['description']}{params}")
-        return
+        return 0
 
     if args.show:
         e = registry.get(args.show)
@@ -247,7 +168,7 @@ def main(argv=None):
              "params": e["params"], "description": e["description"]},
             indent=2))
         print("\n" + e["cypher"].rstrip())
-        return
+        return 0
 
     # --query
     e = registry.get(args.query)
@@ -262,12 +183,11 @@ def main(argv=None):
         sys.exit(f"Missing required param(s): {', '.join(missing)}\n"
                  f"  expected: {', '.join(e['params'])}")
 
-    rows = run_cypher(e["cypher"], params)
-    if args.table:
-        print_table(rows)
-    else:
-        print(json.dumps(rows, indent=2, default=str))
+    if args.print_command:
+        print_command(e, params, allow_write=args.allow_write, table=args.table)
+        return 0
+    return run_registry_query(e, params, allow_write=args.allow_write, table=args.table)
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

@@ -334,6 +334,7 @@ Corpus mode's four are already there, all taking `implementation_label` (a label
 | `corpus_host_urls_in_graph` | 3 — what a host already has in the graph, before proposing a create |
 | `corpus_accountability_coverage` | feedback — community, owner, owner's communities, description length |
 
+An ad-hoc read runs through `neo4j-cli query`, never through Python that opens a driver.
 Add a query rather than running an ad-hoc read whenever the same question will be asked of
 the next set. `run_query --validate` checks the registry after an edit.
 

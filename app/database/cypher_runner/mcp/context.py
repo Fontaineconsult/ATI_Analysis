@@ -14,6 +14,6 @@ from .executor import GraphExecutor
 
 @dataclass
 class ServerContext:
-    registry: Dict[str, Any]   # name -> validated registry entry (from run_query.load_registry)
+    registry: Dict[str, Any]   # name -> validated registry entry (from registry.load_registry)
     executor: GraphExecutor    # the (lazily-connected) Neo4j executor
     settings: Settings         # resolved env settings

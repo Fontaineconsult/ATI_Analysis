@@ -15,7 +15,10 @@ as a Note is recoverable; a fabricated Process pollutes the evidence chain.
 Never route from the source alone. Prefer the registry runner
 (`run_query --list` to discover; `yse_catalog_for_year` resolves mentions to
 year_identifiers; `notes_for_yse` / `notes_for_implementation` check for existing
-annotations); fall back to ad-hoc read-only Bolt.
+annotations). For anything the registry lacks, run the Cypher with
+`neo4j-cli query '...' --format toon`. That is the only other way to read the
+graph from a terminal: no Python that opens a driver, no scratch script, no
+`cypher-shell`. The project hook refuses those and points back here.
 
 ### 0. PULL THE ONTOLOGY FIRST — mandatory, before anything else
 
@@ -64,9 +67,10 @@ Inventing a handle is the same class of error as inventing a property name.
 `run_file` validation is EXPLAIN — it proves the Cypher parses, not that anything
 matches. A MATCH on a misspelled property is valid Cypher that binds zero rows,
 so the statement no-ops and everything downstream of it silently vanishes. Before
-`--execute`, run one query that counts each anchor the file MATCHes — campus,
-academic year, WGP, every YSE, every node referenced by `unique_id` — and confirm
-the counts are what you expect. Treat a zero as a bug, never as "nothing to do".
+`--execute`, run one query through `neo4j-cli query` that counts each anchor the
+file MATCHes — campus, academic year, WGP, every YSE, every node referenced by
+`unique_id` — and confirm the counts are what you expect. Treat a zero as a bug,
+never as "nothing to do".
 
 1. **Reference data**: campuses, AcademicYears, ATIWorkingGroups, Role handles,
    Dimension handles, Tools, Vendors, Assets, Interfaces.
@@ -361,8 +365,10 @@ validation or a late finding → stop and re-present the delta first.
   MeetingMinutes the ingest anchored to. An already-stamped node means enrich, not
   re-create.
 - Validate and execute ONLY through the runner, never ad-hoc scripts:
-  `run_file <file>` then `run_file <file> --execute`. A zero-write re-run confirms
-  idempotence.
+  `run_file <file>` then `run_file <file> --execute`. The runner hands the file to
+  `neo4j-cli query --rw --atomic`, so a failure anywhere rolls the whole file back.
+  The CLI reports no write counters, so idempotence is confirmed by read-back, not
+  by a zero-write message: count the anchors again after the run and compare.
 
 ## Post-run report
 

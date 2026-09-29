@@ -202,6 +202,32 @@ save_follow_up(
 blob of text and makes "what came back" unanswerable. `generated_at` is stamped
 automatically.
 
+**How to call it.** `save_follow_up` and the other verbs in this skill are the
+`ati-graph` MCP server's tools. When that server is not registered in the session
+(it is not, as of 2026-09-25), the same writes go through the HTTP API, and that is
+the only other sanctioned path from a terminal. Do not import the queries layer from
+Python and do not write the node with ad-hoc Cypher; the project hook refuses the
+first, and the second skips the wiring the create function enforces.
+
+```
+POST /ati/data-api/v1/follow-ups
+{ "action": "create_follow_up",
+  "subject": ..., "meeting_minutes_id": ..., "body_markdown": ...,
+  "community_name": ..., "campus_abbreviation": ..., "interview_guide_id": ...,
+  "addressed_to_ids": [...],            # recipient_employee_ids
+  "covers_evidence_identifiers": [...], # covers_year_identifiers
+  "includes_query_ids": [...], "includes_recommendation_ids": [...],
+  "includes_concern_ids": [...], "created_by_id": ... }
+
+PUT  /ati/data-api/v1/follow-ups   { "action": "mark_sent",   "unique_id": ..., "date_sent": ... }
+PUT  /ati/data-api/v1/follow-ups   { "action": "link_reply",  "unique_id": ..., "message_unique_id": ..., "from_person_unique_id": ... }
+GET  /ati/data-api/v1/follow-ups/replies/<unique_id>          # replies_for_follow_up
+PUT  /ati/data-api/v1/queries      { "action": "settle_query", "unique_id": ..., "answer": ..., "settled_by_unique_id": ... }
+```
+
+Reads that feed the draft (`meeting_followup_table`, `overdue_followups`) stay on
+the registry runner, and any read the registry lacks runs through `neo4j-cli query`.
+
 Saves as a **draft**. Call `mark_follow_up_sent(unique_id, date_sent)` only once it
 has genuinely gone out — an ask still open under a SENT follow-up is a non-response
 worth escalating, while the same ask on a draft is just an unfinished chase.

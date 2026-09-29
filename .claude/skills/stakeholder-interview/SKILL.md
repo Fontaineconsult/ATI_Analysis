@@ -32,7 +32,8 @@ interview is a transcript in `app/database/ontology/raw_transcripts/` ready for
 ## Part 1 — Prep (generate the guide)
 
 When the user names a stakeholder / campus / topic, recon the graph (read-only —
-registry runner first, ad-hoc Bolt for the rest) and write the guide to
+registry runner first, `neo4j-cli query` for the rest; never Python that opens a
+driver) and write the guide to
 `app/database/ontology/interviews/<date>-<campus>-<topic-slug>.md`.
 
 Recon, in order:

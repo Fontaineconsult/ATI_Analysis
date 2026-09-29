@@ -1,25 +1,34 @@
 """Standalone runner for batch .cypher files (app/database/batch/, auto-assignments/).
 
-The one sanctioned way to validate and execute batch Cypher FILES against the graph —
-independent of any session tooling or ad-hoc scripts. Sibling of run_query.py, which
-runs single curated queries from query_registry.yaml; this module runs whole
-statement files (ontology-ingest output, migrations, seeds). Connection settings come
-from the config gateway (web.config in production, .env.<FLASK_ENV> in development),
-so this runs anywhere the app runs with no hardcoded credentials.
+The one sanctioned way to validate and execute batch Cypher FILES from a terminal.
+Sibling of run_query.py, which runs single curated queries from query_registry.yaml;
+this module runs whole statement files (ontology-ingest output, migrations, seeds).
+
+This process never opens Bolt. Every statement goes to ``neo4j-cli``, which holds the
+credential in the OS keyring and refuses writes unless it is told ``--rw``. Validation
+here is what stays in Python; execution is delegated.
 
 Usage:
     python -m app.database.cypher_runner.run_file <file.cypher>             # validate only
     python -m app.database.cypher_runner.run_file <file.cypher> --execute   # validate, then run
 
 Behavior:
-    - VALIDATE (always): every statement is EXPLAIN-planned server-side (read-only).
-      Any failure lists the statement number and error; nothing is ever executed
-      unless the whole file validates.
-    - EXECUTE (--execute): statements run in file order, one transaction each.
-      Per-statement write counters are printed for statements that created
-      something, then totals. On error the runner STOPS at the failing statement
-      and reports it; batch files are MERGE-idempotent by convention, so re-running
-      the fixed file is safe (completed statements simply match).
+    - VALIDATE (always): every statement is EXPLAIN-planned server-side through the
+      CLI, which is a read and needs no --rw. The whole file is sent in one call first;
+      if anything fails, statements are re-planned one at a time so the report names
+      the statement and its error. Then the registered GATES run (see below). Nothing
+      is ever executed unless the whole file validates.
+    - EXECUTE (--execute): the file runs as ONE atomic transaction via
+      ``neo4j-cli query --rw --atomic``. A failure anywhere rolls back everything, so a
+      partially applied file cannot happen. The CLI reports no write counters, so the
+      runner prints the statement count and tells you to read back what matters;
+      batch files are MERGE-idempotent by convention and a re-run is safe.
+
+Gates:
+    ``GATES`` is the hook point for claude_files/cypher-validation-gates-plan.md.
+    Each gate is a callable ``(statements: list[str]) -> list[str]`` returning failure
+    messages; any message blocks execution. None are registered yet, because Phase 0
+    of that plan (schema and graph must agree) is still open.
 
 File contract (matches the app/database/batch conventions):
     - Full-line comments start with //  (inline // is NOT stripped).
@@ -36,13 +45,12 @@ import argparse
 import re
 import sys
 from pathlib import Path
-from urllib.parse import unquote, urlparse
+from typing import Callable
 
-# Stdlib + driver + config gateway ONLY — no graph_schema/neomodel imports, so the
-# runner never touches the data_api import cycle and needs no warm-up accommodation.
-from neo4j import GraphDatabase
+from .cli import transport
 
-from app.config_gateway import config
+Gate = Callable[[list[str]], list[str]]
+GATES: list[Gate] = []
 
 
 def split_statements(source: str) -> list[str]:
@@ -57,82 +65,81 @@ def split_statements(source: str) -> list[str]:
     return [s.strip() for s in re.split(r";\s*\n", no_comments) if s.strip()]
 
 
-def build_driver():
-    """Driver + database name from the config gateway's DATABASE_URL.
-
-    The URL embeds credentials (bolt://user:pass@host:port) the way neomodel
-    consumes it; the raw neo4j driver wants them separate, so parse them out.
-    """
-    url = config.get("DATABASE_URL")
-    if not url:
-        print("ERROR: DATABASE_URL is not configured (config gateway found nothing).")
-        sys.exit(2)
-    parsed = urlparse(url)
-    auth = (unquote(parsed.username or ""), unquote(parsed.password or ""))
-    bare_url = f"{parsed.scheme}://{parsed.hostname}:{parsed.port or 7687}"
-    database = config.get("NEO4J_DATABASE", "ati")
-    return GraphDatabase.driver(bare_url, auth=auth), database
-
-
 def first_line(stmt: str, width: int = 78) -> str:
     return stmt.splitlines()[0][:width]
 
 
-def validate(session, statements: list[str]) -> bool:
+def _explain(statements: list[str]) -> transport.CliResult:
+    return transport.run(
+        transport.join_statements("EXPLAIN " + s for s in statements),
+        fmt="json",
+        check=False,
+    )
+
+
+def validate(statements: list[str]) -> bool:
+    """EXPLAIN every statement through the CLI. One call when the file is clean; one
+    call per statement when it is not, so the failing statement gets named."""
+    batch = _explain(statements)
+    if batch.ok:
+        print(f"Validation: {len(statements)}/{len(statements)} statements OK")
+        return True
+
     failures = 0
     for i, stmt in enumerate(statements, 1):
-        try:
-            session.run("EXPLAIN " + stmt).consume()
-        except Exception as exc:  # driver raises many types; report them all uniformly
-            failures += 1
-            print(f"  FAIL #{i:03d} [{first_line(stmt)}]")
-            print(f"       {exc}")
+        single = _explain([stmt])
+        if single.ok:
+            continue
+        failures += 1
+        print(f"  FAIL #{i:03d} [{first_line(stmt)}]")
+        print(f"       {single.error_message()}")
+    if failures == 0:
+        # The batch failed for a reason no single statement reproduces (connection,
+        # credential, CLI). Surface the batch error rather than claiming success.
+        print(f"  FAIL (whole file) {batch.error_message()}")
+        failures = 1
     print(f"Validation: {len(statements) - failures}/{len(statements)} statements OK")
-    return failures == 0
+    return False
 
 
-def execute(session, statements: list[str]) -> bool:
-    total_nodes = total_rels = total_props = 0
-    total_labels = total_deleted_nodes = total_deleted_rels = 0
-    for i, stmt in enumerate(statements, 1):
-        try:
-            counters = session.run(stmt).consume().counters
-        except Exception as exc:
-            print(f"\nEXECUTION FAILED at statement #{i:03d} [{first_line(stmt)}]")
-            print(f"  {exc}")
-            print(
-                "  Statements before this one are committed. Batch files are "
-                "MERGE-idempotent by convention - fix the file and re-run; completed "
-                "statements will match instead of duplicating."
-            )
-            return False
-        total_nodes += counters.nodes_created
-        total_rels += counters.relationships_created
-        total_props += counters.properties_set
-        total_labels += counters.labels_added
-        total_deleted_nodes += counters.nodes_deleted
-        total_deleted_rels += counters.relationships_deleted
-        if counters.nodes_created or counters.relationships_created or counters.labels_added:
-            print(
-                f"  #{i:03d} +{counters.nodes_created}n "
-                f"+{counters.relationships_created}r "
-                f"+{counters.labels_added}L  [{first_line(stmt, 70)}]"
-            )
-    print(
-        f"Execution complete: nodes created={total_nodes}, "
-        f"relationships created={total_rels}, properties set={total_props}, "
-        f"labels added={total_labels}, deleted={total_deleted_nodes}n/{total_deleted_rels}r"
+def run_gates(statements: list[str]) -> bool:
+    problems: list[str] = []
+    for gate in GATES:
+        problems.extend(gate(statements))
+    for p in problems:
+        print(f"  GATE {p}")
+    if problems:
+        print(f"Gates: {len(problems)} problem(s); nothing executed.")
+    return not problems
+
+
+def execute(statements: list[str]) -> bool:
+    result = transport.run(
+        transport.join_statements(statements), rw=True, atomic=True, fmt="json", check=False,
     )
-    if not any((total_nodes, total_rels, total_props, total_labels,
-                total_deleted_nodes, total_deleted_rels)):
-        print("  (no writes - every MERGE matched existing data; idempotent re-run)")
+    if not result.ok:
+        print("\nEXECUTION FAILED (atomic transaction rolled back; nothing was written)")
+        print(f"  {result.error_message()}")
+        if result.warnings():
+            print(f"  {result.warnings()}")
+        return False
+    print(
+        f"Execution complete: {len(statements)} statement(s) committed in one transaction."
+    )
+    print(
+        "  neo4j-cli reports no write counters. Read back the nodes and edges this file "
+        "touches to confirm what changed; a MERGE-idempotent re-run is safe."
+    )
     return True
 
 
 def main(argv=None) -> int:
+    for stream in (sys.stdout, sys.stderr):
+        if hasattr(stream, "reconfigure"):
+            stream.reconfigure(encoding="utf-8", errors="replace")
     parser = argparse.ArgumentParser(
         prog="cypher_runner",
-        description="Validate (EXPLAIN) and optionally execute a batch .cypher file.",
+        description="Validate (EXPLAIN via neo4j-cli) and optionally execute a batch .cypher file.",
     )
     parser.add_argument("file", help="path to the .cypher file")
     parser.add_argument(
@@ -152,17 +159,20 @@ def main(argv=None) -> int:
         return 2
     print(f"{path.name}: {len(statements)} statements")
 
-    driver, database = build_driver()
     try:
-        with driver.session(database=database) as session:
-            if not validate(session, statements):
-                return 1
-            if not args.execute:
-                print("Validate-only mode; pass --execute to run.")
-                return 0
-            return 0 if execute(session, statements) else 1
-    finally:
-        driver.close()
+        transport.find_cli()
+    except transport.CliNotFound as exc:
+        print(f"ERROR: {exc}")
+        return 2
+
+    if not validate(statements):
+        return 1
+    if not run_gates(statements):
+        return 1
+    if not args.execute:
+        print("Validate-only mode; pass --execute to run.")
+        return 0
+    return 0 if execute(statements) else 1
 
 
 if __name__ == "__main__":

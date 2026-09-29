@@ -38,6 +38,9 @@ python -m app.database.cypher_runner.run_query --query yse_maturity_evidence --p
 python -m app.database.cypher_runner.run_query --query stewarded_ict_for_yse --param year_identifier=<yid>
 ```
 
+Anything these do not answer is one `neo4j-cli query '...' --format toon` away.
+That is the only other read path from a terminal; no Python that opens a driver.
+
 - **The bar**: six levels × three dimensions — procedures / resources /
   documentation (+ documentation-evidence per level). PLUS the SI's own
   companion bar, now decomposed into **EvidenceRequirement** nodes — one per
