@@ -344,93 +344,96 @@ the next set. `run_query --validate` checks the registry after an edit.
 
 Present every bucket and finding and STOP.
 
-For a whole set, the artifact IS the proposal: write the batch Cypher file described
-above, show it, and execute it on approval. The API calls below are the single-node
-path — one edit the user asked for by name, or a repair while the batch file is being
-drafted. Reaching for them to loop over a set is the mistake; a loop leaves no reviewable
-record of what changed.
+Every write goes through **neo4j-cli and nothing else**, in every session. Not the HTTP
+API: graph work never writes through the data-api, even though its endpoints wrap the same
+create functions. The artifact IS the proposal: write the batch Cypher file described
+above, show it, and execute it on approval with `run_file --execute`, which runs it
+through `neo4j-cli query --rw --atomic`. A single edit the user asks for by name may go
+straight through `neo4j-cli query --rw` (confirm first). Never loop single writes over a
+set, because a loop leaves no reviewable record of what changed. Bind-check every anchor
+before executing, and read back after.
 
-On approval:
+The patterns below were verified on 2026-10-06
+(`curate_2026_10_06_sfsu_web_content_training.cypher`,
+`curate_2026_10_06_sfbrn_accessibility_services.cypher`).
 
-```
-PUT /ati/data-api/v1/implementations
-{ "action": "assign_accountable_community",
-  "implementation_type": "<Type>", "implementation_unique_id": "<uid>",
-  "community": "<name or unique_id>" }
-```
+Accountable community:
 
-Evidence links are two calls. `assign_implementation_to_yse` takes `strength` inline;
-`control` is a separate call, and it keys on `unique_id` where the assign keys on
-`implementation_title` — an easy mismatch to write:
-
-```
-{ "action": "assign_implementation_to_yse",
-  "year_success_identifier": "...", "implementation_type": "...",
-  "implementation_title": "...", "strength": 2 }
-
-{ "action": "set_evidence_control",
-  "year_success_identifier": "...", "implementation_type": "...",
-  "unique_id": "...", "control": "internal" }
+```cypher
+MATCH (i:Guidance {unique_id: "<uid>"})
+MATCH (c:CommunityOfPractice {name: "<name>"})
+WHERE NOT (i)-[:accountable_community]->()
+MERGE (i)-[:accountable_community]->(c);
 ```
 
-`set_evidence_strength` exists for changing a rating on an existing link, and takes
-`unique_id` like control does. An unrated link renders in the report as an
-unqualified claim, so set strength in the same run rather than leaving it for later.
-Confirm by read-back.
+The `WHERE NOT` guard keeps a run from overwriting a community someone already set.
+Changing an existing one is a separate, named decision.
+
+An evidence link carries `strength`, `control` and a `rationale` in one statement. An
+unrated link renders in the report as an unqualified claim, so rate it in the same run:
+
+```cypher
+MATCH (i:Service {unique_id: "<uid>"})
+MATCH (y:YearSuccessEvidence {year_identifier: "<year>-<key>-<campus>"})
+MERGE (i)-[e:is_evidence_for]->(y)
+ON CREATE SET e.strength = 2, e.control = "internal", e.rationale = "...";
+```
+
+To re-rate an existing link, `MATCH` the edge and `SET e.strength`. `satisfies` handles
+must belong to the indicator the YSE tracks (see `IsEvidenceForRel`). Leave them unset
+unless the companion bar element is named.
 
 All seven implementation types carry `accountable_community` (the four doing types
 plus Guidance, InternalPolicy, Tracking); TAAP does not. Never touch
 `accountable_working_group` — narrower edge, different meaning, four types only.
 Never touch `status_is`.
 
-## Corpus mode calls
+## Corpus mode writes
 
-New page, created and linked in one call:
+A new page, `MERGE`d on its natural key so a re-run creates nothing. Set the Webpage
+defaults the app sets:
 
-```
-POST /ati/data-api/v1/documents
-{ "action": "add_webpage",
-  "webpage_dict": { "name": "...", "url": "...", "description": "..." },
-  "implementation_id": "<uid>", "implementation_type": "<Type>",
-  "academic_year": "<year>", "include_in_year": true }
-```
-
-A page already in the graph is linked, not recreated:
-
-```
-PUT /ati/data-api/v1/implementations
-{ "action": "assign_documentation_to_implementation",
-  "implementation_id": "<uid>", "implementation_type": "<Type>",
-  "documentation_type": "webpage", "documentation_id": "<uid>",
-  "academic_year": "<year>", "include_in_year": true }
+```cypher
+MERGE (w:Webpage {url: "..."})
+ON CREATE SET w.unique_id = replace(randomUUID(), "-", ""), w.name = "...",
+              w.description = "...", w.include_in_report = true,
+              w.depreciated = false, w.no_longer_exists = false;
 ```
 
-`documentation_type` is lowercase (`webpage`, `document`, `note`, `message`) where
-`implementation_type` is the class name (`Service`, `Guidance`). Mixing the two cases
-is a 400 from the type validation, not a silent no-op.
+A downloadable file is a `Document` `MERGE`d on `uri_path` (the external URL). Leave
+`file_path` and `storage_key` unset; they belong to uploads.
 
-A downloadable file is the same POST with `add_document` and
-`document_dict: { "name": "...", "uri_path": "<external URL>" }`. Leave `file_path`
-and `storage_key` alone; they belong to uploads.
+Linking documentation, for a new page or one already in the graph, carries the year
+curation the app writes on the edge:
 
-A rewritten description, one at a time:
-
-```
-PUT /ati/data-api/v1/implementations
-{ "action": "update_implementation", "implementation_type": "<Type>",
-  "unique_id": "<uid>", "description": "..." }
+```cypher
+MATCH (i:Guidance {unique_id: "<uid>"})
+MATCH (w:Webpage {unique_id: "<uid>"})
+MERGE (i)-[r:is_documented_by]->(w)
+ON CREATE SET r.added_date = date("YYYY-MM-DD"), r.modified_date = date("YYYY-MM-DD"),
+              r.included_in_years = ["<year>"], r.excluded_from_years = [];
 ```
 
-`title` and `description` are independent and an omitted one is left alone, so send
-only the field you changed.
+Adding a year to an existing edge: `MATCH` it and `SET r.included_in_years =
+r.included_in_years + ["<year>"], r.modified_date = date(...)`, guarded by
+`WHERE NOT "<year>" IN r.included_in_years`.
 
-Consolidation runs only on the user's decision, and relinking comes first:
+A rewritten description is a single `SET i.description = "..."`, one member at a time.
+Write it from the source text, not pasted out of it.
 
+A new implementation is `MERGE`d on `title` with `ON CREATE SET unique_id`, `retired =
+false` and `description`. Add `owned_by`, `uses_tool` and documentation in the same file.
+
+Consolidation runs only on the user's decision, and relinking comes first. Relink
+documentation and evidence onto the keeper, read back, then retire the other:
+
+```cypher
+MATCH (i:Service {unique_id: "<uid>"})
+SET i.retired = true, i.retired_date = date(),
+    i.retired_note = "Consolidated into <keeper title> (<keeper uid>)";
 ```
-{ "action": "retire_implementation", "implementation_type": "<Type>",
-  "unique_id": "<uid>", "retired": true,
-  "retired_note": "Consolidated into <keeper title> (<keeper uid>)" }
-```
+
+Never delete.
 
 # Feedback
 

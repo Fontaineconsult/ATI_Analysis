@@ -358,6 +358,13 @@ def _write(path, content, tool="Write"):
         "cypher-shell -a bolt://130.212.104.18:7687",
         "curl http://130.212.104.18:7687",
         "python scratch.py --uri bolt://x:7687",
+        # Graph data written through the HTTP API: graph work goes through neo4j-cli.
+        "curl -s -X PUT http://127.0.0.1:5001/ati/data-api/v1/individuals -H 'Content-Type: application/json' -d '{}'",
+        "curl -s http://127.0.0.1:5000/ati/data-api/v1/individuals -d '{\"action\":\"add_person\"}'",
+        "curl --request DELETE http://localhost:5000/ati/data-api/v1/plans/abc",
+        "Invoke-RestMethod -Method Post -Uri http://127.0.0.1:5000/ati/data-api/v1/follow-ups",
+        "wget --post-data='x=1' http://127.0.0.1:5000/ati/data-api/v1/plans",
+        "python -c \"import requests; requests.post('http://127.0.0.1:5000/ati/data-api/v1/x')\"",
     ],
 )
 def test_gate_blocks_direct_graph_access(gate, command):
@@ -374,8 +381,20 @@ def test_gate_blocks_direct_graph_access(gate, command):
         "pytest tests/test_followup.py -v",
         "python -m app.database.tools.create_new_ay_campus",
         "python -m app.database.cypher_runner.mcp --self-test",
-        "python run.py",
         "PYTHONPATH=. python app/database/graph_schema.py",
+        # App development: run the app and read its endpoints.
+        "python run.py",
+        ".venv/Scripts/python.exe app/application.py",
+        "$env:FLASK_RUN_PORT='5001'; & .\\.venv\\Scripts\\python.exe app\\application.py",
+        "flask run --port 5001",
+        "curl -s http://localhost:5000/ati/data-api/v1/communities?view=by_working_group",
+        "curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:5001/ati/data-api/v1/communities",
+        "Invoke-RestMethod -Uri http://127.0.0.1:5000/ati/data-api/v1/plans",
+        # Mentions and unrelated HTTP are not writes to the data-api.
+        "git commit -m 'refuse curl -X PUT at /data-api from agent sessions'",
+        "grep -rn data-api .claude/skills",
+        "curl -sL https://www.sfbrn.calstate.edu/accessible -o p1.html",
+        "npm start",
         "grep -rn bolt:// app",
         "git log --oneline -5",
         "python -c \"import secrets; print(secrets.token_hex(32))\"",
@@ -413,6 +432,16 @@ def test_gate_blocks_scratch_query_scripts(gate, tmp_path):
     assert gate.decide(payload) is not None
     payload = _write(str(scratch), "from app.database.queries.evidence.read import x\n", tool="Edit")
     assert gate.decide(payload) is not None
+
+
+def test_gate_blocks_scratch_scripts_that_write_through_the_data_api(gate, tmp_path):
+    content = "import requests\nrequests.put('http://127.0.0.1:5000/ati/data-api/v1/plans', json={})\n"
+    assert gate.decide(_write(str(tmp_path / "bulk_update.py"), content)) is not None
+
+
+def test_gate_allows_scratch_scripts_that_only_read_the_data_api(gate, tmp_path):
+    content = "import requests\nprint(requests.get('http://127.0.0.1:5000/ati/data-api/v1/plans').json())\n"
+    assert gate.decide(_write(str(tmp_path / "check_endpoint.py"), content)) is None
 
 
 def test_gate_ignores_non_python_and_harmless_scripts(gate, tmp_path):

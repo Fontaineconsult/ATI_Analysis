@@ -202,28 +202,37 @@ save_follow_up(
 blob of text and makes "what came back" unanswerable. `generated_at` is stamped
 automatically.
 
-**How to call it.** `save_follow_up` and the other verbs in this skill are the
-`ati-graph` MCP server's tools. When that server is not registered in the session
-(it is not, as of 2026-09-25), the same writes go through the HTTP API, and that is
-the only other sanctioned path from a terminal. Do not import the queries layer from
-Python and do not write the node with ad-hoc Cypher; the project hook refuses the
-first, and the second skips the wiring the create function enforces.
+**How to call it.** Through **neo4j-cli and nothing else**, in every session. Not the HTTP
+API: this is graph work, so it never writes through the data-api. Not Python: the project hook refuses the
+queries layer from a terminal. The `ati-graph` MCP server's tools are for Claude Desktop
+and IDE clients, not for an agent session here. Write the follow-up as a batch file in
+`app/database/batch/auto-assignments/` and run it with `run_file --execute`, or as a single
+`neo4j-cli query --rw` statement for one status change. Confirm before any `--rw`.
 
-```
-POST /ati/data-api/v1/follow-ups
-{ "action": "create_follow_up",
-  "subject": ..., "meeting_minutes_id": ..., "body_markdown": ...,
-  "community_name": ..., "campus_abbreviation": ..., "interview_guide_id": ...,
-  "addressed_to_ids": [...],            # recipient_employee_ids
-  "covers_evidence_identifiers": [...], # covers_year_identifiers
-  "includes_query_ids": [...], "includes_recommendation_ids": [...],
-  "includes_concern_ids": [...], "created_by_id": ... }
+The Cypher must reproduce what the query-layer functions do, because those functions are
+where the wiring lives. Read them before writing, and say in the file header that you did.
 
-PUT  /ati/data-api/v1/follow-ups   { "action": "mark_sent",   "unique_id": ..., "date_sent": ... }
-PUT  /ati/data-api/v1/follow-ups   { "action": "link_reply",  "unique_id": ..., "message_unique_id": ..., "from_person_unique_id": ... }
-GET  /ati/data-api/v1/follow-ups/replies/<unique_id>          # replies_for_follow_up
-PUT  /ati/data-api/v1/queries      { "action": "settle_query", "unique_id": ..., "answer": ..., "settled_by_unique_id": ... }
-```
+`create_follow_up` (`queries/followup/create.py`):
+- `CREATE` a `FollowUp` with `unique_id`, `subject` (trimmed, required), `body_markdown`,
+  `status = "draft"`, `date_created = date()`, and `generated_at` as an ISO datetime string
+  to the second.
+- `follows_up_on` → the MeetingMinutes. This is required: bind-check it, and abort if it
+  matches nothing.
+- `derived_from` → the InterviewGuide, `pertains_to` → the CommunityOfPractice,
+  `for_campus` → the Campus. At most one of each.
+- `addressed_to` → each recipient Person, `covers_evidence` → each YSE,
+  `includes_query` / `includes_recommendation` / `includes_concern` → each ask carried,
+  and `created_by` → the author.
+
+`mark_follow_up_sent` (`queries/followup/update.py`): `SET status = "sent"`, with
+`date_sent` set to the given date or `date()`.
+
+`link_reply_to_follow_up` (`queries/followup/reply.py`): the Message's `replies_to` edge is
+replaced to point at this FollowUp, and its `from_person` edge is replaced with the sender.
+
+`settle_query` (`queries/query/update.py`): `SET answer` (trimmed, required), `status =
+"settled"` and `date_settled = date()`, plus `query_settled_by` → the Person when one is
+named.
 
 Reads that feed the draft (`meeting_followup_table`, `overdue_followups`) stay on
 the registry runner, and any read the registry lacks runs through `neo4j-cli query`.
