@@ -109,6 +109,9 @@ def get_communities_by_working_group() -> list:
 
     weighted by stake_count (communities are ordered strongest-fit first within
     each group; a community holding stakes in several groups appears under each).
+    Each community also carries `stakes`, the indicators behind that count
+    ({composite_key, success_indicator}, in goal/indicator order). Removed
+    indicators are excluded from both, so the count and the list agree.
 
     People model: each community's explicit member_of_community roster is its
     LEADS — deliberately a handful. The broader body of people is derived from
@@ -125,13 +128,17 @@ def get_communities_by_working_group() -> list:
             MATCH (wg:ATIWorkingGroup)
             OPTIONAL MATCH (wg)-[:responsible_for]->(:Goal)-[:supported_by]->
                            (si:SuccessIndicator)<-[:has_stake_in]-(c:CommunityOfPractice)
-            WITH wg, c, count(DISTINCT si) AS stake_count
+            WHERE NOT coalesce(si.removed, false)
+            WITH wg, c, count(DISTINCT si) AS stake_count,
+                 collect(DISTINCT {composite_key: si.composite_key,
+                                   success_indicator: si.success_indicator}) AS stakes
             ORDER BY stake_count DESC, toLower(c.name)
             WITH wg,
                  [x IN collect({
                     name: c.name,
                     unique_id: c.unique_id,
                     stake_count: stake_count,
+                    stakes: stakes,
                     leads: [(lead:Person)-[m:member_of_community]->(c) |
                               {name: lead.name, title: lead.title,
                                employee_id: lead.employee_id,
@@ -155,6 +162,18 @@ def get_communities_by_working_group() -> list:
         )
     except Exception as e:
         raise CrudError(f"Failed to derive communities by working group: {e}")
+
+    def _indicator_order(stake):
+        # "6.10-ins" sorts after "6.8-ins": compare goal and indicator as numbers.
+        numbers = (stake.get("composite_key") or "").split("-")[0].split(".")
+        return tuple(int(n) if n.isdigit() else 0 for n in numbers)
+
+    for r in rows:
+        for community in r[1]:
+            community["stakes"] = sorted(
+                (s for s in community.get("stakes") or [] if s.get("composite_key")),
+                key=_indicator_order,
+            )
 
     order = {d["name"]: i for i, d in enumerate(WORKING_GROUP_DEFS)}
     abbrev = {d["name"]: d["abbrev"] for d in WORKING_GROUP_DEFS}

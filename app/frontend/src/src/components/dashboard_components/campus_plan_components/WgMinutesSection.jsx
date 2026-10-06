@@ -1,8 +1,9 @@
 import React, { useCallback, useState } from 'react';
 import {
     Badge, Box, Button, Flex, HStack, Modal, ModalBody, ModalCloseButton, ModalContent,
-    ModalFooter, ModalHeader, ModalOverlay, Spinner, Text, VStack, useDisclosure, useToast,
+    ModalFooter, ModalHeader, ModalOverlay, Spinner, Text, useDisclosure, useToast,
 } from '@chakra-ui/react';
+import { InlineList, ListEntry, StackList } from './lists';
 
 import { fetchMinutesPanelForPlan } from '../../../services/api/get';
 import useResource from '../../../hooks/useResource';
@@ -65,16 +66,28 @@ function MinutesModal({ minutes, accentColor, workingGroupName, onChanged, onEdi
                                 not ingested
                             </Badge>
                         )}
-                        {(minutes.pertains_to_communities || []).map((c) => (
-                            <Badge key={c.unique_id} colorScheme="purple" variant="subtle" fontSize="2xs" textTransform="none">
-                                {c.name}
-                            </Badge>
-                        ))}
-                        {(minutes.participants || []).map((p) => (
-                            <Badge key={p.unique_id} colorScheme="gray" variant="subtle" fontSize="2xs" textTransform="none">
-                                {p.name}
-                            </Badge>
-                        ))}
+                        {(minutes.pertains_to_communities || []).length > 0 && (
+                            <InlineList gap={1.5} rowGap={1.5} aria-label="Communities">
+                                {minutes.pertains_to_communities.map((c) => (
+                                    <ListEntry key={c.unique_id}>
+                                        <Badge colorScheme="purple" variant="subtle" fontSize="2xs" textTransform="none">
+                                            {c.name}
+                                        </Badge>
+                                    </ListEntry>
+                                ))}
+                            </InlineList>
+                        )}
+                        {(minutes.participants || []).length > 0 && (
+                            <InlineList gap={1.5} rowGap={1.5} aria-label="Participants">
+                                {minutes.participants.map((p) => (
+                                    <ListEntry key={p.unique_id}>
+                                        <Badge colorScheme="gray" variant="subtle" fontSize="2xs" textTransform="none">
+                                            {p.name}
+                                        </Badge>
+                                    </ListEntry>
+                                ))}
+                            </InlineList>
+                        )}
                     </Flex>
                 </ModalHeader>
                 <ModalCloseButton />
@@ -144,14 +157,16 @@ export default function WgMinutesSection({ workingGroupPlanIdentifier, workingGr
                 <Text fontSize="sm" color="gray.600" fontStyle="italic">No meeting minutes yet.</Text>
             ) : (
                 // Capped height, then scroll — long meeting histories stay inside the card.
-                <VStack align="stretch" spacing={2} maxH="300px" overflowY="auto" pr={1}>
+                <StackList spacing={2} maxH="300px" overflowY="auto" pr={1} aria-label="Meeting minutes">
                     {minutes.map((m) => {
                         const n = attachCount(m);
                         const participants = m.participants || [];
                         const communities = m.pertains_to_communities || [];
                         return (
+                            <ListEntry key={m.unique_id} alignItems="stretch">
                             <Box
-                                key={m.unique_id}
+                                flex="1"
+                                minW={0}
                                 borderWidth="1px"
                                 borderColor="gray.200"
                                 borderRadius="md"
@@ -205,9 +220,10 @@ export default function WgMinutesSection({ workingGroupPlanIdentifier, workingGr
                                     ))}
                                 </Flex>
                             </Box>
+                            </ListEntry>
                         );
                     })}
-                </VStack>
+                </StackList>
             )}
 
             {openMinutes && (

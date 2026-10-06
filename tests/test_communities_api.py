@@ -259,6 +259,9 @@ def test_communities_by_working_group_derivation(flask_client, test_person):
     ours = next((c for c in target["communities"] if c["name"] == COMMUNITY_NAME), None)
     assert ours is not None, "staked community must appear under the SI's working group"
     assert ours["stake_count"] == 1
+    assert [s["composite_key"] for s in ours["stakes"]] == [si.composite_key], \
+        "stakes lists the indicators behind stake_count"
+    assert ours["stakes"][0]["success_indicator"] == si.success_indicator
     assert PERSON_NAME in [l["name"] for l in ours["leads"]], "explicit member = lead"
     assert PERSON_NAME in [m["name"] for m in target["working_group_members"]], \
         "WG roster is the derived body of people"

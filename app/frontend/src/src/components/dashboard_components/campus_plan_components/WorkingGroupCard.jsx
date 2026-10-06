@@ -1,6 +1,6 @@
-import React, { useContext, useMemo, useState } from 'react';
+import React, { useContext, useId, useMemo, useState } from 'react';
 import {
-    Box, Button, HStack, Modal, ModalBody, ModalCloseButton, ModalContent, ModalFooter,
+    Box, Button, Heading, HStack, Modal, ModalBody, ModalCloseButton, ModalContent, ModalFooter,
     ModalHeader, ModalOverlay, Text, useDisclosure,
 } from '@chakra-ui/react';
 
@@ -12,7 +12,9 @@ import ProgressUpdateModal from './ProgressUpdateModal';
 import IndicatorRow, { INDICATOR_GRID_COLUMNS } from './IndicatorRow';
 import WgQueriesSection from './WgQueriesSection';
 import WgMinutesSection from './WgMinutesSection';
-import WgCommunitiesSection from './WgCommunitiesSection';
+import WgCommunitiesSection, { WgPeopleSection, campusMembersOf, communityMembersAt } from './WgCommunitiesSection';
+import WgCardSection, { SectionButton } from './WgCardSection';
+import CopyWorkingGroupPlanButton from './CopyWorkingGroupPlanButton';
 import { getWgAccent, isAtRisk, isStale } from './campusPlanConfig';
 
 const MICRO = {
@@ -26,11 +28,11 @@ const MICRO = {
 
 /**
  * One working-group card in the single-page campus plan (design handoff v2 §5).
- * Header (dot + name + id) → people band (leads on top as their own area, then
- * the vertical stack of community-of-practice boxes whose stakes land in this
- * group — WgCommunitiesSection) → prioritized-indicator table (rows from
- * IndicatorRow, filtered by the stat-strip filter, with cross-campus peer
- * chips) → footer (Queries + Meeting Minutes). Renders for all four groups
+ * Header (dot + name + id), then four zones, each a WgCardSection with a
+ * section header (accent bar, teal heading, summary): Leads & Members (WgPeopleSection) → Prioritized Indicators
+ * (rows from IndicatorRow, filtered by the stat-strip filter, with cross-campus
+ * peer chips) → Communities of Practice whose stakes land in this group
+ * (WgCommunitiesSection) → Queries & Meeting Minutes. Renders for all four groups
  * including Steering — an empty table is fine.
  */
 function WorkingGroupCard({
@@ -41,12 +43,16 @@ function WorkingGroupCard({
     currentUserUniqueId,
     peerWorkingGroupPlans = [],
     communities = [],
+    members = [],
     onIndicatorAdded,
     onProgressAdded,
     onLeadsChanged,
 }) {
     const addModal = useDisclosure();
     const leadsModal = useDisclosure();
+    // The card title names each zone's landmark too, so four cards' "Leads & Members"
+    // regions read as "Web, Leads & Members", "Instructional Materials, Leads & Members".
+    const titleId = useId();
     const [activeProgressSi, setActiveProgressSi] = useState(null);
     const [expanded, setExpanded] = useState(() => new Set());
     const userCtx = useContext(UserContext);
@@ -81,6 +87,35 @@ function WorkingGroupCard({
         return true;
     });
 
+    // One-line summaries for the section headers. Each counts exactly what the
+    // section below it renders, using the same campus filters.
+    const here = campusAbbrev ? campusAbbrev.toUpperCase() : 'this campus';
+    const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`;
+    const campusMembers = campusMembersOf(leads, members, campusAbbrev);
+    const peopleSummary = `${plural(leads.length, 'lead')} · ${plural(campusMembers.length, 'member')} at ${here}`;
+    const atRiskCount = sis.filter(isAtRisk).length;
+    const staleCount = sis.filter(isStale).length;
+    const indicatorSummary = [
+        atRiskCount ? `${atRiskCount} at risk` : null,
+        staleCount ? `${staleCount} stale` : null,
+    ].filter(Boolean).join(' · ') || null;
+    const communitiesHere = communities.map((c) => ({ ...c, members: communityMembersAt(c, campusAbbrev) }));
+    const staffedCount = communitiesHere.filter((c) => c.members.length > 0).length;
+    const communitySummary = communities.length
+        ? `${staffedCount} with people at ${here} · ${communities.length - staffedCount} without`
+        : null;
+
+    // What the Copy table button puts on the clipboard: the card as shown.
+    const report = {
+        workingGroup: wgp?.working_group,
+        planIdentifier: wgp?.plan_identifier,
+        campusName,
+        leads,
+        members: campusMembers,
+        indicators: sis,
+        communities: communitiesHere,
+    };
+
     const toggleExpand = (key) => {
         setExpanded((prev) => {
             const next = new Set(prev);
@@ -103,30 +138,34 @@ function WorkingGroupCard({
             mb={4}
         >
             {/* Header */}
-            <HStack px={5} py={4} spacing={3} borderBottomWidth="1px" borderColor="gray.100" flexWrap="wrap">
+            <HStack px={5} py={4} spacing={3} flexWrap="wrap">
                 <Box w="9px" h="9px" borderRadius="full" bg={accent} flexShrink={0} />
-                <Text fontSize="17px" fontWeight="bold" color="gray.800">{wgp.working_group}</Text>
+                <Heading as="h3" id={titleId} fontSize="17px" fontWeight="bold" color="gray.800">{wgp.working_group}</Heading>
                 <Text fontFamily="mono" fontSize="11px" color="gray.600" whiteSpace="nowrap">{wgp.plan_identifier}</Text>
+                <Box flex="1" minW="12px" />
+                <CopyWorkingGroupPlanButton report={report} />
             </HStack>
 
-            {/* People band: leads on top, then the community-of-practice stack */}
-            <WgCommunitiesSection
-                leads={leads}
-                onManageLeads={leadsModal.onOpen}
-                communities={communities}
+            {/* 1. People: leads, then this campus's members */}
+            <WgCardSection
+                labelPrefixId={titleId}
+                title="Leads & Members"
+                summary={peopleSummary}
                 accentColor={accent}
-                campusAbbrev={campusAbbrev}
-            />
+                action={<SectionButton onClick={leadsModal.onOpen}>Manage leads</SectionButton>}
+            >
+                <WgPeopleSection leads={leads} members={members} campusAbbrev={campusAbbrev} />
+            </WgCardSection>
 
-            {/* Prioritized indicators */}
-            <HStack px={5} pt={3} pb={1} spacing={3}>
-                <Text fontSize="xs" fontWeight="bold" textTransform="uppercase" color="teal.600" letterSpacing="wide">
-                    Prioritized Indicators ({sis.length})
-                </Text>
-                <Box flex="1" />
-                <Button size="xs" variant="outline" colorScheme="teal" onClick={addModal.onOpen}>+ Add Indicator</Button>
-            </HStack>
-
+            {/* 2. Prioritized indicators */}
+            <WgCardSection
+                labelPrefixId={titleId}
+                title="Prioritized Indicators"
+                count={sis.length}
+                summary={indicatorSummary}
+                accentColor={accent}
+                action={<SectionButton onClick={addModal.onOpen}>+ Add Indicator</SectionButton>}
+            >
             {/* Table header */}
             <Box
                 display="grid"
@@ -170,20 +209,34 @@ function WorkingGroupCard({
                     />
                 ))
             )}
+            </WgCardSection>
 
-            {/* Footer: Queries + Meeting Minutes */}
-            <HStack px={5} py={4} align="flex-start" spacing={4} borderTopWidth="1px" borderColor="gray.100">
-                <WgQueriesSection
-                    workingGroupPlanIdentifier={wgp.plan_identifier}
-                    workingGroupName={wgp.working_group}
-                    accentColor={accent}
-                />
-                <WgMinutesSection
-                    workingGroupPlanIdentifier={wgp.plan_identifier}
-                    workingGroupName={wgp.working_group}
-                    accentColor={accent}
-                />
-            </HStack>
+            {/* 3. Communities of practice whose stakes land in this group */}
+            <WgCardSection
+                labelPrefixId={titleId}
+                title="Communities of Practice"
+                count={communities.length}
+                summary={communitySummary}
+                accentColor={accent}
+            >
+                <WgCommunitiesSection communities={communities} accentColor={accent} campusAbbrev={campusAbbrev} />
+            </WgCardSection>
+
+            {/* 4. Queries + Meeting Minutes */}
+            <WgCardSection title="Queries & Meeting Minutes" accentColor={accent} labelPrefixId={titleId}>
+                <HStack px={5} py={4} align="flex-start" spacing={4}>
+                    <WgQueriesSection
+                        workingGroupPlanIdentifier={wgp.plan_identifier}
+                        workingGroupName={wgp.working_group}
+                        accentColor={accent}
+                    />
+                    <WgMinutesSection
+                        workingGroupPlanIdentifier={wgp.plan_identifier}
+                        workingGroupName={wgp.working_group}
+                        accentColor={accent}
+                    />
+                </HStack>
+            </WgCardSection>
 
             {/* Modals */}
             <IndicatorSelectorModal

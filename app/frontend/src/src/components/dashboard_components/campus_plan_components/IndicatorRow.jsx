@@ -14,6 +14,7 @@ import {
 import { Link as RouterLink } from 'react-router-dom';
 
 import StatusProgression, { StatusPill } from './StatusProgression';
+import { InlineList, ListEntry } from './lists';
 import {
     TRAJECTORY_CONFIG,
     getTrajectoryColorScheme,
@@ -60,8 +61,12 @@ function PeerChip({ abbrev, statusLevel }) {
     );
 }
 
-/** Inline "add a progress update" composer shown in the expanded panel. */
-function InlineComposer({ workingGroupPlanIdentifier, yseIdentifier, authorUniqueId, onProgressAdded }) {
+/**
+ * Inline "add a progress update" composer shown in the expanded panel. Its controls
+ * carry aria-labels keyed by the indicator, because several rows can be expanded at once
+ * and a placeholder (an <option> on the Select) is not an accessible name.
+ */
+function InlineComposer({ indicatorKey, workingGroupPlanIdentifier, yseIdentifier, authorUniqueId, onProgressAdded }) {
     const [note, setNote] = useState('');
     const [trajectory, setTrajectory] = useState('');
     const [submitting, setSubmitting] = useState(false);
@@ -99,6 +104,7 @@ function InlineComposer({ workingGroupPlanIdentifier, yseIdentifier, authorUniqu
                 size="sm"
                 flex="1"
                 placeholder="Add an update…"
+                aria-label={`Progress update for ${indicatorKey}`}
                 value={note}
                 onChange={(e) => setNote(e.target.value)}
                 onKeyDown={(e) => { if (e.key === 'Enter') submit(); }}
@@ -107,6 +113,7 @@ function InlineComposer({ workingGroupPlanIdentifier, yseIdentifier, authorUniqu
                 size="sm"
                 w="150px"
                 placeholder="Trajectory"
+                aria-label={`Trajectory for ${indicatorKey}`}
                 value={trajectory}
                 onChange={(e) => setTrajectory(e.target.value)}
             >
@@ -206,11 +213,19 @@ function IndicatorRow({
                         {si.success_indicator}
                     </Link>
                     {peers.length > 0 && (
-                        <HStack mt={1.5} spacing={1.5} flexWrap="wrap" onClick={stop}>
+                        <InlineList
+                            mt={1.5}
+                            gap={1.5}
+                            rowGap={1.5}
+                            onClick={stop}
+                            aria-label="Other campuses prioritizing this indicator"
+                        >
                             {peers.map((p) => (
-                                <PeerChip key={p.abbrev} abbrev={p.abbrev} statusLevel={p.status_level} />
+                                <ListEntry key={p.abbrev}>
+                                    <PeerChip abbrev={p.abbrev} statusLevel={p.status_level} />
+                                </ListEntry>
                             ))}
-                        </HStack>
+                        </InlineList>
                     )}
                     {latestNote && (
                         <Text fontSize="xs" color="gray.600" fontStyle="italic" mt={1.5} lineHeight="1.4">
@@ -328,6 +343,7 @@ function IndicatorRow({
                             )}
 
                             <InlineComposer
+                                indicatorKey={compositeKey}
                                 workingGroupPlanIdentifier={workingGroupPlanIdentifier}
                                 yseIdentifier={yseIdentifier}
                                 authorUniqueId={currentUserUniqueId}

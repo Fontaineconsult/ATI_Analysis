@@ -126,25 +126,30 @@ export default function MeetingMinutesDetail({ minutes, onChanged }) {
                                     ) : (
                                         <Text fontSize="sm" color="gray.700">📄 {d.name}</Text>
                                     )}
-                                    <IconButton aria-label="Remove document" icon={<DeleteIcon />} size="xs" variant="ghost" colorScheme="red" isDisabled={busy} onClick={() => handleDetachDoc(d.unique_id)} />
+                                    <IconButton aria-label={`Remove document: ${d.name || 'untitled'}`} icon={<DeleteIcon />} size="xs" variant="ghost" colorScheme="red" isDisabled={busy} onClick={() => handleDetachDoc(d.unique_id)} />
                                 </HStack>
                             );
                         })}
                         {webpages.map((w) => (
                             <HStack key={w.unique_id} justify="space-between">
                                 <Link href={w.url} isExternal color="teal.600" fontSize="sm">🔗 {w.name || w.url} <ExternalLinkIcon boxSize={3} /></Link>
-                                <IconButton aria-label="Remove webpage" icon={<DeleteIcon />} size="xs" variant="ghost" colorScheme="red" isDisabled={busy} onClick={() => handleDetachWeb(w.unique_id)} />
+                                <IconButton aria-label={`Remove webpage: ${w.name || w.url}`} icon={<DeleteIcon />} size="xs" variant="ghost" colorScheme="red" isDisabled={busy} onClick={() => handleDetachWeb(w.unique_id)} />
                             </HStack>
                         ))}
                     </VStack>
                 )}
                 <Flex gap={2} wrap="wrap" align="center">
-                    <Select size="sm" maxW="130px" value={attachType} onChange={(e) => setAttachType(e.target.value)}>
+                    <Select size="sm" maxW="130px" aria-label="Attachment type" value={attachType} onChange={(e) => setAttachType(e.target.value)}>
                         <option value="document">Document</option>
                         <option value="webpage">Webpage</option>
                     </Select>
-                    <Input size="sm" maxW="200px" placeholder="Name" value={attachName} onChange={(e) => setAttachName(e.target.value)} />
-                    <Input size="sm" flex={1} minW="180px" placeholder={attachType === 'document' ? 'URL or file path (optional)' : 'URL'} value={attachUrl} onChange={(e) => setAttachUrl(e.target.value)} />
+                    <Input size="sm" maxW="200px" aria-label="Attachment name" placeholder="Name" value={attachName} onChange={(e) => setAttachName(e.target.value)} />
+                    <Input
+                        size="sm" flex={1} minW="180px"
+                        aria-label={attachType === 'document' ? 'Attachment URL or file path (optional)' : 'Attachment URL'}
+                        placeholder={attachType === 'document' ? 'URL or file path (optional)' : 'URL'}
+                        value={attachUrl} onChange={(e) => setAttachUrl(e.target.value)}
+                    />
                     <Button size="sm" colorScheme="teal" variant="outline" onClick={handleAttach} isLoading={busy}>Attach</Button>
                 </Flex>
             </Box>
