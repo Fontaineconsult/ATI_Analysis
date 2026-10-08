@@ -87,6 +87,13 @@ const getImplementationURL = (type, uniqueId, campus) => {
 };
 
 
+// A person's page in the People explorer, keyed by employee_id (the route's :personId).
+const getPersonUrl = (employeeId, campus) => {
+    const campusPrefix = campus ? `/${campus}` : '';
+    return `${campusPrefix}/ati-explorer/people/${encodeURIComponent(employeeId)}`;
+};
+
+
 // The read-only Report view URL for a success indicator — the dashboard's "View" target:
 // /{campus}/dashboard/reports/{workingGroup}/{goal}/{indicator}. This is the canonical
 // home for the logic that was inlined in ReportMasterList; ViewReportButton consumes it
@@ -107,6 +114,7 @@ export { getUrlFromCompositeKey,
     getGoalViewUrlFromCompositeKey,
     navigateToIndicator,
     getImplementationURL,
+    getPersonUrl,
     getReportUrlFromCompositeKey,
     workingGroupCodeFromName,
     workingGroupWebSafe};

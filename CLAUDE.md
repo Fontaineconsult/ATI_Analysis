@@ -115,6 +115,22 @@ or a direct hit on port 7687 is not an access path; the hook in
 `.claude/hooks/graph_access_gate.py` refuses them. Details and setup in
 `app/database/cypher_runner/cli/README.md`.
 
+**The kind of work picks the path, in every session.**
+- **Graph work** (skills, curation, ingest, reading or changing graph data) uses
+  neo4j-cli and nothing else. Writes go through `neo4j-cli query --rw` (ask first) or a
+  batch file run with `run_file --execute`. Never use the HTTP API as a stand-in for a
+  data edit, even though its endpoints call the sanctioned create functions.
+- **App development** (building or fixing the app) runs Flask and calls its endpoints to
+  check behaviour. A write endpoint under development is tested with pytest's
+  `flask_client` on sentinel data, not by curl against the live graph.
+
+`.claude/hooks/graph_access_gate.py` enforces the line: it refuses PUT/POST/PATCH/DELETE
+to the data-api, and it lets Flask start and GET requests through. When an app write function has side effects,
+reproduce them explicitly in the Cypher and say so: `update_plan` to Completed also
+stamps `completed_date`, links `completed_in_year`, and creates an Accomplishment via
+`achieved_through`; `add_person` sets `unique_id`, `active`, `can_approve_yse` and
+`non_committee_member_active`. Read the function before writing its Cypher twin.
+
 ### Vocabularies live in `app/data_config.py`
 Add new choice maps (`status_levels`, `working_groups`, `trajectory_choices`, etc.) to `data_config.py` — never to `class_factory.py` or inline in `graph_schema.py`. The `data_config` module has zero project imports, so anything can read from it without triggering load cycles. `class_factory.py` re-exports vocabularies from `data_config` for backward compatibility with older callers.
 

@@ -11,14 +11,18 @@ freely; writes are gated twice, once by the runner flag and once by the CLI.
 
 ## The three access paths
 
-The graph has three sanctioned access paths and this skill is the third.
+The graph has three access paths and this skill is the third, **the only one graph work
+uses, for reads and writes, in every conversation.**
 
 1. **HTTP API.** Flask endpoints over `app/database/queries/<domain>` (neomodel). The
-   app's path.
+   running app's path. App development runs it and reads it. Graph work never writes
+   through it.
 2. **MCP server.** `app/database/cypher_runner/mcp`, its own driver and credential.
    Claude Desktop and IDE clients.
-3. **neo4j-cli.** Anyone in a terminal, including an agent session in this repo. The
-   credential is in the OS keyring; no Python here opens Bolt or sees a password.
+3. **neo4j-cli.** Every agent session in this repo. The credential is in the OS keyring;
+   no Python here opens Bolt or sees a password. Writes go through `neo4j-cli query --rw`
+   (confirm first) or a batch file via `run_file --execute`. When an app write function
+   has side effects, read it and reproduce them in the Cypher.
 
 Not an access path: `python -c` with the driver or neomodel, a scratch script that opens
 a session, `cypher-shell`, a curl at port 7687. The project hook refuses them and points

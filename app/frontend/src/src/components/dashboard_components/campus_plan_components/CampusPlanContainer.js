@@ -110,12 +110,16 @@ function CampusPlanContainer() {
     const { data: communitiesByWgResp } = useResource(
         KEYS.communitiesByWorkingGroup, fetchCommunitiesByWorkingGroup,
     );
-    const communitiesByWg = useMemo(() => {
-        const map = {};
+    // The same response carries each group's participates_in roster
+    // (working_group_members), cross-campus; the card filters it to this campus.
+    const { communitiesByWg, membersByWg } = useMemo(() => {
+        const communities = {};
+        const members = {};
         for (const row of communitiesByWgResp?.data?.items || []) {
-            map[row.working_group] = row.communities || [];
+            communities[row.working_group] = row.communities || [];
+            members[row.working_group] = row.working_group_members || [];
         }
-        return map;
+        return { communitiesByWg: communities, membersByWg: members };
     }, [communitiesByWgResp]);
 
     const allCampusAbbrevs = useMemo(() => {
@@ -393,6 +397,7 @@ function CampusPlanContainer() {
                         currentUserUniqueId={currentUserUniqueId}
                         peerWorkingGroupPlans={peerWorkingGroupPlans}
                         communities={communitiesByWg[wgp.working_group] || []}
+                        members={membersByWg[wgp.working_group] || []}
                         onIndicatorAdded={handleReloadPrimary}
                         onProgressAdded={handleReloadPrimary}
                         onLeadsChanged={handleReloadPrimary}

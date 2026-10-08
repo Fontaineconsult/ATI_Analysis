@@ -1,8 +1,9 @@
 import React, { useCallback, useState } from 'react';
 import {
     Badge, Box, Button, Flex, HStack, Modal, ModalBody, ModalCloseButton, ModalContent,
-    ModalFooter, ModalHeader, ModalOverlay, Spinner, Text, VStack, useDisclosure, useToast,
+    ModalFooter, ModalHeader, ModalOverlay, Spinner, Text, useDisclosure, useToast,
 } from '@chakra-ui/react';
+import { ListEntry, StackList } from './lists';
 
 import { useSettings } from '../../../context/SettingsContext';
 import { fetchQueryPanelForPlan } from '../../../services/api/get';
@@ -131,10 +132,12 @@ export default function WgQueriesSection({ workingGroupPlanIdentifier, workingGr
                 // Capped height, then scroll, matching WgMinutesSection: a working
                 // group with a long question backlog otherwise stretches its card
                 // past every sibling and breaks the row.
-                <VStack align="stretch" spacing={2} maxH="300px" overflowY="auto" pr={1} data-testid="wg-queries-list">
+                <StackList spacing={2} maxH="300px" overflowY="auto" pr={1} data-testid="wg-queries-list" aria-label="Queries">
                     {queries.map((q) => (
+                        <ListEntry key={q.unique_id} alignItems="stretch">
                         <Box
-                            key={q.unique_id}
+                            flex="1"
+                            minW={0}
                             borderWidth="1px"
                             borderColor="gray.200"
                             borderLeftWidth="3px"
@@ -174,8 +177,9 @@ export default function WgQueriesSection({ workingGroupPlanIdentifier, workingGr
                                 <AnswerableBy people={q.answerable_by} size="sm" />
                             </Flex>
                         </Box>
+                        </ListEntry>
                     ))}
-                </VStack>
+                </StackList>
             )}
 
             {openQuery && (

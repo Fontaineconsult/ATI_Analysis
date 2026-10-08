@@ -14,9 +14,16 @@ failed one, and stop where the guide says to ask the user.
 
 | Path | Who uses it | Where the credential lives | Writes |
 |---|---|---|---|
-| HTTP API | the React app, curl, scripts talking to Flask | the config gateway (web.config in prod, `.env.<env>` in dev), read by `create_app()` | the queries layer and its create functions |
-| MCP server | Claude Desktop, Claude Code, IDE clients, once the `ati-graph` server is registered | the server's own environment (`mcp/connection.py`) | registry `mode: write` tools behind `ATI_MCP_ALLOW_WRITE` |
-| neo4j-cli | anyone in a terminal, including agent sessions in this repo | the OS keyring, under the CLI's control | `--rw`, which an agent must never add on its own |
+| HTTP API | the running React app and its users; agents doing app development (run it, read it) | the config gateway (web.config in prod, `.env.<env>` in dev), read by `create_app()` | the queries layer and its create functions |
+| MCP server | Claude Desktop and IDE clients, once the `ati-graph` server is registered | the server's own environment (`mcp/connection.py`) | registry `mode: write` tools behind `ATI_MCP_ALLOW_WRITE` |
+| neo4j-cli | anyone in a terminal, and **all graph work by an agent** (skills, curation, data reads and writes) | the OS keyring, under the CLI's control | `--rw`, which an agent never adds without asking first |
+
+The kind of work picks the path. Graph work never writes through the data-api, even though
+those endpoints wrap the sanctioned create functions. When a write function has side
+effects (for example, `update_plan` to Completed creates an Accomplishment), the agent
+reads it and reproduces them in the Cypher. App development runs Flask and reads its
+endpoints freely, and tests write endpoints with pytest's `flask_client`. The hook
+refuses write requests to the data-api and passes everything else.
 
 There is no fourth path. A `python -c` that imports the driver, a scratch script that
 opens a session, `cypher-shell`, or a curl at port 7687 is not an access path, and the

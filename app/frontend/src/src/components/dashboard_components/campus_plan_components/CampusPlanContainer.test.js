@@ -163,12 +163,12 @@ describe('CampusPlanContainer (v2 single-page shell)', () => {
 
         await screen.findByRole('heading', { name: /^campus plan$/i });
 
-        // Each card emits a "Prioritized Indicators (n)" label — one per card.
-        const cardLabels = screen.getAllByText(/prioritized indicators \(/i);
+        // Each card emits a "Prioritized Indicators" heading with a count pill — one per card.
+        const cardLabels = screen.getAllByRole('heading', { level: 4, name: /prioritized indicators/i });
         expect(cardLabels).toHaveLength(4);
         // Steering (empty) leads; Procurement (the indicator-bearing group) trails.
-        expect(cardLabels[0].textContent).toMatch(/\(0\)/);   // Steering
-        expect(cardLabels[3].textContent).toMatch(/\(2\)/);   // Procurement
+        expect(cardLabels[0].textContent).toMatch(/0$/);   // Steering
+        expect(cardLabels[3].textContent).toMatch(/2$/);   // Procurement
     });
 
     it('shows the empty-indicator state for the Steering card', async () => {

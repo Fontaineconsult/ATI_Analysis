@@ -64,28 +64,33 @@ it lands. Failures appear in the same table so the ratio is visible.
 
 ## Step 4 — Write
 
-Through the sanctioned update path, one item at a time:
+Through **neo4j-cli and nothing else**, one item at a time, with the text passed as a
+parameter. Every agent session, in every conversation, writes the graph this way: not
+the HTTP API (graph work never writes through the data-api), not Python.
 
+```bash
+raw="$(cat <extracted.md>)"
+neo4j-cli query --rw 'MATCH (w:Webpage {unique_id: $uid})
+  WHERE coalesce(w.raw_text, "") <> $raw
+  SET w.raw_text = $raw, w.raw_text_captured = date()
+  RETURN w.name, size(w.raw_text), toString(w.raw_text_captured)' \
+  --param "uid=<uid>" --param "raw=$raw" --format toon
 ```
-PUT /ati/data-api/v1/documents/webpages
-{ "action": "update_webpage",
-  "webpage_dict": { "unique_id": "<uid>", "raw_text": "<markdown>" } }
 
-PUT /ati/data-api/v1/documents/documents
-{ "action": "update_document",
-  "document_dict": { "unique_id": "<uid>", "raw_text": "<markdown>" } }
-```
+For a Document, swap the label to `Document`. Match on `url` instead of `unique_id` when
+that is the key in hand. Confirm with the user before the first `--rw` of a run.
 
-The type segment is required by the route (`/documents/<document_type>`); a bare
-`/documents` 500s on a missing positional argument. The HTTP API is the write path
-from a terminal (the Flask dev server on :5000, or the deployed host). When the
-`ati-graph` MCP server is registered, its `update_*` tools are the other sanctioned
-path. Do not call `update_webpage` / `update_document` from Python directly, and do
-not write `raw_text` with ad-hoc Cypher; the project hook refuses the first, and the
-second skips the `raw_text_captured` stamp the query layer sets.
+The statement reproduces exactly what `update_webpage` / `update_document` in
+`queries/documentation/update.py` do for this field, and nothing more:
 
-**Pass NOTHING else.** The optional arguments on these functions are association
-side-effects, and every one of them is a silent bug in this context:
+- `raw_text` is set, and `raw_text_captured` is stamped with today's date.
+- The `WHERE` guard means identical content changes nothing, so a re-run that fetches
+  the same page leaves the capture date alone. The query layer behaves the same way.
+- An empty extraction is never written. Report it as a failure instead. (The query
+  layer would set the text to null and clear the date.)
+
+**Set NOTHING else.** The other arguments those update functions take are association
+side-effects, and copying any of them into the Cypher is a silent bug here:
 
 - `maintained_by` → `disconnect_all()` then reconnect, **reassigning the maintainer**
   to whoever ran the fetch.
@@ -94,9 +99,12 @@ side-effects, and every one of them is a silent bug in this context:
 - `implementation_id` + `academic_year` + `include_in_year` → rewrites year curation
   on the documentation edge, changing which report years show the item.
 
-Filling Source Text must change exactly one property. `raw_text_captured` is stamped
-by the query layer automatically, and only when the text actually changes — so a
-re-run that fetches identical content correctly leaves the date alone.
+Filling Source Text changes exactly two properties: the text and its capture date.
+
+**Extracting the text.** Fetch the HTML with `curl` into its own scratch folder. Extract
+the main content locally, from `<main>` or `role="main"`, dropping nav, header, footer,
+aside, forms and scripts, and render it as Markdown. WebFetch returns a model summary,
+not the page, so its output is never stored as Source Text.
 
 ## Step 5 — Report
 
