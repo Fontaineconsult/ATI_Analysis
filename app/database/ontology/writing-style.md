@@ -1,4 +1,4 @@
-# Writing style
+~~# Writing style
 
 The prose counterpart to `claude_files/design-sense.md`. That file governs how the
 app looks. This one governs how it reads.
@@ -283,4 +283,4 @@ Skills that write prose reference this file rather than restating it:
 `/ontology-ingest` (Recommendation, Concern, and Plan text), `/follow-up`
 (message body), `/stakeholder-interview` (guide body),
 `/maturity-status-reviewer` (rationale, and the Evidence Summary the public
-report publishes). Rules specific to one artifact stay in that skill. Rules that apply to all prose live here.
+report publishes). Rules specific to one artifact stay in that skill. Rules that apply to all prose live here.~~
