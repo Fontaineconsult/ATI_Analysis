@@ -11,6 +11,7 @@ from dotenv import load_dotenv
 import os
 
 from app.data_config import (trajectory_choices, asset_classes, asset_scopes, taap_outcomes,
+                             taap_risk_levels, taap_signer_roles, taap_reference_kinds, taap_statuses,
                              functions, component_kinds, coverage_domains, audiences, interface_provenances,
                              descriptor_kinds, query_categories, query_statuses, evidence_control_choices,
                              recommendation_statuses, concern_statuses, followup_statuses,
@@ -3300,6 +3301,29 @@ class Tool(StructuredNode):
 
 
 
+class TAAPSignatureRel(StructuredRel):
+    """TAAP -> Person approval edge. The form's "Administrative Approval" table names
+    the role each person signs in and the date the signature landed.
+
+    role        : one of data_config.taap_signer_roles (department_head |
+                  division_executive | ada_coordinator).
+    signed_date : the e-signature stamp date; None while the signature is pending.
+    """
+    role = StringProperty(choices=taap_signer_roles)
+    signed_date = DateProperty()
+
+
+class TAAPReferenceRel(StructuredRel):
+    """TAAP -> Document | Webpage edge for the form's "Referenced Documentation" slots.
+
+    kind : one of data_config.taap_reference_kinds (acr | vendor_demo | testing_results |
+           vendor_roadmap). Distinct from is_documented_by, which carries year-scoped
+           evidence documentation; a reference is an input the plan was written from.
+    """
+    kind = StringProperty(choices=taap_reference_kinds)
+    note = StringProperty()
+
+
 class TAAP(StructuredNode):
 
     """    Class representing a Temporary Alternate Access Plan node.
@@ -3309,20 +3333,71 @@ class TAAP(StructuredNode):
     Asset and feeds YearSuccessEvidence the same way other implementation nodes do. Anchored in Title II 35.205.
     Replaces the older EEAAP.
 
+    The node mirrors the CSU TAAP form (template "Version 3.2 051225") section by section. Free-text sections
+    are text properties; checkbox sections are arrays of vocabulary keys from data_config; the three graded
+    sections (outcome, institutional risk, accommodation requirement) are single choices. Boilerplate sections
+    (vendor non-compliance clause, legal framework) are not stored.
+
+    Identity is composite: `taap_identifier` = covered asset + requesting unit + creation year, built by
+    identifiers.make_taap_identifier(). `title` is descriptive and indexed but NOT unique, because one
+    product can carry several plans at one campus (one per requesting department).
+
     outcome: equally_effective | non_equal_alternative | referral
     """
     unique_id = UniqueIdProperty()
 
-    title = StringProperty(unique_index=True, required=True)
+    taap_identifier = StringProperty(unique_index=True)   # e.g. "handshake-ssu--career-center--2026"
+    title = StringProperty(index=True, required=True)
     description = StringProperty()
+    template_version = StringProperty()                   # "3.2 051225"
+
+    # ICT Product Information
+    creation_date = DateProperty()                        # "Temporary Alternate Access Plan Creation Date"
+    vendor_contact = StringProperty()                     # as written on the form; the Vendor node hangs off the Asset
+
+    # Known Accessibility Barriers / Affected User Groups
+    known_barriers = StringProperty()
+    affected_user_groups = ArrayProperty(StringProperty(), default=list)   # keys of taap_user_groups
+
+    # Proposed Alternative / Accessibility Statement / Communication and Distribution
+    proposed_alternative = StringProperty()
+    accessibility_statement = StringProperty()
+    statement_elements = ArrayProperty(StringProperty(), default=list)     # keys of taap_statement_elements
+    distribution_actions = ArrayProperty(StringProperty(), default=list)   # keys of taap_distribution_actions
+
+    # Requirements Checklist / Process Outcome / Institutional Risk / Accommodation Requirements
+    requirements_met = ArrayProperty(StringProperty(), default=list)       # keys of taap_requirements
     outcome = StringProperty(choices=taap_outcomes)
-    effective_date = DateProperty()
-    review_due = DateProperty()
+    institutional_risk = StringProperty(choices=taap_risk_levels)
+    accommodation_requirement = StringProperty(choices=taap_risk_levels)
+
+    # Approval, review cycle, notes
+    effective_date = DateProperty()                       # date of the last required signature
+    review_due = DateProperty()                           # "Review of this document should occur on or before"
+    misc_notes = StringProperty()
+    taap_status = StringProperty(choices=taap_statuses, default="draft")
     active = BooleanProperty(default=True)
 
     covers_asset = RelationshipTo("Asset", "covers_asset")
+    at_campus = RelationshipTo("Campus", "taap_at_campus")
+    in_year = RelationshipTo("AcademicYear", "taap_in_year")
+
+    # People and units. owned_by is the accountable owner (normally the department-head
+    # signer); prepared_by is the ATI reviewer who wrote the plan; requested_by is the unit
+    # whose purchase the plan covers; alternative_provided_by is the unit named in the
+    # proposed alternative as the one delivering it (often the same unit).
     owned_by = RelationshipTo("Person", "owned_by")
-    signed_by = RelationshipTo("Person", "signed_by")
+    prepared_by = RelationshipTo("Person", "prepared_by")
+    signed_by = RelationshipTo("Person", "signed_by", model=TAAPSignatureRel)
+    requested_by = RelationshipTo("OrgUnit", "requested_by")
+    alternative_provided_by = RelationshipTo("OrgUnit", "alternative_provided_by")
+
+    # Referenced Documentation (inputs), the signed copy (the form itself), renewals
+    references_documents = RelationshipTo("Document", "references", model=TAAPReferenceRel)
+    references_webpages = RelationshipTo("Webpage", "references", model=TAAPReferenceRel)
+    signed_copy = RelationshipTo("Document", "signed_copy", cardinality=ZeroOrOne)
+    supersedes = RelationshipTo("TAAP", "supersedes", cardinality=ZeroOrOne)
+    superseded_by = RelationshipFrom("TAAP", "supersedes")
 
     # Evidence + documentation (standard pattern)
     is_evidence_for = RelationshipTo("YearSuccessEvidence", "is_evidence_for", model=IsEvidenceForRel)
@@ -3334,11 +3409,26 @@ class TAAP(StructuredNode):
     #serialize
     def serialize(self):
         return {
+            'taap_identifier': self.taap_identifier,
             'title': self.title,
             'description': self.description,
+            'template_version': self.template_version,
+            'creation_date': self.creation_date,
+            'vendor_contact': self.vendor_contact,
+            'known_barriers': self.known_barriers,
+            'affected_user_groups': list(self.affected_user_groups or []),
+            'proposed_alternative': self.proposed_alternative,
+            'accessibility_statement': self.accessibility_statement,
+            'statement_elements': list(self.statement_elements or []),
+            'distribution_actions': list(self.distribution_actions or []),
+            'requirements_met': list(self.requirements_met or []),
             'outcome': self.outcome,
+            'institutional_risk': self.institutional_risk,
+            'accommodation_requirement': self.accommodation_requirement,
             'effective_date': self.effective_date,
             'review_due': self.review_due,
+            'misc_notes': self.misc_notes,
+            'taap_status': self.taap_status,
             'active': self.active,
             "unique_id": self.unique_id
         }

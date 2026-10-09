@@ -146,6 +146,29 @@ def make_tool_identifier(title_slug: str) -> str:
     return title_slug
 
 
+def make_taap_identifier(asset_identifier: str, requesting_unit_slug: str, year: str) -> str:
+    """
+    Build a TAAP.taap_identifier from its three identity coordinates.
+
+    A Temporary Alternate Access Plan is written for one ICT asset, for one requesting
+    unit, in one year. Title cannot carry identity: Sonoma State holds four separate
+    Humanity plans, one per department, all titled "Humanity". The year is the calendar
+    year of the form's creation date (an annual renewal is a new plan that `supersedes`
+    the old one, so the same asset and unit recur across years).
+
+      - asset_identifier     : the covered Asset.asset_identifier ('handshake-ssu').
+      - requesting_unit_slug : slug of the requesting OrgUnit's name ('career-center').
+      - year                 : 'YYYY' of the creation date.
+
+    Coordinates are joined with SEGMENT_SEPARATOR because asset_identifier already
+    contains IDENTIFIER_SEPARATOR hyphens.
+
+    Format:  '<asset_identifier>--<requesting_unit_slug>--<YYYY>'
+    Example: 'handshake-ssu--career-center--2026'
+    """
+    return SEGMENT_SEPARATOR.join([asset_identifier, requesting_unit_slug, year])
+
+
 # Separator between a descriptor handle's kind prefix and its target coordinates. The
 # kind prefix (`node_type:` / `field:` / `field_value:`) namespaces handles so they don't
 # collide and so the app can tell a handle's kind from its prefix.

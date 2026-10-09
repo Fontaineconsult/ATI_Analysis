@@ -261,10 +261,10 @@ function AssetDetailPanel({ assetIdentifier, onAfterMutate, onAddTaapForAsset, o
                     <VStack align="stretch" spacing={2}>
                         {asset.covered_by_taap.map((t) => (
                             <HStack
-                                key={t.title}
+                                key={t.taap_identifier || t.unique_id}
                                 justify="space-between"
                                 cursor={onGoToTaaps ? 'pointer' : 'default'}
-                                onClick={() => onGoToTaaps && onGoToTaaps(t.title)}
+                                onClick={() => onGoToTaaps && onGoToTaaps(t.taap_identifier)}
                                 _hover={onGoToTaaps ? { bg: 'gray.50' } : {}}
                                 p={1}
                                 borderRadius="md"
