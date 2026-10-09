@@ -966,3 +966,115 @@
            CASE WHEN size(replies) = 0 THEN 'awaiting_reply' ELSE 'partially_answered' END AS state,
            replies, open_queries, open_recommendations
     ORDER BY days_since_sent DESC
+
+# ---------------------------------------------------------------------------
+# TAAPs  (TAAP -[:covers_asset]-> Asset; -[:taap_at_campus]-> Campus;
+#         -[:taap_in_year]-> AcademicYear; -[:requested_by]-> OrgUnit;
+#         -[:signed_by {role, signed_date}]-> Person; -[:is_evidence_for]-> YSE)
+# ---------------------------------------------------------------------------
+- name: taaps_by_campus_year
+  category: taaps
+  description: >-
+    Every TAAP at a campus in one academic year, with the covered asset, the
+    requesting unit, outcome, risk grades, status, review date, and the signers
+    with their roles. This is the count indicator 8.10-pro asks for ("Total number
+    of EEAAPs completed"), with the detail behind it.
+  mode: read
+  params: [campus_abbreviation, academic_year]   # e.g. "ssu", "2026-2027"
+  cypher: |
+    MATCH (t:TAAP)-[:taap_at_campus]->(c:Campus {abbreviation: $campus_abbreviation})
+    MATCH (t)-[:taap_in_year]->(:AcademicYear {name: $academic_year})
+    OPTIONAL MATCH (t)-[:covers_asset]->(a:Asset)
+    OPTIONAL MATCH (t)-[:requested_by]->(u:OrgUnit)
+    OPTIONAL MATCH (t)-[s:signed_by]->(p:Person)
+    RETURN t.taap_identifier AS taap_identifier, t.title AS title,
+           a.asset_identifier AS asset, u.name AS requesting_unit,
+           t.outcome AS outcome, t.institutional_risk AS institutional_risk,
+           t.accommodation_requirement AS accommodation_requirement,
+           t.taap_status AS status, toString(t.creation_date) AS created,
+           toString(t.review_due) AS review_due,
+           collect(DISTINCT {name: p.name, role: s.role, signed: toString(s.signed_date)}) AS signers
+    ORDER BY t.title, t.taap_identifier
+
+- name: taaps_due_for_review
+  category: taaps
+  description: >-
+    Active TAAPs whose review_due falls within the next N days (or has passed),
+    with campus, requesting unit, and the days remaining (negative = overdue).
+    The annual-review worklist the form's "Next Review" section calls for.
+  mode: read
+  params: [days]   # e.g. 90
+  cypher: |
+    MATCH (t:TAAP)
+    WHERE coalesce(t.active, true) AND t.review_due IS NOT NULL
+      AND t.review_due <= date() + duration({days: toInteger($days)})
+    OPTIONAL MATCH (t)-[:taap_at_campus]->(c:Campus)
+    OPTIONAL MATCH (t)-[:requested_by]->(u:OrgUnit)
+    RETURN t.taap_identifier AS taap_identifier, t.title AS title,
+           c.abbreviation AS campus, u.name AS requesting_unit,
+           t.taap_status AS status, toString(t.review_due) AS review_due,
+           duration.inDays(date(), t.review_due).days AS days_remaining
+    ORDER BY t.review_due, t.title
+
+- name: taap_checklist_mismatches
+  category: taaps
+  description: >-
+    TAAPs whose stored outcome disagrees with their requirements checklist. The
+    form grades outcome from the count of the six legal requirements met (all six
+    = equally_effective, one to five = non_equal_alternative, none = referral).
+    Also lists plans with no review date or a review date before creation. Each
+    row is a curation finding to settle against the signed form, not a correction.
+  mode: read
+  params: []
+  cypher: |
+    MATCH (t:TAAP)
+    OPTIONAL MATCH (t)-[:taap_at_campus]->(c:Campus)
+    WITH t, c, size(coalesce(t.requirements_met, [])) AS met
+    WITH t, c, met,
+         CASE WHEN met = 6 THEN 'equally_effective'
+              WHEN met = 0 THEN 'referral'
+              ELSE 'non_equal_alternative' END AS expected
+    WITH t, c, met, expected,
+         [x IN [
+            CASE WHEN t.outcome IS NOT NULL AND t.outcome <> expected
+                 THEN 'outcome ' + t.outcome + ' but ' + toString(met) + ' requirements met' END,
+            CASE WHEN t.review_due IS NULL THEN 'no review date' END,
+            CASE WHEN t.review_due IS NOT NULL AND t.creation_date IS NOT NULL AND t.review_due < t.creation_date
+                 THEN 'review date before creation date' END,
+            CASE WHEN size(coalesce(t.affected_user_groups, [])) = 0 THEN 'no affected user groups checked' END
+         ] WHERE x IS NOT NULL] AS findings
+    WHERE size(findings) > 0
+    RETURN t.taap_identifier AS taap_identifier, t.title AS title, c.abbreviation AS campus,
+           t.outcome AS outcome, met AS requirements_met, expected AS expected_outcome,
+           toString(t.creation_date) AS created, toString(t.review_due) AS review_due,
+           findings
+    ORDER BY c.abbreviation, t.title
+
+- name: taap_public_search
+  category: taaps
+  description: >-
+    The public TAAP register as the unauthenticated page sees it: plans in force
+    (signed, under review, renewed) matching free text through the taap_public_search
+    full-text index over plan title, barriers, statement, covered asset and vendor.
+    Returns the public projection only (no contacts, notes, signers or alternative).
+    Pass q as Lucene syntax, e.g. "handshake*" or "caption* OR audio*".
+  mode: read
+  params: [q]
+  cypher: |
+    CALL db.index.fulltext.queryNodes('taap_public_search', $q) YIELD node, score
+    OPTIONAL MATCH (node)<-[:covers_asset]-(ta:TAAP)
+    OPTIONAL MATCH (node)<-[:supplied_by]-(:Asset)<-[:covers_asset]-(tv:TAAP)
+    WITH node, score, collect(DISTINCT ta) + collect(DISTINCT tv) AS linked
+    WITH score, CASE WHEN node:TAAP THEN [node] ELSE [] END + linked AS hits
+    UNWIND hits AS t
+    WITH t, max(score) AS score
+    WHERE coalesce(t.active, true) AND t.taap_status IN ['signed', 'under_review', 'renewed']
+    MATCH (t)-[:taap_at_campus]->(c:Campus)
+    OPTIONAL MATCH (t)-[:taap_in_year]->(ay:AcademicYear)
+    OPTIONAL MATCH (t)-[:covers_asset]->(a:Asset)
+    OPTIONAL MATCH (a)-[:supplied_by]->(v:Vendor)
+    RETURN t.taap_identifier AS taap_identifier, t.title AS title, c.abbreviation AS campus,
+           ay.name AS academic_year, head(collect(DISTINCT v.name)) AS vendor,
+           t.outcome AS outcome, t.taap_status AS status, toString(t.review_due) AS review_due,
+           round(score, 2) AS score
+    ORDER BY score DESC, t.title
