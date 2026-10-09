@@ -2901,6 +2901,11 @@ class Metric(StructuredNode):
     description = StringProperty()
     single_value = StringProperty()
     value_dict = JSONProperty()
+    # Names the shape of value_dict (e.g. "popetech-metric-snapshot/1") so a renderer
+    # can be chosen for it. None means value_dict has no declared shape.
+    value_schema = StringProperty()
+    # The date the value describes, e.g. a scan snapshot's as-of date.
+    measured_on = DateProperty()
     comment = StringProperty()
     created_by = RelationshipTo("Person", "created_by")
     notes = RelationshipTo("Note", "has_note")
@@ -2908,13 +2913,22 @@ class Metric(StructuredNode):
     include_in_report = BooleanProperty(default=True)
     has_file = RelationshipTo("StoredFile", "has_file", cardinality=ZeroOrOne)  # managed (uploaded) blob
 
-
-    @staticmethod
-    def set_data(self, data):
-        self.value_dict = json.dumps(data)
-
     def get_data(self):
-        return json.loads(self.value_dict)
+        """value_dict as a Python value, or None when it holds nothing.
+
+        JSONProperty already decodes the stored JSON on load. Older nodes were
+        written with the value pre-encoded, so they decode to a JSON string
+        (often '""'); that string is decoded once more here.
+        """
+        data = self.value_dict
+        if isinstance(data, str):
+            if not data.strip():
+                return None
+            try:
+                data = json.loads(data)
+            except ValueError:
+                return data
+        return None if data in ("", None) else data
 
     def serialize(self):
         """
@@ -2931,7 +2945,9 @@ class Metric(StructuredNode):
             "description": self.description,
             "single_value": self.single_value,
             "comment": self.comment,
-            "data": self.get_data() if self.value_dict else None,
+            "data": self.get_data(),
+            "value_schema": self.value_schema,
+            "measured_on": self.measured_on.isoformat() if self.measured_on else None,
             "include_in_report": self.include_in_report,
             "unique_id": self.unique_id,
             "file": serialize_has_file(self),

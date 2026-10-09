@@ -408,6 +408,20 @@ def add_webpage(
 
 
 
+def parse_measured_on(value):
+    """Metric.measured_on from a date or a YYYY-MM-DD string; None and '' clear it."""
+    if value in (None, ""):
+        return None
+    if isinstance(value, datetime):
+        return value.date()
+    if isinstance(value, date):
+        return value
+    try:
+        return date.fromisoformat(str(value).strip())
+    except ValueError:
+        raise ValidationError(f"measured_on must be YYYY-MM-DD, got {value!r}")
+
+
 def add_metric(
         metric_dict: dict,
         implementation_id: str = None,
@@ -416,7 +430,12 @@ def add_metric(
     """
     Adds a new metric to the graph. The metric can be assigned to an implementation.
 
-    :param metric_dict: Dictionary containing metric properties.
+    :param metric_dict: Dictionary containing metric properties. ``composite_key`` is
+        optional: when given it is used as is, which lets a series of dated values
+        share one name (e.g. ``popetech_sfsu_2026-10-01``). When omitted it defaults
+        to ``<name>_<metric_type>``. ``value_dict`` is stored as JSON; pass the
+        object itself, not a JSON string. ``value_schema`` names its shape and
+        ``measured_on`` (YYYY-MM-DD) is the date the value describes.
     :param implementation_id: (Optional) The unique_id of the implementation to assign the metric to.
     :param implementation_type: (Optional) The type of the implementation (e.g., "Process", "Project").
     :return: True if the metric was added successfully.
@@ -428,13 +447,22 @@ def add_metric(
             if field not in metric_dict:
                 raise ValidationError(f"Missing required field: {field}")
 
-        # Generate composite_key for uniqueness
-        composite_key = f"{metric_dict['name']}_{metric_dict.get('metric_type')}"
+        # Composite key for uniqueness: the caller's, else the name/type default.
+        composite_key = (metric_dict.get('composite_key') or '').strip() \
+            or f"{metric_dict['name']}_{metric_dict.get('metric_type')}"
 
         # Check if a metric with the same composite_key already exists
         existing_metric = Metric.nodes.get_or_none(composite_key=composite_key)
         if existing_metric:
             raise ValidationError(f"A metric with composite_key {composite_key} already exists.")
+
+        # Resolve the academic year before saving, so a bad year leaves no orphan metric.
+        academic_year_node = None
+        if 'academic_year' in metric_dict:
+            academic_year_node = AcademicYear.nodes.get_or_none(name=metric_dict['academic_year'])
+            if not academic_year_node:
+                # Academic years come from the rollover, never from a metric write.
+                raise NotFoundError(f"AcademicYear with name {metric_dict['academic_year']} not found.")
 
         # Create and save the metric
         metric = Metric(
@@ -446,6 +474,8 @@ def add_metric(
             description=metric_dict.get('description'),
             single_value=metric_dict.get('single_value'),
             value_dict=metric_dict.get('value_dict'),
+            value_schema=metric_dict.get('value_schema'),
+            measured_on=parse_measured_on(metric_dict.get('measured_on')),
             comment=metric_dict.get('comment'),
             include_in_report=metric_dict.get('include_in_report', True)
         )
@@ -479,13 +509,7 @@ def add_metric(
                 metric.created_by.connect(person)
 
         # Handle the academic_year relationship
-        if 'academic_year' in metric_dict:
-            academic_year_identifier = metric_dict['academic_year']
-            academic_year_node = AcademicYear.nodes.get(name=academic_year_identifier)
-            if not academic_year_node:
-                # Create a new AcademicYear node if it doesn't exist
-                academic_year_node = AcademicYear(name=academic_year_identifier)
-                academic_year_node.save()
+        if academic_year_node:
             metric.academic_year.connect(academic_year_node)
 
         # Optionally assign the metric to an implementation
