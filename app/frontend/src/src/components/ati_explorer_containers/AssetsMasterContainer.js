@@ -61,7 +61,7 @@ import { KEYS, NS } from '../../context/resourceKeys';
  *
  * Owns: selection per tab, the active tab, and the create flows. Edge mutations
  * inside the detail panels call back here to refresh the lists / stat counts.
- * Assets are keyed by asset_identifier; TAAPs by title.
+ * Assets are keyed by asset_identifier; TAAPs by taap_identifier.
  *
  * It does NOT own the data. All eleven reads go through useResource, so they sit
  * in the shared store on DataContext and survive leaving the area — this
@@ -123,7 +123,8 @@ function AssetsMasterContainer() {
     const taapsLoading = taapsRes.loading;
     const taapsError = taapsRes.error;
     const taapsDueCount = itemsOf(taapsDueRes.data).length;
-    const [selectedTaapTitle, setSelectedTaapTitle] = useState(null);
+    // TAAPs are keyed by taap_identifier; a title is shared by one plan per requesting unit.
+    const [selectedTaapId, setSelectedTaapId] = useState(null);
     const [taapFormOpen, setTaapFormOpen] = useState(false);
     const [taapPresetAsset, setTaapPresetAsset] = useState(null);
 
@@ -240,7 +241,7 @@ function AssetsMasterContainer() {
         const id = itemId ? decodeURIComponent(itemId) : null;
         switch (assetTab) {
             case 'assets': setTabIndex(0); if (id) setSelectedAssetId(id); break;
-            case 'taaps': setTabIndex(1); if (id) setSelectedTaapTitle(id); break;
+            case 'taaps': setTabIndex(1); if (id) setSelectedTaapId(id); break;
             case 'vendors': setTabIndex(2); if (id) setSelectedVendorName(id); break;
             case 'interfaces': setTabIndex(3); if (id) setSelectedInterfaceId(id); break;
             case 'tools': setTabIndex(4); if (id) setSelectedToolId(id); break;
@@ -269,15 +270,15 @@ function AssetsMasterContainer() {
     const handleTaapCreated = async (created) => {
         const list = await loadTaaps();
         await loadTaapsDue();
-        if (created?.title) setSelectedTaapTitle(created.title);
-        else if (list.length) setSelectedTaapTitle(list[0].title);
+        if (created?.taap_identifier) setSelectedTaapId(created.taap_identifier);
+        else if (list.length) setSelectedTaapId(list[0].taap_identifier);
     };
 
-    const handleTaapMutate = async (deletedTitle) => {
+    const handleTaapMutate = async (deletedId) => {
         const list = await loadTaaps();
         await loadTaapsDue();
-        if (deletedTitle && deletedTitle === selectedTaapTitle) {
-            setSelectedTaapTitle(null);
+        if (deletedId && deletedId === selectedTaapId) {
+            setSelectedTaapId(null);
         }
         return list;
     };
@@ -352,9 +353,9 @@ function AssetsMasterContainer() {
     };
 
     // ---- Cross-tab navigation ----
-    const goToTaaps = (title) => {
+    const goToTaaps = (taapIdentifier) => {
         setTabIndex(1);
-        if (title) setSelectedTaapTitle(title);
+        if (taapIdentifier) setSelectedTaapId(taapIdentifier);
     };
     const goToAsset = (assetIdentifier) => {
         setTabIndex(0);
@@ -443,8 +444,8 @@ function AssetsMasterContainer() {
                                 ) : (
                                     <TaapList
                                         items={taaps}
-                                        selectedTitle={selectedTaapTitle}
-                                        onSelect={(t) => setSelectedTaapTitle(t.title)}
+                                        selectedId={selectedTaapId}
+                                        onSelect={(t) => setSelectedTaapId(t.taap_identifier)}
                                         onAdd={() => { setTaapPresetAsset(null); setTaapFormOpen(true); }}
                                         emptyMessage="No TAAPs yet. Click Add TAAP to begin tracking."
                                     />
@@ -452,7 +453,7 @@ function AssetsMasterContainer() {
                             </Box>
                             <Box flex="2" minW="0">
                                 <TaapDetailPanel
-                                    title={selectedTaapTitle}
+                                    taapIdentifier={selectedTaapId}
                                     onAfterMutate={handleTaapMutate}
                                     onGoToAsset={goToAsset}
                                 />

@@ -64,7 +64,7 @@ export const KEYS = {
     taapsAll: 'taaps:all',
     /** Scoped by date: "due for review as of" is a different answer tomorrow. */
     taapsDue: (isoDate) => `taaps:due:${isoDate}`,
-    taapDetail: (title) => `taaps:detail:${title}`,
+    taapDetail: (taapIdentifier) => `taaps:detail:${taapIdentifier}`,
 
     // --- Vendors (the /vendors endpoint) ---
     vendorsList: 'vendors:list',
