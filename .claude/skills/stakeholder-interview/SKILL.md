@@ -29,6 +29,26 @@ The output of prep is a guide the interviewer can glance at live; the output of 
 interview is a transcript in `app/database/ontology/raw_transcripts/` ready for
 `/ontology-ingest`, and after that a defensible `/maturity-status-reviewer` pass.
 
+## Before anything: load the principles
+
+Run this once at the start of the session, before recon or any other query, and keep
+the result in context:
+
+```bash
+python -m app.database.cypher_runner.run_query --query principles_context
+```
+
+It returns every Principle node: the framework's commitments, with the law, policy and
+scholarship that ground or contest each one. They are the standard every call in this
+skill is made against. Use them to decide which gaps are worth a question, and to word questions about responsibility, alternatives and remediation without presuming an answer the principles rule out.
+
+When a principle decides a call, name it by handle (`principle:closest-to-capacity`) in
+the gate, manifest or report, so a reader can see which commitment did the work. When
+the material in front of you contradicts a principle, say so rather than bending the
+material to fit; the principle may be the thing that is wrong. Do not re-run the query
+in the same session unless a principle has been edited. If it fails, say so before
+continuing.
+
 ## Part 1 — Prep (generate the guide)
 
 When the user names a stakeholder / campus / topic, recon the graph (read-only —

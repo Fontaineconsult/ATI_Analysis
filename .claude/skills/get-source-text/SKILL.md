@@ -13,6 +13,26 @@ report reader has to trust the name and cannot check the claim.
 This skill fills that field from the live source. It never invents content: a page
 that cannot be fetched is reported as unfetchable, not summarised from its title.
 
+## Before anything: load the principles
+
+Run this once at the start of the session, before recon or any other query, and keep
+the result in context:
+
+```bash
+python -m app.database.cypher_runner.run_query --query principles_context
+```
+
+It returns every Principle node: the framework's commitments, with the law, policy and
+scholarship that ground or contest each one. They are the standard every call in this
+skill is made against. Most of this skill is mechanical, but the principles decide which fetched text matters when you report what a page says.
+
+When a principle decides a call, name it by handle (`principle:closest-to-capacity`) in
+the gate, manifest or report, so a reader can see which commitment did the work. When
+the material in front of you contradicts a principle, say so rather than bending the
+material to fit; the principle may be the thing that is wrong. Do not re-run the query
+in the same session unless a principle has been edited. If it fails, say so before
+continuing.
+
 ## Step 1 — Resolve the worklist (read-only)
 
 Three entry points, all through the registry runner:

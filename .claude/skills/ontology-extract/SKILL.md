@@ -17,6 +17,26 @@ skill routes facts OUT and gates on evidence grade. Everything here is read-only
 against the graph. The skill writes files, and it may add a `read` query to the
 registry. It never writes a node or an edge.
 
+## Before anything: load the principles
+
+Run this once at the start of the session, before recon or any other query, and keep
+the result in context:
+
+```bash
+python -m app.database.cypher_runner.run_query --query principles_context
+```
+
+It returns every Principle node: the framework's commitments, with the law, policy and
+scholarship that ground or contest each one. They are the standard every call in this
+skill is made against. A claim that leaves the graph must not contradict a principle, and a framing that depends on one should cite it in the manifest.
+
+When a principle decides a call, name it by handle (`principle:closest-to-capacity`) in
+the gate, manifest or report, so a reader can see which commitment did the work. When
+the material in front of you contradicts a principle, say so rather than bending the
+material to fit; the principle may be the thing that is wrong. Do not re-run the query
+in the same session unless a principle has been edited. If it fails, say so before
+continuing.
+
 ## Step 0: Take the brief
 
 Never extract from the request alone. Pin down five things before recon, and

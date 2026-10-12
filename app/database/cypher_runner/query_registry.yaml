@@ -57,6 +57,25 @@
   cypher: |
     CALL db.schema.visualization()
 
+- name: principles_context
+  category: schema
+  description: >-
+    Every Principle with its short and full text and what grounds or contests it.
+    The graph skills load this at the start of every session, before recon, so
+    routing, grading and wording decisions are made against the framework's
+    commitments.
+  mode: read
+  params: []
+  cypher: |
+    MATCH (p:Principle)
+    RETURN p.handle AS handle, p.name AS name,
+           p.description_short AS short, p.description_full AS full,
+           [ (p)-[r:derives_from]->(s) |
+             coalesce(s.title, s.name) + coalesce(' [' + r.provision + ']', '') ] AS grounded_in,
+           [ (p)-[r:contested_by]->(s) |
+             coalesce(s.title, s.name) + coalesce(' [' + r.provision + ']', '') ] AS contested_by
+    ORDER BY handle
+
 # ---------------------------------------------------------------------------
 # INDICATORS  (Goal -[:supported_by]-> SuccessIndicator; WG -[:responsible_for]-> Goal)
 # ---------------------------------------------------------------------------

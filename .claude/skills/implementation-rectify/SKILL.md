@@ -23,6 +23,26 @@ are judgment about meaning, not shape, and a wrong edge is worse than a missing 
 an unwired implementation is an honest gap, a wrongly wired one is a false claim
 about evidence that a maturity review will then grade.
 
+## Before anything: load the principles
+
+Run this once at the start of the session, before recon or any other query, and keep
+the result in context:
+
+```bash
+python -m app.database.cypher_runner.run_query --query principles_context
+```
+
+It returns every Principle node: the framework's commitments, with the law, policy and
+scholarship that ground or contest each one. They are the standard every call in this
+skill is made against. Accountability calls rest on `principle:closest-to-capacity`, `principle:institution-wide-responsibility` and `principle:shared-responsibility-requiring-coordination`; read them before proposing any owner.
+
+When a principle decides a call, name it by handle (`principle:closest-to-capacity`) in
+the gate, manifest or report, so a reader can see which commitment did the work. When
+the material in front of you contradicts a principle, say so rather than bending the
+material to fit; the principle may be the thing that is wrong. Do not re-run the query
+in the same session unless a principle has been edited. If it fails, say so before
+continuing.
+
 ---
 
 # CoP mode — accountable community coverage

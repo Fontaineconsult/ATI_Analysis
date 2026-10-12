@@ -208,6 +208,20 @@ YSE." Specific: "the note is attached to the YSE by has_note." Gesture verbs
 relation genuinely is conveyance or containment. "The edge carries a strength
 rating" is literally true. "This carries our commitment to access" is not.
 
+**Name the action and the thing, not a placeholder.** A sentence that leans on
+"do it", "this", "the work", or "a way to do it" has postponed its content. The
+placeholder makes the reader hold an empty slot and fill it from earlier in the
+passage. Name the verb and name its object.
+
+Wrong: "We need a systematic way to do it."
+Right: "We need to grade evidence systematically."
+
+The fault is the empty word, not its position. Ending a sentence on a preposition
+is not an error, and forcing the preposition earlier can require a heavier
+construction ("the platform to which we moved" for "the platform we moved to"), so
+move it only when the result genuinely reads better. Replace the placeholder with
+the specific action or object, wherever it lands.
+
 **Definitions before uses.** Do not use a term in paragraph one and define it in
 paragraph three.
 
@@ -270,10 +284,14 @@ in the sentence, where a bare "running UDOIT" sends them out of it.
 
 ## Em dashes
 
-Do not use them. Use a colon when the second half explains the first, a full stop
-when it is a separate thought, and parentheses for an aside.
+Do not use them. Use a full stop when the second half explains the first or is a
+separate thought, and parentheses for an aside.
 
-This is a deliberate anti-tell: heavy em dash use is one of the clearest markers
+**Colons.** Avoid them. Where a colon would explain the first half, start the
+next sentence with the verb. Where it would introduce a list, use "among them" or
+fold the items into clauses.
+
+This is a deliberate anti-tell. Heavy em dash use is one of the clearest markers
 of machine prose. Applies to everything written from now on. Files written before
 this rule are not retrofitted unless a rewrite is asked for.
 
