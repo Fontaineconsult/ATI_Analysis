@@ -11,33 +11,43 @@ import {
     VStack,
 } from '@chakra-ui/react';
 import { AddIcon, SearchIcon } from '@chakra-ui/icons';
-import { getOutcomeColor, getOutcomeLabel, toISODate } from './assetConfig';
+import {
+    getOutcomeColor,
+    getOutcomeLabel,
+    getTaapStatusColor,
+    getTaapStatusLabel,
+    toISODate,
+} from './assetConfig';
 import useListboxNavigation from '../../../hooks/useListboxNavigation';
 
 /**
  * Flat, searchable TAAP list (the set is smaller than assets, so no accordion).
- * Sorted active-first then by review_due ascending — the annual-review worklist
- * order. Selected by `title` (the TAAP's unique business key).
+ * Sorted active-first then by review_due ascending, the annual-review worklist
+ * order. Selected by `taap_identifier` (asset--requesting-unit--year); the title
+ * is shown with the requesting unit because one product can carry one plan per
+ * department.
  */
-function TaapList({ items = [], selectedTitle, onSelect, onAdd, emptyMessage = 'No TAAPs yet.' }) {
+function TaapList({ items = [], selectedId, onSelect, onAdd, emptyMessage = 'No TAAPs yet.' }) {
     const [query, setQuery] = useState('');
     const q = query.trim().toLowerCase();
 
     const filtered = useMemo(() => {
         const list = q
-            ? items.filter((t) => `${t.title || ''} ${t.description || ''} ${t.outcome || ''}`.toLowerCase().includes(q))
+            ? items.filter((t) =>
+                `${t.title || ''} ${t.requesting_unit || ''} ${t.campus || ''} ${t.outcome || ''} ${t.taap_status || ''}`
+                    .toLowerCase().includes(q))
             : items;
         return [...list].sort((a, b) => {
             if (!!a.active !== !!b.active) return a.active ? -1 : 1;
             const ad = toISODate(a.review_due) || '9999-99-99';
             const bd = toISODate(b.review_due) || '9999-99-99';
-            return ad.localeCompare(bd);
+            return ad.localeCompare(bd) || (a.title || '').localeCompare(b.title || '');
         });
     }, [items, q]);
 
     const { getItemProps } = useListboxNavigation({
         itemCount: filtered.length,
-        selectedIndex: filtered.findIndex((t) => t.title === selectedTitle),
+        selectedIndex: filtered.findIndex((t) => t.taap_identifier === selectedId),
         onActivate: (i) => onSelect && onSelect(filtered[i]),
     });
 
@@ -54,7 +64,7 @@ function TaapList({ items = [], selectedTitle, onSelect, onAdd, emptyMessage = '
                     <SearchIcon color="gray.600" />
                 </InputLeftElement>
                 <Input
-                    placeholder="Search title, outcome…"
+                    placeholder="Search title, unit, campus, outcome…"
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
                     borderColor="gray.300"
@@ -72,11 +82,12 @@ function TaapList({ items = [], selectedTitle, onSelect, onAdd, emptyMessage = '
                     <Box p={4} color="gray.600" fontSize="sm" fontStyle="italic">No TAAPs match “{query}”.</Box>
                 ) : (
                     filtered.map((t, index) => {
-                        const isSelected = t.title === selectedTitle;
+                        const isSelected = t.taap_identifier === selectedId;
                         const due = toISODate(t.review_due);
+                        const subtitle = [t.requesting_unit, t.campus ? t.campus.toUpperCase() : null].filter(Boolean).join(' · ');
                         return (
                             <Box
-                                key={t.title}
+                                key={t.taap_identifier || t.unique_id}
                                 {...getItemProps(index)}
                                 role="option"
                                 aria-selected={isSelected}
@@ -95,9 +106,13 @@ function TaapList({ items = [], selectedTitle, onSelect, onAdd, emptyMessage = '
                                 <Text fontSize="sm" fontWeight={isSelected ? 'semibold' : 'medium'} color="gray.800" noOfLines={1}>
                                     {t.title}
                                 </Text>
-                                <HStack mt={1} spacing={1}>
+                                {subtitle && (
+                                    <Text fontSize="xs" color="gray.600" noOfLines={1}>{subtitle}</Text>
+                                )}
+                                <HStack mt={1} spacing={1} flexWrap="wrap">
                                     {t.outcome && <Tag size="sm" colorScheme={getOutcomeColor(t.outcome)} variant="subtle">{getOutcomeLabel(t.outcome)}</Tag>}
-                                    <Tag size="sm" colorScheme={t.active ? 'green' : 'gray'} variant="subtle">{t.active ? 'Active' : 'Inactive'}</Tag>
+                                    {t.taap_status && <Tag size="sm" colorScheme={getTaapStatusColor(t.taap_status)} variant="subtle">{getTaapStatusLabel(t.taap_status)}</Tag>}
+                                    {!t.active && <Tag size="sm" colorScheme="gray" variant="subtle">Inactive</Tag>}
                                     {due && <Text fontSize="2xs" color="gray.600">due {due}</Text>}
                                 </HStack>
                             </Box>

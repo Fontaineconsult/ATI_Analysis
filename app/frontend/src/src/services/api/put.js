@@ -964,103 +964,61 @@ export const unassignCampusFromAsset = async (assetIdentifier, campusAbbrev) => 
     }
 };
 
-export const updateTaap = async (title, fields) => {
+// TAAPs are addressed by taap_identifier (asset--requesting-unit--year). A title is
+// not unique: one product can carry one plan per requesting department.
+const taapAction = async (action, taapIdentifier, body, what) => {
     try {
         const response = await axios.put(`${process.env.REACT_APP_API_URL}/taaps`, {
-            action: 'update',
-            title,
-            ...fields,
+            action,
+            taap_identifier: taapIdentifier,
+            ...body,
         });
         return response.data;
     } catch (error) {
-        console.error('Error updating TAAP:', error);
+        console.error(`Error ${what}:`, error);
         throw error;
     }
 };
 
-export const assignOwnerToTaap = async (title, personUniqueId) => {
-    try {
-        const response = await axios.put(`${process.env.REACT_APP_API_URL}/taaps`, {
-            action: 'assign_owner',
-            title,
-            person_unique_id: personUniqueId,
-        });
-        return response.data;
-    } catch (error) {
-        console.error('Error assigning owner to TAAP:', error);
-        throw error;
-    }
-};
+export const updateTaap = (taapIdentifier, fields) =>
+    taapAction('update', taapIdentifier, fields, 'updating TAAP');
 
-export const unassignOwnerFromTaap = async (title, personUniqueId) => {
-    try {
-        const response = await axios.put(`${process.env.REACT_APP_API_URL}/taaps`, {
-            action: 'unassign_owner',
-            title,
-            person_unique_id: personUniqueId,
-        });
-        return response.data;
-    } catch (error) {
-        console.error('Error unassigning owner from TAAP:', error);
-        throw error;
-    }
-};
+export const assignOwnerToTaap = (taapIdentifier, personUniqueId) =>
+    taapAction('assign_owner', taapIdentifier, { person_unique_id: personUniqueId }, 'assigning owner to TAAP');
 
-export const assignSignerToTaap = async (title, personUniqueId) => {
-    try {
-        const response = await axios.put(`${process.env.REACT_APP_API_URL}/taaps`, {
-            action: 'assign_signer',
-            title,
-            person_unique_id: personUniqueId,
-        });
-        return response.data;
-    } catch (error) {
-        console.error('Error assigning signer to TAAP:', error);
-        throw error;
-    }
-};
+export const unassignOwnerFromTaap = (taapIdentifier, personUniqueId) =>
+    taapAction('unassign_owner', taapIdentifier, { person_unique_id: personUniqueId }, 'unassigning owner from TAAP');
 
-export const unassignSignerFromTaap = async (title, personUniqueId) => {
-    try {
-        const response = await axios.put(`${process.env.REACT_APP_API_URL}/taaps`, {
-            action: 'unassign_signer',
-            title,
-            person_unique_id: personUniqueId,
-        });
-        return response.data;
-    } catch (error) {
-        console.error('Error unassigning signer from TAAP:', error);
-        throw error;
-    }
-};
+export const assignPreparerToTaap = (taapIdentifier, personUniqueId) =>
+    taapAction('assign_preparer', taapIdentifier, { person_unique_id: personUniqueId }, 'assigning preparer to TAAP');
 
-export const connectTaapToYse = async (title, yseIdentifier) => {
-    try {
-        const response = await axios.put(`${process.env.REACT_APP_API_URL}/taaps`, {
-            action: 'connect_yse',
-            title,
-            yse_identifier: yseIdentifier,
-        });
-        return response.data;
-    } catch (error) {
-        console.error('Error connecting TAAP to YSE:', error);
-        throw error;
-    }
-};
+export const unassignPreparerFromTaap = (taapIdentifier, personUniqueId) =>
+    taapAction('unassign_preparer', taapIdentifier, { person_unique_id: personUniqueId }, 'unassigning preparer from TAAP');
 
-export const disconnectTaapFromYse = async (title, yseIdentifier) => {
-    try {
-        const response = await axios.put(`${process.env.REACT_APP_API_URL}/taaps`, {
-            action: 'disconnect_yse',
-            title,
-            yse_identifier: yseIdentifier,
-        });
-        return response.data;
-    } catch (error) {
-        console.error('Error disconnecting TAAP from YSE:', error);
-        throw error;
-    }
-};
+/** role: taap_signer_roles key; signedDate: YYYY-MM-DD. Re-asserting a signer updates both. */
+export const assignSignerToTaap = (taapIdentifier, personUniqueId, role = null, signedDate = null) =>
+    taapAction('assign_signer', taapIdentifier, {
+        person_unique_id: personUniqueId,
+        ...(role ? { role } : {}),
+        ...(signedDate ? { signed_date: signedDate } : {}),
+    }, 'assigning signer to TAAP');
+
+export const unassignSignerFromTaap = (taapIdentifier, personUniqueId) =>
+    taapAction('unassign_signer', taapIdentifier, { person_unique_id: personUniqueId }, 'unassigning signer from TAAP');
+
+/** strength 0-3 and control 'internal' | 'external' qualify the evidence link. */
+export const connectTaapToYse = (taapIdentifier, yseIdentifier, strength = null, control = null) =>
+    taapAction('connect_yse', taapIdentifier, {
+        yse_identifier: yseIdentifier,
+        ...(strength !== null && strength !== '' ? { strength } : {}),
+        ...(control ? { control } : {}),
+    }, 'connecting TAAP to YSE');
+
+export const disconnectTaapFromYse = (taapIdentifier, yseIdentifier) =>
+    taapAction('disconnect_yse', taapIdentifier, { yse_identifier: yseIdentifier }, 'disconnecting TAAP from YSE');
+
+export const setTaapSupersedes = (taapIdentifier, previousTaapIdentifier) =>
+    taapAction('set_supersedes', taapIdentifier, { previous_taap_identifier: previousTaapIdentifier }, 'recording TAAP renewal');
 
 //
 // VENDORS — update + employee assign/unassign (action-dispatch PUT)

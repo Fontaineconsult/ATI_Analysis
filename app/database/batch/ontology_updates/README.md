@@ -17,6 +17,7 @@ content vs. the WCAG-EM text.
 | `05_governance_guideline.cypher` | `node_type:Guideline` |
 | `06_governance_doc_types.cypher` | `node_type:Law`, `Case`, `Directive`, `ExternalPolicy`, `Memo` |
 | `07_principles_grounding.cypher` | grounds + activates two inert principles (`derives_from` / `shapes` edges) |
+| `08_taap_form_fields.cypher` | `node_type:TAAP` form mapping (guarded append), `field:TAAP.*` for every form-derived field, `field_value:*` for the checkbox and grade vocabularies, `rel_type:*` for the new TAAP edges; outcome values get the form wording appended |
 
 ## Conventions
 

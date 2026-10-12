@@ -1,0 +1,79 @@
+{% extends "public_base.html" %}
+
+{% block title %}{{ t.title }} · Temporary Alternate Access Plan — SFBRN Evidence Graph{% endblock %}
+
+{% block footer %}{% endblock %}
+
+{% block content %}
+<p><a href="{{ url_for('public_reports.taap_register') }}">← All plans</a></p>
+<h1>
+  <span class="badge type">TAAP</span>
+  {{ t.title }}
+  {% if t.outcome %}<span class="badge outcome-{{ t.outcome }}">{{ t.outcome_label }}</span>{% endif %}
+  <span class="badge status-{{ t.status }}">{{ t.status_label }}</span>
+</h1>
+<p class="lede">
+  Temporary Alternate Access Plan for {{ t.title }}{% if t.vendor %} ({{ t.vendor }}){% endif %}
+  at {{ t.campus_name or (t.campus or '') | upper }}{% if t.requesting_unit %}, requested by {{ t.requesting_unit }}{% endif %}.
+  A TAAP is an interim measure while the vendor resolves the barriers below; it is reviewed at least annually.
+</p>
+
+<h2>Product-specific accessibility statement</h2>
+{% if t.accessibility_statement %}
+<p class="prewrap statement">{{ t.accessibility_statement }}</p>
+{% if t.statement_posted_at_point_of_access %}
+<p class="muted">This statement is posted where the product is accessed.</p>
+{% endif %}
+{% else %}
+<p class="empty">No statement recorded on the plan.</p>
+{% endif %}
+
+<h2>Proposed alternative</h2>
+{% if t.proposed_alternative %}<p class="prewrap">{{ t.proposed_alternative }}</p>{% else %}<p class="empty">Not described on the plan.</p>{% endif %}
+
+<h2>Known accessibility barriers</h2>
+{% if t.known_barriers %}<p class="prewrap">{{ t.known_barriers }}</p>{% else %}<p class="empty">Not described on the plan.</p>{% endif %}
+
+<h3>Affected user groups</h3>
+{% if t.affected_user_groups %}
+<ul>{% for g in t.affected_user_groups %}<li>{{ g }}</li>{% endfor %}</ul>
+{% else %}<p class="empty">None checked on the plan.</p>{% endif %}
+
+<h2>Assessment</h2>
+<table>
+  <caption>How the alternative measures against the six legal requirements for equally effective access</caption>
+  <tr><th scope="row">Outcome</th><td>{% if t.outcome %}<span class="badge outcome-{{ t.outcome }}">{{ t.outcome_label }}</span>{% else %}—{% endif %}</td></tr>
+  <tr><th scope="row">Requirements met</th>
+      <td>{{ t.requirements_met_count }} of {{ t.requirements_total }}
+          {% if t.requirements_met %}<ul>{% for r in t.requirements_met %}<li>{{ r }}</li>{% endfor %}</ul>{% endif %}</td></tr>
+  <tr><th scope="row">Institutional risk</th><td>{{ t.institutional_risk_label or '—' }}</td></tr>
+  <tr><th scope="row">Accommodation requirement</th><td>{{ t.accommodation_requirement_label or '—' }}</td></tr>
+</table>
+
+<h2>Plan record</h2>
+<table>
+  <caption>Identity and review cycle</caption>
+  <tr><th scope="row">Campus</th><td>{{ t.campus_name or (t.campus or '—') | upper }}</td></tr>
+  <tr><th scope="row">Requesting unit</th><td>{{ t.requesting_unit or '—' }}</td></tr>
+  <tr><th scope="row">Product</th><td>{{ t.asset_title or t.title }}{% if t.asset_version %} <span class="muted">version {{ t.asset_version }}</span>{% endif %}</td></tr>
+  <tr><th scope="row">Vendor</th><td>{{ t.vendor or '—' }}</td></tr>
+  <tr><th scope="row">Academic year</th><td>{{ t.academic_year or '—' }}</td></tr>
+  <tr><th scope="row">Created</th><td>{{ t.creation_date or '—' }}</td></tr>
+  <tr><th scope="row">In force since</th><td>{{ t.effective_date or '—' }}</td></tr>
+  <tr><th scope="row">Review due</th><td>{{ t.review_due or '—' }}</td></tr>
+  <tr><th scope="row">Status</th><td>{{ t.status_label }}</td></tr>
+  <tr><th scope="row">Form template</th><td>{{ t.template_version or '—' }}</td></tr>
+  <tr><th scope="row">Plan identifier</th><td><span class="mono">{{ t.taap_identifier }}</span></td></tr>
+</table>
+
+<style>
+  .badge.outcome-equally_effective { background:#E6F4EA; color:#276749; }
+  .badge.outcome-non_equal_alternative { background:#FEFCBF; color:#975A16; }
+  .badge.outcome-referral { background:#FFF5F5; color:#C53030; }
+  .badge.status-signed { background:#E6F4EA; color:#276749; }
+  .badge.status-under_review { background:#EBF8FF; color:#2C5282; }
+  .badge.status-renewed { background:#FAF5FF; color:#553C9A; }
+  p.statement { background:#fff; border:1px solid var(--line); border-left:4px solid var(--brand);
+                border-radius:8px; padding:12px 16px; font-size:14px; }
+</style>
+{% endblock %}

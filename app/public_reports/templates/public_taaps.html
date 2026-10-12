@@ -1,0 +1,132 @@
+{% extends "public_base.html" %}
+
+{% block title %}Temporary Alternate Access Plans — SFBRN Evidence Graph{% endblock %}
+
+{% block footer %}{% endblock %}
+
+{% block content %}
+<h1>Temporary Alternate Access Plans</h1>
+<p class="lede">Search existing TAAPs for San Francisco State, Sonoma State and CSU East Bay.</p>
+
+<form method="get" action="" aria-label="Search plans" class="taap-search">
+  <div class="field grow">
+    <label for="q">Search</label>
+    <input id="q" name="q" type="search" value="{{ s.filters.q or '' }}" placeholder="Product, vendor, or barrier">
+  </div>
+  <div class="field">
+    <label for="campus">Campus</label>
+    <select id="campus" name="campus">
+      <option value="">All</option>
+      {% for c in options.campuses %}
+        <option value="{{ c.abbreviation }}" {{ 'selected' if s.filters.campus == c.abbreviation }}>{{ c.name }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="field">
+    <label for="year">Academic year</label>
+    <select id="year" name="year">
+      <option value="">All</option>
+      {% for y in options.years %}
+        <option value="{{ y }}" {{ 'selected' if s.filters.year == y }}>{{ y }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="field">
+    <label for="outcome">Outcome</label>
+    <select id="outcome" name="outcome">
+      <option value="">All</option>
+      {% for k, label in options.outcomes['items']() %}
+        <option value="{{ k }}" {{ 'selected' if s.filters.outcome == k }}>{{ label }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="field">
+    <label for="group">Affected user group</label>
+    <select id="group" name="group">
+      <option value="">All</option>
+      {% for k, label in options.groups['items']() %}
+        <option value="{{ k }}" {{ 'selected' if s.filters.group == k }}>{{ label }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="field">
+    <label for="status">Status</label>
+    <select id="status" name="status">
+      <option value="">All in force</option>
+      {% for k, label in options.statuses['items']() %}
+        <option value="{{ k }}" {{ 'selected' if s.filters.status == k }}>{{ label }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="field actions">
+    <button type="submit">Search</button>
+    {% if s.filters %}<a href="{{ url_for('public_reports.taap_register') }}">Clear</a>{% endif %}
+  </div>
+</form>
+
+<h2>{{ s.total }} plan{{ '' if s.total == 1 else 's' }}{% if s.filters.q %} matching “{{ s.filters.q }}”{% endif %}</h2>
+
+{% if s['items'] %}
+<table>
+  <caption>Plans in force{% if s.pages > 1 %}, page {{ s.page }} of {{ s.pages }}{% endif %}</caption>
+  <thead>
+    <tr>
+      <th scope="col">Product</th>
+      <th scope="col">Campus</th>
+      <th scope="col">Requesting unit</th>
+      <th scope="col">Outcome</th>
+      <th scope="col">Affected user groups</th>
+      <th scope="col">Review due</th>
+    </tr>
+  </thead>
+  <tbody>
+  {% for t in s['items'] %}
+    <tr>
+      <td>
+        <a href="{{ t.public_url }}">{{ t.title }}</a>
+        {% if t.vendor %}<div class="muted">{{ t.vendor }}</div>{% endif %}
+      </td>
+      <td>{{ t.campus_name or (t.campus or '—') | upper }}</td>
+      <td>{{ t.requesting_unit or '—' }}</td>
+      <td>
+        {% if t.outcome %}<span class="badge outcome-{{ t.outcome }}">{{ t.outcome_label }}</span>{% else %}—{% endif %}
+        <div class="muted">{{ t.requirements_met_count }} of {{ t.requirements_total }} requirements</div>
+      </td>
+      <td>{{ t.affected_user_groups | join(', ') if t.affected_user_groups else '—' }}</td>
+      <td>{{ t.review_due or '—' }}</td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+
+{% if s.pages > 1 %}
+<nav aria-label="Pages" class="pager">
+  {% set base = s.filters.copy() %}
+  {% if s.page > 1 %}{% set _ = base.update({'page': s.page - 1}) %}<a href="{{ url_for('public_reports.taap_register', **base) }}">Previous</a>{% endif %}
+  <span class="muted">Page {{ s.page }} of {{ s.pages }}</span>
+  {% if s.page < s.pages %}{% set _ = base.update({'page': s.page + 1}) %}<a href="{{ url_for('public_reports.taap_register', **base) }}">Next</a>{% endif %}
+</nav>
+{% endif %}
+{% else %}
+<p class="empty">No plans match. Clear a filter or try a product or vendor name.</p>
+{% endif %}
+
+<style>
+  form.taap-search { display:flex; flex-wrap:wrap; gap:12px; align-items:flex-end; background:#fff;
+                     border:1px solid var(--line); border-radius:8px; padding:12px 16px; margin:12px 0 4px; }
+  form.taap-search .field { display:flex; flex-direction:column; gap:4px; min-width:150px; }
+  form.taap-search .field.grow { flex:1 1 260px; }
+  form.taap-search label { font-size:12px; color:var(--muted); font-weight:600; text-transform:uppercase; letter-spacing:.04em; }
+  form.taap-search input, form.taap-search select { font: inherit; font-size:14px; padding:6px 8px;
+                     border:1px solid var(--row-line); border-radius:6px; background:#fff; color:var(--ink); }
+  form.taap-search input:focus-visible, form.taap-search select:focus-visible, form.taap-search button:focus-visible
+                   { outline:3px solid #7E93BF; outline-offset:2px; }
+  form.taap-search .actions { flex-direction:row; align-items:center; gap:12px; }
+  form.taap-search button { font: inherit; font-weight:600; background:var(--brand-dark); color:#fff;
+                            border:0; border-radius:6px; padding:8px 16px; cursor:pointer; }
+  .badge.outcome-equally_effective { background:#E6F4EA; color:#276749; }
+  .badge.outcome-non_equal_alternative { background:#FEFCBF; color:#975A16; }
+  .badge.outcome-referral { background:#FFF5F5; color:#C53030; }
+  nav.pager { display:flex; gap:16px; align-items:center; margin:12px 0; font-size:13px; }
+</style>
+{% endblock %}

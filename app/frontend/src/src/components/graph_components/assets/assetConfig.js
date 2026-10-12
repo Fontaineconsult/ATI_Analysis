@@ -56,6 +56,34 @@ export const getOutcomeLabel = (k, v) => labelFor('taap_outcomes', k, v);
 export const getOutcomeColor = (k) => OUTCOME_COLORS[k] || 'gray';
 export const getOutcomeOptions = (v) => optionsFor('taap_outcomes', OUTCOME_COLORS, v);
 
+// TAAP form vocabularies (data_config: taap_statuses, taap_risk_levels, taap_user_groups,
+// taap_requirements, taap_statement_elements, taap_distribution_actions, taap_signer_roles).
+const TAAP_STATUS_COLORS = {
+    draft: 'gray',
+    awaiting_signature: 'orange',
+    signed: 'green',
+    under_review: 'blue',
+    renewed: 'purple',
+    expired: 'red',
+    retired: 'gray',
+};
+const RISK_COLORS = { high: 'red', moderate: 'yellow', low: 'green' };
+
+export const getTaapStatusLabel = (k, v) => labelFor('taap_statuses', k, v);
+export const getTaapStatusColor = (k) => TAAP_STATUS_COLORS[k] || 'gray';
+export const getTaapStatusOptions = (v) => optionsFor('taap_statuses', TAAP_STATUS_COLORS, v);
+export const getRiskLabel = (k, v) => labelFor('taap_risk_levels', k, v);
+export const getRiskColor = (k) => RISK_COLORS[k] || 'gray';
+export const getRiskOptions = (v) => optionsFor('taap_risk_levels', RISK_COLORS, v);
+export const getUserGroupLabel = (k, v) => labelFor('taap_user_groups', k, v);
+export const getRequirementLabel = (k, v) => labelFor('taap_requirements', k, v);
+export const getStatementElementLabel = (k, v) => labelFor('taap_statement_elements', k, v);
+export const getDistributionActionLabel = (k, v) => labelFor('taap_distribution_actions', k, v);
+export const getSignerRoleLabel = (k, v) => labelFor('taap_signer_roles', k, v);
+export const getSignerRoleOptions = (v) => optionsFor('taap_signer_roles', {}, v);
+/** The form grades an alternative against six legal requirements. */
+export const TAAP_REQUIREMENT_COUNT = 6;
+
 // ---- §508 stewardship (frontend-only structural constants; NOT in data_config) ------
 // Keys match the stewardship keys returned by queries/assets/read.py and accepted by
 // the assign_steward / unassign_steward PUT actions.

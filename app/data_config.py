@@ -190,11 +190,108 @@ asset_scopes = {
 }
 
 # TAAP outcome: the equivalent-facilitation result when full conformance isn't achievable
-# (Title II §35.205). Stored values are dict keys.
+# (Title II §35.205). Stored values are dict keys. The labels quote the "Process Outcome"
+# section of the CSU TAAP form (template 3.2 051225); the keys predate the form and are
+# kept stable because graph descriptors already define them.
+#   equally_effective     = "Meets all six legal requirements: Equally Effective"
+#   non_equal_alternative = "Meets some (1-5) legal requirements: Partially Equally Effective"
+#   referral              = "Unable to provide alternative means of access: Need for
+#                            Individualized Accommodation"
 taap_outcomes = {
     "equally_effective":     "Equally Effective",
-    "non_equal_alternative": "Non-Equal Alternative",
-    "referral":              "Referral",
+    "non_equal_alternative": "Partially Equally Effective",
+    "referral":              "Individualized Accommodation",
+}
+
+# The CSU TAAP form (Temporary Alternative Access Plan, template "Version 3.2 051225") is a
+# fixed instrument. Its checkbox sections are stored as arrays of the keys below so a plan
+# can be queried by what was checked. Labels quote the form; keys are stable slugs.
+TAAP_TEMPLATE_VERSION = "3.2 051225"
+
+# "Affected User Groups" — choose all that apply.
+taap_user_groups = {
+    "blindness":                  "Blindness",
+    "low_vision":                 "Low Vision",
+    "deafness":                   "Deafness",
+    "hard_of_hearing":            "Hard of Hearing",
+    "limited_manual_dexterity":   "Limited Manual Dexterity",
+    "cognitive_disability":       "Cognitive Disability",
+    "speech_disabilities":        "Speech Disabilities",
+    "photosensitivity":           "Photosensitivity",
+    "limited_reach_and_strength": "Limited Reach and Strength",
+}
+
+# "Requirements Checklist" — the six legal requirements an alternative must meet to be
+# equally effective. The form also lists "Saved the document in the ATI Systemwide ACR
+# Repository" under this heading; that line is a distribution action, not a legal
+# requirement, and lives in taap_distribution_actions instead.
+taap_requirements = {
+    "same_information":       "Allows access to the same information, engagement, and services.",
+    "same_availability":      "Offers the same availability as the primary solution.",
+    "independent_access":     "Can be accessed independently without additional assistance.",
+    "no_disparate_burden":    "Does not result in disparate burden or impact on the user.",
+    "equivalent_ease_of_use": "Has substantially equivalent ease of use.",
+    "privacy_protected":      "Protects the privacy of the individuals affected.",
+}
+
+# "Institutional Risk" and "Accommodation Requirements" share one three-level scale. The
+# form ties each level to the requirements count: high = 0 met, moderate = 1 to 5,
+# low = all 6.
+taap_risk_levels = {
+    "high":     "High",
+    "moderate": "Moderate",
+    "low":      "Low",
+}
+
+# "Product Specific Accessibility Statement" — what the drafted statement includes.
+taap_statement_elements = {
+    "known_barriers":     "Known barriers in the product interface.",
+    "impacted_groups":    "Impacted disability groups.",
+    "link_to_plan":       "Link or reference to this document.",
+    "disclaimer":         "Disclaimer: best effort was made, but unknown barriers may remain.",
+    "assistance_contact": "Contact for further accessibility assistance.",
+}
+
+# "Communication and Distribution" — actions taken so the plan can be found.
+taap_distribution_actions = {
+    "syllabi":               "Posted the Accessibility Statement in course syllabi.",
+    "point_of_access":       "Posted the Accessibility Statement where the product is accessed.",
+    "requesting_department": "Provided copies of this document to Requesting Department/Area.",
+    "disability_services":   "Provided copies of this document to Disability Services Office.",
+    "human_resources":       "Provided copies of this document to Human Resources (ADA Coordinators).",
+    "it_help_desk":          "Provided copies of this document to IT Help Desk.",
+    "acr_repository":        "Saved the document in the ATI Systemwide ACR Repository.",
+    "other":                 "Other",
+}
+
+# "Administrative Approval" — the role each signer signs in. SF State forms carry all
+# three; Sonoma State forms carry the first two.
+taap_signer_roles = {
+    "department_head":    "Department Chair/Manager",
+    "division_executive": "Dean/Division Vice President",
+    "ada_coordinator":    "ADA Compliance Officer",
+}
+
+# "Referenced Documentation" — the four link slots at the top of the form. Each becomes a
+# `references` edge from the TAAP to a Document or Webpage carrying this kind.
+taap_reference_kinds = {
+    "acr":             "Product Accessibility Conformance Report (ACR)",
+    "vendor_demo":     "Vendor Accessibility Demonstration Results",
+    "testing_results": "Manual or Automated Testing Results",
+    "vendor_roadmap":  "Vendor Accessibility Roadmap",
+}
+
+# TAAP lifecycle. A plan is reviewed annually or at renewal of the ICT; a renewal is a new
+# TAAP node that `supersedes` the old one, which moves to `renewed`. `retired` means the
+# vendor resolved the barriers and no plan is needed. Stored values are dict keys.
+taap_statuses = {
+    "draft":              "Draft",
+    "awaiting_signature": "Awaiting Signature",
+    "signed":             "Signed",
+    "under_review":       "Under Review",
+    "renewed":            "Renewed",
+    "expired":            "Expired",
+    "retired":            "Retired",
 }
 
 # Interface function: the institutional purpose a surface serves — what it is FOR.
@@ -433,6 +530,14 @@ PUBLIC_VOCABULARIES = {
     "asset_classes":         asset_classes,
     "asset_scopes":          asset_scopes,
     "taap_outcomes":         taap_outcomes,
+    "taap_user_groups":          taap_user_groups,
+    "taap_requirements":         taap_requirements,
+    "taap_risk_levels":          taap_risk_levels,
+    "taap_statement_elements":   taap_statement_elements,
+    "taap_distribution_actions": taap_distribution_actions,
+    "taap_signer_roles":         taap_signer_roles,
+    "taap_reference_kinds":      taap_reference_kinds,
+    "taap_statuses":             taap_statuses,
     # plans / progress
     "trajectory_choices":    trajectory_choices,
     "plan_statuses":         plan_statuses,

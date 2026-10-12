@@ -1,0 +1,207 @@
+# Curation decisions for the 2026-10-07 import of the SFBRN "Completed TAAPs" folder.
+#
+# The parser reads what the form says. Everything here is a judgment the form does not
+# state outright, recorded so the import is reproducible and so a later reader can see
+# which facts were inferred. Keys are the plan's file stem (the .docx stem when one
+# exists, else the .pdf stem).
+#
+# Per plan:
+#   requesting_unit         REQUIRED. Name of the OrgUnit whose purchase the plan covers.
+#                           Part of the taap_identifier. `inferred: true` marks a name the
+#                           form supports only through its signers or prose.
+#   alternative_provided_by Optional. Unit named in the proposed alternative as delivering it.
+#   vendor                  Optional. {name, contact_name, contact_email}. The product's company.
+#   asset_class             Default third_party_service.
+#   instructional           true -> also evidences 6.9-ins (EEAAPs for instructional materials).
+#   preparer                Person name resolved from "Sara M." in the notes.
+#   pdf / pdf_pages         Override the signed PDF pairing (one merged PDF holds two plans).
+#   skip                    true -> not a plan (a duplicate parse of a merged PDF).
+#   open_question           A Query node to raise when the form leaves a fact unknown.
+#
+# People: `people` maps a name as written on a form to the canonical Person name.
+
+campus_default: ssu
+
+people:
+  "Dr. Sarah Ellison": "Sarah Ellison"
+  "Dr. Gerald Jones": "Gerald Jones"
+  "Gerald L. Jones": "Gerald Jones"
+  "Dr. Elisabeth Wade": "Elisabeth Wade"
+  "Jeffery Wilson": "Jeff Wilson"
+  "Sean P. Place": "Sean Place"
+
+preparer_default: "Sara Marquez"   # "Sara M." / "Sara A. Marquez" in the notes; Accessibility Student Assistant, SSU
+
+evidence:
+  # indicator composite key -> strength on the is_evidence_for edge; applied at the plan's
+  # campus and academic year. 6.9-ins only when instructional; 1.19-web only when the
+  # statement was posted where the product is accessed.
+  always:
+    8.10-pro: 3   # "Total number of EEAAPs completed": the plan is one of the counted units
+    4.6-pro: 2    # "Develop a process for providing equally effective alternate access": one instance of the process
+  instructional:
+    6.9-ins: 2
+  point_of_access:
+    1.19-web: 1
+
+plans:
+  "Anatomy LT_SSU_June2026":
+    requesting_unit: "Department of Biology"
+    inferred: true   # signers Sean Place (chair) and Elisabeth Wade (dean); notes name Biology faculty
+    vendor: {name: "ADInstruments", contact_name: "Jessica Nguyen", contact_email: "j.nguyen@adinstruments.com"}
+    instructional: true
+
+  "Atrium Campus One Card_SSU_May2026":
+    requesting_unit: "Seawolf Services Center"
+    alternative_provided_by: "Seawolf Services Center"
+    inferred: true   # the alternative routes users to Seawolf Services; signers Chris Hendry and Neil Markley
+    vendor: {name: "Atrium Campus"}
+
+  "Cayuse_SSU_June 2026":
+    requesting_unit: "Office of Sponsored Research and Programs"   # named in the proposed alternative
+    alternative_provided_by: "Office of Sponsored Research and Programs"
+    vendor: {name: "Cayuse"}
+
+  "CodeHS_SSU_July 2026":
+    requesting_unit: "Department of Computer Science"
+    inferred: true   # signer Mohamed Salem (chair); notes name Mark Gondree
+    vendor: {name: "CodeHS"}
+    instructional: true
+
+  "Edmundo_SSU_Sept 2026":
+    requesting_unit: "School of Business and Economics"
+    inferred: true   # signer Elizabeth Stanny; notes name Nicole Orser
+    vendor: {name: "Edumundo", contact_email: "Operations@Edumundo.com"}
+    instructional: true
+
+  "Edvisorly_SSU_July 2026":
+    requesting_unit: "Office of Admissions"
+    inferred: true   # "Edvisorly Recruit page"; signers Sean Johnson and Edward Mills
+    vendor: {name: "Edvisorly"}
+
+  "Euna_SSU_ July 2026":
+    requesting_unit: "Office of Budget and Resource Planning"   # named in the proposed alternative
+    alternative_provided_by: "Office of Budget and Resource Planning"
+    vendor: {name: "Euna Solutions", contact_name: "Michael Woods", contact_email: "Michael.Woods@eunasolutions.com"}
+
+  "GameRoom_SSU_August 2026":
+    requesting_unit: "Campus Recreation"
+    inferred: true   # product name "Campus Rec Entertainment Room"; signer Ben Ellis
+    asset_class: infrastructure   # a room of game consoles, not a vendor service
+
+  "Handshake_SSU_September 2026":
+    requesting_unit: "Career Center"   # named in the proposed alternative
+    alternative_provided_by: "Career Center"
+    vendor: {name: "Handshake", contact_email: "cingram@joinhandshake.com"}
+
+  "HealthStream_SSU_September 2026":
+    requesting_unit: "Student Health Center"
+    inferred: true   # HealthStream is clinical staff training; signer Timothy Grace, VP Gerald Jones
+    vendor: {name: "HealthStream"}
+
+  "Humanity D1_SSU_July 2026":
+    requesting_unit: "Humanity D1 Requesting Department"
+    inferred: true   # the form never names the department; signers Lauren Antoni and Jeff Wilson
+    vendor: {name: "TCP Software", contact_email: "CBeebe@tcpsoftware.com"}
+    open_question: "Which department requested the Humanity scheduling plan signed by Lauren Antoni (Humanity D1, July 2026)?"
+
+  "Humanity D2_SSU_July 2026":
+    requesting_unit: "Campus Recreation"
+    inferred: true   # signer Ben Ellis, who also signed the Campus Recreation game room plan
+    vendor: {name: "TCP Software", contact_email: "CBeebe@tcpsoftware.com"}
+
+  "Humanity D3_SSU_July 2026":
+    requesting_unit: "Information Technology"   # existing SSU unit; signer Nish Malik heads IT
+    inferred: true
+    vendor: {name: "TCP Software", contact_email: "CBeebe@tcpsoftware.com"}
+
+  "Humanity D4_SSU_July 2026":
+    requesting_unit: "Humanity D4 Requesting Department"
+    inferred: true   # the form never names the department; signers Jessica Way and Jeff Wilson
+    vendor: {name: "TCP Software", contact_email: "CBeebe@tcpsoftware.com"}
+    open_question: "Which department requested the Humanity scheduling plan signed by Jessica Way (Humanity D4, July 2026)?"
+
+  "Insights Disovery Profiles_SSU_June 2026":
+    requesting_unit: "School of Business and Economics"
+    inferred: true   # same signer and contact as the Edmundo plan
+    vendor: {name: "Insights"}
+    instructional: true
+
+  "Iris Booth_SSU_June 2026":
+    requesting_unit: "Career Center"
+    inferred: true   # same signers as the Handshake plan; headshot booth
+    vendor: {name: "Iris Booth", contact_name: "Wade Fraser", contact_email: "wade@irisbooth.com"}
+
+  "Kaplan_SSU_August 2026":
+    requesting_unit: "Department of Nursing"
+    inferred: true   # notes name "the nursing dept team"; signer Anna Valdez
+    vendor: {name: "Kaplan", contact_name: "Melissa Scartozzi", contact_email: "melissa.scartozzi@kaplan.com"}
+    instructional: true
+
+  "MailChimp_SSU_May2026":
+    requesting_unit: "Green Music Center"
+    inferred: true   # signers Andrew Shepherd and Jacob Yarrow
+    alternative_provided_by: "Green Music Center"
+    vendor: {name: "Intuit Mailchimp"}
+
+  "Myers Briggs Strong Interest Inventory_SSU_June 2026":
+    requesting_unit: "Department of Counseling"
+    inferred: true   # signer Julie Shulman (chair); alternative routes to Adam Zagelbaum
+    vendor: {name: "The Myers-Briggs Company"}
+    instructional: true
+    pdf: "Myers Briggs Strong Interest Inventory_TherapyMate_SSU_June 2026 (1).pdf"
+    pdf_pages: [1, 7]
+
+  "TherapyMate_SSU_June 2026":
+    requesting_unit: "Department of Counseling"
+    inferred: true   # notes name "dept Chair Julie Shulman"
+    vendor: {name: "TherapyMate"}
+    instructional: true
+    pdf: "Myers Briggs Strong Interest Inventory_TherapyMate_SSU_June 2026 (1).pdf"
+    pdf_pages: [8, 14]
+
+  "Myers Briggs Strong Interest Inventory_TherapyMate_SSU_June 2026 (1)":
+    skip: true   # merged PDF holding the two plans above
+
+  "Procare_SSU_August 2026":
+    requesting_unit: "Children's School"   # named in the proposed alternative
+    alternative_provided_by: "Children's School"
+    vendor: {name: "Procare Solutions"}
+
+  "SAS_ SSU_ July 2026":
+    requesting_unit: "Department of Mathematics and Statistics"
+    inferred: true   # signer Martha Shott (chair); classroom use with partners
+    vendor: {name: "SAS Institute"}
+    instructional: true
+
+  "Scenario Learning_SSU_July 2026":
+    requesting_unit: "OHPD"
+    inferred: true   # the alternative names "an OHPD staff member" and Monica Fabio; acronym kept as written
+    alternative_provided_by: "OHPD"
+    vendor: {name: "Vector Solutions"}
+
+  "Signup Genius_SSU_July 2026":
+    requesting_unit: "School of Education"
+    inferred: true   # placements scheduling; signer Laura Alamillo; notes name Poonam Rani and Maricella Ibarra Aceves
+    vendor: {name: "SignUpGenius"}
+
+  "When I Work_SSU_July 2026":
+    requesting_unit: "Green Music Center"
+    inferred: true   # signers Caroline Neyman and Jacob Yarrow; alternative routes to GMC staff
+    alternative_provided_by: "Green Music Center"
+    vendor: {name: "When I Work", contact_email: "support@wheniwork.com"}
+
+  "SFSU_TAAP_Pearson_COB":
+    campus: sfsu
+    requesting_unit: "Lam Family College of Business"
+    inferred: true   # file name "COB"; signer Eugene Sivadas (dean)
+    vendor: {name: "Pearson"}
+    instructional: true
+    preparer: null   # SF State plan; preparer not named
+
+  "SFSU_TAAP_Opendorse.docx":
+    campus: sfsu
+    requesting_unit: "Department of Athletics"
+    inferred: true   # student athletes; signers Brandon Davis and Jamillah Moore
+    vendor: {name: "Opendorse"}
+    preparer: null

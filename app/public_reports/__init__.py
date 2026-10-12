@@ -151,3 +151,124 @@ def community_review_spread(campus, year, unique_id):
         c=public_community_payload(spread),
         edit_url=edit_url,
     )
+
+
+# ---------------------------------------------------------------------------
+# TAAPs — the public register of Temporary Alternate Access Plans
+# ---------------------------------------------------------------------------
+# Plans in force (signed, under review, renewed) are public; drafts never appear.
+# The eligibility rule lives in queries/assets/read.py::search_public_taaps and the
+# field allowlist in sanitize.public_taap_payload. Pages are cacheable for five
+# minutes: the register changes a few times a month, not per request.
+
+_TAAP_CACHE = 'public, max-age=300'
+
+
+def _taap_filters(args):
+    """The register's query-string contract, shared by the HTML and JSON routes."""
+    return {
+        'q': (args.get('q') or '').strip() or None,
+        'campus': (args.get('campus') or '').strip() or None,
+        'year': (args.get('year') or '').strip() or None,
+        'outcome': (args.get('outcome') or '').strip() or None,
+        'group': (args.get('group') or '').strip() or None,
+        'status': (args.get('status') or '').strip() or None,
+        'page': args.get('page', 1),
+    }
+
+
+def _taap_search(filters):
+    from app.database.queries.assets.read import search_public_taaps
+
+    return search_public_taaps(
+        q=filters['q'], campus=filters['campus'], academic_year=filters['year'],
+        outcome=filters['outcome'], user_group=filters['group'], status=filters['status'],
+        page=filters['page'],
+    )
+
+
+def _taap_filter_options():
+    from app.data_config import taap_outcomes, taap_user_groups
+    from app.database.queries.assets.read import PUBLIC_TAAP_STATUSES, public_taap_campuses
+    from app.data_config import taap_statuses
+
+    return {
+        'campuses': public_taap_campuses(),
+        'years': sorted(academic_years, reverse=True),
+        'outcomes': taap_outcomes,
+        'groups': taap_user_groups,
+        'statuses': {k: taap_statuses[k] for k in PUBLIC_TAAP_STATUSES},
+    }
+
+
+@public_reports.route('/taaps')
+def taap_register():
+    """Searchable register of public TAAPs. Free text runs against the
+    taap_public_search full-text index (plan, covered asset, vendor); filters
+    narrow by campus, academic year, outcome, affected user group and status."""
+    if not current_app.config.get('PUBLIC_REPORTS_ENABLED', True):
+        abort(404)
+    from flask import make_response, request
+    from app.endpoints.data_api.errors.custom_exceptions import ValidationError
+    from app.public_reports.sanitize import public_taap_search_payload
+
+    filters = _taap_filters(request.args)
+    try:
+        result = _taap_search(filters)
+    except ValidationError:
+        abort(400)
+    payload = public_taap_search_payload(result, filters)
+    html = render_template(
+        'public_taaps.html', s=payload, options=_taap_filter_options(),
+        edit_url=f"/ati/{filters['campus'] or _DEFAULT_CAMPUS}/ati-explorer/assets/taaps",
+    )
+    response = make_response(html)
+    response.headers['Cache-Control'] = _TAAP_CACHE
+    return response
+
+
+@public_reports.route('/taaps.json')
+def taap_register_json():
+    """The register as JSON, same query-string contract as /taaps, for campus
+    pages that embed the plans affecting their users."""
+    if not current_app.config.get('PUBLIC_REPORTS_ENABLED', True):
+        abort(404)
+    from flask import jsonify, request
+    from app.endpoints.data_api.errors.custom_exceptions import ValidationError
+    from app.public_reports.sanitize import public_taap_search_payload
+
+    filters = _taap_filters(request.args)
+    try:
+        result = _taap_search(filters)
+    except ValidationError as e:
+        response = jsonify({'error': str(e)})
+        response.status_code = 400
+        return response
+    response = jsonify(public_taap_search_payload(result, filters))
+    response.headers['Cache-Control'] = _TAAP_CACHE
+    return response
+
+
+@public_reports.route('/taap/<taap_identifier>')
+def taap_detail(taap_identifier):
+    """One public plan: the stable address a product's accessibility statement
+    can point at. 404 for unknown identifiers and for plans not yet in force."""
+    if not current_app.config.get('PUBLIC_REPORTS_ENABLED', True):
+        abort(404)
+    from flask import make_response
+    from app.database.queries.assets.read import get_public_taap
+    from app.endpoints.data_api.errors.custom_exceptions import NotFoundError
+    from app.public_reports.sanitize import public_taap_payload
+
+    try:
+        row = get_public_taap(taap_identifier)
+    except NotFoundError:
+        abort(404)
+    plan = public_taap_payload(row)
+    html = render_template(
+        'public_taap.html', t=plan,
+        edit_url=f"/ati/{plan['campus'] or _DEFAULT_CAMPUS}/ati-explorer/assets/taaps/{taap_identifier}",
+    )
+    response = make_response(html)
+    response.headers['Cache-Control'] = _TAAP_CACHE
+    return response

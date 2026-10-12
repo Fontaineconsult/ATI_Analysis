@@ -447,3 +447,88 @@ def public_community_payload(spread):
             for s in (spread.get('stakes') or [])
         ],
     }
+
+
+# ---------------------------------------------------------------------------
+# TAAPs — the public register of Temporary Alternate Access Plans
+# ---------------------------------------------------------------------------
+# Approved exclusions (2026-10 public TAAP scope): vendor contact, miscellaneous
+# notes, signers, owner, preparer, referenced documentation and the signed copy
+# are never copied. Two fields ARE published verbatim: the product-specific
+# accessibility statement, which the form instructs campuses to post wherever the
+# product is used, and the proposed alternative, which tells an affected user how
+# to get access. Both carry the assistance contact on purpose, so they are the
+# only places an email address or phone number may appear on a public page.
+
+_TAAP_REQUIREMENT_TOTAL = 6
+
+
+def _labels(keys, vocab):
+    return [vocab.get(k, k) for k in (keys or [])]
+
+
+def public_taap_payload(row):
+    """Allowlist projection of one public TAAP row (queries/assets/read.py
+    search_public_taaps shape) for the register page, the single-plan page and
+    the JSON feed."""
+    from app.data_config import (
+        taap_distribution_actions, taap_outcomes, taap_requirements, taap_risk_levels,
+        taap_statuses, taap_user_groups,
+    )
+
+    if not row:
+        return None
+    identifier = row.get('taap_identifier')
+    campus = row.get('campus')
+    met = list(row.get('requirements_met') or [])
+    return {
+        'taap_identifier': identifier,
+        'title': row.get('title'),
+        'campus': campus,
+        'campus_name': row.get('campus_name'),
+        'academic_year': row.get('academic_year'),
+        'asset_title': row.get('asset_title'),
+        'asset_version': row.get('asset_version'),
+        'vendor': row.get('vendor'),
+        'requesting_unit': row.get('requesting_unit'),
+        'outcome': row.get('outcome'),
+        'outcome_label': taap_outcomes.get(row.get('outcome'), row.get('outcome')),
+        'institutional_risk': row.get('institutional_risk'),
+        'institutional_risk_label': taap_risk_levels.get(row.get('institutional_risk'), row.get('institutional_risk')),
+        'accommodation_requirement': row.get('accommodation_requirement'),
+        'accommodation_requirement_label': taap_risk_levels.get(
+            row.get('accommodation_requirement'), row.get('accommodation_requirement')),
+        'affected_user_groups': _labels(row.get('affected_user_groups'), taap_user_groups),
+        'known_barriers': row.get('known_barriers'),
+        'accessibility_statement': row.get('accessibility_statement'),
+        'proposed_alternative': row.get('proposed_alternative'),
+        'requirements_met': _labels(met, taap_requirements),
+        'requirements_met_count': len(met),
+        'requirements_total': _TAAP_REQUIREMENT_TOTAL,
+        'statement_posted_at_point_of_access': 'point_of_access' in (row.get('distribution_actions') or []),
+        'creation_date': _s(row.get('creation_date')),
+        'effective_date': _s(row.get('effective_date')),
+        'review_due': _s(row.get('review_due')),
+        'status': row.get('taap_status'),
+        'status_label': taap_statuses.get(row.get('taap_status'), row.get('taap_status')),
+        'template_version': row.get('template_version'),
+        'public_url': f"/ati/reports/public/taap/{identifier}" if identifier else None,
+    }
+
+
+def public_taap_search_payload(result, filters):
+    """The register page / JSON feed envelope: sanitized items plus the paging
+    and the filters that produced them (echoed so a consumer can build the next
+    page link without re-deriving them)."""
+    items = [public_taap_payload(r) for r in (result.get('items') or [])]
+    total = result.get('total') or 0
+    page_size = result.get('page_size') or 25
+    pages = max(1, -(-total // page_size))
+    return {
+        'items': items,
+        'total': total,
+        'page': result.get('page') or 1,
+        'page_size': page_size,
+        'pages': pages,
+        'filters': {k: v for k, v in (filters or {}).items() if v},
+    }
