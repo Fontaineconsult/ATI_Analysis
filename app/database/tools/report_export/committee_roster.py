@@ -5,8 +5,8 @@ Lists every active committee contributor across all campuses with their campus,
 working group(s), and assigned YearSuccessEvidence (success indicators) for an
 academic year — the "who's who" needed to assemble the ATI committee.
 
-A committee member is an active Person not flagged as a non-committee member
-(active = true AND non_committee_member_active = false). Output is e-mail-pasteable:
+A committee member is an active Person whose involvement is member
+(active = true AND ati_involvement = 'member'). Output is e-mail-pasteable:
 a styled HTML file (inline
 styles so it survives a copy-paste into Gmail/Outlook) plus a plain-text fallback,
 written next to this script under ./reports/. Read-only — it never writes to the graph.
@@ -31,7 +31,7 @@ from neomodel import db
 _ROSTER_QUERY = """
     MATCH (p:Person)
     WHERE coalesce(p.active, true) = true
-      AND coalesce(p.non_committee_member_active, false) = false
+      AND p.ati_involvement = 'member'
     OPTIONAL MATCH (p)-[:works_at_campus]->(hc:Campus)
     WITH p, hc
     OPTIONAL MATCH (p)-[:participates_in]->(wg:ATIWorkingGroup)

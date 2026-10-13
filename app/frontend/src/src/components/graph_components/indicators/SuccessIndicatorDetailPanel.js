@@ -1,3 +1,4 @@
+import { isAtiParticipant } from '../../../services/utils/personInvolvement';
 import React, { useContext, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
@@ -146,7 +147,7 @@ function SuccessIndicatorDetailPanel({ wrapper }) {
     const assignedPersons = individuals?.filter(
         (p) => p.yearSuccessEvidences?.some((yse) => yse.year_identifier === yearIdentifier),
     ) || [];
-    const candidatePersons = individuals?.filter((i) => i.active || i.non_committee_member_active) || [];
+    const candidatePersons = individuals?.filter(isAtiParticipant) || [];
 
     // Companion-guide reference content lives on the SI node itself (raw node → .properties here).
     const props = wrapper?.indicator?.properties || {};

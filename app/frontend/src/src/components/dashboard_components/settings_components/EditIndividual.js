@@ -31,6 +31,7 @@ import { getPositionDescriptions } from '../../../services/api/get';
 import { deletePositionDescription } from '../../../services/api/delete';
 import { useSettings } from '../../../context/SettingsContext';
 import { WORKING_GROUPS, WORKING_GROUP_ORDER } from '../../graph_components/people/peopleConfig';
+import { INVOLVEMENT_LABELS, INVOLVEMENT_ORDER } from '../../../services/utils/personInvolvement';
 import FileUploadField from '../../implementation_explorer/doc_components/FileUploadField';
 
 const EditIndividual = ({ isOpen, onClose, individualData, onSave }) => {
@@ -42,7 +43,7 @@ const EditIndividual = ({ isOpen, onClose, individualData, onSave }) => {
         ati_role: '',
         host_campus: '',
         active: true,
-        non_committee_member_active: false,
+        ati_involvement: 'member',
         can_approve_yse: false,
         workingGroups: [],
     });
@@ -141,7 +142,7 @@ const EditIndividual = ({ isOpen, onClose, individualData, onSave }) => {
                 ati_role: '',
                 host_campus: '',
                 active: true,
-                non_committee_member_active: false,
+                ati_involvement: 'member',
                 can_approve_yse: false,
                 workingGroups: [],
             });
@@ -349,16 +350,7 @@ const EditIndividual = ({ isOpen, onClose, individualData, onSave }) => {
                                     isChecked={formData.active}
                                     onChange={handleInputChange}
                                 >
-                                    Active Member
-                                </Checkbox>
-                                <Checkbox
-                                    size="sm"
-                                    colorScheme="teal"
-                                    name="non_committee_member_active"
-                                    isChecked={formData.non_committee_member_active}
-                                    onChange={handleInputChange}
-                                >
-                                    Active Non-Committee Member
+                                    Active (still in role)
                                 </Checkbox>
                                 <Checkbox
                                     size="sm"
@@ -370,6 +362,19 @@ const EditIndividual = ({ isOpen, onClose, individualData, onSave }) => {
                                     Can Approve YSE
                                 </Checkbox>
                             </VStack>
+                            <FormLabel fontSize="sm" color="gray.700" fontWeight="semibold" mb={2} mt={3}>
+                                ATI involvement
+                            </FormLabel>
+                            <Select
+                                size="sm"
+                                aria-label="ATI involvement"
+                                value={formData.ati_involvement || 'contact'}
+                                onChange={(e) => setFormData((prev) => ({ ...prev, ati_involvement: e.target.value }))}
+                            >
+                                {INVOLVEMENT_ORDER.map((level) => (
+                                    <option key={level} value={level}>{INVOLVEMENT_LABELS[level]}</option>
+                                ))}
+                            </Select>
                         </FormControl>
 
                         <Divider />

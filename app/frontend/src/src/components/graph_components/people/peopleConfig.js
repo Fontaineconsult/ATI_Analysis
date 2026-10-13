@@ -139,8 +139,7 @@ export const PERSON_FORM_FIELDS = [
 ];
 
 export const PERSON_STATUS_FIELDS = [
-    { name: 'active', label: 'Active Member' },
-    { name: 'non_committee_member_active', label: 'Active Non-Committee Member' },
+    { name: 'active', label: 'Active (still in role)' },
     { name: 'can_approve_yse', label: 'Can Approve YSE' },
 ];
 

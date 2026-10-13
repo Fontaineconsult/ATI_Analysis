@@ -1,3 +1,4 @@
+import { isAtiParticipant } from '../../../services/utils/personInvolvement';
 import React, { useContext, useEffect, useRef, useMemo, useState } from 'react';
 import {
     Alert,
@@ -800,7 +801,7 @@ function ImplementationDetailPanel({ implementation, onAfterChange }) {
                 <Divider mb={4} borderColor="gray.200" />
                 <PersonAssignmentSelector
                     assignedPersons={implementation.owned_by || []}
-                    candidatePersons={(individuals || []).filter((i) => i.active || i.non_committee_member_active)}
+                    candidatePersons={(individuals || []).filter(isAtiParticipant)}
                     onAssign={(personUniqueId) => assignPersonAsOwner(type, implementation.unique_id, personUniqueId)}
                     onUnassign={(personUniqueId) => unassignPersonAsOwner(type, implementation.unique_id, personUniqueId)}
                     afterChange={refresh}

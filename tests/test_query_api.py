@@ -170,7 +170,7 @@ def _sentinel_person(name):
     person = Person.nodes.get_or_none(name=name)
     if person is None:
         person = Person(name=name, active=True, can_approve_yse=False,
-                        non_committee_member_active=False).save()
+                        ati_involvement="member").save()
     return person
 
 

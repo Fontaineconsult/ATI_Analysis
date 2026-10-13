@@ -245,3 +245,19 @@ def make_evidence_requirement_handle(composite_key: str, level: str, seq: int) -
     """
     return (f"evidence{DESCRIPTOR_HANDLE_SEPARATOR}{composite_key}"
             f"{DESCRIPTOR_HANDLE_SEPARATOR}{level}{DESCRIPTOR_HANDLE_SEPARATOR}{seq}")
+
+
+def normalize_email(email):
+    """Person.email is the identity key, so it is stored in one form: trimmed and
+    lowercased. Returns None for a missing or blank value, so a person without an
+    email carries no email property and stays clear of the uniqueness constraint.
+    Raises ValueError for a value with no '@', such as a job title typed into the
+    email field."""
+    if email is None:
+        return None
+    value = str(email).strip().lower()
+    if not value:
+        return None
+    if "@" not in value:
+        raise ValueError(f"Not an email address: {email!r}")
+    return value

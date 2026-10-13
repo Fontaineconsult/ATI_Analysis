@@ -3,7 +3,8 @@ import { Button, Heading, HStack, Text, VStack, Wrap, WrapItem } from '@chakra-u
 import { EditIcon } from '@chakra-ui/icons';
 import Card from '../common/Card';
 import { personWorkingGroups } from './peopleConfig';
-import { ApproverBadge, CampusBadge, NonCommitteeBadge, WorkingGroupBadge } from './PersonBadges';
+import { ApproverBadge, CampusBadge, InvolvementBadge, WorkingGroupBadge } from './PersonBadges';
+import { involvementOf } from '../../../services/utils/personInvolvement';
 
 /**
  * Identity header for the People Explorer right panel. Pure presentational —
@@ -44,16 +45,16 @@ function PersonHeader({ person, onEdit }) {
                 {person.ati_role && <Text fontSize="xs" color="gray.600" fontStyle="italic">{person.ati_role}</Text>}
                 {person.email && <Text fontSize="xs" color="gray.600">{person.email}</Text>}
 
-                {(workingGroups.length > 0 || person.non_committee_member_active) && (
+                {(workingGroups.length > 0 || involvementOf(person) !== 'member') && (
                     <Wrap spacing={2} pt={1}>
                         {workingGroups.map((wg) => (
                             <WrapItem key={wg}>
                                 <WorkingGroupBadge name={wg} size="sm" />
                             </WrapItem>
                         ))}
-                        {workingGroups.length === 0 && person.non_committee_member_active && (
+                        {involvementOf(person) !== 'member' && (
                             <WrapItem>
-                                <NonCommitteeBadge size="sm" />
+                                <InvolvementBadge involvement={involvementOf(person)} size="sm" />
                             </WrapItem>
                         )}
                     </Wrap>

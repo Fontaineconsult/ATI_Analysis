@@ -10,6 +10,41 @@ from app.database.graph_schema import Person, ATIWorkingGroup, Campus, PositionD
 from app.endpoints.data_api.errors.custom_exceptions import CrudError, ValidationError, NotFoundError
 from neomodel import db, DoesNotExist
 
+from app.data_config import ati_involvement_levels
+from app.database.identifiers import normalize_email
+
+
+def clean_email(email):
+    """normalize_email, with a malformed value reported as a ValidationError."""
+    try:
+        return normalize_email(email)
+    except ValueError as e:
+        raise ValidationError(str(e))
+
+
+def assert_email_free(email, exclude_unique_id=None):
+    """Email is the identity key. Refuse it when another Person already holds it,
+    in any capitalization, so the uniqueness constraint never has to."""
+    rows, _ = db.cypher_query(
+        "MATCH (p:Person) WHERE toLower(trim(p.email)) = $email "
+        "AND ($exclude IS NULL OR p.unique_id <> $exclude) RETURN p.name LIMIT 1",
+        {"email": email, "exclude": exclude_unique_id},
+    )
+    if rows:
+        raise ValidationError(f"Email '{email}' already belongs to {rows[0][0]}.")
+
+
+def validate_involvement(value, default="contact"):
+    """Return a valid ati_involvement value. Absent means the default, which is
+    contact so that no path creates a member by accident."""
+    if value is None or value == "":
+        return default
+    if value not in ati_involvement_levels:
+        raise ValidationError(
+            f"ati_involvement must be one of {sorted(ati_involvement_levels)}, got {value!r}.")
+    return value
+
+
 def add_person(data: dict) -> Person:
     """
     Adds a new person node to the graph and establishes relationships.
@@ -39,10 +74,7 @@ def add_person(data: dict) -> Person:
             else:
                 person.active = True  # Default value
 
-            if 'non_committee_member_active' in data and data['non_committee_member_active'] is not None:
-                person.active = data['non_committee_member_active']
-            else:
-                person.non_committee_member_active = False  # Default value
+            person.ati_involvement = validate_involvement(data.get('ati_involvement'))
 
             if 'ati_role' in data and data['ati_role'] is not None:
                 person.ati_role = data['ati_role']
@@ -52,10 +84,11 @@ def add_person(data: dict) -> Person:
             else:
                 person.can_approve_yse = False  # Default value
 
-            if 'email' in data and data['email'] is not None:
-                person.email = data['email']
-            else:
+            email = clean_email(data.get('email'))
+            if not email:
                 raise ValidationError("Email is required.")
+            assert_email_free(email)
+            person.email = email
 
             if 'name' in data and data['name'] is not None:
                 person.name = data['name']

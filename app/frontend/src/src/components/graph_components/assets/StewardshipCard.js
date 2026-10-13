@@ -1,3 +1,4 @@
+import { byName, isCurrentPerson } from '../../../services/utils/personInvolvement';
 import React, { useContext, useMemo, useState } from 'react';
 import {
     Box,
@@ -36,7 +37,7 @@ function CapacityRow({ assetIdentifier, capacity, holders, people, orgUnits, onC
 
     const candidates = holderType === 'person' ? people : orgUnits;
     const assignedIds = useMemo(() => new Set((holders || []).map((h) => h.unique_id)), [holders]);
-    const available = useMemo(() => candidates.filter((c) => !assignedIds.has(c.unique_id)), [candidates, assignedIds]);
+    const available = useMemo(() => candidates.filter((c) => !assignedIds.has(c.unique_id)).sort(byName), [candidates, assignedIds]);
 
     const handleAssign = async () => {
         if (!selected) return;
@@ -129,7 +130,7 @@ function StewardshipCard({ asset, onChanged }) {
     const userCtx = useContext(UserContext);
     const people = useMemo(
         () => (userCtx?.individuals || [])
-            .filter((p) => p.active || p.non_committee_member_active)
+            .filter(isCurrentPerson)
             .map((p) => ({ unique_id: p.unique_id, name: p.name })),
         [userCtx],
     );

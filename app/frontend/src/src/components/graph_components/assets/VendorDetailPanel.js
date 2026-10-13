@@ -1,3 +1,4 @@
+import { isCurrentPerson } from '../../../services/utils/personInvolvement';
 import React, { useCallback, useContext, useMemo, useState } from 'react';
 import {
     Alert,
@@ -59,7 +60,7 @@ function VendorDetailPanel({ vendorName, onAfterMutate, onReselect, onGoToAsset 
 
     const candidatePersons = useMemo(
         () => (userCtx?.individuals || [])
-            .filter((p) => p.active || p.non_committee_member_active)
+            .filter(isCurrentPerson)
             .map((p) => ({ unique_id: p.unique_id, name: p.name, title: p.title })),
         [userCtx],
     );

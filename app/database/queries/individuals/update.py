@@ -9,6 +9,8 @@ from app.database.graph_schema import Person, ATIWorkingGroup, Campus
 from app.endpoints.data_api.errors.custom_exceptions import CrudError, NotFoundError
 from neomodel import db, DoesNotExist
 
+from app.database.queries.individuals.create import clean_email, assert_email_free, validate_involvement
+
 def update_person_by_employee_id(data: dict) -> Person:
     """
     Update a person node by employee_id and refresh the in_ati_working_group relationships.
@@ -35,13 +37,16 @@ def update_person_by_employee_id(data: dict) -> Person:
             if 'can_approve_yse' in data and data['can_approve_yse'] is not None:
                 person.can_approve_yse = data['can_approve_yse']
             if 'email' in data and data['email'] is not None:
-                person.email = data['email']
+                email = clean_email(data['email'])
+                if email:
+                    assert_email_free(email, exclude_unique_id=person.unique_id)
+                person.email = email
             if 'name' in data and data['name'] is not None:
                 person.name = data['name']
             if 'title' in data and data['title'] is not None:
                 person.title = data['title']
-            if 'non_committee_member_active' in data and data['non_committee_member_active'] is not None:
-                person.non_committee_member_active = data['non_committee_member_active']
+            if 'ati_involvement' in data and data['ati_involvement'] is not None:
+                person.ati_involvement = validate_involvement(data['ati_involvement'])
 
             # Save updated person node
             person.save()
@@ -83,7 +88,7 @@ def update_person_by_employee_id(data: dict) -> Person:
 
     except DoesNotExist:
         raise NotFoundError(f"Person with employee_id '{employee_id}' not found.")
-    except (NotFoundError, ValueError):
+    except (NotFoundError, ValidationError, ValueError):
         raise
     except Exception as e:
         raise CrudError(f"Error updating person with employee_id '{employee_id}': {e}")

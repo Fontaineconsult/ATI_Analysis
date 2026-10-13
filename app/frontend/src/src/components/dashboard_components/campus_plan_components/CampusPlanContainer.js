@@ -1,3 +1,4 @@
+import { isAtiParticipant } from '../../../services/utils/personInvolvement';
 import React, { useContext, useMemo, useState } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
 import {
@@ -413,7 +414,7 @@ function CampusPlanContainer() {
                     <ModalBody pb={4}>
                         <PersonAssignmentSelector
                             assignedPersons={plan.executive_sponsors || []}
-                            candidatePersons={individuals.filter((i) => i.active || i.non_committee_member_active)}
+                            candidatePersons={individuals.filter(isAtiParticipant)}
                             onAssign={(personUniqueId) => assignExecutiveSponsor(plan.plan_identifier, personUniqueId)}
                             onUnassign={(personUniqueId) => unassignExecutiveSponsor(plan.plan_identifier, personUniqueId)}
                             afterChange={handleReloadPrimary}

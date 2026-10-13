@@ -751,7 +751,9 @@
                        note: m.note}]
          }) WHERE x.name IS NOT NULL] AS communities
     OPTIONAL MATCH (p:Person)-[:participates_in]->(wg)
-    WHERE p.active OR p.non_committee_member_active
+    // participates_in is the membership itself, so only active matters here.
+    // ati_involvement scopes the people pickers, not this derived roster.
+    WHERE p.active
     WITH wg, communities, p
     ORDER BY toLower(p.name)
     RETURN wg.name AS working_group,

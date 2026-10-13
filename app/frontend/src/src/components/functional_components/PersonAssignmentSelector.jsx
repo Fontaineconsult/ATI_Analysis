@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import { byName } from '../../services/utils/personInvolvement';
 import {
     Box,
     Button,
@@ -60,7 +61,7 @@ function PersonAssignmentSelector({
 
     const availableCandidates = useMemo(() => {
         const assignedIds = new Set(assignedPersons.map((p) => p.unique_id));
-        return candidatePersons.filter((p) => !assignedIds.has(p.unique_id));
+        return candidatePersons.filter((p) => !assignedIds.has(p.unique_id)).sort(byName);
     }, [assignedPersons, candidatePersons]);
 
     const handleAssign = async () => {

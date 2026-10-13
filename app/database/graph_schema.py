@@ -16,7 +16,7 @@ from app.data_config import (trajectory_choices, asset_classes, asset_scopes, ta
                              descriptor_kinds, query_categories, query_statuses, evidence_control_choices,
                              recommendation_statuses, concern_statuses, followup_statuses,
                              evidence_requirement_levels, evidence_requirement_elements,
-                             plan_statuses)
+                             plan_statuses, ati_involvement_levels)
 
 # Configuration enters through the single gateway (app/config_gateway.py). Importing
 # it hydrates os.environ from web.config (production) / .env.<FLASK_ENV> (development),
@@ -2421,13 +2421,21 @@ class Person(StructuredNode):
     unique_id = UniqueIdProperty()
 
     name = StringProperty(unique_index=True, required=True)
-    email = StringProperty()
+    # The identity key when known. Stored lowercased and trimmed (normalize_email), so
+    # one address cannot become two people by capitalization. Absent for people known
+    # only by name, such as TAAP signers; those match on name + campus instead.
+    email = StringProperty(unique_index=True)
     employee_id = StringProperty()
     title = StringProperty()
+    # Whether the person is still in their role. Says nothing about ATI involvement.
     active = BooleanProperty(default=True)
     can_approve_yse = BooleanProperty(default=False)
     ati_role = StringProperty()
-    non_committee_member_active = BooleanProperty(default=False) # For people who are not in a committee but are active in the ATI in various capacities
+    # How the person takes part in the ATI (vocab in data_config.ati_involvement_levels).
+    # Replaces non_committee_member_active, which conflated contributors with people
+    # who only appear in records. Defaults to contact so no path creates a member by
+    # accident.
+    ati_involvement = StringProperty(choices=ati_involvement_levels, default="contact")
     in_ati_working_group = RelationshipTo('ATIWorkingGroup', 'participates_in')
     implements_yse = RelationshipTo("YearSuccessEvidence", "implements")
     host_campus = RelationshipTo("Campus", "works_at_campus", cardinality=ZeroOrOne)
@@ -2464,7 +2472,7 @@ class Person(StructuredNode):
             "active": self.active,
             "ati_role": self.ati_role,
             "unique_id": self.unique_id,
-            "non_committee_member_active": self.non_committee_member_active,
+            "ati_involvement": self.ati_involvement,
             "host_campus": host_campus_node.abbreviation if host_campus_node else None,
             "roles": serialize_role_holdings(self),
             "communities": serialize_community_memberships(self),

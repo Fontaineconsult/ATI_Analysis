@@ -1,3 +1,4 @@
+import { INVOLVEMENT_LABELS } from '../../../services/utils/personInvolvement';
 import React from 'react';
 import { Badge } from '@chakra-ui/react';
 import { getWorkingGroupColor, getWorkingGroupAbbrev } from './peopleConfig';
@@ -70,16 +71,19 @@ export function NoWorkingGroupBadge({ size = 'sm' }) {
     );
 }
 
-export function NonCommitteeBadge({ size = 'md' }) {
+// How the person takes part in the ATI. Members carry working-group badges instead,
+// so this renders only for contributors and contacts.
+export function InvolvementBadge({ involvement, size = 'md' }) {
+    if (!involvement || involvement === 'member') return null;
     return (
         <Badge
             colorScheme="gray"
-            variant="subtle"
+            variant={involvement === 'contact' ? 'outline' : 'subtle'}
             fontSize={size === 'sm' ? '2xs' : 'xs'}
             px={2}
             borderRadius="md"
         >
-            Non-committee active
+            {INVOLVEMENT_LABELS[involvement] || involvement}
         </Badge>
     );
 }

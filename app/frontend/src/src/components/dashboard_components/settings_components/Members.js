@@ -15,6 +15,7 @@ import {
     Td,
     TableContainer,
     Checkbox,
+    Select,
     Spinner,
     Text,
     useToast,
@@ -28,6 +29,28 @@ import { updateIndividual } from '../../../services/api/put';
 import { WORKING_GROUPS } from '../../graph_components/people/peopleConfig';
 import { useColumnSort, SortableTh } from '../../functional_components/SortableTable';
 import EditIndividual from './EditIndividual';
+import {
+    INVOLVEMENT_LABELS,
+    INVOLVEMENT_ORDER,
+    involvementOf,
+} from '../../../services/utils/personInvolvement';
+
+// Which people the table shows. Participants (members and contributors) by default;
+// contacts appear in records such as TAAPs and are listed only when asked for.
+const VIEW_OPTIONS = [
+    { value: 'participants', label: 'Members and contributors' },
+    { value: 'member', label: 'Members' },
+    { value: 'contributor', label: 'Contributors' },
+    { value: 'contact', label: 'Contacts' },
+    { value: 'all', label: 'Everyone' },
+];
+
+const inView = (person, view) => {
+    const involvement = involvementOf(person);
+    if (view === 'all') return true;
+    if (view === 'participants') return involvement === 'member' || involvement === 'contributor';
+    return involvement === view;
+};
 
 const wgMember = (row, wgName) => Boolean(row.workingGroups?.some((wg) => wg.name === wgName));
 
@@ -38,7 +61,7 @@ const SORT_ACCESSORS = {
     ati_role: (r) => r.ati_role,
     host_campus: (r) => r.host_campus,
     active: (r) => Boolean(r.active),
-    non_committee_member_active: (r) => Boolean(r.non_committee_member_active),
+    ati_involvement: (r) => INVOLVEMENT_ORDER.indexOf(involvementOf(r)),
     web: (r) => wgMember(r, WORKING_GROUPS.web.name),
     ins: (r) => wgMember(r, WORKING_GROUPS.ins.name),
     pro: (r) => wgMember(r, WORKING_GROUPS.pro.name),
@@ -72,6 +95,7 @@ function Members() {
     const { loadAllIndividuals, individuals } = useContext(UserContext);
     const [individualsData, setIndividualsData] = useState([]);
     const [search, setSearch] = useState('');
+    const [view, setView] = useState('participants');
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedIndividual, setSelectedIndividual] = useState(null);
     const toast = useToast();
@@ -105,7 +129,7 @@ function Members() {
         async (individual, key) => {
             let updatedIndividual;
 
-            if (key === 'active' || key === 'can_approve_yse' || key === 'non_committee_member_active') {
+            if (key === 'active' || key === 'can_approve_yse') {
                 const newValue = !individual[key];
                 setIndividualsData((prev) =>
                     prev.map((indiv) =>
@@ -158,22 +182,55 @@ function Members() {
         [toast]
     );
 
-    // Diagnostic counts read over the FULL roster, not the filtered view.
-    const stats = useMemo(() => ({
-        total: individualsData.length,
-        active: individualsData.filter((p) => p.active).length,
-        approvers: individualsData.filter((p) => p.can_approve_yse).length,
-        noCampus: individualsData.filter((p) => !p.host_campus).length,
-    }), [individualsData]);
+    // Involvement saves immediately, optimistically, and reverts on failure.
+    const handleInvolvementChange = useCallback(
+        async (individual, value) => {
+            const updatedIndividual = { ...individual, ati_involvement: value };
+            setIndividualsData((prev) =>
+                prev.map((indiv) => (indiv.employee_id === individual.employee_id ? updatedIndividual : indiv))
+            );
+            try {
+                await updateIndividual(updatedIndividual);
+                toast({ title: 'Updated successfully.', status: 'success', duration: 2000, isClosable: true });
+            } catch (error) {
+                setIndividualsData((prev) =>
+                    prev.map((indiv) => (indiv.employee_id === individual.employee_id ? individual : indiv))
+                );
+                toast({
+                    title: 'Error updating individual.',
+                    description: error.message,
+                    status: 'error',
+                    duration: 3000,
+                    isClosable: true,
+                });
+            }
+        },
+        [toast]
+    );
+
+    // Diagnostic counts read over the FULL roster, not the filtered view. Members,
+    // contributors and contacts count current people only.
+    const stats = useMemo(() => {
+        const current = individualsData.filter((p) => p.active);
+        const count = (level) => current.filter((p) => involvementOf(p) === level).length;
+        return {
+            members: count('member'),
+            contributors: count('contributor'),
+            contacts: count('contact'),
+            approvers: individualsData.filter((p) => p.can_approve_yse).length,
+            noCampus: individualsData.filter((p) => inView(p, 'participants') && !p.host_campus).length,
+        };
+    }, [individualsData]);
 
     const filtered = useMemo(() => {
         const q = search.trim().toLowerCase();
-        if (!q) return individualsData;
-        return individualsData.filter((p) =>
+        const shown = individualsData.filter((p) => inView(p, view));
+        if (!q) return shown;
+        return shown.filter((p) =>
             [p.name, p.email, p.ati_role, p.host_campus, p.employee_id]
                 .some((field) => field && String(field).toLowerCase().includes(q))
         );
-    }, [individualsData, search]);
+    }, [individualsData, search, view]);
 
     const { sorted, sortKey, direction, toggleSort } = useColumnSort(filtered, SORT_ACCESSORS, 'name');
 
@@ -201,8 +258,9 @@ function Members() {
             </HStack>
 
             <HStack spacing={4} mb={4} align="stretch">
-                <StatCard label="Members" value={stats.total} accent="teal.400" />
-                <StatCard label="Active" value={stats.active} accent="green.400" />
+                <StatCard label="Members" value={stats.members} accent="teal.400" />
+                <StatCard label="Contributors" value={stats.contributors} accent="green.400" />
+                <StatCard label="Contacts" value={stats.contacts} accent="gray.400" />
                 <StatCard label="Approvers" value={stats.approvers} accent="purple.400" />
                 <StatCard
                     label="No campus"
@@ -211,10 +269,23 @@ function Members() {
                 />
             </HStack>
 
+            <HStack spacing={3} mb={3} align="center" flexWrap="wrap">
+            <Select
+                size="sm"
+                maxW="240px"
+                bg="white"
+                aria-label="Show people by involvement"
+                value={view}
+                onChange={(e) => setView(e.target.value)}
+                borderColor="gray.300"
+            >
+                {VIEW_OPTIONS.map((o) => (
+                    <option key={o.value} value={o.value}>{o.label}</option>
+                ))}
+            </Select>
             <Input
                 size="sm"
                 maxW="360px"
-                mb={3}
                 bg="white"
                 placeholder="Search by name, email, role, campus…"
                 aria-label="Search members"
@@ -224,12 +295,13 @@ function Members() {
                 _hover={{ borderColor: 'gray.400' }}
                 _focus={{ borderColor: 'teal.500', boxShadow: '0 0 0 1px teal.500' }}
             />
+            </HStack>
 
             {individualsData.length === 0 ? (
                 <Text fontSize="sm" color="gray.700" fontStyle="italic">No members yet.</Text>
             ) : sorted.length === 0 ? (
                 <Text fontSize="sm" color="gray.700" fontStyle="italic">
-                    No members match “{search.trim()}”.
+                    No people match this view{search.trim() ? ` and “${search.trim()}”` : ''}.
                 </Text>
             ) : (
                 <Box
@@ -249,7 +321,7 @@ function Members() {
                                     {sortableHeader('ati_role', 'Role')}
                                     {sortableHeader('host_campus', 'Campus')}
                                     {sortableHeader('active', 'Active')}
-                                    {sortableHeader('non_committee_member_active', 'Non-Member')}
+                                    {sortableHeader('ati_involvement', 'Involvement')}
                                     {sortableHeader('web', 'Web')}
                                     {sortableHeader('ins', 'Ins')}
                                     {sortableHeader('pro', 'Pro')}
@@ -289,13 +361,18 @@ function Members() {
                                             />
                                         </Td>
                                         <Td>
-                                            <Checkbox
-                                                size="sm"
-                                                colorScheme="teal"
-                                                isChecked={Boolean(person.non_committee_member_active)}
-                                                onChange={() => handleCheckboxChange(person, 'non_committee_member_active')}
-                                                aria-label={`Active non-committee member — ${person.name}`}
-                                            />
+                                            <Select
+                                                size="xs"
+                                                minW="110px"
+                                                bg="white"
+                                                value={involvementOf(person)}
+                                                onChange={(e) => handleInvolvementChange(person, e.target.value)}
+                                                aria-label={`Involvement — ${person.name}`}
+                                            >
+                                                {INVOLVEMENT_ORDER.map((level) => (
+                                                    <option key={level} value={level}>{INVOLVEMENT_LABELS[level]}</option>
+                                                ))}
+                                            </Select>
                                         </Td>
                                         <Td>
                                             <Checkbox

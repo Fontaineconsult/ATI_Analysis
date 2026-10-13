@@ -28,6 +28,7 @@ import {
     WORKING_GROUP_ORDER,
     personWorkingGroups,
 } from './peopleConfig';
+import { INVOLVEMENT_LABELS, INVOLVEMENT_ORDER } from '../../../services/utils/personInvolvement';
 
 const emptyForm = () => ({
     name: '',
@@ -37,7 +38,7 @@ const emptyForm = () => ({
     ati_role: '',
     host_campus: '',
     active: true,
-    non_committee_member_active: false,
+    ati_involvement: 'member',
     can_approve_yse: false,
     workingGroups: [],
 });
@@ -71,7 +72,7 @@ function PersonForm({ isOpen, onClose, existingPerson, onSaved }) {
                 ati_role: existingPerson.ati_role || '',
                 host_campus: existingPerson.host_campus || '',
                 active: existingPerson.active !== false,
-                non_committee_member_active: !!existingPerson.non_committee_member_active,
+                ati_involvement: existingPerson.ati_involvement || 'contact',
                 can_approve_yse: !!existingPerson.can_approve_yse,
                 workingGroups: personWorkingGroups(existingPerson).map((name) => ({ name })),
             });
@@ -116,7 +117,7 @@ function PersonForm({ isOpen, onClose, existingPerson, onSaved }) {
             ati_role: formData.ati_role?.trim() || '',
             host_campus: formData.host_campus || '',
             active: formData.active,
-            non_committee_member_active: formData.non_committee_member_active,
+            ati_involvement: formData.ati_involvement,
             can_approve_yse: formData.can_approve_yse,
             workingGroups: formData.workingGroups,
         };
@@ -216,6 +217,19 @@ function PersonForm({ isOpen, onClose, existingPerson, onSaved }) {
                                     </Checkbox>
                                 ))}
                             </VStack>
+                            <FormLabel fontSize="sm" color="gray.700" fontWeight="semibold" mb={2} mt={3}>
+                                ATI involvement
+                            </FormLabel>
+                            <Select
+                                size="sm"
+                                aria-label="ATI involvement"
+                                value={formData.ati_involvement || 'contact'}
+                                onChange={(e) => setFormData((prev) => ({ ...prev, ati_involvement: e.target.value }))}
+                            >
+                                {INVOLVEMENT_ORDER.map((level) => (
+                                    <option key={level} value={level}>{INVOLVEMENT_LABELS[level]}</option>
+                                ))}
+                            </Select>
                         </FormControl>
 
                         <Divider borderColor="gray.200" />

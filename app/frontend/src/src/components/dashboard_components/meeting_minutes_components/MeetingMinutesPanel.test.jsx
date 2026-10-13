@@ -31,7 +31,7 @@ const renderWithChakra = (ui) => render(<ChakraProvider>{ui}</ChakraProvider>);
 // The form consumes UserContext (individuals for the pickers); provide a minimal value.
 const USER_CTX = {
     user: null,
-    individuals: [{ unique_id: 'p1', name: 'Pat Person', title: 'Analyst', active: true }],
+    individuals: [{ unique_id: 'p1', name: 'Pat Person', title: 'Analyst', active: true, ati_involvement: 'member' }],
 };
 const renderWithUser = (ui) => render(
     <ChakraProvider><UserContext.Provider value={USER_CTX}>{ui}</UserContext.Provider></ChakraProvider>,

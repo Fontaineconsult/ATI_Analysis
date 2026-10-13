@@ -52,12 +52,19 @@ def get_person_by_employee_id(employee_id: str) -> Person:
 def get_person_by_email(email: str) -> Person:
     """
     Get a person node by email — the link key between a local auth account and
-    its Person. Email is NOT unique-indexed on Person, so a duplicate-email match
-    is treated as a failed link (NotFoundError) rather than guessing which Person
-    owns the account.
+    its Person. Email is unique-indexed and stored normalized, so the lookup
+    normalizes too. A duplicate match can only come from data written around the
+    constraint; it is still treated as a failed link rather than a guess.
     :param email: Email of the person
     :return: Person node
     """
+    from app.database.identifiers import normalize_email
+    try:
+        email = normalize_email(email)
+    except ValueError:
+        raise NotFoundError(f"Person with email {email} does not exist.")
+    if not email:
+        raise NotFoundError("An email is required to look up a person.")
     try:
         person = Person.nodes.get_or_none(email=email)
     except Person.MultipleNodesReturned:
@@ -109,7 +116,7 @@ def get_person_implementation_details(employee_id: str) -> dict:
           ati_role: p.ati_role,
           active: p.active,
           can_approve_yse: p.can_approve_yse,
-          non_committee_member_active: p.non_committee_member_active,
+          ati_involvement: p.ati_involvement,
           host_campus: host.abbreviation,
           workingGroups: workingGroupNames,
           roles: [(p)-[hr:holds_role]->(role:Role) | {handle: role.handle, name: role.name, in_position_description: hr.in_position_description, pd_description: hr.pd_description}],

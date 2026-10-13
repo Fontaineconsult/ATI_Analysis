@@ -19,12 +19,21 @@ const PEOPLE = [
     {
         name: 'Zoe Adams', employee_id: 'e1', email: 'zoe@x.edu', ati_role: 'Coordinator',
         host_campus: 'sfsu', active: true, can_approve_yse: true, workingGroups: [{ name: 'Web' }],
+        ati_involvement: 'member',
     },
     {
         name: 'Amir Khan', employee_id: 'e2', email: 'amir@x.edu', ati_role: null,
         host_campus: null, active: false, can_approve_yse: false, workingGroups: [],
+        ati_involvement: 'contributor',
     },
 ];
+
+// A TAAP signer: current, but a contact, so hidden from the default view.
+const SIGNER = {
+    name: 'Sam Signer', employee_id: null, email: null, ati_role: null,
+    host_campus: 'ssu', active: true, can_approve_yse: false, workingGroups: [],
+    ati_involvement: 'contact',
+};
 
 const renderMembers = (individuals = PEOPLE) =>
     render(
@@ -44,9 +53,11 @@ describe('Members settings section', () => {
         renderMembers();
 
         expect(screen.getByRole('heading', { name: 'Members' })).toBeInTheDocument();
-        // Stat strip: 2 members, 1 active, 1 approver, 1 without a campus.
+        // Stat strip counts current people: 1 member, 0 contributors (Amir is no longer
+        // in role), 0 contacts, 1 approver, 1 participant without a campus.
         expect(screen.getByText('Approvers')).toBeInTheDocument();
         expect(screen.getAllByText('1').length).toBeGreaterThanOrEqual(3);
+        expect(screen.getByText('Contributors', { selector: 'dt' })).toBeInTheDocument();
         expect(screen.getByText('No campus')).toBeInTheDocument();
         // Default sort is name-ascending.
         expect(rosterNames()).toEqual(['Amir Khan', 'Zoe Adams']);
@@ -71,11 +82,20 @@ describe('Members settings section', () => {
         await userEvent.type(screen.getByLabelText('Search members'), 'zoe');
         expect(rosterNames()).toEqual(['Zoe Adams']);
         // The strip still reads over the full roster.
-        expect(screen.getByText('2')).toBeInTheDocument();
+        expect(screen.getAllByText('1').length).toBeGreaterThanOrEqual(3);
 
         await userEvent.clear(screen.getByLabelText('Search members'));
         await userEvent.type(screen.getByLabelText('Search members'), 'nobody');
-        expect(screen.getByText(/No members match/)).toBeInTheDocument();
+        expect(screen.getByText(/No people match this view/)).toBeInTheDocument();
+    });
+
+    it('hides contacts by default and lists them in the Contacts view', async () => {
+        renderMembers([...PEOPLE, SIGNER]);
+        expect(rosterNames()).toEqual(['Amir Khan', 'Zoe Adams']);
+
+        await userEvent.selectOptions(screen.getByLabelText('Show people by involvement'), 'contact');
+        expect(rosterNames()).toEqual(['Sam Signer']);
+        expect(screen.getByLabelText('Involvement — Sam Signer')).toHaveValue('contact');
     });
 
     it('shows the empty state when there is no roster', () => {

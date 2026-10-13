@@ -1,3 +1,4 @@
+import { isAtiParticipant } from '../../../services/utils/personInvolvement';
 import React, { useContext, useState } from 'react';
 import {
     Button, FormControl, FormLabel, Modal, ModalBody, ModalCloseButton, ModalContent,
@@ -31,7 +32,7 @@ export default function QueryForm({
 
     const categoryOptions = vocabToOptions(vocab?.query_categories, CATEGORY_META);
     const statusOptions = vocabToOptions(vocab?.query_statuses, null);
-    const people = (individuals || []).filter((p) => p.active || p.non_committee_member_active);
+    const people = (individuals || []).filter(isAtiParticipant);
 
     const errText = (err) => err?.response?.data?.error || err?.message || 'Please try again.';
 

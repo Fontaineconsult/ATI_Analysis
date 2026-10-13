@@ -8,7 +8,7 @@ assign_* functions in queries/assets/update.py, in this order:
   1. Vendor (MERGE by name)                       -> Asset.supplied_by
   2. Asset (MERGE by asset_identifier)            -> asset_at_campus, supplied_by
   3. Requesting unit, alternative provider        -> OrgUnit:Department under the campus
-  4. Signers, owner                               -> Person, works_at_campus when new
+  4. Signers, owner                               -> Person (a contact when new), works_at_campus when new
   5. Signed copy                                  -> Document by SHA-256 with raw_text
   6. The TAAP itself and its edges
   7. is_evidence_for to the campus/year YSEs
@@ -16,6 +16,14 @@ assign_* functions in queries/assets/update.py, in this order:
 
 Every string literal sits on one line (newlines escaped) because run_file splits a
 file on ';' at end of line and drops lines that start with '//'.
+
+People follow the identity rule: email first, then name + campus. A new signer is
+created as a contact (ati_involvement), and an existing person's involvement is never
+changed, so signing a TAAP cannot make anyone a member. The decisions file's `people`
+map takes a canonical name, or {name, email} when the signer's email is known; the
+email is written only to a person who has none. run_file's person-identity gate
+refuses the file when a signer's name already works at another campus or the email
+belongs to someone else, so nothing is merged into the wrong person.
 
     python -m app.database.tools.taap_import.emit_cypher "<folder>" <decisions.yaml> <out_dir>
 """
@@ -27,7 +35,7 @@ from pathlib import Path
 
 import yaml
 
-from app.database.identifiers import make_asset_identifier, make_taap_identifier
+from app.database.identifiers import make_asset_identifier, make_taap_identifier, normalize_email
 from app.database.tools.taap_import.parse_taap import pair_files, parse_plan
 
 TODAY = date.today().isoformat()
@@ -63,6 +71,15 @@ def academic_year_for(when: date) -> str:
 NEW_ID = 'replace(randomUUID(), "-", "")'
 
 
+def resolve_person(name_as_written: str, people_map: dict) -> dict:
+    """Map a name as written on a form to {name, email}. A `people` entry is either
+    the canonical name or {name, email}; an unmapped name is used as written."""
+    entry = people_map.get(name_as_written, name_as_written)
+    if isinstance(entry, dict):
+        return {"name": entry.get("name") or name_as_written, "email": normalize_email(entry.get("email"))}
+    return {"name": entry, "email": None}
+
+
 # --- one plan ---------------------------------------------------------------------------
 
 def build_plan(record: dict, decision: dict, shared: dict) -> tuple:
@@ -86,7 +103,7 @@ def build_plan(record: dict, decision: dict, shared: dict) -> tuple:
 
     preparer = decision.get("preparer", shared.get("preparer_default")) if "preparer" in decision else shared.get("preparer_default")
     vendor = decision.get("vendor")
-    signers = [dict(s, name=people_map.get(s["name_as_written"], s["name_as_written"])) for s in record["signers"]]
+    signers = [dict(s, **resolve_person(s["name_as_written"], people_map)) for s in record["signers"]]
     owner = next((s["name"] for s in signers if s["role"] == "department_head"), None)
 
     out = []
@@ -138,14 +155,17 @@ def build_plan(record: dict, decision: dict, shared: dict) -> tuple:
 
     # 4. People
     if signers:
-        w("// ---- signers (add_person twin: active, not a committee member; campus only when new)")
+        w("// ---- signers (add_person twin: a contact when new, involvement never changed; campus only when new)")
+        emails = {s["name"]: s["email"] for s in signers if s.get("email")}
         for s in dict.fromkeys(s["name"] for s in signers):
             w(f"MATCH (c:Campus {{abbreviation: {q(campus)}}})")
             w(f"MERGE (p:Person {{name: {q(s)}}})")
             w(f"ON CREATE SET p.unique_id = {NEW_ID}, p.active = true, p.can_approve_yse = false,")
-            w("              p.non_committee_member_active = true")
+            w("              p.ati_involvement = \"contact\"")
             w("WITH p, c WHERE NOT (p)-[:works_at_campus]->()")
             w("MERGE (p)-[:works_at_campus]->(c);")
+            if s in emails:
+                w(f"MATCH (p:Person {{name: {q(s)}}}) WHERE p.email IS NULL SET p.email = {q(emails[s])};")
         w("")
 
     # 5. Signed copy

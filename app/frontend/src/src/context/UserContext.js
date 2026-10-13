@@ -2,6 +2,7 @@ import React, { createContext, useState, useEffect, useContext } from 'react';
 import { fetchUserByEmployeeId, fetchAllIndividuals } from '../services/api/get';
 import { useToast } from '@chakra-ui/react';
 import { AuthContext } from './AuthContext';
+import { sortByName } from '../services/utils/personInvolvement';
 
 // Create the UserContext
 export const UserContext = createContext();
@@ -121,7 +122,7 @@ export const UserProvider = ({ children }) => {
             if (!forceLoad && individuals) return;
 
             const individualsData = await fetchAllIndividuals();
-            setIndividuals(individualsData.data.persons);
+            setIndividuals(sortByName(individualsData.data.persons));
 
             // Check if current user still exists in the updated list
             if (currentUser) {
@@ -159,7 +160,7 @@ export const UserProvider = ({ children }) => {
     const refreshAllIndividuals = async () => {
         try {
             const individualsData = await fetchAllIndividuals();
-            setIndividuals(individualsData.data.persons);
+            setIndividuals(sortByName(individualsData.data.persons));
         } catch (err) {
             if (toast) {
                 toast({

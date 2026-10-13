@@ -127,11 +127,21 @@ until the decision manifest has been presented and approved.**
 Transcripts garble names — ASR wrote "Zach Autry" for **Zach Oshri**; first-name-only
 "Timothy" resolved to **Tim Hensel** via campus + WG-lead context. Order:
 
-1. Exact name match.
-2. First name + campus + role context (WGP `has_group_lead`, `works_at_campus`, dept).
-3. Unresolved AND load-bearing (owns work being modeled) → create, flag **"name as
+1. Email match, when the source gives an address. Email is the unique identity key,
+   stored trimmed and lowercased.
+2. Exact name match at the same campus. A name that exists at a different campus is a
+   collision, not a match: `run_file`'s person-identity gate blocks the file, and the
+   report asks which person is meant.
+3. First name + campus + role context (WGP `has_group_lead`, `works_at_campus`, dept).
+4. Unresolved AND load-bearing (owns work being modeled) → create, flag **"name as
    heard — verify"** in the file header AND the report.
-4. Unresolved and peripheral → Note prose only, no node.
+5. Unresolved and peripheral → Note prose only, no node.
+
+**Involvement.** Set `ati_involvement` `ON CREATE` only, never on an existing person.
+A person who appears in a source without doing ATI work (a signer, a vendor contact, a
+department head named in passing) is a `contact`. Someone the source shows doing ATI
+work without a committee seat is a `contributor`. `member` is for committee or working
+group seats, which come from the roster, not from a transcript.
 
 **Departed people who own no current work get NO node** (calibration: Kristen Denver,
 Doug Ferguson) — Note prose only. Create an inactive Person (`active = false`,
@@ -371,7 +381,8 @@ validation or a late finding → stop and re-present the delta first.
 - **Concern** has no natural unique key. MERGE on the `has_concern` pattern with the
   concern text, or guard with an existence check — never blind CREATE.
 - Every `ON CREATE` sets `unique_id = randomUUID()` plus neomodel defaults
-  (`Person.active/can_approve_yse/non_committee_member_active`, `Note.include_in_report`,
+  (`Person.active/can_approve_yse`, `Person.ati_involvement` = `"contact"` unless the source
+  shows ATI work, `Note.include_in_report`,
   `Plan.is_key_plan/is_campus_plan/abandoned`, `Query.status`, `Concern.status`).
 - Note naming `<slug>-<mon>-<year>-yse:<year_identifier>-<8hex>`; attach `has_note` to
   BOTH the YSE and the MeetingMinutes; `created_by` → the ingesting user.

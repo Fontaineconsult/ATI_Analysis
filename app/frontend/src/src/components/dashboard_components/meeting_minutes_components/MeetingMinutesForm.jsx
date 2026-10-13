@@ -1,3 +1,4 @@
+import { isAtiParticipant } from '../../../services/utils/personInvolvement';
 import React, { useContext, useMemo, useState } from 'react';
 import {
     Badge, Box, Button, FormControl, FormLabel, HStack, Input, Modal, ModalBody,
@@ -51,7 +52,7 @@ export default function MeetingMinutesForm({
     const { data: communitiesResp } = useResource(KEYS.communitiesAll, fetchAllCommunities);
     const communities = useMemo(() => communitiesResp?.data?.items || [], [communitiesResp]);
 
-    const people = (individuals || []).filter((p) => p.active || p.non_committee_member_active);
+    const people = (individuals || []).filter(isAtiParticipant);
     const personOptions = people.map((p) => ({
         value: p.unique_id,
         label: p.title ? `${p.name} — ${p.title}` : p.name,

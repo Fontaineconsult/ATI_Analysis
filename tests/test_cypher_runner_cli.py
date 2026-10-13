@@ -465,3 +465,67 @@ def test_gate_end_to_end_exit_codes(tmp_path):
     allowed = subprocess.run([str(py), str(hook)], input=json.dumps(_cmd("git status")),
                              text=True, capture_output=True)
     assert allowed.returncode == 0
+
+
+# --------------------------------------------------------------------------- #
+# person-identity gate                                                         #
+# --------------------------------------------------------------------------- #
+from app.database.cypher_runner.gates import person_identity as pig
+
+SIGNER = (
+    'MATCH (c:Campus {abbreviation: "ssu"})\n'
+    'MERGE (p:Person {name: "Ryan Smith"})\n'
+    'ON CREATE SET p.ati_involvement = "contact"\n'
+    'WITH p, c WHERE NOT (p)-[:works_at_campus]->()\n'
+    'MERGE (p)-[:works_at_campus]->(c)'
+)
+
+
+def test_person_claims_pair_a_merged_name_with_its_campus_anchor():
+    anchors, emails = pig.find_person_claims(["RETURN 1", SIGNER])
+    assert anchors == [{"name": "Ryan Smith", "campus": "ssu", "statement": 2}]
+    assert emails == []
+
+
+def test_person_without_a_campus_anchor_is_not_judged():
+    anchors, _ = pig.find_person_claims(['MERGE (p:Person {name: "Ryan Smith"})'])
+    assert anchors == []
+
+
+def test_email_claims_read_escaped_names_and_flag_unnormalized_values():
+    stmt = 'MATCH (p:Person {name: "Dan \\"D\\" Legate"}) WHERE p.email IS NULL SET p.email = "Dan.LeGate@csueastbay.edu"'
+    _, emails = pig.find_person_claims([stmt])
+    assert emails == [{"name": 'Dan "D" Legate', "email": "Dan.LeGate@csueastbay.edu", "statement": 1}]
+    assert "not normalized" in pig.email_form_problems(emails)[0]
+
+
+def test_gate_skips_the_graph_when_no_person_is_claimed(monkeypatch):
+    monkeypatch.setattr(transport, "run", lambda *a, **k: pytest.fail("no read expected"))
+    assert pig.person_identity_gate(["MERGE (:A)"]) == []
+
+
+def test_gate_blocks_a_namesake_at_another_campus(monkeypatch):
+    seen = {}
+
+    def fake_run(cypher, params=None, **kwargs):
+        seen.update(params=params, rw=kwargs.get("rw"))
+        return transport.CliResult(0, json.dumps({"columns": [], "rows": [
+            {"kind": "campus", "name": "Ryan Smith", "claimed": "ssu", "found": "sfsu", "statement": "1.0"}]}), "")
+
+    monkeypatch.setattr(transport, "run", fake_run)
+    problems = pig.person_identity_gate([SIGNER])
+    assert seen["rw"] is not True, "the gate only reads"
+    assert seen["params"]["anchors"] == [{"name": "Ryan Smith", "campus": "ssu", "statement": 1}]
+    assert len(problems) == 1 and "already works at sfsu" in problems[0] and "#001" in problems[0]
+
+
+def test_gate_blocks_an_email_held_by_someone_else(monkeypatch):
+    stmt = 'MATCH (p:Person {name: "Jeff Wilson"}) WHERE p.email IS NULL SET p.email = "wilsonj@sonoma.edu"'
+    monkeypatch.setattr(transport, "run", lambda *a, **k: transport.CliResult(0, json.dumps({"rows": [
+        {"kind": "email", "name": "Jeff Wilson", "claimed": "wilsonj@sonoma.edu", "found": "Jeffrey Wilson", "statement": "1"}]}), ""))
+    problems = pig.person_identity_gate([stmt])
+    assert len(problems) == 1 and "belongs to 'Jeffrey Wilson'" in problems[0]
+
+
+def test_gate_is_registered_in_run_file():
+    assert pig.person_identity_gate in run_file.GATES

@@ -18,7 +18,10 @@
 #   skip                    true -> not a plan (a duplicate parse of a merged PDF).
 #   open_question           A Query node to raise when the form leaves a fact unknown.
 #
-# People: `people` maps a name as written on a form to the canonical Person name.
+# People: `people` maps a name as written on a form to the canonical Person name, or to
+# {name: ..., email: ...} when the signer's email is known. Email is the identity key;
+# the importer writes it only to a person who has none, and run_file's person-identity
+# gate blocks a name that already works at another campus.
 
 campus_default: ssu
 

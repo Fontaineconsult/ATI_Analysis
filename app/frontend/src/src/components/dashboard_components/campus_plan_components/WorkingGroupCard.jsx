@@ -1,3 +1,4 @@
+import { isAtiParticipant } from '../../../services/utils/personInvolvement';
 import React, { useContext, useId, useMemo, useState } from 'react';
 import {
     Box, Button, Heading, HStack, Modal, ModalBody, ModalCloseButton, ModalContent, ModalFooter,
@@ -269,7 +270,7 @@ function WorkingGroupCard({
                     <ModalBody pb={4}>
                         <PersonAssignmentSelector
                             assignedPersons={leads}
-                            candidatePersons={individuals.filter((i) => i.active || i.non_committee_member_active)}
+                            candidatePersons={individuals.filter(isAtiParticipant)}
                             onAssign={(personUniqueId) => assignGroupLead(wgp.plan_identifier, personUniqueId)}
                             onUnassign={(personUniqueId) => unassignGroupLead(wgp.plan_identifier, personUniqueId)}
                             afterChange={async () => { if (onLeadsChanged) await onLeadsChanged(); }}

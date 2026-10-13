@@ -1,3 +1,4 @@
+import { isCurrentPerson } from '../../../services/utils/personInvolvement';
 import React, { useContext, useState } from 'react';
 import {
     Box, Button, FormControl, FormLabel, Input, Modal, ModalBody, ModalCloseButton,
@@ -47,7 +48,7 @@ export default function InterviewGuideForm({
     const [resultedIn, setResultedIn] = useState(guide.resulted_in?.unique_id || '');
     const [saving, setSaving] = useState(false);
 
-    const people = (individuals || []).filter((p) => p.active || p.non_committee_member_active);
+    const people = (individuals || []).filter(isCurrentPerson);
     const personOptions = people.map((p) => ({
         value: p.unique_id,
         label: p.title ? `${p.name} — ${p.title}` : p.name,

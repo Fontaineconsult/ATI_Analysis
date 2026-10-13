@@ -413,6 +413,23 @@ query_statuses = {
 
 
 # ---------------------------------------------------------------------------
+# Person involvement — how a person takes part in the ATI (graph_schema.Person
+# .ati_involvement). Independent of Person.active, which says only whether the
+# person is still in their role. A member sits on a committee or working group;
+# a contributor does ATI work without a seat; a contact appears in ATI records
+# (signs a TAAP, maintains a page, works for a vendor) without taking part.
+# Imports create contacts and never promote anyone. People pickers offer members
+# and contributors; contacts stay reachable from the records they appear on.
+# ---------------------------------------------------------------------------
+ati_involvement_levels = {
+    "member":      "Member",
+    "contributor": "Contributor",
+    "contact":     "Contact",
+}
+PARTICIPANT_INVOLVEMENT = ("member", "contributor")
+
+
+# ---------------------------------------------------------------------------
 # Recommendation lifecycle — improvements identified at the end of a review
 # cycle for one YSE (graph_schema.Recommendation). Recommendations are records:
 # they resolve via status + resolution prose, never deletion.
@@ -576,6 +593,8 @@ PUBLIC_VOCABULARIES = {
     "recommendation_statuses": recommendation_statuses,
     "concern_statuses":        concern_statuses,
     "followup_statuses":       followup_statuses,
+    # people
+    "ati_involvement_levels":  ati_involvement_levels,
 }
 
 yse_priority_level = {

@@ -129,7 +129,19 @@ to the data-api, and it lets Flask start and GET requests through. When an app w
 reproduce them explicitly in the Cypher and say so: `update_plan` to Completed also
 stamps `completed_date`, links `completed_in_year`, and creates an Accomplishment via
 `achieved_through`; `add_person` sets `unique_id`, `active`, `can_approve_yse` and
-`non_committee_member_active`. Read the function before writing its Cypher twin.
+`ati_involvement`, and stores `email` lowercased. Read the function before writing its Cypher twin.
+
+### People: involvement and identity
+`Person.ati_involvement` (member / contributor / contact, vocab in `data_config`) says how a
+person takes part in the ATI; `active` says only whether they are still in their role. People
+pickers offer current members and contributors (`isAtiParticipant` in
+`services/utils/personInvolvement.js`); pickers that attach outside people to records (TAAP
+signers, vendor contacts, asset stewards, interviewees) offer anyone current. Imports create
+contacts `ON CREATE` and never change an existing person's involvement. Email is the unique
+identity key, stored trimmed and lowercased (`normalize_email` in `identifiers.py`); a person
+without one is matched on name + campus. `Person.name` stays unique. `run_file`'s
+person-identity gate refuses a batch file that MERGEs a Person by name when that name already
+works at another campus, or writes an email that is unnormalized or held by someone else.
 
 ### Vocabularies live in `app/data_config.py`
 Add new choice maps (`status_levels`, `working_groups`, `trajectory_choices`, etc.) to `data_config.py` — never to `class_factory.py` or inline in `graph_schema.py`. The `data_config` module has zero project imports, so anything can read from it without triggering load cycles. `class_factory.py` re-exports vocabularies from `data_config` for backward compatibility with older callers.

@@ -27,8 +27,10 @@ Behavior:
 Gates:
     ``GATES`` is the hook point for claude_files/cypher-validation-gates-plan.md.
     Each gate is a callable ``(statements: list[str]) -> list[str]`` returning failure
-    messages; any message blocks execution. None are registered yet, because Phase 0
-    of that plan (schema and graph must agree) is still open.
+    messages; any message blocks execution. Registered: the person-identity gate
+    (gates/person_identity.py), which refuses a Person MERGEd by name when that name
+    already works at another campus, or an email that is unnormalized or held by a
+    different person.
 
 File contract (matches the app/database/batch conventions):
     - Full-line comments start with //  (inline // is NOT stripped).
@@ -49,8 +51,10 @@ from typing import Callable
 
 from .cli import transport
 
+from .gates.person_identity import person_identity_gate
+
 Gate = Callable[[list[str]], list[str]]
-GATES: list[Gate] = []
+GATES: list[Gate] = [person_identity_gate]
 
 
 def split_statements(source: str) -> list[str]:
