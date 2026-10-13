@@ -9,6 +9,26 @@ Run curated Cypher against the ATI knowledge graph through a vetted registry, an
 batch `.cypher` files, from a terminal. Both go through `neo4j-cli`. Read queries run
 freely; writes are gated twice, once by the runner flag and once by the CLI.
 
+## Before anything: load the principles
+
+Run this once at the start of the session, before recon or any other query, and keep
+the result in context:
+
+```bash
+python -m app.database.cypher_runner.run_query --query principles_context
+```
+
+It returns every Principle node: the framework's commitments, with the law, policy and
+scholarship that ground or contest each one. They are the standard every call in this
+skill is made against. Read results against them, and flag a result that contradicts one instead of explaining it away.
+
+When a principle decides a call, name it by handle (`principle:closest-to-capacity`) in
+the gate, manifest or report, so a reader can see which commitment did the work. When
+the material in front of you contradicts a principle, say so rather than bending the
+material to fit; the principle may be the thing that is wrong. Do not re-run the query
+in the same session unless a principle has been edited. If it fails, say so before
+continuing.
+
 ## The three access paths
 
 The graph has three access paths and this skill is the third, **the only one graph work

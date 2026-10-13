@@ -12,6 +12,26 @@ moves only through the dashboard's admin-review workflow (same rule as
 ontology-ingest); on explicit request the recommendation can be filed as admin
 reviewer feedback, which is an annotation, not a status write.
 
+## Before anything: load the principles
+
+Run this once at the start of the session, before recon or any other query, and keep
+the result in context:
+
+```bash
+python -m app.database.cypher_runner.run_query --query principles_context
+```
+
+It returns every Principle node: the framework's commitments, with the law, policy and
+scholarship that ground or contest each one. They are the standard every call in this
+skill is made against. Grade with them in hand: maturity is graded capability, not pass or fail, a covering plan is not conformance, and deference to a unit's claim is earned through a documented process.
+
+When a principle decides a call, name it by handle (`principle:closest-to-capacity`) in
+the gate, manifest or report, so a reader can see which commitment did the work. When
+the material in front of you contradicts a principle, say so rather than bending the
+material to fit; the principle may be the thing that is wrong. Do not re-run the query
+in the same session unless a principle has been edited. If it fails, say so before
+continuing.
+
 ## Step 0 — Resolve the target (read-only throughout)
 
 The unit of review is one YSE: `<year>-<composite_key>-<campus>` (e.g.

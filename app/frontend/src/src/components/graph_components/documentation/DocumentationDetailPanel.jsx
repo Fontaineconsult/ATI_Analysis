@@ -20,6 +20,7 @@ import DocumentationFields from './DocumentationFields';
 import { FormActions, FormShell } from '../../implementation_explorer/doc_components/docPrimitives';
 import Section from '../common/Section';
 import ReferencedByList from './ReferencedByList';
+import MetricDisplay from '../metrics/MetricDisplay';
 import { DocumentationBadgeRow, TypeBadge } from './DocumentationBadges';
 import {
     DOC_TYPES,
@@ -259,6 +260,15 @@ function DocumentationDetailPanel({
                         </Text>
                     </Box>
                 </Alert>
+            )}
+
+            {/* A Metric's stored value is read here, not edited: it is written
+                whole by whatever produced it, such as a Pope Tech snapshot.
+                Description and links are left to the Fields card below. */}
+            {item.doc_type === 'metrics' && (
+                <Card title="Value">
+                    <MetricDisplay metric={item} variant="full" showRecord={false} />
+                </Card>
             )}
 
             {/* The fields themselves. Every value they carry used to be

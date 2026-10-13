@@ -1,7 +1,7 @@
 import React from 'react';
 import { Badge, Box, HStack, Heading, Tag, Text, VStack, Wrap, WrapItem } from '@chakra-ui/react';
 
-import { strengthConfig, controlConfig } from '../../../graph_components/implementation/implementationConfig';
+import { strengthConfig, controlConfig, documentationRule } from '../../../graph_components/implementation/implementationConfig';
 import ArtifactTable from './ArtifactTable';
 import { DataTable, Dash, SubLabel } from './reportPrimitives';
 
@@ -114,7 +114,7 @@ const ImplementationCard = ({
                         </Badge>
                     )}
                     {undocumented && (
-                        <Badge colorScheme="orange" variant="outline" fontSize="2xs" title="No documents or webpages are attached to this implementation at all (notes and messages don't count as documentation)">
+                        <Badge colorScheme="orange" variant="outline" fontSize="2xs" title={`No ${documentationRule(impl.type).noun} are attached to this implementation at all (notes and messages don't count as documentation)`}>
                             ⚠ Undocumented
                         </Badge>
                     )}

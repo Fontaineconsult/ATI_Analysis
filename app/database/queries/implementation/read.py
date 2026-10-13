@@ -264,6 +264,9 @@ _IMPL_PROJECTION = """
         unique_id: mt.unique_id, name: mt.name, composite_key: mt.composite_key, metric_type: mt.metric_type,
         file_path: mt.file_path, uri_path: mt.uri_path, description: mt.description, single_value: mt.single_value,
         comment: mt.comment, include_in_report: coalesce(mt.include_in_report, true),
+        // Raw stored JSON string; the frontend decodes it (decodeMetricValue).
+        value_dict: mt.value_dict, value_schema: mt.value_schema,
+        measured_on: toString(mt.measured_on),
         created_by: head([ (mt)-[:created_by]->(c:Person) |
           { unique_id: c.unique_id, name: c.name, email: c.email, employee_id: c.employee_id, title: c.title } ]),
         file: head([ (mt)-[:has_file]->(sf:StoredFile) | {

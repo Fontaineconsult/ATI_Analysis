@@ -44,6 +44,7 @@ const SERVER_WRITABLE = {
     metrics: [
         'name', 'composite_key', 'metric_type', 'file_path', 'uri_path',
         'description', 'single_value', 'comment', 'include_in_report',
+        'value_schema', 'measured_on',
     ],
 };
 

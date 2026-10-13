@@ -238,6 +238,55 @@ def test_no_active_documents_is_false_when_nothing_attached():
     assert _undocumented(impl) is True
 
 
+# --- Tracking's own rule: its metrics are its documentation -------------------
+# A Tracking is a record kept over time, so the metrics it holds count as
+# documentation (data_config.documentation_pools). Other types are unchanged.
+
+class Tracking(_FakeImpl):
+    """Named like the real class, which is what documentation_pool keys on."""
+    def __init__(self, docs=(), pages=(), metrics=()):
+        super().__init__(docs, pages)
+        self.supporting_metrics = _FakeManager([(m, None) for m in metrics])
+
+
+class Process(Tracking):
+    """A non-Tracking type holding a metric, to show metrics don't count for it."""
+
+
+@pytest.mark.unit
+def test_a_tracking_with_metrics_is_documented():
+    impl = Tracking(metrics=[object()])
+    assert _undocumented(impl) is False
+    assert _no_active_documents(impl) is False
+
+
+@pytest.mark.unit
+def test_a_tracking_with_nothing_is_undocumented():
+    assert _undocumented(Tracking()) is True
+
+
+@pytest.mark.unit
+def test_a_tracking_metric_keeps_dead_documents_from_flagging():
+    impl = Tracking(docs=[_FakeDoc(depreciated=True)], metrics=[object()])
+    assert _no_active_documents(impl) is False
+
+
+@pytest.mark.unit
+def test_metrics_do_not_document_other_types():
+    impl = Process(metrics=[object()])
+    assert _undocumented(impl) is True
+
+
+@pytest.mark.unit
+def test_public_payload_applies_the_tracking_rule():
+    from app.public_reports.sanitize import public_implementation_payload
+
+    tracking = public_implementation_payload({"type": "Tracking", "supporting_metrics": [{"name": "m"}]})
+    process = public_implementation_payload({"type": "Process", "supporting_metrics": [{"name": "m"}]})
+    assert tracking["undocumented"] is False
+    assert process["undocumented"] is True
+
+
 @pytest.mark.unit
 def test_no_active_documents_live_document_alone_is_enough():
     impl = _FakeImpl(docs=[_FakeDoc()], pages=[_FakePage(no_longer_exists=True)])

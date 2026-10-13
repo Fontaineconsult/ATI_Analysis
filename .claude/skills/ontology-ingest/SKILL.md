@@ -10,6 +10,26 @@ Turn source material into an idempotent batch Cypher file. Two judgments dominat
 justifies that element at all). When in doubt route DOWN, toward Note — a fact filed
 as a Note is recoverable; a fabricated Process pollutes the evidence chain.
 
+## Before anything: load the principles
+
+Run this once at the start of the session, before recon or any other query, and keep
+the result in context:
+
+```bash
+python -m app.database.cypher_runner.run_query --query principles_context
+```
+
+It returns every Principle node: the framework's commitments, with the law, policy and
+scholarship that ground or contest each one. They are the standard every call in this
+skill is made against. Check routing and wording against them: a TAAP is not compliance (`principle:time-bound-alternative-when-not-conformant`), a stake is not ownership, and a stewarded asset nobody can remediate is an elevation signal, not a gap.
+
+When a principle decides a call, name it by handle (`principle:closest-to-capacity`) in
+the gate, manifest or report, so a reader can see which commitment did the work. When
+the material in front of you contradicts a principle, say so rather than bending the
+material to fit; the principle may be the thing that is wrong. Do not re-run the query
+in the same session unless a principle has been edited. If it fails, say so before
+continuing.
+
 ## Step 0 — Recon (read-only)
 
 Never route from the source alone. Prefer the registry runner

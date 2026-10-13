@@ -764,6 +764,14 @@ export const fetchInterfacesForAsset = async (assetIdentifier) => {
 // The frontend fetches these instead of hardcoding label/key copies.
 //
 
+// Admin-only: the service registry and whether each service can run on this
+// server (app/services). Checked fresh by the server on every call. A 403 means
+// the user is not an admin; it is thrown so the caller can say so.
+export const fetchServices = async () => {
+    const response = await axios.get(`${process.env.REACT_APP_API_URL}/services`);
+    return response.data;
+};
+
 export const fetchSettings = async () => {
     try {
         const response = await axios.get(`${process.env.REACT_APP_API_URL}/settings`);

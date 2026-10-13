@@ -16,7 +16,9 @@ module.exports = function (app) {
         // proxied so it's reachable on :3000 in dev (and scannable by e2e).
         ['/ati/data-api', '/ati/auth', '/ati/reports/public'],
         createProxyMiddleware({
-            target: 'http://127.0.0.1:5000',
+            // ATI_API_TARGET points a second dev server at another backend
+            // (e.g. a fresh Flask on another port) without touching :5000.
+            target: process.env.ATI_API_TARGET || 'http://127.0.0.1:5000',
             changeOrigin: true,
         })
     );

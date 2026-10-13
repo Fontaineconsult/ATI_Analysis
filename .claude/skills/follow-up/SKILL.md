@@ -13,6 +13,26 @@ its asks come back settled, the next guide is prepared against a stronger graph.
 skill exists — see *Why a template cannot do this* below. The app displays saved
 follow-ups, timestamps them, and copies them into an email.
 
+## Before anything: load the principles
+
+Run this once at the start of the session, before recon or any other query, and keep
+the result in context:
+
+```bash
+python -m app.database.cypher_runner.run_query --query principles_context
+```
+
+It returns every Principle node: the framework's commitments, with the law, policy and
+scholarship that ground or contest each one. They are the standard every call in this
+skill is made against. Frame each ask so it does not contradict them. Asking a unit to fix what it has no capacity to fix, for example, runs against `principle:closest-to-capacity`.
+
+When a principle decides a call, name it by handle (`principle:closest-to-capacity`) in
+the gate, manifest or report, so a reader can see which commitment did the work. When
+the material in front of you contradicts a principle, say so rather than bending the
+material to fit; the principle may be the thing that is wrong. Do not re-run the query
+in the same session unless a principle has been edited. If it fails, say so before
+continuing.
+
 ## Step 0 — Recon (read-only)
 
 ### 0.1 The gap table — necessary, not sufficient

@@ -1,3 +1,5 @@
+import { documentationRule } from '../implementation/implementationConfig';
+
 // Maturity status color by status_value (0..5), matching the Status Levels settings view.
 export const STATUS_COLORS = {
     '0': 'red',
@@ -54,16 +56,20 @@ export function getIndicatorSummary(wrapper) {
     let totalDocCount = 0;
     let activeDocCount = 0;
     let anyImplAllDepreciated = false;
-    // Implementations with NO documentation at all (zero documents AND zero
-    // webpages — notes/messages are annotations and deliberately don't count).
+    // Implementations with NO documentation at all, by their type's rule
+    // (documentationRule: documents and webpages, plus metrics for a Tracking;
+    // notes/messages are annotations and deliberately don't count).
     // The sibling gap to noActiveDocs: that one asks "did the docs rot?", this
     // one asks "was there ever any documentation?".
     let undocumentedImplCount = 0;
     for (const et of evidenceTypes) {
         const etDocs = (et.docs || []).filter((d) => d && d.document);
         const etWebs = (et.webs || []).filter((w) => w && w.webpage);
-        let etActive = 0;
-        let etTotal = 0;
+        // Metrics have no deprecation, so each one in the pool is active.
+        const etMetrics = documentationRule(et.type).pool.includes('metrics')
+            ? (et.metrics || []).filter(Boolean).length : 0;
+        let etActive = etMetrics;
+        let etTotal = etMetrics;
         for (const d of etDocs) {
             etTotal += 1;
             if (!isDeprecated(d.document.properties?.depreciated)) { etActive += 1; }

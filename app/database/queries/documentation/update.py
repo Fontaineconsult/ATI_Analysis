@@ -8,6 +8,7 @@ from app.database.queries.implementation.update import assign_documentation_to_i
     update_documentation_year_inclusion
 from app.endpoints.data_api.errors.custom_exceptions import NotFoundError, CrudError, ValidationError
 from app.database.queries.files.create import register_stored_file, link_file_to_node
+from app.database.queries.documentation.create import parse_measured_on
 
 
 def unassign_note_from_yse(note_name, year_success_evidence):
@@ -603,6 +604,16 @@ def update_metric(
         ]:
             if field in metric_dict and getattr(metric, field) != metric_dict[field]:
                 setattr(metric, field, metric_dict[field])
+                updated_fields = True
+
+        if 'value_schema' in metric_dict and metric.value_schema != metric_dict['value_schema']:
+            metric.value_schema = metric_dict['value_schema']
+            updated_fields = True
+
+        if 'measured_on' in metric_dict:
+            new_measured_on = parse_measured_on(metric_dict['measured_on'])
+            if metric.measured_on != new_measured_on:
+                metric.measured_on = new_measured_on
                 updated_fields = True
 
         # Handle value_dict (JSON field) separately

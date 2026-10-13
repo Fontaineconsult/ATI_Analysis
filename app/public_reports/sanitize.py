@@ -11,6 +11,8 @@ copies. Approved exclusions (2026-07 public-evidence-report scope):
   - Notes, messages and metrics ARE included (per approved scope), riding
     the payload's existing year / include_in_report curation.
 """
+# data_config has no project imports, so this keeps the module free of graph code.
+from app.data_config import documentation_pool
 
 
 def _s(value):
@@ -136,18 +138,23 @@ def public_implementation_payload(impl):
     evidence_for.sort(key=lambda e: (e['year'] or '', e['composite_key'] or ''), reverse=True)
 
     # Documentation health, same rules as the app views: the pool is documents +
-    # webpages (notes/messages are annotations and don't count); a document is
-    # dead when depreciated, a webpage when depreciated or gone. Legacy string
-    # booleans ('True') still exist until the Document-flags migration runs.
+    # webpages, plus metrics for a Tracking (data_config.documentation_pool);
+    # notes/messages are annotations and don't count. A document is dead when
+    # depreciated, a webpage when depreciated or gone; metrics have no
+    # deprecation. Legacy string booleans ('True') still exist until the
+    # Document-flags migration runs.
     def _dead(v):
         return v is True or v == 'True'
     _docs = [d for d in (impl.get('supporting_documents') or []) if d.get('name')]
     _webs = list(impl.get('supporting_webpages') or [])
-    _doc_total = len(_docs) + len(_webs)
+    _metrics = (list(impl.get('supporting_metrics') or [])
+                if 'metrics' in documentation_pool(impl.get('type')) else [])
+    _doc_total = len(_docs) + len(_webs) + len(_metrics)
     _doc_active = (
         sum(1 for d in _docs if not _dead(d.get('depreciated')))
         + sum(1 for w in _webs
               if not _dead(w.get('depreciated')) and not _dead(w.get('no_longer_exists')))
+        + len(_metrics)
     )
 
     return {

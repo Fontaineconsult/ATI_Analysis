@@ -6,10 +6,11 @@ import { DataContext } from '../../../context/DataContext';
 import { useSettings } from '../../../context/SettingsContext';
 import { UserContext } from '../../../context/UserContext';
 import {
-    AddRow, EmptyText, Field, FieldLabel, FileDownload, FormActions, FormShell,
-    ItemShell, MetaLine, PathLinks, ReportBadges, SwitchRow,
+    AddRow, EmptyText, Field, FieldLabel, FormActions, FormShell,
+    ItemShell, MetaLine, ReportBadges, SwitchRow,
 } from './docPrimitives';
 import FileUploadField from './FileUploadField';
+import MetricDisplay from '../../graph_components/metrics/MetricDisplay';
 
 const metricTypes = ['tabular', 'graphical', 'descriptive'];
 
@@ -161,13 +162,11 @@ export default function MetricsViewer({ metrics = [], implementation_id, impleme
                                     onUnlink={() => handleUnlink(metric)}
                                     canUnlink={canManage}
                                 >
-                                    {metric.single_value && (
-                                        <Text fontSize="xs" color="gray.800" fontWeight="semibold">Value: {metric.single_value}</Text>
-                                    )}
-                                    {metric.description && <Text fontSize="xs" color="gray.600" noOfLines={2}>{metric.description}</Text>}
-                                    {metric.comment && <Text fontSize="2xs" color="gray.600" fontStyle="italic" mt={1}>{metric.comment}</Text>}
-                                    <PathLinks filePath={metric.file_path} uriPath={metric.uri_path} />
-                                    <FileDownload file={metric.file} />
+                                    {/* Value, description, comment and links: the same
+                                        display as everywhere else a metric appears. */}
+                                    <Box mt={1}>
+                                        <MetricDisplay metric={metric} variant="card" />
+                                    </Box>
                                     {metric.composite_key && (
                                         <MetaLine><Text as="span" fontFamily="mono">{metric.composite_key}</Text></MetaLine>
                                     )}

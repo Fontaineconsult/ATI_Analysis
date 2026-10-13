@@ -14,6 +14,7 @@ import Organizations from "./Organizations";
 import SuccessIndicators from "./SuccessIndicators";
 import StatusLevels from "./StatusLevelsControls";
 import OntologyBrowser from "./OntologyBrowser";
+import ServicesSettings from "./ServicesSettings";
 
 function SettingsMasterContainer() {
     // Section comes from the URL (dashboard/settings/:section) so settings pages
@@ -35,6 +36,8 @@ function SettingsMasterContainer() {
                 return <Organizations />;
             case 'ontology-browser':
                 return <OntologyBrowser />;
+            case 'services':
+                return <ServicesSettings />;
             default:
                 return (
                     <Box p={6}>
@@ -63,6 +66,12 @@ function SettingsMasterContainer() {
             heading: 'Ontology',
             items: [
                 { id: 'ontology-browser', label: 'Ontology Browser' },
+            ],
+        },
+        {
+            heading: 'System',
+            items: [
+                { id: 'services', label: 'Services' },
             ],
         },
     ];

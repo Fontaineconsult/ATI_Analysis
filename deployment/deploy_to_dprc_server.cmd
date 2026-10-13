@@ -19,7 +19,13 @@ pause >nul
 :: Step 1: Copy the full app folder. Exclude node_modules and the local .env.* files —
 :: production config is the host's web.config, never a shipped .env (see deployment\iis-deploy.md).
 :: wsgi.py is not in app\ anymore — it lives in this deployment\ folder and is copied in Step 2.
-robocopy "%~dp0..\app" "\\DPRC-SERVER\ati\app" /E /Z /R:2 /W:5 /XD node_modules /XF .env.production .env.development .env.remote
+:: Also excluded, because they are this machine's runtime state, not code:
+::   data           local uploads and service run folders (app\data\services). The
+::                  server's default run-file root is the same path, so shipping it would
+::                  show this machine's runs on the server Settings page.
+::   auth_users.*   the local login store (password hashes).
+::   *.log          local logs.
+robocopy "%~dp0..\app" "\\DPRC-SERVER\ati\app" /E /Z /R:2 /W:5 /XD node_modules "%~dp0..\app\data" /XF .env.production .env.development .env.remote auth_users.sqlite3* app.log app-*.log
 set rc=%errorlevel%
 if %rc% geq 8 (
     echo.

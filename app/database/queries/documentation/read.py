@@ -197,6 +197,10 @@ _EXTRA = {
       description: n.description,
       single_value: n.single_value,
       comment: n.comment,
+      value_schema: n.value_schema,
+      measured_on: toString(n.measured_on),
+      // Raw stored string; decoded to `data` in _derive and then dropped.
+      value_raw: n.value_dict,
       has_location: (n.uri_path IS NOT NULL AND n.uri_path <> '')
                  OR (n.file_path IS NOT NULL AND n.file_path <> ''),
       file_path: n.file_path,
@@ -316,6 +320,10 @@ def _derive(row):
     second query, so a badge and the list it sits in cannot disagree."""
     refs = row.get("referenced_by") or []
     parents = {r.get("parent_id") for r in refs if r.get("parent_id")}
+
+    # Metric only: the stored JSON, decoded the same way Metric.serialize does.
+    if "value_raw" in row:
+        row["data"] = Metric.decode_value(row.pop("value_raw"))
 
     row["reference_count"] = len(refs)
     # Distinct parents. Defensive rather than load-bearing: a parent COULD hold
