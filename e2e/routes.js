@@ -23,6 +23,7 @@ const ROUTES = [
     { name: 'dashboard: settings status levels', path: p('/dashboard/settings/status-levels') },
     { name: 'dashboard: settings success indicators', path: p('/dashboard/settings/success-indicators') },
     { name: 'dashboard: settings ontology browser', path: p('/dashboard/settings/ontology-browser') },
+    { name: 'dashboard: settings services', path: p('/dashboard/settings/services') },
 
     // ATI Explorer area
     { name: 'explorer: implementations', path: p('/ati-explorer/implementations') },

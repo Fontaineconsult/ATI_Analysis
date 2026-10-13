@@ -32,6 +32,7 @@ from . import (asana,
                queries,
                report,
                roles,
+               services,
                settings,
                tools,
                vendors)

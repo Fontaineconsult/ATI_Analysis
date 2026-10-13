@@ -28,3 +28,27 @@ def require_login():
             'error': 'authentication_required',
         }), 401
     return None
+
+
+def require_admin():
+    """Return None for an admin (or with auth off), else a 401/403 JSON response.
+
+    Called by an endpoint, not registered on the blueprint: most of the data API
+    is open to any logged-in user, and only a few views (server configuration,
+    such as GET /services) are admin-only. Admins come from AUTH_ADMINS, never
+    from the graph or the cookie.
+    """
+    if not current_app.config.get('AUTH_ENFORCED', False):
+        return None
+    identity = current_identity()
+    if identity is None:
+        return require_login()
+    from .authz import is_admin
+    if not is_admin(identity, current_app.config.get('AUTH_ADMINS', frozenset())):
+        return jsonify({
+            'status': 'error',
+            'data': None,
+            'message': None,
+            'error': 'admin_required',
+        }), 403
+    return None
