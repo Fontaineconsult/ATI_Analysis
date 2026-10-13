@@ -117,6 +117,24 @@ def create_app(config_object=None):
 
     app.register_blueprint(react_pages, url_prefix='/ati')
 
+    # Which services can run here: each external program's folder and
+    # interpreter checked once at boot. Paths only, nothing is run, and a
+    # missing program is logged rather than stopping the app. Guarded as a
+    # whole too: no state of app/services, even a broken import, may prevent
+    # the app from starting.
+    try:
+        from app.services.registry import services_status
+        app.config['SERVICES'] = services_status()
+        for name, status in app.config['SERVICES'].items():
+            if not status.get('available'):
+                problems = '; '.join(
+                    p.get('problem') or '' for p in status.get('programs') or [] if p.get('problem')
+                ) or status.get('problem') or 'unknown'
+                app.logger.warning('Service %s is not available: %s', name, problems)
+    except Exception as exc:  # noqa: BLE001
+        app.config['SERVICES'] = {}
+        app.logger.warning('Service status check failed; services are unavailable: %s', exc)
+
     # Serve React App for non-API routes under /ati-explorer
 
     return app
