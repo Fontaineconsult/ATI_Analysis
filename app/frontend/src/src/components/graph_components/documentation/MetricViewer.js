@@ -17,10 +17,11 @@ import {
     IconButton,
     Grid,
     GridItem,
-    Link
 } from '@chakra-ui/react';
-import { EditIcon, ExternalLinkIcon } from '@chakra-ui/icons';
+import { EditIcon } from '@chakra-ui/icons';
 import FileUploadField from '../../implementation_explorer/doc_components/FileUploadField';
+import MetricDisplay from '../metrics/MetricDisplay';
+import { decodeMetricValue } from '../metrics/metricViewModel';
 
 const metricTypes = ["tabular", "graphical", "descriptive"];
 
@@ -83,43 +84,17 @@ function MetricViewer({ metrics, onSubmit }) {
                                             )}
                                         </HStack>
 
-                                        {/* Key info row */}
-                                        <HStack spacing={3} fontSize="xs">
-                                            {metric.properties?.single_value && (
-                                                <Text color="teal.600" fontWeight="semibold">
-                                                    Value: {metric.properties.single_value}
-                                                </Text>
-                                            )}
-                                            {metric.properties?.composite_key && (
-                                                <Text color="gray.600">
-                                                    Key: {metric.properties.composite_key}
-                                                </Text>
-                                            )}
-                                            {(metric.properties?.file_path || metric.properties?.uri_path) && (
-                                                <HStack spacing={1}>
-                                                    <Text color="teal.600">Link</Text>
-                                                    <ExternalLinkIcon w={3} h={3} color="teal.600" />
-                                                </HStack>
-                                            )}
-                                            {metric.properties?.file?.download_url && (
-                                                <Link
-                                                    href={metric.properties.file.download_url}
-                                                    isExternal
-                                                    color="teal.600"
-                                                    display="flex"
-                                                    alignItems="center"
-                                                >
-                                                    {metric.properties.file.original_filename || 'Download'} <ExternalLinkIcon ml={1} w={3} h={3} />
-                                                </Link>
-                                            )}
-                                        </HStack>
-
-                                        {/* Description preview */}
-                                        {metric.properties?.description && (
-                                            <Text fontSize="xs" color="gray.600" noOfLines={1}>
-                                                {metric.properties.description}
+                                        {metric.properties?.composite_key && (
+                                            <Text fontSize="xs" color="gray.700" fontFamily="mono">
+                                                {metric.properties.composite_key}
                                             </Text>
                                         )}
+
+                                        {/* The value, links and description, shown the
+                                            same way as everywhere else in the app. */}
+                                        <Box width="full" pt={1}>
+                                            <MetricDisplay metric={metric} variant="card" />
+                                        </Box>
                                     </VStack>
 
                                     <IconButton
@@ -168,7 +143,7 @@ function MetricForm({ metric, onSubmit, onCancel }) {
         size: metric.properties?.file?.size ?? null,
         description: metric.properties?.description || '',
         single_value: metric.properties?.single_value || '',
-        value_dict: JSON.stringify(metric.properties?.value_dict || {}),
+        value_dict: JSON.stringify(decodeMetricValue(metric.properties?.value_dict) ?? {}),
         comment: metric.properties?.comment || '',
         depreciated: metric.properties?.depreciated || false,
         depreciated_date: metric.properties?.depreciated_date || '',

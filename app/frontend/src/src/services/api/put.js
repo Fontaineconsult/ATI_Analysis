@@ -474,9 +474,11 @@ export const updateWebpage = async (implementation_id, implementation_type, webp
     }
 }
 
-export const updateMetric = async (year_success_evidence, metric_dict, created_by) => {
+// Matches updateMetricPayload. The wrapper used to take three arguments and pass
+// them to the four-argument builder, so every field arrived shifted by one.
+export const updateMetric = async (implementation_id, implementation_type, metric_dict, created_by) => {
     try {
-        const response = await axios.put(`${process.env.REACT_APP_API_URL}/documents/metrics`, updateMetricPayload(year_success_evidence, metric_dict, created_by));
+        const response = await axios.put(`${process.env.REACT_APP_API_URL}/documents/metrics`, updateMetricPayload(implementation_id, implementation_type, metric_dict, created_by));
         return response.data;
     } catch (error) {
         console.error('Error updating metric:', error);
