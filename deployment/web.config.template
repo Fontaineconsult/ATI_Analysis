@@ -90,6 +90,16 @@
     <!-- Optional API base override; default https://app.asana.com/api/1.0 -->
     <add key="ASANA_BASE_URL" value="" />
 
+    <!-- ===== Services (app/services) ===== -->
+    <!-- Each external program a service runs is located by ATI_SERVICE_<KEY>_DIR.
+         ATI_SERVICE_<KEY>_PYTHON is needed only when the program has no .venv in
+         that folder. An unset or missing folder marks the service unavailable at
+         boot (logged), it does not stop the app. See app/services/README.md. -->
+    <add key="ATI_SERVICE_POPE_TECH_DIR" value="" />
+    <add key="ATI_SERVICE_POPE_TECH_PYTHON" value="" />
+    <!-- Where service runs keep their local files; default app\data\services. -->
+    <add key="ATI_SERVICES_DATA_DIR" value="" />
+
     <!-- ===== Logging (optional; sensible defaults apply if omitted) ===== -->
     <!-- 1 = also write a bounded, rotating app-<pid>.log; default off (WSGI_LOG is primary). -->
     <add key="ATI_ROTATING_LOG" value="0" />

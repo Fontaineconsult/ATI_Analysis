@@ -25,6 +25,10 @@
 
 .EXAMPLE
     .\Setup-AtiIis.ps1 -RelaxPins -SiteName "ati"
+
+.EXAMPLE
+    # Point the Pope Tech service at PopeTechIntegrator (kept on later re-runs).
+    .\Setup-AtiIis.ps1 -ServiceSettings @{ ATI_SERVICE_POPE_TECH_DIR = 'C:\www\services\PopeTechIntegrator' }
 #>
 
 [CmdletBinding()]
@@ -68,7 +72,13 @@ param(
     # File storage (app/fs — the /files upload/download endpoints).
     [string] $FsProvider          = 'local',
     [string] $FsLocalRoot         = 'C:\www\ati\data\files',
-    [string] $FsMaxUploadMb       = '50'                    # IIS requestLimits is sized from this
+    [string] $FsMaxUploadMb       = '50',                   # IIS requestLimits is sized from this
+
+    # Services (app/services). Where each external program lives, as
+    # @{ ATI_SERVICE_<KEY>_DIR = '...'; ATI_SERVICE_<KEY>_PYTHON = '...'; ATI_SERVICES_DATA_DIR = '...' }.
+    # Generic on purpose: a new service needs no edit to this script. Keys already in
+    # web.config are kept; an empty value removes one.
+    [hashtable] $ServiceSettings  = @{}
 )
 
 $ErrorActionPreference = 'Stop'
@@ -226,6 +236,27 @@ if (-not $SkipWebConfig) {
     $fsMb   = Resolve-AppSetting 'FS_MAX_UPLOAD_MB'      $FsMaxUploadMb       $b.ContainsKey('FsMaxUploadMb')       $existing '50'
     $fsBytes = ([int]$fsMb) * 1024 * 1024
 
+    # Services: every ATI_SERVICE_<KEY>_DIR / _PYTHON key and ATI_SERVICES_DATA_DIR.
+    # Kept from the existing web.config, then -ServiceSettings sets or removes them.
+    # Matched by pattern rather than listed, so registering a new service in
+    # app/services/registry.py never needs a change here.
+    $serviceKeyPattern = '^(ATI_SERVICE_[A-Z0-9_]+_(DIR|PYTHON)|ATI_SERVICES_DATA_DIR)$'
+    $svc = [ordered]@{}
+    foreach ($k in ($existing.Keys | Sort-Object)) {
+        if ($k -cmatch $serviceKeyPattern) { $svc[$k] = $existing[$k] }
+    }
+    foreach ($k in $ServiceSettings.Keys) {
+        $key = [string]$k
+        if ($key -cnotmatch $serviceKeyPattern) {
+            throw "-ServiceSettings key '$key' is not a service setting. Use ATI_SERVICE_<KEY>_DIR, ATI_SERVICE_<KEY>_PYTHON or ATI_SERVICES_DATA_DIR."
+        }
+        $val = [string]$ServiceSettings[$k]
+        if ([string]::IsNullOrWhiteSpace($val)) { $svc.Remove($key) } else { $svc[$key] = $val }
+    }
+    $serviceXml = ($svc.Keys | ForEach-Object { "    <add key=""$_"" value=""$(Xml-Esc $svc[$_])"" />" }) -join "`r`n"
+    if ($svc.Count -eq 0) { Info "No service settings: every service will report itself not configured." }
+    else { Info "Service settings: $($svc.Keys -join ', ')" }
+
     # Required, with the same fail-fast the app enforces at boot (app/__init__.py).
     if ([string]::IsNullOrWhiteSpace($secret)) {
         throw "FLASK_SECRET_KEY is required. Pass -FlaskSecretKey (generate: python -c ""import secrets; print(secrets.token_hex(32))"") or keep it in the existing web.config."
@@ -289,6 +320,8 @@ if (-not $SkipWebConfig) {
     <add key="FS_PROVIDER" value="$(Xml-Esc $fsProv)" />
     <add key="FS_LOCAL_ROOT" value="$(Xml-Esc $fsRoot)" />
     <add key="FS_MAX_UPLOAD_MB" value="$(Xml-Esc $fsMb)" />
+    <!-- Services (app/services): where each external program lives -->
+$serviceXml
   </appSettings>
   <system.web>
     <customErrors mode="Off" />
@@ -305,7 +338,36 @@ Info "Granting IIS_IUSRS read/execute on app + venv, write on the log"
 & icacls $VenvPath /grant "IIS_IUSRS:(OI)(CI)(RX)" /T /Q | Out-Null
 if (-not (Test-Path $LogFile)) { New-Item -ItemType File -Path $LogFile | Out-Null }
 & icacls $LogFile  /grant "IIS_IUSRS:(M)" /Q | Out-Null
-Good "Permissions applied"
+
+# Services: the app pool runs each external program, so it needs read/execute on
+# the program's folder (its code, .venv and .env), and write on the run-file root.
+# With -SkipWebConfig the settings are read back from the existing web.config.
+if ($null -eq $svc) {
+    $svc = [ordered]@{}
+    $wc = Join-Path $SiteRoot 'web.config'
+    if (Test-Path $wc) {
+        try {
+            [xml]$wcXml = Get-Content -Raw -Path $wc
+            foreach ($a in $wcXml.configuration.appSettings.add) {
+                if ($a.key -cmatch '^(ATI_SERVICE_[A-Z0-9_]+_(DIR|PYTHON)|ATI_SERVICES_DATA_DIR)$') { $svc[[string]$a.key] = [string]$a.value }
+            }
+        } catch { Warn "Could not read service settings from web.config: $($_.Exception.Message)" }
+    }
+}
+foreach ($k in @($svc.Keys)) {
+    if ($k -notlike 'ATI_SERVICE_*_DIR') { continue }
+    $dir = $svc[$k]
+    if (Test-Path $dir -PathType Container) {
+        & icacls $dir /grant "IIS_IUSRS:(OI)(CI)(RX)" /T /Q | Out-Null
+        Good "IIS_IUSRS can read/execute $k ($dir)"
+    } else {
+        Warn "$k points at a missing folder ($dir); that service will report itself not configured."
+    }
+}
+$svcData = if ($svc['ATI_SERVICES_DATA_DIR']) { $svc['ATI_SERVICES_DATA_DIR'] } else { Join-Path $SiteRoot 'app\data\services' }
+if (-not (Test-Path $svcData)) { New-Item -ItemType Directory -Force -Path $svcData | Out-Null }
+& icacls $svcData /grant "IIS_IUSRS:(OI)(CI)(M)" /T /Q | Out-Null
+Good "Permissions applied (service run files: $svcData)"
 
 # --- 7. Verify the app imports under the venv ------------------------------
 Info "Verifying imports under Python 3.14..."

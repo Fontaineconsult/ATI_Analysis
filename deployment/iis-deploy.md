@@ -120,6 +120,18 @@ sized from `FS_MAX_UPLOAD_MB`. If you raise `FS_MAX_UPLOAD_MB` by hand, raise
 auth-guarded `/ati/data-api/v1/files/<key>` endpoint — `data\files` is not an IIS virtual dir,
 so blobs are never reachable raw.
 
+**Services (`app/services`):** each external program a service runs is located by
+`ATI_SERVICE_<KEY>_DIR`, plus `ATI_SERVICE_<KEY>_PYTHON` when the program has no `.venv`
+in that folder. `ATI_SERVICES_DATA_DIR` moves the run files from the default
+`C:\www\ati\app\data\services`. Set them with
+`Setup-AtiIis.ps1 -ServiceSettings @{ ATI_SERVICE_POPE_TECH_DIR = 'C:\www\services\PopeTechIntegrator' }`.
+The script keeps every existing service key on a re-run, so a key set once stays set, and an
+empty value removes one. It also grants `IIS_IUSRS` read/execute on each program folder
+and Modify on the run-file root. The external program keeps its own secrets in its own
+`.env` (for Pope Tech, `POPE_TECH_API_KEY`); nothing about them goes in `web.config`. A
+missing or unset folder is logged at boot and marks that service unavailable; it does not
+stop the app.
+
 After any edit, recycle: `iisreset` (or restart the app pool). Verify:
 `GET http://<host>/ati/auth/v1/me` → `{"enforced":true,…}`.
 
