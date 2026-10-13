@@ -94,33 +94,59 @@ export const typeLabel = (type) => BY_KEY[type]?.label || type;
 export const typeColor = (type) => BY_KEY[type]?.colorScheme || 'gray';
 export const isValidType = (type) => Boolean(BY_KEY[type]);
 
-// Supporting-documentation health (design-sense §1 — diagnostic-first). The
-// documentation pool is documents AND webpages. A document is "active" unless
-// flagged `depreciated`; a webpage is "active" unless flagged `depreciated` OR
-// `no_longer_exists` (link rot — the page is gone). An implementation whose whole
-// pool is dead has no live documentation — a warning we surface on the list row,
-// the stat strip, and the detail panel. Zero attached items is a distinct state
-// (nothing attached), so these predicates require at least one document or webpage.
+// Supporting-documentation health (design-sense §1, diagnostic-first).
+//
+// What counts as documentation depends on the implementation type. For most
+// types the pool is documents AND webpages. A Tracking is a record kept over
+// time, so the metrics it holds are its documentation too. Notes and messages
+// are annotations and never count. Mirrors data_config.documentation_pools on
+// the server, which the indicator report and the public report use.
+//
+// A document is "active" unless flagged `depreciated`; a webpage is "active"
+// unless flagged `depreciated` OR `no_longer_exists` (link rot, the page is
+// gone); a metric has no deprecation and is always active. An implementation
+// whose whole pool is dead has no live documentation, a warning surfaced on the
+// list row, the stat strip and the detail panel. Zero attached items is a
+// distinct state (nothing attached), so allDocumentsDepreciated needs at least one.
 const docIsActive = (d) => d?.depreciated !== true;
 const webIsActive = (w) => w?.depreciated !== true && w?.no_longer_exists !== true;
 
-export const activeDocumentCount = (impl) =>
-    (impl?.supporting_documents || []).filter(docIsActive).length +
-    (impl?.supporting_webpages || []).filter(webIsActive).length;
-
-export const allDocumentsDepreciated = (impl) => {
-    const total =
-        (impl?.supporting_documents?.length || 0) +
-        (impl?.supporting_webpages?.length || 0);
-    return total > 0 && activeDocumentCount(impl) === 0;
+const POOL_KINDS = {
+    documents: { field: 'supporting_documents', isActive: docIsActive },
+    webpages: { field: 'supporting_webpages', isActive: webIsActive },
+    metrics: { field: 'supporting_metrics', isActive: () => true },
 };
 
-// The sibling gap: NO documentation at all (zero documents AND zero webpages).
-// Notes/messages are annotations, not documentation, and deliberately don't count.
-export const isUndocumented = (impl) => (
-    ((impl?.supporting_documents?.length || 0) +
-     (impl?.supporting_webpages?.length || 0)) === 0
-);
+export const DOCUMENTATION_RULES = {
+    default: {
+        pool: ['documents', 'webpages'],
+        noun: 'documents or webpages',
+        undocumented: 'No documents or webpages are attached to this implementation, so the practice is undocumented. Notes and messages don\'t count as documentation.',
+    },
+    Tracking: {
+        pool: ['documents', 'webpages', 'metrics'],
+        noun: 'metrics, documents or webpages',
+        undocumented: 'No metrics, documents or webpages are attached, so nothing shows what this tracking records. Notes and messages don\'t count as documentation.',
+    },
+};
+
+/** The documentation rule for a type: which kinds count, and how to say it is missing. */
+export const documentationRule = (type) => DOCUMENTATION_RULES[type] || DOCUMENTATION_RULES.default;
+
+/** Everything in the type's documentation pool, live or dead. */
+export const documentationCount = (impl, type = impl?.type) =>
+    documentationRule(type).pool.reduce(
+        (sum, kind) => sum + (impl?.[POOL_KINDS[kind].field]?.length || 0), 0);
+
+export const activeDocumentCount = (impl, type = impl?.type) =>
+    documentationRule(type).pool.reduce(
+        (sum, kind) => sum + (impl?.[POOL_KINDS[kind].field] || []).filter(POOL_KINDS[kind].isActive).length, 0);
+
+export const allDocumentsDepreciated = (impl, type = impl?.type) =>
+    documentationCount(impl, type) > 0 && activeDocumentCount(impl, type) === 0;
+
+// The sibling gap: NO documentation at all, by the type's rule.
+export const isUndocumented = (impl, type = impl?.type) => documentationCount(impl, type) === 0;
 
 // Campus scoping: an implementation belongs to a campus if it's wired to that campus,
 // or not yet assigned to any (orphans stay visible — matching the list's default).

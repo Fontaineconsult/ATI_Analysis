@@ -29,6 +29,7 @@ from app.database.graph_schema import (
     serialize_participants,
     serialize_role_holdings,
 )
+from app.data_config import documentation_pool
 from app.database.identifiers import previous_academic_year
 from app.database.queries.assets.read import get_stewarded_ict_for_yse
 from app.endpoints.data_api.errors.custom_exceptions import NotFoundError
@@ -94,12 +95,23 @@ def _webpage_is_active(node):
     return not _depreciated(node) and not _no_longer_exists(node)
 
 
+def _metric_count(impl):
+    """Metrics that count as documentation for this type (data_config.documentation_pool).
+    Metrics have no deprecation, so every one counts as active."""
+    if "metrics" not in documentation_pool(type(impl).__name__):
+        return 0
+    return len(list(impl.supporting_metrics.all()))
+
+
 def _undocumented(impl):
-    """True when the implementation has NO documentation at all — zero documents
-    AND zero webpages. Notes/messages are annotations, not documentation, and
-    deliberately don't count. The sibling gap to _no_active_documents (which
-    asks whether existing docs rotted, and is False on zero docs by design)."""
-    return len(list(impl.supporting_documents.all())) == 0         and len(list(impl.supporting_webpages.all())) == 0
+    """True when the implementation has NO documentation at all: nothing in its
+    type's documentation pool (documents and webpages; a Tracking's metrics too).
+    Notes/messages are annotations, not documentation, and deliberately don't
+    count. The sibling gap to _no_active_documents (which asks whether existing
+    docs rotted, and is False on zero docs by design)."""
+    return len(list(impl.supporting_documents.all())) == 0 \
+        and len(list(impl.supporting_webpages.all())) == 0 \
+        and _metric_count(impl) == 0
 
 
 def _no_active_documents(impl):
@@ -120,10 +132,12 @@ def _no_active_documents(impl):
     False when nothing is attached."""
     docs = list(impl.supporting_documents.all())
     pages = list(impl.supporting_webpages.all())
-    if not docs and not pages:
+    metrics = _metric_count(impl)
+    if not docs and not pages and not metrics:
         return False
     active = (sum(1 for d in docs if _document_is_active(d))
-              + sum(1 for p in pages if _webpage_is_active(p)))
+              + sum(1 for p in pages if _webpage_is_active(p))
+              + metrics)
     return active == 0
 
 

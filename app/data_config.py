@@ -92,6 +92,22 @@ documentation_relationships = {
     "metric": "supporting_metrics",
 }
 
+# What counts as documentation when deciding whether an implementation is
+# documented at all, per implementation type. Notes and messages are
+# annotations and never count. A Tracking is a record kept over time, so the
+# metrics it holds are its documentation too. Mirrored in the frontend by
+# DOCUMENTATION_RULES in graph_components/implementation/implementationConfig.js.
+DEFAULT_DOCUMENTATION_POOL = ("documents", "webpages")
+documentation_pools = {
+    "Tracking": ("documents", "webpages", "metrics"),
+}
+
+
+def documentation_pool(implementation_type):
+    """The documentation kinds that count for this implementation type."""
+    return documentation_pools.get(implementation_type, DEFAULT_DOCUMENTATION_POOL)
+
+
 implementor_classes = {
     "Process": "implements_process",
     "Project": "implements_project",

@@ -36,6 +36,8 @@ import { useNavigate, useParams } from 'react-router-dom';
 import Card from '../common/Card';
 import {
     allDocumentsDepreciated,
+    documentationCount as countDocumentation,
+    documentationRule,
     hasAccountableCommunity,
     hasAssets,
     hasParticipants,
@@ -283,14 +285,14 @@ function ImplementationDetailPanel({ implementation, onAfterChange }) {
         (implementation.supporting_messages?.length || 0) +
         (implementation.supporting_metrics?.length || 0);
 
-    // Documentation (documents + webpages) exists but every item is dead — a doc
-    // depreciated, or a page depreciated / no_longer_exists → no active documentation.
-    const documentationCount =
-        (implementation.supporting_documents?.length || 0) +
-        (implementation.supporting_webpages?.length || 0);
-    const docsAllDeprecated = allDocumentsDepreciated(implementation);
-    // Zero documents AND zero webpages — never documented at all (notes/messages
-    // are annotations and deliberately don't count).
+    // What counts as documentation is the type's rule (implementationConfig
+    // DOCUMENTATION_RULES): documents and webpages, plus metrics for a Tracking.
+    // Notes and messages never count.
+    const docRule = documentationRule(type);
+    const documentationCount = countDocumentation(implementation, type);
+    // Documentation exists but every item is dead: no active documentation.
+    const docsAllDeprecated = allDocumentsDepreciated(implementation, type);
+    // Nothing in the pool at all: never documented.
     const undocumented = documentationCount === 0;
 
     const dimensionLabel = describeField?.('Implementation', 'dimensions')?.title || 'AMM Dimensions';
@@ -456,15 +458,15 @@ function ImplementationDetailPanel({ implementation, onAfterChange }) {
             {docsAllDeprecated && (
                 <Alert status="warning" borderRadius="lg" fontSize="sm">
                     <AlertIcon />
-                    All {documentationCount} attached documentation item{documentationCount === 1 ? ' is' : 's are'} deprecated or no longer available — this implementation has no active documentation.
+                    All {documentationCount} attached documentation item{documentationCount === 1 ? ' is' : 's are'} deprecated or no longer available, so this implementation has no active documentation.
                 </Alert>
             )}
 
-            {/* Warning: no documentation was ever attached (docs + webpages only) */}
+            {/* Warning: nothing in this type's documentation pool was ever attached */}
             {undocumented && (
                 <Alert status="warning" borderRadius="lg" fontSize="sm">
                     <AlertIcon />
-                    No documents or webpages are attached to this implementation — the practice is undocumented. Notes and messages don&apos;t count as documentation.
+                    {docRule.undocumented}
                 </Alert>
             )}
 

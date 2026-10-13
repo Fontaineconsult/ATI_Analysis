@@ -15,7 +15,7 @@ import {
     VStack,
 } from '@chakra-ui/react';
 import { AddIcon, SearchIcon } from '@chakra-ui/icons';
-import { IMPLEMENTATION_TYPES, typeLabel, allDocumentsDepreciated, isUndocumented, implementationInCampus } from './implementationConfig';
+import { IMPLEMENTATION_TYPES, typeLabel, allDocumentsDepreciated, documentationRule, isUndocumented, implementationInCampus } from './implementationConfig';
 
 /**
  * Selectable list for the 1/3 column. Mirrors PlansList: a filter bar
@@ -133,7 +133,7 @@ function ImplementationList({
                         </Badge>
                     )}
                     {undocumented && (
-                        <Badge colorScheme="orange" variant="outline" fontSize="2xs" borderRadius="full" px={2} title="No documents or webpages are attached at all (notes and messages don't count as documentation)">
+                        <Badge colorScheme="orange" variant="outline" fontSize="2xs" borderRadius="full" px={2} title={`No ${documentationRule(impl.type).noun} are attached at all (notes and messages don't count as documentation)`}>
                             ⚠ Undocumented
                         </Badge>
                     )}
