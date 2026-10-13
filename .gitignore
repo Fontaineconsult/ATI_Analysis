@@ -48,3 +48,6 @@ nul
 # Node dependencies (regenerable from package-lock.json; frontend and root)
 node_modules/
 /.venv/
+
+# Generated annual report documents
+app/database/tools/report_export/out/
