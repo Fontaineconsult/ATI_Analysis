@@ -141,6 +141,35 @@ def test_update_sets_and_clears_the_new_fields(cleanup_metrics):
     assert Metric.nodes.get(unique_id=metric.unique_id).serialize()["measured_on"] is None
 
 
+@pytest.mark.parametrize("raw,expected", [
+    ('{"a": 1}', {"a": 1}),           # what a Cypher read returns for a new node
+    ('"{\\"a\\": 1}"', {"a": 1}),     # a legacy pre-encoded node, read raw
+    ('"\\"\\""', None),               # a legacy '""' node, read raw
+    ("", None),
+    (None, None),
+    ({"a": 1}, {"a": 1}),             # already inflated
+])
+def test_decode_value_handles_raw_and_inflated_forms(raw, expected):
+    from app.database.graph_schema import Metric
+
+    assert Metric.decode_value(raw) == expected
+
+
+# --- Layer 4: the documentation read the Documentation area renders -----------
+
+def test_documentation_detail_returns_decoded_snapshot(cleanup_metrics):
+    from app.database.graph_schema import Metric
+    from app.database.queries.documentation.read import get_documentation_detail
+
+    _add()
+    metric = Metric.nodes.get(composite_key=f"{SENTINEL}_popetech_sfsu_2026-10-01")
+    item = get_documentation_detail("metrics", metric.unique_id)
+    assert item["data"] == SNAPSHOT
+    assert item["value_schema"] == SCHEMA
+    assert item["measured_on"] == "2026-10-01"
+    assert "value_raw" not in item
+
+
 # --- Layer 5: the list endpoint that used to 500 on a JSON-valued metric --------
 
 @pytest.mark.api

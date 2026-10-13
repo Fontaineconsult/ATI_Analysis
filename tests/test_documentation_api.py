@@ -169,7 +169,8 @@ def test_every_type_projects_its_own_fields(collection):
         "webpages": {"url", "no_longer_exists", "has_location"},
         "notes": {"date_created", "content_preview", "content_length"},
         "messages": {"message_type", "date_created", "content_preview", "file"},
-        "metrics": {"composite_key", "metric_type", "single_value", "comment"},
+        "metrics": {"composite_key", "metric_type", "single_value", "comment",
+                    "value_schema", "measured_on", "data"},
     }
     for doc_type, items in by_type.items():
         for key in required[doc_type]:

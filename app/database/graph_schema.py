@@ -2914,15 +2914,19 @@ class Metric(StructuredNode):
     include_in_report = BooleanProperty(default=True)
     has_file = RelationshipTo("StoredFile", "has_file", cardinality=ZeroOrOne)  # managed (uploaded) blob
 
-    def get_data(self):
-        """value_dict as a Python value, or None when it holds nothing.
+    @staticmethod
+    def decode_value(value):
+        """A stored value_dict as a Python value, or None when it holds nothing.
 
-        JSONProperty already decodes the stored JSON on load. Older nodes were
-        written with the value pre-encoded, so they decode to a JSON string
-        (often '""'); that string is decoded once more here.
+        Accepts either the inflated property or the raw string a Cypher read
+        returns. Older nodes were written with the value pre-encoded, so they sit
+        one layer of encoding deeper (often '""'). Strings are decoded until they
+        stop being JSON, at most three times.
         """
-        data = self.value_dict
-        if isinstance(data, str):
+        data = value
+        for _ in range(3):
+            if not isinstance(data, str):
+                break
             if not data.strip():
                 return None
             try:
@@ -2930,6 +2934,10 @@ class Metric(StructuredNode):
             except ValueError:
                 return data
         return None if data in ("", None) else data
+
+    def get_data(self):
+        """value_dict as a Python value, or None when it holds nothing."""
+        return Metric.decode_value(self.value_dict)
 
     def serialize(self):
         """
