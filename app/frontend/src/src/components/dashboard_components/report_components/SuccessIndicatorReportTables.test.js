@@ -18,6 +18,11 @@ jest.mock('../../functional_components/ViewReportButton', () => ({
     __esModule: true,
     default: () => <button type="button">View</button>,
 }));
+// The per-group "Copy table" button reads campus + year from settings.
+jest.mock('../../../context/SettingsContext', () => ({
+    __esModule: true,
+    useSettings: () => ({ currentAcademicYear: '2025-2026', currentCampus: 'sfsu' }),
+}));
 
 import React from 'react';
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';

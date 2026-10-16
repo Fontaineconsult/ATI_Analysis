@@ -196,6 +196,35 @@ reinstate the syllabus statement as required"* = Recommendation. *"I'm pushing t
 provost to reissue the policy"* = Plan. Never upgrade a Concern by inventing the fix
 yourself — the empty resolution path is the fact being recorded.
 
+### Global state, not transactions
+
+Notes and Queries record the standing state of a process: what the rule is, what
+practice is in place, what gap exists, what decision about the process is still open.
+They never record a single transaction moving through that process.
+
+- **Never ingest an individual procurement review.** A requisition, a product's ACR
+  findings, whether one product needs a TAAP, a TAAP for one vendor: none of it becomes
+  a Note, Query, Concern or Plan. Wording such as "Does campus-wide Gradescope need a
+  TAAP?" or "Grubhub does not rise to TAAP level" is a case being worked, not a state
+  of the program. Completed TAAPs reach the graph through the TAAP import, not
+  through meeting ingest.
+- **Strip the case from a general point.** When a review illustrates a rule ("a TAAP is
+  warranted when a task is blocked, not when the product is unpleasant to use"), record
+  the rule. Leave out the product, the requester and the department.
+- **The same test applies to Queries.** A Query asks something about the process ("should
+  the completed impact analysis be shown to requesters?"), never about one review.
+- **Meeting logistics are never ingested.** That covers calendar problems, VPN trouble,
+  who hosts the call and the next meeting date.
+- **Say TAAP.** The program's term is TAAP (Temporary Alternate Access Plan), even
+  when speakers say "TAP" or "EAP". Use TAAP in every node's text.
+- **Settle a Query when the user says the artifact arrived**, even when the source
+  meeting says it is still outstanding. The user's statement is newer than the minutes.
+
+Calibration (2026-10-14 SFBRN procurement): the first manifest carried a Gradescope
+TAAP Query and a Note covering three requisitions (Grubhub, The Economist, The Atlantic).
+The user struck both. Only the process-level items survived: the review outcome
+framework, the WCAG baseline, the impact-matrix gaps and the TAAP review practices.
+
 ### Writing Recommendation and Concern detail
 
 **All prose here follows `app/database/ontology/writing-style.md`** (the project writing style): no marketing vocabulary, no em dashes, one claim per sentence, name the relation instead of gesturing at it, no throat-clearing. Quoted material and success-indicator text are exempt and go in verbatim.

@@ -31,6 +31,7 @@ import { CODE_TO_SLUG, WORKING_GROUP_LIST, getWorkingGroupIdentity } from '../..
 import { DataContext } from '../../../context/DataContext';
 import { setReadyForReview } from '../../../services/api/put';
 import { reviewWashClass } from '../../../styles/reviewWash';
+import CopyWorkingGroupTableButton from './CopyWorkingGroupTableButton';
 
 /*
  * The "ATI Success Indicators Report" tables — the per-working-group goal tables that make
@@ -558,11 +559,22 @@ const SuccessIndicatorReportTables = ({ data, campus, navigate, openApprovalModa
             );
         }
 
+        const identity = getWorkingGroupIdentity(workingGroupName);
         return (
             <Box key={workingGroupName} mb={8} id={getAnchorId(workingGroupName)}>
-                <Heading as="h3" size="md" color="teal.700" mb={4}>
-                    {workingGroupData.workingGroup}
-                </Heading>
+                <HStack justify="space-between" align="center" mb={4}>
+                    <Heading as="h3" size="md" color="teal.700">
+                        {workingGroupData.workingGroup}
+                    </Heading>
+                    {/* Copies this group's rows as a three-column SI / Name / Status
+                        table. Fed the same (already filtered) tree the tables render,
+                        so the copy matches what is on screen. */}
+                    <CopyWorkingGroupTableButton
+                        workingGroup={identity.dataKey}
+                        label={identity.name || workingGroupName}
+                        data={data}
+                    />
+                </HStack>
                 <VStack align="stretch" spacing={4}>
                     {workingGroupData.goals
                         .sort((a, b) => (a.goal?.properties?.goal_number || 0) - (b.goal?.properties?.goal_number || 0))
