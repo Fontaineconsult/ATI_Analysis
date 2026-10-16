@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Draft unified impact matrix</title>
+<style>
+  body { margin: 24px; font-family: Arial, Helvetica, sans-serif; background: #ffffff; color: #1a1a1a; }
+  .tools { margin: 0 0 16px 0; padding: 12px; border: 1px solid #c8c8c8; background: #f7f7f7; max-width: 876px; font-size: 14px; }
+  .tools button { font-size: 14px; padding: 6px 14px; cursor: pointer; }
+  .tools button:focus-visible { outline: 3px solid #1a5fb4; outline-offset: 2px; }
+  #status { margin-left: 10px; }
+</style>
+</head>
+<body>
+<div class="tools">
+  <button type="button" id="copy">Copy for Outlook</button><span id="status" role="status"></span>
+  <p style="margin:8px 0 0 0;">Click the button, then paste into the body of an Outlook message with Ctrl+V.
+  If the button does not work in this browser, select from the DRAFT banner to the last list, copy, and paste.</p>
+</div>
+
+<div id="matrix">
+<table width="899" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;width:899px;margin:0;"><tr><td bgcolor="#7a1f1f" style="padding:8px 10px;background-color:#7a1f1f;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:14pt;font-weight:bold;color:#ffffff;">DRAFT: Unified SFBRN impact matrix, version 2</td></tr></table>
+<p style="margin:6px 0 0 0;width:899px;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:10pt;line-height:1.35;color:#444444;">For discussion. Version 2, 16 October 2026. Rewritten from the Procurement Working Group meeting of 10/14/2026 and a review of the law, enforcement history, federal practice and peer universities. Every rule shows its decision state.</p>
+<p style="margin:20px 0 6px 0;width:899px;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:12pt;font-weight:bold;line-height:1.35;color:#1a1a1a;">Decision states</p>
+<table width="899" cellpadding="0" cellspacing="0" border="1" bordercolor="#8c8c8c" style="border-collapse:collapse;width:899px;border:1px solid #8c8c8c;mso-table-lspace:0pt;mso-table-rspace:0pt;">
+  <tr>
+    <th scope="col" align="left" valign="top" width="100" bgcolor="#e8e8e8" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#e8e8e8;font-weight:bold;text-align:left;">State</th>
+    <th scope="col" align="left" valign="top" width="799" bgcolor="#e8e8e8" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#e8e8e8;font-weight:bold;text-align:left;">Meaning</th>
+  </tr>
+  <tr>
+    <td valign="top" width="100" bgcolor="#dcefdc" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#dcefdc;"><strong>Agreed</strong></td>
+    <td valign="top" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;">Decided by the Procurement Working Group on 10/14/2026.</td>
+  </tr>
+  <tr>
+    <td valign="top" width="100" bgcolor="#dbe7f5" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#dbe7f5;"><strong>Required</strong></td>
+    <td valign="top" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;">Follows from law or CSU policy. The matrix cannot choose otherwise. The source is named.</td>
+  </tr>
+  <tr>
+    <td valign="top" width="100" bgcolor="#fbefc9" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#fbefc9;"><strong>Proposed</strong></td>
+    <td valign="top" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;">A design choice recommended from the research. The working group has not decided it.</td>
+  </tr>
+  <tr>
+    <td valign="top" width="100" bgcolor="#e8e8e8" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#e8e8e8;"><strong>Calibrate</strong></td>
+    <td valign="top" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;">A number or term the pilot will set. No law or principle picks it.</td>
+  </tr>
+</table>
+<p style="margin:20px 0 6px 0;width:899px;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:12pt;font-weight:bold;line-height:1.35;color:#1a1a1a;">Step 0. Kind of technology: which standard applies</p>
+<p style="margin:6px 0 6px 0;width:899px;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.35;color:#1a1a1a;">The reviewer records what is being bought before rating anything. The kind of technology sets the standard.</p>
+<table width="899" cellpadding="0" cellspacing="0" border="1" bordercolor="#8c8c8c" style="border-collapse:collapse;width:899px;border:1px solid #8c8c8c;mso-table-lspace:0pt;mso-table-rspace:0pt;">
+  <tr>
+    <th scope="col" align="left" valign="top" width="190" bgcolor="#e8e8e8" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#e8e8e8;font-weight:bold;text-align:left;">Kind</th>
+    <th scope="col" align="left" valign="top" width="230" bgcolor="#e8e8e8" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#e8e8e8;font-weight:bold;text-align:left;">Standard</th>
+    <th scope="col" align="left" valign="top" width="379" bgcolor="#e8e8e8" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#e8e8e8;font-weight:bold;text-align:left;">When it cannot conform</th>
+    <th scope="col" align="left" valign="top" width="100" bgcolor="#e8e8e8" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#e8e8e8;font-weight:bold;text-align:left;">State</th>
+  </tr>
+  <tr>
+    <td valign="top" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;">Web content, web application, mobile app</td>
+    <td valign="top" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;">WCAG 2.1 AA (ADA Title II web rule)</td>
+    <td valign="top" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;">A TAAP stands only with a written determination by the president or a designee (28 CFR 35.204)</td>
+    <td valign="top" width="100" bgcolor="#dcefdc" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#dcefdc;"><strong>Agreed; Required</strong></td>
+  </tr>
+  <tr>
+    <td valign="top" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;">Non-web software, hardware, kiosk</td>
+    <td valign="top" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;">Section 508 Standards, through California Government Code 7405</td>
+    <td valign="top" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;">A best-meets record with market research, plus a TAAP (508 E202.7)</td>
+    <td valign="top" width="100" bgcolor="#dbe7f5" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#dbe7f5;"><strong>Required</strong></td>
+  </tr>
+  <tr>
+    <td valign="top" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;">A product with both, such as a desktop client and a web portal</td>
+    <td valign="top" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;">WCAG 2.1 AA for the web and mobile use</td>
+    <td valign="top" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;">As for web</td>
+    <td valign="top" width="100" bgcolor="#dbe7f5" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#dbe7f5;"><strong>Required</strong></td>
+  </tr>
+</table>
+<table width="899" cellpadding="0" cellspacing="0" border="1" bordercolor="#8c8c8c" style="border-collapse:collapse;width:899px;border:1px solid #8c8c8c;mso-table-lspace:0pt;mso-table-rspace:0pt;">
+  <tr>
+    <th scope="col" align="left" valign="top" width="799" bgcolor="#e8e8e8" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#e8e8e8;font-weight:bold;text-align:left;">Rule</th>
+    <th scope="col" align="left" valign="top" width="100" bgcolor="#e8e8e8" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#e8e8e8;font-weight:bold;text-align:left;">State</th>
+  </tr>
+  <tr>
+    <td valign="top" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;">Each interface (public, student, instructor, administrative) and each platform (web, iOS, Android) is reviewed on its own, with its own ACR.</td>
+    <td valign="top" width="100" bgcolor="#dbe7f5" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#dbe7f5;"><strong>Required</strong></td>
+  </tr>
+  <tr>
+    <td valign="top" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;">An alternate version of web content is acceptable only where direct access is not possible for technical or legal reasons (28 CFR 35.202).</td>
+    <td valign="top" width="100" bgcolor="#dbe7f5" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#dbe7f5;"><strong>Required</strong></td>
+  </tr>
+</table>
+<p style="margin:20px 0 6px 0;width:899px;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:12pt;font-weight:bold;line-height:1.35;color:#1a1a1a;">Step 1. Exposure: how widely and how necessarily the product is used</p>
+<p style="margin:6px 0 6px 0;width:899px;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.35;color:#1a1a1a;">Renamed from &ldquo;impact&rdquo;, because in the Title II rule &ldquo;impact&rdquo; means the effect of a barrier on a person. <strong>Exposure sets how deep the review goes, how strong the evidence must be, who approves, and how long a decision lasts. It never decides whether access is owed.</strong> Title II and Section 504 have no threshold of users below which access is optional, and OCR applies the duty to pilots and to classes with no student known to have a disability. (Required)</p>
+<p style="margin:12px 0 6px 0;width:899px;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;font-weight:bold;line-height:1.35;color:#1a1a1a;">Floors: one fact sets a minimum level</p>
+<p style="margin:6px 0 6px 0;width:899px;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.35;color:#1a1a1a;">Floors apply first and only raise the level.</p>
+<table width="899" cellpadding="0" cellspacing="0" border="1" bordercolor="#8c8c8c" style="border-collapse:collapse;width:899px;border:1px solid #8c8c8c;mso-table-lspace:0pt;mso-table-rspace:0pt;">
+  <tr>
+    <th scope="col" align="left" valign="top" width="599" bgcolor="#e8e8e8" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#e8e8e8;font-weight:bold;text-align:left;">Fact</th>
+    <th scope="col" align="left" valign="top" width="200" bgcolor="#e8e8e8" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#e8e8e8;font-weight:bold;text-align:left;">Minimum</th>
+    <th scope="col" align="left" valign="top" width="100" bgcolor="#e8e8e8" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#e8e8e8;font-weight:bold;text-align:left;">State</th>
+  </tr>
+  <tr>
+    <td valign="top" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;">Required of students for coursework or a grade</td>
+    <td valign="top" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;">High</td>
+    <td valign="top" width="100" bgcolor="#fbefc9" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#fbefc9;"><strong>Proposed</strong></td>
+  </tr>
+  <tr>
+    <td valign="top" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;">The only route to a university service, such as enrollment, financial aid, payment or housing</td>
+    <td valign="top" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;">High</td>
+    <td valign="top" width="100" bgcolor="#fbefc9" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#fbefc9;"><strong>Proposed</strong></td>
+  </tr>
+  <tr>
+    <td valign="top" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;">Campus-wide, or all sections of a course in a curriculum</td>
+    <td valign="top" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;">High</td>
+    <td valign="top" width="100" bgcolor="#fbefc9" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#fbefc9;"><strong>Proposed</strong></td>
+  </tr>
+  <tr>
+    <td valign="top" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;">A person with a disability is known to be in the user group, or an accommodation request about the product is open</td>
+    <td valign="top" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;">High</td>
+    <td valign="top" width="100" bgcolor="#fbefc9" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#fbefc9;"><strong>Proposed</strong></td>
+  </tr>
+  <tr>
+    <td valign="top" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;">A prior accessibility complaint about the product</td>
+    <td valign="top" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;">High</td>
+    <td valign="top" width="100" bgcolor="#fbefc9" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#fbefc9;"><strong>Proposed</strong></td>
+  </tr>
+  <tr>
+    <td valign="top" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;">Required for a job duty, or used in hiring (an applicant portal counts as public)</td>
+    <td valign="top" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;">Medium</td>
+    <td valign="top" width="100" bgcolor="#fbefc9" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#fbefc9;"><strong>Proposed</strong></td>
+  </tr>
+  <tr>
+    <td valign="top" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;">Open to the public without single sign-on, publishes content to the public, or sits in a public space such as an open kiosk</td>
+    <td valign="top" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;">Medium</td>
+    <td valign="top" width="100" bgcolor="#fbefc9" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#fbefc9;"><strong>Proposed</strong></td>
+  </tr>
+</table>
+<p style="margin:6px 0 6px 0;width:899px;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:10pt;line-height:1.35;color:#444444;">Knowing that no one with a disability is in the user group never lowers the level. (Required)</p>
+<p style="margin:12px 0 6px 0;width:899px;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;font-weight:bold;line-height:1.35;color:#1a1a1a;">Groups: for products no floor sets to High</p>
+<p style="margin:6px 0 6px 0;width:899px;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.35;color:#1a1a1a;">Factors that describe the same fact are grouped, so nothing is counted twice. A group takes the highest level among its factors.</p>
+<table width="899" cellpadding="0" cellspacing="0" border="1" bordercolor="#8c8c8c" style="border-collapse:collapse;width:899px;border:1px solid #8c8c8c;mso-table-lspace:0pt;mso-table-rspace:0pt;">
+  <tr>
+    <th scope="col" align="left" valign="top" width="90" bgcolor="#e8e8e8" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#e8e8e8;font-weight:bold;text-align:left;">Group</th>
+    <th scope="col" align="left" valign="top" width="150" bgcolor="#e8e8e8" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#e8e8e8;font-weight:bold;text-align:left;">Factor</th>
+    <th scope="col" align="left" valign="top" width="200" bgcolor="#e8e8e8" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#e8e8e8;font-weight:bold;text-align:left;">Low</th>
+    <th scope="col" align="left" valign="top" width="220" bgcolor="#e8e8e8" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#e8e8e8;font-weight:bold;text-align:left;">Medium</th>
+    <th scope="col" align="left" valign="top" width="239" bgcolor="#e8e8e8" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#e8e8e8;font-weight:bold;text-align:left;">High</th>
+  </tr>
+  <tr>
+    <td valign="top" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;"><strong>Reach</strong></td>
+    <td valign="top" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;">Users, confirmed, all groups</td>
+    <td valign="top" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;">Up to 25</td>
+    <td valign="top" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;">26 to 250</td>
+    <td valign="top" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;">More than 250</td>
+  </tr>
+  <tr>
+    <td valign="top" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;"></td>
+    <td valign="top" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;">Scope</td>
+    <td valign="top" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;">One department, organization or course</td>
+    <td valign="top" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;">Several, or a planned expansion</td>
+    <td valign="top" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;">Campus-wide (also a floor)</td>
+  </tr>
+  <tr>
+    <td valign="top" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;"><strong>Stakes</strong></td>
+    <td valign="top" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;">Required use</td>
+    <td valign="top" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;">Optional</td>
+    <td valign="top" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;">Required for a few identified people for a limited task</td>
+    <td valign="top" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;">Required for coursework, a job duty or a university service (also floors)</td>
+  </tr>
+  <tr>
+    <td valign="top" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;"></td>
+    <td valign="top" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;">Program criticality</td>
+    <td valign="top" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;">Optional program or service</td>
+    <td valign="top" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;">Important, not critical</td>
+    <td valign="top" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;">Critical, or a core academic or business function</td>
+  </tr>
+  <tr>
+    <td valign="top" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;"><strong>Spread</strong></td>
+    <td valign="top" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;">Content it publishes</td>
+    <td valign="top" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;">None</td>
+    <td valign="top" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;">For specific, limited audiences</td>
+    <td valign="top" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;">For the public or a large or required audience</td>
+  </tr>
+  <tr>
+    <td valign="top" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;"><strong>Duration</strong></td>
+    <td valign="top" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;">Frequency of use</td>
+    <td valign="top" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;">Occasional or one-time</td>
+    <td valign="top" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;">Weekly or each term</td>
+    <td valign="top" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;">Daily or routine</td>
+  </tr>
+  <tr>
+    <td valign="top" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;"></td>
+    <td valign="top" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;">Contract length</td>
+    <td valign="top" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;">One purchase or one year</td>
+    <td valign="top" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;">Two to three years</td>
+    <td valign="top" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;">More than three years, or an enterprise agreement</td>
+  </tr>
+</table>
+<table width="899" cellpadding="0" cellspacing="0" border="1" bordercolor="#8c8c8c" style="border-collapse:collapse;width:899px;border:1px solid #8c8c8c;mso-table-lspace:0pt;mso-table-rspace:0pt;">
+  <tr>
+    <th scope="col" align="left" valign="top" width="799" bgcolor="#e8e8e8" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#e8e8e8;font-weight:bold;text-align:left;">Rule</th>
+    <th scope="col" align="left" valign="top" width="100" bgcolor="#e8e8e8" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#e8e8e8;font-weight:bold;text-align:left;">State</th>
+  </tr>
+  <tr>
+    <td valign="top" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;">Factors are merged into four groups so no fact is counted twice.</td>
+    <td valign="top" width="100" bgcolor="#fbefc9" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#fbefc9;"><strong>Proposed</strong></td>
+  </tr>
+  <tr>
+    <td valign="top" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;">User cut points of 25 and 250. The previous draft used 5 and 25, far below every peer model. The required-use floors catch small required cases.</td>
+    <td valign="top" width="100" bgcolor="#e8e8e8" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#e8e8e8;"><strong>Calibrate</strong></td>
+  </tr>
+  <tr>
+    <td valign="top" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;">Groups score Low 0, Medium 1, High 2. The weighted total is read as a percent of the possible total.</td>
+    <td valign="top" width="100" bgcolor="#fbefc9" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#fbefc9;"><strong>Proposed</strong></td>
+  </tr>
+  <tr>
+    <td valign="top" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;">Bands: Low under 25 percent, Medium 25 to 55 percent, High 55 percent and above. Group weights set with reviewers from each campus.</td>
+    <td valign="top" width="100" bgcolor="#e8e8e8" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#e8e8e8;"><strong>Calibrate</strong></td>
+  </tr>
+  <tr>
+    <td valign="top" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;">A simple decision table runs beside the points in the pilot (High if any floor applies or two groups are High). The one that agrees better with an expert panel is kept.</td>
+    <td valign="top" width="100" bgcolor="#fbefc9" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#fbefc9;"><strong>Proposed</strong></td>
+  </tr>
+  <tr>
+    <td valign="top" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;">No likelihood axis. Risk-matrix research shows impact-by-likelihood grids misrank risks.</td>
+    <td valign="top" width="100" bgcolor="#fbefc9" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#fbefc9;"><strong>Proposed</strong></td>
+  </tr>
+  <tr>
+    <td valign="top" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;">The requester's and the reviewer's answers are both recorded. A reviewer may raise a level with a reason. Lowering needs a second approver.</td>
+    <td valign="top" width="100" bgcolor="#fbefc9" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#fbefc9;"><strong>Proposed</strong></td>
+  </tr>
+  <tr>
+    <td valign="top" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;">An answer nobody can give is scored both ways. If the results differ, the outcome is &ldquo;request information&rdquo;. Unknowns are rated high because the university carries the burden of proof.</td>
+    <td valign="top" width="100" bgcolor="#fbefc9" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#fbefc9;"><strong>Proposed; Required</strong></td>
+  </tr>
+  <tr>
+    <td valign="top" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;">A product bought for one person's accommodation goes to the accommodation process.</td>
+    <td valign="top" width="100" bgcolor="#fbefc9" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#fbefc9;"><strong>Proposed</strong></td>
+  </tr>
+  <tr>
+    <td valign="top" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;">Left out of exposure: negative points for Low answers, data sensitivity (security review) and cost (high cost alone is not a basis for an exception).</td>
+    <td valign="top" width="100" bgcolor="#fbefc9" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#fbefc9;"><strong>Proposed</strong></td>
+  </tr>
+</table>
+<p style="margin:20px 0 6px 0;width:899px;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:12pt;font-weight:bold;line-height:1.35;color:#1a1a1a;">Step 2. Barrier severity: what a person can do</p>
+<p style="margin:6px 0 6px 0;width:899px;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.35;color:#1a1a1a;">Judged with the Title II tests (28 CFR 35.205): the same information, interactions and transactions, with substantially equivalent timeliness, privacy, independence and ease of use. The WCAG criterion is the evidence, not the verdict. (Required)</p>
+<table width="899" cellpadding="0" cellspacing="0" border="1" bordercolor="#8c8c8c" style="border-collapse:collapse;width:899px;border:1px solid #8c8c8c;mso-table-lspace:0pt;mso-table-rspace:0pt;">
+  <tr>
+    <th scope="col" align="left" valign="top" width="60" bgcolor="#e8e8e8" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#e8e8e8;font-weight:bold;text-align:left;">Level</th>
+    <th scope="col" align="left" valign="top" width="739" bgcolor="#e8e8e8" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#e8e8e8;font-weight:bold;text-align:left;">Definition</th>
+    <th scope="col" align="left" valign="top" width="100" bgcolor="#e8e8e8" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#e8e8e8;font-weight:bold;text-align:left;">GSA label</th>
+  </tr>
+  <tr>
+    <th scope="row" align="left" valign="top" bgcolor="#f4f4f4" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#f4f4f4;font-weight:bold;text-align:left;">S0</th>
+    <td valign="top" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;">No effect on information, interactions, transactions or participation.</td>
+    <td valign="top" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;">none</td>
+  </tr>
+  <tr>
+    <th scope="row" align="left" valign="top" bgcolor="#f4f4f4" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#f4f4f4;font-weight:bold;text-align:left;">S1</th>
+    <td valign="top" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;">Minimal impact, demonstrated: the four Title II tests are documented as met.</td>
+    <td valign="top" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;">Minor</td>
+  </tr>
+  <tr>
+    <th scope="row" align="left" valign="top" bgcolor="#f4f4f4" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#f4f4f4;font-weight:bold;text-align:left;">S2</th>
+    <td valign="top" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;">A core task can be completed independently, with clearly unequal time or effort.</td>
+    <td valign="top" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;">Major</td>
+  </tr>
+  <tr>
+    <th scope="row" align="left" valign="top" bgcolor="#f4f4f4" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#f4f4f4;font-weight:bold;text-align:left;">S3</th>
+    <td valign="top" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;">A person in that role cannot complete a core task independently, or only with another person's help.</td>
+    <td valign="top" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;">Critical</td>
+  </tr>
+</table>
+<table width="899" cellpadding="0" cellspacing="0" border="1" bordercolor="#8c8c8c" style="border-collapse:collapse;width:899px;border:1px solid #8c8c8c;mso-table-lspace:0pt;mso-table-rspace:0pt;">
+  <tr>
+    <th scope="col" align="left" valign="top" width="799" bgcolor="#e8e8e8" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#e8e8e8;font-weight:bold;text-align:left;">Rule</th>
+    <th scope="col" align="left" valign="top" width="100" bgcolor="#e8e8e8" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#e8e8e8;font-weight:bold;text-align:left;">State</th>
+  </tr>
+  <tr>
+    <td valign="top" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;">The TAAP threshold is a barrier that blocks a task: S3.</td>
+    <td valign="top" width="100" bgcolor="#dcefdc" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#dcefdc;"><strong>Agreed</strong></td>
+  </tr>
+  <tr>
+    <td valign="top" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;">A vendor's alternative channel weighs against a TAAP, but only when it is equally effective: same task, same time, independent and private. A channel where staff do the task for the person is assistance and leaves the barrier at S3.</td>
+    <td valign="top" width="100" bgcolor="#dcefdc" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#dcefdc;"><strong>Agreed, narrowed by law</strong></td>
+  </tr>
+  <tr>
+    <td valign="top" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;">An alternative method inside the product that gives equal or greater access can support S0 or S1 (equivalent facilitation, 28 CFR 35.203).</td>
+    <td valign="top" width="100" bgcolor="#dbe7f5" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#dbe7f5;"><strong>Required</strong></td>
+  </tr>
+  <tr>
+    <td valign="top" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;">&ldquo;Not a core feature&rdquo; is not enough for S1. S1 needs the documented minimal-impact finding, because the university carries that burden.</td>
+    <td valign="top" width="100" bgcolor="#dbe7f5" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#dbe7f5;"><strong>Required</strong></td>
+  </tr>
+  <tr>
+    <td valign="top" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;">Severity is rated per role (students, employees, applicants, the public) and per disability group. The worst cell sets the role's severity.</td>
+    <td valign="top" width="100" bgcolor="#fbefc9" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#fbefc9;"><strong>Proposed</strong></td>
+  </tr>
+  <tr>
+    <td valign="top" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;">Core tasks are listed per role before testing, and each is judged as a complete process.</td>
+    <td valign="top" width="100" bgcolor="#fbefc9" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#fbefc9;"><strong>Proposed</strong></td>
+  </tr>
+  <tr>
+    <td valign="top" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;">Keyboard traps, flashing content, auto-playing audio and moving content that cannot be stopped are at least S2 anywhere, and S3 when they trap or endanger the user (WCAG non-interference).</td>
+    <td valign="top" width="100" bgcolor="#dbe7f5" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#dbe7f5;"><strong>Required</strong></td>
+  </tr>
+  <tr>
+    <td valign="top" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;">&ldquo;Partially Supports&rdquo; is never S0.</td>
+    <td valign="top" width="100" bgcolor="#fbefc9" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#fbefc9;"><strong>Proposed</strong></td>
+  </tr>
+</table>
+<p style="margin:12px 0 6px 0;width:899px;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;font-weight:bold;line-height:1.35;color:#1a1a1a;">Evidence</p>
+<p style="margin:6px 0 6px 0;width:899px;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.35;color:#1a1a1a;">&ldquo;ACR&rdquo;, not &ldquo;VPAT&rdquo;. ATI team testing and live vendor demonstrations count as evidence. (Agreed)</p>
+<table width="899" cellpadding="0" cellspacing="0" border="1" bordercolor="#8c8c8c" style="border-collapse:collapse;width:899px;border:1px solid #8c8c8c;mso-table-lspace:0pt;mso-table-rspace:0pt;">
+  <tr>
+    <th scope="col" align="left" valign="top" width="60" bgcolor="#e8e8e8" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#e8e8e8;font-weight:bold;text-align:left;">Level</th>
+    <th scope="col" align="left" valign="top" width="739" bgcolor="#e8e8e8" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#e8e8e8;font-weight:bold;text-align:left;">What it holds</th>
+    <th scope="col" align="left" valign="top" width="100" bgcolor="#e8e8e8" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#e8e8e8;font-weight:bold;text-align:left;">State</th>
+  </tr>
+  <tr>
+    <th scope="row" align="left" valign="top" bgcolor="#f4f4f4" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#f4f4f4;font-weight:bold;text-align:left;">E0</th>
+    <td valign="top" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;">Nothing, or marketing statements</td>
+    <td valign="top" width="100" bgcolor="#fbefc9" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#fbefc9;"><strong>Proposed</strong></td>
+  </tr>
+  <tr>
+    <th scope="row" align="left" valign="top" bgcolor="#f4f4f4" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#f4f4f4;font-weight:bold;text-align:left;">E1-</th>
+    <td valign="top" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;">A vendor ACR that fails a quality check</td>
+    <td valign="top" width="100" bgcolor="#fbefc9" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#fbefc9;"><strong>Proposed</strong></td>
+  </tr>
+  <tr>
+    <th scope="row" align="left" valign="top" bgcolor="#f4f4f4" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#f4f4f4;font-weight:bold;text-align:left;">E1</th>
+    <td valign="top" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;">A vendor ACR that passes every quality check</td>
+    <td valign="top" width="100" bgcolor="#fbefc9" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#fbefc9;"><strong>Proposed</strong></td>
+  </tr>
+  <tr>
+    <th scope="row" align="left" valign="top" bgcolor="#f4f4f4" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#f4f4f4;font-weight:bold;text-align:left;">E1+</th>
+    <td valign="top" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;">E1 plus GSA's issue-level supplement: severity, affected group, workaround</td>
+    <td valign="top" width="100" bgcolor="#fbefc9" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#fbefc9;"><strong>Proposed</strong></td>
+  </tr>
+  <tr>
+    <th scope="row" align="left" valign="top" bgcolor="#f4f4f4" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#f4f4f4;font-weight:bold;text-align:left;">E2a</th>
+    <td valign="top" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;">A live vendor demonstration of each role's core tasks with assistive technology</td>
+    <td valign="top" width="100" bgcolor="#dcefdc" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#dcefdc;"><strong>Agreed</strong></td>
+  </tr>
+  <tr>
+    <th scope="row" align="left" valign="top" bgcolor="#f4f4f4" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#f4f4f4;font-weight:bold;text-align:left;">E2b</th>
+    <td valign="top" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;">A third-party audit that names its method, such as Trusted Tester</td>
+    <td valign="top" width="100" bgcolor="#fbefc9" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#fbefc9;"><strong>Proposed</strong></td>
+  </tr>
+  <tr>
+    <th scope="row" align="left" valign="top" bgcolor="#f4f4f4" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#f4f4f4;font-weight:bold;text-align:left;">E3</th>
+    <td valign="top" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;">ATI team testing of each role's core tasks by a named method</td>
+    <td valign="top" width="100" bgcolor="#dcefdc" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#dcefdc;"><strong>Agreed</strong></td>
+  </tr>
+</table>
+<p style="margin:6px 0 6px 0;width:899px;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.35;color:#1a1a1a;"><strong>An ACR drops to E1- if:</strong> it reports only WCAG 2.0 for a web or mobile product; it has no date or version, or the wrong version; it is older than two years (Calibrate) or the last major release; it names no test methods; &ldquo;Partially Supports&rdquo; or &ldquo;Does Not Support&rdquo; has no remarks; it says only &ldquo;Supports&rdquo; throughout; it uses &ldquo;Not Evaluated&rdquo; outside AAA; or it misses an interface or platform being bought. (Proposed)</p>
+<p style="margin:6px 0 6px 0;width:899px;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.35;color:#1a1a1a;"><strong>Evidence limits the outcome:</strong> E0 or E1- never supports Approve at Medium or High exposure; E1 never supports Approve at High; an S1 finding needs E2 or better. (Proposed)</p>
+<p style="margin:20px 0 6px 0;width:899px;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:12pt;font-weight:bold;line-height:1.35;color:#1a1a1a;">Step 3. Outcome</p>
+<p style="margin:6px 0 6px 0;width:899px;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.35;color:#1a1a1a;">The four agreed outcomes are approve, manual review, TAAP and deny (Agreed). Approve has two forms in this draft.</p>
+<table width="899" cellpadding="0" cellspacing="0" border="1" bordercolor="#8c8c8c" style="border-collapse:collapse;width:899px;border:1px solid #8c8c8c;mso-table-lspace:0pt;mso-table-rspace:0pt;">
+  <tr>
+    <th scope="col" align="left" valign="top" width="180" bgcolor="#e8e8e8" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#e8e8e8;font-weight:bold;text-align:left;">Outcome</th>
+    <th scope="col" align="left" valign="top" width="619" bgcolor="#e8e8e8" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#e8e8e8;font-weight:bold;text-align:left;">Meaning</th>
+    <th scope="col" align="left" valign="top" width="100" bgcolor="#e8e8e8" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#e8e8e8;font-weight:bold;text-align:left;">State</th>
+  </tr>
+  <tr>
+    <td valign="top" bgcolor="#dcefdc" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#dcefdc;"><strong>Approve</strong></td>
+    <td valign="top" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;">No known barrier on any role's path.</td>
+    <td valign="top" width="100" bgcolor="#dcefdc" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#dcefdc;"><strong>Agreed</strong></td>
+  </tr>
+  <tr>
+    <td valign="top" bgcolor="#eef6dc" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#eef6dc;"><strong>Approve with barrier record</strong></td>
+    <td valign="top" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;">Known S1 or S2 barriers. Users are told where they meet the product; the vendor's fix dates go in the contract; a review date is set. This meets indicator 4.6-pro's call for a plan whenever a product with known barriers is approved, without stretching the TAAP.</td>
+    <td valign="top" width="100" bgcolor="#fbefc9" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#fbefc9;"><strong>Proposed</strong></td>
+  </tr>
+  <tr>
+    <td valign="top" bgcolor="#fbefc9" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#fbefc9;"><strong>TAAP</strong></td>
+    <td valign="top" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;">S3 on a core task, with an alternative that passes every TAAP test below.</td>
+    <td valign="top" width="100" bgcolor="#dcefdc" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#dcefdc;"><strong>Agreed</strong></td>
+  </tr>
+  <tr>
+    <td valign="top" bgcolor="#f6d6d3" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#f6d6d3;"><strong>Deny</strong></td>
+    <td valign="top" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;">S3 where a TAAP cannot pass its tests, or a more accessible product meets the need.</td>
+    <td valign="top" width="100" bgcolor="#dcefdc" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#dcefdc;"><strong>Agreed</strong></td>
+  </tr>
+  <tr>
+    <td valign="top" bgcolor="#dbe7f5" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#dbe7f5;"><strong>Manual review</strong></td>
+    <td valign="top" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;">Routes uncertainty, not a barrier: unknown severity, weak evidence, a borderline score, or a claimed exception. It returns a recommendation; the reviewer who owns the requisition decides.</td>
+    <td valign="top" width="100" bgcolor="#dcefdc" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#dcefdc;"><strong>Agreed; Proposed</strong></td>
+  </tr>
+</table>
+<p style="margin:12px 0 6px 0;width:899px;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;font-weight:bold;line-height:1.35;color:#1a1a1a;">Routing before the grid</p>
+<table width="899" cellpadding="0" cellspacing="0" border="1" bordercolor="#8c8c8c" style="border-collapse:collapse;width:899px;border:1px solid #8c8c8c;mso-table-lspace:0pt;mso-table-rspace:0pt;">
+  <tr>
+    <th scope="col" align="left" valign="top" width="330" bgcolor="#e8e8e8" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#e8e8e8;font-weight:bold;text-align:left;">Condition</th>
+    <th scope="col" align="left" valign="top" width="469" bgcolor="#e8e8e8" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#e8e8e8;font-weight:bold;text-align:left;">Route</th>
+    <th scope="col" align="left" valign="top" width="100" bgcolor="#e8e8e8" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#e8e8e8;font-weight:bold;text-align:left;">State</th>
+  </tr>
+  <tr>
+    <td valign="top" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;">No ACR, demonstration or testing</td>
+    <td valign="top" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;">Request evidence. At High exposure, treat as S3, marked provisional, until it arrives.</td>
+    <td valign="top" width="100" bgcolor="#fbefc9" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#fbefc9;"><strong>Proposed</strong></td>
+  </tr>
+  <tr>
+    <td valign="top" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;">Evidence below the limit for the exposure level</td>
+    <td valign="top" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;">Manual review</td>
+    <td valign="top" width="100" bgcolor="#fbefc9" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#fbefc9;"><strong>Proposed</strong></td>
+  </tr>
+  <tr>
+    <td valign="top" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;">Moving one answer one level would change the result</td>
+    <td valign="top" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;">A second reviewer</td>
+    <td valign="top" width="100" bgcolor="#fbefc9" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#fbefc9;"><strong>Proposed</strong></td>
+  </tr>
+  <tr>
+    <td valign="top" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;">A claim that conforming costs too much or would change the program</td>
+    <td valign="top" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;">The president or a designee with budget authority, in writing (28 CFR 35.164, 35.204)</td>
+    <td valign="top" width="100" bgcolor="#dbe7f5" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#dbe7f5;"><strong>Required</strong></td>
+  </tr>
+  <tr>
+    <td valign="top" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;">The reviewer is helping another campus</td>
+    <td valign="top" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;">Bring in the home campus before starting a TAAP</td>
+    <td valign="top" width="100" bgcolor="#dcefdc" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#dcefdc;"><strong>Agreed</strong></td>
+  </tr>
+</table>
+<p style="margin:12px 0 6px 0;width:899px;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;font-weight:bold;line-height:1.35;color:#1a1a1a;">The grid</p>
+<p style="margin:6px 0 6px 0;width:899px;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.35;color:#1a1a1a;">Rows are exposure. Columns are the worst severity on any role's core path.</p>
+<table width="899" cellpadding="0" cellspacing="0" border="1" bordercolor="#8c8c8c" style="border-collapse:collapse;width:899px;border:1px solid #8c8c8c;mso-table-lspace:0pt;mso-table-rspace:0pt;">
+  <tr>
+    <th scope="col" align="left" valign="top" width="100" bgcolor="#e8e8e8" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#e8e8e8;font-weight:bold;text-align:left;">Exposure</th>
+    <th scope="col" align="left" valign="top" width="170" bgcolor="#e8e8e8" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#e8e8e8;font-weight:bold;text-align:left;">S0</th>
+    <th scope="col" align="left" valign="top" width="170" bgcolor="#e8e8e8" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#e8e8e8;font-weight:bold;text-align:left;">S1</th>
+    <th scope="col" align="left" valign="top" width="170" bgcolor="#e8e8e8" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#e8e8e8;font-weight:bold;text-align:left;">S2</th>
+    <th scope="col" align="left" valign="top" width="289" bgcolor="#e8e8e8" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#e8e8e8;font-weight:bold;text-align:left;">S3</th>
+  </tr>
+  <tr>
+    <th scope="row" align="left" valign="top" bgcolor="#f4f4f4" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#f4f4f4;font-weight:bold;text-align:left;">Low</th>
+    <td valign="top" width="170" bgcolor="#dcefdc" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#dcefdc;"><strong>Approve</strong></td>
+    <td valign="top" width="170" bgcolor="#eef6dc" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#eef6dc;"><strong>Approve with barrier record</strong></td>
+    <td valign="top" width="170" bgcolor="#eef6dc" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#eef6dc;"><strong>Approve with barrier record</strong></td>
+    <td valign="top" width="219" bgcolor="#fbefc9" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#fbefc9;"><strong>TAAP or deny</strong><br>TAAP. Deny if a more accessible product meets the need.</td>
+  </tr>
+  <tr>
+    <th scope="row" align="left" valign="top" bgcolor="#f4f4f4" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#f4f4f4;font-weight:bold;text-align:left;">Medium</th>
+    <td valign="top" width="170" bgcolor="#dcefdc" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#dcefdc;"><strong>Approve</strong></td>
+    <td valign="top" width="170" bgcolor="#eef6dc" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#eef6dc;"><strong>Approve with barrier record</strong></td>
+    <td valign="top" width="170" bgcolor="#eef6dc" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#eef6dc;"><strong>Approve with barrier record</strong><br>Vendor fix date required.</td>
+    <td valign="top" width="219" bgcolor="#fbefc9" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#fbefc9;"><strong>TAAP or deny</strong><br>TAAP. Deny if a more accessible product meets the need.</td>
+  </tr>
+  <tr>
+    <th scope="row" align="left" valign="top" bgcolor="#f4f4f4" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#f4f4f4;font-weight:bold;text-align:left;">High</th>
+    <td valign="top" width="170" bgcolor="#dcefdc" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#dcefdc;"><strong>Approve</strong><br>Once claims are validated (E2 or better).</td>
+    <td valign="top" width="170" bgcolor="#eef6dc" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#eef6dc;"><strong>Approve with barrier record</strong><br>E2 or better.</td>
+    <td valign="top" width="170" bgcolor="#eef6dc" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#eef6dc;"><strong>Approve with barrier record</strong><br>E2 or better; vendor fix date within one year.</td>
+    <td valign="top" width="219" bgcolor="#fbefc9" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#fbefc9;"><strong>TAAP or deny</strong><br>TAAP only if the plan serves every affected person from the first day of use, with a written determination (web) or a best-meets record (non-web). Otherwise deny.</td>
+  </tr>
+</table>
+<table width="899" cellpadding="0" cellspacing="0" border="1" bordercolor="#8c8c8c" style="border-collapse:collapse;width:899px;border:1px solid #8c8c8c;mso-table-lspace:0pt;mso-table-rspace:0pt;">
+  <tr>
+    <th scope="col" align="left" valign="top" width="799" bgcolor="#e8e8e8" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#e8e8e8;font-weight:bold;text-align:left;">Rule</th>
+    <th scope="col" align="left" valign="top" width="100" bgcolor="#e8e8e8" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#e8e8e8;font-weight:bold;text-align:left;">State</th>
+  </tr>
+  <tr>
+    <td valign="top" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;">S3 on a core task is never Approve, at any exposure.</td>
+    <td valign="top" width="100" bgcolor="#fbefc9" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#fbefc9;"><strong>Proposed</strong></td>
+  </tr>
+  <tr>
+    <td valign="top" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;">Exposure enters the choice between TAAP and deny through the plan's feasibility: a plan that must reach every affected person from day one is harder at High exposure, so more High cases end in deny.</td>
+    <td valign="top" width="100" bgcolor="#dcefdc" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#dcefdc;"><strong>Agreed</strong></td>
+  </tr>
+  <tr>
+    <td valign="top" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;">Deny when a more accessible product meets the need, at any exposure. Where nothing on the market conforms, the path is a best-meets record and a TAAP.</td>
+    <td valign="top" width="100" bgcolor="#dbe7f5" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#dbe7f5;"><strong>Required</strong></td>
+  </tr>
+  <tr>
+    <td valign="top" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;">S2 never requires a TAAP, because it does not block a task. Exposure raises the evidence and the vendor commitment instead.</td>
+    <td valign="top" width="100" bgcolor="#dcefdc" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#dcefdc;"><strong>Agreed</strong></td>
+  </tr>
+</table>
+<p style="margin:12px 0 6px 0;width:899px;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;font-weight:bold;line-height:1.35;color:#1a1a1a;">Rules that hold in every cell</p>
+<table width="899" cellpadding="0" cellspacing="0" border="1" bordercolor="#8c8c8c" style="border-collapse:collapse;width:899px;border:1px solid #8c8c8c;mso-table-lspace:0pt;mso-table-rspace:0pt;">
+  <tr>
+    <th scope="col" align="left" valign="top" width="799" bgcolor="#e8e8e8" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#e8e8e8;font-weight:bold;text-align:left;">Rule</th>
+    <th scope="col" align="left" valign="top" width="100" bgcolor="#e8e8e8" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#e8e8e8;font-weight:bold;text-align:left;">State</th>
+  </tr>
+  <tr>
+    <td valign="top" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;"><strong>A TAAP passes every test or it is not a TAAP:</strong> access from the first day of use; the same information, interactions and functions; independent use where the product allows it, in the same setting where possible; a named owner, steps, response time, how users learn of it and how they report a barrier; the vendor's fix dates; and why a more accessible product was not chosen.</td>
+    <td valign="top" width="100" bgcolor="#dbe7f5" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#dbe7f5;"><strong>Required</strong></td>
+  </tr>
+  <tr>
+    <td valign="top" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;"><strong>A TAAP respects each person's request.</strong> A person's own request for an aid gets primary consideration, and a person may decline an accommodation.</td>
+    <td valign="top" width="100" bgcolor="#dbe7f5" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#dbe7f5;"><strong>Required</strong></td>
+  </tr>
+  <tr>
+    <td valign="top" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;"><strong>A TAAP is not compliance.</strong> It manages access while the product is fixed (TAAP template 3.3; 28 CFR 35.202).</td>
+    <td valign="top" width="100" bgcolor="#dbe7f5" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#dbe7f5;"><strong>Required</strong></td>
+  </tr>
+  <tr>
+    <td valign="top" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;"><strong>A denial gives its reasons:</strong> the findings, the threshold applied, and the campus route to reconsideration.</td>
+    <td valign="top" width="100" bgcolor="#dbe7f5" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#dbe7f5;"><strong>Required</strong></td>
+  </tr>
+  <tr>
+    <td valign="top" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;"><strong>Approval never ends the accommodation duty.</strong> A person who meets a barrier in an approved product is still accommodated.</td>
+    <td valign="top" width="100" bgcolor="#dbe7f5" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#dbe7f5;"><strong>Required</strong></td>
+  </tr>
+  <tr>
+    <td valign="top" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;"><strong>Notice where users meet the product.</strong> Every barrier record and TAAP names the barrier, the way around it and a contact, and tells the offices that support affected users.</td>
+    <td valign="top" width="100" bgcolor="#fbefc9" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#fbefc9;"><strong>Proposed</strong></td>
+  </tr>
+</table>
+<p style="margin:12px 0 6px 0;width:899px;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;font-weight:bold;line-height:1.35;color:#1a1a1a;">Who approves, and for how long</p>
+<table width="899" cellpadding="0" cellspacing="0" border="1" bordercolor="#8c8c8c" style="border-collapse:collapse;width:899px;border:1px solid #8c8c8c;mso-table-lspace:0pt;mso-table-rspace:0pt;">
+  <tr>
+    <th scope="col" align="left" valign="top" width="100" bgcolor="#e8e8e8" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#e8e8e8;font-weight:bold;text-align:left;">Exposure</th>
+    <th scope="col" align="left" valign="top" width="499" bgcolor="#e8e8e8" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#e8e8e8;font-weight:bold;text-align:left;">Approves a barrier record or TAAP</th>
+    <th scope="col" align="left" valign="top" width="300" bgcolor="#e8e8e8" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#e8e8e8;font-weight:bold;text-align:left;">Decision expires</th>
+  </tr>
+  <tr>
+    <th scope="row" align="left" valign="top" bgcolor="#f4f4f4" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#f4f4f4;font-weight:bold;text-align:left;">Low</th>
+    <td valign="top" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;">ATI coordinator</td>
+    <td valign="top" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;">3 years</td>
+  </tr>
+  <tr>
+    <th scope="row" align="left" valign="top" bgcolor="#f4f4f4" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#f4f4f4;font-weight:bold;text-align:left;">Medium</th>
+    <td valign="top" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;">ATI coordinator and department head</td>
+    <td valign="top" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;">2 years</td>
+  </tr>
+  <tr>
+    <th scope="row" align="left" valign="top" bgcolor="#f4f4f4" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#f4f4f4;font-weight:bold;text-align:left;">High</th>
+    <td valign="top" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;">Division vice president or designee</td>
+    <td valign="top" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;">1 year</td>
+  </tr>
+</table>
+<table width="899" cellpadding="0" cellspacing="0" border="1" bordercolor="#8c8c8c" style="border-collapse:collapse;width:899px;border:1px solid #8c8c8c;mso-table-lspace:0pt;mso-table-rspace:0pt;">
+  <tr>
+    <th scope="col" align="left" valign="top" width="799" bgcolor="#e8e8e8" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#e8e8e8;font-weight:bold;text-align:left;">Rule</th>
+    <th scope="col" align="left" valign="top" width="100" bgcolor="#e8e8e8" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#e8e8e8;font-weight:bold;text-align:left;">State</th>
+  </tr>
+  <tr>
+    <td valign="top" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;">Approver and expiry scale with exposure.</td>
+    <td valign="top" width="100" bgcolor="#fbefc9" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#fbefc9;"><strong>Proposed</strong></td>
+  </tr>
+  <tr>
+    <td valign="top" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;">The expiry terms.</td>
+    <td valign="top" width="100" bgcolor="#e8e8e8" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#e8e8e8;"><strong>Calibrate</strong></td>
+  </tr>
+  <tr>
+    <td valign="top" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;">Renewal, a major new version, a change in who uses the product or how, or a complaint calls for a new decision before the term ends.</td>
+    <td valign="top" width="100" bgcolor="#fbefc9" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#fbefc9;"><strong>Proposed</strong></td>
+  </tr>
+  <tr>
+    <td valign="top" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;">A TAAP is reviewed at least once a year at renewal.</td>
+    <td valign="top" width="100" bgcolor="#dbe7f5" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#dbe7f5;"><strong>Required</strong></td>
+  </tr>
+  <tr>
+    <td valign="top" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;">Who signs and through which system may differ by campus. The levels, thresholds and outcomes may not.</td>
+    <td valign="top" width="100" bgcolor="#fbefc9" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#fbefc9;"><strong>Proposed</strong></td>
+  </tr>
+</table>
+<p style="margin:12px 0 6px 0;width:899px;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;font-weight:bold;line-height:1.35;color:#1a1a1a;">Contract terms</p>
+<table width="899" cellpadding="0" cellspacing="0" border="1" bordercolor="#8c8c8c" style="border-collapse:collapse;width:899px;border:1px solid #8c8c8c;mso-table-lspace:0pt;mso-table-rspace:0pt;">
+  <tr>
+    <th scope="col" align="left" valign="top" width="530" bgcolor="#e8e8e8" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#e8e8e8;font-weight:bold;text-align:left;">Term</th>
+    <th scope="col" align="left" valign="top" width="269" bgcolor="#e8e8e8" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#e8e8e8;font-weight:bold;text-align:left;">Applies to</th>
+    <th scope="col" align="left" valign="top" width="100" bgcolor="#e8e8e8" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#e8e8e8;font-weight:bold;text-align:left;">State</th>
+  </tr>
+  <tr>
+    <td valign="top" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;">CSU General Provisions for IT Acquisitions, clause 45</td>
+    <td valign="top" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;">Every approval</td>
+    <td valign="top" width="100" bgcolor="#dbe7f5" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#dbe7f5;"><strong>Required</strong></td>
+  </tr>
+  <tr>
+    <td valign="top" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;">The vendor responds to and resolves accessibility complaints (Gov Code 7405(b))</td>
+    <td valign="top" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;">Every approval</td>
+    <td valign="top" width="100" bgcolor="#dbe7f5" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#dbe7f5;"><strong>Required</strong></td>
+  </tr>
+  <tr>
+    <td valign="top" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;">Conformance warranty; no loss of conformance on upgrade or configuration; right to test before acceptance</td>
+    <td valign="top" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;">Barrier records and TAAPs</td>
+    <td valign="top" width="100" bgcolor="#fbefc9" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#fbefc9;"><strong>Proposed</strong></td>
+  </tr>
+  <tr>
+    <td valign="top" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;">Acknowledge a reported defect within 7 days; fix critical defects in 30 to 90 days or give an interim accommodation</td>
+    <td valign="top" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;">Barrier records and TAAPs</td>
+    <td valign="top" width="100" bgcolor="#fbefc9" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#fbefc9;"><strong>Proposed; Calibrate</strong></td>
+  </tr>
+  <tr>
+    <td valign="top" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;">A dated remediation roadmap; termination without penalty after a missed window</td>
+    <td valign="top" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;">Barrier records and TAAPs</td>
+    <td valign="top" width="100" bgcolor="#fbefc9" style="padding:6px 8px;border:1px solid #8c8c8c;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;background-color:#fbefc9;"><strong>Proposed</strong></td>
+  </tr>
+</table>
+<p style="margin:20px 0 6px 0;width:899px;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:12pt;font-weight:bold;line-height:1.35;color:#1a1a1a;">Step 4. What every decision records</p>
+<p style="margin:6px 0 6px 0;width:899px;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.35;color:#1a1a1a;">Every decision is recorded, including low-exposure approvals, so indicators 1.3-pro, 1.12-pro, 8.9-pro and 8.10-pro can be met from the records. (Required for the indicator bars; the list is Proposed.)</p>
+<ul style="margin:0 0 0 24px;padding:0;width:875px;">
+  <li style="margin:0 0 4px 0;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;">Kind of technology, interfaces and platforms, and the standard that applies.</li>
+  <li style="margin:0 0 4px 0;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;">Each exposure answer as the requester gave it and as the reviewer confirmed it; any floor that applied; the group scores; the number of unknowns.</li>
+  <li style="margin:0 0 4px 0;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;">Core tasks per role; severity per role and disability group.</li>
+  <li style="margin:0 0 4px 0;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;">Evidence level; ACR date, edition and version; any quality checks it failed.</li>
+  <li style="margin:0 0 4px 0;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;">Products compared, and the best-meets basis where used.</li>
+  <li style="margin:0 0 4px 0;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;">Outcome; contract terms; approver's name and title; date.</li>
+  <li style="margin:0 0 4px 0;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;">Expiry date and what triggers a new decision.</li>
+  <li style="margin:0 0 4px 0;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;">The matrix version used.</li>
+</ul>
+<p style="margin:20px 0 6px 0;width:899px;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:12pt;font-weight:bold;line-height:1.35;color:#1a1a1a;">What changed from version 1</p>
+<ul style="margin:0 0 0 24px;padding:0;width:875px;">
+  <li style="margin:0 0 4px 0;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;">&ldquo;Impact&rdquo; became &ldquo;exposure&rdquo;, and exposure no longer decides an outcome on its own.</li>
+  <li style="margin:0 0 4px 0;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;">A Step 0 picks the standard by kind of technology.</li>
+  <li style="margin:0 0 4px 0;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;">&ldquo;Highest level wins&rdquo; became floors first, then four merged groups.</li>
+  <li style="margin:0 0 4px 0;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;">User cut points moved from 5 and 25 to 25 and 250, to be calibrated.</li>
+  <li style="margin:0 0 4px 0;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;">Severity is defined by the Title II tests; &ldquo;unknown&rdquo; left the grid and became a routing rule.</li>
+  <li style="margin:0 0 4px 0;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;">A vendor's alternative channel counts only when it is equally effective.</li>
+  <li style="margin:0 0 4px 0;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;">The evidence ladder gained levels and eight ACR quality checks.</li>
+  <li style="margin:0 0 4px 0;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;">Approve gained a second form, the barrier record. S3 is never Approve.</li>
+  <li style="margin:0 0 4px 0;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;">TAAP or deny turns on whether the plan can serve every affected person from the first day, and whether a more accessible product exists.</li>
+  <li style="margin:0 0 4px 0;font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.3;color:#1a1a1a;">Approver and expiry scale with exposure. Contract terms follow the outcome.</li>
+</ul>
+</div>
+
+<script>
+  // Copies the tables as rich HTML for Outlook. The copy runs through a copy event,
+  // which works on a page opened from a local file, where the async clipboard API is
+  // often blocked.
+  const node = document.getElementById('matrix');
+  const status = document.getElementById('status');
+  let copying = false;
+
+  document.addEventListener('copy', (event) => {
+    if (!copying) return;
+    const html = '<html><body>' + node.innerHTML + '</body></html>';
+    event.clipboardData.setData('text/html', html);
+    event.clipboardData.setData('text/plain', node.innerText);
+    event.preventDefault();
+  });
+
+  document.getElementById('copy').addEventListener('click', () => {
+    copying = true;
+    let ok = false;
+    try {
+      ok = document.execCommand('copy');
+    } catch (e) {
+      ok = false;
+    }
+    copying = false;
+    if (ok) {
+      status.textContent = 'Copied. Paste into Outlook with Ctrl+V.';
+      return;
+    }
+    // Last resort: select the tables so the user can copy them by hand.
+    const range = document.createRange();
+    range.selectNodeContents(node);
+    const sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(range);
+    status.textContent = 'The browser blocked copying. The tables are selected: press Ctrl+C, then paste into Outlook.';
+  });
+</script>
+</body>
+</html>

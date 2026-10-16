@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Review matrix tester</title>
+<style>
+  :root {
+    --bg: #ffffff; --fg: #1a1a1a; --muted: #555555; --line: #c8c8c8; --panel: #f6f6f6;
+    --focus: #1a5fb4; --approve: #dcefdc; --barrier: #eef6dc; --taap: #fbefc9; --deny: #f6d6d3;
+    --review: #dbe7f5; --cell: #ffffff; --here: #1a1a1a;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #161616; --fg: #ececec; --muted: #b0b0b0; --line: #444444; --panel: #222222;
+      --focus: #8ab4f8; --approve: #1f3d24; --barrier: #2c3a1d; --taap: #4a3d14; --deny: #4d2420;
+      --review: #1d3049; --cell: #1c1c1c; --here: #ececec;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 16px; background: var(--bg); color: var(--fg);
+         font: 15px/1.45 system-ui, -apple-system, "Segoe UI", Arial, sans-serif; }
+  h1 { font-size: 1.35rem; margin: 0 0 4px; }
+  h2 { font-size: 1.05rem; margin: 0 0 8px; }
+  p.lede { margin: 0 0 16px; color: var(--muted); max-width: 70ch; }
+  .layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+  @media (max-width: 900px) { .layout { grid-template-columns: 1fr; } }
+  fieldset { border: 1px solid var(--line); border-radius: 6px; margin: 0 0 12px; padding: 10px 12px; background: var(--panel); }
+  legend { font-weight: 600; padding: 0 4px; }
+  label { display: block; }
+  .check { display: flex; gap: 8px; align-items: flex-start; margin: 4px 0; }
+  .check input { margin-top: 4px; }
+  select, input[type="number"], input[type="text"] { font: inherit; color: var(--fg); background: var(--cell);
+         border: 1px solid var(--line); border-radius: 4px; padding: 4px 6px; max-width: 100%; }
+  button { font: inherit; padding: 5px 12px; border: 1px solid var(--line); border-radius: 4px;
+           background: var(--cell); color: var(--fg); cursor: pointer; }
+  :focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+  table { border-collapse: collapse; width: 100%; }
+  th, td { border: 1px solid var(--line); padding: 4px 6px; text-align: left; vertical-align: top; }
+  th { background: var(--panel); }
+  .factors td:first-child { width: 34%; }
+  .presets { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 12px; }
+  .muted { color: var(--muted); font-size: 0.9em; }
+  .result { position: sticky; top: 12px; }
+  .outcome { font-size: 1.3rem; font-weight: 700; padding: 10px 12px; border-radius: 6px; margin: 0 0 10px; border: 1px solid var(--line); }
+  .o-approve { background: var(--approve); } .o-approve_with_barrier_record { background: var(--barrier); }
+  .o-taap { background: var(--taap); } .o-deny { background: var(--deny); } .o-manual_review { background: var(--review); }
+  dl { display: grid; grid-template-columns: max-content 1fr; gap: 4px 12px; margin: 0 0 12px; }
+  dt { font-weight: 600; } dd { margin: 0; }
+  .grid td.here { outline: 3px solid var(--here); outline-offset: -3px; font-weight: 700; }
+  pre { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 8px; overflow-x: auto; font-size: 12px; }
+  .ctx { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+  .ctx input { width: 100%; }
+  @media (max-width: 600px) { .ctx { grid-template-columns: 1fr; } }
+  .gradeline { font-weight: 600; margin: 0 0 10px; }
+  .copybar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 0 0 10px; }
+  /* An email preview: always light, as it will look in the message. */
+  .reasoning { border: 1px solid var(--line); border-radius: 6px; padding: 12px 14px; margin: 0 0 12px; background: #ffffff; color: #1a1a1a; }
+  .reasoning p { margin: 0 0 8px; } .reasoning ul { margin: 0 0 8px 20px; padding: 0; }
+  details { margin: 0 0 10px; } summary { cursor: pointer; font-weight: 600; margin: 0 0 8px; }
+  .finding { display: grid; grid-template-columns: 1fr 1.4fr 1.2fr 0.7fr auto; gap: 6px; align-items: end; margin: 0 0 6px; }
+  @media (max-width: 600px) { .finding { grid-template-columns: 1fr 1fr; } }
+</style>
+</head>
+<body>
+<h1>Review matrix tester</h1>
+<p class="lede">Enter a purchase review. The determination updates as you change the form. The logic and the form
+  options come from <code>review-matrix.js</code> in this folder, so this page always tests the current model.
+  Matrix version <span id="version"></span>.</p>
+
+<div class="presets" role="group" aria-label="Example reviews">
+  <button type="button" data-preset="small">Small optional tool, S2</button>
+  <button type="button" data-preset="homework">Homework platform, S3</button>
+  <button type="button" data-preset="unknown">Department tool, users unknown</button>
+  <button type="button" data-preset="public">Public page, no ACR</button>
+  <button type="button" data-preset="clear">Clear</button>
+</div>
+
+<div class="layout">
+<form id="form" novalidate>
+  <fieldset>
+    <legend>The request</legend>
+    <div class="ctx">
+      <label for="product">Product<input type="text" id="product" autocomplete="off"></label>
+      <label for="vendor">Vendor<input type="text" id="vendor" autocomplete="off"></label>
+      <label for="unit">Requesting unit<input type="text" id="unit" autocomplete="off"></label>
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend>Step 0. Kind of technology</legend>
+    <label for="ictKind">Kind</label>
+    <select id="ictKind" name="ictKind"></select>
+    <p class="muted" id="standardNote"></p>
+  </fieldset>
+
+  <fieldset id="floorsBox">
+    <legend>Step 1. Floors (facts that set a minimum level)</legend>
+  </fieldset>
+
+  <fieldset>
+    <legend>Step 1. Exposure answers</legend>
+    <p class="muted">Leave a value at "Unknown" to see how unknowns are scored. The reviewer's answer, when given, overrides the requester's.</p>
+    <table class="factors">
+      <thead><tr><th scope="col">Factor</th><th scope="col">Requester</th><th scope="col">Reviewer</th></tr></thead>
+      <tbody id="factorRows"></tbody>
+    </table>
+  </fieldset>
+
+  <fieldset>
+    <legend>Step 2. Evidence</legend>
+    <label for="evidence">Strongest evidence in hand</label>
+    <select id="evidence" name="evidence"></select>
+  </fieldset>
+
+  <fieldset>
+    <legend>Step 2. Barrier findings</legend>
+    <p class="muted">One row per barrier, by role and disability group. No rows means no known barriers.</p>
+    <div id="findings"></div>
+    <button type="button" id="addFinding">Add finding</button>
+  </fieldset>
+
+  <fieldset>
+    <legend>Step 3. Facts for TAAP or deny, and exceptions</legend>
+    <div class="check"><input type="checkbox" id="moreAccessibleProductExists"><label for="moreAccessibleProductExists">A more accessible product meets the need</label></div>
+    <div class="check"><input type="checkbox" id="taapPassesAllTests"><label for="taapPassesAllTests">The proposed TAAP passes every TAAP test</label></div>
+    <div class="check"><input type="checkbox" id="servesEveryoneFromDayOne"><label for="servesEveryoneFromDayOne">The plan serves every affected person from the first day of use</label></div>
+    <div class="check"><input type="checkbox" id="exceptionClaimed"><label for="exceptionClaimed">Someone claims conforming costs too much or would change the program</label></div>
+  </fieldset>
+</form>
+
+<section class="result" aria-labelledby="resultHeading">
+  <h2 id="resultHeading">Grade</h2>
+  <div id="outcome" class="outcome" role="status" aria-live="polite"></div>
+  <p id="gradeLine" class="gradeline"></p>
+  <div class="copybar">
+    <button type="button" id="copyEmail">Copy for email</button>
+    <button type="button" id="copyText">Copy as plain text</button>
+    <span id="copyStatus" role="status" class="muted"></span>
+  </div>
+  <div id="reasoning" class="reasoning"></div>
+  <details>
+    <summary>Reviewer details</summary>
+    <dl id="summary"></dl>
+    <table class="grid" id="grid"></table>
+    <p class="muted">The outlined cell is this review. Routing rules are checked before the grid.</p>
+  </details>
+  <details>
+    <summary>Determination as data</summary>
+    <pre id="json"></pre>
+  </details>
+</section>
+</div>
+
+<script src="review-matrix.js"></script>
+<script>
+  const M = window.ReviewMatrix;
+  const $ = (id) => document.getElementById(id);
+  const label = (s) => s.replace(/_/g, ' ');
+  const FACTORS = M.GROUPS.flatMap((g) => g.factors.map((f) => ({ ...f, group: g.id })));
+  const ROUTE_TEXT = Object.fromEntries(M.ROUTING.map((r) => [r.id, r.text]));
+  const REQUIRES_TEXT = {
+    evidence_e2: 'Claims validated by evidence E2 or better',
+    vendor_fix_date: 'A vendor fix date in the contract',
+    vendor_fix_within_12_months: 'A vendor fix date within 12 months',
+    serves_everyone_from_day_one: 'The plan serves every affected person from day one',
+    exception_record: 'A 35.204 determination (web) or a best-meets record (non-web)',
+    second_reviewer: 'A second reviewer: one answer moved one level would change the outcome',
+  };
+
+  // ---- build the form from the model
+  $('version').textContent = M.MATRIX_VERSION;
+  for (const [id, k] of Object.entries(M.ICT_KINDS)) $('ictKind').add(new Option(k.label, id));
+  for (const e of M.EVIDENCE) $('evidence').add(new Option(`${e.id}: ${e.holds}`, e.id));
+  for (const f of M.FLOORS) {
+    const d = document.createElement('div');
+    d.className = 'check';
+    d.innerHTML = `<input type="checkbox" id="floor_${f.id}" value="${f.id}"><label for="floor_${f.id}">${f.fact} <span class="muted">(at least ${f.min})</span></label>`;
+    $('floorsBox').append(d);
+  }
+  function levelSelect(id, factor, who) {
+    if (factor.numeric) return `<input type="number" min="0" id="${id}" aria-label="${label(factor.id)}, ${who}" placeholder="Unknown">`;
+    const opts = ['<option value="">Unknown</option>']
+      .concat(M.LEVELS.map((l) => `<option value="${l}">${l}: ${factor.levels[l]}</option>`)).join('');
+    return `<select id="${id}" aria-label="${label(factor.id)}, ${who}">${opts}</select>`;
+  }
+  for (const f of FACTORS) {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<th scope="row">${label(f.id)}<br><span class="muted">${f.group}</span></th>
+      <td>${levelSelect(`req_${f.id}`, f, 'requester')}</td><td>${levelSelect(`rev_${f.id}`, f, 'reviewer')}</td>`;
+    $('factorRows').append(tr);
+  }
+  let findingSeq = 0;
+  function addFinding(data = {}) {
+    const n = ++findingSeq;
+    const opts = (list, sel) => list.map((v) => `<option value="${v}"${v === sel ? ' selected' : ''}>${label(v)}</option>`).join('');
+    const row = document.createElement('div');
+    row.className = 'finding';
+    row.innerHTML = `
+      <label>Role<select data-k="role">${opts(M.ROLES, data.role)}</select></label>
+      <label>Disability group<select data-k="group">${opts(M.FUNCTIONAL_GROUPS, data.group)}</select></label>
+      <label>Core task<input type="text" data-k="coreTask" value="${data.coreTask ?? ''}"></label>
+      <label>Severity<select data-k="severity">${opts(['S1', 'S2', 'S3'], data.severity ?? 'S2')}</select></label>
+      <button type="button" aria-label="Remove finding ${n}">Remove</button>`;
+    row.querySelector('button').addEventListener('click', () => { row.remove(); run(); });
+    $('findings').append(row);
+  }
+  $('addFinding').addEventListener('click', () => { addFinding(); run(); });
+
+  // ---- read the form into a Review
+  function readReview() {
+    const answers = {};
+    for (const f of FACTORS) {
+      const v = (id) => { const x = $(id).value; return x === '' ? null : (f.numeric ? Number(x) : x); };
+      answers[f.id] = { requester: v(`req_${f.id}`), reviewer: v(`rev_${f.id}`) };
+    }
+    return {
+      ictKind: $('ictKind').value,
+      floors: M.FLOORS.filter((f) => $(`floor_${f.id}`).checked).map((f) => f.id),
+      answers,
+      evidence: $('evidence').value,
+      findings: [...$('findings').children].map((row) =>
+        Object.fromEntries([...row.querySelectorAll('[data-k]')].map((el) => [el.dataset.k, el.value]))),
+      moreAccessibleProductExists: $('moreAccessibleProductExists').checked,
+      taapPassesAllTests: $('taapPassesAllTests').checked,
+      servesEveryoneFromDayOne: $('servesEveryoneFromDayOne').checked,
+      exceptionClaimed: $('exceptionClaimed').checked,
+    };
+  }
+
+  // ---- copy the reasoning. A copy event works on a page opened from a local file,
+  // where the async clipboard API is often blocked.
+  let lastExplanation = null;
+  let copyMode = null;
+  document.addEventListener('copy', (event) => {
+    if (!copyMode || !lastExplanation) return;
+    event.clipboardData.setData('text/plain', lastExplanation.text);
+    if (copyMode === 'email') event.clipboardData.setData('text/html', `<html><body>${lastExplanation.html}</body></html>`);
+    event.preventDefault();
+  });
+  function copy(mode) {
+    copyMode = mode;
+    let ok = false;
+    try { ok = document.execCommand('copy'); } catch (e) { ok = false; }
+    copyMode = null;
+    $('copyStatus').textContent = ok
+      ? (mode === 'email' ? 'Copied. Paste into the email with Ctrl+V.' : 'Copied as plain text.')
+      : 'The browser blocked copying. Select the text in the box and copy it by hand.';
+  }
+  $('copyEmail').addEventListener('click', () => copy('email'));
+  $('copyText').addEventListener('click', () => copy('text'));
+
+  // ---- render the determination
+  function run() {
+    const review = readReview();
+    $('standardNote').textContent = `${M.ICT_KINDS[review.ictKind].standard}. If it cannot conform: ${M.ICT_KINDS[review.ictKind].whenNonConforming}.`;
+    const d = M.evaluate(review);
+    lastExplanation = M.explain(review, d, {
+      product: $('product').value, vendor: $('vendor').value, unit: $('unit').value,
+      date: new Date().toISOString().slice(0, 10),
+    });
+    const out = $('outcome');
+    out.className = `outcome o-${d.outcome}`;
+    out.textContent = lastExplanation.headline;
+    $('gradeLine').textContent = lastExplanation.grade;
+    $('reasoning').innerHTML = lastExplanation.html;
+    $('copyStatus').textContent = '';
+    const e = d.exposure;
+    const rows = [
+      ['Exposure', `${e.level} (score ${e.scorePct}% of maximum)`],
+      ['Floors applied', e.floorsApplied.length ? e.floorsApplied.map(label).join(', ') : 'none'],
+      ['Groups', Object.entries(e.groupLevels).map(([g, l]) => `${g} ${l}`).join(', ')],
+      ['Unknown answers', `${e.unknownCount}${e.unknownsMatter ? ' (they change the band)' : ''}`],
+      ['Severity', d.severity],
+      ['Evidence', d.evidence],
+      ['Route', d.route ? ROUTE_TEXT[d.route] : 'none'],
+      ['Requires', d.requires.length ? d.requires.map((r) => REQUIRES_TEXT[r] ?? label(r)).join('; ') : 'nothing extra'],
+      ['Approver', d.approver ?? 'not needed'],
+      ['Expires', d.expiresInYears ? `${d.expiresInYears} year${d.expiresInYears === 1 ? '' : 's'}` : 'n/a'],
+      ['Contract terms', d.contractTerms.length ? d.contractTerms.map(label).join(', ') : 'n/a'],
+    ];
+    $('summary').innerHTML = rows.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('');
+    renderGrid(d);
+    $('json').textContent = JSON.stringify(d, null, 2);
+  }
+
+  function renderGrid(d) {
+    const sev = d.severity.slice(0, 2);
+    const head = '<tr><th scope="col">Exposure</th>' + ['S0', 'S1', 'S2', 'S3'].map((s) => `<th scope="col">${s}</th>`).join('') + '</tr>';
+    const body = M.LEVELS.map((lvl) => '<tr><th scope="row">' + lvl + '</th>' + ['S0', 'S1', 'S2', 'S3'].map((s) => {
+      const c = M.GRID[lvl][s];
+      const cls = c.outcome === 'taap_or_deny' ? 'taap' : c.outcome;
+      const here = !d.route && lvl === d.exposure.level && s === sev ? ' here' : '';
+      return `<td class="o-${cls}${here}">${label(c.outcome)}</td>`;
+    }).join('') + '</tr>').join('');
+    $('grid').innerHTML = `<caption class="muted" style="caption-side:bottom;text-align:left">Exposure by worst severity</caption><thead>${head}</thead><tbody>${body}</tbody>`;
+  }
+
+  // ---- presets (the four sample reviews)
+  const PRESETS = {
+    small: { product: 'FormBuilder', vendor: 'Example Forms Inc.', unit: 'Facilities', ictKind: 'web', floors: [], evidence: 'E1',
+      req: { users: 10, scope: 'low', required_use: 'low', criticality: 'low', publishes: 'low', frequency: 'medium', contract_length: 'low' },
+      findings: [{ role: 'employees', group: 'without_vision', coreTask: 'Submit report', severity: 'S2' }] },
+    homework: { product: 'MathLab Pro', vendor: 'Example Learning', unit: 'Mathematics', ictKind: 'web', floors: ['required_for_grade'], evidence: 'E3', taapPassesAllTests: true,
+      req: { users: 400, scope: 'medium', required_use: 'high', criticality: 'high', publishes: 'low', frequency: 'high', contract_length: 'medium' },
+      findings: [{ role: 'students', group: 'without_vision', coreTask: 'Submit homework', severity: 'S3' }] },
+    unknown: { product: 'LabStation desktop app', vendor: 'Example Instruments', unit: 'Chemistry', ictKind: 'nonweb', floors: [], evidence: 'E1',
+      req: { scope: 'low', required_use: 'medium', criticality: 'medium', publishes: 'low', frequency: 'medium', contract_length: 'low' },
+      findings: [] },
+    public: { product: 'EventSignup', vendor: 'Example Events', unit: 'Student Life', ictKind: 'web', floors: ['public'], evidence: 'E0',
+      req: { users: 3, scope: 'low', required_use: 'low', criticality: 'low', publishes: 'high', frequency: 'low', contract_length: 'low' },
+      findings: [] },
+    clear: { ictKind: 'web', floors: [], evidence: 'E0', req: {}, findings: [] },
+  };
+  function applyPreset(p) {
+    $('form').reset();
+    for (const k of ['product', 'vendor', 'unit']) $(k).value = p[k] ?? '';
+    $('ictKind').value = p.ictKind;
+    $('evidence').value = p.evidence;
+    for (const f of M.FLOORS) $(`floor_${f.id}`).checked = p.floors.includes(f.id);
+    for (const f of FACTORS) { $(`req_${f.id}`).value = p.req[f.id] ?? ''; $(`rev_${f.id}`).value = ''; }
+    for (const k of ['moreAccessibleProductExists', 'taapPassesAllTests', 'servesEveryoneFromDayOne', 'exceptionClaimed']) $(k).checked = !!p[k];
+    $('findings').innerHTML = '';
+    p.findings.forEach((f) => addFinding(f));
+    run();
+  }
+  document.querySelectorAll('[data-preset]').forEach((b) => b.addEventListener('click', () => applyPreset(PRESETS[b.dataset.preset])));
+
+  $('form').addEventListener('input', run);
+  $('form').addEventListener('change', run);
+  applyPreset(PRESETS.small);
+</script>
+</body>
+</html>
