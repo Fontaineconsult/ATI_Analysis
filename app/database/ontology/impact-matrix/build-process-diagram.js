@@ -70,7 +70,7 @@ box(SX, Y.start, SW, 60, 'start', ['Requisition intake', 'exposure answers, find
 diamond(SX, Y.d2, SW, DH, ['Accessibility evidence', 'on file?'], 13);
 box(SX, Y.p1, SW, 60, 'step', ['Rate Exposure', 'floors and answers; unknown answers map to high']);
 diamond(SX, Y.d3, SW, DH, ['Unknown answers raise', 'the Exposure level?'], 13);
-box(SX, Y.p2, SW, 60, 'step', ['Severity from the findings, as a minimum', 'task impact of the worst barrier, never the ACR label']);
+box(SX, Y.p2, SW, 60, 'step', ['Severity from the findings, as a minimum', 'impact on the essential function, never the ACR label']);
 diamond(SX, Y.d4, SW, DH, ['Evidence at the Veracity floor', 'for this Exposure and Severity?', '(S1 always E2 or better)'], 12);
 holdBox(RX, Y.d2, 'severity_unknown');
 holdBox(RX, Y.d3, 'answers_unknown');
@@ -109,8 +109,8 @@ for (const x of Object.values(COL)) arrow([[x, Y.bus], [x, Y.state - 35]]);
 
 box(COL.S0, Y.state, CW, 70, 'state', ['S0. No barrier', 'No effect on information,', 'interactions or participation'], { size: 12, stroke: COLOR.state[1] });
 box(COL.S1, Y.state, CW, 70, 'state', [`S1. ${sev('S1').gsa ? 'Minor' : 'Minor'} barrier`, 'Minimal impact, meeting the', 'four tests of 28 CFR 35.205'], { size: 12, stroke: COLOR.state[1] });
-box(COL.S2, Y.state, CW, 70, 'state', ['S2. Major barrier', 'A core task is done independently,', 'with clearly unequal effort'], { size: 12, stroke: COLOR.state[1] });
-box(COL.S3, Y.state, CW, 70, 'state', ['S3. Critical barrier', 'A core task cannot be done', 'independently; incl. accumulated, fallback'], { size: 11, stroke: COLOR.state[1] });
+box(COL.S2, Y.state, CW, 70, 'state', ['S2. Major barrier', 'An essential function is performed independently,', 'with clearly unequal effort'], { size: 12, stroke: COLOR.state[1] });
+box(COL.S3, Y.state, CW, 70, 'state', ['S3. Critical barrier', 'An essential function cannot be performed', 'independently; incl. accumulated, fallback'], { size: 11, stroke: COLOR.state[1] });
 
 /** A hold terminal hung off one side of a lane diamond at row y. */
 const hang = (x, y, id, label = 'no', side = -1) => {

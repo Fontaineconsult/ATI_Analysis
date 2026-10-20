@@ -100,7 +100,7 @@ const notes = [
   `No TAAP on file maps to route ${routeNo('taap_needed')}, On hold: TAAP needed, which carries the TAAP standard and the warning.`,
   `Below the standard at pressure ${C.taapStandard.denyAt} or more, a written undue burden or fundamental alteration determination maps to Approve with TAAP, and a claim maps to route ${routeNo('exception_claimed')}.`,
   'S2 is never denied. An S2 plan below the standard maps to Approve with TAAP under a warning.',
-  `S2 escalates to S3 at ${acc.stack} S2 barriers stacked on one task for one user group, or at high Exposure with S2 barriers across ${acc.spreadPairs} task and group pairs.`,
+  `S2 escalates to S3 at ${acc.stack} S2 barriers stacked on one function for one user group, or at high Exposure with S2 barriers across ${acc.spreadPairs} function and group pairs.`,
   'At S3, a more accessible product that meets the same need maps to Deny.',
   `The Veracity floor column gates every review before the risk grade, with S1 always requiring E2 or better. Evidence below the floor maps to route ${routeNo('veracity_below_floor')}, manual review, which raises the evidence and re-rates Severity.`,
   'When the evidence cannot be raised, the review proceeds at S3 (provisional) with the barriers found as a minimum, and Breadth 2 with no evidence at all.',

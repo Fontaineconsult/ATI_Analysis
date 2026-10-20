@@ -245,15 +245,15 @@ conformance is not proof of access).
 |---|---|---|
 | S0 | No effect on information, interactions, transactions or participation. Equal timeliness, privacy, independence and ease of use. | none |
 | S1 | Minimal impact, demonstrated. The four 35.205 tests are documented as met. | Minor |
-| S2 | A core task can be completed independently, with clearly unequal time or effort. | Major |
-| S3 | A person in that role cannot complete a core task independently, or only with another person's help. | Critical |
+| S2 | An essential function can be performed independently, with clearly unequal time or effort. | Major |
+| S3 | A person in that role cannot perform an essential function independently, or only with another person's help. | Critical |
 
-- The TAAP threshold is a barrier that blocks a task, which is S3. **Agreed.** Grounds:
+- The TAAP threshold is a barrier that blocks an essential function, which is S3. **Agreed.** Grounds:
   `proportionate-remedy`.
 - A vendor's alternative channel weighs against a TAAP. **Agreed, narrowed by law.** The
-  channel counts only when it is equally effective: it completes the same task, at the
-  same time, independently and privately. A channel that needs staff to complete the
-  task for the person counts as assistance and leaves the severity at S3.
+  channel counts only when it is equally effective: it performs the same function, at the
+  same time, independently and privately. A channel that needs staff to perform the
+  function for the person counts as assistance and leaves the severity at S3.
   **Required** (35.205; CSU reads minimal impact as failing when users must rely on
   assistance, alternate processes or workarounds). Grounds: `equally-effective-access`.
 - An alternative method inside the product that gives equal or greater access is
@@ -264,13 +264,13 @@ conformance is not proof of access).
   functional group (the nine 508 functional performance criteria). The worst cell sets
   the role's severity. **Proposed** (raised 10/14: in Gradescope the barriers sit on the
   faculty side). Grounds: `audience-determines-governing-duty`.
-- Core tasks are listed per role before anyone tests, and each is judged as a complete
-  process: a barrier at any step affects the whole task. **Proposed** (WCAG-EM 2.0).
+- Essential functions are listed per role before anyone tests, and each is judged as a complete
+  process: a barrier at any step affects the whole function. **Proposed** (WCAG-EM 2.0).
 - A failure of WCAG 1.4.2, 2.1.2, 2.2.2 or 2.3.1 is at least S2 wherever it occurs, and
   S3 when it traps the user or risks harm, such as a keyboard trap or flashing content.
   **Required** (WCAG conformance requirement 5, non-interference).
-- "Partially Supports" is never S0. It is S1 or S2 by whether a core task is touched,
-  and S3 when a core task is blocked. **Proposed** (deferred on 10/14 as a source of
+- "Partially Supports" is never S0. It is S1 or S2 by whether an essential function is touched,
+  and S3 when an essential function is blocked. **Proposed** (deferred on 10/14 as a source of
   inconsistency).
 
 #### Evidence
@@ -284,9 +284,9 @@ evidence. **Agreed.**
 | E1- | A vendor ACR that fails a quality check below | Proposed |
 | E1 | A vendor ACR that passes every quality check | Proposed |
 | E1+ | E1 plus GSA's issue-level supplement (severity, affected group, workaround) | Proposed |
-| E2a | A live vendor demonstration of each role's core tasks with assistive technology | Agreed (demonstrations); level Proposed |
+| E2a | A live vendor demonstration of each role's essential functions with assistive technology | Agreed (demonstrations); level Proposed |
 | E2b | A third-party audit that names its method (Trusted Tester, ICT Testing Baseline, WCAG-EM) | Proposed |
-| E3 | ATI team testing of each role's core tasks by a named method | Agreed (ATI testing); level Proposed |
+| E3 | ATI team testing of each role's essential functions by a named method | Agreed (ATI testing); level Proposed |
 
 Grounds for the ladder: `vendor-claims-require-proportionate-validation`,
 `same-facts-same-answer`.
@@ -322,7 +322,7 @@ gives approve two forms.
 |---|---|---|
 | Approve | No known barrier on any role's path | Agreed |
 | Approve with barrier record | Known S1 or S2 barriers. The record holds notice to users where they meet the product, the vendor's remediation commitment with dates in the contract, and a review date. | Proposed (two-tier answer to the 4.6-pro tension, below) |
-| TAAP | S3 on a core task, with an alternative that meets every TAAP test below | Agreed |
+| TAAP | S3 on an essential function, with an alternative that meets every TAAP test below | Agreed |
 | Deny | S3 where a TAAP cannot meet its tests, or a more accessible product meets the need | Agreed |
 | Manual review | Not an answer about the barrier. It routes uncertainty: unknown severity, evidence below the limit, a boundary score, or a claimed exception. It returns a recommendation, and the reviewer who owns the requisition decides. | Agreed (recommendation only); routing role Proposed |
 
@@ -345,7 +345,7 @@ first without stretching the TAAP. **Proposed.** Grounds:
 
 #### The grid
 
-Rows are exposure. Columns are the worst severity on any role's core path.
+Rows are exposure. Columns are the worst severity on any role's essential functions.
 
 | Exposure | S0 | S1 | S2 | S3 |
 |---|---|---|---|---|
@@ -360,13 +360,13 @@ How the grid answers the agreed questions:
   provide at High exposure, so more High cases end in deny. **Agreed** (the group wanted
   the matrix, using how many people depend on the product, to decide TAAP or deny).
   Grounds: `equally-effective-access`, `bounded-duty-burden-limits`.
-- S3 on a core task is never Approve, at any exposure. **Proposed.** Grounds:
+- S3 on an essential function is never Approve, at any exposure. **Proposed.** Grounds:
   `program-accessibility-as-proactive-duty`, `exposure-sets-scrutiny-not-entitlement`.
 - Deny is chosen when a more accessible product meets the need, at any exposure. Where
   nothing on the market conforms, the path is a best-meets record and a TAAP.
   **Required** for non-web technology (508 E202.7; CSU procurement Step 1). Grounds:
   `most-accessible-product-that-meets-the-need`, `universal-design-over-accommodation`.
-- S2 never requires a TAAP, because it does not block a task. Exposure raises the
+- S2 never requires a TAAP, because it does not block an essential function. Exposure raises the
   evidence and the vendor commitment instead. **Agreed** (the TAAP threshold).
 
 #### Rules that hold in every cell
@@ -433,7 +433,7 @@ for the 1.3-pro and 1.12-pro output bars; the list is **Proposed**. Grounds:
 - Kind of technology, interfaces and platforms, and the governing standard.
 - Each exposure fact as the requester answered it and as the reviewer confirmed it; any
   floor that applied; the group scores; the count of unknowns.
-- Core tasks per role; severity per role and functional group.
+- Essential functions per role; severity per role and functional group.
 - Evidence level; ACR date, edition and version; the quality checks it failed.
 - Products compared, and the best-meets basis where used.
 - Outcome; contract terms included; approver name and title; date.

@@ -14,7 +14,7 @@
   <polygon points="605,392 755,440 605,488 455,440" fill="#fdf7e3" stroke="#bdbab0"/>
   <text x="605" y="435.5" text-anchor="middle" font-size="13" fill="#1a1a1a"><tspan x="605" dy="0" font-weight="400">Unknown answers raise</tspan><tspan x="605" dy="17" font-weight="400">the Exposure level?</tspan></text>
   <rect x="455" y="520" width="300" height="60" rx="6" fill="#ffffff" stroke="#bdbab0" stroke-width="1"/>
-  <text x="605" y="545.5" text-anchor="middle" font-size="13" fill="#1a1a1a"><tspan x="605" dy="0" font-weight="600">Severity from the findings, as a minimum</tspan><tspan x="605" dy="17" font-weight="400">task impact of the worst barrier, never the ACR label</tspan></text>
+  <text x="605" y="545.5" text-anchor="middle" font-size="13" fill="#1a1a1a"><tspan x="605" dy="0" font-weight="600">Severity from the findings, as a minimum</tspan><tspan x="605" dy="17" font-weight="400">impact on the essential function, never the ACR label</tspan></text>
   <polygon points="605,612 755,660 605,708 455,660" fill="#fdf7e3" stroke="#bdbab0"/>
   <text x="605" y="648" text-anchor="middle" font-size="12" fill="#1a1a1a"><tspan x="605" dy="0" font-weight="400">Evidence at the Veracity floor</tspan><tspan x="605" dy="16" font-weight="400">for this Exposure and Severity?</tspan><tspan x="605" dy="16" font-weight="400">(S1 always E2 or better)</tspan></text>
   <rect x="835" y="192" width="330" height="56" rx="6" fill="#ecebf7" stroke="#bdbab0" stroke-width="1"/>
@@ -59,9 +59,9 @@
   <rect x="355" y="855" width="230" height="70" rx="6" fill="#fdf0d5" stroke="#7a4d00" stroke-width="1.6"/>
   <text x="470" y="878" text-anchor="middle" font-size="12" fill="#7a4d00"><tspan x="470" dy="0" font-weight="600">S1. Minor barrier</tspan><tspan x="470" dy="16" font-weight="400">Minimal impact, meeting the</tspan><tspan x="470" dy="16" font-weight="400">four tests of 28 CFR 35.205</tspan></text>
   <rect x="625" y="855" width="230" height="70" rx="6" fill="#fdf0d5" stroke="#7a4d00" stroke-width="1.6"/>
-  <text x="740" y="878" text-anchor="middle" font-size="12" fill="#7a4d00"><tspan x="740" dy="0" font-weight="600">S2. Major barrier</tspan><tspan x="740" dy="16" font-weight="400">A core task is done independently,</tspan><tspan x="740" dy="16" font-weight="400">with clearly unequal effort</tspan></text>
+  <text x="740" y="878" text-anchor="middle" font-size="12" fill="#7a4d00"><tspan x="740" dy="0" font-weight="600">S2. Major barrier</tspan><tspan x="740" dy="16" font-weight="400">An essential function is performed independently,</tspan><tspan x="740" dy="16" font-weight="400">with clearly unequal effort</tspan></text>
   <rect x="895" y="855" width="230" height="70" rx="6" fill="#fdf0d5" stroke="#7a4d00" stroke-width="1.6"/>
-  <text x="1010" y="879" text-anchor="middle" font-size="11" fill="#7a4d00"><tspan x="1010" dy="0" font-weight="600">S3. Critical barrier</tspan><tspan x="1010" dy="15" font-weight="400">A core task cannot be done</tspan><tspan x="1010" dy="15" font-weight="400">independently; incl. accumulated, fallback</tspan></text>
+  <text x="1010" y="879" text-anchor="middle" font-size="11" fill="#7a4d00"><tspan x="1010" dy="0" font-weight="600">S3. Critical barrier</tspan><tspan x="1010" dy="15" font-weight="400">An essential function cannot be performed</tspan><tspan x="1010" dy="15" font-weight="400">independently; incl. accumulated, fallback</tspan></text>
   <path d="M200,925 L200,1912" fill="none" stroke="#6b6b6b" stroke-width="1.4" marker-end="url(#head)"/>
   <text x="208" y="941" text-anchor="start" font-size="11" fill="#444444"><tspan x="208" dy="0" font-weight="400">Approve</tspan></text>
   <path d="M470,925 L470,1912" fill="none" stroke="#6b6b6b" stroke-width="1.4" marker-end="url(#head)"/>

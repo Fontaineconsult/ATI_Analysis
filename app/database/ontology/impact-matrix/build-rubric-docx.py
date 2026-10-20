@@ -5,7 +5,7 @@ review-matrix.js, so the document carries the same numbers as the model. Each se
 followed by a Grounding part that names the binding rules, the framework principle and the
 calibration choices behind it. Prose follows app/database/ontology/writing-style.md.
 
-    .venv314/Scripts/python app/database/ontology/impact-matrix/build-rubric-docx.py
+    .venv/Scripts/python app/database/ontology/impact-matrix/build-rubric-docx.py
 
 Needs python-docx and the Playwright install under e2e/node_modules.
 """
@@ -55,11 +55,11 @@ GROUNDING = {
         'rules': [
             ('28 CFR 35.205', 'A nonconformance counts as compliant only when its impact is so minimal that people with disabilities still get the same information, interactions and transactions, with substantially equivalent timeliness, privacy, independence and ease of use. The test measures the effect on a person, which is why severity attaches to the barrier and not to the failed criterion.'),
             ('Section 508 Standards, Chapter 3 (36 CFR 1194)', 'The functional performance criteria name the nine disability groups a finding records.'),
-            ('WCAG 2.1, conformance requirement 3', 'Every page in a complete process must conform, so a core task is judged across its whole process.'),
-            ('CSU ATI Procurement Process, Step 1', 'The requester states the product\'s "essential functionality", which is the source of the core task list.'),
+            ('WCAG 2.1, conformance requirement 3', 'Every page in a complete process must conform, so an essential function is judged across its whole process.'),
+            ('CSU ATI Procurement Process, Step 1', 'The requester states the product\'s "essential functionality", which is the source of the essential function list.'),
         ],
         'principles': [
-            ('Severity is judged by the effect on a task', 'A barrier\'s severity comes from what it does to a named group of users on a core task. Neither an ACR\'s conformance label nor a criterion\'s level says how severe a barrier is.'),
+            ('Severity is judged by the effect on an essential function','A barrier\'s severity comes from what it does to a named group of users on an essential function. Neither an ACR\'s conformance label nor a criterion\'s level says how severe a barrier is.'),
             ('The audience determines which duty governs', 'Who uses a system decides which law governs its accessibility, so a finding records the role.'),
         ],
         'calibration': 'None. The definitions restate the law\'s own tests.',
@@ -82,16 +82,16 @@ GROUNDING = {
     },
     'Severity': {
         'rules': [
-            ('28 CFR 35.205', 'The four tests define S1. A barrier that makes a task clearly harder fails the minimal-impact test, so S2 does not conform. The university must be able to show minimal impact, so S1 needs demonstration.'),
+            ('28 CFR 35.205', 'The four tests define S1. A barrier that makes an essential function clearly harder to perform fails the minimal-impact test, so S2 does not conform. The university must be able to show minimal impact, so S1 needs demonstration.'),
             ('CSU TAAP Authoring Template, instructions', 'Barriers "severe enough to prevent users from performing essential functions" require a TAAP, which is the S3 line.'),
             ('Section 508 Standards, E202.7 (36 CFR 1194)', 'Section 508 has no minimal-impact exception, so for non-web technology an S1 or S2 product is acceptable only when no conforming product meets the need.'),
         ],
         'principles': [
-            ('Severity is judged by the effect on a task', 'Severity derives from task impact, independent of the vendor label and the criterion level.'),
+            ('Severity is judged by the effect on an essential function','Severity derives from the impact on an essential function, independent of the vendor label and the criterion level.'),
             ('Severity calls need anchors', 'Trained reviewers disagree on severity often enough that one reviewer\'s call carries known error, so each level has a written anchor and a call made from documents alone stays open to testing.'),
             ('Remedy proportionate to barrier severity', 'Formal alternative-access planning applies to barriers that block essential functions, not to every conformance flaw.'),
         ],
-        'calibration': 'The accumulation thresholds (3 S2 findings stacked on one task and group, and 6 pairs at high exposure) are the matrix\'s. The reasoning is that task completion is conditional on every barrier on the task, so stacked S2 barriers block the task, and S2 barriers across most of the product exceed minimal impact in aggregate. The GSA labels minor, major and critical are used so vendor reports read across, and they are not a rule.',
+        'calibration': 'The accumulation thresholds (3 S2 findings stacked on one function and group, and 6 pairs at high exposure) are the matrix\'s. The reasoning is that a user performs a function only by passing every barrier on it, so stacked S2 barriers block the function, and S2 barriers across most of the product exceed minimal impact in aggregate. The GSA labels minor, major and critical are used so vendor reports read across, and they are not a rule.',
     },
     'Evidence (Veracity)': {
         'rules': [
@@ -110,7 +110,7 @@ GROUNDING = {
     },
     'Breadth': {
         'rules': [
-            ('28 CFR 35.130(b)(3)', 'A university may not use methods of administration that have the effect of discriminating on the basis of disability. A product whose barriers reach most tasks and groups has that effect more widely, which is what Breadth measures.'),
+            ('28 CFR 35.130(b)(3)', 'A university may not use methods of administration that have the effect of discriminating on the basis of disability. A product whose barriers reach most essential functions and groups has that effect more widely, which is what Breadth measures.'),
             ('CSU TAAP Authoring Template, Process Outcome and Institutional Risk', 'The template grades a plan by how many requirements it meets. Breadth raises the pressure, and pressure raises how many a plan must meet.'),
         ],
         'principles': [
@@ -139,7 +139,7 @@ GROUNDING = {
     'Risk grade': {
         'rules': [
             ('CSU TAAP Authoring Template, instructions', 'A TAAP is needed only for barriers that prevent essential functions, so S0 and S1 are Approve and S3 is Needs TAAP at every exposure.'),
-            ('28 CFR 35.205; CSU Executive Order 1111, section IV', 'At medium or high exposure, barriers that make tasks clearly harder reach too many people for the impact to be minimal, so S2 is Needs TAAP there.'),
+            ('28 CFR 35.205; CSU Executive Order 1111, section IV', 'At medium or high exposure, barriers that make essential functions clearly harder to perform reach too many people for the impact to be minimal, so S2 is Needs TAAP there.'),
             ('Section 508 Standards, E202.7 (36 CFR 1194)', 'For non-web technology, a high-exposure S3 approval also carries a best-meets record with market research.'),
         ],
         'principles': [

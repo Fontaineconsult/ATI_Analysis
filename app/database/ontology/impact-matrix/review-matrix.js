@@ -41,11 +41,11 @@ const CALIBRATION = {
   weights: { reach: 1, stakes: 1, spread: 1, duration: 1 },
   bands: { medium: 0.25, high: 0.55 },       // share of the maximum weighted score
   acrMaxAgeMonths: 24,
-  // Breadth, from 0 to 2: one step at each cut of distinct blocked task and group pairs, plus
+  // Breadth, from 0 to 2: one step at each cut of distinct blocked function and group pairs, plus
   // one when S2 findings reach s2AddsAt.
   breadth: { blockedCuts: [2, 4], s2AddsAt: 3 },
-  // S2 barriers that add up to S3. `stack` S2 findings for one group on one core task block
-  // that task. At `spreadAt` exposure, S2 findings across `spreadPairs` task and group pairs
+  // S2 barriers that add up to S3. `stack` S2 findings for one group on one essential function block
+  // that function. At `spreadAt` exposure, S2 findings across `spreadPairs` function and group pairs
   // make the product S3.
   accumulation: { stack: 3, spreadPairs: 6, spreadAt: 'high' },
   // TAAP standard. Pressure P = rank(Exposure) + Breadth, from 0 to 4. `required[P]` is how many
@@ -131,8 +131,8 @@ const GROUPS = [
 const SEVERITY = [
   { id: 'S0', rank: 0, gsa: null, meaning: 'No effect on information, interactions, transactions or participation' },
   { id: 'S1', rank: 1, gsa: 'Minor', meaning: 'Minimal impact, demonstrated: the four 35.205 tests documented as met' },
-  { id: 'S2', rank: 2, gsa: 'Major', meaning: 'A core task can be completed independently, with clearly unequal time or effort' },
-  { id: 'S3', rank: 3, gsa: 'Critical', meaning: 'A core task cannot be completed independently, or only with help' },
+  { id: 'S2', rank: 2, gsa: 'Major', meaning: 'An essential function can be performed independently, with clearly unequal time or effort' },
+  { id: 'S3', rank: 3, gsa: 'Critical', meaning: 'An essential function cannot be performed independently, or only with help' },
 ].map((s) => ({ ...s, state: 'required', grounds: ['equally-effective-access'] }));
 
 const EVIDENCE = [
@@ -140,9 +140,9 @@ const EVIDENCE = [
   { id: 'E1-', rank: 1, holds: 'Vendor ACR that fails a quality check', state: 'proposed' },
   { id: 'E1', rank: 2, holds: 'Vendor ACR that passes every quality check', state: 'proposed' },
   { id: 'E1+', rank: 3, holds: 'E1 plus GSA issue-level supplement', state: 'proposed' },
-  { id: 'E2a', rank: 4, holds: 'Live vendor demonstration of core tasks with assistive technology', state: 'agreed' },
+  { id: 'E2a', rank: 4, holds: 'Live vendor demonstration of essential functions with assistive technology', state: 'agreed' },
   { id: 'E2b', rank: 4, holds: 'Third-party audit with a named method', state: 'proposed' },
-  { id: 'E3', rank: 5, holds: 'ATI team testing of core tasks by a named method', state: 'agreed' },
+  { id: 'E3', rank: 5, holds: 'ATI team testing of essential functions by a named method', state: 'agreed' },
 ].map((e) => ({ ...e, grounds: ['vendor-claims-require-proportionate-validation'] }));
 
 /** Any failed check drops an ACR to E1-. */
@@ -290,7 +290,7 @@ const TAAP_TERMS = {
   state: 'required', source: 'CSU TAAP Authoring Template, Administrative Approval and Annual Review',
 };
 
-/** Exposure levels at which barriers that do not block a task still need a vendor roadmap.
+/** Exposure levels at which barriers that do not block an essential function still need a vendor roadmap.
  *  The CSU Vendor Accessibility Roadmap covers medium- and high-impact products. Every
  *  TAAP needs one, because a TAAP is valid only while the vendor remediates. */
 const ROADMAP_LEVELS = ['medium', 'high'];
@@ -369,14 +369,14 @@ const AUTHORITY = {
       says: 'California applies the Section 508 Standards to the technology state entities buy. The CSU follows them for software and hardware.' },
     { cite: 'CSU ATI Procurement Process', kind: 'csu_policy',
       says: 'The CSU buys the most accessible product that meets the business need.' },
-    // Known barriers that do not block a task. The TAAP line comes from the template's own
+    // Known barriers that do not block an essential function. The TAAP line comes from the template's own
     // instructions. The EEAAP clause of the ATI Policy (2024) is deprecated for this tool.
     { cite: 'CSU TAAP Authoring Template, instructions', kind: 'csu_policy', severity: ['S1', 'S2'],
       says: 'A TAAP is needed only when barriers are "severe enough to prevent users from performing essential functions". Failures "that do not prohibit core functionality do not require this process."' },
     { cite: '28 CFR 35.205', kind: 'federal_law', ict: WEB, severity: ['S1'],
       says: 'A nonconformance counts as compliant only when its impact is so small that people with disabilities still get the same information, interactions and transactions. They must get them with substantially equivalent timeliness, privacy, independence and ease of use. The university must be able to show this, so an S1 finding needs strong evidence.' },
     { cite: '28 CFR 35.205', kind: 'federal_law', ict: WEB, severity: ['S2'],
-      says: 'An S2 barrier makes a task clearly harder, so it does not meet the minimal-impact test. The law does not excuse it, and the product does not conform.' },
+      says: 'An S2 barrier makes an essential function clearly harder to perform, so it does not meet the minimal-impact test. The law does not excuse it, and the product does not conform.' },
     { cite: 'Section 508 Standards, E202.7 (36 CFR 1194)', kind: 'federal_standard', ict: ['nonweb'], severity: ['S1', 'S2'],
       says: 'Section 508 has no minimal-impact exception. A product that does not conform is acceptable only when no conforming product meets the need, and the record shows the market research.' },
     { ...ROADMAP_DUTY, severity: ['S1', 'S2'], exposure: ROADMAP_LEVELS },
@@ -386,9 +386,9 @@ const AUTHORITY = {
   approve_with_taap: [
     { cite: 'CSU TAAP Authoring Template, instructions', kind: 'csu_policy', severity: ['S3'],
       says: 'A TAAP is needed when barriers are "severe enough to prevent users from performing essential functions".' },
-    // Broad S2: no single barrier blocks a task, but together they are more than minimal impact.
+    // Broad S2: no single barrier blocks a function, but together they are more than minimal impact.
     { cite: '28 CFR 35.205', kind: 'federal_law', ict: WEB, severity: ['S2'],
-      says: 'A nonconformance is excused only when its impact is so minimal that people with disabilities still get the same information, interactions and transactions, with substantially equivalent timeliness, privacy, independence and ease of use. At Medium or High exposure, barriers that make tasks clearly harder reach too many people for the impact to be minimal, even though none blocks a task.' },
+      says: 'A nonconformance is excused only when its impact is so minimal that people with disabilities still get the same information, interactions and transactions, with substantially equivalent timeliness, privacy, independence and ease of use. At Medium or High exposure, barriers that make essential functions clearly harder to perform reach too many people for the impact to be minimal, even though none blocks a function.' },
     { cite: 'CSU Executive Order 1111, section IV', kind: 'csu_policy', severity: ['S2'],
       says: '"Accessible" means equal information, interactions and services "in an equally effective and equally integrated manner, with substantially equivalent ease of use." Technology access "must provide comparable functionality, affordability, and timeliness."' },
     { cite: 'CSU TAAP Authoring Template, Requirements Checklist', kind: 'csu_policy',
@@ -437,7 +437,7 @@ const AUTHORITY = {
     { cite: 'Section 508 Standards, E202.7; CSU ATI Procurement Process', kind: 'csu_policy', reason: ['more_accessible_product'],
       says: 'When a more accessible product meets the need, the CSU chooses it.' },
     { cite: 'CSU TAAP Authoring Template, Process Outcome and Administrative Approval', kind: 'csu_policy', reason: ['taap_below_standard'],
-      says: 'A plan that meets fewer than six requirements is a Non-Equal Alternative with moderate institutional risk, and the signers must accept that risk. At high exposure, or where the barriers block many tasks, the matrix does not ask them to: the plan must meet the TAAP standard or the request is denied, unless the president or a designee determines in writing that equally effective access would be an undue burden or a fundamental alteration. The standard is the matrix\'s, stated in the denial, not a number in any rule.' },
+      says: 'A plan that meets fewer than six requirements is a Non-Equal Alternative with moderate institutional risk, and the signers must accept that risk. At high exposure, or where the barriers block many essential functions, the matrix does not ask them to: the plan must meet the TAAP standard or the request is denied, unless the president or a designee determines in writing that equally effective access would be an undue burden or a fundamental alteration. The standard is the matrix\'s, stated in the denial, not a number in any rule.' },
     { cite: 'CSU TAAP Authoring Template, Process Outcome', kind: 'csu_policy', reason: ['no_alternative'],
       says: 'A plan that meets none of the six requirements is "unable to provide alternative means of access", and the template calls it a high risk to the institution. Access would then depend entirely on individual accommodation.' },
     { cite: 'CSU Executive Order 1111, section IV.C.4', kind: 'csu_policy', reason: ['no_alternative'],
@@ -480,12 +480,12 @@ function authorityFor(key, ictKind, severity, denyReason = null, level = null) {
     && (!a.reason || a.reason.includes(denyReason)) && (!a.exposure || a.exposure.includes(level)));
 }
 
-/** How far the barriers reach together: blocked task and group pairs, and S2 findings. */
-const pairKey = (f) => `${f.coreTask || f.role}|${f.group}`;
+/** How far the barriers reach together: blocked function and group pairs, and S2 findings. */
+const pairKey = (f) => `${f.essentialFunction || f.role}|${f.group}`;
 
 /**
- * S2 barriers that add up to S3. A user finishes a task only by passing every barrier on it,
- * so S2 barriers stacked on one task block it. At high exposure, S2 barriers spread across
+ * S2 barriers that add up to S3. A user performs a function only by passing every barrier on it,
+ * so S2 barriers stacked on one function block it. At high exposure, S2 barriers spread across
  * most of the product are more than minimal impact taken together.
  */
 function accumulation(review, level) {
@@ -493,8 +493,8 @@ function accumulation(review, level) {
   const counts = {};
   for (const f of review.findings.filter((x) => x.severity === 'S2')) counts[pairKey(f)] = (counts[pairKey(f)] ?? 0) + 1;
   const stacked = Object.entries(counts).filter(([, n]) => n >= c.stack).map(([k, n]) => {
-    const [task, group] = k.split('|');
-    return { task, group, count: n };
+    const [essentialFunction, group] = k.split('|');
+    return { essentialFunction, group, count: n };
   });
   const spreadPairs = Object.keys(counts).length;
   const spread = level === c.spreadAt && spreadPairs >= c.spreadPairs;
@@ -504,7 +504,7 @@ function accumulation(review, level) {
 function breadth(review, stacked = []) {
   const c = CALIBRATION.breadth;
   const blocked = new Set([...review.findings.filter((f) => f.severity === 'S3').map(pairKey),
-    ...stacked.map((s) => `${s.task}|${s.group}`)]).size;
+    ...stacked.map((s) => `${s.essentialFunction}|${s.group}`)]).size;
   const harder = review.findings.filter((f) => f.severity === 'S2').length;
   const level = Math.min(2, (blocked >= c.blockedCuts[1] ? 2 : blocked >= c.blockedCuts[0] ? 1 : 0)
     + (harder >= c.s2AddsAt ? 1 : 0));
@@ -542,7 +542,7 @@ function taapStandard(review, level, breadthLevel) {
  * @typedef {Object} Finding       One barrier, per role and functional group.
  * @property {string} role         one of ROLES
  * @property {string} group        one of FUNCTIONAL_GROUPS
- * @property {string} coreTask
+ * @property {string} essentialFunction
  * @property {'S0'|'S1'|'S2'|'S3'} severity
  * @property {string[]} [wcag]     success criteria, as evidence
  *
@@ -632,7 +632,7 @@ function exposure(review) {
     scorePct: Math.round(scorePct * 100), unknownCount, unknownsMatter };
 }
 
-/** Worst severity across all roles' core paths, or 'S?' with no findings and no evidence. */
+/** Worst severity across all roles' essential functions, or 'S?' with no findings and no evidence. */
 function worstSeverity(review) {
   if (!review.findings.length) return review.evidence === 'E0' ? 'S?' : 'S0';
   return review.findings.reduce((w, f) => (Number(f.severity[1]) > Number(w[1]) ? f.severity : w), 'S0');
@@ -682,7 +682,7 @@ function evaluate(review) {
   // With no evidence at all, the barriers are assumed to reach widely, as unknown answers are.
   base.breadth = unknownSeverity ? { level: 2, blocked: 0, harder: 0, assumed: true } : breadth(review, acc.stacked);
   if (severity === 'S2' && acc.escalated) {
-    severity = 'S3';                         // S2 barriers that add up to a blocked task
+    severity = 'S3';                         // S2 barriers that add up to a blocked function
     base.severity = 'S3 (accumulated)';
   }
   if (exp.unknownsMatter) return routed('answers_unknown');
@@ -778,7 +778,7 @@ const EVIDENCE_PHRASE = {
   'E1-': 'a vendor ACR that fails one of our quality checks',
   E1: 'a vendor ACR that passes our quality checks',
   'E1+': 'a vendor ACR with the GSA issue-level supplement',
-  E2a: 'a live vendor demonstration of the main tasks with assistive technology',
+  E2a: 'a live vendor demonstration of the essential functions with assistive technology',
   E2b: 'a third-party audit with a named test method',
   E3: 'testing by the ATI team',
 };
@@ -879,15 +879,15 @@ function explain(review, d = evaluate(review), ctx = {}) {
     : `The evidence cannot be raised to the Veracity floor for this exposure, so the review treats the product as S3, ${review.findings.length ? 'with the barriers found as a minimum' : 'because the ACR claim of no barriers is unverified'}.`);
   else if (!review.findings.length) how.push('No barriers appear on any user path.');
   else if (d.severity.includes('accumulated')) {
-    how.push('No single barrier stops a user, but the S2 barriers, which make tasks clearly harder, add up to a critical barrier (S3).');
+    how.push('No single barrier stops a user, but the S2 barriers, which make essential functions clearly harder to perform, add up to a critical barrier (S3).');
     if (acc.stacked.length) {
-      how.push(`${cap(list(acc.stacked.map((s) => `users ${WHO[s.group]} meet ${s.count} such barriers on "${s.task}"`)))}. Task completion is conditional on every barrier on the task, so ${CALIBRATION.accumulation.stack} or more S2 barriers on one task block that task.`);
+      how.push(`${cap(list(acc.stacked.map((s) => `users ${WHO[s.group]} meet ${s.count} such barriers on "${s.essentialFunction}"`)))}. A user performs a function only by passing every barrier on it, so ${CALIBRATION.accumulation.stack} or more S2 barriers on one function block that function.`);
     } else {
-      how.push(`At high exposure, S2 barriers cover ${acc.spreadPairs} pairs of task and user group, at or above the critical threshold of ${CALIBRATION.accumulation.spreadPairs} pairs.`);
+      how.push(`At high exposure, S2 barriers cover ${acc.spreadPairs} pairs of essential function and user group, at or above the critical threshold of ${CALIBRATION.accumulation.spreadPairs} pairs.`);
     }
   } else {
-    const effect = { S1: 'meet minor barriers in', S2: 'need clearly more time or effort to complete', S3: 'cannot independently complete' }[sev];
-    const who = worst.map((f) => `${ROLE_WORD[f.role]} ${WHO[f.group]} ${effect} ${f.coreTask ? `"${f.coreTask}"` : 'a core task'}`);
+    const effect = { S1: 'meet minor barriers in', S2: 'need clearly more time or effort to perform', S3: 'cannot independently perform' }[sev];
+    const who = worst.map((f) => `${ROLE_WORD[f.role]} ${WHO[f.group]} ${effect} ${f.essentialFunction ? `"${f.essentialFunction}"` : 'an essential function'}`);
     how.push(`The most serious finding is ${SEVERITY_WORD[sev]} (${sev}). ${cap(list(who))}.`);
     const others = review.findings.length - worst.length;
     if (others) how.push(`The review also found ${plural(others, 'less serious barrier')}.`);
@@ -902,7 +902,7 @@ function explain(review, d = evaluate(review), ctx = {}) {
   switch (d.route) {
     case 'severity_unknown':
       why.push('An accessibility grade requires evidence, and none is on file.');
-      why.push('Please ask the vendor for a current Accessibility Conformance Report on the WCAG edition, or arrange a live demonstration of the main tasks with assistive technology.');
+      why.push('Please ask the vendor for a current Accessibility Conformance Report on the WCAG edition, or arrange a live demonstration of the essential functions with assistive technology.');
       break;
     case 'answers_unknown':
       why.push('The missing answers could change the exposure level, which sets the depth of review.');
@@ -911,7 +911,7 @@ function explain(review, d = evaluate(review), ctx = {}) {
     case 'veracity_below_floor':
       why.push(`At ${e.level} exposure, ${sev === 'S0' ? 'a finding of no barriers' : `a finding of ${SEVERITY_WORD[sev]} (${sev})`} needs ${evidenceName(floor)} before the review proceeds.`);
       why.push(`The evidence on file is ${EVIDENCE_PHRASE[ev.id]} (${ev.id}).`);
-      why.push('The ATI review team raises the evidence with you and the vendor, through a live demonstration of the main tasks with assistive technology or its own testing, and then re-rates the barriers.');
+      why.push('The ATI review team raises the evidence with you and the vendor, through a live demonstration of the essential functions with assistive technology or its own testing, and then re-rates the barriers.');
       why.push('If the evidence cannot be raised, the review treats the product as having a critical barrier (S3) and requires an alternate access plan (TAAP).');
       break;
     case 'taap_needed':
@@ -920,24 +920,24 @@ function explain(review, d = evaluate(review), ctx = {}) {
       if (d.outcome === 'approve' && sev === 'S0') {
         why.push('No barriers appear on any user path, so the product is approved.');
       } else if (d.outcome === 'approve' && sev === 'S1') {
-        why.push('The barriers found make some tasks harder without stopping task completion.');
+        why.push('The barriers found make some essential functions harder to perform without preventing them.');
         why.push('The CSU TAAP template requires an alternate access plan (TAAP) only for barriers that prevent essential functions. The product is approved without a TAAP.');
       } else if (d.outcome === 'approve') {
-        why.push('The barriers found make some tasks clearly harder without stopping task completion.');
+        why.push('The barriers found make some essential functions clearly harder to perform without preventing them.');
         why.push('At low exposure, the product is approved without an alternate access plan (TAAP).');
         why.push('The product still fails the standard, and the law excuses no barrier this serious.');
       } else if (pending || referred || d.outcome === 'approve_with_taap' || d.outcome === 'deny') {
         const std = d.taapStandard;
         const approved = d.outcome === 'approve_with_taap';
         if (sev === 'S2') {
-          why.push('The barriers found make some tasks clearly harder without stopping task completion.');
+          why.push('The barriers found make some essential functions clearly harder to perform without preventing them.');
           why.push(`At ${e.level} exposure, the audience is too large for a minimal impact on access, so the product ${approved ? 'is approved with' : 'needs'} an alternate access plan (TAAP).`);
         } else {
-          why.push(`${d.severity.includes('accumulated') ? 'Together, the barriers stop' : 'A barrier stops'} some users from completing a core task, so the product ${approved ? 'is approved only with' : 'cannot be approved without'} an alternate access plan (TAAP).`);
+          why.push(`${d.severity.includes('accumulated') ? 'Together, the barriers stop' : 'A barrier stops'} some users from performing an essential function, so the product ${approved ? 'is approved only with' : 'cannot be approved without'} an alternate access plan (TAAP).`);
         }
         const unmet = TAAP_REQUIREMENTS.filter((r) => d.taapUnmet.includes(r.id));
         const need = std ? (std.required === 6 ? 'all six' : `at least ${std.required} of the six`) : '';
-        const scale = d.breadth.level ? `at ${e.level} exposure, with barriers that reach ${d.breadth.level === 2 ? 'widely' : 'several tasks or groups'}` : `at ${e.level} exposure`;
+        const scale = d.breadth.level ? `at ${e.level} exposure, with barriers that reach ${d.breadth.level === 2 ? 'widely' : 'several functions or groups'}` : `at ${e.level} exposure`;
         if (d.denyReason === 'more_accessible_product') {
           why.push('A more accessible product meets the same need, and the university must buy the most accessible product that meets its requirements.');
           why.push('An alternate access plan for this product would not change that requirement.');

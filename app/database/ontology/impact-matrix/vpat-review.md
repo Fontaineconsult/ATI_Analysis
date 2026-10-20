@@ -13,7 +13,7 @@ Maps to the rubric section Terms.
 
 *To be written.*
 
-- The rubric terms this document relies on: review standard, core task, functional group,
+- The rubric terms this document relies on: review standard, essential function, functional group,
   nonconformance, barrier, finding, ACR lead.
 - VPAT and ACR, and the VPAT editions in use (WCAG, 508, EU, INT).
 - The ACR conformance terms: Supports, Partially Supports, Does Not Support, Not Applicable,
@@ -26,7 +26,7 @@ Maps to rubric section 1, Inputs and symbols.
 
 *To be written.*
 
-- The core task list: how the reviewer obtains the requester's minimum functional
+- The essential function list: how the reviewer obtains the requester's minimum functional
   requirements from Procurement Step 1 and confirms the list.
 - The interfaces and platforms being bought, so the ACR can be matched to them.
 - The product version, so the ACR can be matched to it.
@@ -59,7 +59,7 @@ Maps to the rubric section Terms (ACR lead, barrier and finding).
 
 - Which rows are ACR leads.
 - Mapping a success criterion to the functional groups it affects.
-- Placing a lead's feature on a core task, or off every core task.
+- Placing a lead's feature on an essential function, or off every essential function.
 - One nonconformance producing several findings.
 - Leads whose remark names no feature.
 
@@ -71,7 +71,7 @@ Maps to rubric section 3, Severity.
 
 - Anchors and worked examples for S1, S2 and S3, per functional group.
 - Why the conformance label and the criterion level never set severity.
-- Barriers off every core task.
+- Barriers off every essential function.
 - Recording S2 findings so stacking and spread can be counted.
 
 ## 7. Breadth from findings
@@ -80,7 +80,7 @@ Maps to rubric section 4, Breadth.
 
 *To be written.*
 
-- Recording task and functional group pairs consistently, so blocked pairs and the S2 count
+- Recording essential function and functional group pairs consistently, so blocked pairs and the S2 count
   come out the same for any reviewer.
 
 ## 8. Evidence beyond the ACR
@@ -90,9 +90,9 @@ Maps to rubric section 5, Veracity (E2a, E2b and E3).
 *To be written.*
 
 - A quick spot check of the ACR, and when a contradiction drops it to E1-.
-- The vendor demonstration script for core tasks with assistive technology.
+- The vendor demonstration script for essential functions with assistive technology.
 - Third-party audits, and what a named method looks like.
-- ATI team testing of core tasks.
+- ATI team testing of essential functions.
 
 ## 9. Routes from ACR review
 

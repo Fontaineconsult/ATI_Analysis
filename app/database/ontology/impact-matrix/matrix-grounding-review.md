@@ -153,8 +153,8 @@ of accessibility impact; UT Austin says cost is not a valid exception basis).
 |---|---|---|
 | S0 | No effect on information, interactions, transactions or participation, with equal timeliness, privacy, independence and ease of use | none |
 | S1 | Minimal impact, demonstrated: the four 35.205 tests are documented as met | Minor |
-| S2 | A core task can be completed independently, with clearly unequal time or effort | Major |
-| S3 | A user in that role cannot complete a core task independently, or only with another person's help | Critical |
+| S2 | An essential function can be performed independently, with clearly unequal time or effort | Major |
+| S3 | A user in that role cannot perform an essential function independently, or only with another person's help | Critical |
 
 Five rules go with the scale:
 
@@ -168,10 +168,10 @@ Five rules go with the scale:
 3. **Non-interference failures are at least S2 anywhere.** WCAG conformance
    requirement 5 applies criteria 1.4.2, 2.1.2, 2.2.2 and 2.3.1 to all content, because
    these failures block the rest of the page. A keyboard trap or flashing content is S3.
-4. **Core tasks are listed per role before anyone tests.** This follows WCAG-EM 2.0:
+4. **Essential functions are listed per role before anyone tests.** This follows WCAG-EM 2.0:
    essential functionality is "functionality that, if removed, fundamentally changes
-   the use or purpose." A core task is judged as a complete process. A barrier at any
-   step affects the whole task.
+   the use or purpose." An essential function is judged as a complete process. A barrier at any
+   step affects the whole function.
 5. **Rate severity per role and per functional group.** The roles are students,
    employees, applicants and the public. The groups are the nine 508 functional
    performance criteria: without vision, limited vision, without color perception,
@@ -195,9 +195,9 @@ until evidence arrives.
 | E1- | A vendor ACR that fails a quality check below |
 | E1 | A vendor ACR that passes every quality check |
 | E1+ | E1 plus GSA's Supplemental Accessibility Report (methods) and Issue Detail Supplement (severity, affected groups, workarounds) |
-| E2a | A live vendor demonstration of each role's core tasks with assistive technology, against the SFSU demonstration checklist |
+| E2a | A live vendor demonstration of each role's essential functions with assistive technology, against the SFSU demonstration checklist |
 | E2b | A third-party audit that names its method (Trusted Tester, ICT Testing Baseline, or WCAG-EM with its sample) |
-| E3 | ATI team testing of each role's core tasks by a named method, recorded with the Section508.gov test-report elements |
+| E3 | ATI team testing of each role's essential functions by a named method, recorded with the Section508.gov test-report elements |
 
 ACR quality checks. A failure drops the ACR to E1-:
 
@@ -230,8 +230,8 @@ claimed exception.
 
 **Rules that hold in every cell:**
 
-1. **S3 on a core task is never Approve, at any exposure level.** One student blocked
-   from a required task is a denial of access whatever the user count.
+1. **S3 on an essential function is never Approve, at any exposure level.** One student blocked
+   from a required function is a denial of access whatever the user count.
 2. **Approve** requires S0, a documented 35.205 finding (S1), or a documented 35.203
    equivalent facilitation, with evidence at the level exposure requires.
 3. **Approve with conditions** (new, from Tufts and University of Washington) covers
@@ -284,7 +284,7 @@ Every determination records:
 - kind of technology, interfaces, and governing standard;
 - each exposure fact as the requester answered it and as the reviewer confirmed it;
 - which floor applied, the group scores, and the count of unknowns;
-- core tasks per role, and severity per role and functional group;
+- essential functions per role, and severity per role and functional group;
 - evidence level, ACR date and edition, and the checks it failed;
 - products compared, and the best-meets basis where used;
 - outcome, contract terms included, approver name and title, and date;

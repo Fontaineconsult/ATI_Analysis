@@ -62,7 +62,7 @@ Graph status: `ingest_2026_10_17_acr_interpretation_sources.cypher` carries the 
 - **Severity from an ACR row.**
   - A "Partially Supports" or "Does Not Support" row is a lead, not a grade.
   - An S1 to S3 call needs the remark to name the feature, and the reviewer to place that feature
-    on or off a core task.
+    on or off an essential function.
   - When the remark does not name the feature, the barrier is unknown, not minor. GSA Critical
     and Major match our S3 and S2.
 - **A quick validation step.**

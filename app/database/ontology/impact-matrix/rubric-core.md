@@ -18,17 +18,18 @@ and policy behind each final decision.
 - **Review standard.** The standard each review tests one campus-requested product against,
   WCAG 2.1 AA for web and mobile products or the Section 508 Standards for other software and
   hardware.
-- **Core task.** A task the product exists to support, such as registering for a class,
-  submitting homework or paying a bill.
-  - **Test.** A task is core when its removal would change the product's use or purpose.
-    WCAG-EM applies the same test to essential functionality.
+- **Essential function.** A function the product exists to provide, such as registering for a
+  class, submitting homework or paying a bill.
+  - **Test.** A function is essential when its removal would change the product's use or
+    purpose. WCAG-EM 2.0 defines essential functionality by the same test.
   - **Source.** The requester lists the minimum functional requirements, which CSU
     Procurement Step 1 calls "essential functionality", and the reviewer confirms the list.
-  - **Scope.** A core task covers its complete process, including sign-in, navigation, the
+  - **Scope.** An essential function covers its complete process, including sign-in, navigation, the
     content read along the way and the final submission. WCAG 2.1 requires every page in a
     complete process to conform.
-  - **Other names.** CSU TAAP documents say "core functionality" and "essential functions".
-    The "essential functions" of a job under ADA Title I are a separate concept.
+  - **Other names.** WCAG-EM says "essential functionality". CSU TAAP documents say
+    "essential functions" and "core functionality". The "essential functions" of a job under
+    ADA Title I (29 CFR 1630.2(n)) are a separate concept and never set severity.
 
 ### Barriers and findings
 
@@ -36,26 +37,26 @@ The rubric separates a failure in the product from its effect on users.
 
 - **Nonconformance.** A failed success criterion or provision of the review standard. A
   nonconformance belongs to the product.
-- **Barrier.** The effect of a nonconformance on one core task for one of the nine Section 508
+- **Barrier.** The effect of a nonconformance on one essential function for one of the nine Section 508
   **functional groups**, such as users without vision. One nonconformance produces a barrier on
-  every affected **task-group pair**. CSU procurement documents say "gap" or "issue" for a
+  every affected **function-group pair**. CSU procurement documents say "gap" or "issue" for a
   barrier.
 - **Finding.** The record of one barrier by user **role** (students, employees, applicants or
-  the public), functional group, core task and severity.
+  the public), functional group, essential function and severity.
 - **ACR lead.** A "Partially Supports" or "Does Not Support" row in the vendor's **ACR**
   (Accessibility Conformance Report, the vendor's completion of the industry VPAT template).
   A lead becomes a finding once its remark names the affected feature and the reviewer places
-  that feature on a core task.
+  that feature on an essential function.
 
 ### The four factors
 
 - **Exposure.** Audience size and product reliance, rated low, medium or high.
-- **Severity.** Task impact of the worst barrier, rated S0 to S3. Severity attaches to the
+- **Severity.** Impact of the worst barrier on an essential function, rated S0 to S3. Severity attaches to the
   barrier and never to the nonconformance, because the level of the failed criterion (A or AA)
   does not predict the effect on users. S1, S2 and S3 match the GSA severity terms **minor**,
-  **major** and **critical**. S3 (accumulated) marks S2 barriers that add up to a blocked task,
+  **major** and **critical**. S3 (accumulated) marks S2 barriers that add up to a blocked function,
   and S3 (provisional) marks the fallback.
-- **Breadth.** Systemic barrier reach across task-group pairs, rated 0 to 2.
+- **Breadth.** Systemic barrier reach across function-group pairs, rated 0 to 2.
 - **Veracity.** Reliability of the evidence behind the findings, rated 0 to 5, with a
   **Veracity floor**, the minimum rating at which Severity is confirmed, set by Exposure and
   Severity. Below the floor the ATI review team raises the evidence. When the evidence cannot
@@ -132,7 +133,7 @@ The rubric maps seven inputs to the four factors and two derived values.
 |---|---|---|
 | `F` | Floor facts that hold | any of the seven floors in section 2 |
 | `a_f` | The answer to each exposure question `f` | low, medium, high or unknown, and a count for the number of users |
-| `D` | The findings | each finding names a role, a functional group `g`, a core task `t` and a severity `s` |
+| `D` | The findings | each finding names a role, a functional group `g`, an essential function `fn` and a severity `s` |
 | `E` | The strongest evidence on file | one of the seven evidence levels in section 5 |
 | `U` | The evidence cannot be raised, recorded by the ATI review team | true or false |
 | `M` | A more accessible product meets the same need | true or false |
@@ -196,15 +197,20 @@ single-fact Exposure minimum independent of the score.
 
 ## 3. Severity `S`
 
-Product severity derives entirely from maximum task impact across the findings, independent
+Severity is rated on an essential function, a function the product exists to provide, such as
+registering for a class, submitting homework or paying a bill. A function is essential when its
+removal would change the product's use or purpose, the WCAG-EM 2.0 test, and it covers its
+complete process from sign-in to final submission.
+
+Product severity derives entirely from the maximum impact on an essential function across the findings, independent
 of vendor report conformance labels or the failed WCAG criterion level.
 
 | `S` | Definition |
 |---|---|
 | S0 | No effect on information, interactions, transactions or participation |
 | S1 | Minimal impact, shown to meet the four tests of 28 CFR 35.205 |
-| S2 | A core task can be completed independently, with clearly unequal time or effort |
-| S3 | A core task cannot be completed independently, or only with help |
+| S2 | An essential function can be performed independently, with clearly unequal time or effort |
+| S3 | An essential function cannot be performed independently, or only with help |
 | S? | Unknown, for lack of evidence |
 
 ```
@@ -215,29 +221,29 @@ S := S3 (provisional)         under the fallback, section 5
 
 Two accumulation conditions escalate S2 to S3, shown as "S3 (accumulated)".
 
-- **Stacked.** 3 or more S2 barriers on one core task for one functional group, at any
-  Exposure. Task completion is conditional on every barrier on the task, so stacked S2 barriers
-  block that task.
-- **Spread.** S2 barriers on 6 or more task-group pairs, at high Exposure only. Barriers spread
+- **Stacked.** 3 or more S2 barriers on one essential function for one functional group, at any
+  Exposure. A user performs a function only by passing every barrier on it, so stacked S2
+  barriers block that function.
+- **Spread.** S2 barriers on 6 or more function-group pairs, at high Exposure only. Barriers spread
   across most of the product exceed minimal impact in aggregate.
 
 ```
-stacked(t, g) = | { d : s_d = S2, task t, group g } |
-S2 pairs      = | { (t, g) : s_d = S2 } |
+stacked(fn, g) = | { d : s_d = S2, function fn, group g } |
+S2 pairs       = | { (fn, g) : s_d = S2 } |
 
-S := S3   if S = S2  ∧  ( any stacked(t, g) ≥ 3  ∨  ( X = high ∧ S2 pairs ≥ 6 ) )
+S := S3   if S = S2  ∧  ( any stacked(fn, g) ≥ 3  ∨  ( X = high ∧ S2 pairs ≥ 6 ) )
 ```
 
 ## 4. Breadth `B`
 
-Breadth rates systemic barrier reach across task-group pairs, derived from two counts and
+Breadth rates systemic barrier reach across function-group pairs, derived from two counts and
 capped at 2.
 
-- **Blocked pairs.** Task-group pairs stopped by an S3 barrier or by stacked S2 barriers.
+- **Blocked pairs.** Function-group pairs stopped by an S3 barrier or by stacked S2 barriers.
 - **S2 count.** The number of S2 findings.
 
 ```
-blocked = | { (t, g) : s_d = S3 } ∪ { (t, g) : stacked(t, g) ≥ 3 } |
+blocked = | { (fn, g) : s_d = S3 } ∪ { (fn, g) : stacked(fn, g) ≥ 3 } |
 harder  = | { d : s_d = S2 } |
 
 B       = min( 2,  step(blocked) + [ harder ≥ 3 ] )
@@ -258,9 +264,9 @@ ranked E1- on any failed quality check.
 | E1- | Vendor ACR that fails a quality check | 1 |
 | E1 | Vendor ACR that passes every quality check | 2 |
 | E1+ | E1, plus the GSA issue-level supplement | 3 |
-| E2a | Live vendor demonstration of core tasks with assistive technology | 4 |
+| E2a | Live vendor demonstration of essential functions with assistive technology | 4 |
 | E2b | Third-party audit with a named method | 4 |
-| E3 | ATI team testing of core tasks with a named method | 5 |
+| E3 | ATI team testing of essential functions with a named method | 5 |
 
 `Vmin`, the Veracity floor, rises with Exposure and never falls below 4 at S1, since minimal
 impact needs demonstration rather than assumption.
@@ -429,7 +435,7 @@ Pilot calibration sets these values. Any change creates a new matrix version.
 | `Vmin` by Exposure | low 0, medium 2, high 4 |
 | `Vmin` for S1 | at least 4 |
 | ACR maximum age | 24 months |
-| S2 stacked on one task, counted as S3 | 3 |
+| S2 stacked on one function, counted as S3 | 3 |
 | S2 pairs at high Exposure, counted as S3 | 6 |
 | Breadth steps on blocked pairs | 2, 4 |
 | Breadth S2 count | 3 |
