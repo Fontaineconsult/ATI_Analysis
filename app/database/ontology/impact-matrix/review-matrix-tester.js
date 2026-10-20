@@ -461,7 +461,9 @@
           const gradeCell = (s, cols) => ({ text: M.RISK_GRADES[grade(s)], tone: TONE[grade(s)],
             here: gradeKnown && onRow && cols.includes(sev), tentative: gradeTentative, dim: !gradeKnown });
           const taapCell = (col, met) => {
-            const [o, gap] = decide(P, k, met);
+            // "At the minimum" is a plan meeting the minimum but short of all six. Where the
+            // minimum is all six, any such plan is below it, so the column reads Deny.
+            const [o, gap] = col === 'min' && k === FULL ? ['deny', 1] : decide(P, k, met);
             const route = o === 'on_hold' ? ` (route ${routeNo('taap_needed')})` : '';
             return { text: `${M.OUTCOMES[o].label}${route}`, sub: '', warn: o === 'deny' ? '' : `warning ${warnOf(P + gap)}`, tone: TONE[o],
               here: remedyReached && onRow && state === col && drawnMatches(o, col), dim: !remedyReached };
@@ -674,7 +676,7 @@
       table(['TAAP on file', 'Outcome', 'Warning'], [
         ['Meets none of the six', 'Deny, even under the exception', 'None'],
         ['Below the minimum', 'Deny, unless a written undue burden or fundamental alteration determination is on file', 'None, or from pressure plus the gap under the exception'],
-        ['At the minimum, short of all six', 'Approve with TAAP', 'From pressure plus the gap to a full TAAP'],
+        ['At the minimum, short of all six', 'Approve with TAAP. Where the minimum is all six, at pressure 3 or more, a plan short of six is below the minimum and is denied', 'From pressure plus the gap to a full TAAP'],
         ['Full, all six', 'Approve with TAAP', 'From pressure alone, so a warning at high exposure'],
       ]),
       '<p>A plan below the standard is denied at any severity and pressure, unless a written undue burden or fundamental alteration determination is on file. TAAP work costs staff time, so purchases with less at stake get a lower standard. The <strong>shortfall</strong>, the count of requirements the plan misses, is stated in the denial and in the hold, so the signers report what the plan does instead of ticking requirements it does not meet.</p>',

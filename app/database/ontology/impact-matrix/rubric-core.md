@@ -442,7 +442,7 @@ The TAAP on file falls in one of four states against the minimum, each with a fi
 |---|---|---|
 | Meets none of the six | Deny, even under the exception | None |
 | Below the minimum | Deny, unless a written undue burden or fundamental alteration determination is on file | None, or from pressure plus the gap under the exception |
-| At the minimum, short of all six | Approve with TAAP | From pressure plus the gap to a full TAAP |
+| At the minimum, short of all six | Approve with TAAP. Where the minimum is all six, at pressure 3 or more, a plan short of six is below the minimum and is denied | From pressure plus the gap to a full TAAP |
 | Full, all six | Approve with TAAP | From pressure alone, so a warning at high Exposure |
 
 The **warning level** derives from the sum of pressure and the **gap**, the count of

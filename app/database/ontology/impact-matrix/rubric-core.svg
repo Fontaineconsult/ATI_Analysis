@@ -176,10 +176,8 @@
   <text x="892" y="422" text-anchor="middle" font-size="13" font-weight="600" fill="#8c1d22">Deny</text>
   <rect x="938" y="394" width="104" height="46" fill="#fbe3e4" stroke="#d6d4cc"/>
   <text x="990" y="422" text-anchor="middle" font-size="13" font-weight="600" fill="#8c1d22">Deny</text>
-  <rect x="1042" y="394" width="132" height="46" fill="#ddf1f3" stroke="#d6d4cc"/>
-  <text x="1108" y="414" text-anchor="middle" font-size="13" font-weight="600" fill="#0a5660">Approve with TAAP</text>
-  <rect x="1056" y="418" width="104" height="17" rx="8.5" fill="#fdf0d5" stroke="#bdbab0"/>
-  <text x="1108" y="431" text-anchor="middle" font-size="11" font-weight="400" fill="#1a1a1a">warning elevated</text>
+  <rect x="1042" y="394" width="132" height="46" fill="#fbe3e4" stroke="#d6d4cc"/>
+  <text x="1108" y="422" text-anchor="middle" font-size="13" font-weight="600" fill="#8c1d22">Deny</text>
   <rect x="1174" y="394" width="132" height="46" fill="#ddf1f3" stroke="#d6d4cc"/>
   <text x="1240" y="414" text-anchor="middle" font-size="13" font-weight="600" fill="#0a5660">Approve with TAAP</text>
   <rect x="1188" y="418" width="104" height="17" rx="8.5" fill="#fdf0d5" stroke="#bdbab0"/>
@@ -226,10 +224,8 @@
   <text x="892" y="514" text-anchor="middle" font-size="13" font-weight="600" fill="#8c1d22">Deny</text>
   <rect x="938" y="486" width="104" height="46" fill="#fbe3e4" stroke="#d6d4cc"/>
   <text x="990" y="514" text-anchor="middle" font-size="13" font-weight="600" fill="#8c1d22">Deny</text>
-  <rect x="1042" y="486" width="132" height="46" fill="#ddf1f3" stroke="#d6d4cc"/>
-  <text x="1108" y="506" text-anchor="middle" font-size="13" font-weight="600" fill="#0a5660">Approve with TAAP</text>
-  <rect x="1056" y="510" width="104" height="17" rx="8.5" fill="#fdf0d5" stroke="#bdbab0"/>
-  <text x="1108" y="523" text-anchor="middle" font-size="11" font-weight="400" fill="#1a1a1a">warning elevated</text>
+  <rect x="1042" y="486" width="132" height="46" fill="#fbe3e4" stroke="#d6d4cc"/>
+  <text x="1108" y="514" text-anchor="middle" font-size="13" font-weight="600" fill="#8c1d22">Deny</text>
   <rect x="1174" y="486" width="132" height="46" fill="#ddf1f3" stroke="#d6d4cc"/>
   <text x="1240" y="506" text-anchor="middle" font-size="13" font-weight="600" fill="#0a5660">Approve with TAAP</text>
   <rect x="1188" y="510" width="104" height="17" rx="8.5" fill="#fdf0d5" stroke="#bdbab0"/>
@@ -248,10 +244,8 @@
   <text x="892" y="560" text-anchor="middle" font-size="13" font-weight="600" fill="#8c1d22">Deny</text>
   <rect x="938" y="532" width="104" height="46" fill="#fbe3e4" stroke="#d6d4cc"/>
   <text x="990" y="560" text-anchor="middle" font-size="13" font-weight="600" fill="#8c1d22">Deny</text>
-  <rect x="1042" y="532" width="132" height="46" fill="#ddf1f3" stroke="#d6d4cc"/>
-  <text x="1108" y="552" text-anchor="middle" font-size="13" font-weight="600" fill="#0a5660">Approve with TAAP</text>
-  <rect x="1056" y="556" width="104" height="17" rx="8.5" fill="#fbe3e4" stroke="#bdbab0"/>
-  <text x="1108" y="569" text-anchor="middle" font-size="11" font-weight="400" fill="#1a1a1a">warning high</text>
+  <rect x="1042" y="532" width="132" height="46" fill="#fbe3e4" stroke="#d6d4cc"/>
+  <text x="1108" y="560" text-anchor="middle" font-size="13" font-weight="600" fill="#8c1d22">Deny</text>
   <rect x="1174" y="532" width="132" height="46" fill="#ddf1f3" stroke="#d6d4cc"/>
   <text x="1240" y="552" text-anchor="middle" font-size="13" font-weight="600" fill="#0a5660">Approve with TAAP</text>
   <rect x="1188" y="556" width="104" height="17" rx="8.5" fill="#fbe3e4" stroke="#bdbab0"/>
@@ -273,7 +267,7 @@
   <text x="40" y="675" text-anchor="start" font-size="13" font-weight="400" fill="#1a1a1a">3.  No TAAP on file maps to route 4, On hold: TAAP needed, which carries the TAAP standard and the warning.</text>
   <text x="40" y="696" text-anchor="start" font-size="13" font-weight="400" fill="#1a1a1a">4.  Below the standard, a written undue burden or fundamental alteration determination maps to Approve with TAAP as a Non-Equal Alternative, and a claim maps to route 5.</text>
   <text x="40" y="717" text-anchor="start" font-size="13" font-weight="400" fill="#1a1a1a">5.  A TAAP below the minimum is denied at any severity and pressure, with the shortfall stated in the denial. A plan that meets none of the six is denied even under the</text>
-  <text x="40" y="738" text-anchor="start" font-size="13" font-weight="400" fill="#1a1a1a">     exception. A plan at the minimum is approved under a warning.</text>
+  <text x="40" y="738" text-anchor="start" font-size="13" font-weight="400" fill="#1a1a1a">     exception. A plan at the minimum is approved under a warning; where the minimum is all six, only a full TAAP is at it.</text>
   <text x="40" y="759" text-anchor="start" font-size="13" font-weight="400" fill="#1a1a1a">6.  S2 escalates to S3 at 3 S2 barriers stacked on one function for one user group, or at high Exposure with S2 barriers across 6 function and group pairs.</text>
   <text x="40" y="780" text-anchor="start" font-size="13" font-weight="400" fill="#1a1a1a">7.  At S3, a more accessible product that meets the same need maps to Deny.</text>
   <text x="40" y="801" text-anchor="start" font-size="13" font-weight="400" fill="#1a1a1a">8.  The Veracity floor column gates every review before the risk grade, with S1 always requiring E2 or better. Evidence below the floor maps to route 3, manual review, which</text>

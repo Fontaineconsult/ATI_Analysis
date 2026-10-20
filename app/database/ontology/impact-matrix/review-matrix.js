@@ -1082,7 +1082,7 @@ function rubricNotes() {
     `The warning level derives from W = P + gap, the gap being the requirements short of a full TAAP, elevated from ${T.warning.elevated} and high from ${T.warning.high}. A full TAAP at high Exposure still carries a warning, from pressure alone.`,
     `No TAAP on file maps to route ${routeNo('taap_needed')}, On hold: TAAP needed, which carries the TAAP standard and the warning.`,
     `Below the standard, a written undue burden or fundamental alteration determination maps to Approve with TAAP as a Non-Equal Alternative, and a claim maps to route ${routeNo('exception_claimed')}.`,
-    'A TAAP below the minimum is denied at any severity and pressure, with the shortfall stated in the denial. A plan that meets none of the six is denied even under the exception. A plan at the minimum is approved under a warning.',
+    'A TAAP below the minimum is denied at any severity and pressure, with the shortfall stated in the denial. A plan that meets none of the six is denied even under the exception. A plan at the minimum is approved under a warning; where the minimum is all six, only a full TAAP is at it.',
     `S2 escalates to S3 at ${acc.stack} S2 barriers stacked on one function for one user group, or at high Exposure with S2 barriers across ${acc.spreadPairs} function and group pairs.`,
     'At S3, a more accessible product that meets the same need maps to Deny.',
     `The Veracity floor column gates every review before the risk grade, with S1 always requiring E2 or better. Evidence below the floor maps to route ${routeNo('veracity_below_floor')}, manual review, which raises the evidence and re-rates Severity.`,

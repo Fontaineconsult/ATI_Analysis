@@ -77,7 +77,10 @@ for (const X of LV) {
     cell('none', row, 1, 'hold', [`On hold, route ${routeNo('taap_needed')}`], warnOf(P));
     cell('zero', row, 1, 'deny', ['Deny']);
     cell('below', row, 1, 'deny', ['Deny']);
-    cell('min', row, 1, 'taap', ['Approve with TAAP'], warnOf(P + FULL - k));
+    // At the minimum means meeting it while short of all six; where the minimum is all six,
+    // such a plan is below it.
+    if (k === FULL) cell('min', row, 1, 'deny', ['Deny']);
+    else cell('min', row, 1, 'taap', ['Approve with TAAP'], warnOf(P + FULL - k));
     cell('full', row, 1, 'taap', ['Approve with TAAP'], warnOf(P));
   }
 }
