@@ -1,8 +1,8 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 820 990" width="820" height="990" role="img" aria-labelledby="t d" font-family="Segoe UI, system-ui, -apple-system, Helvetica, Arial, sans-serif">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 820 920" width="820" height="920" role="img" aria-labelledby="t d" font-family="Segoe UI, system-ui, -apple-system, Helvetica, Arial, sans-serif">
   <title id="t">Review process, part 2: the remedy step</title>
   <desc id="d">From a Needs TAAP risk grade through the more-accessible-product, TAAP on file, TAAP standard, meets-none, below-standard and determination checks to Deny or Approve with TAAP, with routes 4 and 5 as holds.</desc>
   <defs><marker id="head" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#6b6b6b"/></marker></defs>
-  <rect width="820" height="990" fill="#ffffff"/>
+  <rect width="820" height="920" fill="#ffffff"/>
   
   <rect x="180" y="22" width="300" height="56" rx="6" fill="#ddf1f3" stroke="#0a5660" stroke-width="1.6"/>
   <text x="330" y="46" text-anchor="middle" font-size="12" fill="#0a5660"><tspan x="330" dy="0" font-weight="600">Needs TAAP</tspan><tspan x="330" dy="16" font-weight="400">from the risk grade (Figure 1)</tspan></text>
@@ -11,19 +11,17 @@
   <polygon points="330,212 480,260 330,308 180,260" fill="#fdf7e3" stroke="#bdbab0"/>
   <text x="330" y="264" text-anchor="middle" font-size="12" fill="#1a1a1a"><tspan x="330" dy="0" font-weight="400">TAAP on file?</tspan></text>
   <polygon points="330,342 480,390 330,438 180,390" fill="#fdf7e3" stroke="#bdbab0"/>
-  <text x="330" y="386" text-anchor="middle" font-size="12" fill="#1a1a1a"><tspan x="330" dy="0" font-weight="400">TAAP meets</tspan><tspan x="330" dy="16" font-weight="400">the standard?</tspan></text>
+  <text x="330" y="386" text-anchor="middle" font-size="12" fill="#1a1a1a"><tspan x="330" dy="0" font-weight="400">TAAP meets</tspan><tspan x="330" dy="16" font-weight="400">the minimum?</tspan></text>
   <polygon points="330,482 480,530 330,578 180,530" fill="#fdf7e3" stroke="#bdbab0"/>
   <text x="330" y="526" text-anchor="middle" font-size="12" fill="#1a1a1a"><tspan x="330" dy="0" font-weight="400">TAAP meets none</tspan><tspan x="330" dy="16" font-weight="400">of the six?</tspan></text>
-  <polygon points="330,592 480,640 330,688 180,640" fill="#fdf7e3" stroke="#bdbab0"/>
-  <text x="330" y="628" text-anchor="middle" font-size="12" fill="#1a1a1a"><tspan x="330" dy="0" font-weight="400">Below the standard</tspan><tspan x="330" dy="16" font-weight="400">at pressure 3 or more?</tspan><tspan x="330" dy="16" font-weight="400">(S3 only)</tspan></text>
-  <polygon points="330,702 480,750 330,798 180,750" fill="#fdf7e3" stroke="#bdbab0"/>
-  <text x="330" y="738" text-anchor="middle" font-size="12" fill="#1a1a1a"><tspan x="330" dy="0" font-weight="400">Undue burden or</tspan><tspan x="330" dy="16" font-weight="400">fundamental alteration</tspan><tspan x="330" dy="16" font-weight="400">determination?</tspan></text>
-  <rect x="25" y="900" width="150" height="60" rx="6" fill="#fbe3e4" stroke="#8c1d22" stroke-width="1.6"/>
-  <text x="100" y="918" text-anchor="middle" font-size="12" fill="#8c1d22"><tspan x="100" dy="0" font-weight="600">Deny</tspan><tspan x="100" dy="16" font-weight="400">reasons, standard,</tspan><tspan x="100" dy="16" font-weight="400">path to a new review</tspan></text>
-  <rect x="210" y="900" width="300" height="60" rx="6" fill="#ddf1f3" stroke="#0a5660" stroke-width="1.6"/>
-  <text x="360" y="918" text-anchor="middle" font-size="12" fill="#0a5660"><tspan x="360" dy="0" font-weight="600">Approve with TAAP</tspan><tspan x="360" dy="16" font-weight="400">statement, three signers, roadmap;</tspan><tspan x="360" dy="16" font-weight="400">12-month term or until renewal</tspan></text>
+  <polygon points="330,622 480,670 330,718 180,670" fill="#fdf7e3" stroke="#bdbab0"/>
+  <text x="330" y="658" text-anchor="middle" font-size="12" fill="#1a1a1a"><tspan x="330" dy="0" font-weight="400">Undue burden or</tspan><tspan x="330" dy="16" font-weight="400">fundamental alteration</tspan><tspan x="330" dy="16" font-weight="400">determination?</tspan></text>
+  <rect x="25" y="830" width="150" height="60" rx="6" fill="#fbe3e4" stroke="#8c1d22" stroke-width="1.6"/>
+  <text x="100" y="848" text-anchor="middle" font-size="12" fill="#8c1d22"><tspan x="100" dy="0" font-weight="600">Deny</tspan><tspan x="100" dy="16" font-weight="400">reasons, standard,</tspan><tspan x="100" dy="16" font-weight="400">path to a new review</tspan></text>
+  <rect x="210" y="830" width="300" height="60" rx="6" fill="#ddf1f3" stroke="#0a5660" stroke-width="1.6"/>
+  <text x="360" y="848" text-anchor="middle" font-size="12" fill="#0a5660"><tspan x="360" dy="0" font-weight="600">Approve with TAAP</tspan><tspan x="360" dy="16" font-weight="400">statement, three signers, roadmap;</tspan><tspan x="360" dy="16" font-weight="400">12-month term or until renewal</tspan></text>
   <path d="M330,78 L330,102" fill="none" stroke="#6b6b6b" stroke-width="1.4" marker-end="url(#head)"/>
-  <path d="M180,150 L100,150 L100,900" fill="none" stroke="#6b6b6b" stroke-width="1.4" marker-end="url(#head)"/>
+  <path d="M180,150 L100,150 L100,830" fill="none" stroke="#6b6b6b" stroke-width="1.4" marker-end="url(#head)"/>
   <text x="140" y="144" text-anchor="middle" font-size="11" fill="#444444"><tspan x="140" dy="0" font-weight="400">yes</tspan></text>
   <path d="M330,198 L330,212" fill="none" stroke="#6b6b6b" stroke-width="1.4" marker-end="url(#head)"/>
   <text x="338" y="214" text-anchor="start" font-size="11" fill="#444444"><tspan x="338" dy="0" font-weight="400">no</tspan></text>
@@ -33,24 +31,20 @@
   <text x="250" y="314.5" text-anchor="middle" font-size="11" fill="#3b3270"><tspan x="250" dy="0" font-weight="600">Route 4</tspan><tspan x="250" dy="15" font-weight="400">TAAP needed</tspan></text>
   <path d="M330,308 L330,342" fill="none" stroke="#6b6b6b" stroke-width="1.4" marker-end="url(#head)"/>
   <text x="338" y="324" text-anchor="start" font-size="11" fill="#444444"><tspan x="338" dy="0" font-weight="400">yes</tspan></text>
-  <path d="M480,390 L560,390 L560,930 L510,930" fill="none" stroke="#6b6b6b" stroke-width="1.4" marker-end="url(#head)"/>
+  <path d="M480,390 L560,390 L560,860 L510,860" fill="none" stroke="#6b6b6b" stroke-width="1.4" marker-end="url(#head)"/>
   <text x="520" y="384" text-anchor="middle" font-size="11" fill="#444444"><tspan x="520" dy="0" font-weight="400">yes</tspan></text>
   <path d="M330,438 L330,482" fill="none" stroke="#6b6b6b" stroke-width="1.4" marker-end="url(#head)"/>
   <text x="338" y="454" text-anchor="start" font-size="11" fill="#444444"><tspan x="338" dy="0" font-weight="400">no</tspan></text>
   <path d="M180,530 L100,530" fill="none" stroke="#6b6b6b" stroke-width="1.4"/>
   <text x="140" y="524" text-anchor="middle" font-size="11" fill="#444444"><tspan x="140" dy="0" font-weight="400">yes</tspan></text>
-  <path d="M330,578 L330,592" fill="none" stroke="#6b6b6b" stroke-width="1.4" marker-end="url(#head)"/>
-  <text x="338" y="594" text-anchor="start" font-size="11" fill="#444444"><tspan x="338" dy="0" font-weight="400">no (S2: approved under a warning)</tspan></text>
-  <path d="M480,640 L560,640" fill="none" stroke="#6b6b6b" stroke-width="1.4"/>
-  <text x="520" y="619" text-anchor="middle" font-size="11" fill="#444444"><tspan x="520" dy="0" font-weight="400">no: approved, signers</tspan><tspan x="520" dy="15" font-weight="400">accept the shortfall</tspan></text>
-  <path d="M330,688 L330,702" fill="none" stroke="#6b6b6b" stroke-width="1.4" marker-end="url(#head)"/>
-  <text x="338" y="704" text-anchor="start" font-size="11" fill="#444444"><tspan x="338" dy="0" font-weight="400">yes</tspan></text>
-  <path d="M180,750 L100,750" fill="none" stroke="#6b6b6b" stroke-width="1.4"/>
-  <text x="140" y="744" text-anchor="middle" font-size="11" fill="#444444"><tspan x="140" dy="0" font-weight="400">none</tspan></text>
-  <path d="M480,750 L410,750 L410,790" fill="none" stroke="#6b6b6b" stroke-width="1.4" marker-end="url(#head)"/>
-  <text x="445" y="744" text-anchor="middle" font-size="11" fill="#444444"><tspan x="445" dy="0" font-weight="400">claimed</tspan></text>
-  <rect x="347" y="790" width="126" height="36" rx="6" fill="#ecebf7" stroke="#bdbab0" stroke-width="1"/>
-  <text x="410" y="804.5" text-anchor="middle" font-size="11" fill="#3b3270"><tspan x="410" dy="0" font-weight="600">Route 5</tspan><tspan x="410" dy="15" font-weight="400">formal determination</tspan></text>
-  <path d="M330,798 L330,900" fill="none" stroke="#6b6b6b" stroke-width="1.4" marker-end="url(#head)"/>
-  <text x="322" y="818.5" text-anchor="end" font-size="11" fill="#444444"><tspan x="322" dy="0" font-weight="400">on file:</tspan><tspan x="322" dy="15" font-weight="400">high warning</tspan></text>
+  <path d="M330,578 L330,622" fill="none" stroke="#6b6b6b" stroke-width="1.4" marker-end="url(#head)"/>
+  <text x="338" y="594" text-anchor="start" font-size="11" fill="#444444"><tspan x="338" dy="0" font-weight="400">no: below the minimum</tspan></text>
+  <path d="M180,670 L100,670" fill="none" stroke="#6b6b6b" stroke-width="1.4"/>
+  <text x="140" y="664" text-anchor="middle" font-size="11" fill="#444444"><tspan x="140" dy="0" font-weight="400">none</tspan></text>
+  <path d="M480,670 L410,670 L410,710" fill="none" stroke="#6b6b6b" stroke-width="1.4" marker-end="url(#head)"/>
+  <text x="445" y="664" text-anchor="middle" font-size="11" fill="#444444"><tspan x="445" dy="0" font-weight="400">claimed</tspan></text>
+  <rect x="347" y="710" width="126" height="36" rx="6" fill="#ecebf7" stroke="#bdbab0" stroke-width="1"/>
+  <text x="410" y="724.5" text-anchor="middle" font-size="11" fill="#3b3270"><tspan x="410" dy="0" font-weight="600">Route 5</tspan><tspan x="410" dy="15" font-weight="400">formal determination</tspan></text>
+  <path d="M330,718 L330,830" fill="none" stroke="#6b6b6b" stroke-width="1.4" marker-end="url(#head)"/>
+  <text x="322" y="738.5" text-anchor="end" font-size="11" fill="#444444"><tspan x="322" dy="0" font-weight="400">on file:</tspan><tspan x="322" dy="15" font-weight="400">high warning</tspan></text>
 </svg>

@@ -49,9 +49,10 @@ const CALIBRATION = {
   // make the product S3.
   accumulation: { stack: 3, spreadPairs: 6, spreadAt: 'high' },
   // TAAP standard. Pressure P = rank(Exposure) + Breadth, from 0 to 4. `required[P]` is how many
-  // of the six TAAP requirements a plan must meet. A plan below it is denied at P >= denyAt and
-  // approved with a warning below that. The warning cuts apply to P plus the shortfall.
-  taapStandard: { required: [3, 3, 4, 6, 6], denyAt: 3, warning: { elevated: 2, high: 4 } },
+  // of the six TAAP requirements a plan must meet. A plan below it is denied at every pressure,
+  // unless a written undue burden or fundamental alteration determination is on file. The
+  // warning cuts apply to P plus the shortfall.
+  taapStandard: { required: [3, 3, 4, 6, 6], warning: { elevated: 2, high: 4 } },
 };
 
 // ---------------------------------------------------------------------------------------
@@ -181,8 +182,8 @@ const OUTCOMES = {
   // S0, S1, and S2 at Low exposure. No TAAP: the template asks for one only when barriers
   // prevent essential functions. A Low S2 approval carries S2_CAVEATS.
   approve: { label: 'Approve', state: 'agreed' },
-  // A TAAP at or above the standard, or below it when the pressure is under denyAt or the
-  // barriers are S2. A plan below the standard carries a warning.
+  // A TAAP at or above the standard, or below it only under a written undue burden or
+  // fundamental alteration determination, as a Non-Equal Alternative under a warning.
   approve_with_taap: { label: 'Approve with TAAP', state: 'agreed', grounds: ['proportionate-remedy'] },
   // A deny is a procurement decision, not a TAAP result. The TAAP review is one finding behind it.
   deny: { label: 'Deny', state: 'agreed', grounds: ['vendor-leverage-procurement-as-accessibility-lever'] },
@@ -219,9 +220,9 @@ const ROUTING = [
   { id: 'taap_needed', route: 'request_taap', state: 'proposed',
     text: 'The risk grade is Needs TAAP and no TAAP is on file' },
   // The exception is a defence against one required action, here the TAAP standard. It is
-  // claimed only where the plan falls below the standard at high pressure, never at intake.
+  // claimed only where the plan falls below the standard, never at intake.
   { id: 'exception_claimed', route: 'president_or_designee', state: 'required',
-    text: 'The TAAP falls below the standard at high pressure, and the requesting unit claims that equally effective access would be an undue burden or a fundamental alteration (28 CFR 35.164, 35.204)',
+    text: 'The TAAP falls below the standard, and the requesting unit claims that equally effective access would be an undue burden or a fundamental alteration (28 CFR 35.164, 35.204)',
     grounds: ['bounded-duty-burden-limits'] },
 ];
 
@@ -412,7 +413,7 @@ const AUTHORITY = {
     { cite: 'Section 508 Standards, E202.7 (36 CFR 1194)', kind: 'federal_standard', ict: ['nonweb'],
       says: 'When no conforming product meets the need, the CSU buys the product that best meets the standard and documents why. It provides the information and functions to people with disabilities by an alternative means.' },
     { cite: '28 CFR 35.130(b)(1); 34 CFR 104.4(b)', kind: 'federal_law',
-      says: 'An aid or service given to people with disabilities must be as effective as what others get. An alternative with fewer functions does not meet this. The law does not scale with exposure, so a plan that meets fewer than six requirements is a risk the signers accept, not a compliant result.' },
+      says: 'An aid or service given to people with disabilities must be as effective as what others get. An alternative with fewer functions does not meet this. The law does not scale with exposure, so a plan that meets fewer than six requirements is a Non-Equal Alternative, not a compliant result.' },
     { cite: '28 CFR 35.160(b)(2)', kind: 'federal_law',
       says: 'An alternative must be timely, protect privacy and allow independent use.' },
     { cite: '28 CFR 35.130(e)', kind: 'federal_law',
@@ -437,7 +438,7 @@ const AUTHORITY = {
     { cite: 'Section 508 Standards, E202.7; CSU ATI Procurement Process', kind: 'csu_policy', reason: ['more_accessible_product'],
       says: 'When a more accessible product meets the need, the CSU chooses it.' },
     { cite: 'CSU TAAP Authoring Template, Process Outcome and Administrative Approval', kind: 'csu_policy', reason: ['taap_below_standard'],
-      says: 'A plan that meets fewer than six requirements is a Non-Equal Alternative with moderate institutional risk, and the signers must accept that risk. At high exposure, or where the barriers block many essential functions, the matrix does not ask them to: the plan must meet the TAAP standard or the request is denied, unless the president or a designee determines in writing that equally effective access would be an undue burden or a fundamental alteration. The standard is the matrix\'s, stated in the denial, not a number in any rule.' },
+      says: 'A plan that meets fewer than six requirements is a Non-Equal Alternative with moderate institutional risk, and the signers would have to accept that risk. The matrix does not ask them to: the plan must meet the TAAP standard or the request is denied, unless the president or a designee determines in writing that equally effective access would be an undue burden or a fundamental alteration. The standard is the matrix\'s, stated in the denial, not a number in any rule.' },
     { cite: 'CSU TAAP Authoring Template, Process Outcome', kind: 'csu_policy', reason: ['no_alternative'],
       says: 'A plan that meets none of the six requirements is "unable to provide alternative means of access", and the template calls it a high risk to the institution. Access would then depend entirely on individual accommodation.' },
     { cite: 'CSU Executive Order 1111, section IV.C.4', kind: 'csu_policy', reason: ['no_alternative'],
@@ -512,19 +513,22 @@ function breadth(review, stacked = []) {
 }
 
 /**
- * The TAAP standard: how many of the six requirements a plan must meet, set by the pressure of
- * exposure and breadth. The warning rises with the pressure and with any shortfall. Before a
- * TAAP is on file the shortfall is unknown, and the warning reflects the pressure alone.
+ * The TAAP standard: the minimum number of the six requirements a plan must meet, set by the
+ * pressure of exposure and breadth. A plan below it is denied. The warning rises with the
+ * pressure and with the gap to a full TAAP, so a plan at the minimum is approved under a
+ * warning, and a full plan at high exposure still carries one from pressure alone. Before a
+ * TAAP is on file the gap is unknown, and the warning reflects the pressure alone.
  */
 function taapStandard(review, level, breadthLevel) {
   const c = CALIBRATION.taapStandard;
   const pressure = rank(level) + breadthLevel;
   const required = c.required[pressure];
   const met = review.taap?.exists ? taapMet(review.taap) : null;
-  const shortfall = met == null ? null : Math.max(0, required - met);
-  const w = pressure + (shortfall ?? 0);
+  const shortfall = met == null ? null : Math.max(0, required - met);   // against the minimum
+  const gap = met == null ? null : TAAP_REQUIREMENTS.length - met;        // against a full TAAP
+  const w = pressure + (gap ?? 0);
   const warning = w >= c.warning.high ? 'high' : w >= c.warning.elevated ? 'elevated' : 'low';
-  return { pressure, required, met, shortfall, warning, denyAt: c.denyAt, state: 'calibrate' };
+  return { pressure, required, met, shortfall, gap, warning, state: 'calibrate' };
 }
 
 // ---------------------------------------------------------------------------------------
@@ -578,7 +582,9 @@ function taapStandard(review, level, breadthLevel) {
  *           reviewed: every `months`, or at renewal if sooner; `contract` is the contract length
  * @property {{level: number, blocked: number, harder: number}} breadth
  * @property {{pressure: number, required: number, met: number|null, shortfall: number|null,
- *             warning: 'low'|'elevated'|'high', denyAt: number}|null} taapStandard
+ *             gap: number|null, warning: 'low'|'elevated'|'high'}|null} taapStandard
+ *           `shortfall` counts against the minimum and decides a denial; `gap` counts against
+ *           a full TAAP and sets the warning
  *           set whenever the risk grade is Needs TAAP, including on route 4
  * @property {boolean} taapOnFile
  * @property {boolean} exception    the plan is approved under a written determination (28 CFR 35.204)
@@ -651,10 +657,9 @@ function resolveTaap(review, severity, std) {
   // accommodation, and no determination rescues it, because the law still requires some other
   // action to the maximum extent possible.
   if (std.met === 0) return ['deny', 'no_alternative', null];
-  if (severity === 'S2') return ['approve_with_taap', null, null];   // S2 below the standard is never denied
-  if (std.pressure < std.denyAt) return ['approve_with_taap', null, null];   // the signers accept the shortfall
-  // Below the standard at high pressure, a Non-Equal Alternative is lawful only under a written
-  // undue burden or fundamental alteration determination (28 CFR 35.204; 508 E202.6).
+  // Below the standard, at any severity and pressure, a Non-Equal Alternative is lawful only
+  // under a written undue burden or fundamental alteration determination (28 CFR 35.204;
+  // 508 E202.6). The shortfall is recorded in the denial and the hold, never accepted.
   const exception = review.taap.exception ?? 'none';
   if (exception === 'determined') return ['approve_with_taap', null, 'exception'];
   if (exception === 'claimed') return ['on_hold', 'exception_claimed', null];
@@ -719,8 +724,6 @@ function evaluate(review) {
     requires: outcome === 'deny' ? [] : [
       ...(cell.requires ?? []).filter((r) => !NEEDS_ICT[r] || NEEDS_ICT[r].includes(review.ictKind)),
       ...(basis === 'exception' ? ['exception_record'] : []),
-      // Below the standard without the exception, the approval records the signers' acceptance.
-      ...(outcome === 'approve_with_taap' && std.shortfall > 0 && basis !== 'exception' ? ['shortfall_acceptance'] : []),
       ...(base.fallback ? ['validation_at_review'] : []),
     ],
     exception: basis === 'exception',
@@ -809,7 +812,6 @@ const NEEDS = {
   serves_everyone_from_day_one: 'The alternate access plan serves every affected person from the first day of use.',
   best_meets_record: 'A best-meets record with market research is on file (Section 508 E202.7).',
   exception_record: 'A written determination by the president or a designee is on file that equally effective access would be an undue burden or a fundamental alteration (28 CFR 35.164, 35.204), listing the support that remains for each missed requirement.',
-  shortfall_acceptance: 'The three TAAP signers accept the recorded shortfall against the TAAP standard, with named support for each missed requirement.',
   validation_at_review: 'The first TAAP review re-rates Severity on evidence at the Veracity floor, which the vendor demonstration under the roadmap terms supplies.',
 };
 const plural = (n, one, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
@@ -818,9 +820,9 @@ function warningText(std) {
   if (std.warning === 'low') return 'The warning level is low.';
   const causes = [];
   if (std.pressure >= CALIBRATION.taapStandard.warning.elevated) causes.push('exposure and barrier reach set a strict standard');
-  if (std.shortfall) causes.push(`the plan is ${plural(std.shortfall, 'requirement')} short of the standard`);
+  if (std.gap) causes.push(`the plan is ${plural(std.gap, 'requirement')} short of a full TAAP`);
   const lines = [`The warning level is ${std.warning}, because ${causes.join(', and ')}.`];
-  if (std.warning === 'high' && !std.shortfall) {
+  if (std.warning === 'high' && !std.gap) {
     lines.push('A TAAP that meets the standard manages the barriers without removing them. Weigh that risk before buying. A more accessible product would avoid the risk.');
   }
   return lines.join(' ');
@@ -958,21 +960,17 @@ function explain(review, d = evaluate(review), ctx = {}) {
           }
           if (!d.taapOnFile) {
             why.push('No TAAP is on file yet.');
-            if (sev === 'S2' || std.pressure < std.denyAt) {
-              why.push('A TAAP below that standard can still gain approval, with named support for each missed requirement and signer acceptance of the shortfall risk. A TAAP that meets none of the six requirements is denied.');
-            } else {
-              why.push('At this exposure, a TAAP below that standard leads to a denial.');
-            }
+            why.push('A TAAP below that standard leads to a denial, unless the president or a designee determines in writing that equally effective access would be an undue burden or a fundamental alteration. A TAAP that meets none of the six requirements is denied even then.');
           } else {
             why.push(std.shortfall
               ? `The TAAP on file meets ${std.met} of the six, ${plural(std.shortfall, 'requirement')} short of the standard.`
-              : `The TAAP on file meets ${std.met === 6 ? 'all six' : `${std.met} of the six`}, which meets the standard.`);
+              : `The TAAP on file meets ${std.met === 6 ? 'all six, a full TAAP' : `${std.met} of the six, which meets the minimum of ${std.required} but is ${plural(std.gap, 'requirement')} short of a full TAAP`}.`);
             if (unmet.length) why.push(`The plan falls short where ${list(unmet.map((r) => r.failed))}.`);
             if (d.denyReason === 'taap_below_standard') {
-              why.push('At this exposure, signer acceptance of a below-standard plan is not available.');
+              why.push('Signer acceptance of a below-standard plan is not available at any exposure.');
               why.push('The requesting unit may ask the president or a designee for a written determination that equally effective access would be an undue burden or a fundamental alteration (28 CFR 35.164 and 35.204). With that determination on file, the plan can be approved as a Non-Equal Alternative.');
             } else if (referred) {
-              why.push('At this exposure, signer acceptance of a below-standard plan is not available, and the requesting unit claims that equally effective access would be an undue burden or a fundamental alteration.');
+              why.push('Signer acceptance of a below-standard plan is not available, and the requesting unit claims that equally effective access would be an undue burden or a fundamental alteration.');
               why.push('That determination belongs to the president or a designee, in writing, after a review of all resources available to the program (28 CFR 35.164 and 35.204). High cost alone does not establish an undue burden.');
             } else if (d.exception) {
               why.push('A written determination by the president or a designee is on file that equally effective access would be an undue burden or a fundamental alteration, so the plan is approved as a Non-Equal Alternative under 28 CFR 35.204.');
@@ -1080,11 +1078,11 @@ function rubricNotes() {
   const acc = CALIBRATION.accumulation;
   const routeNo = (id) => ROUTING.findIndex((r) => r.id === id) + 1;
   return [
-    'The TAAP standard is a required count of the six CSU TAAP requirements, scaled by P, the sum of the Exposure rank and Breadth.',
-    `The below-standard column assumes a one-requirement shortfall. The warning level derives from W = P + shortfall, elevated from ${T.warning.elevated} and high from ${T.warning.high}.`,
+    'The TAAP standard is the minimum count of the six CSU TAAP requirements a plan must meet, scaled by P, the sum of the Exposure rank and Breadth. A full TAAP meets all six.',
+    `The warning level derives from W = P + gap, the gap being the requirements short of a full TAAP, elevated from ${T.warning.elevated} and high from ${T.warning.high}. A full TAAP at high Exposure still carries a warning, from pressure alone.`,
     `No TAAP on file maps to route ${routeNo('taap_needed')}, On hold: TAAP needed, which carries the TAAP standard and the warning.`,
-    `Below the standard at pressure under ${T.denyAt}, the approval records the three signers' acceptance of the shortfall. At pressure ${T.denyAt} or more, a written undue burden or fundamental alteration determination maps to Approve with TAAP, and a claim maps to route ${routeNo('exception_claimed')}.`,
-    'A TAAP that meets none of the six is denied at any severity. Otherwise S2 is never denied: an S2 plan below the standard maps to Approve with TAAP under a warning.',
+    `Below the standard, a written undue burden or fundamental alteration determination maps to Approve with TAAP as a Non-Equal Alternative, and a claim maps to route ${routeNo('exception_claimed')}.`,
+    'A TAAP below the minimum is denied at any severity and pressure, with the shortfall stated in the denial. A plan that meets none of the six is denied even under the exception. A plan at the minimum is approved under a warning.',
     `S2 escalates to S3 at ${acc.stack} S2 barriers stacked on one function for one user group, or at high Exposure with S2 barriers across ${acc.spreadPairs} function and group pairs.`,
     'At S3, a more accessible product that meets the same need maps to Deny.',
     `The Veracity floor column gates every review before the risk grade, with S1 always requiring E2 or better. Evidence below the floor maps to route ${routeNo('veracity_below_floor')}, manual review, which raises the evidence and re-rates Severity.`,

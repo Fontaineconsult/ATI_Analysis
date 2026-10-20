@@ -198,7 +198,7 @@
       </fieldset>
       <fieldset x-show="exceptionShown">
         <legend class="label">Undue burden or fundamental alteration</legend>
-        <p class="help">The TAAP falls below the standard at high pressure, where the matrix otherwise denies. A written determination by the president or a designee is the lawful basis for the plan (28 CFR 35.164, 35.204).</p>
+        <p class="help">The TAAP falls below the minimum, which the matrix otherwise denies. A written determination by the president or a designee is the lawful basis for the plan (28 CFR 35.164, 35.204).</p>
         <label class="field" for="taapException"><span>Exception status</span></label>
         <select id="taapException" x-model="form.taap.exception">
           <option value="none">No claim</option>
@@ -274,9 +274,10 @@
           <tr>
             <th scope="col">Exposure</th><th scope="col">Breadth</th><th scope="col">Pressure</th><th scope="col">Veracity floor</th>
             <th scope="col" :class="grid.headDim.grade ? 'dim' : ''">S0, S1</th><th scope="col" :class="grid.headDim.grade ? 'dim' : ''">S2</th><th scope="col" :class="grid.headDim.grade ? 'dim' : ''">S3</th>
-            <th scope="col" :class="grid.headDim.taap ? 'dim' : ''">TAAP standard</th>
+            <th scope="col" :class="grid.headDim.taap ? 'dim' : ''">Minimum (the TAAP standard)</th>
             <th scope="col" :class="grid.headDim.taap ? 'dim' : ''">No TAAP yet</th><th scope="col" :class="grid.headDim.taap ? 'dim' : ''">TAAP meets none</th>
-            <th scope="col" :class="grid.headDim.taap ? 'dim' : ''">TAAP below standard</th><th scope="col" :class="grid.headDim.taap ? 'dim' : ''">TAAP meets standard</th>
+            <th scope="col" :class="grid.headDim.taap ? 'dim' : ''">TAAP below the minimum</th><th scope="col" :class="grid.headDim.taap ? 'dim' : ''">TAAP at the minimum</th>
+            <th scope="col" :class="grid.headDim.taap ? 'dim' : ''">Full TAAP</th>
           </tr>
         </thead>
         <tbody>

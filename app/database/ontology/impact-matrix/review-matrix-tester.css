@@ -263,8 +263,9 @@ h4 { margin: 10px 0 2px; font-size: 0.78rem; text-transform: uppercase; letter-s
 .matrix .grid { width: 100%; }
 .matrix .notes { max-width: none; column-width: 34ch; column-gap: 28px; }
 .grid-wrap { overflow-x: auto; }
-.grid { font-size: 0.85rem; }
-.grid th, .grid td { white-space: nowrap; padding: 5px 7px; }
+.grid { font-size: 0.82rem; }
+.grid th, .grid td { white-space: nowrap; padding: 5px 6px; }
+.grid thead th { white-space: normal; vertical-align: bottom; min-width: 5.5em; }
 .grid .warn { display: block; font-weight: 400; color: var(--text-2); font-size: 0.8em; }
 .grid td.here { outline: 3px solid var(--text); outline-offset: -3px; font-weight: 700; }
 .grid td.dim, .grid th.dim { opacity: 0.35; filter: grayscale(1); }

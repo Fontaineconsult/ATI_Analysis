@@ -7,7 +7,7 @@ const fs = require('fs');
 const { chromium } = require(process.argv[2]);
 const outDir = process.argv[3];
 const here = (f) => 'file:///' + path.join(__dirname, f).replace(/\\/g, '/');
-const SVGS = [['review-process-checks.svg', 820, 925], ['review-process-remedy.svg', 820, 990], ['rubric-core.svg', 1274, 1010]];
+const SVGS = [['review-process-checks.svg', 820, 925], ['review-process-remedy.svg', 820, 920], ['rubric-core.svg', 1346, 884]];
 (async () => {
   const b = await chromium.launch();
   const p = await b.newPage();

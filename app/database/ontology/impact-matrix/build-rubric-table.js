@@ -21,10 +21,11 @@ const evText = { 0: 'any', 2: 'E1 or better', 4: 'E2 or better' };
 const cols = [
   ['X', 'Exposure', 84], ['B', 'Breadth', 64], ['P', 'Pressure', 64], ['V', 'Veracity floor', 116],
   ['S01', 'S0, S1', 82], ['S2', 'S2', 96], ['S3', 'S3', 96],
-  ['k', 'TAAP standard', 84], ['none', 'No TAAP yet', 124], ['zero', 'TAAP meets none', 92],
-  ['below', 'TAAP below standard', 146], ['meets', 'TAAP meets standard', 146],
+  ['k', 'Minimum (TAAP standard)', 92], ['none', 'No TAAP yet', 112], ['zero', 'TAAP meets none', 92],
+  ['below', 'Below the minimum', 104], ['min', 'At the minimum', 132], ['full', 'Full TAAP', 132],
 ];
-const X0 = 40, Y0 = 118, HH = 46, RH = 60;
+const FULL = M.TAAP_REQUIREMENTS.length;
+const X0 = 40, Y0 = 118, HH = 46, RH = 46;
 const xs = {}; let x = X0;
 for (const [id, , w] of cols) { xs[id] = [x, w]; x += w; }
 const W = x;
@@ -46,7 +47,7 @@ const cell = (id, row, span, kind, lines, chip) => {
 };
 
 // Group header and column header.
-const groups = [['FACTORS', 'X', 'V'], ['RISK GRADE BY SEVERITY', 'S01', 'S3'], ['TAAP REVIEW, WHEN THE RISK GRADE IS NEEDS TAAP', 'k', 'meets']];
+const groups = [['FACTORS', 'X', 'V'], ['RISK GRADE BY SEVERITY', 'S01', 'S3'], ['TAAP REVIEW, WHEN THE RISK GRADE IS NEEDS TAAP', 'k', 'full']];
 for (const [label, a, b] of groups) {
   const gx = xs[a][0]; const gw = xs[b][0] + xs[b][1] - gx;
   rect(gx, Y0 - 26, gw, 26, '#e6e4dc'); text(gx + gw / 2, Y0 - 8, label, { size: 12, weight: 700 });
@@ -75,9 +76,9 @@ for (const X of LV) {
     cell('k', row, 1, 'factor', [kText(k)]);
     cell('none', row, 1, 'hold', [`On hold, route ${routeNo('taap_needed')}`], warnOf(P));
     cell('zero', row, 1, 'deny', ['Deny']);
-    if (P >= C.taapStandard.denyAt) cell('below', row, 1, 'deny', ['Deny']);
-    else cell('below', row, 1, 'taap', ['Approve with TAAP', 'signers accept shortfall'], warnOf(P + 1));
-    cell('meets', row, 1, 'taap', ['Approve with TAAP'], warnOf(P));
+    cell('below', row, 1, 'deny', ['Deny']);
+    cell('min', row, 1, 'taap', ['Approve with TAAP'], warnOf(P + FULL - k));
+    cell('full', row, 1, 'taap', ['Approve with TAAP'], warnOf(P));
   }
 }
 cell('S01', 0, 9, 'approve', ['Approve']);

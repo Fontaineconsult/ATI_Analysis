@@ -20,7 +20,6 @@
     serves_everyone_from_day_one: 'The plan serves every affected person from day one',
     best_meets_record: 'A best-meets record with market research (Section 508 E202.7)',
     exception_record: 'A written undue burden or fundamental alteration determination by the president or a designee (28 CFR 35.204)',
-    shortfall_acceptance: 'The three TAAP signers accept the recorded shortfall against the TAAP standard',
     validation_at_review: 'Severity re-rated on evidence at the Veracity floor at the first TAAP review',
   };
   const SEVERITY_WORD = { S0: 'no barriers', S1: 'minor', S2: 'major', S3: 'critical' };
@@ -288,7 +287,7 @@
       get moreAccessibleShown() { return this.sev === 'S3'; },
       get exceptionShown() {
         const s = this.std;
-        return !!s && this.form.taap.exists && this.sev === 'S3' && s.pressure >= s.denyAt && (s.met ?? 0) > 0 && (s.shortfall ?? 0) > 0;
+        return !!s && this.form.taap.exists && (s.met ?? 0) > 0 && (s.shortfall ?? 0) > 0;
       },
       toggleReviewer() {
         if (this.showReviewer) for (const f of FACTORS) this.form.answers[f.id].reviewer = null;
@@ -423,16 +422,15 @@
         const sev = this.sev;
         const s2 = sev === 'S2';
         const warnOf = (w) => (w >= T.warning.high ? 'high' : w >= T.warning.elevated ? 'elevated' : 'low');
+        const FULL = M.TAAP_REQUIREMENTS.length;
+        // The outcome and the gap to a full TAAP, for a plan meeting `met` requirements.
         const decide = (P, k, met) => {
           if (met === null) return ['on_hold', 0];
-          const short = Math.max(0, k - met);
-          if (short === 0) return ['approve_with_taap', short];
-          if (met === 0) return ['deny', short];
-          if (P < T.denyAt) return ['approve_with_taap', short];
-          return ['deny', short];
+          if (met < k) return ['deny', FULL - met];   // meets none, or below the minimum
+          return ['approve_with_taap', FULL - met];
         };
         const std = d.taapStandard;
-        const state = !std ? null : !d.taapOnFile ? 'none' : std.met === 0 ? 'zero' : std.shortfall > 0 ? 'below' : 'meets';
+        const state = !std ? null : !d.taapOnFile ? 'none' : std.met === 0 ? 'zero' : std.shortfall > 0 ? 'below' : std.met === FULL ? 'full' : 'min';
         // How far this review gets through the table: Exposure still open (route 2), the
         // evidence still open (routes 1 and 3), the risk grade alone (Approve), or the remedy
         // step (Needs TAAP). Columns past the stage reached are drawn as not considered.
@@ -445,8 +443,7 @@
         const exception = review.taap?.exception ?? 'none';
         const moreAccessible = sev === 'S3' && review.moreAccessibleProductExists;
         // A TAAP cell is outlined only when its drawn value is this review's own outcome.
-        const drawnMatches = (o, col) => o === d.outcome
-          && (o !== 'on_hold' || d.route === (col === 'none' ? 'taap_needed' : 'exception_claimed'));
+        const drawnMatches = (o) => o === d.outcome && (o !== 'on_hold' || d.route === 'taap_needed');
         const ev = M.EVIDENCE.find((e) => e.id === d.evidence);
         const floorRank = M.veracityFloor(d.exposure.level, sev);
         const floorNote = !rowKnown ? ''
@@ -461,10 +458,9 @@
           const gradeCell = (s, cols) => ({ text: M.RISK_GRADES[grade(s)], tone: TONE[grade(s)],
             here: gradeReached && onRow && cols.includes(sev), dim: !gradeReached });
           const taapCell = (col, met) => {
-            const [o, short] = decide(P, k, met);
-            const route = o === 'on_hold' ? ` (route ${routeNo(col === 'none' ? 'taap_needed' : 'exception_claimed')})` : '';
-            const sub = o === 'approve_with_taap' && short > 0 ? 'signers accept the shortfall' : '';
-            return { text: `${M.OUTCOMES[o].label}${route}`, sub, warn: o === 'deny' ? '' : `warning ${warnOf(P + short)}`, tone: TONE[o],
+            const [o, gap] = decide(P, k, met);
+            const route = o === 'on_hold' ? ` (route ${routeNo('taap_needed')})` : '';
+            return { text: `${M.OUTCOMES[o].label}${route}`, sub: '', warn: o === 'deny' ? '' : `warning ${warnOf(P + gap)}`, tone: TONE[o],
               here: remedyReached && onRow && state === col && drawnMatches(o, col), dim: !remedyReached };
           };
           return {
@@ -472,7 +468,7 @@
             floor: { text: evidenceAtRank(M.EVIDENCE_LIMITS.floor[lvl]).replace('any evidence', 'any'), here: onBand, note: onBand ? floorNote : '' },
             grades: [gradeCell('S0', ['S0', 'S1']), gradeCell('S2', ['S2']), gradeCell('S3', ['S3'])],
             k: { text: k === 6 ? 'all 6' : `${k} of 6`, here: remedyReached && onRow, dim: !remedyReached },
-            taap: [taapCell('none', null), taapCell('zero', 0), taapCell('below', k - 1), taapCell('meets', k)],
+            taap: [taapCell('none', null), taapCell('zero', 0), taapCell('below', k - 1), taapCell('min', k), taapCell('full', FULL)],
           };
         }));
         const notes = M.rubricNotes();
@@ -482,13 +478,12 @@
           grade: 'The risk grade is Approve, so the TAAP columns do not apply to this review.',
           remedy: '',
         }[stage];
-        // The drawn values differ from this review's outcome in three cases only, each in the
-        // below-standard column or, for a more accessible product, in every TAAP column.
+        // The drawn values differ from this review's outcome in two cases only: the exception,
+        // in the below-standard column, and a more accessible product, in every TAAP column.
         const caveat = !std ? ''
           : moreAccessible ? 'For this review, a more accessible product meets the same need, so every TAAP state is Deny.'
-            : s2 && std.pressure >= T.denyAt ? 'This review is S2, so a TAAP below the standard is Approve with TAAP under a warning, not the Deny drawn at this pressure.'
-              : exception !== 'none' && std.pressure >= T.denyAt ? `For this review, an undue burden or fundamental alteration ${exception === 'claimed' ? 'claim' : 'determination'} is on file, so the below-standard column follows note 4 rather than the drawn value.`
-                : '';
+            : exception !== 'none' ? `For this review, an undue burden or fundamental alteration ${exception === 'claimed' ? 'claim' : 'determination'} is on file, so the below-standard column follows note 4 rather than the drawn value.`
+              : '';
         return { rows, notes, stage, stageNote, caveat, headDim: { grade: !gradeReached, taap: !remedyReached } };
       },
 
@@ -557,7 +552,7 @@
       duration: 'Frequency of use and contract length.',
     };
     const WHEN = {
-      exception_claimed: `The TAAP falls below the standard at pressure ${T.denyAt} or more, and the requesting unit claims that equally effective access would be an undue burden or a fundamental alteration (28 CFR 35.164, 35.204).`,
+      exception_claimed: `The TAAP falls below the standard, and the requesting unit claims that equally effective access would be an undue burden or a fundamental alteration (28 CFR 35.164, 35.204).`,
       severity_unknown: 'No ACR, demonstration or testing exists.',
       answers_unknown: 'Unknown answers could change the exposure level.',
       veracity_below_floor: 'The evidence is below the Veracity floor for this exposure and severity, and a demonstration or ATI testing can still raise it.',
@@ -657,7 +652,7 @@
       `<p>A <strong>TAAP</strong> (Temporary Alternate Access Plan) is the CSU's written plan for equally effective access during vendor remediation, held to the six requirements of the CSU TAAP template.</p>${ul(M.TAAP_REQUIREMENTS.map((r) => r.text))}`,
       `<p>Each TAAP includes a campus-written <strong>TAAP accessibility statement</strong>, separate from the vendor's own statement and posted ${M.TAAP_STATEMENT.postedAt}, with the following content.</p>${ul(M.TAAP_STATEMENT.includes.map((x) => x.charAt(0).toUpperCase() + x.slice(1)))}`,
       `<p>Three people sign each TAAP.</p>${ul(M.TAAP_TERMS.signers)}`,
-      `<p>A TAAP below the standard at pressure ${T.denyAt} or more is approved only under a written determination by the president or a designee that equally effective access would be an undue burden or a fundamental alteration (28 CFR 35.164, 35.204). The determination covers this product only, counts all university resources, and lists the support that remains for each missed requirement. High cost alone does not establish an undue burden. The exception is a defence against this one required action, never a property of the product, so the review never asks for it at intake.</p>`,
+      `<p>A TAAP below the standard is approved only under a written determination by the president or a designee that equally effective access would be an undue burden or a fundamental alteration (28 CFR 35.164, 35.204). The determination covers this product only, counts all university resources, and lists the support that remains for each missed requirement. High cost alone does not establish an undue burden. The exception is a defence against this one required action, never a property of the product, so the review never asks for it at intake.</p>`,
       `<p>A TAAP lasts ${M.TAAP_TERMS.reviewMonths} months or until contract renewal, whichever comes first, with no extension.</p>`,
       '<p>The department using the product provides TAAP-defined support on any problem report, independent of accommodation, which starts with one person\'s request. The procurement review never relies on accommodation.</p>',
 
@@ -669,13 +664,20 @@
       table(['Exposure', 'S0', 'S1', 'S2', 'S3'], M.LEVELS.map((l) => [l, ...['S0', 'S1', 'S2', 'S3'].map((s) => M.RISK_GRADES[M.GRID[l][s].grade])])),
 
       '<h3>Pressure and the TAAP standard</h3>',
-      '<p>The <strong>TAAP standard</strong>, the number of TAAP requirements a plan must meet, derives from <strong>pressure</strong>, the sum of exposure rank (low 0, medium 1, high 2) and Breadth.</p>',
+      '<p>The <strong>TAAP standard</strong>, the minimum number of the six TAAP requirements a plan must meet, derives from <strong>pressure</strong>, the sum of exposure rank (low 0, medium 1, high 2) and Breadth. A <strong>full TAAP</strong> meets all six.</p>',
       table(['Pressure', 'TAAP standard'], ks.map((k) => [pressuresFor(k), kText(k)])),
-      `<p>An S3 plan below the standard is denied at pressure ${T.denyAt} or more, unless a written undue burden or fundamental alteration determination is on file, and approved below that pressure only with the three signers' recorded acceptance of the shortfall, under a warning. TAAP work costs staff time, so purchases with less at stake get a lower bar, and a recorded shortfall keeps the signers reporting what the plan does instead of ticking requirements it does not meet.</p>`,
+      '<p>The TAAP on file falls in one of four states against the minimum, each with a fixed outcome.</p>',
+      table(['TAAP on file', 'Outcome', 'Warning'], [
+        ['Meets none of the six', 'Deny, even under the exception', 'None'],
+        ['Below the minimum', 'Deny, unless a written undue burden or fundamental alteration determination is on file', 'None, or from pressure plus the gap under the exception'],
+        ['At the minimum, short of all six', 'Approve with TAAP', 'From pressure plus the gap to a full TAAP'],
+        ['Full, all six', 'Approve with TAAP', 'From pressure alone, so a warning at high exposure'],
+      ]),
+      '<p>A plan below the standard is denied at any severity and pressure, unless a written undue burden or fundamental alteration determination is on file. TAAP work costs staff time, so purchases with less at stake get a lower standard. The <strong>shortfall</strong>, the count of requirements the plan misses, is stated in the denial and in the hold, so the signers report what the plan does instead of ticking requirements it does not meet.</p>',
       '<p>Under the fallback, the TAAP standard is provisional and may rise when evidence arrives, and the first TAAP review re-rates Severity on evidence at the Veracity floor.</p>',
 
       '<h3>Warning level</h3>',
-      `<p>The <strong>warning level</strong>, the purchase risk shown to the purchaser, derives from pressure plus the <strong>shortfall</strong> of requirements the plan misses below the standard.</p>${ul([
+      `<p>The <strong>warning level</strong>, the purchase risk shown to the purchaser, derives from pressure plus the <strong>gap</strong>, the count of requirements the plan misses short of a full TAAP. The shortfall against the minimum decides a denial, and the gap against a full TAAP sets the warning.</p>${ul([
         term('Low', `Under ${T.warning.elevated}.`),
         term('Elevated', `${T.warning.elevated} or ${T.warning.high - 1}.`),
         term('High', `${T.warning.high} or more.`),
@@ -689,10 +691,10 @@
         ['Approve with TAAP', 'The purchase goes ahead under the TAAP on file, a temporary plan that leaves the product\'s conformance unchanged.'],
         ['Deny', 'The purchase stops, as a procurement decision rather than a verdict on the TAAP.'],
       ]),
-      `<p>A TAAP on file that meets none of the six requirements is denied at any severity, because it gives no alternative access. Two further conditions deny an S3 product.</p>${ul([
-        'A more accessible product meets the same need, with or without a TAAP.',
-        `The TAAP on file falls below the standard at pressure ${T.denyAt} or more, with no written undue burden or fundamental alteration determination on file.`,
-      ])}<p>An S2 product with a TAAP that meets at least one requirement is never denied, however far below the standard the plan falls.</p>`,
+      `<p>Two conditions deny a product with a Needs TAAP risk grade.</p>${ul([
+        'A more accessible product meets the same need, with or without a TAAP (S3 only).',
+        'The TAAP on file falls below the TAAP standard, with no written undue burden or fundamental alteration determination on file. A plan that meets none of the six requirements gives no alternative access and is denied even under the exception.',
+      ])}`,
 
       '<h3>Routes</h3>',
       '<p>Reviews either conclude with one of three final decisions or remain paused in one of five numbered <strong>routes</strong>, each held by a named party until the condition the route names is met. Routes 1 to 3, in priority order, gate the risk grade, and route 3 loops to the Severity step with the new findings or the fallback. Routes 4 and 5 come from the TAAP checks, with route 4 holding a Needs TAAP risk grade until a TAAP is on file, and route 5 referring an undue burden or fundamental alteration claim for a written determination.</p>',

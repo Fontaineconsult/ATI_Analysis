@@ -183,14 +183,14 @@ GROUNDING = {
         'principles': [
             ('Remedy proportionate to barrier severity', 'The number of requirements a plan must meet rises with the reach of the barriers and the exposure of the product.'),
         ],
-        'calibration': 'The counts (3 of 6 at pressure 0 or 1, 4 at 2, all 6 at 3 or more) and the denial line at pressure 3 are the matrix\'s. The template sets the risk tiers, and no rule sets how many requirements a plan must meet at each exposure. Low-pressure leniency is deliberate, because TAAP work costs staff time.',
+        'calibration': 'The counts (3 of 6 at pressure 0 or 1, 4 at 2, all 6 at 3 or more) are the matrix\'s. The template sets the risk tiers, and no rule sets how many requirements a plan must meet at each exposure. A lower count at low pressure is deliberate, because TAAP work costs staff time, and the standard binds at every pressure.',
     },
     'Warning level': {
         'rules': [
             ('CSU TAAP Authoring Template, Institutional Risk', 'The template names the institutional risk a plan carries, and the warning level is how the review tells the purchaser that risk.'),
         ],
         'principles': [
-            ('Deference is earned through a documented, individualized process', 'The warning is recorded with the determination, so the risk the signers accepted is visible later.'),
+            ('Deference is earned through a documented, individualized process', 'The warning is recorded with the determination, so the risk the signers took on is visible later.'),
         ],
         'calibration': 'The cut points (elevated at 2, high at 4) are the matrix\'s. The rule that no TAAP lowers the warning below the pressure level follows from the template, which says a TAAP manages barriers while the vendor removes them.',
     },

@@ -117,25 +117,22 @@ below the floor can hide barriers but not invent them, so the pressure and the T
 computed from the findings on file are minimums.
 
 An Approve risk grade maps to an Approve final decision. A Needs TAAP risk grade requires a
-TAAP meeting the **TAAP standard**, a required count of the six requirements that
+TAAP meeting the **TAAP standard**, the minimum count of the six requirements that
 Exposure-plus-Breadth **pressure** scales from 3 at pressure 0 or 1 to all 6 at pressure 3 or
 more.
 
 The **remedy step** maps a Needs TAAP risk grade to a final decision by the TAAP on file. With
 no TAAP on file, the review holds with the requesting unit (route 4), carrying the TAAP standard
-and the warning level. A TAAP at or above the standard gives Approve with TAAP. A TAAP that
-meets none of the six requirements is denied at any severity, because it gives no alternative
-access. An S2 product with any other TAAP on file gives Approve with TAAP, however far below the
-standard the plan falls.
+and the warning level. A TAAP at or above the standard gives Approve with TAAP.
 
-Two further conditions deny an S3 product.
+Two conditions deny a product with a Needs TAAP risk grade.
 
-- A more accessible product meets the same need, with or without a TAAP.
-- The TAAP falls below the standard at pressure 3 or more, with no written undue burden or
-  fundamental alteration determination on file.
+- A more accessible product meets the same need, with or without a TAAP (S3 only).
+- The TAAP falls below the standard, at any severity and pressure, with no written undue burden
+  or fundamental alteration determination on file. A plan that meets none of the six
+  requirements gives no alternative access and is denied even under the exception.
 
-A TAAP below the standard at pressure 3 or more is a Non-Equal Alternative that the matrix
-otherwise denies. The **exception** (28 CFR 35.164 and 35.204; Section 508 E202.6) is the
+A TAAP below the standard is a Non-Equal Alternative that the matrix otherwise denies. The **exception** (28 CFR 35.164 and 35.204; Section 508 E202.6) is the
 lawful basis for such a plan, a written determination by the president or a designee, counting
 all university resources, that equally effective access would be an undue burden or a
 fundamental alteration. A claim holds the review with the president or designee (route 5). A
@@ -144,10 +141,12 @@ missed requirement as the access the law still requires to the maximum extent po
 exception is a defence against this one required action and never a property of the product,
 so it never arises at intake.
 
-Any other TAAP below the standard gives Approve with TAAP, with the three signers' recorded
-acceptance of the shortfall as a requirement of the approval. Every Needs TAAP risk grade carries
-a **warning level** derived from pressure plus the TAAP's shortfall against the standard, never
-below the pressure level, because TAAP coverage manages barriers without removing them.
+The **shortfall**, the count of requirements the plan misses against the standard, is stated in
+the denial and in the hold, so the signers report what the plan does instead of ticking
+requirements it does not meet. Every Needs TAAP risk grade carries a **warning level** derived
+from pressure plus the **gap**, the count of requirements the plan misses short of a full TAAP,
+never below the pressure level, because TAAP coverage manages barriers without removing them.
+A full TAAP at high Exposure still carries a warning from pressure alone.
 
 ## 1. Inputs and symbols
 
@@ -170,7 +169,7 @@ The rubric maps seven inputs to the four factors and two derived values.
 | `B` | Breadth | 0, 1, 2 |
 | `V` | Veracity | 0 to 5 |
 | `P` | Pressure, from Exposure and Breadth | 0 to 4 |
-| `k` | TAAP standard, the required count of TAAP requirements | 3 to 6 |
+| `k` | TAAP standard, the minimum count of TAAP requirements a plan must meet | 3 to 6 |
 
 Levels rank `low = 0`, `medium = 1`, `high = 2`. The whole rubric fits in four lines.
 
@@ -403,8 +402,8 @@ The remedy step maps an Approve risk grade to an Approve final decision, and a N
 grade to Approve with TAAP, Deny, route 4 or route 5 by the TAAP on file and the exception
 status against the TAAP standard.
 
-The TAAP standard `k`, a required count of TAAP requirements, derives from **pressure**, the
-sum of the Exposure rank and Breadth.
+The TAAP standard `k`, the minimum count of TAAP requirements a plan must meet, derives from
+**pressure**, the sum of the Exposure rank and Breadth. A full TAAP meets all six.
 
 ```
 P    = rank(X) + B                   0 to 4
@@ -425,26 +424,35 @@ REMEDY( Needs TAAP ) =
     On hold (route 4)   if no TAAP on file                  no TAAP on file
     Approve with TAAP   if met ≥ k                          standard met
     Deny                if met = 0                          no alternative access, at any S
-    Approve with TAAP   if S = S2                           S2 below the standard never denied
-    Approve with TAAP   if met < k ∧ P < 3                  shortfall accepted by the signers
-    Approve with TAAP   if P ≥ 3 ∧ T.exception = determined Non-Equal Alternative under 35.204
-    On hold (route 5)   if P ≥ 3 ∧ T.exception = claimed    referred for a formal determination
-    Deny                if met < k ∧ P ≥ 3                  below the standard at high pressure
+    Approve with TAAP   if T.exception = determined         Non-Equal Alternative under 35.204
+    On hold (route 5)   if T.exception = claimed            referred for a formal determination
+    Deny                if met < k                          below the standard, at any S and P
 ```
 
 A TAAP below six requirements is a Non-Equal Alternative, with named support required for each
-missed requirement. At pressure 3 or more, a Non-Equal Alternative is approved only under the
-exception, which adds the written determination to the requirements of the approval. Below
-pressure 3 a Non-Equal Alternative is approved with the three signers' recorded acceptance of
-the shortfall as a requirement of the approval, so the signers report what the plan does
-instead of ticking requirements it does not meet.
+missed requirement. Below the standard, a Non-Equal Alternative is approved only under the
+exception, which adds the written determination to the requirements of the approval. The
+standard scales with pressure so that purchases with less at stake get a lower standard, and
+the shortfall against it is stated in the denial and in the hold, so the signers report what
+the plan does instead of ticking requirements it does not meet.
 
-The **warning level** derives from the sum of pressure and shortfall, with zero shortfall
-under no TAAP or a TAAP at the standard. TAAP coverage manages barriers without removing them,
-so no TAAP lowers the warning below the pressure level.
+The TAAP on file falls in one of four states against the minimum, each with a fixed outcome.
+
+| TAAP on file | Outcome | Warning |
+|---|---|---|
+| Meets none of the six | Deny, even under the exception | None |
+| Below the minimum | Deny, unless a written undue burden or fundamental alteration determination is on file | None, or from pressure plus the gap under the exception |
+| At the minimum, short of all six | Approve with TAAP | From pressure plus the gap to a full TAAP |
+| Full, all six | Approve with TAAP | From pressure alone, so a warning at high Exposure |
+
+The **warning level** derives from the sum of pressure and the **gap**, the count of
+requirements the plan misses short of a full TAAP, with a gap of zero under no TAAP. TAAP
+coverage manages barriers without removing them, so no TAAP lowers the warning below the
+pressure level.
 
 ```
-W       = P + shortfall
+gap     = 6 − met
+W       = P + gap
 warning = low       if W < 2
           elevated  if 2 ≤ W < 4
           high      if W ≥ 4
@@ -471,10 +479,7 @@ R = route 4  ∨  route 5  ∨  final_decision = Approve with TAAP
   the vendor's statement and posted wherever the product is in use. The statement covers
   known barriers, impacted disability groups, a reference to the TAAP, a disclaimer about
   unknown barriers and a support contact.
-- **Shortfall acceptance.** Under a Non-Equal Alternative at pressure under 3, the three TAAP
-  signers' recorded acceptance of the shortfall against the TAAP standard, with named support
-  for each missed requirement.
-- **Exception record.** Under a Non-Equal Alternative at pressure 3 or more, the written undue
+- **Exception record.** Under a Non-Equal Alternative, the written undue
   burden or fundamental alteration determination by the president or a designee (28 CFR 35.164
   and 35.204; Section 508 E202.6), listing the support that remains for each missed requirement.
 - **Validation at review.** Under the fallback, the first TAAP review re-rates Severity on
@@ -511,6 +516,5 @@ Pilot calibration sets these values. Any change creates a new matrix version.
 | Breadth steps on blocked pairs | 2, 4 |
 | Breadth S2 count | 3 |
 | TAAP standard `k` by pressure | 3 at `P ≤ 1`, 4 at `P = 2`, 6 at `P ≥ 3` |
-| Deny below the standard | at `P ≥ 3` |
 | Warning level | elevated at `W ≥ 2`, high at `W ≥ 4` |
 | TAAP term | 12 months |

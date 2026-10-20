@@ -125,7 +125,7 @@ down(COL.S0, Y.state + 35, YF - 38, 'Approve');
 // S1: Approve, with roadmap terms at medium or high Exposure.
 down(COL.S1, Y.state + 35, YF - 38, ['Approve; roadmap terms at', 'medium or high Exposure']);
 
-// S2: accumulation, Exposure, then TAAP or Approve. Denied only for a TAAP that meets none of the six.
+// S2: accumulation, then Exposure. Low is Approve; medium or high joins the Needs TAAP lane.
 diamond(COL.S2, R[1], CW, CH, ['S2 accumulation?', `${C.accumulation.stack}+ stacked on one pair, or`, `${C.accumulation.spreadPairs}+ pairs at high Exposure`]);
 down(COL.S2, Y.state + 35, R[1] - CH / 2);
 arrow([right(COL.S2, CW, R[1]), [875, R[1]], [875, Y.state], [COL.S3 - CW / 2, Y.state]]);
@@ -133,38 +133,29 @@ text(880, R[1] - 60, ['yes:', 'S3 (accumulated)'], { size: 11, fill: '#444444', 
 diamond(COL.S2, R[2], CW, CH, ['Exposure?']);
 down(COL.S2, R[1] + CH / 2, R[2] - CH / 2, 'no');
 arrow([left(COL.S2, CW, R[2]), [520, R[2]], [520, YF - 38]], ['low:', 'Approve']);
-diamond(COL.S2, R[3], CW, CH, ['TAAP on file?']);
-down(COL.S2, R[2] + CH / 2, R[3] - CH / 2, ['medium or high:', 'Needs TAAP']);
-hang(COL.S2, R[3], 'taap_needed');
-diamond(COL.S2, R[4], CW, CH, ['TAAP meets none', 'of the six?']);
-down(COL.S2, R[3] + CH / 2, R[4] - CH / 2, 'yes');
-arrow([left(COL.S2, CW, R[4]), [COL.S2 - 70, R[4]], [COL.S2 - 70, R[4] + 50]], 'yes');
-box(COL.S2 - 70, R[4] + 70, 126, 40, 'deny', ['Deny', 'no alternative access'], { size: 11 });
-down(COL.S2, R[4] + CH / 2, YF - 38, ['no; below the standard', 'never denied, warning']);
+arrow([right(COL.S2, CW, R[2]), [COL.S3 - CW / 2, R[2]]]);
+text(875, R[2] - 62, ['medium or high:', 'Needs TAAP'], { size: 11, fill: '#444444' });
 
-// S3: Needs TAAP at every Exposure. The only lane that can end in Deny.
+// The Needs TAAP lane: S3 at every Exposure, and S2 from medium or high. The only lane that
+// can end in Deny.
 diamond(COL.S3, R[1], CW, CH, ['A more accessible product', 'meets the same need?']);
 down(COL.S3, Y.state + 35, R[1] - CH / 2, 'Needs TAAP');
 arrow([right(COL.S3, CW, R[1]), [1160, R[1]], [1160, YF - 60], [1060, YF - 60]], 'yes', { noHead: true });
 diamond(COL.S3, R[2], CW, CH, ['TAAP on file?']);
 down(COL.S3, R[1] + CH / 2, R[2] - CH / 2, 'no');
-hang(COL.S3, R[2], 'taap_needed');
-diamond(COL.S3, R[3], CW, CH, ['TAAP meets', 'the standard?']);
+hang(COL.S3, R[2], 'taap_needed', 'no', 1);
+diamond(COL.S3, R[3], CW, CH, ['TAAP meets', 'the minimum?']);
 down(COL.S3, R[2] + CH / 2, R[3] - CH / 2, 'yes');
 arrow([left(COL.S3, CW, R[3]), [870, R[3]], [870, YF - 38]], 'yes');
 diamond(COL.S3, R[4], CW, CH, ['TAAP meets none', 'of the six?']);
 down(COL.S3, R[3] + CH / 2, R[4] - CH / 2, 'no');
 arrow([right(COL.S3, CW, R[4]), [1160, R[4]]], 'yes', { noHead: true });
-diamond(COL.S3, R[5], CW, CH, ['Below the standard', `at pressure ${C.taapStandard.denyAt} or more?`]);
-down(COL.S3, R[4] + CH / 2, R[5] - CH / 2, 'no');
+diamond(COL.S3, R[5], CW, CH, ['Undue burden or', 'fundamental alteration', 'determination?']);
+down(COL.S3, R[4] + CH / 2, R[5] - CH / 2, ['no: below', 'the minimum']);
 arrow([left(COL.S3, CW, R[5]), [870, R[5]]], null, { noHead: true });
-text(876, R[5] + 40, ['no: approved, signers', 'accept the shortfall'], { size: 11, fill: '#444444', anchor: 'start' });
-diamond(COL.S3, R[6], CW, CH, ['Undue burden or', 'fundamental alteration', 'determination?']);
-down(COL.S3, R[5] + CH / 2, R[6] - CH / 2, 'yes');
-arrow([left(COL.S3, CW, R[6]), [870, R[6]]], null, { noHead: true });
-text(876, R[6] + 40, ['on file: Non-Equal', 'Alternative, high warning'], { size: 11, fill: '#444444', anchor: 'start' });
-hang(COL.S3, R[6], 'exception_claimed', 'claimed', 1);
-arrow([[COL.S3, R[6] + CH / 2], [COL.S3, YF - 60], [1060, YF - 60], [1060, YF - 38]], 'none');
+text(876, R[5] + 40, ['on file: Non-Equal', 'Alternative, high warning'], { size: 11, fill: '#444444', anchor: 'start' });
+hang(COL.S3, R[5], 'exception_claimed', 'claimed', 1);
+arrow([[COL.S3, R[5] + CH / 2], [COL.S3, YF - 60], [1060, YF - 60], [1060, YF - 38]], 'none');
 
 // ---- Final decisions.
 box(335, YF, 400, 76, 'approve', ['Approve', 'standard contract terms; roadmap terms under R;', 'a new review at renewal'], { size: 12, stroke: COLOR.approve[1] });
