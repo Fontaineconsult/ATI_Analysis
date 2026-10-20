@@ -268,6 +268,7 @@ h4 { margin: 10px 0 2px; font-size: 0.78rem; text-transform: uppercase; letter-s
 .grid thead th { white-space: normal; vertical-align: bottom; min-width: 5.5em; }
 .grid .warn { display: block; font-weight: 400; color: var(--text-2); font-size: 0.8em; }
 .grid td.here { outline: 3px solid var(--text); outline-offset: -3px; font-weight: 700; }
+.grid td.here.tentative { outline-style: dashed; }
 .grid td.dim, .grid th.dim { opacity: 0.35; filter: grayscale(1); }
 .grid tr.here-row > td:not(.dim), .grid th.here-band { font-weight: 600; }
 .grid th.here-band { color: var(--text); border-left: 3px solid var(--brand); }

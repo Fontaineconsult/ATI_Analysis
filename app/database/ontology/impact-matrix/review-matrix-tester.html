@@ -287,7 +287,7 @@
               <td :class="row.onRow ? 'here' : ''" x-text="row.B"></td>
               <td :class="row.onRow ? 'here' : ''" x-text="row.P"></td>
               <template x-if="row.first"><td rowspan="3" :class="row.floor.here ? 'here' : ''"><span x-text="row.floor.text"></span><span class="warn" x-show="row.floor.note" x-text="row.floor.note"></span></td></template>
-              <template x-for="(c, i) in row.grades" :key="i"><td :class="'tone-' + c.tone + (c.here ? ' here' : '') + (c.dim ? ' dim' : '')" x-text="c.text"></td></template>
+              <template x-for="(c, i) in row.grades" :key="i"><td :class="'tone-' + c.tone + (c.here ? ' here' : '') + (c.here && c.tentative ? ' tentative' : '') + (c.dim ? ' dim' : '')" x-text="c.text"></td></template>
               <td :class="(row.k.here ? 'here' : '') + (row.k.dim ? ' dim' : '')" x-text="row.k.text"></td>
               <template x-for="(c, i) in row.taap" :key="i">
                 <td :class="'tone-' + c.tone + (c.here ? ' here' : '') + (c.dim ? ' dim' : '')"><span x-text="c.text"></span><span class="warn" x-show="c.sub" x-text="c.sub"></span><span class="warn" x-show="c.warn" x-text="c.warn"></span></td>
@@ -299,7 +299,7 @@
     </div>
     <p class="step-status" x-show="grid.stageNote || grid.caveat"><span x-text="grid.stageNote"></span> <span x-text="grid.caveat"></span></p>
     <div class="notes">
-      <p>The table is the one-page rubric, <code>rubric-core.svg</code>, drawn from the same model. The TAAP columns show the S3 case with no exception on file. The outlined cells are this review: its Exposure band and row, its Veracity floor with the evidence on file, and, once reached, its risk grade, TAAP standard and TAAP state. Columns the review has not reached are greyed. A TAAP state is outlined only when the drawn value is the review's own outcome.</p>
+      <p>The table is the one-page rubric, <code>rubric-core.svg</code>, drawn from the same model. The TAAP columns show the S3 case with no exception on file. The outlined cells are this review: its Exposure band and row, its Veracity floor with the evidence on file, its risk grade, dashed while the evidence is still being raised, and, once reached, its TAAP standard and TAAP state. Columns the review has not reached are greyed. A TAAP state is outlined only when the drawn value is the review's own outcome.</p>
       <template x-for="(note, i) in grid.notes" :key="i"><p x-text="(i + 1) + '. ' + note"></p></template>
     </div>
 </section>

@@ -438,7 +438,10 @@
           : (d.route === 'severity_unknown' || d.route === 'veracity_below_floor') ? 'evidence'
             : std ? 'remedy' : 'grade';
         const rowKnown = stage !== 'exposure';
-        const gradeReached = stage === 'grade' || stage === 'remedy';
+        // Severity read from the evidence on file is a minimum, so the risk grade cell is known
+        // as soon as a finding exists, and only tentative while the evidence is being raised.
+        const gradeKnown = rowKnown && sev !== 'S?';
+        const gradeTentative = stage === 'evidence';
         const remedyReached = stage === 'remedy';
         const exception = review.taap?.exception ?? 'none';
         const moreAccessible = sev === 'S3' && review.moreAccessibleProductExists;
@@ -456,7 +459,7 @@
           const onRow = onBand && B === d.breadth.level;
           const grade = (s) => M.GRID[lvl][s].grade;
           const gradeCell = (s, cols) => ({ text: M.RISK_GRADES[grade(s)], tone: TONE[grade(s)],
-            here: gradeReached && onRow && cols.includes(sev), dim: !gradeReached });
+            here: gradeKnown && onRow && cols.includes(sev), tentative: gradeTentative, dim: !gradeKnown });
           const taapCell = (col, met) => {
             const [o, gap] = decide(P, k, met);
             const route = o === 'on_hold' ? ` (route ${routeNo('taap_needed')})` : '';
@@ -474,7 +477,9 @@
         const notes = M.rubricNotes();
         const stageNote = {
           exposure: `The review holds at route ${routeNo(d.route)} before Exposure is settled, so no row applies yet.`,
-          evidence: `The review holds at route ${routeNo(d.route)} at the Veracity floor, so the risk grade and the TAAP columns are not reached.`,
+          evidence: sev === 'S?'
+            ? `The review holds at route ${routeNo(d.route)} with no evidence on file, so no severity is known and the risk grade and the TAAP columns are not reached.`
+            : `The review holds at route ${routeNo(d.route)} at the Veracity floor. The risk grade is read from the evidence on file as a minimum, dashed, and the TAAP columns are not reached.`,
           grade: 'The risk grade is Approve, so the TAAP columns do not apply to this review.',
           remedy: '',
         }[stage];
@@ -484,7 +489,7 @@
           : moreAccessible ? 'For this review, a more accessible product meets the same need, so every TAAP state is Deny.'
             : exception !== 'none' ? `For this review, an undue burden or fundamental alteration ${exception === 'claimed' ? 'claim' : 'determination'} is on file, so the below-standard column follows note 4 rather than the drawn value.`
               : '';
-        return { rows, notes, stage, stageNote, caveat, headDim: { grade: !gradeReached, taap: !remedyReached } };
+        return { rows, notes, stage, stageNote, caveat, headDim: { grade: !gradeKnown, taap: !remedyReached } };
       },
 
       // ---- copy the reasoning. The async clipboard first; a copy event as the fallback,
