@@ -411,12 +411,12 @@
       get json() { return this.d ? JSON.stringify(this.d, null, 2) : ''; },
 
       // The exposure matrix: one row per Exposure and Breadth, drawn exactly as rubric-core.svg
-      // draws it. The TAAP columns show the S3 case with no exception on file; the notes cover
+      // draws it. The TAAP columns show the S3 case with no exception on file; the status line covers
       // S2, the exception and a more accessible product, and a caveat names which applies to
       // the review on the page.
       get grid() {
         const d = this.d;
-        if (!d) return { rows: [], notes: [] };
+        if (!d) return { rows: [], stageNote: '', caveat: '', headDim: { grade: true, taap: true } };
         const review = toReview(this.form);
         const T = M.CALIBRATION.taapStandard;
         const sev = this.sev;
@@ -474,7 +474,6 @@
             taap: [taapCell('none', null), taapCell('zero', 0), taapCell('below', k - 1), taapCell('min', k), taapCell('full', FULL)],
           };
         }));
-        const notes = M.rubricNotes();
         const stageNote = {
           exposure: `The review holds at route ${routeNo(d.route)} before Exposure is settled, so no row applies yet.`,
           evidence: sev === 'S?'
@@ -489,7 +488,7 @@
           : moreAccessible ? 'For this review, a more accessible product meets the same need, so every TAAP state is Deny.'
             : exception !== 'none' ? `For this review, an undue burden or fundamental alteration ${exception === 'claimed' ? 'claim' : 'determination'} is on file, so the below-standard column follows note 4 rather than the drawn value.`
               : '';
-        return { rows, notes, stage, stageNote, caveat, headDim: { grade: !gradeKnown, taap: !remedyReached } };
+        return { rows, stage, stageNote, caveat, headDim: { grade: !gradeKnown, taap: !remedyReached } };
       },
 
       // ---- copy the reasoning. The async clipboard first; a copy event as the fallback,

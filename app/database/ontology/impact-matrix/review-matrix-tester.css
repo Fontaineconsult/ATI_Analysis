@@ -261,7 +261,6 @@ h4 { margin: 10px 0 2px; font-size: 0.78rem; text-transform: uppercase; letter-s
 .matrix { margin-top: 20px; }
 .matrix h2 { font-size: 1.1rem; margin: 0 0 10px; }
 .matrix .grid { width: 100%; }
-.matrix .notes { max-width: none; column-width: 34ch; column-gap: 28px; }
 .grid-wrap { overflow-x: auto; }
 .grid { font-size: 0.82rem; }
 .grid th, .grid td { white-space: nowrap; padding: 5px 6px; }
@@ -275,8 +274,6 @@ h4 { margin: 10px 0 2px; font-size: 0.78rem; text-transform: uppercase; letter-s
 .grid td.here .warn { font-weight: 600; }
 .grid tr.band > * { border-top: 2px solid var(--line-strong); }
 .grid caption { caption-side: top; text-align: left; color: var(--text-2); font-size: 0.85rem; padding: 0 0 6px; white-space: normal; }
-.notes { margin: 8px 0 0; color: var(--text-2); font-size: 0.85rem; max-width: 68ch; }
-.notes p { margin: 0 0 4px; }
 
 pre { background: var(--surface-2); border: 1px solid var(--line); border-radius: 8px; padding: 10px; overflow-x: auto; font: 12px/1.45 var(--mono); margin: 0; }
 

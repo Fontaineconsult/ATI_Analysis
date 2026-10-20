@@ -298,10 +298,6 @@
       </table>
     </div>
     <p class="step-status" x-show="grid.stageNote || grid.caveat"><span x-text="grid.stageNote"></span> <span x-text="grid.caveat"></span></p>
-    <div class="notes">
-      <p>The table is the one-page rubric, <code>rubric-core.svg</code>, drawn from the same model. The TAAP columns show the S3 case with no exception on file. The outlined cells are this review: its Exposure band and row, its Veracity floor with the evidence on file, its risk grade, dashed while the evidence is still being raised, and, once reached, its TAAP standard and TAAP state. Columns the review has not reached are greyed. A TAAP state is outlined only when the drawn value is the review's own outcome.</p>
-      <template x-for="(note, i) in grid.notes" :key="i"><p x-text="(i + 1) + '. ' + note"></p></template>
-    </div>
 </section>
 </section>
 
