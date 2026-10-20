@@ -3,599 +3,319 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Review matrix tester</title>
-<style>
-  :root {
-    --bg: #ffffff; --fg: #1a1a1a; --muted: #555555; --line: #c8c8c8; --panel: #f6f6f6;
-    --focus: #1a5fb4; --approve: #dcefdc; --taap: #fbefc9; --deny: #f6d6d3;
-    --review: #dbe7f5; --cell: #ffffff; --here: #1a1a1a;
-  }
-  @media (prefers-color-scheme: dark) {
-    :root {
-      --bg: #161616; --fg: #ececec; --muted: #b0b0b0; --line: #444444; --panel: #222222;
-      --focus: #8ab4f8; --approve: #1f3d24; --taap: #4a3d14; --deny: #4d2420;
-      --review: #1d3049; --cell: #1c1c1c; --here: #ececec;
-    }
-  }
-  * { box-sizing: border-box; }
-  body { margin: 0; padding: 16px; background: var(--bg); color: var(--fg);
-         font: 15px/1.45 system-ui, -apple-system, "Segoe UI", Arial, sans-serif; }
-  h1 { font-size: 1.35rem; margin: 0 0 4px; }
-  h2 { font-size: 1.05rem; margin: 0 0 8px; }
-  p.lede { margin: 0 0 16px; color: var(--muted); max-width: 70ch; }
-  .layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; align-items: start; }
-  @media (max-width: 900px) { .layout { grid-template-columns: 1fr; } }
-  fieldset { border: 1px solid var(--line); border-radius: 6px; margin: 0 0 12px; padding: 10px 12px; background: var(--panel); }
-  legend { font-weight: 600; padding: 0 4px; }
-  label { display: block; }
-  .check { display: flex; gap: 8px; align-items: flex-start; margin: 4px 0; }
-  .check input { margin-top: 4px; }
-  select, input[type="number"], input[type="text"] { font: inherit; color: var(--fg); background: var(--cell);
-         border: 1px solid var(--line); border-radius: 4px; padding: 4px 6px; max-width: 100%; }
-  button { font: inherit; padding: 5px 12px; border: 1px solid var(--line); border-radius: 4px;
-           background: var(--cell); color: var(--fg); cursor: pointer; }
-  :focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
-  table { border-collapse: collapse; width: 100%; }
-  th, td { border: 1px solid var(--line); padding: 4px 6px; text-align: left; vertical-align: top; }
-  th { background: var(--panel); }
-  .factors td:first-child { width: 34%; }
-  .presets { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 12px; }
-  .muted { color: var(--muted); font-size: 0.9em; }
-  .result { position: sticky; top: 12px; }
-  .outcome { font-size: 1.3rem; font-weight: 700; padding: 10px 12px; border-radius: 6px; margin: 0 0 10px; border: 1px solid var(--line); }
-  .o-approve { background: var(--approve); }
-  .o-needs_taap, .o-approve_with_taap { background: var(--taap); } .o-deny { background: var(--deny); } .o-on_hold { background: var(--review); }
-  dl { display: grid; grid-template-columns: max-content 1fr; gap: 4px 12px; margin: 0 0 12px; }
-  dt { font-weight: 600; } dd { margin: 0; }
-  .grid { font-size: 0.85em; } .grid tr.band > * { border-top: 2px solid var(--fg); }
-  .grid-wrap { overflow-x: auto; }
-  .grid td.here { outline: 3px solid var(--here); outline-offset: -3px; font-weight: 700; }
-  pre { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 8px; overflow-x: auto; font-size: 12px; }
-  .ctx { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
-  .ctx input { width: 100%; }
-  @media (max-width: 600px) { .ctx { grid-template-columns: 1fr; } }
-  .gradeline { font-weight: 600; margin: 0 0 10px; }
-  .copybar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 0 0 10px; }
-  /* An email preview: always light, as it will look in the message. */
-  .reasoning { border: 1px solid var(--line); border-radius: 6px; padding: 12px 14px; margin: 0 0 12px; background: #ffffff; color: #1a1a1a; }
-  .reasoning p { margin: 0 0 8px; } .reasoning ul { margin: 0 0 8px 20px; padding: 0; }
-  details { margin: 0 0 10px; } summary { cursor: pointer; font-weight: 600; margin: 0 0 8px; }
-  .defs { margin: 24px 0 0; max-width: 90ch; }
-  .defs h3 { font-size: 1rem; margin: 18px 0 6px; }
-  .defs p { margin: 0 0 8px; }
-  .defs table { margin: 0 0 10px; }
-  .finding { display: grid; grid-template-columns: 1fr 1.4fr 1.2fr 0.7fr auto; gap: 6px; align-items: end; margin: 0 0 6px; }
-  @media (max-width: 600px) { .finding { grid-template-columns: 1fr 1fr; } }
-</style>
+<title>Accessibility review tester</title>
+<link rel="stylesheet" href="review-matrix-tester.css">
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.9/dist/cdn.min.js"></script>
 </head>
-<body>
-<h1>Review matrix tester</h1>
-<p class="lede">Enter a purchase review. The determination updates as you change the form. The logic and the form
-  options come from <code>review-matrix.js</code> in this folder, so this page always tests the current model.
-  Matrix version <span id="version"></span>. <a href="#definitions">Definitions</a> explains each category.</p>
+<body x-data="tester">
+<a class="skip" href="#result">Skip to the result</a>
 
-<div class="presets" role="group" aria-label="Example reviews">
-  <button type="button" data-preset="small">Small optional tool, S2</button>
-  <button type="button" data-preset="homework">Homework platform, S3</button>
-  <button type="button" data-preset="homeworkTaap">Homework platform, S3, TAAP on file</button>
-  <button type="button" data-preset="unknown">Department tool, users unknown</button>
-  <button type="button" data-preset="public">Public page, no ACR</button>
-  <button type="button" data-preset="weakDeny">Public portal, S3, weak ACR, partial TAAP</button>
-  <button type="button" data-preset="weakApprove">Required math tool, clean ACR, no findings</button>
-  <button type="button" data-preset="fallback">Required math tool, clean ACR, no demonstration possible</button>
-  <button type="button" data-preset="strongDeny">Public portal, S3, partial TAAP, strong evidence</button>
-  <button type="button" data-preset="exceptionClaimed">Public portal, S3, partial TAAP, undue burden claimed</button>
-  <button type="button" data-preset="exception">Public portal, S3, partial TAAP, determination on file</button>
-  <button type="button" data-preset="clear">Clear</button>
+<header class="page-header">
+  <h1>Accessibility review tester</h1>
+  <p class="lede">Enter a purchase review and read the determination as it changes. The form options and the
+    logic come from <code>review-matrix.js</code>, matrix version <span id="version"></span>, so this page tests
+    the current model. Each step links to its <a href="#definitions" @click.prevent="selectTab('definitions')">definition</a>.</p>
+</header>
+
+<p id="noAlpine" class="notice" hidden>The page logic did not load. Alpine.js comes from a content delivery network, so the page
+  needs a network connection on first open.</p>
+
+<a class="minibar" :class="'tone-' + tone" href="#result" x-show="tab === 'review'" x-cloak>
+  Result: <span x-text="ex ? ex.headline : ''"></span>
+</a>
+
+<main>
+<div class="tabs" role="tablist" aria-label="Page sections">
+  <button type="button" role="tab" id="tab-review" aria-controls="panel-review"
+    :aria-selected="tab === 'review'" :tabindex="tab === 'review' ? 0 : -1"
+    @click="selectTab('review')" @keydown="tabKey($event)">Review</button>
+  <button type="button" role="tab" id="tab-definitions" aria-controls="panel-definitions"
+    :aria-selected="tab === 'definitions'" :tabindex="tab === 'definitions' ? 0 : -1"
+    @click="selectTab('definitions')" @keydown="tabKey($event)">Definitions</button>
 </div>
 
-<div class="layout">
-<form id="form" novalidate>
-  <fieldset>
-    <legend>The request</legend>
-    <div class="ctx">
-      <label for="product">Product<input type="text" id="product" autocomplete="off"></label>
-      <label for="vendor">Vendor<input type="text" id="vendor" autocomplete="off"></label>
-      <label for="unit">Requesting unit<input type="text" id="unit" autocomplete="off"></label>
+<section class="workbench" id="panel-review" role="tabpanel" aria-labelledby="tab-review" tabindex="0" x-show="tab === 'review'">
+<form class="review" aria-label="The review" @submit.prevent novalidate>
+
+  <details class="card examples">
+    <summary>Load an example review</summary>
+    <div class="example-groups">
+      <template x-for="group in examples" :key="group.title">
+        <section :aria-labelledby="'ex-' + group.title">
+          <h3 :id="'ex-' + group.title" x-text="group.title"></h3>
+          <ul>
+            <template x-for="item in group.items" :key="item.id">
+              <li>
+                <button type="button" class="example" @click="applyPreset(item.id)">
+                  <span x-text="item.name"></span>
+                  <span class="lead" x-text="item.result"></span>
+                </button>
+              </li>
+            </template>
+          </ul>
+        </section>
+      </template>
     </div>
-  </fieldset>
+    <p class="help">Or <button type="button" class="btn quiet small" @click="clearForm()">start from a blank review</button>.</p>
+  </details>
 
-  <fieldset>
-    <legend>Step 0. Kind of technology</legend>
-    <label for="ictKind">Kind</label>
-    <select id="ictKind" name="ictKind"></select>
-    <p class="muted" id="standardNote"></p>
-  </fieldset>
+  <section class="card step" aria-labelledby="h-request">
+    <div class="step-title">
+      <h2 id="h-request">The request</h2>
+    </div>
+    <details>
+      <summary>Named for the email: <span x-text="requestSummary"></span></summary>
+      <div class="request-fields">
+        <label class="field"><span>Product</span><input type="text" autocomplete="off" x-model="form.product"></label>
+        <label class="field"><span>Vendor</span><input type="text" autocomplete="off" x-model="form.vendor"></label>
+        <label class="field"><span>Requesting unit</span><input type="text" autocomplete="off" x-model="form.unit"></label>
+      </div>
+    </details>
+  </section>
 
-  <fieldset id="floorsBox">
-    <legend>Step 1. Floors (facts that set a minimum level)</legend>
-  </fieldset>
+  <section class="card step" aria-labelledby="h-kind">
+    <div class="step-title">
+      <span class="step-no">Step 0</span>
+      <h2 id="h-kind">Kind of technology</h2>
+      <a class="def-link" href="#def-barriers-and-findings" @click.prevent="showDefinition('def-barriers-and-findings')">Definition</a>
+    </div>
+    <fieldset>
+      <legend class="label">The kind decides the review standard.</legend>
+      <div id="kindChoices"></div>
+    </fieldset>
+    <p class="step-status" x-cloak>
+      <span x-text="kind.standard"></span>. If the product cannot conform: <span x-text="kind.whenNonConforming"></span>.
+    </p>
+  </section>
 
-  <fieldset>
-    <legend>Step 1. Exposure answers</legend>
-    <p class="muted">Leave a value at "Unknown" to see how unknowns are scored. The reviewer's answer, when given, overrides the requester's.</p>
-    <table class="factors">
-      <thead><tr><th scope="col">Factor</th><th scope="col">Requester</th><th scope="col">Reviewer</th></tr></thead>
-      <tbody id="factorRows"></tbody>
-    </table>
-  </fieldset>
+  <section class="card step" aria-labelledby="h-exposure">
+    <div class="step-title">
+      <span class="step-no">Step 1</span>
+      <h2 id="h-exposure">Exposure</h2>
+      <a class="def-link" href="#def-exposure" @click.prevent="showDefinition('def-exposure')">Definition</a>
+    </div>
+    <fieldset>
+      <legend class="label">Floor facts</legend>
+      <p class="help">One true fact sets a minimum Exposure on its own, whatever the answers below say.</p>
+      <div id="floorChoices"></div>
+    </fieldset>
+    <fieldset>
+      <legend class="label">The requester's answers</legend>
+      <p class="help">An answer left at Unknown counts as high. The review holds when unknown answers would change the level.</p>
+      <table class="answers">
+        <thead>
+          <tr>
+            <th scope="col">Question</th>
+            <th scope="col">Requester</th>
+            <th scope="col" x-show="showReviewer">Reviewer</th>
+          </tr>
+        </thead>
+        <tbody id="answerRows"></tbody>
+      </table>
+      <p class="inline" style="margin: 10px 0 0;">
+        <button type="button" class="btn quiet small" :aria-pressed="showReviewer" @click="toggleReviewer()"
+          x-text="showReviewer ? 'Hide reviewer overrides' : 'Record reviewer overrides'"></button>
+        <span class="help" style="margin:0" x-show="showReviewer" x-cloak>A reviewer answer replaces the requester's answer.
+          Hiding the column clears the overrides.<template x-if="overrideCount"><span> <span x-text="overrideCount"></span> in place.</span></template></span>
+      </p>
+    </fieldset>
+    <p class="step-status" x-text="exposureStatus" x-cloak></p>
+  </section>
 
-  <fieldset>
-    <legend>Step 2. Evidence</legend>
-    <label for="evidence">Strongest evidence in hand</label>
-    <select id="evidence" name="evidence"></select>
-    <label for="validation">Raising the evidence</label>
-    <select id="validation" name="validation"><option value="open">Open: a demonstration or ATI testing can still be arranged</option><option value="unavailable">Unavailable: no demonstration offered and no test access</option></select>
-    <p class="muted">Set by the ATI review team on resuming manual review. Unavailable applies the fallback, and the review treats the product as S3 with the barriers found as a minimum.</p>
-  </fieldset>
+  <section class="card step" aria-labelledby="h-evidence">
+    <div class="step-title">
+      <span class="step-no">Step 2</span>
+      <h2 id="h-evidence">Evidence and barriers</h2>
+      <a class="def-link" href="#def-severity" @click.prevent="showDefinition('def-severity')">Definition</a>
+    </div>
+    <label class="field" for="evidence"><span>Strongest evidence on file</span></label>
+    <select id="evidence" x-model="form.evidence"></select>
+    <p class="help" x-text="evidence.holds" x-cloak></p>
 
-  <fieldset>
-    <legend>Step 2. Barrier findings</legend>
-    <p class="muted">One row per barrier, by role and disability group. No rows means no known barriers.</p>
-    <div id="findings"></div>
-    <button type="button" id="addFinding">Add finding</button>
-  </fieldset>
+    <fieldset x-show="validationMatters" x-cloak>
+      <legend class="label">Raising the evidence</legend>
+      <p class="help">The evidence is below the Veracity floor. The ATI review team records whether a demonstration or its own testing can still raise it.</p>
+      <div class="choice">
+        <input type="radio" name="validation" id="validation_open" value="open" x-model="form.validation">
+        <label for="validation_open">Open: a demonstration or ATI testing can still be arranged</label>
+      </div>
+      <div class="choice">
+        <input type="radio" name="validation" id="validation_unavailable" value="unavailable" x-model="form.validation">
+        <label for="validation_unavailable">Unavailable: no demonstration offered and no test access</label>
+        <span class="desc">The fallback applies. The review treats the product as S3 (provisional) with the barriers found as a minimum.</span>
+      </div>
+    </fieldset>
+    <p class="step-status" x-text="evidenceStatus" x-cloak></p>
 
-  <fieldset>
-    <legend>Step 3. Facts for deny</legend>
-    <div class="check"><input type="checkbox" id="moreAccessibleProductExists"><label for="moreAccessibleProductExists">A more accessible product meets the need</label></div>
-  </fieldset>
+    <fieldset style="margin-top: 14px;">
+      <legend class="label">Findings</legend>
+      <p class="help">One row per barrier, by role and disability group on one essential function. An essential function is a function the product exists to provide, such as registering for a class or submitting homework, and it counts as essential when its removal would change the product's use or purpose. No rows means no known barriers.</p>
+      <ol class="findings" aria-label="Findings">
+        <template id="findingRow" x-for="(f, i) in form.findings" :key="f.key">
+          <li class="finding">
+            <label class="field"><span>Role</span><select x-model="f.role" data-opts="role"></select></label>
+            <label class="field"><span>Disability group</span><select x-model="f.group" data-opts="group"></select></label>
+            <label class="field"><span>Essential function</span><input type="text" x-model="f.essentialFunction" placeholder="Submit homework"></label>
+            <label class="field"><span>Severity</span><select x-model="f.severity" data-opts="severity"></select></label>
+            <button type="button" class="btn quiet small" :aria-label="'Remove finding ' + (i + 1)" @click="removeFinding(f.key)">Remove</button>
+          </li>
+        </template>
+      </ol>
+      <p class="empty" x-show="!form.findings.length" x-cloak>No findings recorded.</p>
+      <button type="button" class="btn" @click="addFinding()">Add a finding</button>
+    </fieldset>
+    <p class="step-status" x-text="severityStatus" x-cloak></p>
+  </section>
 
-  <fieldset id="taapBox">
-    <legend>TAAP (S2 at Medium or High, and S3)</legend>
-    <div class="check"><input type="checkbox" id="taapExists"><label for="taapExists">A TAAP is on file for this product</label></div>
-    <label for="taapException">Undue burden or fundamental alteration</label>
-    <select id="taapException" disabled><option value="none">No claim</option><option value="claimed">Claimed by the requesting unit, awaiting determination</option><option value="determined">Written determination on file (president or designee)</option></select>
-    <p class="muted">Applies only to a TAAP below the standard at high pressure, where the matrix would otherwise deny. Elsewhere the signers accept the shortfall.</p>
-    <p class="muted">Requirements Checklist from the CSU TAAP template. The TAAP standard in the reviewer details sets how many the plan must meet.</p>
-    <div id="taapReqs"></div>
-  </fieldset>
+  <section class="card step" aria-labelledby="h-remedy">
+    <div class="step-title">
+      <span class="step-no">Step 3</span>
+      <h2 id="h-remedy">Remedy</h2>
+      <a class="def-link" href="#def-taap" @click.prevent="showDefinition('def-taap')">Definition</a>
+    </div>
+    <p class="step-status quiet" x-show="!remedyShown" x-text="remedyNote" x-cloak></p>
+    <div x-show="remedyShown" x-cloak>
+      <fieldset x-show="moreAccessibleShown">
+        <legend class="label">Facts for a denial</legend>
+        <div class="choice">
+          <input type="checkbox" id="moreAccessibleProductExists" x-model="form.moreAccessibleProductExists">
+          <label for="moreAccessibleProductExists">A more accessible product meets the same need</label>
+          <span class="desc">At S3 the CSU buys the more accessible product, so this fact denies the request whatever the TAAP says.</span>
+        </div>
+      </fieldset>
+      <fieldset>
+        <legend class="label">The TAAP</legend>
+        <div class="choice">
+          <input type="checkbox" id="taapExists" x-model="form.taap.exists">
+          <label for="taapExists">A TAAP is on file for this product</label>
+        </div>
+        <div x-show="form.taap.exists">
+          <p class="help">The Requirements Checklist of the CSU TAAP template. The plan meets <span x-text="taapMet"></span> of 6; the standard here is <span x-text="std ? (std.required === 6 ? 'all 6' : std.required + ' of 6') : ''"></span>.</p>
+          <div id="taapReqs"></div>
+        </div>
+      </fieldset>
+      <fieldset x-show="exceptionShown">
+        <legend class="label">Undue burden or fundamental alteration</legend>
+        <p class="help">The TAAP falls below the standard at high pressure, where the matrix otherwise denies. A written determination by the president or a designee is the lawful basis for the plan (28 CFR 35.164, 35.204).</p>
+        <label class="field" for="taapException"><span>Exception status</span></label>
+        <select id="taapException" x-model="form.taap.exception">
+          <option value="none">No claim</option>
+          <option value="claimed">Claimed by the requesting unit, awaiting determination</option>
+          <option value="determined">Written determination on file (president or designee)</option>
+        </select>
+      </fieldset>
+      <p class="step-status" x-text="remedyStatus"></p>
+    </div>
+  </section>
 </form>
 
-<section class="result" aria-labelledby="resultHeading">
-  <h2 id="resultHeading">Result</h2>
-  <div id="outcome" class="outcome" role="status" aria-live="polite"></div>
-  <p id="gradeLine" class="gradeline"></p>
-  <div class="copybar">
-    <button type="button" id="copyEmail">Copy for email</button>
-    <button type="button" id="copyText">Copy as plain text</button>
-    <span id="copyStatus" role="status" class="muted"></span>
+<section class="result" id="result" aria-labelledby="resultHeading" x-cloak>
+  <div class="outcome" :class="'tone-' + tone" role="status" aria-live="polite">
+    <h2 id="resultHeading" x-text="ex ? ex.headline : 'Result'"></h2>
+    <p class="holder" x-show="holder">Held by <span x-text="holder ? holder.label : ''"></span>. <span x-text="holder ? holder.holds : ''"></span>.</p>
+    <ol class="path" aria-label="Where the review stands">
+      <template x-for="step in path" :key="step.name">
+        <li :class="step.state" :aria-current="step.state === 'here' ? 'step' : null" x-text="step.name"></li>
+      </template>
+    </ol>
+    <dl class="chips" aria-label="The grade">
+      <template x-for="chip in chips" :key="chip[0]">
+        <div><dt x-text="chip[0]"></dt><dd x-text="chip[1]"></dd></div>
+      </template>
+    </dl>
   </div>
-  <div id="reasoning" class="reasoning"></div>
-  <details>
-    <summary>Reviewer details</summary>
-    <dl id="summary"></dl>
-    <div class="grid-wrap"><table class="grid" id="grid"></table></div>
-    <p class="muted">The outlined cells are this review: its Breadth, its risk grade and its TAAP state. Routes 1 to 3 are checked before the matrix, and nothing is outlined when one applies. Routes 4 and 5 come from the TAAP columns.</p>
-  </details>
-  <details>
-    <summary>Determination as data</summary>
-    <pre id="json"></pre>
-  </details>
-</section>
-</div>
 
-<section class="defs" id="definitions" aria-labelledby="defsHeading">
-  <h2 id="defsHeading">Definitions</h2>
-  <p>No term here relies on a term defined further down. The numbers come from <code>review-matrix.js</code>, so this
-    section changes when the model does.</p>
-  <div id="defsBody"></div>
+  <section class="card panel reasoning" aria-labelledby="h-reasoning">
+    <h3 id="h-reasoning">Reasoning for the requester</h3>
+    <div class="toolbar">
+      <button type="button" class="btn primary" @click="copy('email')">Copy for email</button>
+      <button type="button" class="btn" @click="copy('text')">Copy as plain text</button>
+      <span class="status" role="status" x-text="copyStatus"></span>
+    </div>
+    <template x-for="s in decisionSections" :key="s.heading">
+      <details :open="s.open">
+        <summary x-text="s.heading"></summary>
+        <template x-if="s.bullets"><ul><template x-for="(line, i) in s.lines" :key="i"><li x-text="line"></li></template></ul></template>
+        <template x-if="!s.bullets"><div><template x-for="(line, i) in s.lines" :key="i"><p x-text="line"></p></template></div></template>
+      </details>
+    </template>
+    <p class="sources">The email carries every section, in this order, with the grade line and the matrix version.</p>
+  </section>
+
+  <details class="card panel">
+    <summary>Reviewer details</summary>
+    <template x-for="g in factGroups" :key="g.title">
+      <div>
+        <h4 x-text="g.title"></h4>
+        <dl class="facts">
+          <template x-for="row in g.rows" :key="row[0]">
+            <div style="display: contents;"><dt x-text="row[0]"></dt><dd x-text="row[1]"></dd></div>
+          </template>
+        </dl>
+      </div>
+    </template>
+  </details>
+
+  <details class="card panel">
+    <summary>This review in the matrix</summary>
+    <div class="grid-wrap">
+      <table class="grid">
+        <caption>The exposure matrix. The outlined cells are this review.</caption>
+        <thead>
+          <tr>
+            <th scope="col">Exposure</th><th scope="col">Breadth</th><th scope="col">Pressure</th><th scope="col">Veracity floor</th>
+            <th scope="col">S0, S1</th><th scope="col">S2</th><th scope="col">S3</th><th scope="col">TAAP standard</th>
+            <th scope="col">No TAAP yet</th><th scope="col">TAAP meets none</th><th scope="col">TAAP below standard</th><th scope="col">TAAP meets standard</th>
+          </tr>
+        </thead>
+        <tbody>
+          <template x-for="row in grid.rows" :key="row.key">
+            <tr :class="row.band ? 'band' : ''">
+              <template x-if="row.first"><th scope="rowgroup" rowspan="3" x-text="row.level"></th></template>
+              <td :class="row.hereRow ? 'here' : ''" x-text="row.B"></td>
+              <td x-text="row.P"></td>
+              <template x-if="row.first"><td rowspan="3" x-text="row.floorText"></td></template>
+              <template x-for="(c, i) in row.grades" :key="i"><td :class="'tone-' + c.tone + (c.here ? ' here' : '')" x-text="c.text"></td></template>
+              <td x-text="row.k"></td>
+              <template x-for="(c, i) in row.taap" :key="i">
+                <td :class="'tone-' + c.tone + (c.here ? ' here' : '')"><span x-text="c.text"></span><span class="warn" x-show="c.warn" x-text="c.warn"></span></td>
+              </template>
+            </tr>
+          </template>
+        </tbody>
+      </table>
+    </div>
+    <div class="notes">
+      <p>The outlined cells are this review: its Breadth, its risk grade and its TAAP state. Routes 1 to 3 are checked before the matrix, and nothing is outlined when one applies.</p>
+      <template x-for="(note, i) in grid.notes" :key="i"><p x-text="note"></p></template>
+    </div>
+  </details>
+
+  <details class="card panel">
+    <summary>Determination as data</summary>
+    <pre x-text="json"></pre>
+  </details>
 </section>
+</section>
+
+<section class="definitions" id="panel-definitions" role="tabpanel" aria-labelledby="tab-definitions" tabindex="0" x-show="tab === 'definitions'" x-cloak>
+  <div class="card">
+    <h2 id="defsHeading">Definitions</h2>
+    <p class="lede">The sections read in order, and no term relies on a term defined in a later section. The numbers come from
+      <code>review-matrix.js</code>, so the text changes when the model does.</p>
+    <div class="def-nav" id="defsNav" role="tablist" aria-label="Definition sections" aria-orientation="vertical"></div>
+    <div class="defs-prose" id="defsView" role="tabpanel" tabindex="0"></div>
+    <!-- The complete Definitions markup, which dump-definitions.js reads for the rubric document. -->
+    <div id="defsBody" hidden></div>
+  </div>
+</section>
+</main>
+
+<footer class="page-footer">
+  <p>The rubric in full: <code>rubric-core.md</code>. The same prose, as a document: <code>SFBRN-Accessible-Procurement-Rubric.docx</code>, built from this page's Definitions.</p>
+</footer>
 
 <script src="review-matrix.js"></script>
-<script>
-  const M = window.ReviewMatrix;
-  const $ = (id) => document.getElementById(id);
-  const label = (s) => s.replace(/_/g, ' ');
-  const FACTORS = M.GROUPS.flatMap((g) => g.factors.map((f) => ({ ...f, group: g.id })));
-  const ROUTE_TEXT = Object.fromEntries(M.ROUTING.map((r) => [r.id, r.text]));
-  const REQUIRES_TEXT = {
-    serves_everyone_from_day_one: 'The plan serves every affected person from day one',
-    best_meets_record: 'A best-meets record with market research (Section 508 E202.7)',
-    exception_record: 'A written undue burden or fundamental alteration determination by the president or a designee (28 CFR 35.204)',
-    validation_at_review: 'Severity re-rated on evidence at the Veracity floor at the first TAAP review',
-  };
-  const routeNo = (id) => M.ROUTING.findIndex((r) => r.id === id) + 1;
-
-  // ---- build the form from the model
-  $('version').textContent = M.MATRIX_VERSION;
-  for (const [id, k] of Object.entries(M.ICT_KINDS)) $('ictKind').add(new Option(k.label, id));
-  for (const e of M.EVIDENCE) $('evidence').add(new Option(`${e.id}: ${e.holds}`, e.id));
-  for (const f of M.FLOORS) {
-    const d = document.createElement('div');
-    d.className = 'check';
-    d.innerHTML = `<input type="checkbox" id="floor_${f.id}" value="${f.id}"><label for="floor_${f.id}">${f.fact} <span class="muted">(at least ${f.min})</span></label>`;
-    $('floorsBox').append(d);
-  }
-  function levelSelect(id, factor, who) {
-    if (factor.numeric) return `<input type="number" min="0" id="${id}" aria-label="${label(factor.id)}, ${who}" placeholder="Unknown">`;
-    const opts = ['<option value="">Unknown</option>']
-      .concat(M.LEVELS.map((l) => `<option value="${l}">${l}: ${factor.levels[l]}</option>`)).join('');
-    return `<select id="${id}" aria-label="${label(factor.id)}, ${who}">${opts}</select>`;
-  }
-  for (const f of FACTORS) {
-    const tr = document.createElement('tr');
-    tr.innerHTML = `<th scope="row">${label(f.id)}<br><span class="muted">${f.group}</span></th>
-      <td>${levelSelect(`req_${f.id}`, f, 'requester')}</td><td>${levelSelect(`rev_${f.id}`, f, 'reviewer')}</td>`;
-    $('factorRows').append(tr);
-  }
-  for (const r of M.TAAP_REQUIREMENTS) {
-    const d = document.createElement('div');
-    d.className = 'check';
-    d.innerHTML = `<input type="checkbox" id="taap_${r.id}" disabled><label for="taap_${r.id}">${r.text}</label>`;
-    $('taapReqs').append(d);
-  }
-  const syncTaap = () => {
-    M.TAAP_REQUIREMENTS.forEach((r) => { $(`taap_${r.id}`).disabled = !$('taapExists').checked; });
-    $('taapException').disabled = !$('taapExists').checked;
-  };
-  $('taapExists').addEventListener('change', syncTaap);
-  let findingSeq = 0;
-  function addFinding(data = {}) {
-    const n = ++findingSeq;
-    const opts = (list, sel) => list.map((v) => `<option value="${v}"${v === sel ? ' selected' : ''}>${label(v)}</option>`).join('');
-    const row = document.createElement('div');
-    row.className = 'finding';
-    row.innerHTML = `
-      <label>Role<select data-k="role">${opts(M.ROLES, data.role)}</select></label>
-      <label>Disability group<select data-k="group">${opts(M.FUNCTIONAL_GROUPS, data.group)}</select></label>
-      <label>Core task<input type="text" data-k="coreTask" value="${data.coreTask ?? ''}"></label>
-      <label>Severity<select data-k="severity">${opts(['S1', 'S2', 'S3'], data.severity ?? 'S2')}</select></label>
-      <button type="button" aria-label="Remove finding ${n}">Remove</button>`;
-    row.querySelector('button').addEventListener('click', () => { row.remove(); run(); });
-    $('findings').append(row);
-  }
-  $('addFinding').addEventListener('click', () => { addFinding(); run(); });
-
-  // ---- read the form into a Review
-  function readReview() {
-    const answers = {};
-    for (const f of FACTORS) {
-      const v = (id) => { const x = $(id).value; return x === '' ? null : (f.numeric ? Number(x) : x); };
-      answers[f.id] = { requester: v(`req_${f.id}`), reviewer: v(`rev_${f.id}`) };
-    }
-    return {
-      ictKind: $('ictKind').value,
-      floors: M.FLOORS.filter((f) => $(`floor_${f.id}`).checked).map((f) => f.id),
-      answers,
-      evidence: $('evidence').value,
-      validation: $('validation').value,
-      findings: [...$('findings').children].map((row) =>
-        Object.fromEntries([...row.querySelectorAll('[data-k]')].map((el) => [el.dataset.k, el.value]))),
-      moreAccessibleProductExists: $('moreAccessibleProductExists').checked,
-      taap: { exists: $('taapExists').checked,
-        meets: Object.fromEntries(M.TAAP_REQUIREMENTS.map((r) => [r.id, $(`taap_${r.id}`).checked])),
-        exception: $('taapException').value },
-    };
-  }
-
-  // ---- copy the reasoning. A copy event works on a page opened from a local file,
-  // where the async clipboard API is often blocked.
-  let lastExplanation = null;
-  let copyMode = null;
-  document.addEventListener('copy', (event) => {
-    if (!copyMode || !lastExplanation) return;
-    event.clipboardData.setData('text/plain', lastExplanation.text);
-    if (copyMode === 'email') event.clipboardData.setData('text/html', `<html><body>${lastExplanation.html}</body></html>`);
-    event.preventDefault();
-  });
-  function copy(mode) {
-    copyMode = mode;
-    let ok = false;
-    try { ok = document.execCommand('copy'); } catch (e) { ok = false; }
-    copyMode = null;
-    $('copyStatus').textContent = ok
-      ? (mode === 'email' ? 'Copied. Paste into the email with Ctrl+V.' : 'Copied as plain text.')
-      : 'The browser blocked copying. Select the text in the box and copy it by hand.';
-  }
-  $('copyEmail').addEventListener('click', () => copy('email'));
-  $('copyText').addEventListener('click', () => copy('text'));
-
-  // ---- render the determination
-  function run() {
-    const review = readReview();
-    $('standardNote').textContent = `${M.ICT_KINDS[review.ictKind].standard}. If it cannot conform: ${M.ICT_KINDS[review.ictKind].whenNonConforming}.`;
-    const d = M.evaluate(review);
-    lastExplanation = M.explain(review, d, {
-      product: $('product').value, vendor: $('vendor').value, unit: $('unit').value,
-      date: new Date().toISOString().slice(0, 10),
-    });
-    const out = $('outcome');
-    out.className = `outcome o-${d.outcome}`;
-    out.textContent = lastExplanation.headline;
-    $('gradeLine').textContent = lastExplanation.grade;
-    $('reasoning').innerHTML = lastExplanation.html;
-    $('copyStatus').textContent = '';
-    const e = d.exposure;
-    const rows = [
-      ['Exposure', `${e.level} (score ${e.scorePct}% of maximum)`],
-      ['Floors applied', e.floorsApplied.length ? e.floorsApplied.map(label).join(', ') : 'none'],
-      ['Groups', Object.entries(e.groupLevels).map(([g, l]) => `${g} ${l}`).join(', ')],
-      ['Unknown answers', `${e.unknownCount}${e.unknownsMatter ? ' (they change the band)' : ''}`],
-      ['Severity', d.severity],
-      ['Evidence', d.evidence],
-      ['Route', d.route ? `${M.ROUTING.findIndex((r) => r.id === d.route) + 1}. ${ROUTE_TEXT[d.route]}` : 'none'],
-      ['Held by', d.route ? M.HOLDERS[M.ROUTING.find((r) => r.id === d.route).route].label : 'n/a'],
-      ['Requires', d.requires.length ? d.requires.map((r) => REQUIRES_TEXT[r] ?? label(r)).join('; ') : 'nothing extra'],
-      ['Veracity floor', (() => { const f = M.veracityFloor(e.level, d.severity.slice(0, 2)); return `${f === 0 ? 'any evidence' : `${M.EVIDENCE.find((v) => v.rank === f)?.id} or better`} at ${e.level} exposure for ${d.severity.slice(0, 2)}`; })()],
-      ['Fallback', d.fallback ? 'yes, the evidence cannot be raised' : 'no'],
-      ['Accumulation', d.accumulation?.escalated
-        ? `S2 counted as S3 (${d.accumulation.escalated}: ${d.accumulation.escalated === 'stacked' ? `${d.accumulation.stacked.length} task and group pair(s) with stacked S2` : `${d.accumulation.spreadPairs} task and group pairs`})` : 'none'],
-      ['Breadth', d.breadth.assumed
-        ? `${d.breadth.level} (assumed, no evidence yet)` : `${d.breadth.level} (${d.breadth.blocked} blocked pairs, ${d.breadth.harder} S2)`],
-      ['TAAP on file', d.taapOnFile ? 'yes' : 'no'],
-      ['TAAP standard', d.taapStandard
-        ? `pressure ${d.taapStandard.pressure} of 4, needs ${d.taapStandard.required} of 6, met ${d.taapStandard.met ?? 'no TAAP yet'}, warning ${d.taapStandard.warning}${d.taapStandard.provisional ? ', provisional (fallback, barriers found as a minimum)' : ''}` : 'n/a'],
-      ['Deny reason', d.denyReason ? label(d.denyReason) : 'n/a'],
-      ['Exception', d.exception ? 'approved under a written determination' : review.taap.exists ? label(review.taap.exception ?? 'none') : 'n/a'],
-      ['TAAP signers', d.approver ?? 'not needed'],
-      ['TAAP review', d.taapReview ? `every ${d.taapReview.months} months or at renewal; contract ${d.taapReview.contract ?? 'unknown'}` : 'n/a'],
-      ['Vendor roadmap', d.roadmap ? 'required' : 'not required'],
-      ['Contract terms', d.contractTerms.length ? d.contractTerms.map(label).join(', ') : 'n/a'],
-    ];
-    $('summary').innerHTML = rows.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('');
-    renderGrid(d, review);
-    $('json').textContent = JSON.stringify(d, null, 2);
-  }
-
-  // The exposure matrix: one row per Exposure and Breadth, as in rubric-core.svg. The TAAP
-  // columns follow this review's severity, because S2 is never denied.
-  function renderGrid(d, review) {
-    const T = M.CALIBRATION.taapStandard;
-    const sev = d.severity.slice(0, 2);
-    const s2 = sev === 'S2';
-    const warnOf = (w) => (w >= T.warning.high ? 'high' : w >= T.warning.elevated ? 'elevated' : 'low');
-    const evText = (lvl) => {
-      const r = M.EVIDENCE_LIMITS.floor[lvl];
-      return r === 0 ? 'any' : `${M.EVIDENCE.find((v) => v.rank === r)?.id} or better`;
-    };
-    const decide = (P, k, met) => {
-      if (sev === 'S3' && review.moreAccessibleProductExists) return ['deny', 0];
-      if (met === null) return ['on_hold', 0];
-      const short = Math.max(0, k - met);
-      if (short === 0 || s2) return ['approve_with_taap', short];
-      if (met === 0) return ['deny', short];
-      if (P < T.denyAt) return ['approve_with_taap', short];
-      const ex = review.taap?.exception ?? 'none';
-      return [ex === 'determined' ? 'approve_with_taap' : ex === 'claimed' ? 'on_hold' : 'deny', short];
-    };
-    // Which TAAP column this review sits in.
-    const std = d.taapStandard;
-    const state = !std ? null : !d.taapOnFile ? 'none' : std.met === 0 ? 'zero' : std.shortfall > 0 ? 'below' : 'meets';
-    const onRow = (lvl, B) => lvl === d.exposure.level && B === d.breadth.level;
-    const routedEarly = d.route && !['taap_needed', 'exception_claimed'].includes(d.route);
-    const here = (yes) => (yes && !routedEarly ? ' here' : '');
-
-    const head = '<tr><th scope="col">Exposure</th><th scope="col">Breadth</th><th scope="col">Pressure</th>'
-      + '<th scope="col">Veracity floor</th><th scope="col">S0, S1</th><th scope="col">S2</th><th scope="col">S3</th>'
-      + '<th scope="col">TAAP standard</th><th scope="col">No TAAP yet</th><th scope="col">TAAP meets none</th>'
-      + '<th scope="col">TAAP below standard</th><th scope="col">TAAP meets standard</th></tr>';
-    const body = M.LEVELS.flatMap((lvl, xi) => [0, 1, 2].map((B) => {
-      const P = xi + B;
-      const k = T.required[P];
-      const row = onRow(lvl, B);
-      const grade = (s) => M.GRID[lvl][s].grade;
-      const gradeCell = (s, cols) => `<td class="o-${grade(s)}${here(row && cols.includes(sev))}">${M.RISK_GRADES[grade(s)]}</td>`;
-      const taapCell = (col, met) => {
-        const [o, short] = decide(P, k, met);
-        const w = o === 'deny' ? '' : `<br><span class="muted">warning ${warnOf(P + short)}</span>`;
-        return `<td class="o-${o}${here(row && state === col)}">${M.OUTCOMES[o].label}${o === 'on_hold' ? ` (route ${routeNo(col === 'none' ? 'taap_needed' : 'exception_claimed')})` : ''}${w}</td>`;
-      };
-      return `<tr${B === 0 && xi ? ' class="band"' : ''}>${B === 0 ? `<th scope="rowgroup" rowspan="3">${lvl}</th>` : ''}`
-        + `<td class="${here(row).trim()}">${B}</td><td>${P}</td>${B === 0 ? `<td rowspan="3">${evText(lvl)}</td>` : ''}`
-        + gradeCell('S0', ['S0', 'S1']) + gradeCell('S2', ['S2']) + gradeCell('S3', ['S3'])
-        + `<td>${k === 6 ? 'all 6' : `${k} of 6`}</td>`
-        + taapCell('none', null) + taapCell('zero', 0) + taapCell('below', k - 1) + taapCell('meets', k)
-        + '</tr>';
-    })).join('');
-    const notes = [
-      'The TAAP standard is a required count of the six TAAP requirements, scaled by pressure, the sum of the Exposure rank and Breadth.',
-      `The TAAP columns reflect this review's severity (${sev}).${s2 ? ' S2 is never denied, so a TAAP below the standard maps to Approve with TAAP under a warning.' : ''} The below-standard column assumes a one-requirement shortfall.`,
-      `The warning level derives from the sum of pressure and shortfall, elevated from ${T.warning.elevated} and high from ${T.warning.high}.`,
-      'At S3, a more accessible product that meets the same need maps every TAAP column to Deny.',
-      `No TAAP on file maps to route ${routeNo('taap_needed')}, On hold: TAAP needed, which carries the TAAP standard and the warning. Below the standard at pressure ${T.denyAt} or more, a written undue burden or fundamental alteration determination maps to Approve with TAAP, and a claim maps to route ${routeNo('exception_claimed')}.`,
-      `The Veracity floor column gates every review before the risk grade, with S1 always requiring E2a or better. Evidence below the floor maps to route ${routeNo('veracity_below_floor')}, manual review, which raises the evidence and re-rates Severity. When the evidence cannot be raised, the review proceeds at S3 (provisional) with the barriers found as a minimum.`,
-    ];
-    $('grid').innerHTML = `<caption class="muted" style="caption-side:bottom;text-align:left">Exposure matrix. ${notes.join(' ')}</caption><thead>${head}</thead><tbody>${body}</tbody>`;
-  }
-
-  // ---- definitions, built from the model so the numbers never drift
-  function renderDefinitions() {
-    const C = M.CALIBRATION;
-    const T = C.taapStandard;
-    const pct = (x) => `${Math.round(x * 100)}%`;
-    const evAt = (lvl) => {
-      const r = M.EVIDENCE_LIMITS.floor[lvl];
-      return r === 0 ? 'any evidence' : `${M.EVIDENCE.filter((e) => e.rank >= r).map((e) => e.id).join(', ')}`;
-    };
-    const table = (cols, rows) => `<table><thead><tr>${cols.map((c) => `<th scope="col">${c}</th>`).join('')}</tr></thead><tbody>`
-      + rows.map(([h, ...cells]) => `<tr><th scope="row">${h}</th>${cells.map((c) => `<td>${c}</td>`).join('')}</tr>`).join('') + '</tbody></table>';
-    const ul = (items) => `<ul>${items.map((i) => `<li>${i}</li>`).join('')}</ul>`;
-    const kText = (k) => (k === 6 ? 'all 6' : `${k} of 6`);
-    const pressuresFor = (k) => T.required.map((r, p) => (r === k ? p : null)).filter((p) => p !== null).join(', ');
-    const ks = [...new Set(T.required)];
-
-    const term = (name, text) => `<strong>${name}.</strong> ${text}`;
-    const ROLE_NAME = { public: 'members of the public' };
-    const roles = M.ROLES.map((r) => ROLE_NAME[r] ?? r);
-    const GROUP_COVERS = {
-      reach: 'Number of users and organizational scope.',
-      stakes: 'Required use and criticality.',
-      spread: 'Content the product publishes.',
-      duration: 'Frequency of use and contract length.',
-    };
-    const WHEN = {
-      exception_claimed: `The TAAP falls below the standard at pressure ${T.denyAt} or more, and the requesting unit claims that equally effective access would be an undue burden or a fundamental alteration (28 CFR 35.164, 35.204).`,
-      severity_unknown: 'No ACR, demonstration or testing exists.',
-      answers_unknown: 'Unknown answers could change the exposure level.',
-      veracity_below_floor: 'The evidence is below the Veracity floor for this exposure and severity, and a demonstration or ATI testing can still raise it.',
-      taap_needed: 'The risk grade is Needs TAAP and no TAAP is on file.',
-    };
-    const RESUMES = {
-      severity_unknown: 'The evidence check',
-      answers_unknown: 'The exposure check',
-      veracity_below_floor: 'The Severity step, with the new findings or the fallback',
-      taap_needed: 'The remedy step',
-      exception_claimed: 'The remedy step',
-    };
-
-    $('defsBody').innerHTML = [
-      '<h3>Barriers and findings</h3>',
-      '<p>Each review tests one campus-requested product against its <strong>review standard</strong>, WCAG 2.1 AA for web and mobile products or the Section 508 Standards for other software and hardware.</p>',
-      `<p>A <strong>core task</strong> is a task the product exists to support. Registering for a class, submitting homework and paying a bill are core tasks.</p>${ul([
-        term('Test', 'A task is core when its removal would change the product\'s use or purpose. WCAG-EM applies the same test to essential functionality.'),
-        term('Source', 'The requester lists the minimum functional requirements, which CSU Procurement Step 1 calls "essential functionality", and the reviewer confirms the list.'),
-        term('Scope', 'A core task covers its complete process, including sign-in, navigation, the content read along the way and the final submission. WCAG 2.1 requires every page in a complete process to conform.'),
-        term('Other names', 'CSU TAAP documents say "core functionality" and "essential functions". The "essential functions" of a job under ADA Title I are a separate concept.'),
-      ])}`,
-      `<p>The review separates a failure in the product from its effect on users.</p>${ul([
-        term('Nonconformance', 'A failed success criterion or provision of the review standard, belonging to the product.'),
-        term('Barrier', 'The effect of a nonconformance on one core task for one of the nine Section 508 <strong>disability groups</strong> listed below. One nonconformance produces a barrier for every core task and disability group it affects.'),
-      ])}`,
-      `<p>A <strong>finding</strong> records one barrier in four fields.</p>${ul([
-        term('Role', `The users the barrier affects, among them ${roles.slice(0, -1).join(', ')} and ${roles[roles.length - 1]}.`),
-        term('Disability group', 'The group the barrier affects.'),
-        term('Core task', 'The task the barrier blocks or slows.'),
-        term('Severity', 'Task impact of the barrier, from S0 (no effect) to S3 (the user cannot finish the task alone).'),
-      ])}`,
-      '<p>An <strong>ACR lead</strong> is a row marked "Partially Supports" or "Does Not Support" in the vendor\'s ACR (Accessibility Conformance Report). A lead becomes a finding once its remark names the affected feature and the reviewer places that feature on a core task.</p>',
-      '<p>Severity attaches to the barrier and never to the nonconformance, because the level of the failed criterion (A or AA) does not predict the effect on users. S1, S2 and S3 match the GSA severity terms <strong>minor</strong>, <strong>major</strong> and <strong>critical</strong>. CSU procurement documents say "gap" or "issue" for a barrier.</p>',
-      `<p>The Section 508 functional performance criteria name nine disability groups.</p>${ul(M.FUNCTIONAL_GROUPS.map(label))}`,
-
-      '<h3>Exposure</h3>',
-      '<p><strong>Exposure</strong> rates audience size and product reliance as low, medium or high.</p>',
-      '<p>A single <strong>floor</strong> fact sets a minimum exposure regardless of the answers.</p>',
-      table(['Floor', 'Minimum exposure'], M.FLOORS.map((f) => [f.fact, f.min])),
-      `<p>The requester's answers map uniquely across four distinct groups.</p>${ul(M.GROUPS.map((g) => term(g.id.charAt(0).toUpperCase() + g.id.slice(1), GROUP_COVERS[g.id] ?? '')))}`,
-      `<p>Each group level is the group's highest answer. The exposure level is the range containing the aggregate share of the maximum score, with cut points at ${pct(C.bands.medium)} and ${pct(C.bands.high)} partitioning the share range into low, medium and high, unless a floor sets a higher level.</p>`,
-      '<p>An unknown answer maps to its highest level. Where that mapping alters exposure, the review halts pending the requester\'s answers.</p>',
-
-      '<h3>Severity</h3>',
-      '<p>Product <strong>severity</strong> derives entirely from maximum task impact across the findings, independent of vendor report conformance labels or the failed WCAG criterion level.</p>',
-      table(['Severity', 'GSA term', 'Meaning'], M.SEVERITY.map((s) => [s.id, s.gsa ?? 'none', s.meaning])),
-      '<p><strong>S?</strong> marks unknown severity, in the absence of any ACR, demonstration or testing. <strong>S3 (provisional)</strong> marks the fallback, defined under Evidence.</p>',
-      `<p>Two conditions escalate S2 findings to S3, shown as "S3 (accumulated)".</p>${ul([
-        term('Stacking', `${C.accumulation.stack} or more S2 findings on one core task for one disability group, regardless of exposure.`),
-        term('Spread', `S2 findings on ${C.accumulation.spreadPairs} or more pairs of core task and disability group, at ${C.accumulation.spreadAt} exposure only.`),
-      ])}`,
-
-      '<h3>Evidence (Veracity)</h3>',
-      '<p><strong>Veracity</strong> rates the reliability of the evidence behind the findings, by evidence level.</p>',
-      table(['Evidence', 'What it is'], M.EVIDENCE.map((e) => [e.id, e.holds])),
-      `<p>Severity read from the evidence on file is a minimum. Every review needs evidence at the <strong>Veracity floor</strong> for its exposure and severity before Severity is confirmed.</p>${ul(M.LEVELS.map((l) => term(`${l.charAt(0).toUpperCase() + l.slice(1)} exposure`, `${evAt(l).charAt(0).toUpperCase() + evAt(l).slice(1)}.`)))}`,
-      '<p>An S1 finding always needs E2a, E2b or E3, because the reviewer must show the impact is minimal.</p>',
-      '<p>Below the floor, the review holds with the ATI review team, which raises the evidence with the requesting unit and the vendor, re-rates Severity and resumes. The need for Veracity rises with exposure and severity, and both parties share the interest in establishing the barriers. A demonstration or ATI testing ranks 4 or 5, which clears every floor, so one loop closes it.</p>',
-      '<p>When the evidence cannot be raised, the ATI review team records that and the review proceeds under the <strong>fallback</strong>. Severity is S3 (provisional) and the barriers found are a minimum. Unproven conformance is treated as hiding a blocking barrier, so the review requires an alternate access plan (TAAP, defined below). Deny stands on the evidence in hand, because weak evidence can hide barriers but not invent them.</p>',
-
-      '<h3>Breadth</h3>',
-      '<p><strong>Breadth</strong> rates barrier reach across core tasks and disability groups, on a scale of 0 to 2.</p>',
-      `<p>Breadth derives from the count of <strong>blocked pairs</strong> (core task and disability group pairs stopped by an S3 finding or stacked S2 findings), with ${C.breadth.blockedCuts[0]} blocked pairs giving 1 and ${C.breadth.blockedCuts[1]} giving 2, plus 1 for ${C.breadth.s2AddsAt} or more S2 findings, capped at 2. Under the fallback with no evidence at all, the review assumes Breadth 2.</p>`,
-
-      '<h3>TAAP</h3>',
-      `<p>A <strong>TAAP</strong> (Temporary Alternate Access Plan) is the CSU's written plan for equally effective access during vendor remediation, held to the six requirements of the CSU TAAP template.</p>${ul(M.TAAP_REQUIREMENTS.map((r) => r.text))}`,
-      `<p>Each TAAP includes a campus-written <strong>TAAP accessibility statement</strong>, separate from the vendor's own statement and posted ${M.TAAP_STATEMENT.postedAt}, with the following content.</p>${ul(M.TAAP_STATEMENT.includes.map((x) => x.charAt(0).toUpperCase() + x.slice(1)))}`,
-      `<p>Three people sign each TAAP.</p>${ul(M.TAAP_TERMS.signers)}`,
-      `<p>A TAAP below the standard at pressure ${T.denyAt} or more is approved only under a written determination by the president or a designee that equally effective access would be an undue burden or a fundamental alteration (28 CFR 35.164, 35.204). The determination covers this product only, counts all university resources, and lists the support that remains for each missed requirement. High cost alone does not establish an undue burden. The exception is a defence against this one required action, never a property of the product, so the review never asks for it at intake.</p>`,
-      `<p>A TAAP lasts ${M.TAAP_TERMS.reviewMonths} months or until contract renewal, whichever comes first, with no extension.</p>`,
-      '<p>The department using the product provides TAAP-defined support on any problem report, independent of accommodation, which starts with one person\'s request. The procurement review never relies on accommodation.</p>',
-
-      '<h3>Risk grade</h3>',
-      `<p>The <strong>risk grade</strong> is a fixed mapping from each pairing of an exposure level with a severity to one of two values.</p>${ul([
-        term('Approve', 'The barriers need no TAAP at this exposure.'),
-        term('Needs TAAP', 'A TAAP is required before a final decision.'),
-      ])}`,
-      table(['Exposure', 'S0', 'S1', 'S2', 'S3'], M.LEVELS.map((l) => [l, ...['S0', 'S1', 'S2', 'S3'].map((s) => M.RISK_GRADES[M.GRID[l][s].grade])])),
-
-      '<h3>Pressure and the TAAP standard</h3>',
-      '<p>The <strong>TAAP standard</strong>, the number of TAAP requirements a plan must meet, derives from <strong>pressure</strong>, the sum of exposure rank (low 0, medium 1, high 2) and Breadth.</p>',
-      table(['Pressure', 'TAAP standard'], ks.map((k) => [pressuresFor(k), kText(k)])),
-      `<p>An S3 plan below the standard is denied at pressure ${T.denyAt} or more, unless a written undue burden or fundamental alteration determination is on file, and approved with a warning below that pressure. TAAP work costs staff time, so purchases with less at stake get a lower bar.</p>`,
-      '<p>Under the fallback, the TAAP standard is provisional and may rise when evidence arrives, and the first TAAP review re-rates Severity on evidence at the Veracity floor.</p>',
-
-      '<h3>Warning level</h3>',
-      `<p>The <strong>warning level</strong>, the purchase risk shown to the purchaser, derives from pressure plus the <strong>shortfall</strong> of requirements the plan misses below the standard.</p>${ul([
-        term('Low', `Under ${T.warning.elevated}.`),
-        term('Elevated', `${T.warning.elevated} or ${T.warning.high - 1}.`),
-        term('High', `${T.warning.high} or more.`),
-      ])}`,
-      '<p>No TAAP lowers the warning below the pressure level, because a TAAP manages barriers and only the vendor removes barriers.</p>',
-
-      '<h3>Final decision</h3>',
-      '<p>The <strong>final decision</strong> settles the purchase as one of three values.</p>',
-      table(['Final decision', 'Meaning'], [
-        ['Approve', 'The purchase goes ahead, with any barriers acceptable at this exposure without a TAAP.'],
-        ['Approve with TAAP', 'The purchase goes ahead under the TAAP on file, a temporary plan that leaves the product\'s conformance unchanged.'],
-        ['Deny', 'The purchase stops, as a procurement decision rather than a verdict on the TAAP.'],
-      ]),
-      `<p>Three conditions deny an S3 product.</p>${ul([
-        'A more accessible product meets the same need, with or without a TAAP.',
-        'The TAAP on file meets none of the six requirements.',
-        `The TAAP on file falls below the standard at pressure ${T.denyAt} or more, with no written undue burden or fundamental alteration determination on file.`,
-      ])}<p>An S2 product is never denied.</p>`,
-
-      '<h3>Routes</h3>',
-      '<p>Reviews either conclude with one of three final decisions or remain paused in one of five numbered <strong>routes</strong>, each held by a named party until the condition the route names is met. Routes 1 to 3, in priority order, gate the risk grade, and route 3 loops to the Severity step with the new findings or the fallback. Routes 4 and 5 come from the TAAP checks, with route 4 holding a Needs TAAP risk grade until a TAAP is on file, and route 5 referring an undue burden or fundamental alteration claim for a written determination.</p>',
-      table(['Route', 'Headline', 'When it applies', 'Held by', 'Resumes at'], M.ROUTING.map((r, i) => [String(i + 1), M.HEADLINE[r.id], WHEN[r.id] ?? r.text, M.HOLDERS[r.route].label, RESUMES[r.id]])),
-    ].join('\n');
-  }
-  renderDefinitions();
-
-  // ---- presets (the sample reviews)
-  const PRESETS = {
-    small: { product: 'FormBuilder', vendor: 'Example Forms Inc.', unit: 'Facilities', ictKind: 'web', floors: [], evidence: 'E1',
-      req: { users: 10, scope: 'low', required_use: 'low', criticality: 'low', publishes: 'low', frequency: 'medium', contract_length: 'low' },
-      findings: [{ role: 'employees', group: 'without_vision', coreTask: 'Submit report', severity: 'S2' }] },
-    homeworkTaap: { product: 'MathLab Pro', vendor: 'Example Learning', unit: 'Mathematics', ictKind: 'web', floors: ['required_for_grade'], evidence: 'E3',
-      taap: M.TAAP_REQUIREMENTS.map((r) => r.id),
-      req: { users: 400, scope: 'medium', required_use: 'high', criticality: 'high', publishes: 'low', frequency: 'high', contract_length: 'medium' },
-      findings: [{ role: 'students', group: 'without_vision', coreTask: 'Submit homework', severity: 'S3' }] },
-    homework: { product: 'MathLab Pro', vendor: 'Example Learning', unit: 'Mathematics', ictKind: 'web', floors: ['required_for_grade'], evidence: 'E3',
-      req: { users: 400, scope: 'medium', required_use: 'high', criticality: 'high', publishes: 'low', frequency: 'high', contract_length: 'medium' },
-      findings: [{ role: 'students', group: 'without_vision', coreTask: 'Submit homework', severity: 'S3' }] },
-    unknown: { product: 'LabStation desktop app', vendor: 'Example Instruments', unit: 'Chemistry', ictKind: 'nonweb', floors: [], evidence: 'E1',
-      req: { scope: 'low', required_use: 'medium', criticality: 'medium', publishes: 'low', frequency: 'medium', contract_length: 'low' },
-      findings: [] },
-    public: { product: 'EventSignup', vendor: 'Example Events', unit: 'Student Life', ictKind: 'web', floors: ['public'], evidence: 'E0',
-      req: { users: 3, scope: 'low', required_use: 'low', criticality: 'low', publishes: 'high', frequency: 'low', contract_length: 'low' },
-      findings: [] },
-    weakDeny: { product: 'CampusPay portal', vendor: 'Example Payments', unit: 'Student Financial Services', ictKind: 'web', floors: ['public'], evidence: 'E1',
-      taap: M.TAAP_REQUIREMENTS.slice(0, 2).map((r) => r.id),
-      req: { users: 5000, scope: 'high', required_use: 'high', criticality: 'high', publishes: 'high', frequency: 'high', contract_length: 'medium' },
-      findings: [
-        { role: 'students', group: 'without_vision', coreTask: 'Pay tuition', severity: 'S3' },
-        { role: 'students', group: 'limited_manipulation', coreTask: 'Pay tuition', severity: 'S3' },
-        { role: 'students', group: 'without_vision', coreTask: 'View balance', severity: 'S3' },
-        { role: 'students', group: 'limited_manipulation', coreTask: 'View balance', severity: 'S3' },
-      ] },
-    clear: { ictKind: 'web', floors: [], evidence: 'E0', req: {}, findings: [] },
-  };
-  PRESETS.exception = { ...PRESETS.weakDeny, evidence: 'E3', exception: 'determined' };
-  PRESETS.exceptionClaimed = { ...PRESETS.weakDeny, evidence: 'E3', exception: 'claimed' };
-  PRESETS.strongDeny = { ...PRESETS.weakDeny, evidence: 'E3' };
-  PRESETS.weakApprove = { ...PRESETS.homework, evidence: 'E1', findings: [] };
-  PRESETS.fallback = { ...PRESETS.weakApprove, validation: 'unavailable' };
-  function applyPreset(p) {
-    $('form').reset();
-    for (const k of ['product', 'vendor', 'unit']) $(k).value = p[k] ?? '';
-    $('ictKind').value = p.ictKind;
-    $('evidence').value = p.evidence;
-    for (const f of M.FLOORS) $(`floor_${f.id}`).checked = p.floors.includes(f.id);
-    for (const f of FACTORS) { $(`req_${f.id}`).value = p.req[f.id] ?? ''; $(`rev_${f.id}`).value = ''; }
-    $('moreAccessibleProductExists').checked = !!p.moreAccessibleProductExists;
-    $('taapExists').checked = !!p.taap;
-    $('taapException').value = p.exception ?? 'none';
-    $('validation').value = p.validation ?? 'open';
-    for (const r of M.TAAP_REQUIREMENTS) $(`taap_${r.id}`).checked = !!p.taap?.includes(r.id);
-    syncTaap();
-    $('findings').innerHTML = '';
-    p.findings.forEach((f) => addFinding(f));
-    run();
-  }
-  document.querySelectorAll('[data-preset]').forEach((b) => b.addEventListener('click', () => applyPreset(PRESETS[b.dataset.preset])));
-
-  $('form').addEventListener('input', run);
-  $('form').addEventListener('change', run);
-  applyPreset(PRESETS.small);
-</script>
+<script src="review-matrix-tester.js"></script>
 </body>
 </html>
