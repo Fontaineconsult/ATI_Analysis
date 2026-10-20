@@ -21,8 +21,8 @@ const evText = { 0: 'any', 2: 'E1 or better', 4: 'E2 or better' };
 const cols = [
   ['X', 'Exposure', 84], ['B', 'Breadth', 64], ['P', 'Pressure', 64], ['V', 'Veracity floor', 116],
   ['S01', 'S0, S1', 82], ['S2', 'S2', 96], ['S3', 'S3', 96],
-  ['k', 'Minimum (TAAP standard)', 92], ['none', 'No TAAP yet', 112], ['zero', 'TAAP meets none', 92],
-  ['below', 'Below the minimum', 104], ['min', 'At the minimum', 132], ['full', 'Full TAAP', 132],
+  ['k', 'Minimum (TAAP standard)', 92], ['none', 'No TAAP yet', 112],
+  ['below', 'TAAP below the minimum', 132], ['min', 'TAAP at the minimum', 132], ['full', 'Full TAAP', 132],
 ];
 const FULL = M.TAAP_REQUIREMENTS.length;
 const X0 = 40, Y0 = 118, HH = 46, RH = 46;
@@ -75,7 +75,6 @@ for (const X of LV) {
     cell('P', row, 1, 'factor', [String(P)]);
     cell('k', row, 1, 'factor', [kText(k)]);
     cell('none', row, 1, 'hold', [`On hold, route ${routeNo('taap_needed')}`], warnOf(P));
-    cell('zero', row, 1, 'deny', ['Deny']);
     cell('below', row, 1, 'deny', ['Deny']);
     // At the minimum means meeting it while short of all six; where the minimum is all six,
     // such a plan is below it.

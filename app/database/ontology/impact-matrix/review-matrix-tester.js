@@ -430,7 +430,7 @@
           return ['approve_with_taap', FULL - met];
         };
         const std = d.taapStandard;
-        const state = !std ? null : !d.taapOnFile ? 'none' : std.met === 0 ? 'zero' : std.shortfall > 0 ? 'below' : std.met === FULL ? 'full' : 'min';
+        const state = !std ? null : !d.taapOnFile ? 'none' : std.shortfall > 0 ? 'below' : std.met === FULL ? 'full' : 'min';
         // How far this review gets through the table: Exposure still open (route 2), the
         // evidence still open (routes 1 and 3), the risk grade alone (Approve), or the remedy
         // step (Needs TAAP). Columns past the stage reached are drawn as not considered.
@@ -473,7 +473,7 @@
             floor: { text: evidenceAtRank(M.EVIDENCE_LIMITS.floor[lvl]).replace('any evidence', 'any'), here: onBand, note: onBand ? floorNote : '' },
             grades: [gradeCell('S0', ['S0', 'S1']), gradeCell('S2', ['S2']), gradeCell('S3', ['S3'])],
             k: { text: k === 6 ? 'all 6' : `${k} of 6`, here: remedyReached && onRow, dim: !remedyReached },
-            taap: [taapCell('none', null), taapCell('zero', 0), taapCell('below', k - 1), taapCell('min', k), taapCell('full', FULL)],
+            taap: [taapCell('none', null), taapCell('below', k - 1), taapCell('min', k), taapCell('full', FULL)],
           };
         }));
         const stageNote = {
@@ -672,10 +672,9 @@
       '<h3>Pressure and the TAAP standard</h3>',
       '<p>The <strong>TAAP standard</strong>, the minimum number of the six TAAP requirements a plan must meet, derives from <strong>pressure</strong>, the sum of exposure rank (low 0, medium 1, high 2) and Breadth. A <strong>full TAAP</strong> meets all six.</p>',
       table(['Pressure', 'TAAP standard'], ks.map((k) => [pressuresFor(k), kText(k)])),
-      '<p>The TAAP on file falls in one of four states against the minimum, each with a fixed outcome.</p>',
+      '<p>The TAAP on file falls in one of three states against the minimum, each with a fixed outcome.</p>',
       table(['TAAP on file', 'Outcome', 'Warning'], [
-        ['Meets none of the six', 'Deny, even under the exception', 'None'],
-        ['Below the minimum', 'Deny, unless a written undue burden or fundamental alteration determination is on file', 'None, or from pressure plus the gap under the exception'],
+        ['Below the minimum', 'Deny, unless a written undue burden or fundamental alteration determination is on file. A plan that meets none of the six is denied even then, since it gives no alternative access', 'None, or from pressure plus the gap under the exception'],
         ['At the minimum, short of all six', 'Approve with TAAP. Where the minimum is all six, at pressure 3 or more, a plan short of six is below the minimum and is denied', 'From pressure plus the gap to a full TAAP'],
         ['Full, all six', 'Approve with TAAP', 'From pressure alone, so a warning at high exposure'],
       ]),

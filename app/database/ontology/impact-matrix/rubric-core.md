@@ -436,12 +436,11 @@ standard scales with pressure so that purchases with less at stake get a lower s
 the shortfall against it is stated in the denial and in the hold, so the signers report what
 the plan does instead of ticking requirements it does not meet.
 
-The TAAP on file falls in one of four states against the minimum, each with a fixed outcome.
+The TAAP on file falls in one of three states against the minimum, each with a fixed outcome.
 
 | TAAP on file | Outcome | Warning |
 |---|---|---|
-| Meets none of the six | Deny, even under the exception | None |
-| Below the minimum | Deny, unless a written undue burden or fundamental alteration determination is on file | None, or from pressure plus the gap under the exception |
+| Below the minimum | Deny, unless a written undue burden or fundamental alteration determination is on file. A plan that meets none of the six is denied even then, since it gives no alternative access | None, or from pressure plus the gap under the exception |
 | At the minimum, short of all six | Approve with TAAP. Where the minimum is all six, at pressure 3 or more, a plan short of six is below the minimum and is denied | From pressure plus the gap to a full TAAP |
 | Full, all six | Approve with TAAP | From pressure alone, so a warning at high Exposure |
 
