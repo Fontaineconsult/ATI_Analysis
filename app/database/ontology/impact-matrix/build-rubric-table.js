@@ -24,7 +24,7 @@ const cols = [
   ['k', 'TAAP standard', 84], ['none', 'No TAAP yet', 124], ['zero', 'TAAP meets none', 92],
   ['below', 'TAAP below standard', 146], ['meets', 'TAAP meets standard', 146],
 ];
-const X0 = 40, Y0 = 118, HH = 46, RH = 46;
+const X0 = 40, Y0 = 118, HH = 46, RH = 60;
 const xs = {}; let x = X0;
 for (const [id, , w] of cols) { xs[id] = [x, w]; x += w; }
 const W = x;
@@ -76,7 +76,7 @@ for (const X of LV) {
     cell('none', row, 1, 'hold', [`On hold, route ${routeNo('taap_needed')}`], warnOf(P));
     cell('zero', row, 1, 'deny', ['Deny']);
     if (P >= C.taapStandard.denyAt) cell('below', row, 1, 'deny', ['Deny']);
-    else cell('below', row, 1, 'taap', ['Approve with TAAP'], warnOf(P + 1));
+    else cell('below', row, 1, 'taap', ['Approve with TAAP', 'signers accept shortfall'], warnOf(P + 1));
     cell('meets', row, 1, 'taap', ['Approve with TAAP'], warnOf(P));
   }
 }
@@ -94,8 +94,19 @@ parts.push(`<rect x="${X0}" y="${Y0 - 26}" width="${W - X0}" height="${26 + HH +
 // Notes under the table.
 const ny = Y0 + HH + 9 * RH + 34;
 const notes = M.rubricNotes();   // shared with the tester's matrix
-notes.forEach((n, i) => text(X0, ny + i * 21, `${i + 1}.  ${n}`, { anchor: 'start', size: 13 }));
-const H = ny + notes.length * 21 + 20;
+// Long notes wrap at a word boundary, with the continuation indented under the text.
+const MAX = Math.floor((W - X0) / 7.2);
+const lines = [];
+notes.forEach((n, i) => {
+  let cur = `${i + 1}.  `;
+  for (const word of n.split(' ')) {
+    if ((cur + word).length > MAX) { lines.push(cur.trimEnd()); cur = '     '; }
+    cur += word + ' ';
+  }
+  lines.push(cur.trimEnd());
+});
+lines.forEach((l, i) => text(X0, ny + i * 21, l, { anchor: 'start', size: 13 }));
+const H = ny + lines.length * 21 + 20;
 
 const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W + 40} ${H}" width="${W + 40}" height="${H}" role="img" aria-labelledby="t d" font-family="Segoe UI, system-ui, -apple-system, Helvetica, Arial, sans-serif">
   <title id="t">SFBRN review rubric, version 2, decision table</title>

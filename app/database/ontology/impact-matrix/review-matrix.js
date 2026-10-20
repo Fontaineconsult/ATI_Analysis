@@ -719,6 +719,8 @@ function evaluate(review) {
     requires: outcome === 'deny' ? [] : [
       ...(cell.requires ?? []).filter((r) => !NEEDS_ICT[r] || NEEDS_ICT[r].includes(review.ictKind)),
       ...(basis === 'exception' ? ['exception_record'] : []),
+      // Below the standard without the exception, the approval records the signers' acceptance.
+      ...(outcome === 'approve_with_taap' && std.shortfall > 0 && basis !== 'exception' ? ['shortfall_acceptance'] : []),
       ...(base.fallback ? ['validation_at_review'] : []),
     ],
     exception: basis === 'exception',
@@ -807,6 +809,7 @@ const NEEDS = {
   serves_everyone_from_day_one: 'The alternate access plan serves every affected person from the first day of use.',
   best_meets_record: 'A best-meets record with market research is on file (Section 508 E202.7).',
   exception_record: 'A written determination by the president or a designee is on file that equally effective access would be an undue burden or a fundamental alteration (28 CFR 35.164, 35.204), listing the support that remains for each missed requirement.',
+  shortfall_acceptance: 'The three TAAP signers accept the recorded shortfall against the TAAP standard, with named support for each missed requirement.',
   validation_at_review: 'The first TAAP review re-rates Severity on evidence at the Veracity floor, which the vendor demonstration under the roadmap terms supplies.',
 };
 const plural = (n, one, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
@@ -1080,7 +1083,7 @@ function rubricNotes() {
     'The TAAP standard is a required count of the six CSU TAAP requirements, scaled by P, the sum of the Exposure rank and Breadth.',
     `The below-standard column assumes a one-requirement shortfall. The warning level derives from W = P + shortfall, elevated from ${T.warning.elevated} and high from ${T.warning.high}.`,
     `No TAAP on file maps to route ${routeNo('taap_needed')}, On hold: TAAP needed, which carries the TAAP standard and the warning.`,
-    `Below the standard at pressure ${T.denyAt} or more, a written undue burden or fundamental alteration determination maps to Approve with TAAP, and a claim maps to route ${routeNo('exception_claimed')}.`,
+    `Below the standard at pressure under ${T.denyAt}, the approval records the three signers' acceptance of the shortfall. At pressure ${T.denyAt} or more, a written undue burden or fundamental alteration determination maps to Approve with TAAP, and a claim maps to route ${routeNo('exception_claimed')}.`,
     'A TAAP that meets none of the six is denied at any severity. Otherwise S2 is never denied: an S2 plan below the standard maps to Approve with TAAP under a warning.',
     `S2 escalates to S3 at ${acc.stack} S2 barriers stacked on one function for one user group, or at high Exposure with S2 barriers across ${acc.spreadPairs} function and group pairs.`,
     'At S3, a more accessible product that meets the same need maps to Deny.',

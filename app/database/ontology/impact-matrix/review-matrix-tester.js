@@ -20,6 +20,7 @@
     serves_everyone_from_day_one: 'The plan serves every affected person from day one',
     best_meets_record: 'A best-meets record with market research (Section 508 E202.7)',
     exception_record: 'A written undue burden or fundamental alteration determination by the president or a designee (28 CFR 35.204)',
+    shortfall_acceptance: 'The three TAAP signers accept the recorded shortfall against the TAAP standard',
     validation_at_review: 'Severity re-rated on evidence at the Veracity floor at the first TAAP review',
   };
   const SEVERITY_WORD = { S0: 'no barriers', S1: 'minor', S2: 'major', S3: 'critical' };
@@ -461,7 +462,8 @@
           const taapCell = (col, met) => {
             const [o, short] = decide(P, k, met);
             const route = o === 'on_hold' ? ` (route ${routeNo(col === 'none' ? 'taap_needed' : 'exception_claimed')})` : '';
-            return { text: `${M.OUTCOMES[o].label}${route}`, warn: o === 'deny' ? '' : `warning ${warnOf(P + short)}`, tone: TONE[o],
+            const sub = o === 'approve_with_taap' && short > 0 ? 'signers accept the shortfall' : '';
+            return { text: `${M.OUTCOMES[o].label}${route}`, sub, warn: o === 'deny' ? '' : `warning ${warnOf(P + short)}`, tone: TONE[o],
               here: remedyReached && onRow && state === col && asDrawn, dim: !remedyReached };
           };
           return {
@@ -666,7 +668,7 @@
       '<h3>Pressure and the TAAP standard</h3>',
       '<p>The <strong>TAAP standard</strong>, the number of TAAP requirements a plan must meet, derives from <strong>pressure</strong>, the sum of exposure rank (low 0, medium 1, high 2) and Breadth.</p>',
       table(['Pressure', 'TAAP standard'], ks.map((k) => [pressuresFor(k), kText(k)])),
-      `<p>An S3 plan below the standard is denied at pressure ${T.denyAt} or more, unless a written undue burden or fundamental alteration determination is on file, and approved with a warning below that pressure. TAAP work costs staff time, so purchases with less at stake get a lower bar. Below that pressure the shortfall is recorded and warned about rather than denied, so the signers report what the plan does instead of ticking requirements it does not meet.</p>`,
+      `<p>An S3 plan below the standard is denied at pressure ${T.denyAt} or more, unless a written undue burden or fundamental alteration determination is on file, and approved below that pressure only with the three signers' recorded acceptance of the shortfall, under a warning. TAAP work costs staff time, so purchases with less at stake get a lower bar, and a recorded shortfall keeps the signers reporting what the plan does instead of ticking requirements it does not meet.</p>`,
       '<p>Under the fallback, the TAAP standard is provisional and may rise when evidence arrives, and the first TAAP review re-rates Severity on evidence at the Veracity floor.</p>',
 
       '<h3>Warning level</h3>',

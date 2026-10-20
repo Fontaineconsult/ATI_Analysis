@@ -42,7 +42,7 @@
   <path d="M330,578 L330,592" fill="none" stroke="#6b6b6b" stroke-width="1.4" marker-end="url(#head)"/>
   <text x="338" y="594" text-anchor="start" font-size="11" fill="#444444"><tspan x="338" dy="0" font-weight="400">no (S2: approved under a warning)</tspan></text>
   <path d="M480,640 L560,640" fill="none" stroke="#6b6b6b" stroke-width="1.4"/>
-  <text x="520" y="619" text-anchor="middle" font-size="11" fill="#444444"><tspan x="520" dy="0" font-weight="400">no: approved</tspan><tspan x="520" dy="15" font-weight="400">under a warning</tspan></text>
+  <text x="520" y="619" text-anchor="middle" font-size="11" fill="#444444"><tspan x="520" dy="0" font-weight="400">no: approved, signers</tspan><tspan x="520" dy="15" font-weight="400">accept the shortfall</tspan></text>
   <path d="M330,688 L330,702" fill="none" stroke="#6b6b6b" stroke-width="1.4" marker-end="url(#head)"/>
   <text x="338" y="704" text-anchor="start" font-size="11" fill="#444444"><tspan x="338" dy="0" font-weight="400">yes</tspan></text>
   <path d="M180,750 L100,750" fill="none" stroke="#6b6b6b" stroke-width="1.4"/>

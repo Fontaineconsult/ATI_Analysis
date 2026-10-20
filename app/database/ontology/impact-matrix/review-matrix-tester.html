@@ -289,7 +289,7 @@
               <template x-for="(c, i) in row.grades" :key="i"><td :class="'tone-' + c.tone + (c.here ? ' here' : '') + (c.dim ? ' dim' : '')" x-text="c.text"></td></template>
               <td :class="(row.k.here ? 'here' : '') + (row.k.dim ? ' dim' : '')" x-text="row.k.text"></td>
               <template x-for="(c, i) in row.taap" :key="i">
-                <td :class="'tone-' + c.tone + (c.here ? ' here' : '') + (c.dim ? ' dim' : '')"><span x-text="c.text"></span><span class="warn" x-show="c.warn" x-text="c.warn"></span></td>
+                <td :class="'tone-' + c.tone + (c.here ? ' here' : '') + (c.dim ? ' dim' : '')"><span x-text="c.text"></span><span class="warn" x-show="c.sub" x-text="c.sub"></span><span class="warn" x-show="c.warn" x-text="c.warn"></span></td>
               </template>
             </tr>
           </template>

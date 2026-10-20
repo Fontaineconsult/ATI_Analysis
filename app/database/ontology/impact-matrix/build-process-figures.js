@@ -96,7 +96,7 @@ const W = 820;
   arrow([[RX, Y.d6 + CH / 2], [RX, Y.d7 - CH / 2]], 'no');
   arrow([[RX - RW / 2, Y.d7], [BL, Y.d7]], 'yes', { noHead: true });
   arrow([[RX, Y.d7 + CH / 2], [RX, Y.d8 - CH / 2]], 'no (S2: approved under a warning)');
-  arrow([[RX + RW / 2, Y.d8], [BR, Y.d8]], ['no: approved', 'under a warning'], { noHead: true });
+  arrow([[RX + RW / 2, Y.d8], [BR, Y.d8]], ['no: approved, signers', 'accept the shortfall'], { noHead: true });
   arrow([[RX, Y.d8 + CH / 2], [RX, Y.d9 - CH / 2]], 'yes');
   arrow([[RX - RW / 2, Y.d9], [BL, Y.d9]], 'none', { noHead: true });
   hang(Y.d9, 'exception_claimed', 'claimed', 1);

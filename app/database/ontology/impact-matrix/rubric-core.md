@@ -144,7 +144,8 @@ missed requirement as the access the law still requires to the maximum extent po
 exception is a defence against this one required action and never a property of the product,
 so it never arises at intake.
 
-Any other TAAP below the standard gives Approve with TAAP. Every Needs TAAP risk grade carries
+Any other TAAP below the standard gives Approve with TAAP, with the three signers' recorded
+acceptance of the shortfall as a requirement of the approval. Every Needs TAAP risk grade carries
 a **warning level** derived from pressure plus the TAAP's shortfall against the standard, never
 below the pressure level, because TAAP coverage manages barriers without removing them.
 
@@ -434,8 +435,9 @@ REMEDY( Needs TAAP ) =
 A TAAP below six requirements is a Non-Equal Alternative, with named support required for each
 missed requirement. At pressure 3 or more, a Non-Equal Alternative is approved only under the
 exception, which adds the written determination to the requirements of the approval. Below
-pressure 3 the shortfall is recorded and warned about rather than denied, so the signers report
-what the plan does instead of ticking requirements it does not meet.
+pressure 3 a Non-Equal Alternative is approved with the three signers' recorded acceptance of
+the shortfall as a requirement of the approval, so the signers report what the plan does
+instead of ticking requirements it does not meet.
 
 The **warning level** derives from the sum of pressure and shortfall, with zero shortfall
 under no TAAP or a TAAP at the standard. TAAP coverage manages barriers without removing them,
@@ -469,6 +471,9 @@ R = route 4  ∨  route 5  ∨  final_decision = Approve with TAAP
   the vendor's statement and posted wherever the product is in use. The statement covers
   known barriers, impacted disability groups, a reference to the TAAP, a disclaimer about
   unknown barriers and a support contact.
+- **Shortfall acceptance.** Under a Non-Equal Alternative at pressure under 3, the three TAAP
+  signers' recorded acceptance of the shortfall against the TAAP standard, with named support
+  for each missed requirement.
 - **Exception record.** Under a Non-Equal Alternative at pressure 3 or more, the written undue
   burden or fundamental alteration determination by the president or a designee (28 CFR 35.164
   and 35.204; Section 508 E202.6), listing the support that remains for each missed requirement.

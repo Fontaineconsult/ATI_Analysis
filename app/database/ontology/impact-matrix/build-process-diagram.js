@@ -158,7 +158,7 @@ arrow([right(COL.S3, CW, R[4]), [1160, R[4]]], 'yes', { noHead: true });
 diamond(COL.S3, R[5], CW, CH, ['Below the standard', `at pressure ${C.taapStandard.denyAt} or more?`]);
 down(COL.S3, R[4] + CH / 2, R[5] - CH / 2, 'no');
 arrow([left(COL.S3, CW, R[5]), [870, R[5]]], null, { noHead: true });
-text(876, R[5] + 40, ['no, approved', 'under a warning'], { size: 11, fill: '#444444', anchor: 'start' });
+text(876, R[5] + 40, ['no: approved, signers', 'accept the shortfall'], { size: 11, fill: '#444444', anchor: 'start' });
 diamond(COL.S3, R[6], CW, CH, ['Undue burden or', 'fundamental alteration', 'determination?']);
 down(COL.S3, R[5] + CH / 2, R[6] - CH / 2, 'yes');
 arrow([left(COL.S3, CW, R[6]), [870, R[6]]], null, { noHead: true });
