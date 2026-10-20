@@ -410,8 +410,10 @@
       },
       get json() { return this.d ? JSON.stringify(this.d, null, 2) : ''; },
 
-      // The exposure matrix: one row per Exposure and Breadth, as in rubric-core.svg. The TAAP
-      // columns follow this review's severity, because S2 is never denied.
+      // The exposure matrix: one row per Exposure and Breadth, drawn exactly as rubric-core.svg
+      // draws it. The TAAP columns show the S3 case with no exception on file; the notes cover
+      // S2, the exception and a more accessible product, and a caveat names which applies to
+      // the review on the page.
       get grid() {
         const d = this.d;
         if (!d) return { rows: [], notes: [] };
@@ -421,48 +423,68 @@
         const s2 = sev === 'S2';
         const warnOf = (w) => (w >= T.warning.high ? 'high' : w >= T.warning.elevated ? 'elevated' : 'low');
         const decide = (P, k, met) => {
-          if (sev === 'S3' && review.moreAccessibleProductExists) return ['deny', 0];
           if (met === null) return ['on_hold', 0];
           const short = Math.max(0, k - met);
-          if (short === 0 || s2) return ['approve_with_taap', short];
+          if (short === 0) return ['approve_with_taap', short];
           if (met === 0) return ['deny', short];
           if (P < T.denyAt) return ['approve_with_taap', short];
-          const ex = review.taap?.exception ?? 'none';
-          return [ex === 'determined' ? 'approve_with_taap' : ex === 'claimed' ? 'on_hold' : 'deny', short];
+          return ['deny', short];
         };
         const std = d.taapStandard;
         const state = !std ? null : !d.taapOnFile ? 'none' : std.met === 0 ? 'zero' : std.shortfall > 0 ? 'below' : 'meets';
-        const routedEarly = d.route && !['taap_needed', 'exception_claimed'].includes(d.route);
-        const here = (yes) => yes && !routedEarly;
+        // How far this review gets through the table: Exposure still open (route 2), the
+        // evidence still open (routes 1 and 3), the risk grade alone (Approve), or the remedy
+        // step (Needs TAAP). Columns past the stage reached are drawn as not considered.
+        const stage = d.route === 'answers_unknown' ? 'exposure'
+          : (d.route === 'severity_unknown' || d.route === 'veracity_below_floor') ? 'evidence'
+            : std ? 'remedy' : 'grade';
+        const rowKnown = stage !== 'exposure';
+        const gradeReached = stage === 'grade' || stage === 'remedy';
+        const remedyReached = stage === 'remedy';
+        const exception = review.taap?.exception ?? 'none';
+        const moreAccessible = sev === 'S3' && review.moreAccessibleProductExists;
+        // The TAAP cell is outlined only when the drawn value is this review's own outcome.
+        const asDrawn = sev === 'S3' && !moreAccessible && exception === 'none';
+        const ev = M.EVIDENCE.find((e) => e.id === d.evidence);
+        const floorRank = M.veracityFloor(d.exposure.level, sev);
+        const floorNote = !rowKnown ? ''
+          : d.fallback ? `${ev.id} on file, below; fallback`
+            : ev.rank >= floorRank ? `${ev.id} on file, at or above` : `${ev.id} on file, below`;
         const rows = M.LEVELS.flatMap((lvl, xi) => [0, 1, 2].map((B) => {
           const P = xi + B;
           const k = T.required[P];
-          const onRow = lvl === d.exposure.level && B === d.breadth.level;
+          const onBand = rowKnown && lvl === d.exposure.level;
+          const onRow = onBand && B === d.breadth.level;
           const grade = (s) => M.GRID[lvl][s].grade;
-          const gradeCell = (s, cols) => ({ text: M.RISK_GRADES[grade(s)], tone: TONE[grade(s)], here: here(onRow && cols.includes(sev)) });
+          const gradeCell = (s, cols) => ({ text: M.RISK_GRADES[grade(s)], tone: TONE[grade(s)],
+            here: gradeReached && onRow && cols.includes(sev), dim: !gradeReached });
           const taapCell = (col, met) => {
             const [o, short] = decide(P, k, met);
             const route = o === 'on_hold' ? ` (route ${routeNo(col === 'none' ? 'taap_needed' : 'exception_claimed')})` : '';
-            return { text: `${M.OUTCOMES[o].label}${route}`, warn: o === 'deny' ? '' : `warning ${warnOf(P + short)}`, tone: TONE[o], here: here(onRow && state === col) };
+            return { text: `${M.OUTCOMES[o].label}${route}`, warn: o === 'deny' ? '' : `warning ${warnOf(P + short)}`, tone: TONE[o],
+              here: remedyReached && onRow && state === col && asDrawn, dim: !remedyReached };
           };
           return {
-            key: `${lvl}-${B}`, level: lvl, first: B === 0, band: B === 0 && xi > 0, B, P,
-            floorText: evidenceAtRank(M.EVIDENCE_LIMITS.floor[lvl]).replace('any evidence', 'any'),
-            hereRow: here(onRow),
+            key: `${lvl}-${B}`, level: lvl, first: B === 0, band: B === 0 && xi > 0, B, P, onRow, onBand,
+            floor: { text: evidenceAtRank(M.EVIDENCE_LIMITS.floor[lvl]).replace('any evidence', 'any'), here: onBand, note: onBand ? floorNote : '' },
             grades: [gradeCell('S0', ['S0', 'S1']), gradeCell('S2', ['S2']), gradeCell('S3', ['S3'])],
-            k: k === 6 ? 'all 6' : `${k} of 6`,
+            k: { text: k === 6 ? 'all 6' : `${k} of 6`, here: remedyReached && onRow, dim: !remedyReached },
             taap: [taapCell('none', null), taapCell('zero', 0), taapCell('below', k - 1), taapCell('meets', k)],
           };
         }));
-        const notes = [
-          'The TAAP standard is a required count of the six TAAP requirements, scaled by pressure, the sum of the Exposure rank and Breadth.',
-          `The TAAP columns reflect this review's severity (${sev}).${s2 ? ' S2 is never denied, so a TAAP below the standard maps to Approve with TAAP under a warning.' : ''} The below-standard column assumes a one-requirement shortfall.`,
-          `The warning level derives from the sum of pressure and shortfall, elevated from ${T.warning.elevated} and high from ${T.warning.high}.`,
-          'At S3, a more accessible product that meets the same need maps every TAAP column to Deny.',
-          `No TAAP on file maps to route ${routeNo('taap_needed')}, On hold: TAAP needed, which carries the TAAP standard and the warning. Below the standard at pressure ${T.denyAt} or more, a written undue burden or fundamental alteration determination maps to Approve with TAAP, and a claim maps to route ${routeNo('exception_claimed')}.`,
-          `The Veracity floor column gates every review before the risk grade, with S1 always requiring E2a or better. Evidence below the floor maps to route ${routeNo('veracity_below_floor')}, manual review, which raises the evidence and re-rates Severity. When the evidence cannot be raised, the review proceeds at S3 (provisional) with the barriers found as a minimum.`,
-        ];
-        return { rows, notes };
+        const notes = M.rubricNotes();
+        const stageNote = {
+          exposure: `The review holds at route ${routeNo(d.route)} before Exposure is settled, so no row applies yet.`,
+          evidence: `The review holds at route ${routeNo(d.route)} at the Veracity floor, so the risk grade and the TAAP columns are not reached.`,
+          grade: 'The risk grade is Approve, so the TAAP columns do not apply to this review.',
+          remedy: '',
+        }[stage];
+        const caveat = !std ? ''
+          : moreAccessible ? 'For this review, a more accessible product meets the same need, so every TAAP state is Deny.'
+            : s2 ? 'This review is S2. Of the TAAP columns, only TAAP meets none applies as drawn. A TAAP below the standard is Approve with TAAP under a warning.'
+              : exception !== 'none' ? `For this review, an undue burden or fundamental alteration ${exception === 'claimed' ? 'claim' : 'determination'} is on file, so the below-standard column follows note 4 rather than the drawn value.`
+                : '';
+        return { rows, notes, stage, stageNote, caveat, headDim: { grade: !gradeReached, taap: !remedyReached } };
       },
 
       // ---- copy the reasoning. The async clipboard first; a copy event as the fallback,
@@ -545,18 +567,31 @@
     };
 
     return [
-      '<h3>Barriers and findings</h3>',
+      '<h3>Review standard</h3>',
       '<p>Each review tests one campus-requested product against its <strong>review standard</strong>, WCAG 2.1 AA for web and mobile products or the Section 508 Standards for other software and hardware.</p>',
+      '<h3>Essential function</h3>',
       `<p>An <strong>essential function</strong> is a function the product exists to provide. Registering for a class, submitting homework and paying a bill are essential functions.</p>${ul([
         term('Test', 'A function is essential when its removal would change the product\'s use or purpose. WCAG-EM 2.0 defines essential functionality by the same test.'),
         term('Source', 'The requester lists the minimum functional requirements, which CSU Procurement Step 1 calls "essential functionality", and the reviewer confirms the list.'),
         term('Scope', 'An essential function covers its complete process, including sign-in, navigation, the content read along the way and the final submission. WCAG 2.1 requires every page in a complete process to conform.'),
         term('Other names', 'WCAG-EM says "essential functionality". CSU TAAP documents say "essential functions" and "core functionality". The "essential functions" of a job under ADA Title I (29 CFR 1630.2(n)) are a separate concept and never set severity.'),
       ])}`,
+      '<h3>Nonconformance and barrier</h3>',
       `<p>The review separates a failure in the product from its effect on users.</p>${ul([
         term('Nonconformance', 'A failed success criterion or provision of the review standard, belonging to the product.'),
         term('Barrier', 'The effect of a nonconformance on one essential function for one of the nine Section 508 <strong>disability groups</strong> listed below. One nonconformance produces a barrier for every essential function and disability group it affects.'),
       ])}`,
+      `<p>The Section 508 functional performance criteria name nine disability groups.</p>${ul(M.FUNCTIONAL_GROUPS.map(label))}`,
+      '<p>Severity attaches to the barrier and never to the nonconformance, because the level of the failed criterion (A or AA) does not predict the effect on users. S1, S2 and S3 match the GSA severity terms <strong>minor</strong>, <strong>major</strong> and <strong>critical</strong>. CSU procurement documents say "gap" or "issue" for a barrier.</p>',
+
+      '<h3>Minimal impact</h3>',
+      `<p>A nonconformance has <strong>minimal impact</strong> only when people with disabilities can still do all four of the following with substantially equivalent timeliness, privacy, independence and ease of use (28 CFR 35.205). The rubric calls these the <strong>four minimal-impact tests</strong>.</p>${ul([
+        'Access the same information as people without disabilities.',
+        'Engage in the same interactions as people without disabilities.',
+        'Conduct the same transactions as people without disabilities.',
+        'Participate in or benefit from the same services, programs and activities as people without disabilities.',
+      ])}<p><strong>Burden.</strong> The university must demonstrate that all four tests are met, so minimal impact rests on evidence, never on assumption.</p><p><strong>Standard.</strong> The tests come from the Title II web rule. The rubric applies them to non-web products as policy, since the Section 508 Standards have no minimal-impact clause.</p>`,
+      '<h3>Finding</h3>',
       `<p>A <strong>finding</strong> records one barrier in four fields.</p>${ul([
         term('Role', `The users the barrier affects, among them ${roles.slice(0, -1).join(', ')} and ${roles[roles.length - 1]}.`),
         term('Disability group', 'The group the barrier affects.'),
@@ -564,8 +599,6 @@
         term('Severity', 'Impact of the barrier on the function, from S0 (no effect) to S3 (the user cannot perform the function alone).'),
       ])}`,
       '<p>An <strong>ACR lead</strong> is a row marked "Partially Supports" or "Does Not Support" in the vendor\'s ACR (Accessibility Conformance Report). A lead becomes a finding once its remark names the affected feature and the reviewer places that feature on an essential function.</p>',
-      '<p>Severity attaches to the barrier and never to the nonconformance, because the level of the failed criterion (A or AA) does not predict the effect on users. S1, S2 and S3 match the GSA severity terms <strong>minor</strong>, <strong>major</strong> and <strong>critical</strong>. CSU procurement documents say "gap" or "issue" for a barrier.</p>',
-      `<p>The Section 508 functional performance criteria name nine disability groups.</p>${ul(M.FUNCTIONAL_GROUPS.map(label))}`,
 
       '<h3>Exposure</h3>',
       '<p><strong>Exposure</strong> rates audience size and product reliance as low, medium or high.</p>',
@@ -580,10 +613,28 @@
       '<p>Product <strong>severity</strong> derives entirely from the maximum impact on an essential function across the findings, independent of vendor report conformance labels or the failed WCAG criterion level.</p>',
       table(['Severity', 'GSA term', 'Meaning'], M.SEVERITY.map((s) => [s.id, s.gsa ?? 'none', s.meaning])),
       '<p><strong>S?</strong> marks unknown severity, in the absence of any ACR, demonstration or testing. <strong>S3 (provisional)</strong> marks the fallback, defined under Evidence.</p>',
-      `<p>Two conditions escalate S2 findings to S3, shown as "S3 (accumulated)".</p>${ul([
-        term('Stacking', `${C.accumulation.stack} or more S2 findings on one essential function for one disability group, regardless of exposure.`),
-        term('Spread', `S2 findings on ${C.accumulation.spreadPairs} or more pairs of essential function and disability group, at ${C.accumulation.spreadAt} exposure only.`),
+      `<p>The levels sort by the four <strong>minimal-impact tests</strong> of 28 CFR 35.205, defined under Minimal impact. People with disabilities must still be able to do all four with substantially equivalent timeliness, privacy, independence and ease of use.</p>${ul([
+        'Access the same information.',
+        'Engage in the same interactions.',
+        'Conduct the same transactions.',
+        'Participate in or benefit from the same services, programs and activities.',
       ])}`,
+      table(['Severity', 'Against the four tests', 'What the reviewer records'], [
+        ['S0', 'Passes all four, with no effect at all', 'No finding'],
+        ['S1', 'Passes all four, with the impact shown to be minimal', 'Each test as met, on evidence at E2a or better'],
+        ['S2', 'Fails at least one, since clearly unequal time or effort fails substantially equivalent ease of use', 'The function the barrier slows, and for whom'],
+        ['S3', 'Fails outright, since the user cannot perform the function independently', 'The function the barrier blocks, and for whom'],
+      ]),
+      '<p>Two conditions escalate S2 findings to S3, shown as "S3 (accumulated)".</p>',
+      table(['Condition', 'What is counted', 'Threshold', 'Exposure', 'Why it escalates'], [
+        ['Stacking', 'S2 findings on one pair of essential function and disability group', `${C.accumulation.stack} or more`, 'Any', 'A user performs a function only by passing every barrier on it, so stacked barriers block the function'],
+        ['Spread', 'Distinct pairs of essential function and disability group with an S2 finding', `${C.accumulation.spreadPairs} or more`, `${cap(C.accumulation.spreadAt)} only`, 'Barriers across most of the product exceed minimal impact in aggregate'],
+      ]),
+      `${ul([
+        term('Stacking', `${C.accumulation.stack} or more S2 findings on one essential function for one disability group, regardless of exposure. Example: a homework platform, where students who are blind meet ${C.accumulation.stack} S2 barriers on the one function "Submit homework". The upload button has no accessible name, so the screen reader user finds it by trial. The due-date field accepts keyboard input only in an undocumented format. The confirmation is not announced, so the student reloads the page to check that the submission went through. Each barrier alone leaves the submission possible with clearly more effort, so each is S2. The student must pass all ${C.accumulation.stack} in sequence to submit, so together they block the function, and the product is S3 (accumulated).`),
+        term('Spread', `S2 findings on ${C.accumulation.spreadPairs} or more pairs of essential function and disability group, at ${C.accumulation.spreadAt} exposure only. Example: a campus-wide student portal at high exposure, where no barrier blocks a function but the reviewer records S2 findings on ${C.accumulation.spreadPairs} different pairs: pay tuition for students who are blind (unlabelled form fields), pay tuition for students with limited use of their hands (small controls with no keyboard shortcut), view balance for students with low vision (3 to 1 contrast on the balance table), register for classes for students who are blind (search results not announced), register for classes for students with cognitive disabilities (a session timeout with a ten-second warning), and view financial aid for students who are deaf (video instructions with the transcript on another page). Barriers across most of the product exceed minimal impact in aggregate, so the product is S3 (accumulated).`),
+      ])}`,
+      `<p>Neither condition applies to ${C.accumulation.stack - 1} S2 findings on one pair, or to ${C.accumulation.spreadPairs} pairs at medium exposure. Those stay S2, though ${C.breadth.s2AddsAt} or more S2 findings still raise Breadth, defined below. Six S2 findings on one pair are one pair for spread but twice the stacking threshold, so they stack. The pair, not the finding, is the unit spread counts.</p>`,
 
       '<h3>Evidence (Veracity)</h3>',
       '<p><strong>Veracity</strong> rates the reliability of the evidence behind the findings, by evidence level.</p>',
@@ -615,7 +666,7 @@
       '<h3>Pressure and the TAAP standard</h3>',
       '<p>The <strong>TAAP standard</strong>, the number of TAAP requirements a plan must meet, derives from <strong>pressure</strong>, the sum of exposure rank (low 0, medium 1, high 2) and Breadth.</p>',
       table(['Pressure', 'TAAP standard'], ks.map((k) => [pressuresFor(k), kText(k)])),
-      `<p>An S3 plan below the standard is denied at pressure ${T.denyAt} or more, unless a written undue burden or fundamental alteration determination is on file, and approved with a warning below that pressure. TAAP work costs staff time, so purchases with less at stake get a lower bar.</p>`,
+      `<p>An S3 plan below the standard is denied at pressure ${T.denyAt} or more, unless a written undue burden or fundamental alteration determination is on file, and approved with a warning below that pressure. TAAP work costs staff time, so purchases with less at stake get a lower bar. Below that pressure the shortfall is recorded and warned about rather than denied, so the signers report what the plan does instead of ticking requirements it does not meet.</p>`,
       '<p>Under the fallback, the TAAP standard is provisional and may rise when evidence arrives, and the first TAAP review re-rates Severity on evidence at the Veracity floor.</p>',
 
       '<h3>Warning level</h3>',
@@ -633,11 +684,10 @@
         ['Approve with TAAP', 'The purchase goes ahead under the TAAP on file, a temporary plan that leaves the product\'s conformance unchanged.'],
         ['Deny', 'The purchase stops, as a procurement decision rather than a verdict on the TAAP.'],
       ]),
-      `<p>Three conditions deny an S3 product.</p>${ul([
+      `<p>A TAAP on file that meets none of the six requirements is denied at any severity, because it gives no alternative access. Two further conditions deny an S3 product.</p>${ul([
         'A more accessible product meets the same need, with or without a TAAP.',
-        'The TAAP on file meets none of the six requirements.',
         `The TAAP on file falls below the standard at pressure ${T.denyAt} or more, with no written undue burden or fundamental alteration determination on file.`,
-      ])}<p>An S2 product is never denied.</p>`,
+      ])}<p>An S2 product with a TAAP that meets at least one requirement is never denied, however far below the standard the plan falls.</p>`,
 
       '<h3>Routes</h3>',
       '<p>Reviews either conclude with one of three final decisions or remain paused in one of five numbered <strong>routes</strong>, each held by a named party until the condition the route names is met. Routes 1 to 3, in priority order, gate the risk grade, and route 3 loops to the Severity step with the new findings or the fallback. Routes 4 and 5 come from the TAAP checks, with route 4 holding a Needs TAAP risk grade until a TAAP is on file, and route 5 referring an undue burden or fundamental alteration claim for a written determination.</p>',

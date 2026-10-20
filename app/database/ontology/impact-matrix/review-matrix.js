@@ -646,10 +646,12 @@ function resolveTaap(review, severity, std) {
   // At S3 the CSU buys the more accessible product, even when a TAAP could be written.
   if (severity === 'S3' && review.moreAccessibleProductExists) return ['deny', 'more_accessible_product', null];
   if (!review.taap?.exists) return ['on_hold', 'taap_needed', null];
-  if (std.shortfall === 0 || severity === 'S2') return ['approve_with_taap', null, null];   // S2 is never denied
-  // A plan that meets nothing leaves access to individual accommodation. No determination
-  // rescues it, because the law still requires some other action to the maximum extent possible.
+  if (std.shortfall === 0) return ['approve_with_taap', null, null];
+  // A plan that meets nothing is no TAAP, at any severity. It leaves access to individual
+  // accommodation, and no determination rescues it, because the law still requires some other
+  // action to the maximum extent possible.
   if (std.met === 0) return ['deny', 'no_alternative', null];
+  if (severity === 'S2') return ['approve_with_taap', null, null];   // S2 below the standard is never denied
   if (std.pressure < std.denyAt) return ['approve_with_taap', null, null];   // the signers accept the shortfall
   // Below the standard at high pressure, a Non-Equal Alternative is lawful only under a written
   // undue burden or fundamental alteration determination (28 CFR 35.204; 508 E202.6).
@@ -954,7 +956,7 @@ function explain(review, d = evaluate(review), ctx = {}) {
           if (!d.taapOnFile) {
             why.push('No TAAP is on file yet.');
             if (sev === 'S2' || std.pressure < std.denyAt) {
-              why.push('A TAAP below that standard can still gain approval, with named support for each missed requirement and signer acceptance of the shortfall risk.');
+              why.push('A TAAP below that standard can still gain approval, with named support for each missed requirement and signer acceptance of the shortfall risk. A TAAP that meets none of the six requirements is denied.');
             } else {
               why.push('At this exposure, a TAAP below that standard leads to a denial.');
             }
@@ -1066,10 +1068,31 @@ function explain(review, d = evaluate(review), ctx = {}) {
   return { headline, grade, sections, text, html };
 }
 
+/**
+ * The notes under the one-page rubric table. rubric-core.svg and the tester's matrix both
+ * print these, so the two never drift.
+ */
+function rubricNotes() {
+  const T = CALIBRATION.taapStandard;
+  const acc = CALIBRATION.accumulation;
+  const routeNo = (id) => ROUTING.findIndex((r) => r.id === id) + 1;
+  return [
+    'The TAAP standard is a required count of the six CSU TAAP requirements, scaled by P, the sum of the Exposure rank and Breadth.',
+    `The below-standard column assumes a one-requirement shortfall. The warning level derives from W = P + shortfall, elevated from ${T.warning.elevated} and high from ${T.warning.high}.`,
+    `No TAAP on file maps to route ${routeNo('taap_needed')}, On hold: TAAP needed, which carries the TAAP standard and the warning.`,
+    `Below the standard at pressure ${T.denyAt} or more, a written undue burden or fundamental alteration determination maps to Approve with TAAP, and a claim maps to route ${routeNo('exception_claimed')}.`,
+    'A TAAP that meets none of the six is denied at any severity. Otherwise S2 is never denied: an S2 plan below the standard maps to Approve with TAAP under a warning.',
+    `S2 escalates to S3 at ${acc.stack} S2 barriers stacked on one function for one user group, or at high Exposure with S2 barriers across ${acc.spreadPairs} function and group pairs.`,
+    'At S3, a more accessible product that meets the same need maps to Deny.',
+    `The Veracity floor column gates every review before the risk grade, with S1 always requiring E2 or better. Evidence below the floor maps to route ${routeNo('veracity_below_floor')}, manual review, which raises the evidence and re-rates Severity.`,
+    'When the evidence cannot be raised, the review proceeds at S3 (provisional) with the barriers found as a minimum, and Breadth 2 with no evidence at all.',
+  ];
+}
+
 const ReviewMatrix = {
   MATRIX_VERSION, STATES, LEVELS, ROLES, FUNCTIONAL_GROUPS, CALIBRATION, ICT_KINDS, FLOORS,
   GROUPS, SEVERITY, EVIDENCE, ACR_CHECKS, EVIDENCE_LIMITS, veracityFloor, RISK_GRADES, OUTCOMES, HOLDERS, ROUTING,
-  GRID, TAAP_REQUIREMENTS, S2_CAVEATS, TAAP_TERMS, TAAP_STATEMENT, ROADMAP_LEVELS, CONTRACT_TERMS, accumulation, breadth, taapStandard, AUTHORITY_KINDS, AUTHORITY, WHO, HEADLINE, exposure, worstSeverity, evaluate, explain,
+  GRID, TAAP_REQUIREMENTS, S2_CAVEATS, TAAP_TERMS, TAAP_STATEMENT, ROADMAP_LEVELS, CONTRACT_TERMS, accumulation, breadth, taapStandard, AUTHORITY_KINDS, AUTHORITY, WHO, HEADLINE, exposure, worstSeverity, evaluate, explain, rubricNotes,
 };
 
 if (typeof module !== 'undefined' && module.exports) module.exports = ReviewMatrix;

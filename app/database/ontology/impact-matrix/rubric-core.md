@@ -13,11 +13,14 @@ and policy behind each final decision.
 
 ## Terms
 
-### Review scope
+### Review standard
 
 - **Review standard.** The standard each review tests one campus-requested product against,
   WCAG 2.1 AA for web and mobile products or the Section 508 Standards for other software and
   hardware.
+
+### Essential function
+
 - **Essential function.** A function the product exists to provide, such as registering for a
   class, submitting homework or paying a bill.
   - **Test.** A function is essential when its removal would change the product's use or
@@ -31,7 +34,7 @@ and policy behind each final decision.
     "essential functions" and "core functionality". The "essential functions" of a job under
     ADA Title I (29 CFR 1630.2(n)) are a separate concept and never set severity.
 
-### Barriers and findings
+### Nonconformance and barrier
 
 The rubric separates a failure in the product from its effect on users.
 
@@ -41,6 +44,25 @@ The rubric separates a failure in the product from its effect on users.
   **functional groups**, such as users without vision. One nonconformance produces a barrier on
   every affected **function-group pair**. CSU procurement documents say "gap" or "issue" for a
   barrier.
+
+### Minimal impact
+
+- **Minimal impact.** A nonconformance has minimal impact only when people with disabilities can
+  still do all four of the following with substantially equivalent timeliness, privacy,
+  independence and ease of use (28 CFR 35.205). The rubric calls these the **four
+  minimal-impact tests**.
+  - Access the same information as people without disabilities.
+  - Engage in the same interactions as people without disabilities.
+  - Conduct the same transactions as people without disabilities.
+  - Participate in or benefit from the same services, programs and activities as people without
+    disabilities.
+- **Burden.** The university must demonstrate that all four tests are met, so minimal impact
+  rests on evidence, never on assumption.
+- **Standard.** The tests come from the Title II web rule. The rubric applies them to non-web
+  products as policy, since the Section 508 Standards have no minimal-impact clause.
+
+### Finding
+
 - **Finding.** The record of one barrier by user **role** (students, employees, applicants or
   the public), functional group, essential function and severity.
 - **ACR lead.** A "Partially Supports" or "Does Not Support" row in the vendor's **ACR**
@@ -101,13 +123,14 @@ more.
 
 The **remedy step** maps a Needs TAAP risk grade to a final decision by the TAAP on file. With
 no TAAP on file, the review holds with the requesting unit (route 4), carrying the TAAP standard
-and the warning level. A TAAP at or above the standard gives Approve with TAAP. An S2 product
-is never denied, so at S2 every TAAP on file gives Approve with TAAP.
+and the warning level. A TAAP at or above the standard gives Approve with TAAP. A TAAP that
+meets none of the six requirements is denied at any severity, because it gives no alternative
+access. An S2 product with any other TAAP on file gives Approve with TAAP, however far below the
+standard the plan falls.
 
-Three conditions deny an S3 product.
+Two further conditions deny an S3 product.
 
 - A more accessible product meets the same need, with or without a TAAP.
-- The TAAP meets none of the six requirements.
 - The TAAP falls below the standard at pressure 3 or more, with no written undue burden or
   fundamental alteration determination on file.
 
@@ -213,6 +236,22 @@ of vendor report conformance labels or the failed WCAG criterion level.
 | S3 | An essential function cannot be performed independently, or only with help |
 | S? | Unknown, for lack of evidence |
 
+The levels sort by the four minimal-impact tests of 28 CFR 35.205, defined under Minimal
+impact. People with disabilities must still be able to do all four with substantially
+equivalent timeliness, privacy, independence and ease of use.
+
+- Access the same information.
+- Engage in the same interactions.
+- Conduct the same transactions.
+- Participate in or benefit from the same services, programs and activities.
+
+| Severity | Against the four tests | What the reviewer records |
+|---|---|---|
+| S0 | Passes all four, with no effect at all | No finding |
+| S1 | Passes all four, with the impact shown to be minimal | Each test as met, on evidence at E2a or better |
+| S2 | Fails at least one, since clearly unequal time or effort fails substantially equivalent ease of use | The function the barrier slows, and for whom |
+| S3 | Fails outright, since the user cannot perform the function independently | The function the barrier blocks, and for whom |
+
 ```
 S  = max( s_d : d ∈ D )       S0 when D is empty and E > E0
 S  = S?                       when D is empty and E = E0
@@ -221,11 +260,36 @@ S := S3 (provisional)         under the fallback, section 5
 
 Two accumulation conditions escalate S2 to S3, shown as "S3 (accumulated)".
 
+| Condition | What is counted | Threshold | Exposure | Why it escalates |
+|---|---|---|---|---|
+| Stacked | S2 findings on one function-group pair | 3 or more | Any | A user performs a function only by passing every barrier on it, so stacked barriers block the function |
+| Spread | Distinct function-group pairs with an S2 finding | 6 or more | High only | Barriers across most of the product exceed minimal impact in aggregate |
+
 - **Stacked.** 3 or more S2 barriers on one essential function for one functional group, at any
   Exposure. A user performs a function only by passing every barrier on it, so stacked S2
-  barriers block that function.
+  barriers block that function. Example: a homework platform, where students who are blind
+  meet 3 S2 barriers on the one function "Submit homework". The upload button has no
+  accessible name, so the screen reader user finds it by trial. The due-date field accepts
+  keyboard input only in an undocumented format. The confirmation is not announced, so the
+  student reloads the page to check that the submission went through. Each barrier alone
+  leaves the submission possible with clearly more effort, so each is S2. The student must
+  pass all 3 in sequence to submit, so together they block the function, and the product is
+  S3 (accumulated).
 - **Spread.** S2 barriers on 6 or more function-group pairs, at high Exposure only. Barriers spread
-  across most of the product exceed minimal impact in aggregate.
+  across most of the product exceed minimal impact in aggregate. Example: a campus-wide student
+  portal at high Exposure, where no barrier blocks a function but the reviewer records S2
+  findings on 6 different pairs: pay tuition for students who are blind (unlabelled form
+  fields), pay tuition for students with limited use of their hands (small controls with no
+  keyboard shortcut), view balance for students with low vision (3 to 1 contrast on the balance
+  table), register for classes for students who are blind (search results not announced),
+  register for classes for students with cognitive disabilities (a session timeout with a
+  ten-second warning), and view financial aid for students who are deaf (video instructions
+  with the transcript on another page). The product is S3 (accumulated).
+
+Neither condition applies to 2 S2 findings on one pair, or to 6 pairs at medium Exposure. Those
+stay S2, though 3 or more S2 findings still raise Breadth (section 4). Six S2 findings on one
+pair are one pair for spread but twice the stacking threshold, so they stack. The pair, not the
+finding, is the unit spread counts.
 
 ```
 stacked(fn, g) = | { d : s_d = S2, function fn, group g } |
@@ -359,8 +423,8 @@ REMEDY( Needs TAAP ) =
     Deny                if S = S3 ∧ M                       more accessible product
     On hold (route 4)   if no TAAP on file                  no TAAP on file
     Approve with TAAP   if met ≥ k                          standard met
-    Approve with TAAP   if S = S2                           S2 never denied
-    Deny                if met = 0                          no alternative access
+    Deny                if met = 0                          no alternative access, at any S
+    Approve with TAAP   if S = S2                           S2 below the standard never denied
     Approve with TAAP   if met < k ∧ P < 3                  shortfall accepted by the signers
     Approve with TAAP   if P ≥ 3 ∧ T.exception = determined Non-Equal Alternative under 35.204
     On hold (route 5)   if P ≥ 3 ∧ T.exception = claimed    referred for a formal determination
@@ -369,7 +433,9 @@ REMEDY( Needs TAAP ) =
 
 A TAAP below six requirements is a Non-Equal Alternative, with named support required for each
 missed requirement. At pressure 3 or more, a Non-Equal Alternative is approved only under the
-exception, which adds the written determination to the requirements of the approval.
+exception, which adds the written determination to the requirements of the approval. Below
+pressure 3 the shortfall is recorded and warned about rather than denied, so the signers report
+what the plan does instead of ticking requirements it does not meet.
 
 The **warning level** derives from the sum of pressure and shortfall, with zero shortfall
 under no TAAP or a TAAP at the standard. TAAP coverage manages barriers without removing them,

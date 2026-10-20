@@ -13,7 +13,7 @@
   <polygon points="330,342 480,390 330,438 180,390" fill="#fdf7e3" stroke="#bdbab0"/>
   <text x="330" y="386" text-anchor="middle" font-size="12" fill="#1a1a1a"><tspan x="330" dy="0" font-weight="400">TAAP meets</tspan><tspan x="330" dy="16" font-weight="400">the standard?</tspan></text>
   <polygon points="330,482 480,530 330,578 180,530" fill="#fdf7e3" stroke="#bdbab0"/>
-  <text x="330" y="518" text-anchor="middle" font-size="12" fill="#1a1a1a"><tspan x="330" dy="0" font-weight="400">TAAP meets none</tspan><tspan x="330" dy="16" font-weight="400">of the six?</tspan><tspan x="330" dy="16" font-weight="400">(S3 only)</tspan></text>
+  <text x="330" y="526" text-anchor="middle" font-size="12" fill="#1a1a1a"><tspan x="330" dy="0" font-weight="400">TAAP meets none</tspan><tspan x="330" dy="16" font-weight="400">of the six?</tspan></text>
   <polygon points="330,592 480,640 330,688 180,640" fill="#fdf7e3" stroke="#bdbab0"/>
   <text x="330" y="628" text-anchor="middle" font-size="12" fill="#1a1a1a"><tspan x="330" dy="0" font-weight="400">Below the standard</tspan><tspan x="330" dy="16" font-weight="400">at pressure 3 or more?</tspan><tspan x="330" dy="16" font-weight="400">(S3 only)</tspan></text>
   <polygon points="330,702 480,750 330,798 180,750" fill="#fdf7e3" stroke="#bdbab0"/>
@@ -36,11 +36,11 @@
   <path d="M480,390 L560,390 L560,930 L510,930" fill="none" stroke="#6b6b6b" stroke-width="1.4" marker-end="url(#head)"/>
   <text x="520" y="384" text-anchor="middle" font-size="11" fill="#444444"><tspan x="520" dy="0" font-weight="400">yes</tspan></text>
   <path d="M330,438 L330,482" fill="none" stroke="#6b6b6b" stroke-width="1.4" marker-end="url(#head)"/>
-  <text x="338" y="446.5" text-anchor="start" font-size="11" fill="#444444"><tspan x="338" dy="0" font-weight="400">no (S2: Approve with</tspan><tspan x="338" dy="15" font-weight="400">TAAP under a warning)</tspan></text>
+  <text x="338" y="454" text-anchor="start" font-size="11" fill="#444444"><tspan x="338" dy="0" font-weight="400">no</tspan></text>
   <path d="M180,530 L100,530" fill="none" stroke="#6b6b6b" stroke-width="1.4"/>
   <text x="140" y="524" text-anchor="middle" font-size="11" fill="#444444"><tspan x="140" dy="0" font-weight="400">yes</tspan></text>
   <path d="M330,578 L330,592" fill="none" stroke="#6b6b6b" stroke-width="1.4" marker-end="url(#head)"/>
-  <text x="338" y="594" text-anchor="start" font-size="11" fill="#444444"><tspan x="338" dy="0" font-weight="400">no</tspan></text>
+  <text x="338" y="594" text-anchor="start" font-size="11" fill="#444444"><tspan x="338" dy="0" font-weight="400">no (S2: approved under a warning)</tspan></text>
   <path d="M480,640 L560,640" fill="none" stroke="#6b6b6b" stroke-width="1.4"/>
   <text x="520" y="619" text-anchor="middle" font-size="11" fill="#444444"><tspan x="520" dy="0" font-weight="400">no: approved</tspan><tspan x="520" dy="15" font-weight="400">under a warning</tspan></text>
   <path d="M330,688 L330,702" fill="none" stroke="#6b6b6b" stroke-width="1.4" marker-end="url(#head)"/>

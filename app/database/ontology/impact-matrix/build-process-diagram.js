@@ -125,7 +125,7 @@ down(COL.S0, Y.state + 35, YF - 38, 'Approve');
 // S1: Approve, with roadmap terms at medium or high Exposure.
 down(COL.S1, Y.state + 35, YF - 38, ['Approve; roadmap terms at', 'medium or high Exposure']);
 
-// S2: accumulation, Exposure, then TAAP or Approve. Never denied.
+// S2: accumulation, Exposure, then TAAP or Approve. Denied only for a TAAP that meets none of the six.
 diamond(COL.S2, R[1], CW, CH, ['S2 accumulation?', `${C.accumulation.stack}+ stacked on one pair, or`, `${C.accumulation.spreadPairs}+ pairs at high Exposure`]);
 down(COL.S2, Y.state + 35, R[1] - CH / 2);
 arrow([right(COL.S2, CW, R[1]), [875, R[1]], [875, Y.state], [COL.S3 - CW / 2, Y.state]]);
@@ -136,7 +136,11 @@ arrow([left(COL.S2, CW, R[2]), [520, R[2]], [520, YF - 38]], ['low:', 'Approve']
 diamond(COL.S2, R[3], CW, CH, ['TAAP on file?']);
 down(COL.S2, R[2] + CH / 2, R[3] - CH / 2, ['medium or high:', 'Needs TAAP']);
 hang(COL.S2, R[3], 'taap_needed');
-down(COL.S2, R[3] + CH / 2, YF - 38, ['yes; never denied,', 'warning if below']);
+diamond(COL.S2, R[4], CW, CH, ['TAAP meets none', 'of the six?']);
+down(COL.S2, R[3] + CH / 2, R[4] - CH / 2, 'yes');
+arrow([left(COL.S2, CW, R[4]), [COL.S2 - 70, R[4]], [COL.S2 - 70, R[4] + 50]], 'yes');
+box(COL.S2 - 70, R[4] + 70, 126, 40, 'deny', ['Deny', 'no alternative access'], { size: 11 });
+down(COL.S2, R[4] + CH / 2, YF - 38, ['no; below the standard', 'never denied, warning']);
 
 // S3: Needs TAAP at every Exposure. The only lane that can end in Deny.
 diamond(COL.S3, R[1], CW, CH, ['A more accessible product', 'meets the same need?']);

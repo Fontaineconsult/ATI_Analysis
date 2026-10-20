@@ -92,12 +92,12 @@ code { font: 0.9em var(--mono); }
 .notice { margin: 12px 24px; padding: 10px 12px; background: var(--deny-bg); color: var(--deny-fg); border-radius: 8px; }
 .notice a { color: inherit; }
 
-.workbench {
+.workbench { padding-bottom: 32px; }
+.columns {
   display: grid;
   grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
   gap: 20px;
   align-items: start;
-  padding-bottom: 32px;
 }
 
 /* ---- surfaces ---- */
@@ -216,7 +216,7 @@ th { font-weight: 600; color: var(--text-2); font-size: 0.85rem; }
 .example .lead { font-size: 0.8rem; color: var(--text-2); white-space: nowrap; }
 
 /* ---- result ---- */
-.workbench > *, .result > * { min-width: 0; }
+.columns > *, .result > * { min-width: 0; }
 .result { position: sticky; top: 12px; display: grid; gap: 12px; }
 .outcome { padding: 16px 18px; border-radius: 10px; border: 1px solid; }
 .outcome h2 { margin: 0; font-size: 1.4rem; }
@@ -258,11 +258,19 @@ details.panel[open] > summary { margin-bottom: 8px; }
 .facts dd { margin: 0; }
 h4 { margin: 10px 0 2px; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--brand-deep); }
 
+.matrix { margin-top: 20px; }
+.matrix h2 { font-size: 1.1rem; margin: 0 0 10px; }
+.matrix .grid { width: 100%; }
+.matrix .notes { max-width: none; column-width: 34ch; column-gap: 28px; }
 .grid-wrap { overflow-x: auto; }
 .grid { font-size: 0.85rem; }
 .grid th, .grid td { white-space: nowrap; padding: 5px 7px; }
 .grid .warn { display: block; font-weight: 400; color: var(--text-2); font-size: 0.8em; }
 .grid td.here { outline: 3px solid var(--text); outline-offset: -3px; font-weight: 700; }
+.grid td.dim, .grid th.dim { opacity: 0.35; filter: grayscale(1); }
+.grid tr.here-row > td:not(.dim), .grid th.here-band { font-weight: 600; }
+.grid th.here-band { color: var(--text); border-left: 3px solid var(--brand); }
+.grid td.here .warn { font-weight: 600; }
 .grid tr.band > * { border-top: 2px solid var(--line-strong); }
 .grid caption { caption-side: top; text-align: left; color: var(--text-2); font-size: 0.85rem; padding: 0 0 6px; white-space: normal; }
 .notes { margin: 8px 0 0; color: var(--text-2); font-size: 0.85rem; max-width: 68ch; }
@@ -308,7 +316,7 @@ pre { background: var(--surface-2); border: 1px solid var(--line); border-radius
 /* ---- narrow screens ---- */
 @media (max-width: 1000px) {
   .page-header, .tabs, .workbench, .definitions, .page-footer { padding-left: 16px; padding-right: 16px; }
-  .workbench { grid-template-columns: 1fr; }
+  .columns { grid-template-columns: 1fr; }
   .result { position: static; }
   .minibar {
     display: block;

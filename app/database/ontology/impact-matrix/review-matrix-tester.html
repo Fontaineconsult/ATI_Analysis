@@ -35,6 +35,7 @@
 </div>
 
 <section class="workbench" id="panel-review" role="tabpanel" aria-labelledby="tab-review" tabindex="0" x-show="tab === 'review'">
+<div class="columns">
 <form class="review" aria-label="The review" @submit.prevent novalidate>
 
   <details class="card examples">
@@ -77,7 +78,7 @@
     <div class="step-title">
       <span class="step-no">Step 0</span>
       <h2 id="h-kind">Kind of technology</h2>
-      <a class="def-link" href="#def-barriers-and-findings" @click.prevent="showDefinition('def-barriers-and-findings')">Definition</a>
+      <a class="def-link" href="#def-review-standard" @click.prevent="showDefinition('def-review-standard')">Definition</a>
     </div>
     <fieldset>
       <legend class="label">The kind decides the review standard.</legend>
@@ -149,7 +150,8 @@
 
     <fieldset style="margin-top: 14px;">
       <legend class="label">Findings</legend>
-      <p class="help">One row per barrier, by role and disability group on one essential function. An essential function is a function the product exists to provide, such as registering for a class or submitting homework, and it counts as essential when its removal would change the product's use or purpose. No rows means no known barriers.</p>
+      <p class="help">One row per barrier, by role and disability group on one essential function. An essential function is a function the product exists to provide, such as registering for a class or submitting homework, and it counts as essential when its removal would change the product's use or purpose. No rows means no known barriers.
+        <a href="#def-finding" @click.prevent="showDefinition('def-finding')">What a finding records</a>.</p>
       <ol class="findings" aria-label="Findings">
         <template id="findingRow" x-for="(f, i) in form.findings" :key="f.key">
           <li class="finding">
@@ -257,44 +259,48 @@
   </details>
 
   <details class="card panel">
-    <summary>This review in the matrix</summary>
+    <summary>Determination as data</summary>
+    <pre x-text="json"></pre>
+  </details>
+</section>
+</div>
+
+<section class="card panel matrix" aria-labelledby="h-matrix">
+    <h2 id="h-matrix">This review in the matrix</h2>
     <div class="grid-wrap">
       <table class="grid">
         <caption>The exposure matrix. The outlined cells are this review.</caption>
         <thead>
           <tr>
             <th scope="col">Exposure</th><th scope="col">Breadth</th><th scope="col">Pressure</th><th scope="col">Veracity floor</th>
-            <th scope="col">S0, S1</th><th scope="col">S2</th><th scope="col">S3</th><th scope="col">TAAP standard</th>
-            <th scope="col">No TAAP yet</th><th scope="col">TAAP meets none</th><th scope="col">TAAP below standard</th><th scope="col">TAAP meets standard</th>
+            <th scope="col" :class="grid.headDim.grade ? 'dim' : ''">S0, S1</th><th scope="col" :class="grid.headDim.grade ? 'dim' : ''">S2</th><th scope="col" :class="grid.headDim.grade ? 'dim' : ''">S3</th>
+            <th scope="col" :class="grid.headDim.taap ? 'dim' : ''">TAAP standard</th>
+            <th scope="col" :class="grid.headDim.taap ? 'dim' : ''">No TAAP yet</th><th scope="col" :class="grid.headDim.taap ? 'dim' : ''">TAAP meets none</th>
+            <th scope="col" :class="grid.headDim.taap ? 'dim' : ''">TAAP below standard</th><th scope="col" :class="grid.headDim.taap ? 'dim' : ''">TAAP meets standard</th>
           </tr>
         </thead>
         <tbody>
           <template x-for="row in grid.rows" :key="row.key">
-            <tr :class="row.band ? 'band' : ''">
-              <template x-if="row.first"><th scope="rowgroup" rowspan="3" x-text="row.level"></th></template>
-              <td :class="row.hereRow ? 'here' : ''" x-text="row.B"></td>
-              <td x-text="row.P"></td>
-              <template x-if="row.first"><td rowspan="3" x-text="row.floorText"></td></template>
-              <template x-for="(c, i) in row.grades" :key="i"><td :class="'tone-' + c.tone + (c.here ? ' here' : '')" x-text="c.text"></td></template>
-              <td x-text="row.k"></td>
+            <tr :class="(row.band ? 'band' : '') + (row.onRow ? ' here-row' : '')">
+              <template x-if="row.first"><th scope="rowgroup" rowspan="3" :class="row.onBand ? 'here-band' : ''" x-text="row.level"></th></template>
+              <td :class="row.onRow ? 'here' : ''" x-text="row.B"></td>
+              <td :class="row.onRow ? 'here' : ''" x-text="row.P"></td>
+              <template x-if="row.first"><td rowspan="3" :class="row.floor.here ? 'here' : ''"><span x-text="row.floor.text"></span><span class="warn" x-show="row.floor.note" x-text="row.floor.note"></span></td></template>
+              <template x-for="(c, i) in row.grades" :key="i"><td :class="'tone-' + c.tone + (c.here ? ' here' : '') + (c.dim ? ' dim' : '')" x-text="c.text"></td></template>
+              <td :class="(row.k.here ? 'here' : '') + (row.k.dim ? ' dim' : '')" x-text="row.k.text"></td>
               <template x-for="(c, i) in row.taap" :key="i">
-                <td :class="'tone-' + c.tone + (c.here ? ' here' : '')"><span x-text="c.text"></span><span class="warn" x-show="c.warn" x-text="c.warn"></span></td>
+                <td :class="'tone-' + c.tone + (c.here ? ' here' : '') + (c.dim ? ' dim' : '')"><span x-text="c.text"></span><span class="warn" x-show="c.warn" x-text="c.warn"></span></td>
               </template>
             </tr>
           </template>
         </tbody>
       </table>
     </div>
+    <p class="step-status" x-show="grid.stageNote || grid.caveat"><span x-text="grid.stageNote"></span> <span x-text="grid.caveat"></span></p>
     <div class="notes">
-      <p>The outlined cells are this review: its Breadth, its risk grade and its TAAP state. Routes 1 to 3 are checked before the matrix, and nothing is outlined when one applies.</p>
-      <template x-for="(note, i) in grid.notes" :key="i"><p x-text="note"></p></template>
+      <p>The table is the one-page rubric, <code>rubric-core.svg</code>, drawn from the same model. The TAAP columns show the S3 case with no exception on file. The outlined cells are this review: its Exposure band and row, its Veracity floor with the evidence on file, and, once reached, its risk grade, TAAP standard and TAAP state. Columns the review has not reached are greyed. A TAAP state is outlined only when the drawn value is the review's own outcome.</p>
+      <template x-for="(note, i) in grid.notes" :key="i"><p x-text="(i + 1) + '. ' + note"></p></template>
     </div>
-  </details>
-
-  <details class="card panel">
-    <summary>Determination as data</summary>
-    <pre x-text="json"></pre>
-  </details>
 </section>
 </section>
 

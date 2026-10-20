@@ -51,18 +51,44 @@ GROUNDING = {
         ],
         'calibration': 'The split into risk grade, routes and remedy step is the matrix\'s own design. No rule prescribes a hold state, a holder or a resume point.',
     },
-    'Barriers and findings': {
+    'Review standard': {
         'rules': [
-            ('28 CFR 35.205', 'A nonconformance counts as compliant only when its impact is so minimal that people with disabilities still get the same information, interactions and transactions, with substantially equivalent timeliness, privacy, independence and ease of use. The test measures the effect on a person, which is why severity attaches to the barrier and not to the failed criterion.'),
-            ('Section 508 Standards, Chapter 3 (36 CFR 1194)', 'The functional performance criteria name the nine disability groups a finding records.'),
+            ('28 CFR 35.200', 'Web content and mobile apps that a public university provides, directly or through a vendor, must conform to WCAG 2.1 AA.'),
+            ('Gov Code 7405 and 11135; Section 508 Standards (36 CFR 1194)', 'California applies the Section 508 Standards to the technology state entities buy, which sets the standard for software and hardware that is not web or mobile.'),
+        ],
+        'principles': [],
+        'calibration': 'None. The kind of technology selects the standard the law names for it.',
+    },
+    'Essential function': {
+        'rules': [
             ('WCAG 2.1, conformance requirement 3', 'Every page in a complete process must conform, so an essential function is judged across its whole process.'),
             ('CSU ATI Procurement Process, Step 1', 'The requester states the product\'s "essential functionality", which is the source of the essential function list.'),
         ],
+        'principles': [],
+        'calibration': 'None. The test is WCAG-EM 2.0\'s definition of essential functionality, and the source of the list is CSU Procurement Step 1.',
+    },
+    'Nonconformance and barrier': {
+        'rules': [
+            ('Section 508 Standards, Chapter 3 (36 CFR 1194)', 'The functional performance criteria name the nine disability groups a barrier is recorded against.'),
+        ],
         'principles': [
-            ('Severity is judged by the effect on an essential function','A barrier\'s severity comes from what it does to a named group of users on an essential function. Neither an ACR\'s conformance label nor a criterion\'s level says how severe a barrier is.'),
+            ('Severity is judged by the effect on an essential function', 'A barrier\'s severity comes from what it does to a named group of users on an essential function. Neither an ACR\'s conformance label nor a criterion\'s level says how severe a barrier is.'),
+        ],
+        'calibration': 'None. The split between a failure in the product and its effect on a person follows the law, which measures the effect.',
+    },
+    'Minimal impact': {
+        'rules': [
+            ('28 CFR 35.205', 'A nonconformance counts as compliant only when its impact is so minimal that people with disabilities still get the same information, interactions, transactions and participation, with substantially equivalent timeliness, privacy, independence and ease of use. The public entity must demonstrate it. The test measures the effect on a person, which is why severity attaches to the barrier and not to the failed criterion.'),
+        ],
+        'principles': [],
+        'calibration': 'The four tests are the regulation\'s. Applying them to non-web products, where the Section 508 Standards have no minimal-impact clause, is the matrix\'s choice.',
+    },
+    'Finding': {
+        'rules': [],
+        'principles': [
             ('The audience determines which duty governs', 'Who uses a system decides which law governs its accessibility, so a finding records the role.'),
         ],
-        'calibration': 'None. The definitions restate the law\'s own tests.',
+        'calibration': 'None. The four fields are the dimensions the law measures: who is affected, on which function, and how badly.',
     },
     'Exposure': {
         'rules': [
