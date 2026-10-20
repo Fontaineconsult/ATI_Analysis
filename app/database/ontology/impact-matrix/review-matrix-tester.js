@@ -444,8 +444,9 @@
         const remedyReached = stage === 'remedy';
         const exception = review.taap?.exception ?? 'none';
         const moreAccessible = sev === 'S3' && review.moreAccessibleProductExists;
-        // The TAAP cell is outlined only when the drawn value is this review's own outcome.
-        const asDrawn = sev === 'S3' && !moreAccessible && exception === 'none';
+        // A TAAP cell is outlined only when its drawn value is this review's own outcome.
+        const drawnMatches = (o, col) => o === d.outcome
+          && (o !== 'on_hold' || d.route === (col === 'none' ? 'taap_needed' : 'exception_claimed'));
         const ev = M.EVIDENCE.find((e) => e.id === d.evidence);
         const floorRank = M.veracityFloor(d.exposure.level, sev);
         const floorNote = !rowKnown ? ''
@@ -464,7 +465,7 @@
             const route = o === 'on_hold' ? ` (route ${routeNo(col === 'none' ? 'taap_needed' : 'exception_claimed')})` : '';
             const sub = o === 'approve_with_taap' && short > 0 ? 'signers accept the shortfall' : '';
             return { text: `${M.OUTCOMES[o].label}${route}`, sub, warn: o === 'deny' ? '' : `warning ${warnOf(P + short)}`, tone: TONE[o],
-              here: remedyReached && onRow && state === col && asDrawn, dim: !remedyReached };
+              here: remedyReached && onRow && state === col && drawnMatches(o, col), dim: !remedyReached };
           };
           return {
             key: `${lvl}-${B}`, level: lvl, first: B === 0, band: B === 0 && xi > 0, B, P, onRow, onBand,
@@ -481,10 +482,12 @@
           grade: 'The risk grade is Approve, so the TAAP columns do not apply to this review.',
           remedy: '',
         }[stage];
+        // The drawn values differ from this review's outcome in three cases only, each in the
+        // below-standard column or, for a more accessible product, in every TAAP column.
         const caveat = !std ? ''
           : moreAccessible ? 'For this review, a more accessible product meets the same need, so every TAAP state is Deny.'
-            : s2 ? 'This review is S2. Of the TAAP columns, only TAAP meets none applies as drawn. A TAAP below the standard is Approve with TAAP under a warning.'
-              : exception !== 'none' ? `For this review, an undue burden or fundamental alteration ${exception === 'claimed' ? 'claim' : 'determination'} is on file, so the below-standard column follows note 4 rather than the drawn value.`
+            : s2 && std.pressure >= T.denyAt ? 'This review is S2, so a TAAP below the standard is Approve with TAAP under a warning, not the Deny drawn at this pressure.'
+              : exception !== 'none' && std.pressure >= T.denyAt ? `For this review, an undue burden or fundamental alteration ${exception === 'claimed' ? 'claim' : 'determination'} is on file, so the below-standard column follows note 4 rather than the drawn value.`
                 : '';
         return { rows, notes, stage, stageNote, caveat, headDim: { grade: !gradeReached, taap: !remedyReached } };
       },
