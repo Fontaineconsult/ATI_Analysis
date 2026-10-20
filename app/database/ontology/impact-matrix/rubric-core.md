@@ -76,7 +76,7 @@ The rubric separates a failure in the product from its effect on users.
 - **Severity.** Impact of the worst barrier on an essential function, rated S0 to S3. Severity attaches to the
   barrier and never to the nonconformance, because the level of the failed criterion (A or AA)
   does not predict the effect on users. S1, S2 and S3 match the GSA severity terms **minor**,
-  **major** and **critical**. S3 (accumulated) marks S2 barriers that add up to a blocked function,
+  **major** and **critical**. S3 (accumulated) marks S2 barriers that add up to S3 by stacking or spread,
   and S3 (provisional) marks the fallback.
 - **Breadth.** Systemic barrier reach across function-group pairs, rated 0 to 2.
 - **Veracity.** Reliability of the evidence behind the findings, rated 0 to 5, with a
@@ -101,8 +101,8 @@ numbered **routes**, each held by a named party until the condition the route na
 - Deny
 
 Routes 1 to 3, in priority order, gate the **risk grade**, a fixed Approve or Needs TAAP value
-for each pairing of an Exposure level with a Severity level. A review with no accessibility
-evidence holds with the requesting unit (route 1). Unknown Exposure answers hold the review
+for each pairing of an Exposure level with a Severity level. A review with no findings and no accessibility
+evidence, Severity S?, holds with the requesting unit (route 1). Unknown Exposure answers hold the review
 with the requesting unit when those answers alone raise the Exposure level (route 2).
 
 Severity read from the evidence on file is a minimum, and the review proceeds only on evidence
@@ -165,20 +165,24 @@ The rubric maps seven inputs to the four factors and two derived values.
 | Symbol | Value | Range |
 |---|---|---|
 | `X` | Exposure | low, medium, high |
-| `S` | Severity | S0, S1, S2, S3, or S? without evidence; S3 (provisional) under the fallback |
+| `S` | Severity | S0, S1, S2, S3, or S? with no findings and no evidence; S3 (accumulated) by stacking or spread; S3 (provisional) under the fallback |
 | `B` | Breadth | 0, 1, 2 |
 | `V` | Veracity | 0 to 5 |
 | `P` | Pressure, from Exposure and Breadth | 0 to 4 |
 | `k` | TAAP standard, the minimum count of TAAP requirements a plan must meet | 3 to 6 |
 
-Levels rank `low = 0`, `medium = 1`, `high = 2`. The whole rubric fits in four lines.
+Levels rank `low = 0`, `medium = 1`, `high = 2`. The whole rubric fits in four lines, once no
+route in section 6 holds the review.
 
 ```
-trusted        = V ≥ Vmin(X, S)                     section 5
-S             := S3 (provisional)  if ¬trusted ∧ U  section 5, the fallback
-risk_grade     = GRID[ X ][ S ]                     section 7
-final_decision = REMEDY( risk_grade, k(P), M, T )   section 8
+trusted        = S ≠ S?  ∧  V ≥ Vmin(X, S)                 section 5
+S             := S3 (provisional)   if ¬trusted ∧ U         section 5, the fallback
+risk_grade     = GRID[ X ][ S ]                             section 7
+final_decision = REMEDY( risk_grade, S, k(P), M, T )        section 8
 ```
+
+Routes 1 to 3 halt the review before the risk grade, when `¬trusted ∧ ¬U` or when unknown
+answers alone set `X`. Routes 4 and 5 are the two holds `REMEDY` returns.
 
 ## 2. Exposure `X`
 
@@ -197,12 +201,12 @@ score-based Exposure level is the **band** containing the aggregate score of the
 with cut points at 0.25 and 0.55 partitioning the score range into three bands.
 
 ```
-G_k   = max( a_f : f ∈ G_k )                   unknown a_f → high
-score = Σ λ_k · rank(G_k)  /  Σ λ_k · 2        λ_k = 1 for every group
+G_k   = max( a_f : f ∈ G_k )                         unknown a_f → high
+score = ( Σ λ_k · rank(G_k) ) / ( Σ λ_k · 2 )        λ_k = 1 for every group
 band  = high    if score ≥ 0.55
         medium  if score ≥ 0.25
         low     otherwise
-X     = max( band, max( min_f : f ∈ F ) )
+X     = max( band, max( min_f : f ∈ F ) )             low when F is empty
 ```
 
 Exposure is the higher of the score-based level and the highest applicable **floor**, a
@@ -213,10 +217,10 @@ single-fact Exposure minimum independent of the score.
 | Required of students for coursework or a grade | high |
 | The only route to a university service | high |
 | Campus-wide, or used in all sections of a course | high |
-| A person with a disability is known to be a user | high |
+| A person with a disability is known to be in the user group, or an accommodation request is open | high |
 | A prior accessibility complaint about the product | high |
 | Required for a job duty, or used in hiring | medium |
-| Open to the public, or publishes to the public | medium |
+| Open to the public without single sign-on, publishes to the public, or in a public space | medium |
 
 ## 3. Severity `S`
 
@@ -225,8 +229,9 @@ registering for a class, submitting homework or paying a bill. A function is ess
 removal would change the product's use or purpose, the WCAG-EM 2.0 test, and it covers its
 complete process from sign-in to final submission.
 
-Product severity derives entirely from the maximum impact on an essential function across the findings, independent
-of vendor report conformance labels or the failed WCAG criterion level.
+Product severity is the maximum impact on an essential function across the findings, raised by
+the two accumulation conditions below, and independent of vendor report conformance labels or
+the failed WCAG criterion level.
 
 | `S` | Definition |
 |---|---|
@@ -248,7 +253,7 @@ equivalent timeliness, privacy, independence and ease of use.
 | Severity | Against the four tests | What the reviewer records |
 |---|---|---|
 | S0 | Passes all four, with no effect at all | No finding |
-| S1 | Passes all four, with the impact shown to be minimal | Each test as met, on evidence at E2a or better |
+| S1 | Passes all four, with the impact shown to be minimal | Each test as met, on evidence at E2 or better (E2a, E2b or E3) |
 | S2 | Fails at least one, since clearly unequal time or effort fails substantially equivalent ease of use | The function the barrier slows, and for whom |
 | S3 | Fails outright, since the user cannot perform the function independently | The function the barrier blocks, and for whom |
 
@@ -312,6 +317,7 @@ harder  = | { d : s_d = S2 } |
 
 B       = min( 2,  step(blocked) + [ harder ≥ 3 ] )
 step(n) = 2 if n ≥ 4,  1 if n ≥ 2,  0 otherwise
+B      := 2   if S = S?                            the fallback with no evidence at all
 ```
 
 Under the fallback, `B` is as found from the findings on file, or 2 with no evidence at all,
@@ -338,7 +344,8 @@ impact needs demonstration rather than assumption.
 ```
 Vmin(X)     = 0 if X = low,  2 if X = medium,  4 if X = high
 Vmin(X, S1) = max( 4, Vmin(X) )
-Vmin(X, S)  = Vmin(X)        for every other S
+Vmin(X, S)  = Vmin(X)        for every other rated S
+Vmin(X, S?) = ∞              an unknown Severity is never confirmed
 ```
 
 Veracity gates every review before the risk grade. Severity read from the evidence on file is a
@@ -370,6 +377,10 @@ until a TAAP is on file and route 5 referring an exception claim for a written d
 4.  REMEDY gives On hold (no TAAP on file)      → On hold: TAAP needed
 5.  REMEDY gives On hold (exception claimed)    → Referred for a formal determination
 ```
+
+`band(known answers)` drops the unknown answers, and a group with no known answer ranks low.
+An unknown answer only raises the band, so the inequality in route 2 means that the unknown
+answers alone raise `X` above every floor.
 
 Each route carries a headline for the requester, a holder, the party whose action releases
 the hold, and the step at which the review resumes.
@@ -442,7 +453,7 @@ The TAAP on file falls in one of three states against the minimum, each with a f
 |---|---|---|
 | Below the minimum | Deny, unless a written undue burden or fundamental alteration determination is on file. A plan that meets none of the six is denied even then, since it gives no alternative access | None, or from pressure plus the gap under the exception |
 | At the minimum, short of all six | Approve with TAAP. Where the minimum is all six, at pressure 3 or more, a plan short of six is below the minimum and is denied | From pressure plus the gap to a full TAAP |
-| Full, all six | Approve with TAAP | From pressure alone, so a warning at high Exposure |
+| Full, all six | Approve with TAAP | From pressure alone, elevated from pressure 2 and high at pressure 4, so every high Exposure carries one |
 
 The **warning level** derives from the sum of pressure and the **gap**, the count of
 requirements the plan misses short of a full TAAP, with a gap of zero under no TAAP. TAAP
@@ -457,14 +468,23 @@ warning = low       if W < 2
           high      if W ≥ 4
 ```
 
+Under the constants in section 10, two consequences follow.
+
+- Below the minimum, `met ≤ k − 1`, so `gap ≥ 7 − k(P)` and `W ≥ 4` at every pressure. A plan
+  approved under the exception always carries a high warning.
+- A full TAAP has `gap = 0`, so `W = P`: elevated from pressure 2 and high at pressure 4.
+
 ## 9. Requirements by final decision
 
 `R` marks a CSU Vendor Accessibility Roadmap requirement.
 
 ```
 R = route 4  ∨  route 5  ∨  final_decision = Approve with TAAP
-    ∨ ( final_decision = Approve  ∧  S ∈ {S1, S2}  ∧  X ∈ {medium, high} )
+    ∨ ( final_decision = Approve  ∧  S ≠ S0  ∧  X ∈ {medium, high} )
 ```
+
+Only S1 reaches the last line, since every Approve risk grade at medium or high Exposure is S0
+or S1.
 
 - **Standard contract terms.** Every approval carries four terms.
   - CSU General Provisions for IT Acquisitions, clause 45
@@ -474,6 +494,10 @@ R = route 4  ∨  route 5  ∨  final_decision = Approve with TAAP
 - **Roadmap terms.** Under `R`, the approval also carries two terms.
   - Roadmap milestones in the contract
   - A vendor demonstration of progress against the milestones
+- **Day-one service.** At high Exposure and S3, the plan serves every affected person from the
+  first day of use.
+- **Best-meets record.** At high Exposure and S3 for a non-web or mixed product, a best-meets
+  record with market research (Section 508 E202.7).
 - **TAAP accessibility statement.** A campus-written statement in every TAAP, separate from
   the vendor's statement and posted wherever the product is in use. The statement covers
   known barriers, impacted disability groups, a reference to the TAAP, a disclaimer about
@@ -492,7 +516,7 @@ R = route 4  ∨  route 5  ∨  final_decision = Approve with TAAP
 | Final decision or route | Requires | Term |
 |---|---|---|
 | Approve | The standard contract terms, plus the roadmap terms under `R` | Until renewal, with a new review at renewal |
-| Approve with TAAP | The standard contract terms, the roadmap terms, the TAAP accessibility statement, and signatures from all three TAAP signers | 12 months or until renewal, whichever comes first, with annual TAAP review across a multi-year contract |
+| Approve with TAAP | The standard contract terms, the roadmap terms, the TAAP accessibility statement, and signatures from all three TAAP signers, plus day-one service and the best-meets record at high Exposure and S3, the exception record under the exception, and validation at review under the fallback | 12 months or until renewal, whichever comes first, with annual TAAP review across a multi-year contract |
 | Deny | The denial reasons, the applicable TAAP standard, and the path to a new review | None |
 | Route 4 | Submission of a TAAP at or above the TAAP standard, followed by the Approve with TAAP terms | Open until a TAAP is on file |
 | Route 5 | The exception record, followed by the Approve with TAAP terms under a high warning | Open until the determination is on file |

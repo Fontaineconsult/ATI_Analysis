@@ -616,7 +616,7 @@
 
       '<h3>Severity</h3>',
       '<p>Severity is rated on an <strong>essential function</strong>, a function the product exists to provide, such as registering for a class, submitting homework or paying a bill. A function is essential when its removal would change the product\'s use or purpose, the WCAG-EM 2.0 test, and it covers its complete process from sign-in to final submission.</p>',
-      '<p>Product <strong>severity</strong> derives entirely from the maximum impact on an essential function across the findings, independent of vendor report conformance labels or the failed WCAG criterion level.</p>',
+      '<p>Product <strong>severity</strong> is the maximum impact on an essential function across the findings, raised by the two accumulation conditions below, and independent of vendor report conformance labels or the failed WCAG criterion level.</p>',
       table(['Severity', 'GSA term', 'Meaning'], M.SEVERITY.map((s) => [s.id, s.gsa ?? 'none', s.meaning])),
       '<p><strong>S?</strong> marks unknown severity, in the absence of any ACR, demonstration or testing. <strong>S3 (provisional)</strong> marks the fallback, defined under Evidence.</p>',
       `<p>The levels sort by the four <strong>minimal-impact tests</strong> of 28 CFR 35.205, defined under Minimal impact. People with disabilities must still be able to do all four with substantially equivalent timeliness, privacy, independence and ease of use.</p>${ul([
@@ -627,7 +627,7 @@
       ])}`,
       table(['Severity', 'Against the four tests', 'What the reviewer records'], [
         ['S0', 'Passes all four, with no effect at all', 'No finding'],
-        ['S1', 'Passes all four, with the impact shown to be minimal', 'Each test as met, on evidence at E2a or better'],
+        ['S1', 'Passes all four, with the impact shown to be minimal', 'Each test as met, on evidence at E2 or better (E2a, E2b or E3)'],
         ['S2', 'Fails at least one, since clearly unequal time or effort fails substantially equivalent ease of use', 'The function the barrier slows, and for whom'],
         ['S3', 'Fails outright, since the user cannot perform the function independently', 'The function the barrier blocks, and for whom'],
       ]),
@@ -676,7 +676,7 @@
       table(['TAAP on file', 'Outcome', 'Warning'], [
         ['Below the minimum', 'Deny, unless a written undue burden or fundamental alteration determination is on file. A plan that meets none of the six is denied even then, since it gives no alternative access', 'None, or from pressure plus the gap under the exception'],
         ['At the minimum, short of all six', 'Approve with TAAP. Where the minimum is all six, at pressure 3 or more, a plan short of six is below the minimum and is denied', 'From pressure plus the gap to a full TAAP'],
-        ['Full, all six', 'Approve with TAAP', 'From pressure alone, so a warning at high exposure'],
+        ['Full, all six', 'Approve with TAAP', 'From pressure alone, elevated from pressure 2 and high at pressure 4, so every high exposure carries one'],
       ]),
       '<p>A plan below the standard is denied at any severity and pressure, unless a written undue burden or fundamental alteration determination is on file. TAAP work costs staff time, so purchases with less at stake get a lower standard. The <strong>shortfall</strong>, the count of requirements the plan misses, is stated in the denial and in the hold, so the signers report what the plan does instead of ticking requirements it does not meet.</p>',
       '<p>Under the fallback, the TAAP standard is provisional and may rise when evidence arrives, and the first TAAP review re-rates Severity on evidence at the Veracity floor.</p>',

@@ -51,7 +51,7 @@ const CALIBRATION = {
   // TAAP standard. Pressure P = rank(Exposure) + Breadth, from 0 to 4. `required[P]` is how many
   // of the six TAAP requirements a plan must meet. A plan below it is denied at every pressure,
   // unless a written undue burden or fundamental alteration determination is on file. The
-  // warning cuts apply to P plus the shortfall.
+  // warning cuts apply to P plus the gap to a full TAAP.
   taapStandard: { required: [3, 3, 4, 6, 6], warning: { elevated: 2, high: 4 } },
 };
 
@@ -815,7 +815,7 @@ const NEEDS = {
   validation_at_review: 'The first TAAP review re-rates Severity on evidence at the Veracity floor, which the vendor demonstration under the roadmap terms supplies.',
 };
 const plural = (n, one, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
-/** The warning sentence, built from what raised it: pressure, shortfall, or both. */
+/** The warning sentence, built from what raised it: pressure, the gap to a full TAAP, or both. */
 function warningText(std) {
   if (std.warning === 'low') return 'The warning level is low.';
   const causes = [];
