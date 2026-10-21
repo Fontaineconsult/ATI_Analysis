@@ -24,6 +24,9 @@
 //      grounding is overwritten. Checked beforehand: none of these pairs existed.
 //   6. contested_by edges on prioritization-by-impact (3).
 //
+// EXECUTED 2026-10-21, after the 10/17 ACR batch. vendor-claims-require-proportionate-validation
+// already existed, so its MERGE was changed to ON CREATE SET only before running.
+//
 // NOT DONE
 //   - shapes edges for the new principles. Separate pass.
 //   - The South Carolina and Penn State cases have no stored text and ground nothing here.
@@ -65,9 +68,11 @@ SET p.name = "Exposure sets scrutiny, not entitlement",
     p.description_short = "How widely a technology is used decides how closely it is reviewed and who signs. It does not decide whether people with disabilities are owed access.",
     p.description_full = "Title II and Section 504 set no threshold of users, criticality or exposure below which a public entity may deny access. The Title II regulation forbids denying a qualified person the opportunity to participate in or benefit from an aid, benefit or service, and it states no exception for small or optional uses. Enforcement has read it the same way. The complaints behind the 2010 Dear Colleague Letter concerned pilots of e-readers, and OCR's 2011 answers say the obligations apply to pilot programs and apply when no student with a visual impairment is enrolled.\n\nExposure still matters, because review capacity is finite. Federal testing guidance sets the minimum test scope at public-facing, frequently used or critical functions. An exposure rating can therefore decide how deep a review goes, how strong the evidence must be, and who approves an exception.\n\nIt cannot make an inaccessible product acceptable. A low rating that ends in approval of a product with a blocking barrier is a denial of access recorded as a review outcome. This principle governs the first stage of the impact matrix: that stage sets scrutiny, and barrier severity and evidence decide the outcome.";
 
+// ON CREATE only: the 10/17 ACR batch created this principle first, and its name and
+// descriptions stand. This file only adds groundings to it (decision 2026-10-21).
 MERGE (p:Principle {handle: "principle:vendor-claims-require-proportionate-validation"})
-ON CREATE SET p.unique_id = replace(randomUUID(), "-", "")
-SET p.name = "Vendor claims require proportionate validation",
+ON CREATE SET p.unique_id = replace(randomUUID(), "-", ""),
+    p.name = "Vendor claims require proportionate validation",
     p.description_short = "A vendor's accessibility conformance report is a claim. The evidence required to accept it rises with the product's exposure.",
     p.description_full = "An Accessibility Conformance Report is written by the party selling the product. Federal guidance tells buyers to verify vendor conformance claims through independent testing whenever possible. The CSU procurement process lists a vendor demonstration to validate ACR conformance claims among its usual contract requirements. GSA asks vendors for an issue-level supplement that states each defect's severity, the affected user group and any workaround.\n\nExpert judgment varies too. In a study of WCAG 2.0 evaluation, about half of the success criteria fell short of 80 percent agreement among knowledgeable evaluators. A repeatable manual test method, such as the DHS Trusted Tester process, narrows that variation.\n\nValidation is proportionate. A low-exposure purchase can rest on an ACR that passes quality checks. A high-exposure purchase needs a demonstration of essential functions, a third-party audit, or ATI testing before approval. This principle grounds the evidence ladder in the impact matrix and indicator 1.8-pro's process for validating conformance claims.";
 

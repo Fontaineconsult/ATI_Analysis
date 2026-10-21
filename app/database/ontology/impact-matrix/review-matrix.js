@@ -51,7 +51,10 @@ const CALIBRATION = {
   // TAAP standard. Pressure P = rank(Exposure) + Breadth, from 0 to 4. `required[P]` is how many
   // of the six TAAP requirements a plan must meet. A plan below it is denied at every pressure,
   // unless a written undue burden or fundamental alteration determination is on file. The
-  // warning cuts apply to P plus the gap to a full TAAP.
+  // warning cuts apply to P plus the gap to a full TAAP. The gap follows the TAAP template's
+  // Institutional Risk tiers, which grade a plan by the requirements it meets. The pressure
+  // term and the cuts are the matrix's, with the Section508.gov risk model as the nearest
+  // precedent. WARNING_LEVELS states what each level means.
   taapStandard: { required: [3, 3, 4, 6, 6], warning: { elevated: 2, high: 4 } },
 };
 
@@ -105,6 +108,17 @@ const FLOORS = [
 ];
 
 /**
+ * A bypass is one fact that ends the review at intake. An accommodation purchase carries out
+ * the interactive process between one person with a disability and the campus (EO 1111), and
+ * that process settled what the person needs. The audience is that person, so the four
+ * factors are not rated. The approval is limited to the accommodation.
+ */
+const BYPASSES = [
+  { id: 'accommodation_purchase', fact: 'Purchased as an accommodation for one named person with a disability', outcome: 'approve',
+    state: 'proposed', grounds: ['parallel-duties-conformance-and-accommodation'] },
+];
+
+/**
  * Groups merge factors that describe the same fact, so nothing is counted twice.
  * A group takes the highest level among its factors.
  */
@@ -150,7 +164,7 @@ const EVIDENCE = [
 const ACR_CHECKS = [
   { id: 'wrong_edition', text: 'Reports WCAG 2.0 only (508 edition) for a web or mobile product' },
   { id: 'no_date_or_version', text: 'No month and year, no product version, or a different version' },
-  { id: 'stale', text: 'Older than CALIBRATION.acrMaxAgeMonths or the last major release' },
+  { id: 'stale', text: `Older than ${CALIBRATION.acrMaxAgeMonths} months or the last major release` },
   { id: 'no_methods', text: 'No evaluation methods named' },
   { id: 'no_remarks', text: '"Partially Supports" or "Does Not Support" without remarks' },
   { id: 'all_supports', text: 'Only "Supports" throughout, or on complex criteria without remarks' },
@@ -174,10 +188,11 @@ const veracityFloor = (level, severity) => (severity === 'S1'
 // ---------------------------------------------------------------------------------------
 // Step 3. Outcomes, routing, grid, and the rules that hold in every cell.
 // ---------------------------------------------------------------------------------------
-/** The two risk grades the grid gives. Needs TAAP is a grade, never a final decision. */
-const RISK_GRADES = { approve: 'Approve', needs_taap: 'Needs TAAP' };
+/** The two risk grades the grid gives: whether equally effective alternate access is owed for this
+ *  purchase (28 CFR 35.150 and 35.130(b)(1); Section 508 E202.7.2). Neither is a final decision. */
+const RISK_GRADES = { approve: 'No alternate access required', needs_taap: 'Alternate access required' };
 
-/** The three final decisions, plus the hold state every route produces. */
+/** The three final decisions, plus the hold state. */
 const OUTCOMES = {
   // S0, S1, and S2 at Low exposure. No TAAP: the template asks for one only when barriers
   // prevent essential functions. A Low S2 approval carries S2_CAVEATS.
@@ -187,48 +202,50 @@ const OUTCOMES = {
   approve_with_taap: { label: 'Approve with TAAP', state: 'agreed', grounds: ['proportionate-remedy'] },
   // A deny is a procurement decision, not a TAAP result. The TAAP review is one finding behind it.
   deny: { label: 'Deny', state: 'agreed', grounds: ['vendor-leverage-procurement-as-accessibility-lever'] },
-  // No decision yet. `route` names the ROUTING entry, and HOLDERS names who holds the review.
+  // No decision yet. `hold` names the HOLDS entry, and HOLDERS names who holds the review.
   on_hold: { label: 'On hold', state: 'proposed' },
 };
 
-/** Who holds a routed review, by the `route` destination on each ROUTING entry. */
+/** Who holds a held review, by the `holder` key on each HOLDS entry. */
 const HOLDERS = {
   president_or_designee: { label: 'the president or a designee with budget authority',
-    holds: 'Makes the written determination; the remedy step resumes on receipt' },
+    holds: 'Makes the written determination. The remedy step resumes on receipt' },
   request_evidence: { label: 'the requesting unit',
-    holds: 'Obtains the vendor evidence; the review resumes on receipt' },
+    holds: 'Obtains the vendor evidence. The review resumes on receipt' },
   request_information: { label: 'the requesting unit',
-    holds: 'Answers the open exposure questions; the review resumes on receipt' },
+    holds: 'Answers the open exposure questions. The review resumes on receipt' },
   manual_review: { label: 'the ATI review team',
-    holds: 'Raises the evidence with the requesting unit and the vendor, then re-rates Severity; the review resumes at the Severity step, under the fallback when the evidence cannot be raised' },
+    holds: 'Raises the evidence with the requesting unit and the vendor, then re-rates Severity. The review resumes at the Severity step, or proceeds under the fallback when the evidence cannot be raised' },
   request_taap: { label: 'the requesting unit',
-    holds: 'Writes the TAAP to the TAAP standard; the remedy step resumes on receipt' },
+    holds: 'Writes the TAAP to the TAAP standard. The remedy step resumes on receipt' },
 };
 
 /**
- * Routes 1 to 3 are checked in order before the grid, and the first that applies sets the
- * route. Route 3 is a loop: it resumes at the Severity step with the new findings, or under
- * the fallback when the evidence cannot be raised. Routes 4 and 5 come from the remedy step.
+ * The five holds. Each is named by what the review waits for (`waits`), and `holder` names
+ * the HOLDERS entry whose action releases it. Holds 1 to 3 are checked in order before the
+ * grid, and the first that applies holds the review. Hold 3 resumes at the Severity step with
+ * the new findings, or the review proceeds under the fallback when the evidence cannot be
+ * raised. Holds 4 and 5 arise in the remedy step.
  */
-const ROUTING = [
-  { id: 'severity_unknown', route: 'request_evidence', state: 'proposed',
+const HOLDS = [
+  { id: 'severity_unknown', waits: 'accessibility evidence', holder: 'request_evidence', state: 'proposed',
     text: 'No ACR, demonstration or testing' },
-  { id: 'answers_unknown', route: 'request_information', state: 'proposed',
+  { id: 'answers_unknown', waits: 'exposure answers', holder: 'request_information', state: 'proposed',
     text: 'Unknown answers change the exposure band' },
-  { id: 'veracity_below_floor', route: 'manual_review', state: 'proposed',
+  { id: 'veracity_below_floor', waits: 'stronger evidence', holder: 'manual_review', state: 'proposed',
     text: 'The evidence is below the Veracity floor for the exposure level and the severity, and it can still be raised' },
-  { id: 'taap_needed', route: 'request_taap', state: 'proposed',
-    text: 'The risk grade is Needs TAAP and no TAAP is on file' },
+  { id: 'taap_needed', waits: 'a TAAP', holder: 'request_taap', state: 'proposed',
+    text: 'The risk grade is Alternate access required and no TAAP is on file' },
   // The exception is a defence against one required action, here the TAAP standard. It is
   // claimed only where the plan falls below the standard, never at intake.
-  { id: 'exception_claimed', route: 'president_or_designee', state: 'required',
+  { id: 'exception_claimed', waits: 'a written determination', holder: 'president_or_designee', state: 'required',
     text: 'The TAAP falls below the standard, and the requesting unit claims that equally effective access would be an undue burden or a fundamental alteration (28 CFR 35.164, 35.204)',
     grounds: ['bounded-duty-burden-limits'] },
 ];
 
 /**
  * The grid: exposure by worst severity. It gives the risk grade, a RISK_GRADES key.
- * `resolveTaap` settles Needs TAAP from the TAAP section against the TAAP standard.
+ * `resolveTaap` settles Alternate access required from the TAAP section against the TAAP standard.
  * `requires` lists conditions the approval carries.
  */
 const GRID = {
@@ -328,7 +345,7 @@ const TAAP_STATEMENT = {
 };
 
 // ---------------------------------------------------------------------------------------
-// The legal and policy basis for each outcome and route, in plain words for the requester.
+// The legal and policy basis for each outcome and hold, in plain words for the requester.
 // Only rules that bind us belong here: federal and California law, and CSU policy. Federal
 // guidance, settlements, court cases elsewhere, peer practice and working group decisions
 // are not grounding. Where no binding rule supports the matrix, the text says so. `ict` and `severity` narrow an
@@ -363,6 +380,15 @@ const RENEWAL = { cite: 'CSU Vendor Accessibility Roadmap, Background; CSU ATI P
   says: 'The vendor furnishes and updates its accessibility conformance documentation during acquisition and at renewal.' };
 
 const AUTHORITY = {
+  // The accommodation purchase. The interactive process, not the procurement review, settles
+  // what one person needs, and the purchase carries that settlement out.
+  accommodation_purchase: [
+    { cite: 'CSU Executive Order 1111, sections V.B and VI.B', kind: 'csu_policy',
+      says: 'An accommodation comes from an interactive process between one student or employee and the campus, in response to that person\'s request. That process settles what the person needs, and the purchase carries it out.' },
+    { cite: '28 CFR 35.130(b)(7); 29 CFR 1630.2(o)', kind: 'federal_law',
+      says: 'A public entity makes reasonable modifications for a person with a disability, and an employer provides reasonable accommodation to a qualified employee. A purchase made under those duties serves the named person, so the review of the product for a general audience does not apply.' },
+    CONTRACT_DUTY,
+  ],
   approve: [
     { cite: '28 CFR 35.200', kind: 'federal_law', ict: WEB,
       says: 'Web content and mobile apps that a public university provides, directly or through a vendor, must conform to WCAG 2.1 AA.' },
@@ -398,7 +424,7 @@ const AUTHORITY = {
       says: 'The template sorts a plan by how many of the six requirements it meets. All six is Equally Effective, with low institutional risk. One to five is a Non-Equal Alternative with moderate risk, where "staff should be prepared to provide additional support for affected individuals." None is a need for individualized accommodation, with high risk. The template sets these risk levels, and the matrix sets how many requirements a plan must meet at each exposure. No rule sets those counts.' },
     ...TAAP_SUPPORT,
     { cite: 'CSU TAAP Authoring Template, Administrative Approval', kind: 'csu_policy',
-      says: 'The TAAP is signed by the Department Chair or Manager, the Dean or Division Vice President, and the ADA Compliance Officer. Each signer confirms they have "evaluated the associated institutional risks and accommodation requirements" and found the plan "an acceptable interim solution."' },
+      says: 'The TAAP is signed by the Department Chair or Manager, the Dean or Division Vice President, and the ADA Compliance Officer. Each signer confirms they have "evaluated the associated institutional risks and accommodation requirements" and found the plan "an acceptable interim solution." The warning level tells the signers, by consequence, what they accept.' },
     { cite: 'CSU TAAP Authoring Template, Product Specific Accessibility Statement', kind: 'csu_policy',
       says: 'The TAAP includes "a concise accessibility statement tailored specifically to this product (not your general campus-wide accessibility statement)". The statement lists known barriers, impacted disability groups and the alternative, and it is posted "wherever the product is available and in use."' },
     { cite: 'CSU TAAP Authoring Template, Annual Review', kind: 'csu_policy',
@@ -444,7 +470,7 @@ const AUTHORITY = {
     { cite: 'CSU Executive Order 1111, section IV.C.4', kind: 'csu_policy', reason: ['no_alternative'],
       says: 'The CSU strives for Universal Design that "will reduce the need for, and costs associated with, individual accommodations for inaccessible technology products." The procurement review does not approve a product whose access rests on accommodation.' },
   ],
-  // Routes. Manual review is not an answer about the barrier, so each route has its own basis.
+  // Holds. A hold is not an answer about the barrier, so each hold has its own basis.
   exception_claimed: [
     { cite: '28 CFR 35.164 and 35.204', kind: 'federal_law', ict: WEB,
       says: 'Only the head of the university or a designee may decide that conforming is an undue burden or a fundamental alteration. The decision is in writing and considers all resources available to the program. The university carries the burden of proof, and it must still give access to the maximum extent possible.' },
@@ -471,7 +497,7 @@ const AUTHORITY = {
   ],
 };
 
-// Before a TAAP is on file (route 4), the case is held to the rules the TAAP must meet.
+// Before a TAAP is on file (hold 4), the case is held to the rules the TAAP must meet.
 AUTHORITY.taap_needed = AUTHORITY.approve_with_taap;
 
 /** The entries that bear on one determination. */
@@ -531,6 +557,32 @@ function taapStandard(review, level, breadthLevel) {
   return { pressure, required, met, shortfall, gap, warning, state: 'calibrate' };
 }
 
+/**
+ * What each warning level tells the purchaser, and what follows from it. The cuts are
+ * CALIBRATION's. The meanings follow the principle that residual risk is stated by
+ * consequence and owned by a named officer: the sentence names who depends on the plan,
+ * what the department carries, and who acknowledges it. The level never moves the TAAP
+ * standard, which is the tolerance line.
+ */
+const WARNING_LEVELS = {
+  low: {
+    label: 'Low',
+    means: 'A small or optional audience, and a plan that covers equally effective access. The residual risk is the ordinary risk of a temporary plan.',
+    action: 'The TAAP is reviewed annually.',
+  },
+  elevated: {
+    label: 'Elevated',
+    means: 'Either the audience is large or required, or the plan leaves named requirements uncovered. The department carries support for those requirements until the vendor\'s roadmap closes the barriers.',
+    action: 'The Dean or Division Vice President signs knowing what the plan leaves to staff support and to the vendor\'s roadmap. The TAAP is reviewed at the first roadmap milestone or at 12 months, whichever comes first.',
+  },
+  high: {
+    label: 'High',
+    means: 'A large or required audience depends on staff support for access the plan does not provide, or on a full plan at the highest exposure. The Title II duty continues and rests on the department\'s capacity and the vendor\'s remediation.',
+    action: 'Weigh the more accessible product before buying. The Dean or Division Vice President acknowledges the residual risk in the TAAP. The TAAP is reviewed at the first roadmap milestone.',
+  },
+  state: 'proposed', grounds: ['residual-risk-stated-and-owned', 'time-bound-alternative-when-not-conformant'],
+};
+
 // ---------------------------------------------------------------------------------------
 // The record.
 // ---------------------------------------------------------------------------------------
@@ -553,6 +605,7 @@ function taapStandard(review, level, breadthLevel) {
  * @typedef {Object} Review        What the reviewer supplies.
  * @property {keyof ICT_KINDS} ictKind
  * @property {string[]} floors     ids from FLOORS that are true
+ * @property {string[]} [bypasses] ids from BYPASSES that are true
  * @property {Object<string, Answer>} answers   keyed by factor id
  * @property {Finding[]} findings
  * @property {string} evidence     id from EVIDENCE
@@ -574,8 +627,9 @@ function taapStandard(review, level, breadthLevel) {
  * @property {boolean} fallback    the evidence cannot be raised to the floor, so Severity is S3
  *           (provisional) with the barriers found as a minimum
  * @property {string} evidence
- * @property {string} outcome      key of OUTCOMES; 'on_hold' whenever `route` is set
- * @property {string|null} route   id from ROUTING, when one applied
+ * @property {string} outcome      key of OUTCOMES; 'on_hold' whenever `hold` is set
+ * @property {string|null} hold    id from HOLDS, when one applied
+ * @property {string|null} bypass  id from BYPASSES, when one ended the review at intake
  * @property {string[]} requires   conditions the approval carries
  * @property {string|null} approver  the TAAP signers, when a TAAP is involved
  * @property {{months: number, contract: Level|null}|null} taapReview  when the TAAP is
@@ -585,7 +639,7 @@ function taapStandard(review, level, breadthLevel) {
  *             gap: number|null, warning: 'low'|'elevated'|'high'}|null} taapStandard
  *           `shortfall` counts against the minimum and decides a denial; `gap` counts against
  *           a full TAAP and sets the warning
- *           set whenever the risk grade is Needs TAAP, including on route 4
+ *           set whenever the risk grade is Alternate access required, including on hold 4
  * @property {boolean} taapOnFile
  * @property {boolean} exception    the plan is approved under a written determination (28 CFR 35.204)
  * @property {string[]} caveats     S2_CAVEATS ids a Low exposure S2 approval carries
@@ -645,8 +699,8 @@ function worstSeverity(review) {
 }
 
 /**
- * Settle a Needs TAAP risk grade. Returns [outcome, reason, basis]: the deny reason for a Deny,
- * the route id for on_hold, and basis 'exception' when a written determination carries the plan.
+ * Settle an Alternate access required risk grade. Returns [outcome, reason, basis]: the deny reason for a Deny,
+ * the hold id for on_hold, and basis 'exception' when a written determination carries the plan.
  */
 function resolveTaap(review, severity, std) {
   // At S3 the CSU buys the more accessible product, even when a TAAP could be written.
@@ -679,11 +733,20 @@ function evaluate(review) {
   const ev = EVIDENCE.find((e) => e.id === review.evidence);
   const base = { matrixVersion: MATRIX_VERSION, standard: ICT_KINDS[review.ictKind],
     exposure: exp, severity, evidence: ev.id, breadth: breadth(review), accumulation: null, fallback: false, requires: [], approver: null,
-    taapReview: null, taapStandard: null, roadmap: false, contractTerms: [] };
+    taapReview: null, taapStandard: null, roadmap: false, contractTerms: [], bypass: null };
 
-  const routed = (route) => ({ ...base, outcome: 'on_hold', route,
-    authority: authorityFor(route, review.ictKind, severity) });
-  if (unknownSeverity && !unavailable) return routed('severity_unknown');
+  // The accommodation purchase ends the review at intake. Nothing below is rated.
+  const bypass = BYPASSES.find((b) => review.bypasses?.includes(b.id));
+  if (bypass) {
+    return { ...base, outcome: bypass.outcome, hold: null, bypass: bypass.id, requires: ['accommodation_scope'],
+      exception: false, taapOnFile: false, caveats: [], denyReason: null, taapUnmet: [],
+      contractTerms: CONTRACT_TERMS.filter((t) => t.appliesTo === 'all').map((t) => t.id),
+      authority: authorityFor(bypass.id, review.ictKind, severity) };
+  }
+
+  const holdFor = (hold) => ({ ...base, outcome: 'on_hold', hold,
+    authority: authorityFor(hold, review.ictKind, severity) });
+  if (unknownSeverity && !unavailable) return holdFor('severity_unknown');
   const acc = accumulation(review, exp.level);
   base.accumulation = acc;
   // With no evidence at all, the barriers are assumed to reach widely, as unknown answers are.
@@ -692,11 +755,11 @@ function evaluate(review) {
     severity = 'S3';                         // S2 barriers that add up to a blocked function
     base.severity = 'S3 (accumulated)';
   }
-  if (exp.unknownsMatter) return routed('answers_unknown');
+  if (exp.unknownsMatter) return holdFor('answers_unknown');
   // Severity read from the evidence on file is a minimum until the evidence meets the floor.
-  // Below it, the ATI review team raises the evidence and the review resumes here (route 3).
+  // Below it, the ATI review team raises the evidence and the review resumes here (hold 3).
   if (unknownSeverity || ev.rank < veracityFloor(exp.level, severity)) {
-    if (!unavailable) return routed('veracity_below_floor');
+    if (!unavailable) return holdFor('veracity_below_floor');
     // The fallback. Unproven conformance is treated as hiding a blocking barrier, so the TAAP
     // is the remedy. The barriers found stay as a minimum, and Breadth stays as found.
     severity = 'S3';
@@ -711,7 +774,7 @@ function evaluate(review) {
   // so the pressure and the standard computed from the findings on file are minimums.
   const [outcome, reason, basis] = std ? resolveTaap(review, severity, std) : [cell.grade, null, null];
   const denyReason = outcome === 'deny' ? reason : null;
-  const held = outcome === 'on_hold';        // a TAAP route: no TAAP on file, or a claim referred
+  const held = outcome === 'on_hold';        // a TAAP hold: no TAAP on file, or a claim referred
   const withTaap = held || outcome === 'approve_with_taap';
   const roadmap = withTaap || (outcome === 'approve' && severity !== 'S0' && ROADMAP_LEVELS.includes(exp.level));
   const taapUnmet = review.taap?.exists
@@ -720,7 +783,7 @@ function evaluate(review) {
   return {
     ...base,
     outcome,
-    route: held ? reason : null,
+    hold: held ? reason : null,
     requires: outcome === 'deny' ? [] : [
       ...(cell.requires ?? []).filter((r) => !NEEDS_ICT[r] || NEEDS_ICT[r].includes(review.ictKind)),
       ...(basis === 'exception' ? ['exception_record'] : []),
@@ -813,18 +876,32 @@ const NEEDS = {
   best_meets_record: 'A best-meets record with market research is on file (Section 508 E202.7).',
   exception_record: 'A written determination by the president or a designee is on file that equally effective access would be an undue burden or a fundamental alteration (28 CFR 35.164, 35.204), listing the support that remains for each missed requirement.',
   validation_at_review: 'The first TAAP review re-rates Severity on evidence at the Veracity floor, which the vendor demonstration under the roadmap terms supplies.',
+  accommodation_scope: 'The approval is limited to the accommodation it serves. Use of the product beyond the named person returns it to review.',
 };
 const plural = (n, one, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
-/** The warning sentence, built from what raised it: pressure, the gap to a full TAAP, or both. */
-function warningText(std) {
-  if (std.warning === 'low') return 'The warning level is low.';
-  const causes = [];
-  if (std.pressure >= CALIBRATION.taapStandard.warning.elevated) causes.push('exposure and barrier reach set a strict standard');
-  if (std.gap) causes.push(`the plan is ${plural(std.gap, 'requirement')} short of a full TAAP`);
-  const lines = [`The warning level is ${std.warning}, because ${causes.join(', and ')}.`];
-  if (std.warning === 'high' && !std.gap) {
-    lines.push('A TAAP that meets the standard manages the barriers without removing them. Weigh that risk before buying. A more accessible product would avoid the risk.');
-  }
+/**
+ * The warning sentence, in the shape of a residual risk statement: the level with the numbers
+ * behind it, who depends on the plan and for what, the audience the pressure counts, what the
+ * department carries, and what the signer does. WARNING_LEVELS holds each level's action.
+ */
+function warningText(d, review) {
+  const std = d.taapStandard;
+  const level = WARNING_LEVELS[std.warning];
+  const sev = d.severity.slice(0, 2);
+  const e = d.exposure;
+  const lines = [`The warning level is ${std.warning}: pressure ${std.pressure} of 4${std.gap == null ? ', with no TAAP on file yet' : std.gap === 0 ? ', and the plan is a full TAAP' : `, and the plan is ${plural(std.gap, 'requirement')} short of a full TAAP`}.`];
+  const worst = review.findings.filter((f) => f.severity === sev);
+  const who = worst.length ? list([...new Set(worst.map((f) => `${ROLE_WORD[f.role]} ${WHO[f.group]}`))]) : 'users with disabilities';
+  const fns = [...new Set(worst.map((f) => f.essentialFunction).filter(Boolean))];
+  const what = fns.length ? list(fns.map((f) => `"${f}"`)) : 'the essential functions';
+  const audience = `${e.level} exposure${d.breadth.level ? `, with barriers that reach ${d.breadth.level === 2 ? 'widely' : 'several functions or groups'}` : ''}`;
+  if (d.fallback) lines.push(`The barriers are unproven and treated as blocking, so ${who} are taken to depend on the plan for ${what}, at ${audience}.`);
+  else if (sev === 'S3') lines.push(`${cap(who)} cannot perform ${what} without the plan's support, at ${audience}.`);
+  else lines.push(`${cap(who)} can perform ${what} only with clearly more time or effort, so the plan carries equal access, at ${audience}.`);
+  if (std.gap) lines.push(`Until the vendor's roadmap closes the barriers, the department carries the support for the ${plural(std.gap, 'requirement')} the plan leaves uncovered, and the duty of equally effective access continues.`);
+  else if (std.gap === 0) lines.push(std.warning === 'low' ? 'The plan covers all six requirements, so the residual risk is the ordinary risk of a temporary plan.' : 'The plan covers all six requirements. The warning stands on the audience alone, which depends on a temporary plan while the vendor remediates.');
+  else lines.push('The gap is unknown until a TAAP is on file, so the warning stands on pressure alone and rises with each requirement the plan misses.');
+  if (std.met != null) lines.push(level.action);
   return lines.join(' ');
 }
 const DENY_BECAUSE = {
@@ -832,13 +909,8 @@ const DENY_BECAUSE = {
   no_alternative: 'the TAAP on file meets none of the six requirements',
   taap_below_standard: 'the TAAP on file falls below the standard for this exposure',
 };
-const HEADLINE = {
-  exception_claimed: 'Referred for a formal determination',
-  severity_unknown: 'On hold: accessibility evidence needed',
-  answers_unknown: 'On hold: more information needed',
-  veracity_below_floor: 'Manual review: stronger evidence needed',
-  taap_needed: 'On hold: TAAP needed',
-};
+/** The result heading the requester reads for each hold. */
+const HEADLINE = Object.fromEntries(HOLDS.map((h) => [h.id, `On hold for ${h.waits}`]));
 const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
 // Lowercase the first letter, unless the word is an acronym (ATI, CSU).
 const lower = (s) => (/^[A-Z]{2}/.test(s) ? s : s.charAt(0).toLowerCase() + s.slice(1));
@@ -861,9 +933,57 @@ function explain(review, d = evaluate(review), ctx = {}) {
   const e = d.exposure;
   const sev = d.severity.slice(0, 2);
   const ev = EVIDENCE.find((x) => x.id === d.evidence);
-  const headline = d.route ? HEADLINE[d.route] : OUTCOMES[d.outcome].label;
+  const headline = d.hold ? HEADLINE[d.hold] : OUTCOMES[d.outcome].label;
   const sevLabel = d.severity.replace(' (', ', ').replace(')', '');   // "S3, provisional"
-  const grade = `Exposure ${cap(e.level)} | ${sev === 'S?' ? 'Barriers unknown' : `${cap(SEVERITY_WORD[sev])} (${sevLabel})`} | Evidence ${ev.id}`;
+  const grade = d.bypass ? 'Accommodation purchase | The four factors are not rated'
+    : `Exposure ${cap(e.level)} | ${sev === 'S?' ? 'Barriers unknown' : `${cap(SEVERITY_WORD[sev])} (${sevLabel})`} | Evidence ${ev.id}`;
+  const finish = (how, why, next) => {
+    const sections = [
+      { heading: 'How we graded it', lines: how, bullets: true },
+      { heading: 'Why this result', lines: why },
+      { heading: 'What happens next', lines: next, bullets: true },
+    ].filter((s) => s.lines.length);
+    if (d.authority?.length) sections.push({ heading: 'The rules behind this result', bullets: true,
+      lines: d.authority.map((a) => `${a.cite} (${AUTHORITY_KINDS[a.kind]}). ${a.says}`) });
+    const about = [product !== 'This product' ? product : null, ctx.vendor?.trim() ? `vendor: ${ctx.vendor.trim()}` : null,
+      ctx.unit?.trim() ? `requested by ${ctx.unit.trim()}` : null].filter(Boolean).join(', ');
+    const footer = `Graded with the SFBRN accessibility review matrix, version ${MATRIX_VERSION}${ctx.date ? `, on ${ctx.date}` : ''}.`;
+
+    const text = [
+      `Accessibility review${about ? `: ${about}` : ''}`,
+      `Result: ${headline}`,
+      grade,
+      '',
+      ...sections.flatMap((s) => [s.heading, ...s.lines.map((l) => (s.bullets ? `- ${l}` : l)), '']),
+      footer,
+    ].join('\n');
+
+    const esc = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    const P = 'margin:0 0 8px 0;font-family:Calibri,Arial,sans-serif;font-size:11pt;line-height:1.4;color:#1a1a1a;';
+    const html = [
+      `<p style="${P}"><strong>Accessibility review${about ? `: ${esc(about)}` : ''}</strong></p>`,
+      `<p style="${P}font-size:13pt;"><strong>Result: ${esc(headline)}</strong></p>`,
+      `<p style="${P}color:#444444;">${esc(grade)}</p>`,
+      ...sections.map((s) => `<p style="${P}margin-top:12px;"><strong>${esc(s.heading)}</strong></p>` + (s.bullets
+        ? `<ul style="margin:0 0 8px 20px;padding:0;">${s.lines.map((l) => `<li style="${P}margin-bottom:4px;">${esc(l)}</li>`).join('')}</ul>`
+        : s.lines.map((l) => `<p style="${P}">${esc(l)}</p>`).join(''))),
+      `<p style="${P}color:#444444;font-size:10pt;margin-top:12px;">${esc(footer)}</p>`,
+    ].join('\n');
+
+    return { headline, grade, sections, text, html };
+};
+
+  if (d.bypass) {
+    const b = BYPASSES.find((x) => x.id === d.bypass);
+    return finish(
+      [`${product} is ${lower(b.fact)}.`,
+        'The interactive process between that person and the campus settled what the person needs, and this purchase carries it out.',
+        'The review of the product for a general audience does not apply, so Exposure, Severity, Breadth and Veracity are not rated.'],
+      ['The purchase carries out an accommodation the campus has agreed to, so it is approved.'],
+      [NEEDS.accommodation_scope,
+        'The contract includes the CSU accessibility terms below.',
+        ...CONTRACT_TERMS.filter((x) => d.contractTerms.includes(x.id)).map((t) => `${cap(t.text)}.`)]);
+  }
 
   // How we graded it
   const how = [];
@@ -903,10 +1023,10 @@ function explain(review, d = evaluate(review), ctx = {}) {
 
   // Why this result
   const why = [];
-  const pending = d.route === 'taap_needed';
-  const referred = d.route === 'exception_claimed';
+  const pending = d.hold === 'taap_needed';
+  const referred = d.hold === 'exception_claimed';
   const floor = veracityFloor(e.level, sev);
-  switch (d.route) {
+  switch (d.hold) {
     case 'severity_unknown':
       why.push('An accessibility grade requires evidence, and none is on file.');
       why.push('Please ask the vendor for a current Accessibility Conformance Report on the WCAG edition, or arrange a live demonstration of the essential functions with assistive technology.');
@@ -979,7 +1099,7 @@ function explain(review, d = evaluate(review), ctx = {}) {
               why.push('The plan is therefore a Non-Equal Alternative, with named department support required for each missed requirement.');
             }
           }
-          if (d.outcome !== 'deny') why.push(warningText(std));
+          if (d.outcome !== 'deny') why.push(warningText(d, review));
           if (pending) why.push('The review holds with the requesting unit until a TAAP is on file.');
           if (referred) why.push('The review holds with the president or a designee until the written determination is on file.');
         }
@@ -1010,7 +1130,7 @@ function explain(review, d = evaluate(review), ctx = {}) {
     next.push(`The TAAP includes a product-specific accessibility statement, written by the campus, with ${list(TAAP_STATEMENT.includes)}. The statement is posted ${TAAP_STATEMENT.postedAt}. It is separate from the vendor's own accessibility statement.`);
   }
   if (referred) next.push('The review resumes on receipt of the written determination. A determination that equally effective access would be an undue burden or a fundamental alteration lists the support that remains for each missed requirement.');
-  if ((!d.route || pending) && d.outcome !== 'deny') {
+  if ((!d.hold || pending) && d.outcome !== 'deny') {
     for (const c of S2_CAVEATS.filter((x) => d.caveats.includes(x.id))) next.push(cap(c.text));
     for (const r of d.requires) next.push(r === 'validation_at_review' ? NEEDS[r] : `${pending ? 'The TAAP must also show that' : 'The approval requires that'} ${lower(NEEDS[r] ?? r)}`);
     if (d.roadmap) next.push('The vendor completes the CSU Vendor Accessibility Roadmap, with status, remediation timeline and workarounds for each barrier found.');
@@ -1034,66 +1154,34 @@ function explain(review, d = evaluate(review), ctx = {}) {
     }
   }
 
-  const sections = [
-    { heading: 'How we graded it', lines: how, bullets: true },
-    { heading: 'Why this result', lines: why },
-    { heading: 'What happens next', lines: next, bullets: true },
-  ].filter((s) => s.lines.length);
-  if (d.authority?.length) sections.push({ heading: 'The rules behind this result', bullets: true,
-    lines: d.authority.map((a) => `${a.cite} (${AUTHORITY_KINDS[a.kind]}). ${a.says}`) });
-  const about = [product !== 'This product' ? product : null, ctx.vendor?.trim() ? `vendor: ${ctx.vendor.trim()}` : null,
-    ctx.unit?.trim() ? `requested by ${ctx.unit.trim()}` : null].filter(Boolean).join(', ');
-  const footer = `Graded with the SFBRN accessibility review matrix, version ${MATRIX_VERSION}${ctx.date ? `, on ${ctx.date}` : ''}.`;
-
-  const text = [
-    `Accessibility review${about ? `: ${about}` : ''}`,
-    `Result: ${headline}`,
-    grade,
-    '',
-    ...sections.flatMap((s) => [s.heading, ...s.lines.map((l) => (s.bullets ? `- ${l}` : l)), '']),
-    footer,
-  ].join('\n');
-
-  const esc = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-  const P = 'margin:0 0 8px 0;font-family:Calibri,Arial,sans-serif;font-size:11pt;line-height:1.4;color:#1a1a1a;';
-  const html = [
-    `<p style="${P}"><strong>Accessibility review${about ? `: ${esc(about)}` : ''}</strong></p>`,
-    `<p style="${P}font-size:13pt;"><strong>Result: ${esc(headline)}</strong></p>`,
-    `<p style="${P}color:#444444;">${esc(grade)}</p>`,
-    ...sections.map((s) => `<p style="${P}margin-top:12px;"><strong>${esc(s.heading)}</strong></p>` + (s.bullets
-      ? `<ul style="margin:0 0 8px 20px;padding:0;">${s.lines.map((l) => `<li style="${P}margin-bottom:4px;">${esc(l)}</li>`).join('')}</ul>`
-      : s.lines.map((l) => `<p style="${P}">${esc(l)}</p>`).join(''))),
-    `<p style="${P}color:#444444;font-size:10pt;margin-top:12px;">${esc(footer)}</p>`,
-  ].join('\n');
-
-  return { headline, grade, sections, text, html };
+  return finish(how, why, next);
 }
 
 /**
- * The notes under the one-page rubric table. rubric-core.svg and the tester's matrix both
- * print these, so the two never drift.
+ * The notes under the tester's copy of the rubric table. rubric-core.svg carries the table
+ * alone, and the rubric document's definitions carry the rules.
  */
 function rubricNotes() {
   const T = CALIBRATION.taapStandard;
   const acc = CALIBRATION.accumulation;
-  const routeNo = (id) => ROUTING.findIndex((r) => r.id === id) + 1;
+  const holdNo = (id) => HOLDS.findIndex((h) => h.id === id) + 1;
   return [
     'The TAAP standard is the minimum count of the six CSU TAAP requirements a plan must meet, scaled by P, the sum of the Exposure rank and Breadth. A full TAAP meets all six.',
-    `The warning level derives from W = P + gap, the gap being the requirements short of a full TAAP, elevated from ${T.warning.elevated} and high from ${T.warning.high}. A full TAAP at high Exposure still carries a warning, from pressure alone.`,
-    `No TAAP on file maps to route ${routeNo('taap_needed')}, On hold: TAAP needed, which carries the TAAP standard and the warning.`,
-    `Below the standard, a written undue burden or fundamental alteration determination maps to Approve with TAAP as a Non-Equal Alternative, and a claim maps to route ${routeNo('exception_claimed')}.`,
+    `The warning level derives from W = P + gap, the gap being the requirements short of a full TAAP, elevated from ${T.warning.elevated} and high from ${T.warning.high}. A full TAAP at high Exposure still carries a warning, from pressure alone. Each level carries a fixed meaning and action, stated in the Warning level definition.`,
+    `No TAAP on file maps to hold ${holdNo('taap_needed')}, on hold for a TAAP, which carries the TAAP standard and the warning.`,
+    `Below the standard, a written undue burden or fundamental alteration determination maps to Approve with TAAP as a Non-Equal Alternative, and a claim maps to hold ${holdNo('exception_claimed')}, on hold for a written determination.`,
     'A TAAP below the minimum is denied at any severity and pressure, with the shortfall stated in the denial, and a plan that meets none of the six is denied even under the exception. A plan at the minimum is approved under a warning; where the minimum is all six, only a full TAAP is at it.',
     `S2 escalates to S3 at ${acc.stack} S2 barriers stacked on one function for one user group, or at high Exposure with S2 barriers across ${acc.spreadPairs} function and group pairs.`,
     'At S3, a more accessible product that meets the same need maps to Deny.',
-    `The Veracity floor column gates every review before the risk grade, with S1 always requiring E2 or better. Evidence below the floor maps to route ${routeNo('veracity_below_floor')}, manual review, which raises the evidence and re-rates Severity.`,
+    `The Veracity floor column gates every review before the risk grade, with S1 always requiring E2 or better. Evidence below the floor maps to hold ${holdNo('veracity_below_floor')}, where the ATI review team raises the evidence and re-rates Severity.`,
     'When the evidence cannot be raised, the review proceeds at S3 (provisional) with the barriers found as a minimum, and Breadth 2 with no evidence at all.',
   ];
 }
 
 const ReviewMatrix = {
-  MATRIX_VERSION, STATES, LEVELS, ROLES, FUNCTIONAL_GROUPS, CALIBRATION, ICT_KINDS, FLOORS,
-  GROUPS, SEVERITY, EVIDENCE, ACR_CHECKS, EVIDENCE_LIMITS, veracityFloor, RISK_GRADES, OUTCOMES, HOLDERS, ROUTING,
-  GRID, TAAP_REQUIREMENTS, S2_CAVEATS, TAAP_TERMS, TAAP_STATEMENT, ROADMAP_LEVELS, CONTRACT_TERMS, accumulation, breadth, taapStandard, AUTHORITY_KINDS, AUTHORITY, WHO, HEADLINE, exposure, worstSeverity, evaluate, explain, rubricNotes,
+  MATRIX_VERSION, STATES, LEVELS, ROLES, FUNCTIONAL_GROUPS, CALIBRATION, ICT_KINDS, FLOORS, BYPASSES,
+  GROUPS, SEVERITY, EVIDENCE, ACR_CHECKS, EVIDENCE_LIMITS, veracityFloor, RISK_GRADES, OUTCOMES, HOLDERS, HOLDS,
+  GRID, TAAP_REQUIREMENTS, S2_CAVEATS, TAAP_TERMS, TAAP_STATEMENT, ROADMAP_LEVELS, CONTRACT_TERMS, accumulation, breadth, taapStandard, WARNING_LEVELS, AUTHORITY_KINDS, AUTHORITY, WHO, HEADLINE, exposure, worstSeverity, evaluate, explain, rubricNotes,
 };
 
 if (typeof module !== 'undefined' && module.exports) module.exports = ReviewMatrix;

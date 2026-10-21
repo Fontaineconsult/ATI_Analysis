@@ -246,6 +246,16 @@ This is the case "one claim per sentence" leaves open. Those sentences are one c
 split apart, not independent claims. Stop consolidating when the sentence needs a second
 "where" or "with" clause to hold everything, since the hierarchy is then two claims.
 
+**Give a mechanism its reason.** A sentence that fixes how a value is computed, mapped or
+capped states what that design secures, in the same sentence or the next. The reader who
+knows why the groups exist can apply the rule to a case the rule did not foresee.
+
+Wrong: "Seven questions map into four groups, the group levels aggregate into one score, and
+cut points partition the score range into three levels."
+Right: "Seven questions map into four groups, so that two questions about the same fact are
+not counted twice. The group levels aggregate into one score, so that no single answer sets
+the level by itself."
+
 **Keep contrast and cause in one sentence.** When the second clause cuts against
 the first, join the clauses with "but" or "though". Two sentences delete the
 relationship and leave the reader to reconstruct the link.
@@ -272,6 +282,18 @@ because that is what a Concern is.
 
 **No throat-clearing.** Cut any sentence that announces what the writing is about
 to do. "It is worth noting that" and "this section covers" advance nothing.
+
+**No qualifier the sentence does not need.** A trailing phrase that explains, locates or
+hedges what the sentence already said adds a condition the reader has to test. "The
+accessibility review matrix of the San Francisco Bay Region Network, applied at
+requisition intake" is the first eleven words. Cut the phrase unless the sentence is false
+without it.
+
+**State purpose, not justification.** A sentence that explains a thing by what came before
+it argues with the past. "The unified matrix" and "the three campuses had been deciding
+this four different ways" tell the reader what the document replaced, when the reader
+needs what the document is. Name the thing and what it does. The history belongs in the
+record of the decision, not in the document that results from it.
 
 ## Rhythm
 

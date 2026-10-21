@@ -1,7 +1,7 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1282 926" width="1282" height="926" role="img" aria-labelledby="t d" font-family="Segoe UI, system-ui, -apple-system, Helvetica, Arial, sans-serif">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1282 608" width="1282" height="608" role="img" aria-labelledby="t d" font-family="Segoe UI, system-ui, -apple-system, Helvetica, Arial, sans-serif">
   <title id="t">SFBRN review rubric, version 2, decision table</title>
   <desc id="d">Rows partition reviews by Exposure and Breadth. Columns give the Veracity floor, the risk grade by Severity, the TAAP standard, and the final decision and warning level for each TAAP state.</desc>
-  <rect width="1282" height="926" fill="#fafaf8"/>
+  <rect width="1282" height="608" fill="#fafaf8"/>
   <text x="40" y="44" font-size="22" font-weight="700" fill="#1a1a1a">SFBRN review rubric, version 2</text>
   <text x="40" y="68" font-size="13" fill="#444">The final decision as a function of Exposure, Breadth, Severity, Veracity and TAAP status. Generated from review-matrix.js.</text>
   <rect x="40" y="92" width="328" height="26" fill="#e6e4dc" stroke="#d6d4cc"/>
@@ -9,7 +9,7 @@
   <rect x="368" y="92" width="274" height="26" fill="#e6e4dc" stroke="#d6d4cc"/>
   <text x="505" y="110" text-anchor="middle" font-size="12" font-weight="700" fill="#1a1a1a">RISK GRADE BY SEVERITY</text>
   <rect x="642" y="92" width="600" height="26" fill="#e6e4dc" stroke="#d6d4cc"/>
-  <text x="942" y="110" text-anchor="middle" font-size="12" font-weight="700" fill="#1a1a1a">TAAP REVIEW, WHEN THE RISK GRADE IS NEEDS TAAP</text>
+  <text x="942" y="110" text-anchor="middle" font-size="12" font-weight="700" fill="#1a1a1a">TAAP REVIEW, WHEN THE RISK GRADE IS ALTERNATE ACCESS REQUIRED</text>
   <rect x="40" y="118" width="84" height="46" fill="#f0efe9" stroke="#d6d4cc"/>
   <text x="82" y="146" text-anchor="middle" font-size="12" font-weight="700" fill="#1a1a1a">Exposure</text>
   <rect x="124" y="118" width="64" height="46" fill="#f0efe9" stroke="#d6d4cc"/>
@@ -43,7 +43,8 @@
   <rect x="252" y="164" width="116" height="138" fill="#ffffff" stroke="#d6d4cc"/>
   <text x="310" y="238" text-anchor="middle" font-size="13" font-weight="400" fill="#1a1a1a">any</text>
   <rect x="450" y="164" width="96" height="138" fill="#e3f4e8" stroke="#d6d4cc"/>
-  <text x="498" y="238" text-anchor="middle" font-size="13" font-weight="600" fill="#14612d">Approve</text>
+  <text x="498" y="230" text-anchor="middle" font-size="13" font-weight="600" fill="#14612d">No alternate</text>
+  <text x="498" y="246" text-anchor="middle" font-size="13" font-weight="600" fill="#14612d">access required</text>
   <rect x="124" y="164" width="64" height="46" fill="#ffffff" stroke="#d6d4cc"/>
   <text x="156" y="192" text-anchor="middle" font-size="13" font-weight="400" fill="#1a1a1a">0</text>
   <rect x="188" y="164" width="64" height="46" fill="#ffffff" stroke="#d6d4cc"/>
@@ -51,7 +52,7 @@
   <rect x="642" y="164" width="92" height="46" fill="#ffffff" stroke="#d6d4cc"/>
   <text x="688" y="192" text-anchor="middle" font-size="13" font-weight="400" fill="#1a1a1a">3 of 6</text>
   <rect x="734" y="164" width="112" height="46" fill="#ecebf7" stroke="#d6d4cc"/>
-  <text x="790" y="184" text-anchor="middle" font-size="13" font-weight="600" fill="#3b3270">On hold, route 4</text>
+  <text x="790" y="184" text-anchor="middle" font-size="13" font-weight="600" fill="#3b3270">On hold (hold 4)</text>
   <rect x="738" y="188" width="104" height="17" rx="8.5" fill="#e3f4e8" stroke="#bdbab0"/>
   <text x="790" y="201" text-anchor="middle" font-size="11" font-weight="400" fill="#1a1a1a">warning low</text>
   <rect x="846" y="164" width="132" height="46" fill="#fbe3e4" stroke="#d6d4cc"/>
@@ -71,7 +72,7 @@
   <rect x="642" y="210" width="92" height="46" fill="#ffffff" stroke="#d6d4cc"/>
   <text x="688" y="238" text-anchor="middle" font-size="13" font-weight="400" fill="#1a1a1a">3 of 6</text>
   <rect x="734" y="210" width="112" height="46" fill="#ecebf7" stroke="#d6d4cc"/>
-  <text x="790" y="230" text-anchor="middle" font-size="13" font-weight="600" fill="#3b3270">On hold, route 4</text>
+  <text x="790" y="230" text-anchor="middle" font-size="13" font-weight="600" fill="#3b3270">On hold (hold 4)</text>
   <rect x="738" y="234" width="104" height="17" rx="8.5" fill="#e3f4e8" stroke="#bdbab0"/>
   <text x="790" y="247" text-anchor="middle" font-size="11" font-weight="400" fill="#1a1a1a">warning low</text>
   <rect x="846" y="210" width="132" height="46" fill="#fbe3e4" stroke="#d6d4cc"/>
@@ -91,7 +92,7 @@
   <rect x="642" y="256" width="92" height="46" fill="#ffffff" stroke="#d6d4cc"/>
   <text x="688" y="284" text-anchor="middle" font-size="13" font-weight="400" fill="#1a1a1a">4 of 6</text>
   <rect x="734" y="256" width="112" height="46" fill="#ecebf7" stroke="#d6d4cc"/>
-  <text x="790" y="276" text-anchor="middle" font-size="13" font-weight="600" fill="#3b3270">On hold, route 4</text>
+  <text x="790" y="276" text-anchor="middle" font-size="13" font-weight="600" fill="#3b3270">On hold (hold 4)</text>
   <rect x="738" y="280" width="104" height="17" rx="8.5" fill="#fdf0d5" stroke="#bdbab0"/>
   <text x="790" y="293" text-anchor="middle" font-size="11" font-weight="400" fill="#1a1a1a">warning elevated</text>
   <rect x="846" y="256" width="132" height="46" fill="#fbe3e4" stroke="#d6d4cc"/>
@@ -109,7 +110,8 @@
   <rect x="252" y="302" width="116" height="138" fill="#ffffff" stroke="#d6d4cc"/>
   <text x="310" y="376" text-anchor="middle" font-size="13" font-weight="400" fill="#1a1a1a">E1 or better</text>
   <rect x="450" y="302" width="96" height="138" fill="#fdf0d5" stroke="#d6d4cc"/>
-  <text x="498" y="376" text-anchor="middle" font-size="13" font-weight="600" fill="#7a4d00">Needs TAAP</text>
+  <text x="498" y="368" text-anchor="middle" font-size="13" font-weight="600" fill="#7a4d00">Alternate access</text>
+  <text x="498" y="384" text-anchor="middle" font-size="13" font-weight="600" fill="#7a4d00">required</text>
   <rect x="124" y="302" width="64" height="46" fill="#ffffff" stroke="#d6d4cc"/>
   <text x="156" y="330" text-anchor="middle" font-size="13" font-weight="400" fill="#1a1a1a">0</text>
   <rect x="188" y="302" width="64" height="46" fill="#ffffff" stroke="#d6d4cc"/>
@@ -117,7 +119,7 @@
   <rect x="642" y="302" width="92" height="46" fill="#ffffff" stroke="#d6d4cc"/>
   <text x="688" y="330" text-anchor="middle" font-size="13" font-weight="400" fill="#1a1a1a">3 of 6</text>
   <rect x="734" y="302" width="112" height="46" fill="#ecebf7" stroke="#d6d4cc"/>
-  <text x="790" y="322" text-anchor="middle" font-size="13" font-weight="600" fill="#3b3270">On hold, route 4</text>
+  <text x="790" y="322" text-anchor="middle" font-size="13" font-weight="600" fill="#3b3270">On hold (hold 4)</text>
   <rect x="738" y="326" width="104" height="17" rx="8.5" fill="#e3f4e8" stroke="#bdbab0"/>
   <text x="790" y="339" text-anchor="middle" font-size="11" font-weight="400" fill="#1a1a1a">warning low</text>
   <rect x="846" y="302" width="132" height="46" fill="#fbe3e4" stroke="#d6d4cc"/>
@@ -137,7 +139,7 @@
   <rect x="642" y="348" width="92" height="46" fill="#ffffff" stroke="#d6d4cc"/>
   <text x="688" y="376" text-anchor="middle" font-size="13" font-weight="400" fill="#1a1a1a">4 of 6</text>
   <rect x="734" y="348" width="112" height="46" fill="#ecebf7" stroke="#d6d4cc"/>
-  <text x="790" y="368" text-anchor="middle" font-size="13" font-weight="600" fill="#3b3270">On hold, route 4</text>
+  <text x="790" y="368" text-anchor="middle" font-size="13" font-weight="600" fill="#3b3270">On hold (hold 4)</text>
   <rect x="738" y="372" width="104" height="17" rx="8.5" fill="#fdf0d5" stroke="#bdbab0"/>
   <text x="790" y="385" text-anchor="middle" font-size="11" font-weight="400" fill="#1a1a1a">warning elevated</text>
   <rect x="846" y="348" width="132" height="46" fill="#fbe3e4" stroke="#d6d4cc"/>
@@ -157,7 +159,7 @@
   <rect x="642" y="394" width="92" height="46" fill="#ffffff" stroke="#d6d4cc"/>
   <text x="688" y="422" text-anchor="middle" font-size="13" font-weight="400" fill="#1a1a1a">all 6</text>
   <rect x="734" y="394" width="112" height="46" fill="#ecebf7" stroke="#d6d4cc"/>
-  <text x="790" y="414" text-anchor="middle" font-size="13" font-weight="600" fill="#3b3270">On hold, route 4</text>
+  <text x="790" y="414" text-anchor="middle" font-size="13" font-weight="600" fill="#3b3270">On hold (hold 4)</text>
   <rect x="738" y="418" width="104" height="17" rx="8.5" fill="#fdf0d5" stroke="#bdbab0"/>
   <text x="790" y="431" text-anchor="middle" font-size="11" font-weight="400" fill="#1a1a1a">warning elevated</text>
   <rect x="846" y="394" width="132" height="46" fill="#fbe3e4" stroke="#d6d4cc"/>
@@ -173,7 +175,8 @@
   <rect x="252" y="440" width="116" height="138" fill="#ffffff" stroke="#d6d4cc"/>
   <text x="310" y="514" text-anchor="middle" font-size="13" font-weight="400" fill="#1a1a1a">E2 or better</text>
   <rect x="450" y="440" width="96" height="138" fill="#fdf0d5" stroke="#d6d4cc"/>
-  <text x="498" y="514" text-anchor="middle" font-size="13" font-weight="600" fill="#7a4d00">Needs TAAP</text>
+  <text x="498" y="506" text-anchor="middle" font-size="13" font-weight="600" fill="#7a4d00">Alternate access</text>
+  <text x="498" y="522" text-anchor="middle" font-size="13" font-weight="600" fill="#7a4d00">required</text>
   <rect x="124" y="440" width="64" height="46" fill="#ffffff" stroke="#d6d4cc"/>
   <text x="156" y="468" text-anchor="middle" font-size="13" font-weight="400" fill="#1a1a1a">0</text>
   <rect x="188" y="440" width="64" height="46" fill="#ffffff" stroke="#d6d4cc"/>
@@ -181,7 +184,7 @@
   <rect x="642" y="440" width="92" height="46" fill="#ffffff" stroke="#d6d4cc"/>
   <text x="688" y="468" text-anchor="middle" font-size="13" font-weight="400" fill="#1a1a1a">4 of 6</text>
   <rect x="734" y="440" width="112" height="46" fill="#ecebf7" stroke="#d6d4cc"/>
-  <text x="790" y="460" text-anchor="middle" font-size="13" font-weight="600" fill="#3b3270">On hold, route 4</text>
+  <text x="790" y="460" text-anchor="middle" font-size="13" font-weight="600" fill="#3b3270">On hold (hold 4)</text>
   <rect x="738" y="464" width="104" height="17" rx="8.5" fill="#fdf0d5" stroke="#bdbab0"/>
   <text x="790" y="477" text-anchor="middle" font-size="11" font-weight="400" fill="#1a1a1a">warning elevated</text>
   <rect x="846" y="440" width="132" height="46" fill="#fbe3e4" stroke="#d6d4cc"/>
@@ -201,7 +204,7 @@
   <rect x="642" y="486" width="92" height="46" fill="#ffffff" stroke="#d6d4cc"/>
   <text x="688" y="514" text-anchor="middle" font-size="13" font-weight="400" fill="#1a1a1a">all 6</text>
   <rect x="734" y="486" width="112" height="46" fill="#ecebf7" stroke="#d6d4cc"/>
-  <text x="790" y="506" text-anchor="middle" font-size="13" font-weight="600" fill="#3b3270">On hold, route 4</text>
+  <text x="790" y="506" text-anchor="middle" font-size="13" font-weight="600" fill="#3b3270">On hold (hold 4)</text>
   <rect x="738" y="510" width="104" height="17" rx="8.5" fill="#fdf0d5" stroke="#bdbab0"/>
   <text x="790" y="523" text-anchor="middle" font-size="11" font-weight="400" fill="#1a1a1a">warning elevated</text>
   <rect x="846" y="486" width="132" height="46" fill="#fbe3e4" stroke="#d6d4cc"/>
@@ -219,7 +222,7 @@
   <rect x="642" y="532" width="92" height="46" fill="#ffffff" stroke="#d6d4cc"/>
   <text x="688" y="560" text-anchor="middle" font-size="13" font-weight="400" fill="#1a1a1a">all 6</text>
   <rect x="734" y="532" width="112" height="46" fill="#ecebf7" stroke="#d6d4cc"/>
-  <text x="790" y="552" text-anchor="middle" font-size="13" font-weight="600" fill="#3b3270">On hold, route 4</text>
+  <text x="790" y="552" text-anchor="middle" font-size="13" font-weight="600" fill="#3b3270">On hold (hold 4)</text>
   <rect x="738" y="556" width="104" height="17" rx="8.5" fill="#fbe3e4" stroke="#bdbab0"/>
   <text x="790" y="569" text-anchor="middle" font-size="11" font-weight="400" fill="#1a1a1a">warning high</text>
   <rect x="846" y="532" width="132" height="46" fill="#fbe3e4" stroke="#d6d4cc"/>
@@ -231,9 +234,13 @@
   <rect x="1124" y="556" width="104" height="17" rx="8.5" fill="#fbe3e4" stroke="#bdbab0"/>
   <text x="1176" y="569" text-anchor="middle" font-size="11" font-weight="400" fill="#1a1a1a">warning high</text>
   <rect x="368" y="164" width="82" height="414" fill="#e3f4e8" stroke="#d6d4cc"/>
-  <text x="409" y="376" text-anchor="middle" font-size="13" font-weight="600" fill="#14612d">Approve</text>
+  <text x="409" y="360" text-anchor="middle" font-size="13" font-weight="600" fill="#14612d">No alternate</text>
+  <text x="409" y="376" text-anchor="middle" font-size="13" font-weight="600" fill="#14612d">access</text>
+  <text x="409" y="392" text-anchor="middle" font-size="13" font-weight="600" fill="#14612d">required</text>
   <rect x="546" y="164" width="96" height="414" fill="#fdf0d5" stroke="#d6d4cc"/>
-  <text x="594" y="376" text-anchor="middle" font-size="13" font-weight="600" fill="#7a4d00">Needs TAAP</text>
+  <text x="594" y="360" text-anchor="middle" font-size="13" font-weight="600" fill="#7a4d00">Alternate</text>
+  <text x="594" y="376" text-anchor="middle" font-size="13" font-weight="600" fill="#7a4d00">access</text>
+  <text x="594" y="392" text-anchor="middle" font-size="13" font-weight="600" fill="#7a4d00">required</text>
   <line x1="40" y1="302" x2="368" y2="302" stroke="#6b6b6b" stroke-width="1.6"/>
   <line x1="450" y1="302" x2="546" y2="302" stroke="#6b6b6b" stroke-width="1.6"/>
   <line x1="642" y1="302" x2="1242" y2="302" stroke="#6b6b6b" stroke-width="1.6"/>
@@ -241,18 +248,4 @@
   <line x1="450" y1="440" x2="546" y2="440" stroke="#6b6b6b" stroke-width="1.6"/>
   <line x1="642" y1="440" x2="1242" y2="440" stroke="#6b6b6b" stroke-width="1.6"/>
   <rect x="40" y="92" width="1202" height="486" fill="none" stroke="#6b6b6b" stroke-width="1.4"/>
-  <text x="40" y="612" text-anchor="start" font-size="13" font-weight="400" fill="#1a1a1a">1.  The TAAP standard is the minimum count of the six CSU TAAP requirements a plan must meet, scaled by P, the sum of the Exposure rank and Breadth. A full TAAP meets</text>
-  <text x="40" y="633" text-anchor="start" font-size="13" font-weight="400" fill="#1a1a1a">     all six.</text>
-  <text x="40" y="654" text-anchor="start" font-size="13" font-weight="400" fill="#1a1a1a">2.  The warning level derives from W = P + gap, the gap being the requirements short of a full TAAP, elevated from 2 and high from 4. A full TAAP at high Exposure</text>
-  <text x="40" y="675" text-anchor="start" font-size="13" font-weight="400" fill="#1a1a1a">     still carries a warning, from pressure alone.</text>
-  <text x="40" y="696" text-anchor="start" font-size="13" font-weight="400" fill="#1a1a1a">3.  No TAAP on file maps to route 4, On hold: TAAP needed, which carries the TAAP standard and the warning.</text>
-  <text x="40" y="717" text-anchor="start" font-size="13" font-weight="400" fill="#1a1a1a">4.  Below the standard, a written undue burden or fundamental alteration determination maps to Approve with TAAP as a Non-Equal Alternative, and a claim maps to route</text>
-  <text x="40" y="738" text-anchor="start" font-size="13" font-weight="400" fill="#1a1a1a">     5.</text>
-  <text x="40" y="759" text-anchor="start" font-size="13" font-weight="400" fill="#1a1a1a">5.  A TAAP below the minimum is denied at any severity and pressure, with the shortfall stated in the denial, and a plan that meets none of the six is denied even</text>
-  <text x="40" y="780" text-anchor="start" font-size="13" font-weight="400" fill="#1a1a1a">     under the exception. A plan at the minimum is approved under a warning; where the minimum is all six, only a full TAAP is at it.</text>
-  <text x="40" y="801" text-anchor="start" font-size="13" font-weight="400" fill="#1a1a1a">6.  S2 escalates to S3 at 3 S2 barriers stacked on one function for one user group, or at high Exposure with S2 barriers across 6 function and group pairs.</text>
-  <text x="40" y="822" text-anchor="start" font-size="13" font-weight="400" fill="#1a1a1a">7.  At S3, a more accessible product that meets the same need maps to Deny.</text>
-  <text x="40" y="843" text-anchor="start" font-size="13" font-weight="400" fill="#1a1a1a">8.  The Veracity floor column gates every review before the risk grade, with S1 always requiring E2 or better. Evidence below the floor maps to route 3, manual</text>
-  <text x="40" y="864" text-anchor="start" font-size="13" font-weight="400" fill="#1a1a1a">     review, which raises the evidence and re-rates Severity.</text>
-  <text x="40" y="885" text-anchor="start" font-size="13" font-weight="400" fill="#1a1a1a">9.  When the evidence cannot be raised, the review proceeds at S3 (provisional) with the barriers found as a minimum, and Breadth 2 with no evidence at all.</text>
 </svg>

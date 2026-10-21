@@ -1,6 +1,6 @@
 // Builds review-process.svg, the decision process from requisition intake to a final decision
 // or a hold, from the model. The shared checks run down the top, ending in the Veracity loop;
-// the four severity states then each carry their own lane. Run after any change to ROUTING, OUTCOMES or CALIBRATION:
+// the four severity states then each carry their own lane. Run after any change to HOLDS, OUTCOMES or CALIBRATION:
 //   node build-process-diagram.js
 const path = require('path');
 const fs = require('fs');
@@ -56,17 +56,18 @@ const Y = { start: 110, d2: 220, p1: 330, d3: 440, p2: 550, d4: 660, bus: 820, s
 const right = (x, w, y) => [x + w / 2, y];
 const left = (x, w, y) => [x - w / 2, y];
 
-const ROUTE_SHORT = { exception_claimed: 'Formal determination', severity_unknown: 'Evidence needed', answers_unknown: 'Information needed',
-  veracity_below_floor: 'Manual review', taap_needed: 'TAAP needed' };
-const routeNo = (id) => M.ROUTING.findIndex((r) => r.id === id) + 1;
+const HOLD_SHORT = Object.fromEntries(M.HOLDS.map((h) => [h.id, h.waits.charAt(0).toUpperCase() + h.waits.slice(1)]));
+const holdNo = (id) => M.HOLDS.findIndex((h) => h.id === id) + 1;
 const holdBox = (cx, cy, id) => {
-  const r = M.ROUTING.find((x) => x.id === id);
-  const title = `Route ${routeNo(id)}. ${M.HEADLINE[id]}`;
-  const lines = [...(title.length > 48 ? title.split(/(?<=:) /) : [title]), `Held by ${M.HOLDERS[r.route].label}`];
+  const h = M.HOLDS.find((x) => x.id === id);
+  const lines = [`Hold ${holdNo(id)}, for ${h.waits}`, `Held by ${M.HOLDERS[h.holder].label}`];
   box(cx, cy, RW, lines.length * 16 + 24, 'hold', lines, { size: 12 });
 };
 
 box(SX, Y.start, SW, 60, 'start', ['Requisition intake', 'exposure answers, findings, evidence on file'], { rx: 30 });
+// The accommodation purchase ends the review at intake, before any check.
+box(SX - 400, Y.start, 330, 60, 'approve', ['Approve at intake', 'purchased as an accommodation for one named person;', 'limited to the accommodation; nothing rated'], { size: 11, stroke: COLOR.approve[1] });
+arrow([left(SX, SW, Y.start), [SX - 400 + 165, Y.start]], 'accommodation');
 diamond(SX, Y.d2, SW, DH, ['Accessibility evidence', 'on file?'], 13);
 box(SX, Y.p1, SW, 60, 'step', ['Rate Exposure', 'floors and answers; unknown answers map to high']);
 diamond(SX, Y.d3, SW, DH, ['Unknown answers raise', 'the Exposure level?'], 13);
@@ -101,7 +102,7 @@ arrow([[SX, Y.d4 + DH / 2], [SX, Y.bus]], 'yes', { noHead: true });
 const COL = { S0: 200, S1: 470, S2: 740, S3: 1010 };
 const CW = 230, CH = 96;                        // lane diamond size
 const R = { 1: 1010, 2: 1160, 3: 1310, 4: 1460, 5: 1610, 6: 1760 };
-const YF = 1950;                                // final decisions; clears the route 5 hang
+const YF = 1950;                                // final decisions; clears the hold 5 hang
 const sev = (id) => M.SEVERITY.find((s) => s.id === id);
 
 parts.push(`<path d="M${COL.S0},${Y.bus} L${COL.S3},${Y.bus}" fill="none" stroke="${LINE}" stroke-width="1.4"/>`);
@@ -115,31 +116,31 @@ box(COL.S3, Y.state, CW, 70, 'state', ['S3. Critical barrier', 'An essential fun
 /** A hold terminal hung off one side of a lane diamond at row y. */
 const hang = (x, y, id, label = 'no', side = -1) => {
   arrow([[x + side * CW / 2, y], [x + side * 70, y], [x + side * 70, y + 50]], label);
-  box(x + side * 70, y + 70, 126, 40, 'hold', [`Route ${routeNo(id)}`, ROUTE_SHORT[id]], { size: 11 });
+  box(x + side * 70, y + 70, 170, 40, 'hold', [`Hold ${holdNo(id)}`, HOLD_SHORT[id]], { size: 11 });
 };
 const down = (x, from, to, label) => arrow([[x, from], [x, to]], label);
 
-// S0: Approve.
-down(COL.S0, Y.state + 35, YF - 38, 'Approve');
+// S0: No alternate access required.
+down(COL.S0, Y.state + 35, YF - 38, 'No alternate access required');
 
-// S1: Approve, with roadmap terms at medium or high Exposure.
-down(COL.S1, Y.state + 35, YF - 38, ['Approve; roadmap terms at', 'medium or high Exposure']);
+// S1: No alternate access required, with roadmap terms at medium or high Exposure.
+down(COL.S1, Y.state + 35, YF - 38, ['No alternate access required; roadmap', 'terms at medium or high Exposure']);
 
-// S2: accumulation, then Exposure. Low is Approve; medium or high joins the Needs TAAP lane.
+// S2: accumulation, then Exposure. Low is No alternate access required; medium or high joins the Alternate access required lane.
 diamond(COL.S2, R[1], CW, CH, ['S2 accumulation?', `${C.accumulation.stack}+ stacked on one pair, or`, `${C.accumulation.spreadPairs}+ pairs at high Exposure`]);
 down(COL.S2, Y.state + 35, R[1] - CH / 2);
 arrow([right(COL.S2, CW, R[1]), [875, R[1]], [875, Y.state], [COL.S3 - CW / 2, Y.state]]);
 text(880, R[1] - 60, ['yes:', 'S3 (accumulated)'], { size: 11, fill: '#444444', anchor: 'start' });
 diamond(COL.S2, R[2], CW, CH, ['Exposure?']);
 down(COL.S2, R[1] + CH / 2, R[2] - CH / 2, 'no');
-arrow([left(COL.S2, CW, R[2]), [520, R[2]], [520, YF - 38]], ['low:', 'Approve']);
+arrow([left(COL.S2, CW, R[2]), [520, R[2]], [520, YF - 38]], ['low:', 'No alternate access required']);
 arrow([right(COL.S2, CW, R[2]), [COL.S3 - CW / 2, R[2]]]);
-text(875, R[2] - 62, ['medium or high:', 'Needs TAAP'], { size: 11, fill: '#444444' });
+text(875, R[2] - 62, ['medium or high:', 'Alternate access required'], { size: 11, fill: '#444444' });
 
-// The Needs TAAP lane: S3 at every Exposure, and S2 from medium or high. The only lane that
+// The Alternate access required lane: S3 at every Exposure, and S2 from medium or high. The only lane that
 // can end in Deny.
 diamond(COL.S3, R[1], CW, CH, ['A more accessible product', 'meets the same need?']);
-down(COL.S3, Y.state + 35, R[1] - CH / 2, 'Needs TAAP');
+down(COL.S3, Y.state + 35, R[1] - CH / 2, 'Alternate access required');
 arrow([right(COL.S3, CW, R[1]), [1160, R[1]], [1160, YF - 60], [1060, YF - 60]], 'yes', { noHead: true });
 diamond(COL.S3, R[2], CW, CH, ['TAAP on file?']);
 down(COL.S3, R[1] + CH / 2, R[2] - CH / 2, 'no');
@@ -177,15 +178,15 @@ const resumes = {
   taap_needed: 'the TAAP check', exception_claimed: 'the determination check',
 };
 let ky = LY + 36;
-text(40, ky, ['Holds. Each one is held by a named party until the condition the route names is met.'], { anchor: 'start', size: 12, boldFirst: true });
-M.ROUTING.forEach((r, i) => {
+text(40, ky, ['Holds. Each is named by what the review waits for and released by a named party.'], { anchor: 'start', size: 12, boldFirst: true });
+M.HOLDS.forEach((h, i) => {
   ky += 20;
-  text(40, ky, [`Route ${i + 1}. ${M.HEADLINE[r.id]}`], { anchor: 'start', size: 12 });
-  text(500, ky, [`Held by ${M.HOLDERS[r.route].label}`], { anchor: 'start', size: 12 });
-  text(830, ky, [`Resumes at ${resumes[r.id]}`], { anchor: 'start', size: 12 });
+  text(40, ky, [`Hold ${i + 1}, for ${h.waits}`], { anchor: 'start', size: 12 });
+  text(500, ky, [`Held by ${M.HOLDERS[h.holder].label}`], { anchor: 'start', size: 12 });
+  text(830, ky, [`Resumes at ${resumes[h.id]}`], { anchor: 'start', size: 12 });
 });
-text(40, ky + 36, ['Routes 1 to 3 are checked in that order before the risk grade. Route 3 loops until the evidence meets the floor or cannot be raised.',
-  `Routes 4 and 5 come from the TAAP checks. Generated from review-matrix.js, matrix version ${M.MATRIX_VERSION}.`], { anchor: 'start', size: 12, fill: '#444444' });
+text(40, ky + 36, ['Holds 1 to 3 are checked in that order before the risk grade. Hold 3 ends when the evidence meets the floor or cannot be raised.',
+  `Holds 4 and 5 arise in the TAAP checks. Generated from review-matrix.js, matrix version ${M.MATRIX_VERSION}.`], { anchor: 'start', size: 12, fill: '#444444' });
 
 const W = 1200, H = ky + 66;
 const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-labelledby="t d" font-family="Segoe UI, system-ui, -apple-system, Helvetica, Arial, sans-serif">

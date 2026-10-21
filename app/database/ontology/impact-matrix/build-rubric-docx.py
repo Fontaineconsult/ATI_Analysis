@@ -1,13 +1,20 @@
 """Build SFBRN-Accessible-Procurement-Rubric.docx.
 
 The rubric prose is the Definitions section of review-matrix-tester.html, rendered from
-review-matrix.js, so the document carries the same numbers as the model. Each section is
-followed by a Grounding part that names the binding rules, the framework principle and the
-calibration choices behind it. Prose follows app/database/ontology/writing-style.md.
+review-matrix.js, so the document carries the same numbers as the model. Prose follows app/database/ontology/writing-style.md.
+
+The rules, principles and calibration choices behind each section are Word endnotes, marked on the
+section's first paragraph and collected under the closing Notes heading.
+
+Document rule: no bold inside a paragraph. The source marks key terms with <strong> and
+**bold** for the web page; this document renders them as plain text. Bold is kept only for
+the label that opens a list entry or a paragraph, which the writing style's reference-document
+rule asks for.
 
     .venv/Scripts/python app/database/ontology/impact-matrix/build-rubric-docx.py
 
-Needs python-docx and the Playwright install under e2e/node_modules.
+Needs python-docx, pywin32 and Word (which fills the contents page), and the Playwright
+install under e2e/node_modules.
 """
 import json
 import re
@@ -21,7 +28,7 @@ from pathlib import Path
 
 from docx import Document
 from docx.enum.section import WD_ORIENT, WD_SECTION
-from docx.enum.text import WD_ALIGN_PARAGRAPH
+from docx.enum.text import WD_ALIGN_PARAGRAPH, WD_TAB_ALIGNMENT
 from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
 from docx.shared import Inches, Pt, RGBColor
@@ -38,7 +45,7 @@ PLAYWRIGHT = ROOT / 'e2e' / 'node_modules' / 'playwright'
 # matrix-grounding-review.md). Calibration names the choices no rule sets.
 # ---------------------------------------------------------------------------------------
 GROUNDING = {
-    'How a review reaches a decision': {
+    'Accessible Procurement Process Overview': {
         'rules': [
             ('CSU ATI Procurement Process, Step 3', 'The ATI reviewer approves or denies the acquisition on the review findings. A denial is recorded with a detailed rationale, and each campus provides a way to request reconsideration.'),
             ('28 CFR 35.200', 'Web content and mobile apps that a public university provides, directly or through a vendor, must conform to WCAG 2.1 AA.'),
@@ -47,9 +54,9 @@ GROUNDING = {
         ],
         'principles': [
             ('Time-bound alternative access when full conformance is not yet achieved', 'Where content cannot yet meet the standard, the institution provides a documented, time-limited, equally effective alternative while it remediates, and does not treat the non-conformance as acceptable. A TAAP is that alternative, never compliance.'),
-            ('Deference is earned through a documented, individualized process', 'Courts and OCR defer to an institution\'s judgment only when a record shows the responsible officials considered the individual and the alternatives. Every route names its holder and every decision its reasons for that record.'),
+            ('Deference is earned through a documented, individualized process', 'Courts and OCR defer to an institution\'s judgment only when a record shows the responsible officials considered the individual and the alternatives. Every hold names its holder and every decision its reasons for that record.'),
         ],
-        'calibration': 'The split into risk grade, routes and remedy step is the matrix\'s own design. No rule prescribes a hold state, a holder or a resume point.',
+        'calibration': 'The split into risk grade, holds and remedy step is the matrix\'s own design. No rule prescribes a hold state, a holder or a resume point.',
     },
     'Review standard': {
         'rules': [
@@ -121,8 +128,8 @@ GROUNDING = {
     },
     'Evidence (Veracity)': {
         'rules': [
-            ('CSU ATI Procurement Process, Step 2', 'The CSU asks for a current Accessibility Conformance Report for each interface before it buys, which is route 1.'),
-            ('CSU ATI success indicator 1.8-pro', 'Each campus has a process to validate vendors\' conformance claims, which is the loop under route 3.'),
+            ('CSU ATI Procurement Process, Step 2', 'The CSU asks for a current Accessibility Conformance Report for each interface before it buys, which is hold 1.'),
+            ('CSU ATI success indicator 1.8-pro', 'Each campus has a process to validate vendors\' conformance claims, which is the loop under hold 3.'),
             ('CSU ATI Procurement Process, Step 3', 'The ATI reviewer decides on the review findings, so the findings are confirmed before the decision is made.'),
             ('28 CFR 35.205', 'The university must be able to show that a nonconformance has minimal impact, which is why S1 always needs a demonstration, an audit or ATI testing.'),
             ('Section 508 Standards, E202.7.2 (36 CFR 1194); CSU TAAP Authoring Template', 'Where conforming technology is not available, access is provided by an alternative means planned in advance. The fallback applies that remedy when conformance cannot be shown.'),
@@ -164,15 +171,15 @@ GROUNDING = {
     },
     'Risk grade': {
         'rules': [
-            ('CSU TAAP Authoring Template, instructions', 'A TAAP is needed only for barriers that prevent essential functions, so S0 and S1 are Approve and S3 is Needs TAAP at every exposure.'),
-            ('28 CFR 35.205; CSU Executive Order 1111, section IV', 'At medium or high exposure, barriers that make essential functions clearly harder to perform reach too many people for the impact to be minimal, so S2 is Needs TAAP there.'),
+            ('CSU TAAP Authoring Template, instructions', 'A TAAP is needed only for barriers that prevent essential functions, so S0 and S1 are No alternate access required and S3 is Alternate access required at every exposure.'),
+            ('28 CFR 35.205; CSU Executive Order 1111, section IV', 'At medium or high exposure, barriers that make essential functions clearly harder to perform reach too many people for the impact to be minimal, so S2 is Alternate access required there.'),
             ('Section 508 Standards, E202.7 (36 CFR 1194)', 'For non-web technology, a high-exposure S3 approval also carries a best-meets record with market research.'),
         ],
         'principles': [
             ('Remedy proportionate to barrier severity', 'The grade places the formal remedy on the barriers that block essential functions.'),
             ('Exposure sets scrutiny, not entitlement (proposed)', 'Exposure moves the S2 row only, and never makes an S3 product acceptable.'),
         ],
-        'calibration': 'The Approve grade for S2 at low exposure is the matrix\'s choice. The law does not scale with exposure, and the product still fails the standard, which the approval says in writing.',
+        'calibration': 'The No alternate access required grade for S2 at low exposure is the matrix\'s choice. The law does not scale with exposure, and the product still fails the standard, which the approval says in writing.',
     },
     'Pressure and the TAAP standard': {
         'rules': [
@@ -187,12 +194,15 @@ GROUNDING = {
     },
     'Warning level': {
         'rules': [
-            ('CSU TAAP Authoring Template, Institutional Risk', 'The template names the institutional risk a plan carries, and the warning level is how the review tells the purchaser that risk.'),
+            ('CSU TAAP Authoring Template, Administrative Approval', 'Each signer confirms they have "evaluated the associated institutional risks and accommodation requirements" and found the plan "an acceptable interim solution." The warning level tells the signers, by consequence, what they accept.'),
+            ('CSU TAAP Authoring Template, Institutional Risk', 'The template grades a plan by the count of the six requirements it meets: all six low, one to five moderate, none high. That count is the gap term of the warning. The template\'s tiers grade the plan alone, so a full plan the template calls low risk can carry an elevated or high warning here from the audience it must serve.'),
+            ('CSU ATI Procurement Process, Step 2', 'The CSU names the consequences that make a purchase high impact: denied access, a critical program, high accommodation cost, significant legal exposure and no known workaround. The warning sentence states residual risk in those terms.'),
         ],
         'principles': [
-            ('Deference is earned through a documented, individualized process', 'The warning is recorded with the determination, so the risk the signers took on is visible later.'),
+            ('Residual risk is stated by consequence and owned by a named officer (proposed)', 'The record states who cannot do what without staff support, what the department carries and which officer accepted that. Each level has a fixed meaning and action, the numbers print with the word, and the level maps to the TAAP signers.'),
+            ('Time-bound alternative access when full conformance is not yet achieved', 'The acceptance holds only while the vendor shows progress, so the warning is reviewed at the first roadmap milestone.'),
         ],
-        'calibration': 'The cut points (elevated at 2, high at 4) are the matrix\'s. The rule that no TAAP lowers the warning below the pressure level follows from the template, which says a TAAP manages barriers while the vendor removes them.',
+        'calibration': 'The pressure term and the cut points (elevated at 2, high at 4) are the matrix\'s. No rule scales residual risk by audience. The nearest precedent is the Section508.gov risk model, which sums scope of use with the coverage of the alternate means plan and the remediation time. The level never lowers the TAAP standard.',
     },
     'Final decision': {
         'rules': [
@@ -202,6 +212,7 @@ GROUNDING = {
             ('28 CFR 35.130(b)(1) and (b)(3); 34 CFR 104.4(b)(1)', 'A university may not give people with disabilities a less effective service, or use methods of administration that have a discriminating effect. Requiring a product some users cannot use can have that effect.'),
             ('Section 508 Standards, E202.7 (36 CFR 1194)', 'When a more accessible product meets the need, the CSU chooses it.'),
             ('CSU TAAP Authoring Template, Process Outcome; CSU Executive Order 1111, section IV.C.4', 'A plan that meets none of the six requirements is "unable to provide alternative means of access". Access would then rest on individual accommodation, which the CSU\'s Universal Design commitment aims to reduce.'),
+            ('CSU Executive Order 1111, sections V.B and VI.B; 28 CFR 35.130(b)(7); 29 CFR 1630.2(o)', 'An accommodation comes from the interactive process between one person and the campus. A purchase that carries it out is approved at intake, and the review of the product for a general audience does not apply.'),
         ],
         'principles': [
             ('Procurement as an accessibility lever', 'The institution advances accessibility at the point of purchase. A denial states its findings, the standard it applied and the route to a new review.'),
@@ -209,13 +220,13 @@ GROUNDING = {
         ],
         'calibration': 'None. Each deny condition rests on a rule above.',
     },
-    'Routes': {
+    'Holds': {
         'rules': [
-            ('CSU ATI Procurement Process, Step 2', 'A current ACR for each interface before purchase (route 1).'),
-            ('CSU ATI Procurement Process', 'The depth of review depends on how the product will be used (route 2).'),
-            ('CSU ATI success indicator 1.8-pro; CSU ATI Procurement Process, Step 3', 'A process to validate vendor claims, and a decision made on confirmed findings (route 3).'),
-            ('CSU TAAP Authoring Template', 'The TAAP standard a plan is held to before the remedy step resumes (route 4).'),
-            ('28 CFR 35.164 and 35.204; Section 508 Standards, E202.6', 'The written determination belongs to the president or a designee, after considering all resources (route 5).'),
+            ('CSU ATI Procurement Process, Step 2', 'A current ACR for each interface before purchase (hold 1).'),
+            ('CSU ATI Procurement Process', 'The depth of review depends on how the product will be used (hold 2).'),
+            ('CSU ATI success indicator 1.8-pro; CSU ATI Procurement Process, Step 3', 'A process to validate vendor claims, and a decision made on confirmed findings (hold 3).'),
+            ('CSU TAAP Authoring Template', 'The TAAP standard a plan is held to before the remedy step resumes (hold 4).'),
+            ('28 CFR 35.164 and 35.204; Section 508 Standards, E202.6', 'The written determination belongs to the president or a designee, after considering all resources (hold 5).'),
         ],
         'principles': [
             ('Deference is earned through a documented, individualized process', 'Each hold names who holds it and what releases it, so the record shows the review waited for a fact rather than assumed one.'),
@@ -302,7 +313,23 @@ def add_table(doc, rows):
                 r.font.size = Pt(10)
             if i == 0:
                 shade(c, HEADER_FILL)
+    indent_table(t)
     doc.add_paragraph().paragraph_format.space_after = Pt(0)
+
+
+def indent_table(t):
+    """Moves the table to the body column and fits it to the width that remains."""
+    tbl_pr = t._tbl.tblPr
+    ind = OxmlElement('w:tblInd')
+    ind.set(qn('w:w'), str(int(BODY_INDENT.inches * 1440)))
+    ind.set(qn('w:type'), 'dxa')
+    tbl_pr.insert_element_before(ind, 'w:tblBorders', 'w:shd', 'w:tblLayout', 'w:tblCellMar', 'w:tblLook', 'w:tblCaption', 'w:tblDescription')
+    width = tbl_pr.find(qn('w:tblW'))
+    if width is None:
+        width = OxmlElement('w:tblW')
+        tbl_pr.append(width)
+    width.set(qn('w:w'), str(int((TEXT_WIDTH.inches - BODY_INDENT.inches) * 1440)))
+    width.set(qn('w:type'), 'dxa')
 
 
 def field(par, instr, placeholder=''):
@@ -317,51 +344,43 @@ def field(par, instr, placeholder=''):
         run._r.append(el)
 
 
-def entry(doc, label, text):
-    """A labelled reference entry: bold label, hanging indent, so a reader can scan the labels."""
-    par = doc.add_paragraph()
-    fmt = par.paragraph_format
-    fmt.left_indent = Inches(0.35)
-    fmt.first_line_indent = Inches(-0.35)
-    fmt.space_after = Pt(6)
-    par.add_run(f'{label}. ').bold = True
-    par.add_run(text)
-    return par
+# Endnotes. python-docx cannot write Word endnotes, so the builder leaves a marker token at
+# each citation point and Word replaces every token with a real endnote (Endnotes.Add) when
+# it opens the file to fill the contents page. ENDNOTES holds (token, text) in document order.
+ENDNOTES = []
+KIND = {'rules': ('Binding rule', 'Binding rules'), 'principles': ('Principle', 'Principles'), 'calibration': ('Calibration', 'Calibration')}
 
 
-def grounding(doc, heading):
-    """Calibration under the section. Rules and principles are in the appendices."""
+def mark(par, heading):
+    """Appends the section's endnote markers to the paragraph: one note per kind (binding rules,
+    principles, calibration), each entry on its own line inside the note, with a superscript
+    comma between markers so Word renders 1,2,3 rather than 123."""
     g = GROUNDING.get(heading)
     if not g:
         return
-    doc.add_heading('Grounding', level=3)
-    par = doc.add_paragraph()
-    par.add_run('Calibration. ').bold = True
-    par.add_run(g['calibration'] + ' Appendix A lists the binding rules and Appendix B the principles '
-                f'behind this section, each under the heading {heading}.')
-
-
-def appendix(doc, letter, title, key, intro, headings):
-    """An appendix grouped by the section the entries ground, in document order."""
-    doc.add_page_break()
-    doc.add_heading(f'Appendix {letter}. {title}', level=1)
-    doc.add_paragraph(intro)
-    for heading in headings:
-        g = GROUNDING.get(heading)
-        if not g or not g[key]:
-            continue
-        doc.add_heading(heading, level=2)
-        for label, text in g[key]:
-            entry(doc, label, text)
+    groups = [(key, g[key]) for key in ('rules', 'principles') if g[key]]
+    if not g['calibration'].startswith('None.'):
+        groups.append(('calibration', [(None, g['calibration'])]))
+    for i, (key, entries) in enumerate(groups):
+        if i:
+            par.add_run(',').font.superscript = True
+        kind = KIND[key][1 if len(entries) > 1 else 0]
+        lines = [f'{label}. {text}' if label else text for label, text in entries]
+        lines[0] = f'{kind}. {lines[0]}'
+        token = f'[[EN{len(ENDNOTES) + 1:03d}]]'
+        ENDNOTES.append((token, '\r'.join(lines)))
+        par.add_run(token)
 
 
 def figure(doc, png, caption, width=None, height=None):
     par = doc.add_paragraph()
     par.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    par.paragraph_format.left_indent = BODY_INDENT
     par.paragraph_format.keep_with_next = True
     par.add_run().add_picture(str(png), width=width, height=height)
     cap = doc.add_paragraph(style='Caption')
     cap.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    cap.paragraph_format.left_indent = BODY_INDENT
     cap.add_run(caption)
 
 
@@ -392,15 +411,19 @@ def md_runs(text):
 
 
 def overview_blocks():
-    """The 'How a review reaches a decision' section of rubric-core.md, as blocks."""
+    """The 'Accessible Procurement Process Overview' section of rubric-core.md, as blocks.
+    Its ### headings become subsections of the overview."""
     md = (HERE / 'rubric-core.md').read_text(encoding='utf-8')
-    start = md.index('## How a review reaches a decision')
+    start = md.index('## Accessible Procurement Process Overview')
     end = md.index('## 1. Inputs and symbols')
     body = md[start:end].split('\n', 1)[1]
     blocks = []
     for chunk in re.split(r'\n\s*\n', body.strip()):
         prose, bullet = [], None
         for line in chunk.strip().split('\n'):
+            if line.startswith('### '):
+                blocks.append(('h3', [(line[4:].strip(), False)]))
+                continue
             if line.startswith('- '):
                 if prose:
                     blocks.append(('p', md_runs(' '.join(prose))))
@@ -417,20 +440,68 @@ def overview_blocks():
     return [(k, md_runs(' '.join(v)) if k == 'li' else v) for k, v in blocks]
 
 
-def render(doc, blocks):
+def plain(runs):
+    """The runs of a paragraph with bold removed (the document rule). A short bold label that
+    opens the paragraph and ends in a full stop, such as "Burden.", keeps its bold, since it is
+    a labelled entry and not a key concept inside the text."""
+    if runs and runs[0][1] and runs[0][0].rstrip().endswith('.') and len(runs[0][0]) <= 40:
+        return [runs[0]] + [(text, False) for text, _ in runs[1:]]
+    return [(text, False) for text, _ in runs]
+
+
+def render(doc, blocks, heading=None, level=1, cite=True):
+    """Renders the blocks. Headings take `level`; paragraphs, lists and tables sit in the body
+    column, indented to where the heading text starts. The first paragraph after a heading
+    carries that heading's endnote markers, so each note sits on the definition it grounds.
+    With `cite` false, only the `heading` passed in is cited: the overview's subsections share
+    names with definitions and must not repeat their notes."""
+    pending = heading
     for kind, payload in blocks:
         if kind == 'h3':
-            doc.add_heading(''.join(t for t, _ in payload), level=1)
+            text = ''.join(t for t, _ in payload)
+            doc.add_heading(text, level=level)
+            pending = text if cite else None
         elif kind == 'p':
-            add_runs(doc.add_paragraph(), payload)
+            par = doc.add_paragraph()
+            par.paragraph_format.left_indent = BODY_INDENT
+            add_runs(par, plain(payload))
+            if pending:
+                mark(par, pending)
+                pending = None
         elif kind == 'li':
-            add_runs(doc.add_paragraph(style='List Bullet'), payload)
+            par = doc.add_paragraph(style='List Bullet')
+            par.paragraph_format.left_indent = BODY_INDENT + Inches(0.25)
+            par.paragraph_format.first_line_indent = Inches(-0.25)
+            add_runs(par, payload)
         elif kind == 'table':
             add_table(doc, payload)
 
 
+def body_paragraph(doc, text=''):
+    """A paragraph in the body column."""
+    par = doc.add_paragraph(text)
+    par.paragraph_format.left_indent = BODY_INDENT
+    return par
+
+
+def unnumbered(par):
+    """Drops the heading number from one heading paragraph (a numId of 0 means no list)."""
+    num = par._p.get_or_add_pPr().get_or_add_numPr()
+    ilvl = OxmlElement('w:ilvl')
+    ilvl.set(qn('w:val'), '0')
+    nid = OxmlElement('w:numId')
+    nid.set(qn('w:val'), '0')
+    num.append(ilvl)
+    num.append(nid)
+    return par
+
+
 HEADER_FILL = 'E8EEF0'
 ACCENT = RGBColor(0x0A, 0x56, 0x60)
+GREY = RGBColor(0x44, 0x44, 0x44)
+TEXT_WIDTH = Inches(6.5)          # letter page at 1 inch margins
+BODY_INDENT = Inches(0.5)         # body text starts where the heading text starts
+HEADING_NUM_ID = 90               # the numbering definition linked to the heading styles
 
 
 def style(doc):
@@ -440,7 +511,7 @@ def style(doc):
     normal.font.size = Pt(11)
     normal.paragraph_format.space_after = Pt(6)
     normal.paragraph_format.line_spacing = 1.08
-    for name, size, before in (('Heading 1', 18, 18), ('Heading 2', 13, 12), ('Heading 3', 11, 8)):
+    for name, size, before in (('Heading 1', 16, 18), ('Heading 2', 13, 12), ('Heading 3', 11, 8)):
         h = st[name]
         h.font.name = 'Calibri'
         h.font.size = Pt(size)
@@ -471,23 +542,161 @@ def style(doc):
     sec = doc.sections[0]
     for side in ('left_margin', 'right_margin', 'top_margin', 'bottom_margin'):
         setattr(sec, side, Inches(1))
+    heading_numbering(doc)
 
 
-def footer(doc, version):
-    par = doc.sections[0].footer.paragraphs[0]
-    par.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    run = par.add_run(f'SFBRN Accessible Procurement Rubric, matrix version {version}. Page ')
-    run.font.size = Pt(9); run.font.color.rgb = RGBColor(0x44, 0x44, 0x44)
-    field(par, 'PAGE', '1')
-    for r in par.runs:
-        r.font.size = Pt(9); r.font.color.rgb = RGBColor(0x44, 0x44, 0x44)
+def heading_numbering(doc):
+    """Word's multilevel list linked to the heading styles: 1, 1.1, 1.1.1, with the number
+    hanging in the margin so the heading text starts at the body column."""
+    numbering = doc.part.numbering_part.element
+    abstract = OxmlElement('w:abstractNum')
+    abstract.set(qn('w:abstractNumId'), str(HEADING_NUM_ID))
+    mlt = OxmlElement('w:multiLevelType')
+    mlt.set(qn('w:val'), 'multilevel')
+    abstract.append(mlt)
+    for ilvl, (style_id, text) in enumerate((('Heading1', '%1'), ('Heading2', '%1.%2'), ('Heading3', '%1.%2.%3'))):
+        lvl = OxmlElement('w:lvl')
+        lvl.set(qn('w:ilvl'), str(ilvl))
+        for tag, val in (('w:start', '1'), ('w:numFmt', 'decimal'), ('w:pStyle', style_id), ('w:lvlText', text), ('w:lvlJc', 'left')):
+            el = OxmlElement(tag)
+            el.set(qn('w:val'), val)
+            lvl.append(el)
+        ppr = OxmlElement('w:pPr')
+        ind = OxmlElement('w:ind')
+        ind.set(qn('w:left'), str(int(BODY_INDENT.inches * 1440)))
+        ind.set(qn('w:hanging'), str(int(BODY_INDENT.inches * 1440)))
+        ppr.append(ind)
+        lvl.append(ppr)
+        abstract.append(lvl)
+    nums = numbering.findall(qn('w:num'))
+    if nums:
+        nums[0].addprevious(abstract)
+    else:
+        numbering.append(abstract)
+    num = OxmlElement('w:num')
+    num.set(qn('w:numId'), str(HEADING_NUM_ID))
+    ref = OxmlElement('w:abstractNumId')
+    ref.set(qn('w:val'), str(HEADING_NUM_ID))
+    num.append(ref)
+    numbering.append(num)
+    for ilvl, name in enumerate(('Heading 1', 'Heading 2', 'Heading 3')):
+        num_pr = doc.styles[name].element.get_or_add_pPr().get_or_add_numPr()
+        lvl = OxmlElement('w:ilvl')
+        lvl.set(qn('w:val'), str(ilvl))
+        nid = OxmlElement('w:numId')
+        nid.set(qn('w:val'), str(HEADING_NUM_ID))
+        num_pr.append(lvl)
+        num_pr.append(nid)
 
 
-def update_fields_on_open(doc):
-    settings = doc.settings.element
-    uf = OxmlElement('w:updateFields')
-    uf.set(qn('w:val'), 'true')
-    settings.append(uf)
+def rule(par, side):
+    """A thin rule under (side 'bottom') or over (side 'top') the paragraph."""
+    ppr = par._p.get_or_add_pPr()
+    bdr = OxmlElement('w:pBdr')
+    line = OxmlElement(f'w:{side}')
+    line.set(qn('w:val'), 'single')
+    line.set(qn('w:sz'), '6')
+    line.set(qn('w:space'), '4')
+    line.set(qn('w:color'), 'BDBAB0')
+    bdr.append(line)
+    ppr.insert_element_before(bdr, 'w:shd', 'w:tabs', 'w:suppressAutoHyphens', 'w:kinsoku', 'w:wordWrap', 'w:overflowPunct',
+                              'w:topLinePunct', 'w:autoSpaceDE', 'w:autoSpaceDN', 'w:bidi', 'w:adjustRightInd', 'w:snapToGrid',
+                              'w:spacing', 'w:ind', 'w:contextualSpacing', 'w:mirrorIndents', 'w:suppressOverlap', 'w:jc',
+                              'w:textDirection', 'w:textAlignment', 'w:textboxTightWrap', 'w:outlineLvl', 'w:divId', 'w:cnfStyle',
+                              'w:rPr', 'w:sectPr', 'w:pPrChange')
+
+
+def small(run):
+    run.font.size = Pt(9)
+    run.font.color.rgb = GREY
+    return run
+
+
+def right_tab_only(par, width):
+    """One right tab at the text edge. The Header and Footer styles carry a centre tab at 3.25
+    inches and a right tab at 6.5, which only a clearing tab stop at the same position removes."""
+    tabs = par.paragraph_format.tab_stops
+    for pos in (Inches(3.25), Inches(6.5)):
+        if pos != width:
+            tabs.add_tab_stop(pos, WD_TAB_ALIGNMENT.CLEAR)
+    tabs.add_tab_stop(width, WD_TAB_ALIGNMENT.RIGHT)
+
+
+def furnish(doc, version):
+    """The running header and footer of every section, sized to that section's text width.
+    The cover page, the first page of the first section, carries neither."""
+    for i, sec in enumerate(doc.sections):
+        width = sec.page_width - sec.left_margin - sec.right_margin
+        sec.different_first_page_header_footer = i == 0
+        if i:
+            sec.header.is_linked_to_previous = False
+            sec.footer.is_linked_to_previous = False
+        head = sec.header.paragraphs[0]
+        head.text = ''
+        right_tab_only(head, width)
+        small(head.add_run('SFBRN Accessible Procurement Rubric'))
+        small(head.add_run(f'\tMatrix version {version}, {date.today().isoformat()}'))
+        rule(head, 'bottom')
+        foot = sec.footer.paragraphs[0]
+        foot.text = ''
+        right_tab_only(foot, width)
+        small(foot.add_run('San Francisco Bay Region Network'))
+        small(foot.add_run('\tPage '))
+        field(foot, 'PAGE', '1')
+        small(foot.add_run(' of '))
+        field(foot, 'NUMPAGES', '1')
+        for r in foot.runs:
+            small(r)
+        rule(foot, 'top')
+
+
+def update_fields_with_word(path):
+    """Opens the saved document in Word, turns every endnote marker into a Word endnote, inserts
+    the table of contents at its marker, updates the page fields, and saves. The contents page then carries the real page
+    numbers and a link to each heading, and the notes sit at the end under their own heading."""
+    import pythoncom
+    import win32com.client
+    pythoncom.CoInitialize()
+    word = win32com.client.DispatchEx('Word.Application')
+    word.Visible = False
+    word.DisplayAlerts = 0
+    try:
+        d = word.Documents.Open(str(path), ReadOnly=False, AddToRecentFiles=False)
+        try:
+            if d.ReadOnly:
+                raise RuntimeError('Word opened the file read-only, which means it repaired malformed XML. Check element order.')
+            d.ActiveWindow.View.Type = 3          # wdPrintView; Read Mode refuses the endnote settings
+            d.Endnotes.NumberStyle = 0            # wdNoteNumberStyleArabic
+            d.Endnotes.Location = 1               # wdEndOfDocument
+            d.Styles('Endnote Text').ParagraphFormat.SpaceAfter = 4   # air between the entries of one note
+            for token, text in ENDNOTES:
+                rng = d.Content
+                found = rng.Find.Execute(FindText=token, MatchCase=True, MatchWildcards=False)
+                if not found:
+                    raise RuntimeError(f'endnote marker not found: {token}')
+                rng.Text = ''
+                d.Endnotes.Add(rng).Range.Text = text   # the Text argument of Add is ignored
+            d.Repaginate()
+            heading = d.Content
+            if heading.Find.Execute(FindText='Contents', MatchCase=True, MatchWholeWord=True):
+                heading.Paragraphs(1).Style = 'TOC Heading'
+                heading.Paragraphs(1).Range.ListFormat.RemoveNumbers()
+            rng = d.Content
+            if not rng.Find.Execute(FindText='[[TOC]]', MatchCase=True, MatchWildcards=False):
+                raise RuntimeError('contents marker not found')
+            rng.Text = ''
+            # Positional, since late-bound COM drops named arguments: Range, UseHeadingStyles,
+            # UpperHeadingLevel, LowerHeadingLevel, UseFields, TableID, RightAlignPageNumbers,
+            # IncludePageNumbers, AddedStyles, UseHyperlinks, HidePageNumbersInWeb, UseOutlineLevels.
+            d.TablesOfContents.Add(rng, True, 1, 2, False, '', True, True, '', True, True, False)
+            for toc in d.TablesOfContents:
+                toc.Update()
+            d.Fields.Update()
+            d.Save()
+        finally:
+            d.Close(SaveChanges=0)
+    finally:
+        word.Quit()
 
 
 def main():
@@ -499,91 +708,91 @@ def main():
 
     doc = Document()
     style(doc)
-    footer(doc, data['version'])
 
     # ---- Title page and contents.
     for _ in range(6):
         doc.add_paragraph()
     doc.add_paragraph('SFBRN Accessible Procurement Rubric', style='Title')
     sub = doc.add_paragraph()
-    sub.add_run('The unified accessibility review matrix for the San Francisco Bay Region Network, '
-                'applied at requisition intake.').font.size = Pt(14)
+    sub.add_run('The accessibility review matrix of the San Francisco Bay Region Network.').font.size = Pt(14)
     meta = doc.add_paragraph()
     meta.add_run(f'Review matrix version {data["version"]}. Built {date.today().isoformat()} from review-matrix.js, '
                  'the model the SFBRN campuses run.').italic = True
     doc.add_paragraph()
+    doc.add_paragraph().paragraph_format.space_after = Pt(0)
     doc.add_paragraph(
-        'Each section states one part of the rubric, in the words the review tester shows a reviewer, '
-        'followed by its grounding. Calibration names the choices no rule sets, which the pilot will test. '
-        'Appendix A collects the binding rules, federal and California law, the federal standards California '
-        'applies, and CSU policy. Appendix B collects the principles, the commitments the ATI framework holds. '
-        'Both are grouped by the section they ground.')
+        'ADA Title II and Section 508, which Government Code 7405 and 11135 apply to the CSU, require the web pages, '
+        'apps, software and hardware a campus provides to meet WCAG 2.1 AA or the Section 508 Standards. CSU '
+        'policy has the campus Accessible Technology Initiative (ATI) reviewer check every technology purchase '
+        'against that standard before the campus buys the product. The Chancellor\'s Office procurement process '
+        'names the steps of that check and leaves the judgment inside each step to the campus. This document is '
+        'the rubric by which the three San Francisco Bay Region Network (SFBRN) campuses, CSU East Bay, '
+        'San Francisco State and Sonoma State, make that judgment.')
     doc.add_page_break()
-    contents = doc.add_paragraph()
-    run = contents.add_run('Contents')
-    run.bold = True; run.font.size = Pt(18); run.font.color.rgb = ACCENT
-    contents.paragraph_format.space_after = Pt(8)
-    field(doc.add_paragraph(), 'TOC \\o "1-2" \\h \\z \\u', 'Right-click and choose Update Field to build the contents.')
+    # Word builds the table of contents itself in the Word pass, at the [[TOC]] token.
+    doc.add_paragraph('Contents')
+    doc.add_paragraph('[[TOC]]')
+
+    sections = ['Accessible Procurement Process Overview'] + [''.join(t for t, _ in p) for k, p in parser.blocks if k == 'h3']
+    missing = [h for h in GROUNDING if h not in sections]
+    if missing:
+        sys.exit(f'grounding has no section: {missing}')
 
     # ---- Overview and the process figures.
     doc.add_page_break()
-    doc.add_heading('How a review reaches a decision', level=1)
-    render(doc, overview_blocks())
+    doc.add_heading('Accessible Procurement Process Overview', level=1)
+    render(doc, overview_blocks(), 'Accessible Procurement Process Overview', level=2, cite=False)
     figure(doc, Path(tmp) / 'review-process-checks.png',
-           'Figure 1. The shared checks, from requisition intake to the risk grade. Routes 1 to 3 hold the review, '
-           'and route 3 loops back to the Severity step.', width=Inches(5.8))
+           'Figure 1. The shared checks, from requisition intake to the risk grade. An accommodation purchase is '
+           'approved at intake. Holds 1 to 3 pause the review, '
+           'and hold 3 resumes at the Severity step. With no evidence at all, the review falls back once the ATI '
+           'review team records that none can be obtained.', width=Inches(6.0))
     figure(doc, Path(tmp) / 'review-process-remedy.png',
-           'Figure 2. The remedy step, from a Needs TAAP risk grade to Deny or Approve with TAAP. '
-           'Routes 4 and 5 hold the review.', width=Inches(5.6))
-    grounding(doc, 'How a review reaches a decision')
+           'Figure 2. The remedy step, from an Alternate access required risk grade to Deny or Approve with TAAP. '
+           'Holds 4 and 5 pause the review. Under the fallback the minimum is provisional, and the first TAAP '
+           'review re-rates Severity on evidence at the Veracity floor.', width=Inches(5.8))
 
     # ---- The rubric table, on a landscape page.
     landscape(doc)
     doc.add_heading('The rubric on one page', level=1)
     figure(doc, Path(tmp) / 'rubric-core.png',
            'Figure 3. The rubric core, generated from the same model as this document. It collects the values '
-           'the sections that follow define: the risk grade for each pairing of Exposure and Severity, the '
+           'the sections that follow define, the risk grade for each pairing of Exposure and Severity, the '
            'Veracity floor, the TAAP standard by pressure and the warning level.',
-           width=Inches(9.5))
+           width=Inches(9.0))
     portrait(doc)
 
-    # ---- The definitions, one section each.
+    # ---- The definitions, one numbered subsection each.
+    doc.add_heading('Definitions', level=1)
     current = None
     section = []
     for kind, payload in parser.blocks:
         if kind == 'h3':
             if current:
-                render(doc, section)
-                grounding(doc, current)
+                render(doc, section, level=2)
             current = ''.join(t for t, _ in payload)
             section = [(kind, payload)]
         else:
             section.append((kind, payload))
     if current:
-        render(doc, section)
-        grounding(doc, current)
+        render(doc, section, level=2)
 
-    sections = ['How a review reaches a decision'] + [''.join(t for t, _ in p) for k, p in parser.blocks if k == 'h3']
-    missing = [h for h in GROUNDING if h not in sections]
-    if missing:
-        sys.exit(f'grounding has no section: {missing}')
+    # ---- Notes. Word places the endnotes after this heading.
+    doc.add_page_break()
+    unnumbered(doc.add_heading('Notes', level=1))
+    body_paragraph(doc,
+        'Each note names a rule that binds the CSU, a principle the Accessible Technology Initiative '
+        'applies in every review, or a calibration choice that no rule sets and the pilot tests. '
+        'Guidance, settlements and cases from other institutions are not cited, because they do not '
+        'bind the CSU.')
 
-    # ---- Appendices.
-    appendix(doc, 'A', 'Binding rules', 'rules',
-             'The rules below bind the CSU. They are federal and California law, the federal standards '
-             'California applies through Government Code 7405 and 11135, and CSU policy. Each entry states '
-             'what the rule says and which part of the section it carries. Guidance, settlements, cases '
-             'from other institutions and peer practice are not listed, because they do not bind the CSU.',
-             sections)
-    appendix(doc, 'B', 'Principles', 'principles',
-             'A principle is a commitment the ATI framework holds, recorded in the ATI knowledge graph with '
-             'the law, policy and scholarship that ground it. Each entry states the principle and the part '
-             'of the section it carries. A principle marked "proposed" was drafted for this matrix and is '
-             'not yet recorded in the graph.',
-             sections)
-    update_fields_on_open(doc)
     shutil.rmtree(tmp, ignore_errors=True)
+    lock = OUT.with_name('~$' + OUT.name[2:])
+    if lock.exists():
+        sys.exit(f'{OUT.name} is open in Word. Close it and run again.')
+    furnish(doc, data['version'])
     doc.save(OUT)
+    update_fields_with_word(OUT)
     print('wrote', OUT)
 
 

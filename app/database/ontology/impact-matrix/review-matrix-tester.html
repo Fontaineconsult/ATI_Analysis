@@ -96,8 +96,8 @@
       <a class="def-link" href="#def-exposure" @click.prevent="showDefinition('def-exposure')">Definition</a>
     </div>
     <fieldset>
-      <legend class="label">Floor facts</legend>
-      <p class="help">One true fact sets a minimum Exposure on its own, whatever the answers below say.</p>
+      <legend class="label">Facts</legend>
+      <p class="help">One true floor fact sets a minimum Exposure on its own, whatever the answers below say. An accommodation purchase is approved at intake.</p>
       <div id="floorChoices"></div>
     </fieldset>
     <fieldset>
@@ -207,6 +207,7 @@
         </select>
       </fieldset>
       <p class="step-status" x-text="remedyStatus"></p>
+      <p class="step-status" x-show="warningLevel" x-cloak><strong x-text="warningLevel ? 'Warning ' + warningLevel.key + '.' : ''"></strong> <span x-text="warningLevel ? warningLevel.means + ' ' + warningLevel.action : ''"></span></p>
     </div>
   </section>
 </form>

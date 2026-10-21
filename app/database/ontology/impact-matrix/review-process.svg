@@ -7,6 +7,10 @@
   <text x="40" y="54" font-size="12" fill="#444444">Shared checks, then one lane per severity state. Each lane ends in a final decision or a hold.</text>
   <rect x="455" y="80" width="300" height="60" rx="30" fill="#f0efe9" stroke="#bdbab0" stroke-width="1"/>
   <text x="605" y="105.5" text-anchor="middle" font-size="13" fill="#1a1a1a"><tspan x="605" dy="0" font-weight="600">Requisition intake</tspan><tspan x="605" dy="17" font-weight="400">exposure answers, findings, evidence on file</tspan></text>
+  <rect x="40" y="80" width="330" height="60" rx="6" fill="#e3f4e8" stroke="#14612d" stroke-width="1.6"/>
+  <text x="205" y="99" text-anchor="middle" font-size="11" fill="#14612d"><tspan x="205" dy="0" font-weight="600">Approve at intake</tspan><tspan x="205" dy="15" font-weight="400">purchased as an accommodation for one named person;</tspan><tspan x="205" dy="15" font-weight="400">limited to the accommodation; nothing rated</tspan></text>
+  <path d="M455,110 L370,110" fill="none" stroke="#6b6b6b" stroke-width="1.4" marker-end="url(#head)"/>
+  <text x="412.5" y="104" text-anchor="middle" font-size="11" fill="#444444"><tspan x="412.5" dy="0" font-weight="400">accommodation</tspan></text>
   <polygon points="605,172 755,220 605,268 455,220" fill="#fdf7e3" stroke="#bdbab0"/>
   <text x="605" y="215.5" text-anchor="middle" font-size="13" fill="#1a1a1a"><tspan x="605" dy="0" font-weight="400">Accessibility evidence</tspan><tspan x="605" dy="17" font-weight="400">on file?</tspan></text>
   <rect x="455" y="300" width="300" height="60" rx="6" fill="#ffffff" stroke="#bdbab0" stroke-width="1"/>
@@ -18,9 +22,9 @@
   <polygon points="605,612 755,660 605,708 455,660" fill="#fdf7e3" stroke="#bdbab0"/>
   <text x="605" y="648" text-anchor="middle" font-size="12" fill="#1a1a1a"><tspan x="605" dy="0" font-weight="400">Evidence at the Veracity floor</tspan><tspan x="605" dy="16" font-weight="400">for this Exposure and Severity?</tspan><tspan x="605" dy="16" font-weight="400">(S1 always E2 or better)</tspan></text>
   <rect x="835" y="192" width="330" height="56" rx="6" fill="#ecebf7" stroke="#bdbab0" stroke-width="1"/>
-  <text x="1000" y="216" text-anchor="middle" font-size="12" fill="#3b3270"><tspan x="1000" dy="0" font-weight="600">Route 1. On hold: accessibility evidence needed</tspan><tspan x="1000" dy="16" font-weight="400">Held by the requesting unit</tspan></text>
+  <text x="1000" y="216" text-anchor="middle" font-size="12" fill="#3b3270"><tspan x="1000" dy="0" font-weight="600">Hold 1, for accessibility evidence</tspan><tspan x="1000" dy="16" font-weight="400">Held by the requesting unit</tspan></text>
   <rect x="835" y="412" width="330" height="56" rx="6" fill="#ecebf7" stroke="#bdbab0" stroke-width="1"/>
-  <text x="1000" y="436" text-anchor="middle" font-size="12" fill="#3b3270"><tspan x="1000" dy="0" font-weight="600">Route 2. On hold: more information needed</tspan><tspan x="1000" dy="16" font-weight="400">Held by the requesting unit</tspan></text>
+  <text x="1000" y="436" text-anchor="middle" font-size="12" fill="#3b3270"><tspan x="1000" dy="0" font-weight="600">Hold 2, for exposure answers</tspan><tspan x="1000" dy="16" font-weight="400">Held by the requesting unit</tspan></text>
   <path d="M605,140 L605,172" fill="none" stroke="#6b6b6b" stroke-width="1.4" marker-end="url(#head)"/>
   <path d="M755,220 L835,220" fill="none" stroke="#6b6b6b" stroke-width="1.4" marker-end="url(#head)"/>
   <text x="795" y="214" text-anchor="middle" font-size="11" fill="#444444"><tspan x="795" dy="0" font-weight="400">no</tspan></text>
@@ -37,7 +41,7 @@
   <path d="M755,660 L850,660" fill="none" stroke="#6b6b6b" stroke-width="1.4" marker-end="url(#head)"/>
   <text x="802.5" y="654" text-anchor="middle" font-size="11" fill="#444444"><tspan x="802.5" dy="0" font-weight="400">no</tspan></text>
   <rect x="835" y="512" width="330" height="56" rx="6" fill="#ecebf7" stroke="#bdbab0" stroke-width="1"/>
-  <text x="1000" y="536" text-anchor="middle" font-size="12" fill="#3b3270"><tspan x="1000" dy="0" font-weight="600">Route 3. Manual review: stronger evidence needed</tspan><tspan x="1000" dy="16" font-weight="400">Held by the ATI review team</tspan></text>
+  <text x="1000" y="536" text-anchor="middle" font-size="12" fill="#3b3270"><tspan x="1000" dy="0" font-weight="600">Hold 3, for stronger evidence</tspan><tspan x="1000" dy="16" font-weight="400">Held by the ATI review team</tspan></text>
   <path d="M1000,612 L1000,568" fill="none" stroke="#6b6b6b" stroke-width="1.4" marker-end="url(#head)"/>
   <text x="1008" y="628" text-anchor="start" font-size="11" fill="#444444"><tspan x="1008" dy="0" font-weight="400">yes</tspan></text>
   <path d="M835,540 L755,540" fill="none" stroke="#6b6b6b" stroke-width="1.4" marker-end="url(#head)"/>
@@ -63,9 +67,9 @@
   <rect x="895" y="855" width="230" height="70" rx="6" fill="#fdf0d5" stroke="#7a4d00" stroke-width="1.6"/>
   <text x="1010" y="879" text-anchor="middle" font-size="11" fill="#7a4d00"><tspan x="1010" dy="0" font-weight="600">S3. Critical barrier</tspan><tspan x="1010" dy="15" font-weight="400">An essential function cannot be performed</tspan><tspan x="1010" dy="15" font-weight="400">independently; incl. accumulated, fallback</tspan></text>
   <path d="M200,925 L200,1912" fill="none" stroke="#6b6b6b" stroke-width="1.4" marker-end="url(#head)"/>
-  <text x="208" y="941" text-anchor="start" font-size="11" fill="#444444"><tspan x="208" dy="0" font-weight="400">Approve</tspan></text>
+  <text x="208" y="941" text-anchor="start" font-size="11" fill="#444444"><tspan x="208" dy="0" font-weight="400">No alternate access required</tspan></text>
   <path d="M470,925 L470,1912" fill="none" stroke="#6b6b6b" stroke-width="1.4" marker-end="url(#head)"/>
-  <text x="478" y="933.5" text-anchor="start" font-size="11" fill="#444444"><tspan x="478" dy="0" font-weight="400">Approve; roadmap terms at</tspan><tspan x="478" dy="15" font-weight="400">medium or high Exposure</tspan></text>
+  <text x="478" y="933.5" text-anchor="start" font-size="11" fill="#444444"><tspan x="478" dy="0" font-weight="400">No alternate access required; roadmap</tspan><tspan x="478" dy="15" font-weight="400">terms at medium or high Exposure</tspan></text>
   <polygon points="740,962 855,1010 740,1058 625,1010" fill="#fdf7e3" stroke="#bdbab0"/>
   <text x="740" y="998" text-anchor="middle" font-size="12" fill="#1a1a1a"><tspan x="740" dy="0" font-weight="400">S2 accumulation?</tspan><tspan x="740" dy="16" font-weight="400">3+ stacked on one pair, or</tspan><tspan x="740" dy="16" font-weight="400">6+ pairs at high Exposure</tspan></text>
   <path d="M740,925 L740,962" fill="none" stroke="#6b6b6b" stroke-width="1.4" marker-end="url(#head)"/>
@@ -76,13 +80,13 @@
   <path d="M740,1058 L740,1112" fill="none" stroke="#6b6b6b" stroke-width="1.4" marker-end="url(#head)"/>
   <text x="748" y="1074" text-anchor="start" font-size="11" fill="#444444"><tspan x="748" dy="0" font-weight="400">no</tspan></text>
   <path d="M625,1160 L520,1160 L520,1912" fill="none" stroke="#6b6b6b" stroke-width="1.4" marker-end="url(#head)"/>
-  <text x="572.5" y="1139" text-anchor="middle" font-size="11" fill="#444444"><tspan x="572.5" dy="0" font-weight="400">low:</tspan><tspan x="572.5" dy="15" font-weight="400">Approve</tspan></text>
+  <text x="572.5" y="1139" text-anchor="middle" font-size="11" fill="#444444"><tspan x="572.5" dy="0" font-weight="400">low:</tspan><tspan x="572.5" dy="15" font-weight="400">No alternate access required</tspan></text>
   <path d="M855,1160 L895,1160" fill="none" stroke="#6b6b6b" stroke-width="1.4" marker-end="url(#head)"/>
-  <text x="875" y="1090.5" text-anchor="middle" font-size="11" fill="#444444"><tspan x="875" dy="0" font-weight="400">medium or high:</tspan><tspan x="875" dy="15" font-weight="400">Needs TAAP</tspan></text>
+  <text x="875" y="1090.5" text-anchor="middle" font-size="11" fill="#444444"><tspan x="875" dy="0" font-weight="400">medium or high:</tspan><tspan x="875" dy="15" font-weight="400">Alternate access required</tspan></text>
   <polygon points="1010,962 1125,1010 1010,1058 895,1010" fill="#fdf7e3" stroke="#bdbab0"/>
   <text x="1010" y="1006" text-anchor="middle" font-size="12" fill="#1a1a1a"><tspan x="1010" dy="0" font-weight="400">A more accessible product</tspan><tspan x="1010" dy="16" font-weight="400">meets the same need?</tspan></text>
   <path d="M1010,925 L1010,962" fill="none" stroke="#6b6b6b" stroke-width="1.4" marker-end="url(#head)"/>
-  <text x="1018" y="941" text-anchor="start" font-size="11" fill="#444444"><tspan x="1018" dy="0" font-weight="400">Needs TAAP</tspan></text>
+  <text x="1018" y="941" text-anchor="start" font-size="11" fill="#444444"><tspan x="1018" dy="0" font-weight="400">Alternate access required</tspan></text>
   <path d="M1125,1010 L1160,1010 L1160,1890 L1060,1890" fill="none" stroke="#6b6b6b" stroke-width="1.4"/>
   <text x="1142.5" y="1004" text-anchor="middle" font-size="11" fill="#444444"><tspan x="1142.5" dy="0" font-weight="400">yes</tspan></text>
   <polygon points="1010,1112 1125,1160 1010,1208 895,1160" fill="#fdf7e3" stroke="#bdbab0"/>
@@ -91,8 +95,8 @@
   <text x="1018" y="1074" text-anchor="start" font-size="11" fill="#444444"><tspan x="1018" dy="0" font-weight="400">no</tspan></text>
   <path d="M1125,1160 L1080,1160 L1080,1210" fill="none" stroke="#6b6b6b" stroke-width="1.4" marker-end="url(#head)"/>
   <text x="1102.5" y="1154" text-anchor="middle" font-size="11" fill="#444444"><tspan x="1102.5" dy="0" font-weight="400">no</tspan></text>
-  <rect x="1017" y="1210" width="126" height="40" rx="6" fill="#ecebf7" stroke="#bdbab0" stroke-width="1"/>
-  <text x="1080" y="1226.5" text-anchor="middle" font-size="11" fill="#3b3270"><tspan x="1080" dy="0" font-weight="600">Route 4</tspan><tspan x="1080" dy="15" font-weight="400">TAAP needed</tspan></text>
+  <rect x="995" y="1210" width="170" height="40" rx="6" fill="#ecebf7" stroke="#bdbab0" stroke-width="1"/>
+  <text x="1080" y="1226.5" text-anchor="middle" font-size="11" fill="#3b3270"><tspan x="1080" dy="0" font-weight="600">Hold 4</tspan><tspan x="1080" dy="15" font-weight="400">A TAAP</tspan></text>
   <polygon points="1010,1262 1125,1310 1010,1358 895,1310" fill="#fdf7e3" stroke="#bdbab0"/>
   <text x="1010" y="1306" text-anchor="middle" font-size="12" fill="#1a1a1a"><tspan x="1010" dy="0" font-weight="400">TAAP meets</tspan><tspan x="1010" dy="16" font-weight="400">the minimum?</tspan></text>
   <path d="M1010,1208 L1010,1262" fill="none" stroke="#6b6b6b" stroke-width="1.4" marker-end="url(#head)"/>
@@ -113,8 +117,8 @@
   <text x="876" y="1642.5" text-anchor="start" font-size="11" fill="#444444"><tspan x="876" dy="0" font-weight="400">on file: Non-Equal</tspan><tspan x="876" dy="15" font-weight="400">Alternative, high warning</tspan></text>
   <path d="M1125,1610 L1080,1610 L1080,1660" fill="none" stroke="#6b6b6b" stroke-width="1.4" marker-end="url(#head)"/>
   <text x="1102.5" y="1604" text-anchor="middle" font-size="11" fill="#444444"><tspan x="1102.5" dy="0" font-weight="400">claimed</tspan></text>
-  <rect x="1017" y="1660" width="126" height="40" rx="6" fill="#ecebf7" stroke="#bdbab0" stroke-width="1"/>
-  <text x="1080" y="1676.5" text-anchor="middle" font-size="11" fill="#3b3270"><tspan x="1080" dy="0" font-weight="600">Route 5</tspan><tspan x="1080" dy="15" font-weight="400">Formal determination</tspan></text>
+  <rect x="995" y="1660" width="170" height="40" rx="6" fill="#ecebf7" stroke="#bdbab0" stroke-width="1"/>
+  <text x="1080" y="1676.5" text-anchor="middle" font-size="11" fill="#3b3270"><tspan x="1080" dy="0" font-weight="600">Hold 5</tspan><tspan x="1080" dy="15" font-weight="400">A written determination</tspan></text>
   <path d="M1010,1658 L1010,1890 L1060,1890 L1060,1912" fill="none" stroke="#6b6b6b" stroke-width="1.4" marker-end="url(#head)"/>
   <text x="1018" y="1674" text-anchor="start" font-size="11" fill="#444444"><tspan x="1018" dy="0" font-weight="400">none</tspan></text>
   <rect x="135" y="1912" width="400" height="76" rx="6" fill="#e3f4e8" stroke="#14612d" stroke-width="1.6"/>
@@ -139,21 +143,21 @@
   <text x="700" y="2034" text-anchor="start" font-size="12" fill="#1a1a1a"><tspan x="700" dy="0" font-weight="400">Approve with TAAP</tspan></text>
   <rect x="845" y="2021" width="16" height="16" fill="#fbe3e4" stroke="#bdbab0"/>
   <text x="867" y="2034" text-anchor="start" font-size="12" fill="#1a1a1a"><tspan x="867" dy="0" font-weight="400">Deny</tspan></text>
-  <text x="40" y="2066" text-anchor="start" font-size="12" fill="#1a1a1a"><tspan x="40" dy="0" font-weight="600">Holds. Each one is held by a named party until the condition the route names is met.</tspan></text>
-  <text x="40" y="2086" text-anchor="start" font-size="12" fill="#1a1a1a"><tspan x="40" dy="0" font-weight="400">Route 1. On hold: accessibility evidence needed</tspan></text>
+  <text x="40" y="2066" text-anchor="start" font-size="12" fill="#1a1a1a"><tspan x="40" dy="0" font-weight="600">Holds. Each is named by what the review waits for and released by a named party.</tspan></text>
+  <text x="40" y="2086" text-anchor="start" font-size="12" fill="#1a1a1a"><tspan x="40" dy="0" font-weight="400">Hold 1, for accessibility evidence</tspan></text>
   <text x="500" y="2086" text-anchor="start" font-size="12" fill="#1a1a1a"><tspan x="500" dy="0" font-weight="400">Held by the requesting unit</tspan></text>
   <text x="830" y="2086" text-anchor="start" font-size="12" fill="#1a1a1a"><tspan x="830" dy="0" font-weight="400">Resumes at the evidence check</tspan></text>
-  <text x="40" y="2106" text-anchor="start" font-size="12" fill="#1a1a1a"><tspan x="40" dy="0" font-weight="400">Route 2. On hold: more information needed</tspan></text>
+  <text x="40" y="2106" text-anchor="start" font-size="12" fill="#1a1a1a"><tspan x="40" dy="0" font-weight="400">Hold 2, for exposure answers</tspan></text>
   <text x="500" y="2106" text-anchor="start" font-size="12" fill="#1a1a1a"><tspan x="500" dy="0" font-weight="400">Held by the requesting unit</tspan></text>
   <text x="830" y="2106" text-anchor="start" font-size="12" fill="#1a1a1a"><tspan x="830" dy="0" font-weight="400">Resumes at the Exposure check</tspan></text>
-  <text x="40" y="2126" text-anchor="start" font-size="12" fill="#1a1a1a"><tspan x="40" dy="0" font-weight="400">Route 3. Manual review: stronger evidence needed</tspan></text>
+  <text x="40" y="2126" text-anchor="start" font-size="12" fill="#1a1a1a"><tspan x="40" dy="0" font-weight="400">Hold 3, for stronger evidence</tspan></text>
   <text x="500" y="2126" text-anchor="start" font-size="12" fill="#1a1a1a"><tspan x="500" dy="0" font-weight="400">Held by the ATI review team</tspan></text>
   <text x="830" y="2126" text-anchor="start" font-size="12" fill="#1a1a1a"><tspan x="830" dy="0" font-weight="400">Resumes at the Severity step, with the new findings</tspan></text>
-  <text x="40" y="2146" text-anchor="start" font-size="12" fill="#1a1a1a"><tspan x="40" dy="0" font-weight="400">Route 4. On hold: TAAP needed</tspan></text>
+  <text x="40" y="2146" text-anchor="start" font-size="12" fill="#1a1a1a"><tspan x="40" dy="0" font-weight="400">Hold 4, for a TAAP</tspan></text>
   <text x="500" y="2146" text-anchor="start" font-size="12" fill="#1a1a1a"><tspan x="500" dy="0" font-weight="400">Held by the requesting unit</tspan></text>
   <text x="830" y="2146" text-anchor="start" font-size="12" fill="#1a1a1a"><tspan x="830" dy="0" font-weight="400">Resumes at the TAAP check</tspan></text>
-  <text x="40" y="2166" text-anchor="start" font-size="12" fill="#1a1a1a"><tspan x="40" dy="0" font-weight="400">Route 5. Referred for a formal determination</tspan></text>
+  <text x="40" y="2166" text-anchor="start" font-size="12" fill="#1a1a1a"><tspan x="40" dy="0" font-weight="400">Hold 5, for a written determination</tspan></text>
   <text x="500" y="2166" text-anchor="start" font-size="12" fill="#1a1a1a"><tspan x="500" dy="0" font-weight="400">Held by the president or a designee with budget authority</tspan></text>
   <text x="830" y="2166" text-anchor="start" font-size="12" fill="#1a1a1a"><tspan x="830" dy="0" font-weight="400">Resumes at the determination check</tspan></text>
-  <text x="40" y="2194" text-anchor="start" font-size="12" fill="#444444"><tspan x="40" dy="0" font-weight="400">Routes 1 to 3 are checked in that order before the risk grade. Route 3 loops until the evidence meets the floor or cannot be raised.</tspan><tspan x="40" dy="16" font-weight="400">Routes 4 and 5 come from the TAAP checks. Generated from review-matrix.js, matrix version 2.</tspan></text>
+  <text x="40" y="2194" text-anchor="start" font-size="12" fill="#444444"><tspan x="40" dy="0" font-weight="400">Holds 1 to 3 are checked in that order before the risk grade. Hold 3 ends when the evidence meets the floor or cannot be raised.</tspan><tspan x="40" dy="16" font-weight="400">Holds 4 and 5 arise in the TAAP checks. Generated from review-matrix.js, matrix version 2.</tspan></text>
 </svg>

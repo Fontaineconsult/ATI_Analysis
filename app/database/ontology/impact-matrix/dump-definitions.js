@@ -7,7 +7,10 @@ const fs = require('fs');
 const { chromium } = require(process.argv[2]);
 const outDir = process.argv[3];
 const here = (f) => 'file:///' + path.join(__dirname, f).replace(/\\/g, '/');
-const SVGS = [['review-process-checks.svg', 820, 925], ['review-process-remedy.svg', 820, 920], ['rubric-core.svg', 1282, 926]];
+const SVGS = ['review-process-checks.svg', 'review-process-remedy.svg', 'rubric-core.svg'].map((f) => {
+  const head = fs.readFileSync(path.join(__dirname, f), 'utf8').slice(0, 400);
+  return [f, Number(head.match(/ width="(\d+)"/)[1]), Number(head.match(/ height="(\d+)"/)[1])];
+});
 (async () => {
   const b = await chromium.launch();
   const p = await b.newPage();

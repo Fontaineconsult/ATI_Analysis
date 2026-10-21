@@ -15,7 +15,7 @@ const COLOR = {
 const WARN = { low: '#e3f4e8', elevated: '#fdf0d5', high: '#fbe3e4' };
 const warnOf = (w) => (w >= C.taapStandard.warning.high ? 'high' : w >= C.taapStandard.warning.elevated ? 'elevated' : 'low');
 const kText = (k) => (k === 6 ? 'all 6' : `${k} of 6`);
-const routeNo = (id) => M.ROUTING.findIndex((r) => r.id === id) + 1;
+const holdNo = (id) => M.HOLDS.findIndex((h) => h.id === id) + 1;
 const evText = { 0: 'any', 2: 'E1 or better', 4: 'E2 or better' };
 
 const cols = [
@@ -47,7 +47,7 @@ const cell = (id, row, span, kind, lines, chip) => {
 };
 
 // Group header and column header.
-const groups = [['FACTORS', 'X', 'V'], ['RISK GRADE BY SEVERITY', 'S01', 'S3'], ['TAAP REVIEW, WHEN THE RISK GRADE IS NEEDS TAAP', 'k', 'full']];
+const groups = [['FACTORS', 'X', 'V'], ['RISK GRADE BY SEVERITY', 'S01', 'S3'], ['TAAP REVIEW, WHEN THE RISK GRADE IS ALTERNATE ACCESS REQUIRED', 'k', 'full']];
 for (const [label, a, b] of groups) {
   const gx = xs[a][0]; const gw = xs[b][0] + xs[b][1] - gx;
   rect(gx, Y0 - 26, gw, 26, '#e6e4dc'); text(gx + gw / 2, Y0 - 8, label, { size: 12, weight: 700 });
@@ -67,14 +67,14 @@ for (const X of LV) {
   const r0 = row;
   cell('X', r0, 3, 'factor', [X]);
   cell('V', r0, 3, 'factor', [evText[M.EVIDENCE_LIMITS.floor[X]]]);
-  cell('S2', r0, 3, X === 'low' ? 'approve' : 'needs', [X === 'low' ? 'Approve' : 'Needs TAAP']);
+  cell('S2', r0, 3, X === 'low' ? 'approve' : 'needs', X === 'low' ? ['No alternate', 'access required'] : ['Alternate access', 'required']);
   for (let B = 0; B <= 2; B++, row++) {
     const P = LV.indexOf(X) + B;
     const k = C.taapStandard.required[P];
     cell('B', row, 1, 'factor', [String(B)]);
     cell('P', row, 1, 'factor', [String(P)]);
     cell('k', row, 1, 'factor', [kText(k)]);
-    cell('none', row, 1, 'hold', [`On hold, route ${routeNo('taap_needed')}`], warnOf(P));
+    cell('none', row, 1, 'hold', [`On hold (hold ${holdNo('taap_needed')})`], warnOf(P));
     cell('below', row, 1, 'deny', ['Deny']);
     // At the minimum means meeting it while short of all six; where the minimum is all six,
     // such a plan is below it.
@@ -83,8 +83,8 @@ for (const X of LV) {
     cell('full', row, 1, 'taap', ['Approve with TAAP'], warnOf(P));
   }
 }
-cell('S01', 0, 9, 'approve', ['Approve']);
-cell('S3', 0, 9, 'needs', ['Needs TAAP']);
+cell('S01', 0, 9, 'approve', ['No alternate', 'access', 'required']);
+cell('S3', 0, 9, 'needs', ['Alternate', 'access', 'required']);
 // Heavier rules between Exposure bands.
 for (const r of [3, 6]) {
   const yy = Y0 + HH + r * RH;
@@ -94,22 +94,9 @@ for (const r of [3, 6]) {
 }
 parts.push(`<rect x="${X0}" y="${Y0 - 26}" width="${W - X0}" height="${26 + HH + 9 * RH}" fill="none" stroke="#6b6b6b" stroke-width="1.4"/>`);
 
-// Notes under the table.
-const ny = Y0 + HH + 9 * RH + 34;
-const notes = M.rubricNotes();   // shared with the tester's matrix
-// Long notes wrap at a word boundary, with the continuation indented under the text.
-const MAX = Math.floor((W - X0) / 7.2);
-const lines = [];
-notes.forEach((n, i) => {
-  let cur = `${i + 1}.  `;
-  for (const word of n.split(' ')) {
-    if ((cur + word).length > MAX) { lines.push(cur.trimEnd()); cur = '     '; }
-    cur += word + ' ';
-  }
-  lines.push(cur.trimEnd());
-});
-lines.forEach((l, i) => text(X0, ny + i * 21, l, { anchor: 'start', size: 13 }));
-const H = ny + lines.length * 21 + 20;
+// The table ends the figure. The rules it rests on are the document's definitions, and the
+// tester prints the model's rubricNotes() under its own copy of the table.
+const H = Y0 + HH + 9 * RH + 30;
 
 const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W + 40} ${H}" width="${W + 40}" height="${H}" role="img" aria-labelledby="t d" font-family="Segoe UI, system-ui, -apple-system, Helvetica, Arial, sans-serif">
   <title id="t">SFBRN review rubric, version 2, decision table</title>

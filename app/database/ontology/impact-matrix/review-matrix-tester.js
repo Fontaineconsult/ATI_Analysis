@@ -14,18 +14,22 @@
   const M = window.ReviewMatrix;
   const label = (s) => s.replace(/_/g, ' ');
   const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
+  const lower = (s) => s.charAt(0).toLowerCase() + s.slice(1);
   const FACTORS = M.GROUPS.flatMap((g) => g.factors.map((f) => ({ ...f, group: g.id })));
-  const ROUTE_TEXT = Object.fromEntries(M.ROUTING.map((r) => [r.id, r.text]));
+  const HOLD_TEXT = Object.fromEntries(M.HOLDS.map((h) => [h.id, h.text]));
   const REQUIRES_TEXT = {
     serves_everyone_from_day_one: 'The plan serves every affected person from day one',
     best_meets_record: 'A best-meets record with market research (Section 508 E202.7)',
     exception_record: 'A written undue burden or fundamental alteration determination by the president or a designee (28 CFR 35.204)',
     validation_at_review: 'Severity re-rated on evidence at the Veracity floor at the first TAAP review',
+    accommodation_scope: 'Approval limited to the accommodation; use beyond the named person returns the product to review',
   };
+  const BYPASS_NOTE = 'Not rated. The product is purchased as an accommodation, which approves it at intake.';
   const SEVERITY_WORD = { S0: 'no barriers', S1: 'minor', S2: 'major', S3: 'critical' };
   const TONE = { approve: 'approve', approve_with_taap: 'taap', deny: 'deny', on_hold: 'hold', needs_taap: 'taap' };
-  const routeNo = (id) => M.ROUTING.findIndex((r) => r.id === id) + 1;
-  const routeOf = (id) => M.ROUTING.find((r) => r.id === id);
+  const holdNo = (id) => M.HOLDS.findIndex((h) => h.id === id) + 1;
+  const holdOf = (id) => M.HOLDS.find((h) => h.id === id);
+  const holdName = (id) => (holdOf(id) ? `hold ${holdNo(id)}, for ${holdOf(id).waits}` : 'no hold');
   const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   const evidenceById = (id) => M.EVIDENCE.find((e) => e.id === id);
   const evidenceAtRank = (rank) => (rank === 0 ? 'any evidence' : `${M.EVIDENCE.find((e) => e.rank === rank)?.id} or better`);
@@ -60,6 +64,10 @@
       <div class="choice">
         <input type="checkbox" id="floor_${f.id}" value="${f.id}" x-model="form.floors">
         <label for="floor_${f.id}">${esc(f.fact)} <span class="tag">at least ${f.min}</span></label>
+      </div>`).join('') + M.BYPASSES.map((b) => `
+      <div class="choice">
+        <input type="checkbox" id="floor_${b.id}" value="${b.id}" x-model="form.floors">
+        <label for="floor_${b.id}">${esc(b.fact)} <span class="tag">${esc(M.OUTCOMES[b.outcome].label)} at intake</span></label>
       </div>`).join('');
 
     $('answerRows').innerHTML = FACTORS.map((f) => `
@@ -133,6 +141,7 @@
     return {
       ictKind: form.ictKind,
       floors: M.FLOORS.filter((f) => form.floors.includes(f.id)).map((f) => f.id),
+      bypasses: M.BYPASSES.filter((b) => form.floors.includes(b.id)).map((b) => b.id),
       answers,
       evidence: form.evidence,
       validation: form.validation,
@@ -170,6 +179,10 @@
         { role: 'students', group: 'without_vision', essentialFunction: 'View balance', severity: 'S3' },
         { role: 'students', group: 'limited_manipulation', essentialFunction: 'View balance', severity: 'S3' },
       ] },
+    accommodation: { product: 'ZoomText Fusion', vendor: 'Example AT', unit: 'Human Resources', ictKind: 'nonweb',
+      floors: ['accommodation_purchase', 'known_user_or_request'], evidence: 'E0',
+      req: { users: 1, scope: 'low', required_use: 'high', criticality: 'medium', publishes: 'low', frequency: 'high', contract_length: 'medium' },
+      findings: [] },
     clear: { ictKind: 'web', floors: [], evidence: 'E0', req: {}, findings: [] },
   };
   PRESETS.exception = { ...PRESETS.weakDeny, evidence: 'E3', exception: 'determined' };
@@ -184,6 +197,7 @@
       ['small', 'Small optional tool, one S2 barrier'],
       ['homeworkTaap', 'Homework platform, S3, TAAP meets all six'],
       ['exception', 'Public portal, S3, partial TAAP, determination on file'],
+      ['accommodation', 'Screen magnifier for one employee, an accommodation purchase'],
     ] },
     { title: 'Holds', items: [
       ['public', 'Public page, no ACR'],
@@ -269,8 +283,8 @@
       get evidence() { return evidenceById(this.form.evidence); },
       get floor() { return this.d ? M.veracityFloor(this.d.exposure.level, this.sev) : 0; },
       get std() { return this.d?.taapStandard ?? null; },
-      get route() { return this.d?.route ? routeOf(this.d.route) : null; },
-      get holder() { return this.route ? M.HOLDERS[this.route.route] : null; },
+      get hold() { return this.d?.hold ? holdOf(this.d.hold) : null; },
+      get holder() { return this.hold ? M.HOLDERS[this.hold.holder] : null; },
       get requestSummary() {
         const parts = [this.form.product.trim(), this.form.vendor.trim() ? `vendor ${this.form.vendor.trim()}` : '',
           this.form.unit.trim() ? `requested by ${this.form.unit.trim()}` : ''].filter(Boolean);
@@ -282,7 +296,7 @@
       get taapMet() { return M.TAAP_REQUIREMENTS.filter((r) => this.form.taap.meets[r.id]).length; },
 
       // ---- what the form shows, by relevance
-      get validationMatters() { return !!this.d && (this.d.route === 'severity_unknown' || this.d.route === 'veracity_below_floor' || this.d.fallback); },
+      get validationMatters() { return !!this.d && (this.d.hold === 'severity_unknown' || this.d.hold === 'veracity_below_floor' || this.d.fallback); },
       get remedyShown() { return !!this.std; },
       get moreAccessibleShown() { return this.sev === 'S3'; },
       get exceptionShown() {
@@ -299,6 +313,7 @@
       // ---- the status line under each step
       get exposureStatus() {
         if (!this.d) return '';
+        if (this.d.bypass) return BYPASS_NOTE;
         const e = this.d.exposure;
         if (e.unknownsMatter) return `${e.unknownCount} unknown ${e.unknownCount === 1 ? 'answer changes' : 'answers change'} the Exposure level. The review holds until the requesting unit answers.`;
         const floors = M.FLOORS.filter((f) => e.floorsApplied.includes(f.id));
@@ -312,6 +327,7 @@
       },
       get severityStatus() {
         if (!this.d) return '';
+        if (this.d.bypass) return BYPASS_NOTE;
         if (this.sev === 'S?') return 'Severity unknown. No evidence is on file and no finding is recorded.';
         const b = this.d.breadth;
         const breadth = b.assumed ? 'Breadth 2, assumed without evidence.' : `Breadth ${b.level}, from ${b.blocked} blocked ${b.blocked === 1 ? 'pair' : 'pairs'} and ${b.harder} S2 ${b.harder === 1 ? 'finding' : 'findings'}.`;
@@ -323,6 +339,7 @@
       },
       get evidenceStatus() {
         if (!this.d) return '';
+        if (this.d.bypass) return BYPASS_NOTE;
         const ev = this.evidence;
         const f = this.floor;
         const need = `The Veracity floor at ${this.d.exposure.level} exposure for ${this.sev} is ${f === 0 ? 'any evidence' : `rank ${f} (${evidenceAtRank(f)})`}.`;
@@ -334,8 +351,13 @@
       },
       get remedyNote() {
         if (!this.d || this.std) return '';
-        if (this.d.route) return `The review holds at route ${routeNo(this.d.route)} before the risk grade, so no remedy step applies yet.`;
-        return 'The risk grade is Approve, so no TAAP step applies.';
+        if (this.d.bypass) return BYPASS_NOTE;
+        if (this.d.hold) return `The review is on ${holdName(this.d.hold)}, before the risk grade, so no remedy step applies yet.`;
+        return 'The risk grade is No alternate access required, so no TAAP step applies.';
+      },
+      get warningLevel() {
+        // A denial carries no warning: the email omits it too.
+        return this.std && this.d.outcome !== 'deny' ? { key: this.std.warning, ...M.WARNING_LEVELS[this.std.warning] } : null;
       },
       get remedyStatus() {
         const s = this.std;
@@ -348,6 +370,7 @@
       // ---- the result
       get chips() {
         if (!this.d) return [];
+        if (this.d.bypass) return [['Accommodation purchase', 'Approved at intake']];
         const e = this.d.exposure;
         const out = [
           ['Exposure', cap(e.level)],
@@ -363,7 +386,8 @@
       get path() {
         const steps = ['Exposure', 'Severity', 'Veracity', 'Risk grade', 'Remedy', 'Decision'];
         const haltAt = { answers_unknown: 0, severity_unknown: 1, veracity_below_floor: 2, taap_needed: 4, exception_claimed: 4 };
-        const here = this.d?.route ? haltAt[this.d.route] : 5;
+        if (this.d?.bypass) return steps.map((name) => ({ name, state: name === 'Decision' ? 'here' : 'todo' }));
+        const here = this.d?.hold ? haltAt[this.d.hold] : 5;
         return steps.map((name, i) => ({ name, state: i < here ? 'done' : i === here ? 'here' : 'todo' }));
       },
       get decisionSections() {
@@ -378,6 +402,7 @@
         const review = toReview(this.form);
         return [
           { title: 'Exposure', rows: [
+            ['Accommodation purchase', d.bypass ? 'yes, approved at intake' : 'no'],
             ['Level', `${e.level} (score ${e.scorePct}% of maximum)`],
             ['Floors applied', e.floorsApplied.length ? e.floorsApplied.map(label).join(', ') : 'none'],
             ['Groups', Object.entries(e.groupLevels).map(([g, l]) => `${g} ${l}`).join(', ')],
@@ -392,9 +417,9 @@
               ? `S2 counted as S3 (${d.accumulation.escalated}: ${d.accumulation.escalated === 'stacked' ? `${d.accumulation.stacked.length} function and group pair(s) with stacked S2` : `${d.accumulation.spreadPairs} function and group pairs`})` : 'none'],
             ['Breadth', d.breadth.assumed ? `${d.breadth.level} (assumed, no evidence yet)` : `${d.breadth.level} (${d.breadth.blocked} blocked pairs, ${d.breadth.harder} S2)`],
           ] },
-          { title: 'Route and remedy', rows: [
-            ['Route', d.route ? `${routeNo(d.route)}. ${ROUTE_TEXT[d.route]}` : 'none'],
-            ['Held by', d.route ? M.HOLDERS[routeOf(d.route).route].label : 'n/a'],
+          { title: 'Hold and remedy', rows: [
+            ['Hold', d.hold ? `${cap(holdName(d.hold))}. ${HOLD_TEXT[d.hold]}` : 'none'],
+            ['Held by', d.hold ? M.HOLDERS[holdOf(d.hold).holder].label : 'n/a'],
             ['Requires', d.requires.length ? d.requires.map((r) => REQUIRES_TEXT[r] ?? label(r)).join('; ') : 'nothing extra'],
             ['TAAP on file', d.taapOnFile ? 'yes' : 'no'],
             ['TAAP standard', d.taapStandard
@@ -431,13 +456,13 @@
         };
         const std = d.taapStandard;
         const state = !std ? null : !d.taapOnFile ? 'none' : std.shortfall > 0 ? 'below' : std.met === FULL ? 'full' : 'min';
-        // How far this review gets through the table: Exposure still open (route 2), the
-        // evidence still open (routes 1 and 3), the risk grade alone (Approve), or the remedy
-        // step (Needs TAAP). Columns past the stage reached are drawn as not considered.
-        const stage = d.route === 'answers_unknown' ? 'exposure'
-          : (d.route === 'severity_unknown' || d.route === 'veracity_below_floor') ? 'evidence'
+        // How far this review gets through the table: Exposure still open (hold 2), the
+        // evidence still open (holds 1 and 3), the risk grade alone (No alternate access required), or the remedy
+        // step (Alternate access required). Columns past the stage reached are drawn as not considered.
+        const stage = d.bypass ? 'bypass' : d.hold === 'answers_unknown' ? 'exposure'
+          : (d.hold === 'severity_unknown' || d.hold === 'veracity_below_floor') ? 'evidence'
             : std ? 'remedy' : 'grade';
-        const rowKnown = stage !== 'exposure';
+        const rowKnown = stage !== 'exposure' && stage !== 'bypass';
         // Severity read from the evidence on file is a minimum, so the risk grade cell is known
         // as soon as a finding exists, and only tentative while the evidence is being raised.
         const gradeKnown = rowKnown && sev !== 'S?';
@@ -446,7 +471,7 @@
         const exception = review.taap?.exception ?? 'none';
         const moreAccessible = sev === 'S3' && review.moreAccessibleProductExists;
         // A TAAP cell is outlined only when its drawn value is this review's own outcome.
-        const drawnMatches = (o) => o === d.outcome && (o !== 'on_hold' || d.route === 'taap_needed');
+        const drawnMatches = (o) => o === d.outcome && (o !== 'on_hold' || d.hold === 'taap_needed');
         const ev = M.EVIDENCE.find((e) => e.id === d.evidence);
         const floorRank = M.veracityFloor(d.exposure.level, sev);
         const floorNote = !rowKnown ? ''
@@ -464,8 +489,8 @@
             // "At the minimum" is a plan meeting the minimum but short of all six. Where the
             // minimum is all six, any such plan is below it, so the column reads Deny.
             const [o, gap] = col === 'min' && k === FULL ? ['deny', 1] : decide(P, k, met);
-            const route = o === 'on_hold' ? ` (route ${routeNo('taap_needed')})` : '';
-            return { text: `${M.OUTCOMES[o].label}${route}`, sub: '', warn: o === 'deny' ? '' : `warning ${warnOf(P + gap)}`, tone: TONE[o],
+            const hold = o === 'on_hold' ? ` (hold ${holdNo('taap_needed')})` : '';
+            return { text: `${M.OUTCOMES[o].label}${hold}`, sub: '', warn: o === 'deny' ? '' : `warning ${warnOf(P + gap)}`, tone: TONE[o],
               here: remedyReached && onRow && state === col && drawnMatches(o, col), dim: !remedyReached };
           };
           return {
@@ -477,11 +502,12 @@
           };
         }));
         const stageNote = {
-          exposure: `The review holds at route ${routeNo(d.route)} before Exposure is settled, so no row applies yet.`,
+          bypass: 'The product is purchased as an accommodation and approved at intake, so no row applies.',
+          exposure: `The review is on ${holdName(d.hold)}, before Exposure is settled, so no row applies yet.`,
           evidence: sev === 'S?'
-            ? `The review holds at route ${routeNo(d.route)} with no evidence on file, so no severity is known and the risk grade and the TAAP columns are not reached.`
-            : `The review holds at route ${routeNo(d.route)} at the Veracity floor. The risk grade is read from the evidence on file as a minimum, dashed, and the TAAP columns are not reached.`,
-          grade: 'The risk grade is Approve, so the TAAP columns do not apply to this review.',
+            ? `The review is on ${holdName(d.hold)}, with no evidence on file, so no severity is known and the risk grade and the TAAP columns are not reached.`
+            : `The review is on ${holdName(d.hold)}, below the Veracity floor. The risk grade is read from the evidence on file as a minimum, dashed, and the TAAP columns are not reached.`,
+          grade: 'The risk grade is No alternate access required, so the TAAP columns do not apply to this review.',
           remedy: '',
         }[stage];
         // The drawn values differ from this review's outcome in two cases only: the exception,
@@ -562,7 +588,7 @@
       severity_unknown: 'No ACR, demonstration or testing exists.',
       answers_unknown: 'Unknown answers could change the exposure level.',
       veracity_below_floor: 'The evidence is below the Veracity floor for this exposure and severity, and a demonstration or ATI testing can still raise it.',
-      taap_needed: 'The risk grade is Needs TAAP and no TAAP is on file.',
+      taap_needed: 'The risk grade is Alternate access required and no TAAP is on file.',
     };
     const RESUMES = {
       severity_unknown: 'The evidence check',
@@ -645,6 +671,8 @@
       '<h3>Evidence (Veracity)</h3>',
       '<p><strong>Veracity</strong> rates the reliability of the evidence behind the findings, by evidence level.</p>',
       table(['Evidence', 'What it is'], M.EVIDENCE.map((e) => [e.id, e.holds])),
+      `<p>An ACR passes ${M.ACR_CHECKS.length} quality checks to rank E1. Any failed check drops it to E1-.</p>${ul(M.ACR_CHECKS.map((c) => c.text))}`,
+      '<p>A report marked Supports on every criterion fails the sixth check. A perfect result is as likely to mean the evaluation was not done as that no barrier exists, so the report earns E1 only when its remarks show the work.</p>',
       `<p>Severity read from the evidence on file is a minimum. Every review needs evidence at the <strong>Veracity floor</strong> for its exposure and severity before Severity is confirmed.</p>${ul(M.LEVELS.map((l) => term(`${l.charAt(0).toUpperCase() + l.slice(1)} exposure`, `${evAt(l).charAt(0).toUpperCase() + evAt(l).slice(1)}.`)))}`,
       '<p>An S1 finding always needs E2a, E2b or E3, because the reviewer must show the impact is minimal.</p>',
       '<p>Below the floor, the review holds with the ATI review team, which raises the evidence with the requesting unit and the vendor, re-rates Severity and resumes. The need for Veracity rises with exposure and severity, and both parties share the interest in establishing the barriers. A demonstration or ATI testing ranks 4 or 5, which clears every floor, so one loop closes it.</p>',
@@ -664,8 +692,8 @@
 
       '<h3>Risk grade</h3>',
       `<p>The <strong>risk grade</strong> is a fixed mapping from each pairing of an exposure level with a severity to one of two values.</p>${ul([
-        term('Approve', 'The barriers need no TAAP at this exposure.'),
-        term('Needs TAAP', 'A TAAP is required before a final decision.'),
+        term('No alternate access required', 'The barriers need no plan at this exposure.'),
+        term('Alternate access required', 'The campus owes equally effective alternate access, so a TAAP must be on file before a final decision.'),
       ])}`,
       table(['Exposure', 'S0', 'S1', 'S2', 'S3'], M.LEVELS.map((l) => [l, ...['S0', 'S1', 'S2', 'S3'].map((s) => M.RISK_GRADES[M.GRID[l][s].grade])])),
 
@@ -682,12 +710,15 @@
       '<p>Under the fallback, the TAAP standard is provisional and may rise when evidence arrives, and the first TAAP review re-rates Severity on evidence at the Veracity floor.</p>',
 
       '<h3>Warning level</h3>',
-      `<p>The <strong>warning level</strong>, the purchase risk shown to the purchaser, derives from pressure plus the <strong>gap</strong>, the count of requirements the plan misses short of a full TAAP. The shortfall against the minimum decides a denial, and the gap against a full TAAP sets the warning.</p>${ul([
-        term('Low', `Under ${T.warning.elevated}.`),
-        term('Elevated', `${T.warning.elevated} or ${T.warning.high - 1}.`),
-        term('High', `${T.warning.high} or more.`),
-      ])}`,
-      '<p>No TAAP lowers the warning below the pressure level, because a TAAP manages barriers and only the vendor removes barriers.</p>',
+      '<p>The <strong>warning level</strong>, the residual risk shown to the purchaser, derives from pressure plus the <strong>gap</strong>, the count of requirements the plan misses short of a full TAAP. The shortfall against the minimum decides a denial, and the gap against a full TAAP sets the warning. The level never moves the TAAP standard.</p>',
+      '<p>Each level has a fixed meaning and a required action. The pressure and the gap print with the word, so the label never stands alone.</p>',
+      table(['Level', 'Pressure plus gap', 'What it tells the purchaser', 'What the purchaser does'], [
+        ['Low', `Under ${T.warning.elevated}`, M.WARNING_LEVELS.low.means, M.WARNING_LEVELS.low.action],
+        ['Elevated', `${T.warning.elevated} or ${T.warning.high - 1}`, M.WARNING_LEVELS.elevated.means, M.WARNING_LEVELS.elevated.action],
+        ['High', `${T.warning.high} or more`, M.WARNING_LEVELS.high.means, M.WARNING_LEVELS.high.action],
+      ]),
+      '<p>The warning sentence in the review states, in order: the level with its numbers, who depends on the plan and for which essential functions (cannot perform at S3, only with clearly more time or effort at S2), the audience the pressure counts, what the department carries until the vendor\'s roadmap closes the barriers, and the action.</p>',
+      '<p>No TAAP lowers the warning below the pressure level, because a TAAP manages barriers and only the vendor removes barriers. The CSU TAAP template\'s Institutional Risk grades the plan alone, by the count of requirements met, and is a different measure.</p>',
 
       '<h3>Final decision</h3>',
       '<p>The <strong>final decision</strong> settles the purchase as one of three values.</p>',
@@ -696,14 +727,15 @@
         ['Approve with TAAP', 'The purchase goes ahead under the TAAP on file, a temporary plan that leaves the product\'s conformance unchanged.'],
         ['Deny', 'The purchase stops, as a procurement decision rather than a verdict on the TAAP.'],
       ]),
-      `<p>Two conditions deny a product with a Needs TAAP risk grade.</p>${ul([
+      `<p>One fact approves a purchase at intake. ${M.BYPASSES.map((b) => `A product <strong>${lower(b.fact)}</strong> carries out the interactive process between that person and the campus, which settled what the person needs. The four factors are not rated, and the approval is limited to the accommodation.`).join(' ')}</p>`,
+      `<p>Two conditions deny a product with an Alternate access required risk grade.</p>${ul([
         'A more accessible product meets the same need, with or without a TAAP (S3 only).',
         'The TAAP on file falls below the TAAP standard, with no written undue burden or fundamental alteration determination on file. A plan that meets none of the six requirements gives no alternative access and is denied even under the exception.',
       ])}`,
 
-      '<h3>Routes</h3>',
-      '<p>Reviews either conclude with one of three final decisions or remain paused in one of five numbered <strong>routes</strong>, each held by a named party until the condition the route names is met. Routes 1 to 3, in priority order, gate the risk grade, and route 3 loops to the Severity step with the new findings or the fallback. Routes 4 and 5 come from the TAAP checks, with route 4 holding a Needs TAAP risk grade until a TAAP is on file, and route 5 referring an undue burden or fundamental alteration claim for a written determination.</p>',
-      table(['Route', 'Headline', 'When it applies', 'Held by', 'Resumes at'], M.ROUTING.map((r, i) => [String(i + 1), M.HEADLINE[r.id], WHEN[r.id] ?? r.text, M.HOLDERS[r.route].label, RESUMES[r.id]])),
+      '<h3>Holds</h3>',
+      '<p>A <strong>hold</strong> pauses the review until a named party supplies what the review waits for. Holds 1 to 3 come before the risk grade, and the first that applies holds the review. Hold 3 resumes at the Severity step with the new findings, or the review proceeds under the fallback, defined under Evidence, when the evidence cannot be raised. Holds 4 and 5 arise in the remedy step.</p>',
+      table(['Hold', 'Waits for', 'When it applies', 'Held by', 'Resumes at'], M.HOLDS.map((h, i) => [String(i + 1), cap(h.waits), WHEN[h.id] ?? h.text, cap(M.HOLDERS[h.holder].label), RESUMES[h.id]])),
     ].join('\n');
   }
 
