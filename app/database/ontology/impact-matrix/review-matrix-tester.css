@@ -260,6 +260,11 @@ h4 { margin: 10px 0 2px; font-size: 0.78rem; text-transform: uppercase; letter-s
 
 .matrix { margin-top: 20px; }
 .matrix h2 { font-size: 1.1rem; margin: 0 0 10px; }
+.matrix-summary { margin: 0 0 14px; max-width: 80ch; }
+.matrix-lead { margin: 0 0 6px; font-weight: 600; }
+.matrix-summary ul { margin: 0; padding-left: 1.2em; }
+.matrix-summary li { margin: 3px 0; line-height: 1.45; }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
 .matrix .grid { width: 100%; }
 .grid-wrap { overflow-x: auto; }
 .grid { font-size: 0.82rem; }

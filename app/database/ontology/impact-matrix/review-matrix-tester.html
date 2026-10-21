@@ -268,37 +268,42 @@
 
 <section class="card panel matrix" aria-labelledby="h-matrix">
     <h2 id="h-matrix">This review in the matrix</h2>
+    <div class="step-status matrix-summary" id="matrixSummary">
+      <p class="matrix-lead" x-text="grid.lead"></p>
+      <ul>
+        <template x-for="(line, i) in grid.summary" :key="i"><li x-text="line"></li></template>
+      </ul>
+    </div>
     <div class="grid-wrap">
-      <table class="grid">
-        <caption>The exposure matrix. The outlined cells are this review.</caption>
+      <table class="grid" aria-describedby="matrixSummary">
+        <caption>The exposure matrix. Outlined cells are this review. Faded columns are not reached.</caption>
         <thead>
           <tr>
             <th scope="col">Exposure</th><th scope="col">Breadth</th><th scope="col">Pressure</th><th scope="col">Veracity floor</th>
-            <th scope="col" :class="grid.headDim.grade ? 'dim' : ''">S0, S1</th><th scope="col" :class="grid.headDim.grade ? 'dim' : ''">S2</th><th scope="col" :class="grid.headDim.grade ? 'dim' : ''">S3</th>
-            <th scope="col" :class="grid.headDim.taap ? 'dim' : ''">Minimum (the TAAP standard)</th>
-            <th scope="col" :class="grid.headDim.taap ? 'dim' : ''">No TAAP yet</th>
-            <th scope="col" :class="grid.headDim.taap ? 'dim' : ''">TAAP below the minimum</th><th scope="col" :class="grid.headDim.taap ? 'dim' : ''">TAAP at the minimum</th>
-            <th scope="col" :class="grid.headDim.taap ? 'dim' : ''">Full TAAP</th>
+            <th scope="col" :class="grid.headDim.grade ? 'dim' : ''">S0, S1<span class="sr-only" x-show="grid.headDim.grade">, not reached</span></th><th scope="col" :class="grid.headDim.grade ? 'dim' : ''">S2<span class="sr-only" x-show="grid.headDim.grade">, not reached</span></th><th scope="col" :class="grid.headDim.grade ? 'dim' : ''">S3<span class="sr-only" x-show="grid.headDim.grade">, not reached</span></th>
+            <th scope="col" :class="grid.headDim.taap ? 'dim' : ''">Minimum (the TAAP standard)<span class="sr-only" x-show="grid.headDim.taap">, not reached</span></th>
+            <th scope="col" :class="grid.headDim.taap ? 'dim' : ''">No TAAP yet<span class="sr-only" x-show="grid.headDim.taap">, not reached</span></th>
+            <th scope="col" :class="grid.headDim.taap ? 'dim' : ''">TAAP below the minimum<span class="sr-only" x-show="grid.headDim.taap">, not reached</span></th><th scope="col" :class="grid.headDim.taap ? 'dim' : ''">TAAP at the minimum<span class="sr-only" x-show="grid.headDim.taap">, not reached</span></th>
+            <th scope="col" :class="grid.headDim.taap ? 'dim' : ''">Full TAAP<span class="sr-only" x-show="grid.headDim.taap">, not reached</span></th>
           </tr>
         </thead>
         <tbody>
           <template x-for="row in grid.rows" :key="row.key">
             <tr :class="(row.band ? 'band' : '') + (row.onRow ? ' here-row' : '')">
               <template x-if="row.first"><th scope="rowgroup" rowspan="3" :class="row.onBand ? 'here-band' : ''" x-text="row.level"></th></template>
-              <td :class="row.onRow ? 'here' : ''" x-text="row.B"></td>
-              <td :class="row.onRow ? 'here' : ''" x-text="row.P"></td>
-              <template x-if="row.first"><td rowspan="3" :class="row.floor.here ? 'here' : ''"><span x-text="row.floor.text"></span><span class="warn" x-show="row.floor.note" x-text="row.floor.note"></span></td></template>
-              <template x-for="(c, i) in row.grades" :key="i"><td :class="'tone-' + c.tone + (c.here ? ' here' : '') + (c.here && c.tentative ? ' tentative' : '') + (c.dim ? ' dim' : '')" x-text="c.text"></td></template>
-              <td :class="(row.k.here ? 'here' : '') + (row.k.dim ? ' dim' : '')" x-text="row.k.text"></td>
+              <td :class="row.onRow ? 'here' : ''"><span class="sr-only" x-show="row.onRow">This review, </span><span x-text="row.B"></span></td>
+              <td :class="row.onRow ? 'here' : ''"><span class="sr-only" x-show="row.onRow">This review, </span><span x-text="row.P"></span></td>
+              <template x-if="row.first"><td rowspan="3" :class="row.floor.here ? 'here' : ''"><span class="sr-only" x-show="row.floor.here">This review, </span><span x-text="row.floor.text"></span><span class="warn" x-show="row.floor.note" x-text="row.floor.note"></span></td></template>
+              <template x-for="(c, i) in row.grades" :key="i"><td :class="'tone-' + c.tone + (c.here ? ' here' : '') + (c.here && c.tentative ? ' tentative' : '') + (c.dim ? ' dim' : '')"><span class="sr-only" x-show="c.here" x-text="c.tentative ? 'This review, for now, ' : 'This review, '"></span><span x-text="c.text"></span></td></template>
+              <td :class="(row.k.here ? 'here' : '') + (row.k.dim ? ' dim' : '')"><span class="sr-only" x-show="row.k.here">This review, </span><span x-text="row.k.text"></span></td>
               <template x-for="(c, i) in row.taap" :key="i">
-                <td :class="'tone-' + c.tone + (c.here ? ' here' : '') + (c.dim ? ' dim' : '')"><span x-text="c.text"></span><span class="warn" x-show="c.sub" x-text="c.sub"></span><span class="warn" x-show="c.warn" x-text="c.warn"></span></td>
+                <td :class="'tone-' + c.tone + (c.here ? ' here' : '') + (c.dim ? ' dim' : '')"><span class="sr-only" x-show="c.here">This review, </span><span x-text="c.text"></span><span class="warn" x-show="c.sub" x-text="c.sub"></span><span class="warn" x-show="c.warn" x-text="c.warn"></span></td>
               </template>
             </tr>
           </template>
         </tbody>
       </table>
     </div>
-    <p class="step-status" x-show="grid.stageNote || grid.caveat"><span x-text="grid.stageNote"></span> <span x-text="grid.caveat"></span></p>
 </section>
 </section>
 

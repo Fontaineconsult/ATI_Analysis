@@ -436,12 +436,14 @@
       get json() { return this.d ? JSON.stringify(this.d, null, 2) : ''; },
 
       // The exposure matrix: one row per Exposure and Breadth, drawn exactly as rubric-core.svg
-      // draws it. The TAAP columns show the S3 case with no exception on file; the status line covers
-      // S2, the exception and a more accessible product, and a caveat names which applies to
-      // the review on the page.
+      // draws it. The TAAP columns show the S3 case with no exception on file. The summary above
+      // the table states, in plain sentences, every state the outlines and the fading encode:
+      // the row, the floor and the evidence against it, the risk grade, the TAAP standard, the
+      // column the plan on file falls in, the warning, and where this review's own result
+      // departs from the drawn value.
       get grid() {
         const d = this.d;
-        if (!d) return { rows: [], stageNote: '', caveat: '', headDim: { grade: true, taap: true } };
+        if (!d) return { rows: [], lead: '', summary: [], headDim: { grade: true, taap: true } };
         const review = toReview(this.form);
         const T = M.CALIBRATION.taapStandard;
         const sev = this.sev;
@@ -501,22 +503,97 @@
             taap: [taapCell('none', null), taapCell('below', k - 1), taapCell('min', k), taapCell('full', FULL)],
           };
         }));
-        const stageNote = {
-          bypass: 'The product is purchased as an accommodation and approved at intake, so no row applies.',
-          exposure: `The review is on ${holdName(d.hold)}, before Exposure is settled, so no row applies yet.`,
-          evidence: sev === 'S?'
-            ? `The review is on ${holdName(d.hold)}, with no evidence on file, so no severity is known and the risk grade and the TAAP columns are not reached.`
-            : `The review is on ${holdName(d.hold)}, below the Veracity floor. The risk grade is read from the evidence on file as a minimum, dashed, and the TAAP columns are not reached.`,
-          grade: 'The risk grade is No alternate access required, so the TAAP columns do not apply to this review.',
-          remedy: '',
-        }[stage];
-        // The drawn values differ from this review's outcome in two cases only: the exception,
-        // in the below-standard column, and a more accessible product, in every TAAP column.
-        const caveat = !std ? ''
-          : moreAccessible ? 'For this review, a more accessible product meets the same need, so every TAAP state is Deny.'
-            : exception !== 'none' ? `For this review, an undue burden or fundamental alteration ${exception === 'claimed' ? 'claim' : 'determination'} is on file, so the below-standard column follows note 4 rather than the drawn value.`
-              : '';
-        return { rows, stage, stageNote, caveat, headDim: { grade: !gradeKnown, taap: !remedyReached } };
+        const { lead, summary } = this.gridSummary({ stage, sev, std, state, exception, moreAccessible, ev, floorRank, rows });
+        return { rows, stage, lead, summary, headDim: { grade: !gradeKnown, taap: !remedyReached } };
+      },
+
+      // The sentences above the table. One fact per sentence, in the order the table reads,
+      // so a reader who cannot see the outlines hears the same position a sighted reader sees.
+      gridSummary({ stage, sev, std, state, exception, moreAccessible, ev, floorRank, rows }) {
+        const d = this.d;
+        const FULL = M.TAAP_REQUIREMENTS.length;
+        const sevHow = d.severity.includes('provisional') ? ', provisional under the fallback'
+          : d.severity.includes('accumulated') ? ', accumulated from S2 barriers' : '';
+        const sevText = sev === 'S?' ? '' : `${sev}, ${SEVERITY_WORD[sev]}${sevHow}`;
+        const lvl = d.exposure.level;
+        const B = d.breadth.level;
+        const row = rows.find((r) => r.onRow);
+        const bandFloor = rows.find((r) => r.level === lvl && r.first)?.floor.text;
+        const floorText = bandFloor === 'any' ? 'any evidence' : bandFloor;
+        const out = [];
+
+        if (stage === 'bypass') {
+          return { lead: 'This review does not use the table.', summary: [
+            'The product is purchased as an accommodation for one named person, so it is approved at intake.',
+            'No row applies and nothing is rated. The whole table is shown faded.',
+          ] };
+        }
+        if (stage === 'exposure') {
+          const n = d.exposure.unknownCount;
+          return { lead: 'This review has not reached the table.', summary: [
+            `${n} unknown ${n === 1 ? 'answer changes' : 'answers change'} the Exposure level, so the review is on ${holdName(d.hold)}.`,
+            'Until Exposure is settled, no row applies. The whole table is shown faded.',
+          ] };
+        }
+
+        // The row.
+        out.push(`Exposure is ${lvl} and Breadth is ${B}, which gives Pressure ${row.P}.`);
+
+        // The floor and the evidence against it.
+        if (sev === 'S?') {
+          out.push(`The Veracity floor for ${lvl} exposure is ${floorText}. ${ev.id === 'E0' ? 'No evidence is on file' : `The evidence on file is ${ev.id} and no finding is recorded`}, so Severity is unknown and the review is on ${holdName(d.hold)}.`);
+          out.push('Without a severity there is no risk grade. The risk grade columns and the TAAP columns are not reached and are shown faded.');
+          return { lead: `This review sits in the ${lvl} exposure band, on the Breadth ${B} row, and stops at the Veracity floor.`, summary: out };
+        }
+        const floor = floorRank === 0 ? 'any evidence' : evidenceAtRank(floorRank);
+        if (d.fallback) {
+          out.push(`The Veracity floor for ${sev} at ${lvl} exposure is ${floor}. The evidence on file is ${ev.id}, below the floor, and it cannot be raised, so the fallback applies.`);
+        } else if (ev.rank >= floorRank) {
+          out.push(`The Veracity floor for ${sev} at ${lvl} exposure is ${floor}. The evidence on file is ${ev.id}, at or above the floor.`);
+        } else {
+          out.push(`The Veracity floor for ${sev} at ${lvl} exposure is ${floor}. The evidence on file is ${ev.id}, below the floor, so the review is on ${holdName(d.hold)}.`);
+        }
+
+        // The risk grade.
+        const gradeLabel = M.RISK_GRADES[M.GRID[lvl][sev].grade];
+        if (stage === 'evidence') {
+          out.push(`Severity ${sevText}, read from the evidence on file, is a minimum, so for now the risk grade is ${gradeLabel}. Stronger evidence can raise it, not lower it. Its cell has a dashed outline.`);
+          out.push('The TAAP columns are not reached and are shown faded.');
+          return { lead: `This review sits in the ${lvl} exposure band, on the Breadth ${B} row, and stops at the Veracity floor.`, summary: out };
+        }
+        if (stage === 'grade') {
+          out.push(`Severity is ${sevText}, so the risk grade is ${gradeLabel}. The product is approved without a TAAP.`);
+          out.push('The TAAP columns do not apply and are shown faded.');
+          return { lead: `This review sits in the ${lvl} exposure band, on the Breadth ${B} row, and ends at the risk grade.`, summary: out };
+        }
+
+        // The remedy step.
+        out.push(`Severity is ${sevText}, so the risk grade is ${gradeLabel}.`);
+        const k = std.required;
+        out.push(`Pressure ${std.pressure} sets the TAAP standard at ${k === FULL ? `all ${FULL}` : `${k} of the ${FULL}`} requirements.`);
+        const met = std.met ?? 0;
+        const metText = met === 0 ? `none of the ${FULL}` : met === FULL ? `all ${FULL}` : `${met} of ${FULL}`;
+        const drawn = { none: 'on_hold', below: 'deny', min: 'approve_with_taap', full: 'approve_with_taap' }[state];
+        // The drawn cell is this review's own result unless a caveat below says otherwise.
+        const own = drawn === d.outcome && (drawn !== 'on_hold' || d.hold === 'taap_needed');
+        const reads = own ? 'the result for this review is' : 'that column reads';
+        if (state === 'none') out.push(`No TAAP is on file, so the review is on ${holdName('taap_needed')}. The warning from pressure alone is ${std.warning}.`);
+        else if (state === 'below') out.push(`The TAAP on file meets ${metText}, below the minimum, so ${reads} Deny.`);
+        else if (state === 'min') out.push(`The TAAP on file meets ${metText}, at the minimum, so ${reads} Approve with TAAP, warning ${std.warning}.`);
+        else out.push(`The TAAP on file meets ${metText}, so ${reads} Approve with TAAP, warning ${std.warning}.`);
+
+        // Where this review's own result departs from the drawn value.
+        const claim = exception === 'claimed' ? 'claim' : 'determination';
+        if (moreAccessible) {
+          out.push('A more accessible product meets the same need, so the result for this review is Deny, whatever the TAAP on file.');
+        } else if (d.outcome === 'approve_with_taap' && d.exception) {
+          out.push(`A written undue burden or fundamental alteration determination is on file, so the result for this review is Approve with TAAP under a ${std.warning} warning, not Deny.`);
+        } else if (d.hold === 'exception_claimed') {
+          out.push(`An undue burden or fundamental alteration claim is on file, so the review is on ${holdName(d.hold)}, not denied yet.`);
+        } else if (exception !== 'none' && drawn === 'deny' && met === 0) {
+          out.push(`An undue burden or fundamental alteration ${claim} is on file, and a plan that meets none of the ${FULL} is denied even so.`);
+        }
+        return { lead: `This review sits in the ${lvl} exposure band, on the Breadth ${B} row, and reaches the TAAP columns.`, summary: out };
       },
 
       // ---- copy the reasoning. The async clipboard first; a copy event as the fallback,
