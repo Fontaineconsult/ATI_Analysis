@@ -1,0 +1,88 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["report", "rows", "reading_notes"],
+  "properties": {
+    "report": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "product_name", "product_version", "template_version", "edition", "standards_reported",
+        "report_date", "evaluation_date", "evaluation_methods", "assistive_technologies", "browsers",
+        "interfaces_covered", "author_name", "author_organization", "author_relationship",
+        "author_evidence", "scope_carve_outs", "design_intent_language", "nonstandard_terms"
+      ],
+      "properties": {
+        "product_name": { "type": ["string", "null"] },
+        "product_version": { "type": ["string", "null"], "description": "The version the report says it evaluated, verbatim. Null when the report names only a product line." },
+        "template_version": { "type": ["string", "null"], "description": "The VPAT template version printed on the report, such as 2.5Rev. Null when absent." },
+        "edition": { "type": "string", "enum": ["WCAG", "508", "EU", "INT", "custom", "unknown"] },
+        "standards_reported": {
+          "type": "array",
+          "items": { "type": "string", "enum": ["WCAG 2.0", "WCAG 2.1", "WCAG 2.2", "Revised Section 508", "EN 301 549", "other"] }
+        },
+        "report_date": { "type": ["string", "null"], "description": "YYYY-MM of the report date. Null when absent." },
+        "evaluation_date": { "type": ["string", "null"], "description": "YYYY-MM of the evaluation date in the methods section, when it differs from the report date. Null when absent." },
+        "evaluation_methods": { "$ref": "#/$defs/quoted_or_null" },
+        "assistive_technologies": { "type": "array", "items": { "type": "string" }, "description": "Each named screen reader, magnifier, voice control or keyboard-only testing, as written." },
+        "browsers": { "type": "array", "items": { "type": "string" } },
+        "interfaces_covered": { "type": "array", "items": { "type": "string" }, "description": "Each product, interface or platform the report says it covers, such as web app, iOS app, admin console." },
+        "author_name": { "type": ["string", "null"] },
+        "author_organization": { "type": ["string", "null"] },
+        "author_relationship": { "type": "string", "enum": ["vendor_staff", "third_party", "unknown"], "description": "third_party only when the report names an outside firm as the evaluator." },
+        "author_evidence": { "$ref": "#/$defs/quoted_or_null" },
+        "scope_carve_outs": { "type": "array", "items": { "$ref": "#/$defs/quoted" }, "description": "Notes that exclude part of the product from the evaluation." },
+        "design_intent_language": { "type": "array", "items": { "$ref": "#/$defs/quoted" }, "description": "Claims about intent instead of behaviour, such as 'designed to be accessible'." },
+        "nonstandard_terms": { "type": "array", "items": { "type": "string" }, "description": "Conformance terms outside Supports, Partially Supports, Does Not Support, Not Applicable and Not Evaluated, as written." }
+      }
+    },
+    "rows": {
+      "type": "array",
+      "description": "Every criterion row in every conformance table, in document order.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["table", "criterion", "name", "level", "conformance", "conformance_raw", "remarks", "page", "remark_type", "remark_reason", "features_named", "hedged", "contradicts_rating", "affected_groups"],
+        "properties": {
+          "table": { "type": "string", "description": "The table the row sits in, such as 'WCAG 2.1 Level A', 'Section 508 Chapter 3', 'Chapter 5 Software'." },
+          "criterion": { "type": "string", "description": "The criterion number as printed, such as 1.1.1 or 302.1 or 502.3.1." },
+          "name": { "type": "string" },
+          "level": { "type": "string", "enum": ["A", "AA", "AAA", "none"] },
+          "conformance": { "type": "string", "enum": ["Supports", "Partially Supports", "Does Not Support", "Not Applicable", "Not Evaluated", "other"] },
+          "conformance_raw": { "type": "string", "description": "The rating exactly as printed." },
+          "remarks": { "type": "string", "description": "The Remarks and Explanations cell, verbatim. Empty string when blank." },
+          "page": { "type": ["integer", "null"] },
+          "remark_type": { "type": "string", "enum": ["bug_report", "feature_named", "restated", "generic", "blank"] },
+          "remark_reason": { "type": "string", "description": "One sentence naming what in the remark sets its type." },
+          "features_named": { "type": "array", "items": { "type": "string" }, "description": "Pages, screens, components or workflows the remark names." },
+          "hedged": { "type": "boolean", "description": "The remark qualifies its claim with some, most, generally, may or similar." },
+          "contradicts_rating": { "type": "boolean", "description": "The remark describes a failure under a Supports rating, or full support under a failing rating." },
+          "affected_groups": {
+            "type": "array",
+            "description": "Functional groups the remark names or the failure plainly affects. Empty when the remark gives no basis.",
+            "items": { "type": "string", "enum": ["without_vision", "limited_vision", "without_color_perception", "without_hearing", "limited_hearing", "without_speech", "limited_manipulation", "limited_reach_and_strength", "limited_language_cognitive_learning"] }
+          }
+        }
+      }
+    },
+    "reading_notes": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Anything about the document that limits the extraction: unreadable pages, tables split across pages, a second product in the same file."
+    }
+  },
+  "$defs": {
+    "quoted": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["quote", "page"],
+      "properties": {
+        "quote": { "type": "string" },
+        "page": { "type": ["integer", "null"] }
+      }
+    },
+    "quoted_or_null": {
+      "anyOf": [{ "$ref": "#/$defs/quoted" }, { "type": "null" }]
+    }
+  }
+}

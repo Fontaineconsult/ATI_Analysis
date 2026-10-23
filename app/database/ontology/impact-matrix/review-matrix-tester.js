@@ -117,7 +117,9 @@
   const saveSigner = (s) => { try { localStorage.setItem(SIGNER_KEY, s); } catch (e) { /* storage blocked: the field still works for the session */ } };
   function blankForm() {
     return {
-      product: '', vendor: '', unit: '', requester: '', requisition: '', signer: loadSigner(),
+      product: '', vendor: '', unit: '', requester: '', requisition: '', contact: '', signer: loadSigner(),
+      // A loaded test review fixes its date, so the ACR's age does not drift. Null means today.
+      reviewDate: null,
       ictKind: 'web',
       floors: [],
       answers: Object.fromEntries(FACTORS.map((f) => [f.id, { requester: null, reviewer: null }])),
@@ -152,6 +154,7 @@
       answers[f.id] = { requester: v(form.answers[f.id].requester), reviewer: v(form.answers[f.id].reviewer) };
     }
     return {
+      reviewDate: form.reviewDate || undefined,
       ictKind: form.ictKind,
       floors: M.FLOORS.filter((f) => form.floors.includes(f.id)).map((f) => f.id),
       bypasses: M.BYPASSES.filter((b) => form.floors.includes(b.id)).map((b) => b.id),
@@ -171,6 +174,40 @@
         exception: form.taap.exception },
     };
   }
+
+  /** A stored review, in the shape `evaluate` reads, as form state. The inverse of toReview. */
+  function formFromReview(r, request = {}) {
+    const form = blankForm();
+    Object.assign(form, {
+      product: request.product ?? '', vendor: request.vendor ?? '', unit: request.unit ?? '', requester: request.requester ?? '',
+      contact: request.contact ?? '', requisition: request.requisition ?? '',
+      reviewDate: r.reviewDate ?? null, ictKind: r.ictKind ?? 'web',
+      floors: [...(r.floors ?? []), ...(r.bypasses ?? [])], evidence: r.evidence ?? 'E0', evidenceNote: r.evidenceNote ?? '',
+      validation: r.validation ?? 'open', moreAccessibleProductExists: !!r.moreAccessibleProductExists,
+    });
+    for (const f of FACTORS) {
+      const a = r.answers?.[f.id];
+      form.answers[f.id] = { requester: a?.requester ?? null, reviewer: a?.reviewer ?? null };
+    }
+    Object.assign(form.acr, {
+      issued: r.acr?.issued ?? '', lastMajorRelease: r.acr?.lastMajorRelease ?? '', defects: [...(r.acr?.defects ?? [])],
+      author: r.acr?.author ?? null, authorName: r.acr?.authorName ?? '', remarks: r.acr?.remarks ?? null,
+      spotCheck: r.acr?.spotCheck ?? 'none', spotCheckNote: r.acr?.spotCheckNote ?? '',
+      accepted: !!r.acr?.accepted, acceptedNote: r.acr?.acceptedNote ?? '',
+    });
+    form.findings = (r.findings ?? []).map((f) => newFinding(f));
+    form.taap.exists = !!r.taap?.exists;
+    form.taap.exception = r.taap?.exception ?? 'none';
+    for (const req of M.TAAP_REQUIREMENTS) form.taap.meets[req.id] = !!r.taap?.meets?.[req.id];
+    return form;
+  }
+  /** The parts of a determination a test review pins, in the order the list reports them. */
+  const pinned = (d) => ({
+    outcome: d.outcome, hold: d.hold, exposure: d.exposure.level, evidence: d.evidence, severity: d.severity,
+    breadth: d.breadth.level, taapStandard: d.taapStandard ? d.taapStandard.required : null,
+    warning: d.taapStandard ? d.taapStandard.warning : null, raiseBy: d.veracity.raise ? d.veracity.raise.by : null,
+  });
+  const resultWord = (e) => (e.hold ? M.HEADLINE[e.hold] : (M.OUTCOMES[e.outcome] ? M.OUTCOMES[e.outcome].label : e.outcome));
 
   // ACR records for the examples: dated relative to today, so the age qualification holds as written.
   const monthsAgo = (n) => { const d = new Date(); d.setMonth(d.getMonth() - n); return d.toISOString().slice(0, 7); };
@@ -294,6 +331,9 @@
       copyStatus: '',
       determinationStatus: '',
       open: { messages: false, reviewer: false, data: false },
+      analysis: null,
+      testSet: null,
+      activeTest: null,
       tab: 'review',
       tabs: ['review', 'definitions'],
       examples: EXAMPLE_GROUPS.map((g) => ({ ...g, items: g.items.map(([id, name]) => {
@@ -339,7 +379,7 @@
         const review = toReview(this.form);
         this.d = M.evaluate(review);
         const ctx = { product: this.form.product, vendor: this.form.vendor, unit: this.form.unit, requester: this.form.requester,
-          requisition: this.form.requisition, signer: this.form.signer, date: new Date().toISOString().slice(0, 10) };
+          requisition: this.form.requisition, contact: this.form.contact, signer: this.form.signer, date: this.form.reviewDate || new Date().toISOString().slice(0, 10) };
         this.ex = M.explain(review, this.d, ctx);
         // The messages for this state. The selection holds while it still applies, else the recommended one.
         this.emails = window.ReviewEmails.templates(review, this.d, this.ex, ctx, { reasoning: this.includeReasoning });
@@ -352,6 +392,8 @@
         this.form = formFromPreset(PRESETS[id]);
         this.form.signer = signer;
         this.emailId = null;   // a new review starts on its recommended message
+        this.analysis = null;  // an ACR analysis belongs to the review it was loaded into
+        this.activeTest = null;
         this.showReviewer = false;
         this.update();
       },
@@ -467,6 +509,106 @@
         this.showReviewer = !this.showReviewer;
       },
       addFinding() { this.form.findings.push(newFinding()); },
+
+      // ---- an ACR analysis from vpat-analysis/apply_rules.js. It fills the ACR record the
+      // analyst would otherwise read off the report, and lists the admitted failures as leads.
+      // The analyst still places each lead on an essential function and rates its severity.
+      /** Reads a JSON file and routes it by kind: a set of test reviews, or an ACR analysis. */
+      async loadFile(event) {
+        const file = event.target.files?.[0];
+        event.target.value = '';
+        if (!file) return;
+        let a;
+        try { a = JSON.parse(await file.text()); } catch (e) { a = null; }
+        if (a && a.kind === 'sfbrn-review-tests' && Array.isArray(a.reviews)) {
+          this.loadTestSet(a, file.name);
+          // A test file loaded at the ACR button says so there, since its list sits at the top of the page.
+          if (event.target === this.$refs.acrFile && this.testSet.reviews.length) {
+            this.analysis = { file: file.name, leads: [],
+              message: `${file.name} is a set of test reviews, not an ACR analysis. The form now shows its first review, "${this.testSet.reviews[0].name}". The full list is under Load an example review, at the top of the page.` };
+          }
+          return;
+        }
+        return this.loadAnalysis(a, file.name);
+      },
+      /** A set of test reviews: each review's inputs and the determination it should give. */
+      loadTestSet(t, fileName) {
+        const reviews = t.reviews.map((r) => {
+          let actual = null;
+          let error = null;
+          try { actual = pinned(M.evaluate(r.review)); } catch (e) { error = `The review does not run: ${e.message}`; }
+          const diff = actual && r.expected
+            ? Object.keys(r.expected).filter((k) => JSON.stringify(r.expected[k]) !== JSON.stringify(actual[k]))
+              .map((k) => `${k}: expected ${r.expected[k] ?? 'none'}, got ${actual[k] ?? 'none'}`)
+            : [];
+          return { ...r, actual, error, diff, match: !error && diff.length === 0 };
+        });
+        this.testSet = { file: fileName, description: t.description ?? '', matrixVersion: t.matrixVersion ?? null, request: t.request ?? {}, reviews };
+        // Loading shows a result at once: the form takes the first review, and the list opens.
+        if (reviews.length) this.applyTest(reviews[0].id);
+        if (this.$refs.examples) this.$refs.examples.open = true;
+      },
+      applyTest(id) {
+        const t = this.testSet?.reviews.find((r) => r.id === id);
+        if (!t) return;
+        const signer = this.form.signer;
+        this.form = formFromReview(t.review, this.testSet.request);
+        this.form.signer = signer;
+        this.emailId = null;
+        this.analysis = null;
+        this.activeTest = id;
+        this.update();
+      },
+      get testSetStatus() {
+        const t = this.testSet;
+        if (!t) return '';
+        const bad = t.reviews.filter((r) => !r.match).length;
+        const version = t.matrixVersion && String(t.matrixVersion) !== String(M.MATRIX_VERSION)
+          ? ` The file was built under matrix version ${t.matrixVersion}, and this page runs version ${M.MATRIX_VERSION}, so a mismatch may be a rule change rather than a bug.` : '';
+        const count = t.reviews.length === 1 ? 'one review' : `${t.reviews.length} reviews`;
+        const result = bad ? `${bad} ${bad === 1 ? 'differs' : 'differ'} from the expected determination` : 'all match the expected determination';
+        return `Loaded ${t.file}: ${count}, ${result}.${version}`;
+      },
+      testResult(r) { return r.error ? 'Error' : `${r.match ? 'Match' : 'Mismatch'}: ${resultWord(r.actual)}`; },
+      async loadAnalysis(a, fileName) {
+        const file = { name: fileName };
+        if (!a || !a.record || !Array.isArray(a.leads)) {
+          this.analysis = { file: file.name, problem: 'The file is neither an ACR analysis nor a set of test reviews. Load a .review.json file from apply_rules.js or a .reviews.json test file.', leads: [] };
+          return;
+        }
+        const r = a.record;
+        this.form.evidence = 'E1';
+        Object.assign(this.form.acr, {
+          issued: r.issued || '', lastMajorRelease: r.lastMajorRelease || '', author: r.author ?? null,
+          authorName: r.authorName || '', remarks: r.remarks ?? null, defects: [...(r.defects || [])],
+          spotCheck: 'none', spotCheckNote: '', accepted: false, acceptedNote: '',
+        });
+        if (!this.form.product.trim() && a.product?.name) this.form.product = a.product.name;
+        const analystChecks = Object.entries(a.checks || {}).filter(([, c]) => c.result === 'analyst').map(([id]) => id);
+        this.analysis = { file: file.name, level: a.level?.level ?? null, analystChecks, today: a.today,
+          leads: a.leads.map((l) => ({ ...l, added: false })) };
+        this.$nextTick(() => {
+          // The tester rates the record itself. A different level means the review date differs
+          // from the analysis run, or the analyst has changed the record since.
+          if (this.analysis.level && this.derived.id !== this.analysis.level) {
+            this.analysis.problem = `The analysis rated the ACR ${this.analysis.level} on ${a.today}, and the tester rates it ${this.derived.id} today. Check the dates before relying on either.`;
+          }
+        });
+      },
+      addLead(lead) {
+        this.form.findings.push(newFinding({ group: lead.suggestedGroups?.[0] ?? 'without_vision', essentialFunction: '' }));
+        lead.added = true;
+      },
+      get analysisStatus() {
+        const a = this.analysis;
+        if (!a) return '';
+        if (a.problem) return a.problem;
+        if (a.message) return a.message;
+        const open = a.analystChecks.length
+          ? ` The analyst still decides ${a.analystChecks.length === 1 ? 'one check' : `${a.analystChecks.length} checks`}: ${a.analystChecks.map((id) => M.ACR_CHECKS.find((c) => c.id === id)?.text.toLowerCase()).join('; ')}.`
+          : '';
+        return `Loaded ${a.file}. The analysis rates the ACR ${a.level} and lists ${a.leads.length === 1 ? 'one lead' : `${a.leads.length} leads`}. Confirm each call against the report.${open}`;
+      },
       removeFinding(key) { this.form.findings = this.form.findings.filter((f) => f.key !== key); },
 
       // ---- the status line under each step

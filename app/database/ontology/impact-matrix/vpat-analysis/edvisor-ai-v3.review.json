@@ -1,0 +1,186 @@
+{
+  "matrixVersion": "3",
+  "today": "2026-10",
+  "kind": "web",
+  "source": {
+    "file": "Edvisor AI VPAT V3 - Updated 09_28_2026_Audited_1710 (1).pdf",
+    "model": "claude-opus-5-5, in-session reading (not extract_acr.py)",
+    "request_id": null,
+    "input_tokens": null,
+    "output_tokens": null
+  },
+  "product": {
+    "name": "Edvisor.ai - Courses Platform (Instructor and Student)",
+    "version": null
+  },
+  "record": {
+    "issued": "2026-10",
+    "author": "outside",
+    "authorName": "WCAG Designs, Accessibility evaluation was conducted through manual inspection and assistive technology testing, including keyboard-on",
+    "remarks": "restated",
+    "defects": [
+      "no_date_or_version",
+      "bare_supports"
+    ],
+    "spotCheck": "none",
+    "accepted": false
+  },
+  "evidence": "E1",
+  "level": {
+    "level": "E1-",
+    "trusted": false,
+    "age": "raised",
+    "author": "raised",
+    "remarks": "lowered",
+    "months": 0,
+    "spotCheck": "none",
+    "stale": false,
+    "clean": false,
+    "defects": [
+      "no_date_or_version",
+      "bare_supports"
+    ],
+    "defective": true,
+    "accepted": false,
+    "acceptedNote": null,
+    "authorName": "WCAG Designs, Accessibility evaluation was conducted through manual inspection and assistive technology testing, including keyboard-on",
+    "spotCheckNote": null
+  },
+  "checks": {
+    "wrong_edition": {
+      "result": "pass",
+      "why": "The report covers WCAG 2.0, WCAG 2.1, WCAG 2.2 and Revised Section 508.",
+      "evidence": []
+    },
+    "no_date_or_version": {
+      "result": "fail",
+      "why": "The report names no product version.",
+      "evidence": []
+    },
+    "stale": {
+      "result": "analyst",
+      "why": "The evaluation is less than a month old. The month of the last major release was not given, so the analyst checks it.",
+      "evidence": []
+    },
+    "no_methods": {
+      "result": "pass",
+      "why": "The report describes its evaluation methods.",
+      "evidence": [
+        {
+          "page": 3,
+          "quote": "Accessibility evaluation was conducted through manual inspection and assistive technology testing, including keyboard-only navigation and screen reader testing with NVDA/JAWS. Color contrast was verified using contrast analysis tools, and reflow behavior was assessed at 200 percent and 400 percent magnification on a 1280 by 1024 display."
+        }
+      ]
+    },
+    "single_browser_at": {
+      "result": "pass",
+      "why": "The report names NVDA and JAWS and no browser.",
+      "evidence": []
+    },
+    "not_evaluated": {
+      "result": "pass",
+      "why": "Every Level A and AA row carries a rating, and every Not Applicable row gives a reason.",
+      "evidence": []
+    },
+    "missing_interface": {
+      "result": "analyst",
+      "why": "The interfaces being bought were not given. The report covers Courses Module, instructor workflows (web) and Courses Module, student workflows (web).",
+      "evidence": []
+    },
+    "carve_outs": {
+      "result": "pass",
+      "why": "The notes exclude no part of the product.",
+      "evidence": []
+    },
+    "no_remarks": {
+      "result": "pass",
+      "why": "Every admission has a remark.",
+      "evidence": []
+    },
+    "bare_supports": {
+      "result": "fail",
+      "why": "2 Supports rows on complex criteria give no example or method.",
+      "evidence": [
+        {
+          "criterion": "2.2.2",
+          "page": 11,
+          "quote": "No issues were identified for this criterion during the audit within the evaluated scope."
+        },
+        {
+          "criterion": "2.4.1",
+          "page": 12,
+          "quote": "No issues were identified for this criterion during the audit within the evaluated scope."
+        }
+      ]
+    },
+    "contradicts_rating": {
+      "result": "pass",
+      "why": "No remark contradicts its rating.",
+      "evidence": []
+    },
+    "hedge_words": {
+      "result": "pass",
+      "why": "No remark hedges.",
+      "evidence": []
+    }
+  },
+  "qualifications": {
+    "age": {
+      "value": "raised",
+      "months": 0,
+      "why": "Evaluated 2026-10."
+    },
+    "author": {
+      "value": "outside",
+      "why": "A named outside firm wrote it: WCAG Designs.",
+      "evidence": [
+        {
+          "page": 3,
+          "quote": "This Accessibility Conformance Report documents an independent accessibility evaluation of the Edvisor.ai Courses Module conducted by WCAG Designs (Sana Kapasi)."
+        }
+      ]
+    },
+    "remarks": {
+      "value": "lowered",
+      "why": "2 Supports rows on complex criteria show no work, and 15 rated rows repeat the same remark, such as \"No issues were identified for this criterion during the audit within the evaluated scope\".",
+      "counts": {
+        "admissions": 0,
+        "weak": 0,
+        "bareComplex": 2,
+        "repeated": 15
+      }
+    }
+  },
+  "leads": [],
+  "flags": [
+    "The report rates every applicable Level A and AA criterion Supports. A clean report is the case the spot check exists for.",
+    "The report names no browser. The SFBRN heading checks look for named browsers and operating systems."
+  ],
+  "readingNotes": [
+    "The report names no product version. It says the evaluation \"reflects the product version available as of October 7, 2026\" (page 3).",
+    "The report names no browser. The methods section names NVDA, JAWS and keyboard-only testing (page 3).",
+    "The evaluation covers one course the vendor chose: \"Testing was conducted against 'Intro to WCAG 2.2: The Accessibility Audit Course' (course code 3I7E4H), provided by the vendor as a representative sample of instructor-created course content\" (page 4). The report calls the pages in it representative of the platform. This is recorded here, not as a scope carve-out, because the report does not say any part of the product was left out.",
+    "The evaluation covers the Courses Module. The report does not say whether Edvisor.ai has other modules, such as the Chat feature named under 3.2.6.",
+    "The initial audit found 161 defects. Every rating reflects the state after remediation and revalidation as of October 7, 2026 (page 4).",
+    "The report rates every Level AAA criterion Not Applicable with the remark that AAA was not evaluated. The template term for that is Not Evaluated.",
+    "The 26 Section 508 rows without a rating are chapter and section headings, such as \"402 Closed Functionality\", and are left out. The EN 301 549 tables are left out, since the report marks EN 301 549 as not included.",
+    "The file name reads \"Updated 09_28_2026\"; the report date inside is 10/07/2026. The extraction uses the date inside."
+  ],
+  "config": {
+    "state": "calibrate",
+    "complexCriteria": [
+      "1.1.1",
+      "1.2.2",
+      "1.3.1",
+      "1.4.1",
+      "2.1.1",
+      "2.2.2",
+      "2.4.1",
+      "2.4.3",
+      "4.1.2"
+    ],
+    "repeatAt": 3,
+    "manyNotApplicable": 10,
+    "minTemplate": 2.5
+  }
+}

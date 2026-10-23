@@ -1,0 +1,199 @@
+{
+  "matrixVersion": "3",
+  "today": "2026-10",
+  "kind": "web",
+  "source": {
+    "file": "example (hand-built)",
+    "model": "none",
+    "request_id": null,
+    "input_tokens": 0,
+    "output_tokens": 0
+  },
+  "product": {
+    "name": "MathLab Pro",
+    "version": "7.2"
+  },
+  "record": {
+    "issued": "2026-05",
+    "author": "outside",
+    "authorName": "Example Audits LLC, Manual testing with NVDA 2025.1 and JAWS 2025 on Chrome and Firefox, plus keyboard-only testing.",
+    "remarks": "bug_report",
+    "defects": [
+      "missing_interface"
+    ],
+    "spotCheck": "none",
+    "accepted": false
+  },
+  "evidence": "E1",
+  "level": {
+    "level": "E1-",
+    "trusted": false,
+    "age": "raised",
+    "author": "raised",
+    "remarks": "raised",
+    "months": 5,
+    "spotCheck": "none",
+    "stale": false,
+    "clean": false,
+    "defects": [
+      "missing_interface"
+    ],
+    "defective": true,
+    "accepted": false,
+    "acceptedNote": null,
+    "authorName": "Example Audits LLC, Manual testing with NVDA 2025.1 and JAWS 2025 on Chrome and Firefox, plus keyboard-only testing.",
+    "spotCheckNote": null
+  },
+  "checks": {
+    "wrong_edition": {
+      "result": "pass",
+      "why": "The report covers WCAG 2.1.",
+      "evidence": []
+    },
+    "no_date_or_version": {
+      "result": "pass",
+      "why": "The report is dated 2026-05 for version 7.2.",
+      "evidence": []
+    },
+    "stale": {
+      "result": "analyst",
+      "why": "The evaluation is 5 months old. The month of the last major release was not given, so the analyst checks it.",
+      "evidence": []
+    },
+    "no_methods": {
+      "result": "pass",
+      "why": "The report describes its evaluation methods.",
+      "evidence": [
+        {
+          "quote": "Manual testing with NVDA 2025.1 and JAWS 2025 on Chrome and Firefox, plus keyboard-only testing.",
+          "page": 1
+        }
+      ]
+    },
+    "single_browser_at": {
+      "result": "pass",
+      "why": "The report names NVDA and JAWS and Chrome and Firefox.",
+      "evidence": []
+    },
+    "not_evaluated": {
+      "result": "pass",
+      "why": "Every Level A and AA row carries a rating, and every Not Applicable row gives a reason.",
+      "evidence": []
+    },
+    "missing_interface": {
+      "result": "fail",
+      "why": "The purchase includes iOS app, which the report does not cover. It covers Web application (student and instructor views).",
+      "evidence": []
+    },
+    "carve_outs": {
+      "result": "pass",
+      "why": "The notes exclude no part of the product.",
+      "evidence": []
+    },
+    "no_remarks": {
+      "result": "pass",
+      "why": "Every admission has a remark.",
+      "evidence": []
+    },
+    "bare_supports": {
+      "result": "pass",
+      "why": "Every Supports row on a complex criterion shows the work.",
+      "evidence": []
+    },
+    "contradicts_rating": {
+      "result": "pass",
+      "why": "No remark contradicts its rating.",
+      "evidence": []
+    },
+    "hedge_words": {
+      "result": "pass",
+      "why": "No remark hedges.",
+      "evidence": []
+    }
+  },
+  "qualifications": {
+    "age": {
+      "value": "raised",
+      "months": 5,
+      "why": "Evaluated 2026-05."
+    },
+    "author": {
+      "value": "outside",
+      "why": "A named outside firm wrote it: Example Audits LLC.",
+      "evidence": [
+        {
+          "quote": "Evaluation performed by Example Audits LLC, an independent accessibility firm.",
+          "page": 1
+        }
+      ]
+    },
+    "remarks": {
+      "value": "raised",
+      "why": "All 2 admissions read like a bug report, and every Supports row on a complex criterion gives an example or the method.",
+      "counts": {
+        "admissions": 2,
+        "weak": 0,
+        "bareComplex": 0,
+        "repeated": 0
+      }
+    }
+  },
+  "leads": [
+    {
+      "criterion": "1.4.3",
+      "name": "Contrast (Minimum)",
+      "level": "AA",
+      "table": "WCAG 2.x Level AA",
+      "conformance": "Partially Supports",
+      "page": 4,
+      "remarks": "On the Gradebook screen, placeholder text in the search field has a 3.1:1 contrast ratio, which users with low vision may not read.",
+      "remarkType": "bug_report",
+      "features": [
+        "Gradebook search field"
+      ],
+      "suggestedGroups": [
+        "limited_vision"
+      ],
+      "placeable": true
+    },
+    {
+      "criterion": "2.4.7",
+      "name": "Focus Visible",
+      "level": "AA",
+      "table": "WCAG 2.x Level AA",
+      "conformance": "Does Not Support",
+      "page": 4,
+      "remarks": "The equation editor toolbar shows no focus indicator, so keyboard users cannot tell which button is selected.",
+      "remarkType": "bug_report",
+      "features": [
+        "equation editor toolbar"
+      ],
+      "suggestedGroups": [
+        "limited_manipulation",
+        "limited_vision"
+      ],
+      "placeable": true
+    }
+  ],
+  "flags": [
+    "The extraction found 11 WCAG Level A and AA rows. WCAG 2.1 has 50, so the analyst checks for rows the report or the extraction missed."
+  ],
+  "readingNotes": [],
+  "config": {
+    "state": "calibrate",
+    "complexCriteria": [
+      "1.1.1",
+      "1.2.2",
+      "1.3.1",
+      "1.4.1",
+      "2.1.1",
+      "2.2.2",
+      "2.4.1",
+      "2.4.3",
+      "4.1.2"
+    ],
+    "repeatAt": 3,
+    "manyNotApplicable": 10,
+    "minTemplate": 2.5
+  }
+}

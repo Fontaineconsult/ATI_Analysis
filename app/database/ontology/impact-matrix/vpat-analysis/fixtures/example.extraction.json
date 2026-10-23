@@ -1,0 +1,234 @@
+{
+  "report": {
+    "product_name": "MathLab Pro",
+    "product_version": "7.2",
+    "template_version": "VPAT 2.5Rev",
+    "edition": "WCAG",
+    "standards_reported": [
+      "WCAG 2.1"
+    ],
+    "report_date": "2026-06",
+    "evaluation_date": "2026-05",
+    "evaluation_methods": {
+      "quote": "Manual testing with NVDA 2025.1 and JAWS 2025 on Chrome and Firefox, plus keyboard-only testing.",
+      "page": 1
+    },
+    "assistive_technologies": [
+      "NVDA",
+      "JAWS",
+      "keyboard only"
+    ],
+    "browsers": [
+      "Chrome",
+      "Firefox"
+    ],
+    "interfaces_covered": [
+      "Web application (student and instructor views)"
+    ],
+    "author_name": "R. Lee",
+    "author_organization": "Example Audits LLC",
+    "author_relationship": "third_party",
+    "author_evidence": {
+      "quote": "Evaluation performed by Example Audits LLC, an independent accessibility firm.",
+      "page": 1
+    },
+    "scope_carve_outs": [],
+    "design_intent_language": [],
+    "nonstandard_terms": []
+  },
+  "rows": [
+    {
+      "table": "WCAG 2.x Level A",
+      "criterion": "1.1.1",
+      "name": "Non-text Content",
+      "level": "A",
+      "conformance": "Supports",
+      "conformance_raw": "Supports",
+      "remarks": "Tested on the Course Home and Submit screens with NVDA and the keyboard; Non-text Content met.",
+      "page": 4,
+      "remark_type": "bug_report",
+      "remark_reason": "test",
+      "features_named": [],
+      "hedged": false,
+      "contradicts_rating": false,
+      "affected_groups": []
+    },
+    {
+      "table": "WCAG 2.x Level A",
+      "criterion": "1.2.2",
+      "name": "Captions (Prerecorded)",
+      "level": "A",
+      "conformance": "Supports",
+      "conformance_raw": "Supports",
+      "remarks": "Tested on the Course Home and Submit screens with NVDA and the keyboard; Captions (Prerecorded) met.",
+      "page": 4,
+      "remark_type": "bug_report",
+      "remark_reason": "test",
+      "features_named": [],
+      "hedged": false,
+      "contradicts_rating": false,
+      "affected_groups": []
+    },
+    {
+      "table": "WCAG 2.x Level A",
+      "criterion": "1.3.1",
+      "name": "Info and Relationships",
+      "level": "A",
+      "conformance": "Supports",
+      "conformance_raw": "Supports",
+      "remarks": "Tested on the Course Home and Submit screens with NVDA and the keyboard; Info and Relationships met.",
+      "page": 4,
+      "remark_type": "bug_report",
+      "remark_reason": "test",
+      "features_named": [],
+      "hedged": false,
+      "contradicts_rating": false,
+      "affected_groups": []
+    },
+    {
+      "table": "WCAG 2.x Level A",
+      "criterion": "1.4.1",
+      "name": "Use of Color",
+      "level": "A",
+      "conformance": "Supports",
+      "conformance_raw": "Supports",
+      "remarks": "Tested on the Course Home and Submit screens with NVDA and the keyboard; Use of Color met.",
+      "page": 4,
+      "remark_type": "bug_report",
+      "remark_reason": "test",
+      "features_named": [],
+      "hedged": false,
+      "contradicts_rating": false,
+      "affected_groups": []
+    },
+    {
+      "table": "WCAG 2.x Level A",
+      "criterion": "2.1.1",
+      "name": "Keyboard",
+      "level": "A",
+      "conformance": "Supports",
+      "conformance_raw": "Supports",
+      "remarks": "Tested on the Course Home and Submit screens with NVDA and the keyboard; Keyboard met.",
+      "page": 4,
+      "remark_type": "bug_report",
+      "remark_reason": "test",
+      "features_named": [],
+      "hedged": false,
+      "contradicts_rating": false,
+      "affected_groups": []
+    },
+    {
+      "table": "WCAG 2.x Level A",
+      "criterion": "2.2.2",
+      "name": "Pause, Stop, Hide",
+      "level": "A",
+      "conformance": "Supports",
+      "conformance_raw": "Supports",
+      "remarks": "Tested on the Course Home and Submit screens with NVDA and the keyboard; Pause, Stop, Hide met.",
+      "page": 4,
+      "remark_type": "bug_report",
+      "remark_reason": "test",
+      "features_named": [],
+      "hedged": false,
+      "contradicts_rating": false,
+      "affected_groups": []
+    },
+    {
+      "table": "WCAG 2.x Level A",
+      "criterion": "2.4.1",
+      "name": "Bypass Blocks",
+      "level": "A",
+      "conformance": "Supports",
+      "conformance_raw": "Supports",
+      "remarks": "Tested on the Course Home and Submit screens with NVDA and the keyboard; Bypass Blocks met.",
+      "page": 4,
+      "remark_type": "bug_report",
+      "remark_reason": "test",
+      "features_named": [],
+      "hedged": false,
+      "contradicts_rating": false,
+      "affected_groups": []
+    },
+    {
+      "table": "WCAG 2.x Level A",
+      "criterion": "2.4.3",
+      "name": "Focus Order",
+      "level": "A",
+      "conformance": "Supports",
+      "conformance_raw": "Supports",
+      "remarks": "Tested on the Course Home and Submit screens with NVDA and the keyboard; Focus Order met.",
+      "page": 4,
+      "remark_type": "bug_report",
+      "remark_reason": "test",
+      "features_named": [],
+      "hedged": false,
+      "contradicts_rating": false,
+      "affected_groups": []
+    },
+    {
+      "table": "WCAG 2.x Level A",
+      "criterion": "4.1.2",
+      "name": "Name, Role, Value",
+      "level": "A",
+      "conformance": "Supports",
+      "conformance_raw": "Supports",
+      "remarks": "Tested on the Course Home and Submit screens with NVDA and the keyboard; Name, Role, Value met.",
+      "page": 4,
+      "remark_type": "bug_report",
+      "remark_reason": "test",
+      "features_named": [],
+      "hedged": false,
+      "contradicts_rating": false,
+      "affected_groups": []
+    },
+    {
+      "table": "WCAG 2.x Level AA",
+      "criterion": "1.4.3",
+      "name": "Contrast (Minimum)",
+      "level": "AA",
+      "conformance": "Partially Supports",
+      "conformance_raw": "Partially Supports",
+      "remarks": "On the Gradebook screen, placeholder text in the search field has a 3.1:1 contrast ratio, which users with low vision may not read.",
+      "page": 4,
+      "remark_type": "bug_report",
+      "remark_reason": "test",
+      "features_named": [
+        "Gradebook search field"
+      ],
+      "hedged": false,
+      "contradicts_rating": false,
+      "affected_groups": [
+        "limited_vision"
+      ]
+    },
+    {
+      "table": "WCAG 2.x Level AA",
+      "criterion": "2.4.7",
+      "name": "Focus Visible",
+      "level": "AA",
+      "conformance": "Does Not Support",
+      "conformance_raw": "Does Not Support",
+      "remarks": "The equation editor toolbar shows no focus indicator, so keyboard users cannot tell which button is selected.",
+      "page": 4,
+      "remark_type": "bug_report",
+      "remark_reason": "test",
+      "features_named": [
+        "equation editor toolbar"
+      ],
+      "hedged": false,
+      "contradicts_rating": false,
+      "affected_groups": [
+        "limited_manipulation",
+        "limited_vision"
+      ]
+    }
+  ],
+  "reading_notes": [],
+  "_source": {
+    "file": "example (hand-built)",
+    "model": "none",
+    "request_id": null,
+    "input_tokens": 0,
+    "output_tokens": 0
+  }
+}

@@ -1,0 +1,482 @@
+{
+  "kind": "sfbrn-review-tests",
+  "matrixVersion": "3",
+  "generated": "2026-10-23",
+  "description": "Edvisor.ai Courses Platform, CSUEB Economics, against the ACR by WCAG Designs dated 10/07/2026. Each review holds the inputs the matrix reads and the determination matrix version 3 gave for them on 2026-10-23.",
+  "sources": {
+    "acr": "Edvisor AI VPAT V3 - Updated 09_28_2026_Audited_1710 (1).pdf",
+    "acrAnalysis": "edvisor-ai-v3.review.json",
+    "requisition": "CSUEB IT purchase review form, new acquisition, completed by Zach Oshri for Dr. Filippo Rebessi"
+  },
+  "request": {
+    "product": "Edvisor.ai Courses Platform (AI courseware)",
+    "vendor": "Tutorly Technologies Inc. (d/b/a Edvisor)",
+    "unit": "Economics",
+    "requester": "Filippo",
+    "contact": "accessibility@edvisor.ai"
+  },
+  "reviews": [
+    {
+      "id": "edvisor-as-submitted",
+      "name": "Edvisor.ai, as submitted",
+      "note": "The requisition and the ACR analysis as they stand.",
+      "review": {
+        "ictKind": "web",
+        "floors": [
+          "required_for_grade"
+        ],
+        "bypasses": [],
+        "answers": {
+          "users": {
+            "requester": 500,
+            "source": "Approximate number of users: 101-500. The upper bound is used; the coursework floor sets High either way."
+          },
+          "scope": {
+            "requester": "low",
+            "source": "One course in one department. Not systemwide."
+          },
+          "required_use": {
+            "requester": "high",
+            "source": "Dr. Rebessi is \"adopting Edvisor as required course material\"."
+          },
+          "criticality": {
+            "requester": "high",
+            "source": "Readings, quizzes, assignments and grading for the course."
+          },
+          "publishes": {
+            "requester": "medium",
+            "source": "Generates a coursepack for the enrolled class."
+          },
+          "frequency": {
+            "requester": "medium",
+            "source": "Weekly through the term."
+          },
+          "contract_length": {
+            "requester": "low",
+            "source": "One year. Students buy access each term."
+          }
+        },
+        "findings": [],
+        "evidence": "E1",
+        "acr": {
+          "issued": "2026-10",
+          "author": "outside",
+          "authorName": "WCAG Designs, Accessibility evaluation was conducted through manual inspection and assistive technology testing, including keyboard-on",
+          "remarks": "restated",
+          "defects": [
+            "no_date_or_version",
+            "bare_supports"
+          ],
+          "spotCheck": "none",
+          "accepted": false
+        },
+        "validation": "open",
+        "moreAccessibleProductExists": false,
+        "taap": {
+          "exists": false,
+          "meets": {},
+          "exception": "none"
+        },
+        "reviewDate": "2026-10-23"
+      },
+      "expected": {
+        "outcome": "on_hold",
+        "hold": "veracity_below_floor",
+        "exposure": "high",
+        "evidence": "E1-",
+        "severity": "S0",
+        "breadth": 0,
+        "taapStandard": null,
+        "warning": null,
+        "raiseBy": "review_failed_check"
+      }
+    },
+    {
+      "id": "edvisor-users-101",
+      "name": "Edvisor.ai, lower bound of the user range",
+      "note": "The user range straddles the 250 cut. At 101 users the start level is medium, and the coursework floor still sets High.",
+      "review": {
+        "ictKind": "web",
+        "floors": [
+          "required_for_grade"
+        ],
+        "bypasses": [],
+        "answers": {
+          "users": {
+            "requester": 101,
+            "source": "Lower bound of 101-500."
+          },
+          "scope": {
+            "requester": "low",
+            "source": "One course in one department. Not systemwide."
+          },
+          "required_use": {
+            "requester": "high",
+            "source": "Dr. Rebessi is \"adopting Edvisor as required course material\"."
+          },
+          "criticality": {
+            "requester": "high",
+            "source": "Readings, quizzes, assignments and grading for the course."
+          },
+          "publishes": {
+            "requester": "medium",
+            "source": "Generates a coursepack for the enrolled class."
+          },
+          "frequency": {
+            "requester": "medium",
+            "source": "Weekly through the term."
+          },
+          "contract_length": {
+            "requester": "low",
+            "source": "One year. Students buy access each term."
+          }
+        },
+        "findings": [],
+        "evidence": "E1",
+        "acr": {
+          "issued": "2026-10",
+          "author": "outside",
+          "authorName": "WCAG Designs, Accessibility evaluation was conducted through manual inspection and assistive technology testing, including keyboard-on",
+          "remarks": "restated",
+          "defects": [
+            "no_date_or_version",
+            "bare_supports"
+          ],
+          "spotCheck": "none",
+          "accepted": false
+        },
+        "validation": "open",
+        "moreAccessibleProductExists": false,
+        "taap": {
+          "exists": false,
+          "meets": {},
+          "exception": "none"
+        },
+        "reviewDate": "2026-10-23"
+      },
+      "expected": {
+        "outcome": "on_hold",
+        "hold": "veracity_below_floor",
+        "exposure": "high",
+        "evidence": "E1-",
+        "severity": "S0",
+        "breadth": 0,
+        "taapStandard": null,
+        "warning": null,
+        "raiseBy": "review_failed_check"
+      }
+    },
+    {
+      "id": "edvisor-defects-accepted",
+      "name": "Edvisor.ai, analyst accepts both report defects",
+      "note": "The report ties its findings to the October 7, 2026 build, and the boilerplate appears on only two complex criteria.",
+      "review": {
+        "ictKind": "web",
+        "floors": [
+          "required_for_grade"
+        ],
+        "bypasses": [],
+        "answers": {
+          "users": {
+            "requester": 500,
+            "source": "Approximate number of users: 101-500. The upper bound is used; the coursework floor sets High either way."
+          },
+          "scope": {
+            "requester": "low",
+            "source": "One course in one department. Not systemwide."
+          },
+          "required_use": {
+            "requester": "high",
+            "source": "Dr. Rebessi is \"adopting Edvisor as required course material\"."
+          },
+          "criticality": {
+            "requester": "high",
+            "source": "Readings, quizzes, assignments and grading for the course."
+          },
+          "publishes": {
+            "requester": "medium",
+            "source": "Generates a coursepack for the enrolled class."
+          },
+          "frequency": {
+            "requester": "medium",
+            "source": "Weekly through the term."
+          },
+          "contract_length": {
+            "requester": "low",
+            "source": "One year. Students buy access each term."
+          }
+        },
+        "findings": [],
+        "evidence": "E1",
+        "acr": {
+          "issued": "2026-10",
+          "author": "outside",
+          "authorName": "WCAG Designs, Accessibility evaluation was conducted through manual inspection and assistive technology testing, including keyboard-on",
+          "remarks": "restated",
+          "defects": [
+            "no_date_or_version",
+            "bare_supports"
+          ],
+          "spotCheck": "none",
+          "accepted": true,
+          "acceptedNote": "The report ties its findings to the October 7, 2026 build; the boilerplate appears on only two complex criteria."
+        },
+        "validation": "open",
+        "moreAccessibleProductExists": false,
+        "taap": {
+          "exists": false,
+          "meets": {},
+          "exception": "none"
+        },
+        "reviewDate": "2026-10-23"
+      },
+      "expected": {
+        "outcome": "on_hold",
+        "hold": "veracity_below_floor",
+        "exposure": "high",
+        "evidence": "E1",
+        "severity": "S0",
+        "breadth": 0,
+        "taapStandard": null,
+        "warning": null,
+        "raiseBy": "spot_check"
+      }
+    },
+    {
+      "id": "edvisor-spot-check-agrees",
+      "name": "Edvisor.ai, accepted and the spot check agrees",
+      "note": "NVDA and the keyboard on the readings, a quiz, a discussion, the AI study assistant and the Canvas launch, with nothing the ACR does not report.",
+      "review": {
+        "ictKind": "web",
+        "floors": [
+          "required_for_grade"
+        ],
+        "bypasses": [],
+        "answers": {
+          "users": {
+            "requester": 500,
+            "source": "Approximate number of users: 101-500. The upper bound is used; the coursework floor sets High either way."
+          },
+          "scope": {
+            "requester": "low",
+            "source": "One course in one department. Not systemwide."
+          },
+          "required_use": {
+            "requester": "high",
+            "source": "Dr. Rebessi is \"adopting Edvisor as required course material\"."
+          },
+          "criticality": {
+            "requester": "high",
+            "source": "Readings, quizzes, assignments and grading for the course."
+          },
+          "publishes": {
+            "requester": "medium",
+            "source": "Generates a coursepack for the enrolled class."
+          },
+          "frequency": {
+            "requester": "medium",
+            "source": "Weekly through the term."
+          },
+          "contract_length": {
+            "requester": "low",
+            "source": "One year. Students buy access each term."
+          }
+        },
+        "findings": [],
+        "evidence": "E1",
+        "acr": {
+          "issued": "2026-10",
+          "author": "outside",
+          "authorName": "WCAG Designs, Accessibility evaluation was conducted through manual inspection and assistive technology testing, including keyboard-on",
+          "remarks": "restated",
+          "defects": [
+            "no_date_or_version",
+            "bare_supports"
+          ],
+          "spotCheck": "agrees",
+          "accepted": true,
+          "acceptedNote": "Version tied to the 10/7/2026 build; boilerplate on two complex criteria.",
+          "spotCheckNote": "NVDA and keyboard: readings, quiz, discussion, AI study assistant, Canvas LTI launch"
+        },
+        "validation": "open",
+        "moreAccessibleProductExists": false,
+        "taap": {
+          "exists": false,
+          "meets": {},
+          "exception": "none"
+        },
+        "reviewDate": "2026-10-23"
+      },
+      "expected": {
+        "outcome": "approve",
+        "hold": null,
+        "exposure": "high",
+        "evidence": "E3a",
+        "severity": "S0",
+        "breadth": 0,
+        "taapStandard": null,
+        "warning": null,
+        "raiseBy": null
+      }
+    },
+    {
+      "id": "edvisor-spot-check-contradicts",
+      "name": "Edvisor.ai, accepted and the spot check finds a blocking barrier",
+      "note": "A hypothetical: the spot check finds students who are blind cannot complete a quiz, which the ACR rates Supports.",
+      "review": {
+        "ictKind": "web",
+        "floors": [
+          "required_for_grade"
+        ],
+        "bypasses": [],
+        "answers": {
+          "users": {
+            "requester": 500,
+            "source": "Approximate number of users: 101-500. The upper bound is used; the coursework floor sets High either way."
+          },
+          "scope": {
+            "requester": "low",
+            "source": "One course in one department. Not systemwide."
+          },
+          "required_use": {
+            "requester": "high",
+            "source": "Dr. Rebessi is \"adopting Edvisor as required course material\"."
+          },
+          "criticality": {
+            "requester": "high",
+            "source": "Readings, quizzes, assignments and grading for the course."
+          },
+          "publishes": {
+            "requester": "medium",
+            "source": "Generates a coursepack for the enrolled class."
+          },
+          "frequency": {
+            "requester": "medium",
+            "source": "Weekly through the term."
+          },
+          "contract_length": {
+            "requester": "low",
+            "source": "One year. Students buy access each term."
+          }
+        },
+        "findings": [
+          {
+            "role": "students",
+            "group": "without_vision",
+            "essentialFunction": "Complete a quiz",
+            "severity": "S3"
+          }
+        ],
+        "evidence": "E1",
+        "acr": {
+          "issued": "2026-10",
+          "author": "outside",
+          "authorName": "WCAG Designs, Accessibility evaluation was conducted through manual inspection and assistive technology testing, including keyboard-on",
+          "remarks": "restated",
+          "defects": [
+            "no_date_or_version",
+            "bare_supports"
+          ],
+          "spotCheck": "contradicts",
+          "accepted": true,
+          "acceptedNote": "Version tied to the 10/7/2026 build; boilerplate on two complex criteria.",
+          "spotCheckNote": "NVDA: quiz submit button unlabelled"
+        },
+        "validation": "open",
+        "moreAccessibleProductExists": false,
+        "taap": {
+          "exists": false,
+          "meets": {},
+          "exception": "none"
+        },
+        "reviewDate": "2026-10-23"
+      },
+      "expected": {
+        "outcome": "on_hold",
+        "hold": "veracity_below_floor",
+        "exposure": "high",
+        "evidence": "E1-",
+        "severity": "S3",
+        "breadth": 0,
+        "taapStandard": null,
+        "warning": null,
+        "raiseBy": "review_contradicted"
+      }
+    },
+    {
+      "id": "edvisor-fallback",
+      "name": "Edvisor.ai, evidence cannot be raised",
+      "note": "A hypothetical: no demonstration is offered and the ATI review team has no test access.",
+      "review": {
+        "ictKind": "web",
+        "floors": [
+          "required_for_grade"
+        ],
+        "bypasses": [],
+        "answers": {
+          "users": {
+            "requester": 500,
+            "source": "Approximate number of users: 101-500. The upper bound is used; the coursework floor sets High either way."
+          },
+          "scope": {
+            "requester": "low",
+            "source": "One course in one department. Not systemwide."
+          },
+          "required_use": {
+            "requester": "high",
+            "source": "Dr. Rebessi is \"adopting Edvisor as required course material\"."
+          },
+          "criticality": {
+            "requester": "high",
+            "source": "Readings, quizzes, assignments and grading for the course."
+          },
+          "publishes": {
+            "requester": "medium",
+            "source": "Generates a coursepack for the enrolled class."
+          },
+          "frequency": {
+            "requester": "medium",
+            "source": "Weekly through the term."
+          },
+          "contract_length": {
+            "requester": "low",
+            "source": "One year. Students buy access each term."
+          }
+        },
+        "findings": [],
+        "evidence": "E1",
+        "acr": {
+          "issued": "2026-10",
+          "author": "outside",
+          "authorName": "WCAG Designs, Accessibility evaluation was conducted through manual inspection and assistive technology testing, including keyboard-on",
+          "remarks": "restated",
+          "defects": [
+            "no_date_or_version",
+            "bare_supports"
+          ],
+          "spotCheck": "none",
+          "accepted": false
+        },
+        "validation": "unavailable",
+        "moreAccessibleProductExists": false,
+        "taap": {
+          "exists": false,
+          "meets": {},
+          "exception": "none"
+        },
+        "reviewDate": "2026-10-23"
+      },
+      "expected": {
+        "outcome": "on_hold",
+        "hold": "taap_needed",
+        "exposure": "high",
+        "evidence": "E1-",
+        "severity": "S3 (provisional)",
+        "breadth": 0,
+        "taapStandard": 4,
+        "warning": "elevated",
+        "raiseBy": "review_failed_check"
+      }
+    }
+  ]
+}

@@ -436,3 +436,24 @@ pre { background: var(--surface-2); border: 1px solid var(--line); border-radius
 @media (prefers-reduced-motion: reduce) {
   * { scroll-behavior: auto !important; }
 }
+
+/* ---- the ACR analysis loader and its leads ---- */
+.acr-import { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 8px 0 0; }
+.acr-import .help { margin: 0; }
+.leads { margin: 4px 0 12px; }
+.leads ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.lead { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); }
+.lead strong { display: block; font-size: 0.95rem; }
+.lead-remark { display: block; color: var(--text-2); font-size: 0.9rem; margin-top: 2px; }
+.lead-note { display: block; color: var(--attention-fg); font-size: 0.85rem; margin-top: 4px; }
+.lead .btn[disabled] { opacity: 0.6; cursor: default; }
+
+/* ---- loaded test reviews ---- */
+.test-set { margin: 10px 0 4px; }
+.test-set h3 { margin: 0 0 4px; font-size: 0.75rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--brand-deep); }
+.test-set ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.test-set .example.active { border-color: var(--brand); background: var(--brand-tint); }
+.test-set .example.mismatch { border-color: var(--attention-line); }
+.test-set .example.mismatch .lead { color: var(--attention-fg); font-weight: 600; }
+.test-note { display: block; color: var(--text-2); font-size: 0.82rem; margin-top: 2px; }
+.test-diff { margin: 2px 0 6px 10px; font-size: 0.85rem; color: var(--attention-fg); }

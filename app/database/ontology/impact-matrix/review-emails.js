@@ -96,6 +96,8 @@
     const requisition = ctx.requisition?.trim() || '[Requisition number]';
     const first = ctx.requester?.trim() || '[First name]';
     const signer = ctx.signer?.trim() || '[Your name]';
+    // The supplier's contact for accessibility problems, from the requisition.
+    const contact = ctx.contact?.trim() || null;
     const date = ctx.date ?? d.reviewDate;
     const findingLines = review.findings.map((f) =>
       `${cap(ROLE_WORD[f.role])} ${M.WHO[f.group]} ${EFFECT[f.severity] ?? 'meet no barrier in'} ${f.essentialFunction ? `"${lower(f.essentialFunction)}"` : 'an essential function'}.`);
@@ -106,7 +108,7 @@
     const need = std ? (std.required === 6 ? 'all six' : `at least ${std.required} of the six`) : '';
     const level = cap(d.exposure.level);
     const users = d.exposure.usersValue;
-    return { sev, product, supplier, unit, requisition, first, signer, date, findingLines, functions, unknownAnswers, floors, std, need,
+    return { sev, product, supplier, unit, requisition, first, signer, date, contact, findingLines, functions, unknownAnswers, floors, std, need,
       level, users, acr: d.veracity.acr, raise: d.veracity.raise?.by ?? null, standard: STANDARD[review.ictKind],
       evidence: EVIDENCE_WORDS[d.evidence] ?? 'the documentation on file' };
   }
@@ -313,7 +315,7 @@
               ul(f.findingLines),
               p('Please review the report with the faculty and staff who will use the product, and plan a workaround for each barrier before rollout. The workaround your team will offer is [workaround].'),
             ] : []),
-            p(`The approval covers ${f.users != null ? plural(count(f.users), 'user') : '[number] users'}. Growth beyond that number returns the product to review, as does renewal. A user who cannot use the product contacts [support contact].`),
+            p(`The approval covers ${f.users != null ? plural(count(f.users), 'user') : '[number] users'}. Growth beyond that number returns the product to review, as does renewal. A user who cannot use the product contacts [support contact].${f.contact ? ` The supplier also takes accessibility problems at ${f.contact}.` : ''}`),
           ]),
           p(NOT_A_PO),
           ...roadmapBlock(d, f),
@@ -378,7 +380,7 @@
             ...(review.findings.length ? [p('The plan covers the barriers below.'), ul(f.findingLines)] : []),
             p(`The warning level is ${std.warning}. ${w.means} ${w.action}`),
             p('The plan runs twelve months or until contract renewal, whichever comes first. Each review requires measurable progress on the supplier\'s roadmap, and without that progress the plan lapses.'),
-            p(`Post the plan's accessibility statement ${M.TAAP_STATEMENT.postedAt}. A user who reports a problem with the product receives the support the plan names, with no accommodation request needed.`),
+            p(`Post the plan's accessibility statement ${M.TAAP_STATEMENT.postedAt}. A user who reports a problem with the product receives the support the plan names, with no accommodation request needed.${f.contact ? ` The supplier takes accessibility problems at ${f.contact}.` : ''}`),
             p(NOT_A_PO),
             ...roadmapBlock(d, f),
             ...contractBlocks(d),
@@ -566,7 +568,7 @@
    * @param {Object} d               the Determination from `evaluate(review)`
    * @param {Object} ex              the write-up from `explain(review, d, ctx)`
    * @param {{product?: string, vendor?: string, unit?: string, requester?: string, requisition?: string,
-   *          signer?: string, interfaces?: string, date?: string}} [ctx]
+   *          signer?: string, contact?: string, interfaces?: string, date?: string}} [ctx]
    * @param {{reasoning?: boolean}} [opts]   include the reasoning block (default true)
    * @returns {{id: string, label: string, to: string, toKey: string, purpose: string, subject: string|null,
    *            greeting: string|null, blocks: Object[], text: string, html: string, placeholders: string[],
@@ -583,7 +585,10 @@
       const blocks = STAKEHOLDERS.includes(t.to) && !m.always ? stakeholderBlocks(kept) : kept;
       const footer = m.footer ? `Graded with the SFBRN accessibility review matrix, version ${M.MATRIX_VERSION}, on ${f.date}.` : null;
       const signature = t.to === 'record' ? null : `Thanks,\n${f.signer}`;
+      // A message to the supplier goes to the accessibility contact the requisition names.
+      const toLine = t.to === 'supplier' ? `To: ${f.contact || '[Supplier accessibility contact]'}` : null;
       const text = [
+        toLine,
         m.subject ? `Subject: ${m.subject}` : null, m.subject ? '' : null,
         m.greeting, m.greeting ? '' : null,
         ...blocksToText(blocks),
@@ -591,6 +596,7 @@
         footer,
       ].filter((l) => l !== null).join('\n').replace(/\n{3,}/g, '\n\n').trim();
       const html = [
+        toLine ? `<p style="${P}"><strong>${esc(toLine)}</strong></p>` : '',
         m.subject ? `<p style="${P}"><strong>Subject: ${esc(m.subject)}</strong></p>` : '',
         m.greeting ? `<p style="${P}">${esc(m.greeting)}</p>` : '',
         blocksToHtml(blocks),
@@ -598,7 +604,7 @@
         footer ? `<p style="${P}color:#444444;font-size:10pt;margin-top:12px;">${esc(footer)}</p>` : '',
       ].filter(Boolean).join('\n');
       const placeholders = unique(text.match(/\[[^\]\n]{1,40}\]/g) || []);
-      out.push({ id: t.id, label: t.label, to: TO[t.to], toKey: t.to, purpose: t.purpose, subject: m.subject, greeting: m.greeting,
+      out.push({ id: t.id, label: t.label, to: TO[t.to], toKey: t.to, toLine, purpose: t.purpose, subject: m.subject, greeting: m.greeting,
         blocks, text, html, placeholders, recommended: false });
     }
     // The recommended message is the first one written for the state. The two that apply to

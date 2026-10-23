@@ -42,7 +42,7 @@
 <div class="columns">
 <form class="review" aria-label="The review" @submit.prevent novalidate>
 
-  <details class="card examples">
+  <details class="card examples" x-ref="examples">
     <summary>Load an example review</summary>
     <div class="example-groups">
       <template x-for="group in examples" :key="group.title">
@@ -62,6 +62,27 @@
       </template>
     </div>
     <p class="help">Or <button type="button" class="btn quiet small" @click="clearForm()">start from a blank review</button>.</p>
+    <div class="acr-import">
+      <button type="button" class="btn quiet small" @click="$refs.testFile.click()">Load a test review file</button>
+      <input type="file" accept=".json,application/json" hidden x-ref="testFile" @change="loadFile($event)">
+      <span class="help">A <code>.reviews.json</code> file lists reviews and the determination each should give.</span>
+    </div>
+    <p class="step-status" :class="testSet && testSet.reviews.some((r) => !r.match) ? 'attention' : ''" role="status" x-show="testSet" x-text="testSetStatus" x-cloak></p>
+    <section class="test-set" x-show="testSet && testSet.reviews.length" aria-labelledby="testSetHeading" x-cloak>
+      <h3 id="testSetHeading" tabindex="-1" x-text="testSet ? 'Test reviews from ' + testSet.file : ''"></h3>
+      <p class="help explain" x-show="testSet && testSet.description" x-text="testSet ? testSet.description : ''"></p>
+      <ul>
+        <template x-for="r in (testSet ? testSet.reviews : [])" :key="r.id">
+          <li>
+            <button type="button" class="example" :class="(r.match ? '' : 'mismatch') + (activeTest === r.id ? ' active' : '')" :aria-current="activeTest === r.id ? 'true' : null" @click="applyTest(r.id)">
+              <span><span x-text="r.name"></span><span class="test-note" x-show="r.note" x-text="r.note"></span></span>
+              <span class="lead" x-text="testResult(r)"></span>
+            </button>
+            <p class="test-diff" x-show="!r.match" x-text="r.error ? r.error : r.diff.join('; ')"></p>
+          </li>
+        </template>
+      </ul>
+    </section>
   </details>
 
   <section class="card step" aria-labelledby="h-request">
@@ -76,6 +97,7 @@
         <label class="field"><span>Requesting department</span><input type="text" autocomplete="off" x-model="form.unit"></label>
         <label class="field"><span>Requester's first name</span><input type="text" autocomplete="off" x-model="form.requester"></label>
         <label class="field"><span>Requisition number</span><input type="text" autocomplete="off" x-model="form.requisition"></label>
+        <label class="field"><span>Supplier accessibility contact</span><input type="text" autocomplete="off" x-model="form.contact" placeholder="accessibility@example.com"></label>
         <label class="field"><span>Your name, for the signature</span><input type="text" autocomplete="name" x-model="form.signer"></label>
       </div>
       <p class="help">The messages fill these in. A field left blank prints as a bracketed placeholder to replace before sending.</p>
@@ -139,6 +161,12 @@
     </div>
     <h3 class="label"><label for="evidence">Strongest evidence on file</label></h3>
     <select id="evidence" x-model="form.evidence"></select>
+    <div class="acr-import">
+      <button type="button" class="btn quiet small" @click="$refs.acrFile.click()">Load an ACR analysis</button>
+      <input type="file" accept=".json,application/json" hidden x-ref="acrFile" @change="loadFile($event)">
+      <span class="help">A <code>.review.json</code> file from the VPAT analysis fills in the ACR record below.</span>
+    </div>
+    <p class="step-status" :class="analysis && analysis.problem ? 'attention' : ''" role="status" x-show="analysis" x-text="analysisStatus" x-cloak></p>
     <p class="help" x-show="!acrShown" x-text="evidence.holds" x-cloak></p>
     <label class="field" x-show="evidenceIsDirect" x-cloak><span>Who supplied it, the method and the date</span><input type="text" autocomplete="off" x-model="form.evidenceNote" placeholder="Vendor demonstration by Example Learning, NVDA and keyboard, 2026-10"></label>
     <p class="help" x-show="supersededAcr" x-text="supersededAcr" x-cloak></p>
@@ -271,6 +299,22 @@
           </li>
         </template>
       </ol>
+      <div class="leads" x-show="analysis && analysis.leads.length" x-cloak>
+        <h4 class="facts-title">Leads from the ACR analysis</h4>
+        <p class="help explain">Each lead is a failure the ACR admits. Add one as a WCAG failure, then set the essential function it affects and its severity. The rating in the ACR does not set severity.</p>
+        <ul>
+          <template x-for="(l, i) in (analysis ? analysis.leads : [])" :key="l.criterion + '-' + i">
+            <li class="lead">
+              <div>
+                <strong x-text="l.criterion + ' ' + l.name + ', ' + l.conformance"></strong>
+                <span class="lead-remark" x-text="l.remarks || 'No remark.'"></span>
+                <span class="lead-note" x-show="!l.placeable">The remark names no feature, so the ACR alone cannot place this lead.</span>
+              </div>
+              <button type="button" class="btn small" :disabled="l.added" @click="addLead(l)" x-text="l.added ? 'Added' : 'Add as a WCAG failure'" :aria-label="(l.added ? 'Added ' : 'Add as a WCAG failure: ') + l.criterion + ' ' + l.name"></button>
+            </li>
+          </template>
+        </ul>
+      </div>
       <p class="step-status attention" role="status" x-show="!form.findings.length" x-text="noFailuresFlag" x-cloak></p>
       <button type="button" class="btn" @click="addFinding()">Add a WCAG failure</button>
     </fieldset>
@@ -375,6 +419,7 @@
       Replace before sending: <span x-text="email ? email.placeholders.join(', ') : ''"></span>
     </p>
     <div class="preview" aria-label="Message preview" x-show="email" x-cloak>
+      <p class="subject" x-show="email && email.toLine" x-text="email ? email.toLine : ''"></p>
       <p class="subject" x-show="email && email.subject"><strong>Subject:</strong> <span x-text="email ? email.subject : ''"></span></p>
       <p x-show="email && email.greeting" x-text="email ? email.greeting : ''"></p>
       <template x-for="(b, i) in (email ? email.blocks : [])" :key="i">
@@ -400,7 +445,7 @@
       </template>
       <p x-show="email && email.toKey !== 'record'">Thanks,<br><span x-text="form.signer.trim() || '[Your name]'"></span></p>
     </div>
-    <p class="sources">The copy carries the subject line, the body as previewed, the signature and the matrix version. Cut the subject line into the email's subject field.</p>
+    <p class="sources">The copy carries the To line on a message to the supplier, the subject line, the body as previewed, the signature and the matrix version. Cut the subject line into the email's subject field.</p>
     </div>
   </section>
 
