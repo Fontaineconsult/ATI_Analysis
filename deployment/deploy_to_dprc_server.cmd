@@ -11,6 +11,15 @@ if errorlevel 1 (
 
 cd /d "%~dp0"
 
+:: Publish the review matrix tester into app\public_reports\static\review-matrix, so the
+:: robocopy below ships the current page. Its sources stay in app\database\ontology\impact-matrix.
+call node "%~dp0..\app\database\ontology\impact-matrix\publish-tester.js"
+if errorlevel 1 (
+    echo.
+    echo Review matrix tester publish FAILED. Aborting deployment.
+    exit /b 1
+)
+
 echo.
 echo About to deploy to \\DPRC-SERVER\ati
 echo Press Ctrl+C to cancel, or any key to continue...

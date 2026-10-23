@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Accessibility review tester</title>
+<link rel="stylesheet" href="review-matrix-tester.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/plugins/monthSelect/style.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/plugins/monthSelect/index.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.9/dist/cdn.min.js"></script>
+</head>
+<body x-data="tester">
+<a class="skip" href="#result">Skip to the result</a>
+
+<header class="page-header">
+  <h1>Accessibility review tester</h1>
+  <p class="lede">Enter a purchase review and watch the determination change as you go. The form and its logic
+    come from the review matrix, version <span id="version"></span>. Each step links to its
+    <a href="#definitions" @click.prevent="selectTab('definitions')">definition</a>.</p>
+</header>
+
+<p id="noAlpine" class="notice" hidden>The page logic did not load. Alpine.js comes from a content delivery network, so the page
+  needs a network connection on first open.</p>
+
+<a class="minibar" :class="'tone-' + tone" href="#result" x-show="tab === 'review'" x-cloak>
+  Result: <span x-text="ex ? ex.headline : ''"></span>
+</a>
+
+<main>
+<div class="tabs" role="tablist" aria-label="Page sections">
+  <button type="button" role="tab" id="tab-review" aria-controls="panel-review"
+    :aria-selected="tab === 'review'" :tabindex="tab === 'review' ? 0 : -1"
+    @click="selectTab('review')" @keydown="tabKey($event)">Review</button>
+  <button type="button" role="tab" id="tab-definitions" aria-controls="panel-definitions"
+    :aria-selected="tab === 'definitions'" :tabindex="tab === 'definitions' ? 0 : -1"
+    @click="selectTab('definitions')" @keydown="tabKey($event)">Definitions</button>
+</div>
+
+<section class="workbench" id="panel-review" role="tabpanel" aria-labelledby="tab-review" tabindex="0" x-show="tab === 'review'">
+<div class="columns">
+<form class="review" aria-label="The review" @submit.prevent novalidate>
+
+  <details class="card examples" x-ref="examples">
+    <summary>Load an example review</summary>
+    <div class="example-groups">
+      <template x-for="group in examples" :key="group.title">
+        <section :aria-labelledby="'ex-' + group.title">
+          <h3 :id="'ex-' + group.title" x-text="group.title"></h3>
+          <ul>
+            <template x-for="item in group.items" :key="item.id">
+              <li>
+                <button type="button" class="example" @click="applyPreset(item.id)">
+                  <span x-text="item.name"></span>
+                  <span class="lead" x-text="item.result"></span>
+                </button>
+              </li>
+            </template>
+          </ul>
+        </section>
+      </template>
+    </div>
+    <p class="help">Or <button type="button" class="btn quiet small" @click="clearForm()">start from a blank review</button>.</p>
+    <div class="acr-import">
+      <button type="button" class="btn quiet small" @click="$refs.testFile.click()">Load a test review file</button>
+      <input type="file" accept=".json,application/json" hidden x-ref="testFile" @change="loadFile($event)">
+      <span class="help">A <code>.reviews.json</code> file lists reviews and the determination each should give.</span>
+    </div>
+    <p class="step-status" :class="testSet && testSet.reviews.some((r) => !r.match) ? 'attention' : ''" role="status" x-show="testSet" x-text="testSetStatus" x-cloak></p>
+    <section class="test-set" x-show="testSet && testSet.reviews.length" aria-labelledby="testSetHeading" x-cloak>
+      <h3 id="testSetHeading" tabindex="-1" x-text="testSet ? 'Test reviews from ' + testSet.file : ''"></h3>
+      <p class="help explain" x-show="testSet && testSet.description" x-text="testSet ? testSet.description : ''"></p>
+      <ul>
+        <template x-for="r in (testSet ? testSet.reviews : [])" :key="r.id">
+          <li>
+            <button type="button" class="example" :class="(r.match ? '' : 'mismatch') + (activeTest === r.id ? ' active' : '')" :aria-current="activeTest === r.id ? 'true' : null" @click="applyTest(r.id)">
+              <span><span x-text="r.name"></span><span class="test-note" x-show="r.note" x-text="r.note"></span></span>
+              <span class="lead" x-text="testResult(r)"></span>
+            </button>
+            <p class="test-diff" x-show="!r.match" x-text="r.error ? r.error : r.diff.join('; ')"></p>
+          </li>
+        </template>
+      </ul>
+    </section>
+  </details>
+
+  <section class="card step" aria-labelledby="h-request">
+    <div class="step-title">
+      <h2 id="h-request">The request</h2>
+    </div>
+    <details>
+      <summary>Named for the email: <span x-text="requestSummary"></span></summary>
+      <div class="request-fields">
+        <label class="field"><span>Product</span><input type="text" autocomplete="off" x-model="form.product"></label>
+        <label class="field"><span>Vendor</span><input type="text" autocomplete="off" x-model="form.vendor"></label>
+        <label class="field"><span>Requesting department</span><input type="text" autocomplete="off" x-model="form.unit"></label>
+        <label class="field"><span>Requester's first name</span><input type="text" autocomplete="off" x-model="form.requester"></label>
+        <label class="field"><span>Requisition number</span><input type="text" autocomplete="off" x-model="form.requisition"></label>
+        <label class="field"><span>Supplier accessibility contact</span><input type="text" autocomplete="off" x-model="form.contact" placeholder="accessibility@example.com"></label>
+        <label class="field"><span>Your name, for the signature</span><input type="text" autocomplete="name" x-model="form.signer"></label>
+      </div>
+      <p class="help">The messages fill these in. A field left blank prints as a bracketed placeholder to replace before sending.</p>
+    </details>
+  </section>
+
+  <section class="card step" aria-labelledby="h-kind">
+    <div class="step-title">
+      <span class="step-no">Step 0</span>
+      <h2 id="h-kind">Kind of technology</h2>
+      <a class="def-link" href="#def-review-standard" @click.prevent="showDefinition('def-review-standard')">Definition</a>
+    </div>
+    <fieldset>
+      <legend class="label">The kind decides the review standard.</legend>
+      <div id="kindChoices"></div>
+    </fieldset>
+    <p class="step-status" x-cloak>
+      <span x-text="kind.standard"></span>. If the product cannot conform: <span x-text="kind.whenNonConforming"></span>.
+    </p>
+  </section>
+
+  <section class="card step" aria-labelledby="h-exposure">
+    <div class="step-title">
+      <span class="step-no">Step 1</span>
+      <h2 id="h-exposure">Exposure</h2>
+      <a class="def-link" href="#def-exposure" @click.prevent="showDefinition('def-exposure')">Definition</a>
+    </div>
+    <fieldset>
+      <legend class="label">The requester's answers</legend>
+      <p class="help explain">The review needs the user count, which sets the starting level. The other answers are optional. A blank answer counts as high, and an entered answer can only lower the level.</p>
+      <table class="answers">
+        <thead>
+          <tr>
+            <th scope="col">Question</th>
+            <th scope="col">Requester</th>
+            <th scope="col" x-show="showReviewer">Reviewer</th>
+          </tr>
+        </thead>
+        <tbody id="answerRows"></tbody>
+      </table>
+      <p class="inline" style="margin: 10px 0 0;">
+        <button type="button" class="btn quiet small" :aria-pressed="showReviewer" @click="toggleReviewer()"
+          x-text="showReviewer ? 'Hide reviewer overrides' : 'Record reviewer overrides'"></button>
+        <span class="help" style="margin:0" x-show="showReviewer" x-cloak>A reviewer answer replaces the requester's answer.
+          Hiding the column clears the overrides.<template x-if="overrideCount"><span> <span x-text="overrideCount"></span> in place.</span></template></span>
+      </p>
+    </fieldset>
+    <fieldset>
+      <legend><h3 class="label">Facts</h3></legend>
+      <p class="help explain">One true floor fact sets a minimum Exposure on its own, whatever the answers above say. The review approves an accommodation purchase at intake.</p>
+      <div id="floorChoices"></div>
+    </fieldset>
+    <p class="step-status" :class="d && d.exposure.unknownsMatter ? 'attention' : ''" x-text="exposureStatus" x-cloak></p>
+  </section>
+
+  <section class="card step" aria-labelledby="h-evidence">
+    <div class="step-title">
+      <span class="step-no">Step 2</span>
+      <h2 id="h-evidence">Evidence and barriers</h2>
+      <a class="def-link" href="#def-severity" @click.prevent="showDefinition('def-severity')">Definition</a>
+    </div>
+    <h3 class="label"><label for="evidence">Strongest evidence on file</label></h3>
+    <select id="evidence" x-model="form.evidence"></select>
+    <div class="acr-import">
+      <button type="button" class="btn quiet small" @click="$refs.acrFile.click()">Load an ACR analysis</button>
+      <input type="file" accept=".json,application/json" hidden x-ref="acrFile" @change="loadFile($event)">
+      <span class="help">A <code>.review.json</code> file from the VPAT analysis fills in the ACR record below.</span>
+    </div>
+    <p class="step-status" :class="analysis && analysis.problem ? 'attention' : ''" role="status" x-show="analysis" x-text="analysisStatus" x-cloak></p>
+    <p class="help" x-show="!acrShown" x-text="evidence.holds" x-cloak></p>
+    <label class="field" x-show="evidenceIsDirect" x-cloak><span>Who supplied it, the method and the date</span><input type="text" autocomplete="off" x-model="form.evidenceNote" placeholder="Vendor demonstration by Example Learning, NVDA and keyboard, 2026-10"></label>
+    <p class="help" x-show="supersededAcr" x-text="supersededAcr" x-cloak></p>
+
+    <fieldset x-show="acrShown" x-cloak>
+      <legend class="label">The ACR</legend>
+      <p class="help explain">The analyst reads the date, the author and the remarks off the ACR. Remarks that read like a bug report show the vendor did the evaluation, so the analyst takes the ACR at face value (E1+) unless it is both more than a year old and by the vendor's own staff. Remarks that name the feature but not where or how leave the ACR at E1, and the analyst's spot check comes next, under Raising the evidence. Remarks that are blank, restate the criterion, repeat across rows or hedge lower the ACR and open the remarks checks. The document checks apply to every ACR, and a failed check ranks the ACR E1- until the vendor corrects the report or the analyst accepts the defect.
+        <a href="#def-evidence-veracity" @click.prevent="showDefinition('def-evidence-veracity')">How the review derives the level</a>.
+        <a href="#def-reading-an-acr" @click.prevent="showDefinition('def-reading-an-acr')">How to read an ACR</a>.</p>
+      <div class="request-fields">
+        <label class="field"><span>Evaluation date (month), from the methods section, or the report date if none</span><input type="text" autocomplete="off" placeholder="Month and year" x-month="form.acr.issued"></label>
+        <label class="field"><span>Product's last major release (month, if known)</span><input type="text" autocomplete="off" placeholder="Month and year" x-month="form.acr.lastMajorRelease"></label>
+      </div>
+      <fieldset x-show="qualificationsShown">
+        <legend class="label">Author</legend>
+        <div class="choice">
+          <input type="radio" name="acrAuthor" id="acrAuthor_outside" value="outside" x-model="form.acr.author">
+          <label for="acrAuthor_outside">A named outside firm, with the method named</label>
+          <span class="desc">A firm the vendor does not own, is not affiliated with, and does not pay for remediation.</span>
+        </div>
+        <div class="choice">
+          <input type="radio" name="acrAuthor" id="acrAuthor_vendor" value="vendor" x-model="form.acr.author">
+          <label for="acrAuthor_vendor">The vendor's own staff, a firm tied to the vendor, or no author named</label>
+        </div>
+        <label class="field" x-show="form.acr.author === 'outside'"><span>Firm and method, as the ACR names them</span><input type="text" autocomplete="off" x-model="form.acr.authorName" placeholder="Example Audits LLC, manual testing with NVDA and JAWS"></label>
+      </fieldset>
+      <fieldset x-show="qualificationsShown">
+        <legend class="label">Remarks</legend>
+        <p class="help explain">Read the Remarks and Explanations column on the "Partially Supports" and "Does Not Support" rows. Pick the description that fits most of them.</p>
+        <div class="choice">
+          <input type="radio" name="acrRemarks" id="acrRemarks_bug" value="bug_report" x-model="form.acr.remarks">
+          <label for="acrRemarks_bug">Read like a bug report</label>
+          <span class="desc">Each row names the page, screen, component or workflow affected, how it falls short and who is affected, the fields of the GSA issue-level supplement. "Supports" rows on complex criteria give an example or the method. The analyst takes the ACR at face value.</span>
+        </div>
+        <div class="choice">
+          <input type="radio" name="acrRemarks" id="acrRemarks_named" value="feature_named" x-model="form.acr.remarks">
+          <label for="acrRemarks_named">Name the feature, but not where or how</label>
+          <span class="desc">Each row says which function or feature has issues, the floor the VPAT instructions set, and stops there. The analyst does not take the ACR at face value and runs the spot check next.</span>
+        </div>
+        <div class="choice">
+          <input type="radio" name="acrRemarks" id="acrRemarks_restated" value="restated" x-model="form.acr.remarks">
+          <label for="acrRemarks_restated">Blank, restate the criterion, repeat across rows, or hedge</label>
+          <span class="desc">The same sentence on every row, the criterion's own words, or "some", "most" and "generally". The remark alone cannot place a barrier on an essential function. Opens the remarks checks below.</span>
+        </div>
+      </fieldset>
+      <fieldset x-show="reportChecksShown">
+        <legend class="label">Report checks</legend>
+        <p class="help explain">The document checks rate the report's front matter and scope, and they apply to every ACR. Tick each check the report fails. The dates above decide the stale check.</p>
+        <template x-for="c in documentChecks" :key="c.id">
+          <div class="choice">
+            <input type="checkbox" :id="'defect_' + c.id" :value="c.id" x-model="form.acr.defects">
+            <label :for="'defect_' + c.id" x-text="c.text"></label>
+          </div>
+        </template>
+        <div class="choice">
+          <input type="checkbox" id="defect_stale" disabled :checked="isStale">
+          <label for="defect_stale" x-text="staleCheck.text + ' (read from the dates)'"></label>
+        </div>
+        <div x-show="remarksChecksShown" x-cloak>
+          <p class="help explain">The remarks checks rate the Remarks column. They open when the remarks fall short of a bug report, and a tick applies only while they are open.</p>
+          <template x-for="c in remarksChecks" :key="c.id">
+            <div class="choice">
+              <input type="checkbox" :id="'defect_' + c.id" :value="c.id" x-model="form.acr.defects">
+              <label :for="'defect_' + c.id" x-text="c.text"></label>
+            </div>
+          </template>
+        </div>
+      </fieldset>
+      <fieldset x-show="acceptanceShown">
+        <legend class="label">Accepting the report defect</legend>
+        <p class="help explain">The vendor cures a report defect with a corrected report. The analyst may instead accept the ACR as it is when the defect does not bear on this purchase, such as a version line one patch release behind. The analyst cannot accept a stale report.</p>
+        <div class="choice">
+          <input type="checkbox" id="acrAccepted" x-model="form.acr.accepted">
+          <label for="acrAccepted">Accept the ACR despite the report defect</label>
+          <span class="desc">The ACR is then rated like a clean one, and the determination prints the defect and the acceptance.</span>
+        </div>
+        <label class="field" x-show="form.acr.accepted"><span>Why the defect does not matter for this purchase</span><input type="text" autocomplete="off" x-model="form.acr.acceptedNote" placeholder="the version line reads 4.2 and the product bought is 4.2.1, a patch release"></label>
+      </fieldset>
+      <p class="step-status" :class="!acrRated || (form.acr.accepted && !form.acr.acceptedNote.trim()) ? 'attention' : ''" x-text="acrStatus" x-cloak></p>
+    </fieldset>
+
+    <fieldset x-show="raisingShown" x-cloak>
+      <legend class="label">Raising the evidence</legend>
+      <p class="help"><strong>What raises it.</strong> <span x-text="raiseNote"></span></p>
+      <fieldset x-show="spotCheckApplies">
+        <legend class="label">ATI spot check</legend>
+        <div class="choice">
+          <input type="radio" name="acrSpot" id="acrSpot_none" value="none" x-model="form.acr.spotCheck">
+          <label for="acrSpot_none">Not done</label>
+        </div>
+        <div class="choice">
+          <input type="radio" name="acrSpot" id="acrSpot_agrees" value="agrees" x-model="form.acr.spotCheck" :disabled="form.acr.spotCheck === 'contradicts'">
+          <label for="acrSpot_agrees">Agrees: an essential function exercised with a screen reader and the keyboard, nothing found that the ACR does not report</label>
+          <span class="desc" x-show="form.acr.spotCheck === 'contradicts'">A contradicted ACR takes a full manual review or a demonstration, recorded below. A second spot check cannot restore it.</span>
+        </div>
+        <div class="choice">
+          <input type="radio" name="acrSpot" id="acrSpot_contradicts" value="contradicts" x-model="form.acr.spotCheck">
+          <label for="acrSpot_contradicts">Contradicts: a barrier found that the ACR reports as Supports</label>
+          <span class="desc">Record the barriers the spot check found as findings below.</span>
+        </div>
+        <label class="field" x-show="form.acr.spotCheck !== 'none'"><span>Functions covered and assistive technology used</span><input type="text" autocomplete="off" x-model="form.acr.spotCheckNote" placeholder="Book a room and cancel a booking, NVDA and keyboard"></label>
+      </fieldset>
+      <label class="field" x-show="raiseBy" for="raiseResult"><span x-text="raiseBy === 'spot_check' ? 'Or record a stronger step' : 'Record the result'"></span></label>
+      <select id="raiseResult" x-show="raiseBy" x-model="raiseResult">
+        <template x-for="o in raiseOptions" :key="o.value"><option :value="o.value" x-text="o.label"></option></template>
+      </select>
+      <p class="desc" x-show="form.validation === 'unavailable'">The fallback applies. The review treats the product as S3 (provisional) with the barriers found as a minimum.</p>
+      <p class="help explain" x-show="raiseBy && raiseBy !== 'vendor_evidence'">Recording a demonstration, audit or review replaces the ACR as the strongest evidence on file. The ACR's details and the findings it gave stay on the record.</p>
+    </fieldset>
+    <p class="step-status" :class="sev === 'S?' ? 'attention' : ''" x-show="evidenceStatus" x-text="evidenceStatus" x-cloak></p>
+
+    <p class="step-status quiet" x-show="!findingsShown" x-text="findingsNote" x-cloak></p>
+    <fieldset style="margin-top: 14px;" x-show="findingsShown" x-cloak>
+      <legend><h3 class="label">WCAG failures</h3></legend>
+      <div class="help wide explain">
+        <p>Add a row for each WCAG failure the evidence shows. A failure is a "Partially Supports" or "Does Not Support" row in the ACR, or a barrier the analyst found in a demonstration, an audit or ATI testing. Each row is one finding.</p>
+        <p>Name the essential function the failure affects, the role and disability group it stops, and its severity.</p>
+        <p>An essential function is one the product exists to provide, such as registering for a class or submitting homework. A function counts as essential when removing it would change the product's use or purpose.</p>
+        <p>An ACR the analyst takes at face value, with only minor admitted failures, needs no row.
+          <a href="#def-finding" @click.prevent="showDefinition('def-finding')">What a finding records</a>.</p>
+      </div>
+      <ol class="findings" aria-label="WCAG failures">
+        <template id="findingRow" x-for="(f, i) in form.findings" :key="f.key">
+          <li class="finding">
+            <label class="field"><span>Role</span><select x-model="f.role" data-opts="role"></select></label>
+            <label class="field"><span>Disability group</span><select x-model="f.group" data-opts="group"></select></label>
+            <label class="field"><span>Essential function</span><input type="text" x-model="f.essentialFunction" placeholder="Submit homework"></label>
+            <label class="field"><span>Severity</span><select x-model="f.severity" data-opts="severity"></select></label>
+            <button type="button" class="btn quiet small" :aria-label="'Remove failure ' + (i + 1)" @click="removeFinding(f.key)">Remove</button>
+          </li>
+        </template>
+      </ol>
+      <div class="leads" x-show="analysis && analysis.leads.length" x-cloak>
+        <h4 class="facts-title">Leads from the ACR analysis</h4>
+        <p class="help explain">Each lead is a failure the ACR admits. Add one as a WCAG failure, then set the essential function it affects and its severity. The rating in the ACR does not set severity.</p>
+        <ul>
+          <template x-for="(l, i) in (analysis ? analysis.leads : [])" :key="l.criterion + '-' + i">
+            <li class="lead">
+              <div>
+                <strong x-text="l.criterion + ' ' + l.name + ', ' + l.conformance"></strong>
+                <span class="lead-remark" x-text="l.remarks || 'No remark.'"></span>
+                <span class="lead-note" x-show="!l.placeable">The remark names no feature, so the ACR alone cannot place this lead.</span>
+              </div>
+              <button type="button" class="btn small" :disabled="l.added" @click="addLead(l)" x-text="l.added ? 'Added' : 'Add as a WCAG failure'" :aria-label="(l.added ? 'Added ' : 'Add as a WCAG failure: ') + l.criterion + ' ' + l.name"></button>
+            </li>
+          </template>
+        </ul>
+      </div>
+      <p class="step-status attention" role="status" x-show="!form.findings.length" x-text="noFailuresFlag" x-cloak></p>
+      <button type="button" class="btn" @click="addFinding()">Add a WCAG failure</button>
+    </fieldset>
+    <p class="step-status" :class="sev === 'S?' ? 'attention' : ''" x-show="findingsShown" x-text="severityStatus" x-cloak></p>
+  </section>
+
+  <section class="card step" aria-labelledby="h-remedy">
+    <div class="step-title">
+      <span class="step-no">Step 3</span>
+      <h2 id="h-remedy">Remedy</h2>
+      <a class="def-link" href="#def-taap" @click.prevent="showDefinition('def-taap')">Definition</a>
+    </div>
+    <p class="step-status quiet" x-show="!remedyShown" x-text="remedyNote" x-cloak></p>
+    <div x-show="remedyShown" x-cloak>
+      <fieldset x-show="moreAccessibleShown">
+        <legend class="label">Facts for a denial</legend>
+        <div class="choice">
+          <input type="checkbox" id="moreAccessibleProductExists" x-model="form.moreAccessibleProductExists">
+          <label for="moreAccessibleProductExists">A more accessible product meets the same need</label>
+          <span class="desc">At S3 the CSU buys the more accessible product, so this fact denies the request whatever the TAAP says.</span>
+        </div>
+      </fieldset>
+      <fieldset>
+        <legend class="label">The TAAP</legend>
+        <div class="choice">
+          <input type="checkbox" id="taapExists" x-model="form.taap.exists">
+          <label for="taapExists">A TAAP is on file for this product</label>
+        </div>
+        <div x-show="form.taap.exists">
+          <p class="help">The Requirements Checklist of the CSU TAAP template. The plan meets <span x-text="taapMet"></span> of 6; the standard here is <span x-text="std ? (std.required === 6 ? 'all 6' : std.required + ' of 6') : ''"></span>.</p>
+          <div id="taapReqs"></div>
+        </div>
+      </fieldset>
+      <fieldset x-show="exceptionShown">
+        <legend class="label">Undue burden or fundamental alteration</legend>
+        <p class="help explain">The TAAP falls below the minimum, which the matrix otherwise denies. A written determination by the president or a designee is the lawful basis for the plan (28 CFR 35.164, 35.204).</p>
+        <label class="field" for="taapException"><span>Exception status</span></label>
+        <select id="taapException" x-model="form.taap.exception">
+          <option value="none">No claim</option>
+          <option value="claimed">Claimed by the requester, awaiting determination</option>
+          <option value="determined">Written determination on file (president or designee)</option>
+        </select>
+      </fieldset>
+      <p class="step-status" x-text="remedyStatus"></p>
+      <p class="step-status warn" x-show="warningLevel" x-cloak><strong x-text="warningLevel ? 'Warning ' + warningLevel.key + '.' : ''"></strong> <span x-text="warningLevel ? warningLevel.means + ' ' + warningLevel.action : ''"></span></p>
+    </div>
+  </section>
+</form>
+
+<section class="result" id="result" aria-labelledby="resultHeading" x-cloak>
+  <div class="outcome" :class="'tone-' + tone" role="status" aria-live="polite">
+    <h2 id="resultHeading" x-text="ex ? ex.headline : 'Result'"></h2>
+    <p class="holder" x-show="holder">Held by <span x-text="holder ? holder.label : ''"></span>. <span x-text="holder ? holder.holds : ''"></span>.</p>
+    <ol class="path" aria-label="Where the review stands">
+      <template x-for="step in path" :key="step.name">
+        <li :class="step.state" :aria-current="step.state === 'here' ? 'step' : null" x-text="step.name"></li>
+      </template>
+    </ol>
+    <dl class="chips" aria-label="The grade">
+      <template x-for="chip in chips" :key="chip[0]">
+        <div><dt x-text="chip[0]"></dt><dd x-text="chip[1]"></dd></div>
+      </template>
+    </dl>
+  </div>
+
+  <section class="card panel reasoning" aria-labelledby="h-reasoning">
+    <h2 id="h-reasoning">Reasoning for the requester</h2>
+    <div class="toolbar">
+      <button type="button" class="btn primary" @click="copy('email', 'determination')">Copy for email</button>
+      <button type="button" class="btn" @click="copy('text', 'determination')">Copy as plain text</button>
+      <span class="status" role="status" x-text="determinationStatus"></span>
+    </div>
+    <template x-for="s in decisionSections" :key="s.heading">
+      <div class="acc acc-inner">
+        <h3 class="acc-title"><button type="button" class="acc-btn" :id="'btn-' + s.key" :aria-controls="'body-' + s.key" :aria-expanded="isOpen(s.key, s.open) ? 'true' : 'false'" @click="toggle(s.key, s.open)" x-text="s.heading"></button></h3>
+        <div class="acc-body" :id="'body-' + s.key" x-show="isOpen(s.key, s.open)">
+          <template x-if="s.bullets"><ul><template x-for="(line, i) in s.lines" :key="i"><li x-text="line"></li></template></ul></template>
+          <template x-if="!s.bullets"><div><template x-for="(line, i) in s.lines" :key="i"><p x-text="line"></p></template></div></template>
+        </div>
+      </div>
+    </template>
+    <p class="sources">The copy carries every section, in this order, with the grade line and the matrix version.</p>
+  </section>
+
+  <section class="card panel acc reasoning messages" aria-labelledby="h-messages">
+    <h2 id="h-messages" class="acc-title"><button type="button" class="acc-btn" id="btn-messages" aria-controls="body-messages" :aria-expanded="open.messages ? 'true' : 'false'" @click="toggle('messages')">Messages for this result</button></h2>
+    <div id="body-messages" class="acc-body" x-show="open.messages" x-cloak>
+    <div class="toolbar email-pick">
+      <label class="field grow" for="emailPick"><span>Message</span></label>
+      <select id="emailPick" x-model="emailId">
+        <template x-for="t in emails" :key="t.id"><option :value="t.id" x-text="emailOption(t)"></option></template>
+      </select>
+      <label class="check"><input type="checkbox" x-model="includeReasoning"> Include the review's reasoning</label>
+    </div>
+    <p class="help" x-text="email ? email.purpose : ''"></p>
+    <div class="toolbar">
+      <button type="button" class="btn primary" @click="copy('email')">Copy for email</button>
+      <button type="button" class="btn" @click="copy('text')">Copy as plain text</button>
+      <span class="status" role="status" x-text="copyStatus"></span>
+    </div>
+    <p class="placeholders" x-show="email && email.placeholders.length" x-cloak>
+      Replace before sending: <span x-text="email ? email.placeholders.join(', ') : ''"></span>
+    </p>
+    <div class="preview" aria-label="Message preview" x-show="email" x-cloak>
+      <p class="subject" x-show="email && email.toLine" x-text="email ? email.toLine : ''"></p>
+      <p class="subject" x-show="email && email.subject"><strong>Subject:</strong> <span x-text="email ? email.subject : ''"></span></p>
+      <p x-show="email && email.greeting" x-text="email ? email.greeting : ''"></p>
+      <template x-for="(b, i) in (email ? email.blocks : [])" :key="i">
+        <div>
+          <template x-if="b.type === 'p'"><p x-text="b.text"></p></template>
+          <template x-if="b.type === 'ps'"><div><template x-for="(l, j) in b.lines" :key="j"><p x-text="l"></p></template></div></template>
+          <template x-if="b.type === 'h'"><h3 x-text="b.text"></h3></template>
+          <template x-if="b.type === 'ul'"><ul><template x-for="(l, j) in b.items" :key="j"><li x-text="l"></li></template></ul></template>
+          <template x-if="b.type === 'ol'"><ol><template x-for="(l, j) in b.items" :key="j"><li x-text="l"></li></template></ol></template>
+          <template x-if="b.type === 'quote'">
+            <blockquote>
+              <template x-for="(q, k) in b.blocks" :key="k">
+                <div>
+                  <template x-if="q.type === 'p'"><p x-text="q.text"></p></template>
+                  <template x-if="q.type === 'h'"><h3 x-text="q.text"></h3></template>
+                  <template x-if="q.type === 'ul'"><ul><template x-for="(l, j) in q.items" :key="j"><li x-text="l"></li></template></ul></template>
+                  <template x-if="q.type === 'ol'"><ol><template x-for="(l, j) in q.items" :key="j"><li x-text="l"></li></template></ol></template>
+                </div>
+              </template>
+            </blockquote>
+          </template>
+        </div>
+      </template>
+      <p x-show="email && email.toKey !== 'record'">Thanks,<br><span x-text="form.signer.trim() || '[Your name]'"></span></p>
+    </div>
+    <p class="sources">The copy carries the To line on a message to the supplier, the subject line, the body as previewed, the signature and the matrix version. Cut the subject line into the email's subject field.</p>
+    </div>
+  </section>
+
+  <section class="card panel acc" aria-labelledby="h-reviewer">
+    <h2 id="h-reviewer" class="acc-title"><button type="button" class="acc-btn" id="btn-reviewer" aria-controls="body-reviewer" :aria-expanded="open.reviewer ? 'true' : 'false'" @click="toggle('reviewer')">Reviewer details</button></h2>
+    <div id="body-reviewer" class="acc-body" x-show="open.reviewer" x-cloak>
+    <template x-for="g in factGroups" :key="g.title">
+      <div>
+        <h3 class="facts-title" x-text="g.title"></h3>
+        <dl class="facts">
+          <template x-for="row in g.rows" :key="row[0]">
+            <div style="display: contents;"><dt x-text="row[0]"></dt><dd x-text="row[1]"></dd></div>
+          </template>
+        </dl>
+      </div>
+    </template>
+    </div>
+  </section>
+
+  <section class="card panel acc" aria-labelledby="h-data">
+    <h2 id="h-data" class="acc-title"><button type="button" class="acc-btn" id="btn-data" aria-controls="body-data" :aria-expanded="open.data ? 'true' : 'false'" @click="toggle('data')">Determination as data</button></h2>
+    <div id="body-data" class="acc-body" x-show="open.data" x-cloak>
+    <pre x-text="json"></pre>
+    </div>
+  </section>
+</section>
+</div>
+
+<section class="card panel matrix" aria-labelledby="h-matrix">
+    <h2 id="h-matrix">This review in the matrix</h2>
+    <div class="step-status matrix-summary" id="matrixSummary">
+      <p class="matrix-lead" x-text="grid.lead"></p>
+      <ul>
+        <template x-for="(line, i) in grid.summary" :key="i"><li x-text="line"></li></template>
+      </ul>
+    </div>
+    <div class="grid-wrap">
+      <table class="grid" aria-describedby="matrixSummary">
+        <caption>The exposure matrix. Outlined cells mark this review. Faded columns lie past the stage it reached.</caption>
+        <thead>
+          <tr>
+            <th scope="col">Exposure</th><th scope="col">Breadth</th><th scope="col">Pressure</th><th scope="col">Veracity floor</th>
+            <th scope="col" :class="grid.headDim.grade ? 'dim' : ''">S0, S1<span class="sr-only" x-show="grid.headDim.grade">, not reached</span></th><th scope="col" :class="grid.headDim.grade ? 'dim' : ''">S2<span class="sr-only" x-show="grid.headDim.grade">, not reached</span></th><th scope="col" :class="grid.headDim.grade ? 'dim' : ''">S3<span class="sr-only" x-show="grid.headDim.grade">, not reached</span></th>
+            <th scope="col" :class="grid.headDim.taap ? 'dim' : ''">Minimum (the TAAP standard)<span class="sr-only" x-show="grid.headDim.taap">, not reached</span></th>
+            <th scope="col" :class="grid.headDim.taap ? 'dim' : ''">No TAAP yet<span class="sr-only" x-show="grid.headDim.taap">, not reached</span></th>
+            <th scope="col" :class="grid.headDim.taap ? 'dim' : ''">TAAP below the minimum<span class="sr-only" x-show="grid.headDim.taap">, not reached</span></th><th scope="col" :class="grid.headDim.taap ? 'dim' : ''">TAAP at the minimum<span class="sr-only" x-show="grid.headDim.taap">, not reached</span></th>
+            <th scope="col" :class="grid.headDim.taap ? 'dim' : ''">Full TAAP<span class="sr-only" x-show="grid.headDim.taap">, not reached</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          <template x-for="row in grid.rows" :key="row.key">
+            <tr :class="(row.band ? 'band' : '') + (row.onRow ? ' here-row' : '')">
+              <template x-if="row.first"><th scope="rowgroup" rowspan="3" :class="row.onBand ? 'here-band' : ''" x-text="row.level"></th></template>
+              <td :class="row.onRow ? 'here' : ''"><span class="sr-only" x-show="row.onRow">This review, </span><span x-text="row.B"></span></td>
+              <td :class="row.onRow ? 'here' : ''"><span class="sr-only" x-show="row.onRow">This review, </span><span x-text="row.P"></span></td>
+              <template x-if="row.first"><td rowspan="3" :class="row.floor.here ? 'here' : ''"><span class="sr-only" x-show="row.floor.here">This review, </span><span x-text="row.floor.text"></span><span class="warn" x-show="row.floor.note" x-text="row.floor.note"></span></td></template>
+              <template x-for="(c, i) in row.grades" :key="i"><td :class="'tone-' + c.tone + (c.here ? ' here' : '') + (c.here && c.tentative ? ' tentative' : '') + (c.dim ? ' dim' : '')"><span class="sr-only" x-show="c.here" x-text="c.tentative ? 'This review, for now, ' : 'This review, '"></span><span x-text="c.text"></span></td></template>
+              <td :class="(row.k.here ? 'here' : '') + (row.k.dim ? ' dim' : '')"><span class="sr-only" x-show="row.k.here">This review, </span><span x-text="row.k.text"></span></td>
+              <template x-for="(c, i) in row.taap" :key="i">
+                <td :class="'tone-' + c.tone + (c.here ? ' here' : '') + (c.dim ? ' dim' : '')"><span class="sr-only" x-show="c.here">This review, </span><span x-text="c.text"></span><span class="warn" x-show="c.sub" x-text="c.sub"></span><span class="warn" x-show="c.warn" x-text="c.warn"></span></td>
+              </template>
+            </tr>
+          </template>
+        </tbody>
+      </table>
+    </div>
+</section>
+</section>
+
+<section class="definitions" id="panel-definitions" role="tabpanel" aria-labelledby="tab-definitions" tabindex="0" x-show="tab === 'definitions'" x-cloak>
+  <div class="card">
+    <h2 id="defsHeading">Definitions</h2>
+    <p class="lede">The sections read in order, and no term relies on a term defined in a later section. The numbers come from
+      <code>review-matrix.js</code>, so the text changes when the model does.</p>
+    <div class="def-nav" id="defsNav" role="tablist" aria-label="Definition sections" aria-orientation="vertical"></div>
+    <div class="defs-prose" id="defsView" role="tabpanel" tabindex="0"></div>
+    <!-- The complete Definitions markup, which dump-definitions.js reads for the rubric document. -->
+    <div id="defsBody" hidden></div>
+  </div>
+</section>
+</main>
+
+<script src="review-matrix.js"></script>
+<script src="review-emails.js"></script>
+<script src="review-matrix-tester.js"></script>
+</body>
+</html>

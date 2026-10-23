@@ -272,3 +272,43 @@ def taap_detail(taap_identifier):
     response = make_response(html)
     response.headers['Cache-Control'] = _TAAP_CACHE
     return response
+
+
+# ---------------------------------------------------------------------------------------
+# The review matrix tester: a static page, published into static/review-matrix by
+# app/database/ontology/impact-matrix/publish-tester.js. It runs the SFBRN review rubric in
+# the browser and reads nothing from the graph, so it needs no sanitize step.
+# ---------------------------------------------------------------------------------------
+_TESTER_DIR = 'review-matrix'
+_TESTER_PAGE = 'review-matrix-tester.html'
+# Only the files the publish script writes. Its README stays private.
+_TESTER_FILES = {'review-matrix-tester.css', 'review-matrix-tester.js', 'review-matrix.js', 'review-emails.js'}
+# Short, so a deploy reaches readers within minutes.
+_TESTER_CACHE = 'public, max-age=300'
+
+
+@public_reports.route('/review-matrix')
+def review_matrix_redirect():
+    """The bare address redirects to the folder form, so the page's relative asset paths
+    resolve inside /review-matrix/."""
+    if not current_app.config.get('PUBLIC_REPORTS_ENABLED', True):
+        abort(404)
+    return redirect(url_for('public_reports.review_matrix_tester'), code=301)
+
+
+@public_reports.route('/review-matrix/')
+@public_reports.route('/review-matrix/<filename>')
+def review_matrix_tester(filename=None):
+    """The tester page, and the four files it loads beside it."""
+    if not current_app.config.get('PUBLIC_REPORTS_ENABLED', True):
+        abort(404)
+    import os
+    from flask import send_from_directory
+
+    name = _TESTER_PAGE if filename is None else filename
+    if name != _TESTER_PAGE and name not in _TESTER_FILES:
+        abort(404)
+    folder = os.path.join(public_reports.root_path, 'static', _TESTER_DIR)
+    response = send_from_directory(folder, name, max_age=300)
+    response.headers['Cache-Control'] = _TESTER_CACHE
+    return response
