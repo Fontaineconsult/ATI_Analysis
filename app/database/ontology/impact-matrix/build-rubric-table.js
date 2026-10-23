@@ -16,7 +16,7 @@ const WARN = { low: '#e3f4e8', elevated: '#fdf0d5', high: '#fbe3e4' };
 const warnOf = (w) => (w >= C.taapStandard.warning.high ? 'high' : w >= C.taapStandard.warning.elevated ? 'elevated' : 'low');
 const kText = (k) => (k === 6 ? 'all 6' : `${k} of 6`);
 const holdNo = (id) => M.HOLDS.findIndex((h) => h.id === id) + 1;
-const evText = { 0: 'any', 2: 'E1 or better', 4: 'E2 or better' };
+const evText = { 0: ['any'], 2: ['E1 or better'], 3: ['E1+, taken', 'at face value'], 4: ['E2 or better'] };
 
 const cols = [
   ['X', 'Exposure', 84], ['B', 'Breadth', 64], ['P', 'Pressure', 64], ['V', 'Veracity floor', 116],
@@ -33,17 +33,18 @@ const W = x;
 const parts = [];
 const rect = (x, y, w, h, fill, stroke = '#d6d4cc') => parts.push(`<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${fill}" stroke="${stroke}"/>`);
 const text = (x, y, t, o = {}) => parts.push(`<text x="${x}" y="${y}" text-anchor="${o.anchor ?? 'middle'}" font-size="${o.size ?? 13}" font-weight="${o.weight ?? 400}" fill="${o.fill ?? '#1a1a1a'}"${o.mono ? ' font-family="Consolas, Menlo, monospace"' : ''}>${esc(t)}</text>`);
-const cell = (id, row, span, kind, lines, chip) => {
+const cell = (id, row, span, kind, lines, chip, sub) => {
   const [cx, w] = xs[id]; const y = Y0 + HH + row * RH; const h = span * RH;
   const [bg, fg] = COLOR[kind];
   rect(cx, y, w, h, bg);
-  const n = lines.length + (chip ? 1 : 0);
+  const n = lines.length + (chip ? 1 : 0) + (sub ? 1 : 0);
   let ty = y + h / 2 - (n - 1) * 8 + 5;
   for (const l of lines) { text(cx + w / 2, ty, l, { fill: fg, weight: kind === 'factor' ? 400 : 600 }); ty += 16; }
   if (chip) {
     const cw = 104; parts.push(`<rect x="${cx + (w - cw) / 2}" y="${ty - 12}" width="${cw}" height="17" rx="8.5" fill="${WARN[chip]}" stroke="#bdbab0"/>`);
     text(cx + w / 2, ty + 1, `warning ${chip}`, { size: 11 });
   }
+  if (sub) text(cx + w / 2, ty - 2, sub, { size: 11, fill: fg });
 };
 
 // Group header and column header.
@@ -66,7 +67,7 @@ let row = 0;
 for (const X of LV) {
   const r0 = row;
   cell('X', r0, 3, 'factor', [X]);
-  cell('V', r0, 3, 'factor', [evText[M.EVIDENCE_LIMITS.floor[X]]]);
+  cell('V', r0, 3, 'factor', evText[M.EVIDENCE_LIMITS.floor[X]]);
   cell('S2', r0, 3, X === 'low' ? 'approve' : 'needs', X === 'low' ? ['No alternate', 'access required'] : ['Alternate access', 'required']);
   for (let B = 0; B <= 2; B++, row++) {
     const P = LV.indexOf(X) + B;
@@ -75,10 +76,10 @@ for (const X of LV) {
     cell('P', row, 1, 'factor', [String(P)]);
     cell('k', row, 1, 'factor', [kText(k)]);
     cell('none', row, 1, 'hold', [`On hold (hold ${holdNo('taap_needed')})`], warnOf(P));
-    cell('below', row, 1, 'deny', ['Deny']);
+    cell('below', row, 1, 'deny', ['Deny'], null, `or hold ${holdNo('exception_claimed')} on a claim`);
     // At the minimum means meeting it while short of all six; where the minimum is all six,
     // such a plan is below it.
-    if (k === FULL) cell('min', row, 1, 'deny', ['Deny']);
+    if (k === FULL) cell('min', row, 1, 'deny', ['Deny'], null, `or hold ${holdNo('exception_claimed')} on a claim`);
     else cell('min', row, 1, 'taap', ['Approve with TAAP'], warnOf(P + FULL - k));
     cell('full', row, 1, 'taap', ['Approve with TAAP'], warnOf(P));
   }
@@ -99,10 +100,10 @@ parts.push(`<rect x="${X0}" y="${Y0 - 26}" width="${W - X0}" height="${26 + HH +
 const H = Y0 + HH + 9 * RH + 30;
 
 const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W + 40} ${H}" width="${W + 40}" height="${H}" role="img" aria-labelledby="t d" font-family="Segoe UI, system-ui, -apple-system, Helvetica, Arial, sans-serif">
-  <title id="t">SFBRN review rubric, version 2, decision table</title>
+  <title id="t">SFBRN review rubric, version ${M.MATRIX_VERSION}, decision table</title>
   <desc id="d">Rows partition reviews by Exposure and Breadth. Columns give the Veracity floor, the risk grade by Severity, the TAAP standard, and the final decision and warning level for each TAAP state.</desc>
   <rect width="${W + 40}" height="${H}" fill="#fafaf8"/>
-  <text x="${X0}" y="44" font-size="22" font-weight="700" fill="#1a1a1a">SFBRN review rubric, version 2</text>
+  <text x="${X0}" y="44" font-size="22" font-weight="700" fill="#1a1a1a">SFBRN review rubric, version ${M.MATRIX_VERSION}</text>
   <text x="${X0}" y="68" font-size="13" fill="#444">The final decision as a function of Exposure, Breadth, Severity, Veracity and TAAP status. Generated from review-matrix.js.</text>
   ${parts.join('\n  ')}
 </svg>

@@ -37,19 +37,27 @@ Maps to rubric section 2, Exposure, and section 5, Veracity.
 
 *To be written.*
 
-- How Exposure and Severity set the Veracity floor, and so how deep the ACR review goes.
+- How Exposure sets the Veracity floor, and so how deep the ACR review goes.
 - Which exposure answers the reviewer verifies during ACR review.
 
-## 4. ACR quality checks
+## 4. ACR report checks
 
 Maps to rubric section 5, Veracity (E1-, E1 and E1+).
 
 *To be written.*
 
-- The quality checks in `ACR_CHECKS`, with how to apply each one.
+- The report checks in `ACR_CHECKS`, with how to apply each one. They rate the report as a
+  document.
+- When the analyst accepts an ACR with a report defect, and how the acceptance is recorded
+  (the defect and why it does not bear on the purchase).
 - The checks the ACR research adds: remarks that contradict their rating, hedge words, scope
   carve-outs, and single-browser or single-screen-reader testing.
-- The GSA issue-level supplement, and when it lifts an ACR to E1+.
+- The three qualifications, age, author and remarks, that decide whether a clean ACR is taken at face value (E1+) or takes the spot check first (E1), how
+  to read the evaluation date, the product's last major release and the author off the front
+  page, and how to judge whether the remarks read like a bug report (the page, screen,
+  component or workflow affected, how it falls short, and who is affected).
+- The GSA issue-level supplement, as the form a remark takes so that a lead can become a
+  finding.
 
 ## 5. From ACR rows to findings
 
@@ -85,25 +93,30 @@ Maps to rubric section 4, Breadth.
 
 ## 8. Evidence beyond the ACR
 
-Maps to rubric section 5, Veracity (E2a, E2b and E3).
+Maps to rubric section 5, Veracity (E2a, E2b, E3a and E3b).
 
 *To be written.*
 
-- A quick spot check of the ACR, and when a contradiction drops it to E1-.
+- The spot check, the analyst's own pass over the essential functions with a screen reader
+  and the keyboard, on top of a clean ACR. An agreeing spot check makes the evidence E3a,
+  which ranks with a demonstration and clears every floor. A contradiction drops the ACR to
+  E1-, and the barriers found are recorded as findings.
+- The full manual review (E3b), the ATI coordinator's evaluation of the product by a named
+  method.
 - The vendor demonstration script for essential functions with assistive technology.
 - Third-party audits, and what a named method looks like.
 - ATI team testing of essential functions.
 
 ## 9. Routes from ACR review
 
-Maps to rubric section 6, Routes.
+Maps to rubric section 6, Holds.
 
 *To be written.*
 
-- No ACR at all (route 1).
-- Evidence below the Veracity floor (route 3), how to raise it to the next level, and when to
-  record that it cannot be raised.
-- No TAAP on file (route 4), with the handoff in section 10.
+- No ACR at all (hold 1).
+- Evidence below the Veracity floor (hold 3), the step that raises it, and when to record
+  that it cannot be raised.
+- No TAAP on file (hold 4), with the handoff in section 10.
 
 ## 10. Handoff to the TAAP and the roadmap
 

@@ -22,28 +22,28 @@ const kText = (k) => (k === 6 ? 'all 6' : `${k} of 6`);
   const { text, box, diamond, arrow, svg } = makeCanvas();
   const W = 900;
   const SX = 250, SW = 300, DH = 96;
-  const HX = 630, HW = 270, BUS = 800;
+  const HX = 630, HW = 270;
   const Y = { start: 50, d0: 140, d1: 240, p1: 340, d2: 435, p2: 535, d3: 645, fb: 755, grade: 855, end: 970 };
   const hold = (y, id) => { const l = holdLines(id); box(HX, y, HW, l.length * 16 + 24, 'hold', l, { size: 12 }); };
 
   box(SX, Y.start, SW, 56, 'start', ['Requisition intake', 'exposure answers, findings, evidence on file'], { rx: 28 });
   diamond(SX, Y.d0, SW, DH, ['Purchased as an accommodation', 'for one named person?'], 13);
   box(HX, Y.d0, HW, 56, 'approve', ['Approve at intake', 'limited to the accommodation; nothing rated'], { size: 12, stroke: COLOR.approve[1] });
-  diamond(SX, Y.d1, SW, DH, ['Accessibility evidence', 'on file?'], 13);
-  box(SX, Y.p1, SW, 56, 'step', ['Rate Exposure', 'floors and answers; unknown answers map to high']);
-  diamond(SX, Y.d2, SW, DH, ['Unknown answers raise', 'the Exposure level?'], 13);
+  diamond(SX, Y.d1, SW, DH, ['Findings or accessibility', 'evidence on file?'], 13);
+  box(SX, Y.p1, SW, 56, 'step', ['Rate Exposure', 'users start it; answers lower; floors raise']);
+  diamond(SX, Y.d2, SW, DH, ['User count', 'missing?'], 13);
   box(SX, Y.p2, SW, 72, 'step', ['Rate Severity from the findings, as a minimum', 'task impact of the worst barrier, never the ACR label',
     `${C.accumulation.stack} S2 on one pair, or ${C.accumulation.spreadPairs} pairs at high Exposure, rate S3`], { size: 11 });
-  diamond(SX, Y.d3, SW, 100, ['Evidence at the Veracity floor', 'for this Exposure and Severity?', '(S1 always E2 or better)'], 12);
+  diamond(SX, Y.d3, SW, 100, ['Vendor denials at the Veracity floor?', 'any at low; E1+, taken at face value, at medium and high;', 'binds every grade at high, and at low and medium', 'a grade on the barriers found proceeds'], 11);
   box(SX, Y.grade, SW, 72, 'step', ['Risk grade', 'from the Exposure level and the Severity',
     'Breadth (0 to 2) is rated here for the TAAP standard'], { size: 11 });
   box(SX, Y.end, SW, 60, 'approve', ['No alternate access required', 'S0 and S1 at every Exposure; S2 at low'], { size: 12, stroke: COLOR.approve[1] });
-  box(HX, Y.end, HW, 60, 'taap', ['Alternate access required', 'S2 at medium or high; S3', 'continues in Figure 2'], { size: 12, stroke: COLOR.taap[1] });
+  box(HX, Y.end, HW, 60, 'taap', ['Alternate access required', 'S2 at medium or high; S3; standard', 'provisional below the floor. Figure 2'], { size: 12, stroke: COLOR.taap[1] });
 
   hold(Y.d1, 'severity_unknown');
   hold(Y.d2, 'answers_unknown');
   hold(Y.p2, 'veracity_below_floor');
-  diamond(HX, Y.d3, SW, 100, ['Can the evidence be raised?', 'a demonstration or ATI testing;', 'the ATI review team records a no'], 11);
+  diamond(HX, Y.d3, SW, 100, ['Can the evidence be raised?', 'a spot check of a clean ACR, a corrected or accepted ACR,', 'a demonstration or a full manual review;', 'the ATI review team records a no'], 11);
   box(HX, Y.fb, HW, 56, 'step', ['Fallback: S3 (provisional)', 'barriers found as a minimum; Breadth as found,', 'or 2 with no evidence at all'], { size: 11 });
 
   arrow([[SX, Y.start + 28], [SX, Y.d0 - DH / 2]]);
@@ -60,9 +60,10 @@ const kText = (k) => (k === 6 ? 'all 6' : `${k} of 6`);
   text(HX + 10, Y.d3 - 50 - 8, ['yes'], { size: 11, fill: '#444444', anchor: 'start' });
   arrow([[HX - HW / 2, Y.p2], [SX + SW / 2, Y.p2]]);
   text((HX - HW / 2 + SX + SW / 2) / 2, Y.p2 + 22, ['resumes with', 'the new findings'], { size: 10, fill: '#444444' });
-  // The no-evidence case: from hold 1 along the bus to the "can it be raised" check.
-  arrow([[HX + HW / 2, Y.d1], [BUS, Y.d1], [BUS, Y.d3], [HX + SW / 2, Y.d3]]);
-  text(BUS + 8, (Y.d1 + Y.d3) / 2, ['no evidence', 'can be', 'obtained'], { size: 10, fill: '#444444', anchor: 'start' });
+  // The no-evidence case: once the ATI review team records that none can be obtained, the
+  // review re-enters at the Exposure step, fails the floor with no denials to confirm, and
+  // falls back.
+  arrow([[HX, Y.d1 + 28], [HX, Y.p1], [SX + SW / 2, Y.p1]], ['no evidence can be obtained:', 'the fallback follows']);
   arrow([[HX, Y.d3 + 50], [HX, Y.fb - 28]], 'no');
   arrow([[HX, Y.fb + 28], [HX, Y.grade - 48], [SX, Y.grade - 48]], null, { noHead: true });
   arrow([[SX, Y.d3 + 50], [SX, Y.grade - 36]], 'yes');
@@ -71,7 +72,7 @@ const kText = (k) => (k === 6 ? 'all 6' : `${k} of 6`);
 
   fs.writeFileSync(path.join(__dirname, 'review-process-checks.svg'), svg(W, Y.end + 60,
     'Review process, part 1: the shared checks',
-    'From requisition intake through the evidence, Exposure and Veracity checks to the risk grade. An accommodation purchase is approved at intake. Holds 1 to 3 pause the review, hold 3 resumes at the Severity step, and the fallback joins the S3 path when the ATI review team records that the evidence cannot be raised, including when none is on file at all.'));
+    'From requisition intake through the evidence, Exposure and Veracity checks to the risk grade. An accommodation purchase is approved at intake. The Veracity floor binds every grade at high exposure, and at low and medium a grade that rests on the vendor\'s denials; at low and medium a grade on the barriers found proceeds at any level with the standard provisional. Holds 1 to 3 pause the review, hold 3 resumes at the Severity step, and the fallback joins the S3 path when the ATI review team records that the evidence cannot be raised. With no evidence at all, the review re-enters at the Exposure step and falls back the same way.'));
 }
 
 // ---- Figure 2. The remedy step: one chain of checks, with Deny exits on the left and
@@ -93,7 +94,7 @@ const kText = (k) => (k === 6 ? 'all 6' : `${k} of 6`);
   const minimum = `${kText(req[0])} at pressure 0 or 1, ${kText(req[2])} at 2, ${kText(req[3])} at 3 or more`;
 
   box(RX, Y.start, RW, 56, 'taap', ['Alternate access required', 'from the risk grade (Figure 1)'], { size: 12, stroke: COLOR.taap[1] });
-  diamond(RX, Y.d4, RW, CH, ['A more accessible product', 'meets the same need?', '(S3 only)']);
+  diamond(RX, Y.d4, RW, CH, ['A more accessible product', 'meets the same need?', '(S3 only, including S3 provisional)']);
   diamond(RX, Y.d5, RW, CH, ['TAAP on file?']);
   diamond(RX, Y.d6, RW + 60, 120, ['TAAP meets the minimum?', 'pressure = Exposure rank + Breadth', minimum], 11);
   diamond(RX, Y.d7, RW, CH, ['TAAP meets none', 'of the six?']);

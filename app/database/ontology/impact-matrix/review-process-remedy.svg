@@ -7,7 +7,7 @@
   <rect x="180" y="22" width="300" height="56" rx="6" fill="#ddf1f3" stroke="#0a5660" stroke-width="1.6"/>
   <text x="330" y="46" text-anchor="middle" font-size="12" fill="#0a5660"><tspan x="330" dy="0" font-weight="600">Alternate access required</tspan><tspan x="330" dy="16" font-weight="400">from the risk grade (Figure 1)</tspan></text>
   <polygon points="330,102 480,150 330,198 180,150" fill="#fdf7e3" stroke="#bdbab0"/>
-  <text x="330" y="138" text-anchor="middle" font-size="12" fill="#1a1a1a"><tspan x="330" dy="0" font-weight="400">A more accessible product</tspan><tspan x="330" dy="16" font-weight="400">meets the same need?</tspan><tspan x="330" dy="16" font-weight="400">(S3 only)</tspan></text>
+  <text x="330" y="138" text-anchor="middle" font-size="12" fill="#1a1a1a"><tspan x="330" dy="0" font-weight="400">A more accessible product</tspan><tspan x="330" dy="16" font-weight="400">meets the same need?</tspan><tspan x="330" dy="16" font-weight="400">(S3 only, including S3 provisional)</tspan></text>
   <polygon points="330,212 480,260 330,308 180,260" fill="#fdf7e3" stroke="#bdbab0"/>
   <text x="330" y="264" text-anchor="middle" font-size="12" fill="#1a1a1a"><tspan x="330" dy="0" font-weight="400">TAAP on file?</tspan></text>
   <polygon points="330,385 510,445 330,505 150,445" fill="#fdf7e3" stroke="#bdbab0"/>

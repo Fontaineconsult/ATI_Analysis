@@ -12,19 +12,21 @@
   <path d="M455,110 L370,110" fill="none" stroke="#6b6b6b" stroke-width="1.4" marker-end="url(#head)"/>
   <text x="412.5" y="104" text-anchor="middle" font-size="11" fill="#444444"><tspan x="412.5" dy="0" font-weight="400">accommodation</tspan></text>
   <polygon points="605,172 755,220 605,268 455,220" fill="#fdf7e3" stroke="#bdbab0"/>
-  <text x="605" y="215.5" text-anchor="middle" font-size="13" fill="#1a1a1a"><tspan x="605" dy="0" font-weight="400">Accessibility evidence</tspan><tspan x="605" dy="17" font-weight="400">on file?</tspan></text>
+  <text x="605" y="215.5" text-anchor="middle" font-size="13" fill="#1a1a1a"><tspan x="605" dy="0" font-weight="400">Findings or accessibility</tspan><tspan x="605" dy="17" font-weight="400">evidence on file?</tspan></text>
   <rect x="455" y="300" width="300" height="60" rx="6" fill="#ffffff" stroke="#bdbab0" stroke-width="1"/>
-  <text x="605" y="325.5" text-anchor="middle" font-size="13" fill="#1a1a1a"><tspan x="605" dy="0" font-weight="600">Rate Exposure</tspan><tspan x="605" dy="17" font-weight="400">floors and answers; unknown answers map to high</tspan></text>
+  <text x="605" y="325.5" text-anchor="middle" font-size="13" fill="#1a1a1a"><tspan x="605" dy="0" font-weight="600">Rate Exposure</tspan><tspan x="605" dy="17" font-weight="400">users start it; answers lower; floors raise</tspan></text>
   <polygon points="605,392 755,440 605,488 455,440" fill="#fdf7e3" stroke="#bdbab0"/>
-  <text x="605" y="435.5" text-anchor="middle" font-size="13" fill="#1a1a1a"><tspan x="605" dy="0" font-weight="400">Unknown answers raise</tspan><tspan x="605" dy="17" font-weight="400">the Exposure level?</tspan></text>
+  <text x="605" y="435.5" text-anchor="middle" font-size="13" fill="#1a1a1a"><tspan x="605" dy="0" font-weight="400">User count</tspan><tspan x="605" dy="17" font-weight="400">missing?</tspan></text>
   <rect x="455" y="520" width="300" height="60" rx="6" fill="#ffffff" stroke="#bdbab0" stroke-width="1"/>
   <text x="605" y="545.5" text-anchor="middle" font-size="13" fill="#1a1a1a"><tspan x="605" dy="0" font-weight="600">Severity from the findings, as a minimum</tspan><tspan x="605" dy="17" font-weight="400">impact on the essential function, never the ACR label</tspan></text>
   <polygon points="605,612 755,660 605,708 455,660" fill="#fdf7e3" stroke="#bdbab0"/>
-  <text x="605" y="648" text-anchor="middle" font-size="12" fill="#1a1a1a"><tspan x="605" dy="0" font-weight="400">Evidence at the Veracity floor</tspan><tspan x="605" dy="16" font-weight="400">for this Exposure and Severity?</tspan><tspan x="605" dy="16" font-weight="400">(S1 always E2 or better)</tspan></text>
+  <text x="605" y="641.5" text-anchor="middle" font-size="11" fill="#1a1a1a"><tspan x="605" dy="0" font-weight="400">Vendor denials at the Veracity floor?</tspan><tspan x="605" dy="15" font-weight="400">any at low; E1+, taken at face value, at medium and high;</tspan><tspan x="605" dy="15" font-weight="400">binds every grade at high, and at low and medium</tspan><tspan x="605" dy="15" font-weight="400">a grade on the barriers found proceeds</tspan></text>
   <rect x="835" y="192" width="330" height="56" rx="6" fill="#ecebf7" stroke="#bdbab0" stroke-width="1"/>
   <text x="1000" y="216" text-anchor="middle" font-size="12" fill="#3b3270"><tspan x="1000" dy="0" font-weight="600">Hold 1, for accessibility evidence</tspan><tspan x="1000" dy="16" font-weight="400">Held by the requesting unit</tspan></text>
   <rect x="835" y="412" width="330" height="56" rx="6" fill="#ecebf7" stroke="#bdbab0" stroke-width="1"/>
   <text x="1000" y="436" text-anchor="middle" font-size="12" fill="#3b3270"><tspan x="1000" dy="0" font-weight="600">Hold 2, for exposure answers</tspan><tspan x="1000" dy="16" font-weight="400">Held by the requesting unit</tspan></text>
+  <path d="M1000,248 L1000,330 L755,330" fill="none" stroke="#6b6b6b" stroke-width="1.4" marker-end="url(#head)"/>
+  <text x="1008" y="256.5" text-anchor="start" font-size="11" fill="#444444"><tspan x="1008" dy="0" font-weight="400">no evidence can be</tspan><tspan x="1008" dy="15" font-weight="400">obtained: the fallback follows</tspan></text>
   <path d="M605,140 L605,172" fill="none" stroke="#6b6b6b" stroke-width="1.4" marker-end="url(#head)"/>
   <path d="M755,220 L835,220" fill="none" stroke="#6b6b6b" stroke-width="1.4" marker-end="url(#head)"/>
   <text x="795" y="214" text-anchor="middle" font-size="11" fill="#444444"><tspan x="795" dy="0" font-weight="400">no</tspan></text>
@@ -37,7 +39,7 @@
   <text x="613" y="504" text-anchor="start" font-size="11" fill="#444444"><tspan x="613" dy="0" font-weight="400">no</tspan></text>
   <path d="M605,580 L605,612" fill="none" stroke="#6b6b6b" stroke-width="1.4" marker-end="url(#head)"/>
   <polygon points="1000,612 1150,660 1000,708 850,660" fill="#fdf7e3" stroke="#bdbab0"/>
-  <text x="1000" y="656" text-anchor="middle" font-size="12" fill="#1a1a1a"><tspan x="1000" dy="0" font-weight="400">Can the evidence be raised?</tspan><tspan x="1000" dy="16" font-weight="400">a demonstration, or ATI testing</tspan></text>
+  <text x="1000" y="641.5" text-anchor="middle" font-size="11" fill="#1a1a1a"><tspan x="1000" dy="0" font-weight="400">Can the evidence be raised?</tspan><tspan x="1000" dy="15" font-weight="400">a spot check of a clean ACR, a corrected or accepted ACR,</tspan><tspan x="1000" dy="15" font-weight="400">a demonstration or a full manual review;</tspan><tspan x="1000" dy="15" font-weight="400">the ATI review team records a no</tspan></text>
   <path d="M755,660 L850,660" fill="none" stroke="#6b6b6b" stroke-width="1.4" marker-end="url(#head)"/>
   <text x="802.5" y="654" text-anchor="middle" font-size="11" fill="#444444"><tspan x="802.5" dy="0" font-weight="400">no</tspan></text>
   <rect x="835" y="512" width="330" height="56" rx="6" fill="#ecebf7" stroke="#bdbab0" stroke-width="1"/>
@@ -84,7 +86,7 @@
   <path d="M855,1160 L895,1160" fill="none" stroke="#6b6b6b" stroke-width="1.4" marker-end="url(#head)"/>
   <text x="875" y="1090.5" text-anchor="middle" font-size="11" fill="#444444"><tspan x="875" dy="0" font-weight="400">medium or high:</tspan><tspan x="875" dy="15" font-weight="400">Alternate access required</tspan></text>
   <polygon points="1010,962 1125,1010 1010,1058 895,1010" fill="#fdf7e3" stroke="#bdbab0"/>
-  <text x="1010" y="1006" text-anchor="middle" font-size="12" fill="#1a1a1a"><tspan x="1010" dy="0" font-weight="400">A more accessible product</tspan><tspan x="1010" dy="16" font-weight="400">meets the same need?</tspan></text>
+  <text x="1010" y="998" text-anchor="middle" font-size="12" fill="#1a1a1a"><tspan x="1010" dy="0" font-weight="400">A more accessible product</tspan><tspan x="1010" dy="16" font-weight="400">meets the same need?</tspan><tspan x="1010" dy="16" font-weight="400">incl. S3 provisional</tspan></text>
   <path d="M1010,925 L1010,962" fill="none" stroke="#6b6b6b" stroke-width="1.4" marker-end="url(#head)"/>
   <text x="1018" y="941" text-anchor="start" font-size="11" fill="#444444"><tspan x="1018" dy="0" font-weight="400">Alternate access required</tspan></text>
   <path d="M1125,1010 L1160,1010 L1160,1890 L1060,1890" fill="none" stroke="#6b6b6b" stroke-width="1.4"/>
@@ -159,5 +161,5 @@
   <text x="40" y="2166" text-anchor="start" font-size="12" fill="#1a1a1a"><tspan x="40" dy="0" font-weight="400">Hold 5, for a written determination</tspan></text>
   <text x="500" y="2166" text-anchor="start" font-size="12" fill="#1a1a1a"><tspan x="500" dy="0" font-weight="400">Held by the president or a designee with budget authority</tspan></text>
   <text x="830" y="2166" text-anchor="start" font-size="12" fill="#1a1a1a"><tspan x="830" dy="0" font-weight="400">Resumes at the determination check</tspan></text>
-  <text x="40" y="2194" text-anchor="start" font-size="12" fill="#444444"><tspan x="40" dy="0" font-weight="400">Holds 1 to 3 are checked in that order before the risk grade. Hold 3 ends when the evidence meets the floor or cannot be raised.</tspan><tspan x="40" dy="16" font-weight="400">Holds 4 and 5 arise in the TAAP checks. Generated from review-matrix.js, matrix version 2.</tspan></text>
+  <text x="40" y="2194" text-anchor="start" font-size="12" fill="#444444"><tspan x="40" dy="0" font-weight="400">Holds 1 to 3 are checked in that order before the risk grade. Hold 3 ends when the evidence meets the floor or cannot be raised.</tspan><tspan x="40" dy="16" font-weight="400">Holds 4 and 5 arise in the TAAP checks. Generated from review-matrix.js, matrix version 3.</tspan></text>
 </svg>

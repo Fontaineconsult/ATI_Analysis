@@ -45,7 +45,8 @@
     const model = `form.answers.${factor.id}.${who}`;
     const name = `${label(factor.id)}, ${who}`;
     if (factor.numeric) {
-      return `<input type="number" min="0" inputmode="numeric" placeholder="Unknown" aria-label="${esc(name)}" x-model.number="${model}">`;
+      const required = who === 'requester';
+      return `<input type="number" min="0" inputmode="numeric" placeholder="${required ? 'Required' : 'Unknown'}"${required ? ' aria-required="true"' : ''} aria-label="${esc(name)}" x-model.number="${model}">`;
     }
     return `<select aria-label="${esc(name)}" x-model="${model}">${levelOptions(factor)}</select>`;
   }
@@ -77,7 +78,8 @@
         <td x-show="showReviewer">${answerCell(f, 'reviewer')}</td>
       </tr>`).join('');
 
-    $('evidence').innerHTML = M.EVIDENCE.map((e) => `<option value="${e.id}">${esc(`${e.id}: ${e.holds}`)}</option>`).join('');
+    // E1+ is derived from the ACR record, so the analyst never records it.
+    $('evidence').innerHTML = M.EVIDENCE.filter((e) => !e.derived).map((e) => `<option value="${e.id}">${esc(`${e.id}: ${e.record ?? e.holds}`)}</option>`).join('');
 
     $('taapReqs').innerHTML = M.TAAP_REQUIREMENTS.map((r) => `
       <div class="choice">
@@ -113,6 +115,9 @@
       floors: [],
       answers: Object.fromEntries(FACTORS.map((f) => [f.id, { requester: null, reviewer: null }])),
       evidence: 'E0',
+      evidenceNote: '',
+      // Author and remarks start unanswered. The ACR is rated once both are read off it.
+      acr: { issued: '', lastMajorRelease: '', defects: [], author: null, authorName: '', remarks: null, spotCheck: 'none', spotCheckNote: '', accepted: false, acceptedNote: '' },
       validation: 'open',
       findings: [],
       moreAccessibleProductExists: false,
@@ -124,6 +129,7 @@
     Object.assign(form, { product: p.product ?? '', vendor: p.vendor ?? '', unit: p.unit ?? '', ictKind: p.ictKind,
       floors: [...p.floors], evidence: p.evidence, validation: p.validation ?? 'open',
       moreAccessibleProductExists: !!p.moreAccessibleProductExists });
+    Object.assign(form.acr, p.acr ?? {});
     for (const f of FACTORS) form.answers[f.id].requester = p.req[f.id] ?? null;
     form.findings = p.findings.map((f) => newFinding(f));
     form.taap.exists = !!p.taap;
@@ -144,6 +150,12 @@
       bypasses: M.BYPASSES.filter((b) => form.floors.includes(b.id)).map((b) => b.id),
       answers,
       evidence: form.evidence,
+      evidenceNote: form.evidenceNote.trim() || undefined,
+      acr: { issued: form.acr.issued || undefined, lastMajorRelease: form.acr.lastMajorRelease || undefined,
+        defects: form.acr.remarks === 'criterion' ? [...form.acr.defects] : [],
+        author: form.acr.author, authorName: form.acr.authorName.trim() || undefined, remarks: form.acr.remarks,
+        spotCheck: form.acr.spotCheck, spotCheckNote: form.acr.spotCheckNote.trim() || undefined,
+        accepted: form.acr.accepted, acceptedNote: form.acr.acceptedNote.trim() || undefined },
       validation: form.validation,
       findings: form.findings.map(({ role, group, essentialFunction, severity }) => ({ role, group, essentialFunction, severity })),
       moreAccessibleProductExists: !!form.moreAccessibleProductExists,
@@ -153,24 +165,32 @@
     };
   }
 
+  // ACR records for the examples: dated relative to today, so the age qualification holds as written.
+  const monthsAgo = (n) => { const d = new Date(); d.setMonth(d.getMonth() - n); return d.toISOString().slice(0, 7); };
+  const RECENT_VENDOR = { issued: monthsAgo(4), author: 'vendor', remarks: 'criterion' };
+  const RECENT_OUTSIDE = { issued: monthsAgo(4), author: 'outside', authorName: 'Example Audits LLC, manual testing with NVDA and keyboard', remarks: 'bug_report' };
+  const OLD_VENDOR = { issued: monthsAgo(16), author: 'vendor', remarks: 'criterion' };
   const PRESETS = {
-    small: { product: 'FormBuilder', vendor: 'Example Forms Inc.', unit: 'Facilities', ictKind: 'web', floors: [], evidence: 'E1',
+    small: { product: 'FormBuilder', vendor: 'Example Forms Inc.', unit: 'Facilities', ictKind: 'web', floors: [], evidence: 'E1', acr: RECENT_VENDOR,
       req: { users: 10, scope: 'low', required_use: 'low', criticality: 'low', publishes: 'low', frequency: 'medium', contract_length: 'low' },
       findings: [{ role: 'employees', group: 'without_vision', essentialFunction: 'Submit report', severity: 'S2' }] },
-    homeworkTaap: { product: 'MathLab Pro', vendor: 'Example Learning', unit: 'Mathematics', ictKind: 'web', floors: ['required_for_grade'], evidence: 'E3',
+    deptClean: { product: 'RoomBooker', vendor: 'Example Scheduling', unit: 'Student Life', ictKind: 'web', floors: [], evidence: 'E1', acr: RECENT_VENDOR,
+      req: { users: 100, scope: 'medium', required_use: 'medium', criticality: 'medium', publishes: 'low', frequency: 'medium', contract_length: 'medium' },
+      findings: [] },
+    homeworkTaap: { product: 'MathLab Pro', vendor: 'Example Learning', unit: 'Mathematics', ictKind: 'web', floors: ['required_for_grade'], evidence: 'E3b',
       taap: M.TAAP_REQUIREMENTS.map((r) => r.id),
       req: { users: 400, scope: 'medium', required_use: 'high', criticality: 'high', publishes: 'low', frequency: 'high', contract_length: 'medium' },
       findings: [{ role: 'students', group: 'without_vision', essentialFunction: 'Submit homework', severity: 'S3' }] },
-    homework: { product: 'MathLab Pro', vendor: 'Example Learning', unit: 'Mathematics', ictKind: 'web', floors: ['required_for_grade'], evidence: 'E3',
+    homework: { product: 'MathLab Pro', vendor: 'Example Learning', unit: 'Mathematics', ictKind: 'web', floors: ['required_for_grade'], evidence: 'E3b',
       req: { users: 400, scope: 'medium', required_use: 'high', criticality: 'high', publishes: 'low', frequency: 'high', contract_length: 'medium' },
       findings: [{ role: 'students', group: 'without_vision', essentialFunction: 'Submit homework', severity: 'S3' }] },
-    unknown: { product: 'LabStation desktop app', vendor: 'Example Instruments', unit: 'Chemistry', ictKind: 'nonweb', floors: [], evidence: 'E1',
+    unknown: { product: 'LabStation desktop app', vendor: 'Example Instruments', unit: 'Chemistry', ictKind: 'nonweb', floors: [], evidence: 'E1', acr: RECENT_OUTSIDE,
       req: { scope: 'medium', required_use: 'medium', criticality: 'medium', publishes: 'low', frequency: 'high', contract_length: 'medium' },
       findings: [] },
     public: { product: 'EventSignup', vendor: 'Example Events', unit: 'Student Life', ictKind: 'web', floors: ['public'], evidence: 'E0',
       req: { users: 3, scope: 'low', required_use: 'low', criticality: 'low', publishes: 'high', frequency: 'low', contract_length: 'low' },
       findings: [] },
-    weakDeny: { product: 'CampusPay portal', vendor: 'Example Payments', unit: 'Student Financial Services', ictKind: 'web', floors: ['public'], evidence: 'E1',
+    weakDeny: { product: 'CampusPay portal', vendor: 'Example Payments', unit: 'Student Financial Services', ictKind: 'web', floors: ['public'], evidence: 'E1', acr: OLD_VENDOR,
       taap: M.TAAP_REQUIREMENTS.slice(0, 2).map((r) => r.id),
       req: { users: 5000, scope: 'high', required_use: 'high', criticality: 'high', publishes: 'high', frequency: 'high', contract_length: 'medium' },
       findings: [
@@ -185,16 +205,33 @@
       findings: [] },
     clear: { ictKind: 'web', floors: [], evidence: 'E0', req: {}, findings: [] },
   };
-  PRESETS.exception = { ...PRESETS.weakDeny, evidence: 'E3', exception: 'determined' };
-  PRESETS.exceptionClaimed = { ...PRESETS.weakDeny, evidence: 'E3', exception: 'claimed' };
-  PRESETS.strongDeny = { ...PRESETS.weakDeny, evidence: 'E3' };
-  PRESETS.weakApprove = { ...PRESETS.homework, evidence: 'E1', findings: [] };
-  PRESETS.fallback = { ...PRESETS.weakApprove, validation: 'unavailable' };
+  PRESETS.exception = { ...PRESETS.weakDeny, evidence: 'E3b', exception: 'determined' };
+  PRESETS.exceptionClaimed = { ...PRESETS.weakDeny, evidence: 'E3b', exception: 'claimed' };
+  PRESETS.strongDeny = { ...PRESETS.weakDeny, evidence: 'E3b' };
+  PRESETS.weakApprove = { ...PRESETS.homework, evidence: 'E1', acr: RECENT_OUTSIDE, findings: [] };
+  PRESETS.fallback = { ...PRESETS.weakApprove, acr: RECENT_VENDOR, validation: 'unavailable' };
+  PRESETS.trustedVendor = { ...PRESETS.homework, evidence: 'E1', acr: { ...RECENT_VENDOR, remarks: 'bug_report' },
+    findings: [{ role: 'students', group: 'limited_vision', essentialFunction: 'Submit homework', severity: 'S1' }] };
+  PRESETS.acceptedVendor = { ...PRESETS.homework, evidence: 'E1',
+    acr: { ...RECENT_OUTSIDE, remarks: 'criterion', defects: ['no_date_or_version'], accepted: true, acceptedNote: 'the version line reads 4.2 and the product bought is 4.2.1, a patch release', spotCheck: 'agrees', spotCheckNote: 'Submit homework, NVDA and keyboard' },
+    findings: [{ role: 'students', group: 'limited_vision', essentialFunction: 'Submit homework', severity: 'S1' }] };
+  PRESETS.deptDefect = { ...PRESETS.deptClean, acr: { ...RECENT_VENDOR, defects: ['no_methods'] } };
+  PRESETS.deptOutside = { ...PRESETS.deptClean, acr: RECENT_OUTSIDE };
+  PRESETS.deptSpot = { ...PRESETS.deptClean, acr: { ...RECENT_VENDOR, spotCheck: 'agrees', spotCheckNote: 'Book a room and cancel a booking, NVDA and keyboard' } };
+  PRESETS.deptContradicted = { ...PRESETS.deptClean, acr: { ...RECENT_OUTSIDE, spotCheck: 'contradicts', spotCheckNote: 'Book a room, keyboard only' },
+    findings: [{ role: 'students', group: 'limited_manipulation', essentialFunction: 'Book a room', severity: 'S2' }] };
+  PRESETS.deptAdmits = { ...PRESETS.deptClean,
+    findings: [{ role: 'students', group: 'without_vision', essentialFunction: 'Book a room', severity: 'S2' }] };
 
   /** The examples, grouped by what they show. Each one's result is computed, never typed. */
   const EXAMPLE_GROUPS = [
     { title: 'Approvals', items: [
       ['small', 'Small optional tool, one S2 barrier'],
+      ['deptOutside', 'Department tool, clean ACR by an outside firm, no findings'],
+      ['deptSpot', 'Department tool, clean vendor ACR, spot check agrees'],
+      ['weakApprove', 'Required math tool, outside-firm ACR taken at face value, no findings'],
+      ['trustedVendor', 'Required math tool, vendor ACR that reads like a bug report, one S1 barrier'],
+      ['acceptedVendor', 'Required math tool, outside-firm ACR with a report defect accepted, spot check agrees, one S1 barrier'],
       ['homeworkTaap', 'Homework platform, S3, TAAP meets all six'],
       ['exception', 'Public portal, S3, partial TAAP, determination on file'],
       ['accommodation', 'Screen magnifier for one employee, an accommodation purchase'],
@@ -202,14 +239,17 @@
     { title: 'Holds', items: [
       ['public', 'Public page, no ACR'],
       ['unknown', 'Department tool, user count unknown'],
-      ['weakApprove', 'Required math tool, clean ACR, no findings'],
-      ['weakDeny', 'Public portal, S3, weak ACR, partial TAAP'],
+      ['deptClean', 'Department tool, clean vendor ACR, no findings, no spot check yet'],
+      ['deptDefect', 'Department tool, vendor ACR with a report defect, no methods named'],
+      ['deptContradicted', 'Department tool, clean ACR, spot check found a barrier'],
+      ['deptAdmits', 'Department tool, clean vendor ACR admits one S2 barrier'],
       ['homework', 'Homework platform, S3, no TAAP yet'],
-      ['fallback', 'Required math tool, clean ACR, no demonstration possible'],
+      ['fallback', 'Required math tool, vendor ACR not yet trusted, no demonstration possible'],
+      ['weakDeny', 'Public portal, S3, partial TAAP, old vendor ACR (high exposure raises the evidence first)'],
       ['exceptionClaimed', 'Public portal, S3, partial TAAP, undue burden claimed'],
     ] },
     { title: 'Denials', items: [
-      ['strongDeny', 'Public portal, S3, partial TAAP, strong evidence'],
+      ['strongDeny', 'Public portal, S3, partial TAAP, full manual review'],
     ] },
   ];
 
@@ -217,6 +257,24 @@
   // The Alpine component.
   // ---------------------------------------------------------------------------------------
   document.addEventListener('alpine:init', () => {
+    // `x-month="form.acr.issued"` binds a text input to a YYYY-MM model value through flatpickr's
+    // month picker, which renders the same in every browser (type="month" does not). The input
+    // stays typeable, so the keyboard path is the text field and the picker is a convenience.
+    // The model can change from outside (a preset), so an effect pushes it back into the picker.
+    Alpine.directive('month', (el, { expression }, { evaluate, effect, cleanup }) => {
+      const set = (value) => evaluate(`${expression} = $month`, { scope: { $month: value } });
+      const fp = flatpickr(el, {
+        dateFormat: 'Y-m', altInput: true, altFormat: 'F Y', allowInput: true, disableMobile: true,
+        plugins: [new monthSelectPlugin({ shorthand: false, dateFormat: 'Y-m', altFormat: 'F Y' })],
+        onChange: (dates, value) => set(value || ''),
+      });
+      effect(() => {
+        const value = evaluate(expression) || '';
+        if ((fp.input.value || '') === value) return;
+        if (value) fp.setDate(value, false, 'Y-m'); else fp.clear(false);
+      });
+      cleanup(() => fp.destroy());
+    });
     Alpine.data('tester', () => ({
       M, FACTORS, LEVELS: M.LEVELS,
       form: blankForm(),
@@ -233,7 +291,7 @@
       label, cap,
 
       init() {
-        this.applyPreset('small');
+        this.applyPreset('clear');
         this.$watch('form', () => this.update());
         // A link into the definitions opens that tab, so a shared URL lands on the term.
         const hash = location.hash.slice(1);
@@ -281,7 +339,65 @@
       get tone() { return this.d ? TONE[this.d.outcome] : 'hold'; },
       get kind() { return M.ICT_KINDS[this.form.ictKind]; },
       get evidence() { return evidenceById(this.form.evidence); },
-      get floor() { return this.d ? M.veracityFloor(this.d.exposure.level, this.sev) : 0; },
+      /** The level after the ACR record: E1+ when the qualifications or the spot check earn it. */
+      get derived() { return this.d ? evidenceById(this.d.evidence) : this.evidence; },
+      get floor() { return this.d ? M.veracityFloor(this.d.exposure.level) : 0; },
+      get acrShown() { return M.ACR_LEVELS.includes(this.form.evidence); },
+      /** The qualifications are read off every ACR that is not stale. The remarks open the report checks. */
+      get qualificationsShown() { return this.acrShown && !this.isStale; },
+      /** A clean ACR is rated once its author and remarks are answered. The date may stay unknown. */
+      get acrRated() {
+        if (!this.qualificationsShown) return true;
+        if (this.form.acr.accepted && !this.form.acr.acceptedNote.trim()) return false;
+        return this.form.acr.author != null && this.form.acr.remarks != null;
+      },
+      /** Findings are entered once the ACR is rated, so the ACR is read before any barrier is recorded. */
+      get findingsShown() { return this.form.findings.length > 0 || this.acrRated; },
+      /** The report checks, with the stale one read from the dates. */
+      get reportChecks() { return M.ACR_CHECKS.filter((c) => c.id !== 'stale'); },
+      get staleCheck() { return M.ACR_CHECKS.find((c) => c.id === 'stale'); },
+      get isStale() { return !!this.d?.veracity?.acr?.stale; },
+      get hasDefect() { return !!this.d?.veracity?.acr?.defective; },
+      /** The report checks open under remarks that restate the criterion, and ticks apply only while they are open. */
+      get reportChecksShown() { return this.qualificationsShown && this.form.acr.remarks === 'criterion'; },
+      /** Acceptance is offered for a ticked defect; a stale report is not accepted. */
+      get acceptanceShown() { return this.reportChecksShown && this.hasDefect; },
+      get findingsNote() { return 'WCAG failures are recorded once the ACR is rated.'; },
+      /** What an empty failure list says about the product, as the review stands. */
+      get noFailuresFlag() {
+        if (!this.d) return '';
+        if (this.d.evidence === 'E0') return 'No WCAG failure recorded and no evidence on file. Severity is unknown, and the review holds for evidence.';
+        return `No WCAG failure recorded. As it stands, the review reads the ${this.d.evidence} evidence as showing no barrier on any essential function, severity S0, and grades the product on that. Add a row for each failure the evidence shows.`;
+      },
+      /** The spot check applies to a clean ACR only, so its fieldset shows for one. */
+      get spotCheckApplies() { return !!this.d?.veracity?.acr?.clean; },
+      /** The step that lifts the evidence, from the model, for the raising block. */
+      get raiseNote() {
+        if (this.d?.veracity?.raise?.text) return this.d.veracity.raise.text;
+        if (this.spotCheckApplies && !this.d?.veracity?.acr?.trusted) return 'Nothing needs raising for this result. The spot check can still be recorded, and an agreeing one makes the evidence E3a.';
+        return 'The evidence is at the floor, so nothing needs raising.';
+      },
+      get raiseBy() { return this.d?.veracity?.raise?.by ?? null; },
+      /** True when the evidence on file is a demonstration, audit or review rather than an ACR. */
+      get evidenceIsDirect() { return ['E2a', 'E2b', 'E3b'].includes(this.form.evidence); },
+      /** An ACR record that the direct evidence supersedes, for the note under the select. */
+      get supersededAcr() {
+        const a = this.form.acr;
+        const recorded = a.issued || a.authorName || a.spotCheck !== 'none' || a.author === 'outside' || a.remarks === 'bug_report' || a.accepted || a.defects.length;
+        if (!this.evidenceIsDirect || !recorded) return '';
+        const who = a.author === 'outside' ? (a.authorName || 'an outside firm') : 'the vendor';
+        return `The ACR on record (${a.issued ? `evaluated ${a.issued}, ` : ''}by ${who}${a.spotCheck !== 'none' ? `, spot check ${a.spotCheck}` : ''}) is superseded as the strongest evidence. Its details stay on the record, and the findings stay.`;
+      },
+      // The result of the raising step, as one control. A Done option records the demonstration,
+      // audit or review as the strongest evidence on file, which replaces the ACR; a corrected
+      // or newly supplied ACR records as E1 with no spot check yet; Unavailable is the fallback.
+      get raiseResult() { return this.form.validation === 'unavailable' ? 'unavailable' : 'open'; },
+      set raiseResult(value) {
+        if (value === 'unavailable' || value === 'open') { this.form.validation = value; return; }
+        this.form.validation = 'open';
+        if (value === 'acr') { this.form.evidence = 'E1'; this.form.acr.defects = []; this.form.acr.accepted = false; this.form.acr.acceptedNote = ''; this.form.acr.spotCheck = 'none'; this.form.acr.spotCheckNote = ''; return; }
+        this.form.evidence = value;
+      },
       get std() { return this.d?.taapStandard ?? null; },
       get hold() { return this.d?.hold ? holdOf(this.d.hold) : null; },
       get holder() { return this.hold ? M.HOLDERS[this.hold.holder] : null; },
@@ -297,6 +413,19 @@
 
       // ---- what the form shows, by relevance
       get validationMatters() { return !!this.d && (this.d.hold === 'severity_unknown' || this.d.hold === 'veracity_below_floor' || this.d.fallback); },
+      /** The raising block shows whenever a clean ACR is not yet taken at face value, so the spot check can be recorded, and stays once one is. */
+      get raisingShown() { return this.acrRated && (this.validationMatters || (this.spotCheckApplies && (!this.d.veracity.acr.trusted || this.form.acr.spotCheck !== 'none'))); },
+      /** The result options for the branch in hand. The ACR options appear only where an ACR is the step. */
+      get raiseOptions() {
+        const by = this.raiseBy;
+        const acr = by === 'review_failed_check' ? [{ value: 'acr', label: 'Corrected ACR received, no report defect (E1)' }]
+          : by === 'vendor_evidence' ? [{ value: 'acr', label: 'Vendor ACR received, no report defect (E1)' }] : [];
+        return [{ value: 'open', label: 'Not done yet' }, ...acr,
+          { value: 'E2a', label: 'Vendor demonstration done (E2a)' },
+          { value: 'E2b', label: 'Third-party audit received (E2b)' },
+          { value: 'E3b', label: 'Full manual review done (E3b)' },
+          { value: 'unavailable', label: 'Cannot be arranged (fallback)' }];
+      },
       get remedyShown() { return !!this.std; },
       get moreAccessibleShown() { return this.sev === 'S3'; },
       get exceptionShown() {
@@ -315,14 +444,16 @@
         if (!this.d) return '';
         if (this.d.bypass) return BYPASS_NOTE;
         const e = this.d.exposure;
-        if (e.unknownsMatter) return `${e.unknownCount} unknown ${e.unknownCount === 1 ? 'answer changes' : 'answers change'} the Exposure level. The review holds until the requesting unit answers.`;
+        if (e.unknownsMatter) return `Exposure unknown. The user count is required, and the review holds until the requesting unit supplies it.${e.unknownCount > 1 ? ` ${e.unknownCount - 1} other ${e.unknownCount === 2 ? 'answer is' : 'answers are'} blank and count as high.` : ''}`;
         const floors = M.FLOORS.filter((f) => e.floorsApplied.includes(f.id));
         const floorMax = floors.reduce((a, f) => (M.LEVELS.indexOf(f.min) > M.LEVELS.indexOf(a) ? f.min : a), 'low');
         const byFloor = floors.length > 0 && M.LEVELS.indexOf(floorMax) >= M.LEVELS.indexOf(e.level);
+        const lv = (l) => M.LEVELS.indexOf(l);
+        const answers = `the user count starts Exposure at ${e.start}, and the other answers score ${e.points} of ${e.maxPoints} points, ${e.answerBand}, ${lv(e.answerBand) >= lv(e.start) ? `so it stays ${e.start}` : `so they lower it to ${e.lowered}`}.`;
         const base = byFloor
-          ? `Exposure ${e.level}, set by a floor fact. The answers alone score ${e.scorePct} percent of the maximum.`
-          : `Exposure ${e.level}, at ${e.scorePct} percent of the maximum score.`;
-        const unknown = e.unknownCount ? ` ${e.unknownCount} unknown ${e.unknownCount === 1 ? 'answer counts' : 'answers count'} as high without changing the level.` : '';
+          ? `Exposure ${e.level}, set by a floor fact. Without it, ${answers}`
+          : `Exposure ${e.level}. ${cap(answers)}`;
+        const unknown = e.unknownCount ? ` ${e.unknownCount} blank ${e.unknownCount === 1 ? 'answer counts' : 'answers count'} as high. An answer entered can lower the level.` : '';
         return base + unknown;
       },
       get severityStatus() {
@@ -334,19 +465,42 @@
         const acc = this.d.accumulation?.escalated;
         const how = this.d.fallback ? 'Severity S3 (provisional), under the fallback.'
           : acc ? `Severity S3 (accumulated): S2 barriers ${acc === 'stacked' ? 'stacked on one function' : 'spread across the product'} add up to a blocked function.`
-            : `Severity ${this.sev}, ${SEVERITY_WORD[this.sev]}, from the worst finding.`;
+            : this.form.findings.length ? `Severity ${this.sev}, ${SEVERITY_WORD[this.sev]}, from the worst finding.`
+              : 'Severity S0. No WCAG failure is recorded, so the review takes the evidence as showing no barrier.';
         return `${how} ${breadth}`;
+      },
+      /** How the ACR record moved the level. */
+      get acrStatus() {
+        const a = this.d?.veracity?.acr;
+        if (!a) return '';
+        const named = a.defects.map((id) => M.ACR_CHECKS.find((c) => c.id === id)?.text).filter(Boolean).map((t) => t.charAt(0).toLowerCase() + t.slice(1)).join('; ');
+        if (a.stale) return `The ACR is ${a.months != null && a.months > M.CALIBRATION.acrMaxAgeMonths ? `${a.months} months old` : 'dated before the last major release'}, so it is stale and ranks E1-. The vendor supplies a current report, or a full manual review or a demonstration is next.`;
+        if (!a.clean) return `The report fails a check (${named}), so the ACR ranks E1-. The vendor corrects the report, the analyst accepts the defect with the reason noted, or a full manual review or a demonstration is next.`;
+        const pre = a.accepted ? `Report defect accepted (${named}). ` : '';
+        if (!this.acrRated) return a.accepted && !this.form.acr.acceptedNote.trim() ? `Report defect ticked (${named}). Note why it does not matter for this purchase.` : 'Read the author and the remarks off the ACR to rate it.';
+        const note = a.spotCheckNote ? ` (${a.spotCheckNote})` : '';
+        if (a.spotCheck === 'agrees') return `${pre}The spot check agrees${note}, so the evidence is E3a and the review proceeds.`;
+        if (a.spotCheck === 'contradicts') return `${pre}The spot check contradicts the ACR${note}, which drops it to E1-. A full manual review or a demonstration is next.`;
+        const age = a.age === 'unknown' ? 'its date is not recorded' : `it is ${a.months} ${a.months === 1 ? 'month' : 'months'} old`;
+        const author = a.author === 'raised' ? 'it is by an outside firm' : 'it is by the vendor\'s own staff';
+        if (a.trusted) return `${pre}Taken at face value (E1+). Its remarks read like a bug report, ${age}, and ${author}. The review proceeds on it.`;
+        const reason = a.remarks === 'lowered' ? 'its remarks restate the criterion, generalise or leave the location out' : `${age} and ${author.replace('it is ', '')}`;
+        return `${pre}Not yet taken at face value (E1), because ${reason}. ${this.d.hold === 'veracity_below_floor' ? 'The analyst\'s spot check is next, under Raising the evidence.' : 'The review proceeds without the spot check at this exposure and grade, and one can still be recorded under Raising the evidence.'}`;
       },
       get evidenceStatus() {
         if (!this.d) return '';
         if (this.d.bypass) return BYPASS_NOTE;
-        const ev = this.evidence;
-        const f = this.floor;
-        const need = `The Veracity floor at ${this.d.exposure.level} exposure for ${this.sev} is ${f === 0 ? 'any evidence' : `rank ${f} (${evidenceAtRank(f)})`}.`;
+        if (!this.acrRated) return '';
+        const ev = this.derived;
+        const v = this.d.veracity;
+        const f = v.floor;
+        const need = this.d.exposure.unknownsMatter ? 'The Veracity floor is set once the Exposure level is known.'
+          : `The Veracity floor at ${this.d.exposure.level} exposure is ${f === 0 ? 'any evidence' : `rank ${f} (${evidenceAtRank(f)})`}.`;
         if (ev.id === 'E0' && this.sev === 'S?') return `No evidence on file. ${need}`;
         const standing = ev.rank >= f ? 'at or above the floor, so Severity is confirmed'
           : this.d.fallback ? 'below the floor and it cannot be raised, so the fallback applies'
-            : 'below the floor, so the ATI review team raises it';
+            : !v.binds ? 'below the floor, but the risk grade rests on the barriers found, so the review proceeds with the TAAP standard provisional'
+              : 'below the floor, so the ATI review team raises it';
         return `${ev.id} ranks ${ev.rank}, ${standing}. ${need}`;
       },
       get remedyNote() {
@@ -373,7 +527,7 @@
         if (this.d.bypass) return [['Accommodation purchase', 'Approved at intake']];
         const e = this.d.exposure;
         const out = [
-          ['Exposure', cap(e.level)],
+          ['Exposure', e.unknownsMatter ? 'Unknown' : cap(e.level)],
           ['Severity', this.sev === 'S?' ? 'Unknown' : `${this.d.severity.replace(' (', ', ').replace(')', '')}, ${SEVERITY_WORD[this.sev]}`],
           ['Evidence', this.d.evidence],
         ];
@@ -383,11 +537,14 @@
         }
         return out;
       },
+      /** The steps in the order the review takes them. The step a hold stops at is marked, the
+       *  steps before it are done, and the steps after it are to do. */
       get path() {
-        const steps = ['Exposure', 'Severity', 'Veracity', 'Risk grade', 'Remedy', 'Decision'];
-        const haltAt = { answers_unknown: 0, severity_unknown: 1, veracity_below_floor: 2, taap_needed: 4, exception_claimed: 4 };
-        if (this.d?.bypass) return steps.map((name) => ({ name, state: name === 'Decision' ? 'here' : 'todo' }));
-        const here = this.d?.hold ? haltAt[this.d.hold] : 5;
+        const steps = ['Exposure', 'Veracity', 'Severity', 'Risk grade', 'Remedy', 'Decision'];
+        const d = this.d;
+        if (d?.bypass) return steps.map((name) => ({ name, state: name === 'Decision' ? 'here' : 'todo' }));
+        const haltAt = { answers_unknown: 0, severity_unknown: 1, veracity_below_floor: 1, taap_needed: 4, exception_claimed: 4 };
+        const here = d?.exposure?.unknownsMatter ? 0 : d?.hold ? haltAt[d.hold] : 5;
         return steps.map((name, i) => ({ name, state: i < here ? 'done' : i === here ? 'here' : 'todo' }));
       },
       get decisionSections() {
@@ -403,15 +560,23 @@
         return [
           { title: 'Exposure', rows: [
             ['Accommodation purchase', d.bypass ? 'yes, approved at intake' : 'no'],
-            ['Level', `${e.level} (score ${e.scorePct}% of maximum)`],
+            ['Level', e.unknownsMatter ? `unknown (${e.unknownCount} ${e.unknownCount === 1 ? 'answer' : 'answers'} missing)` : e.level],
+            ['Start from the user count', e.unknownsMatter ? 'not set, the user count is missing' : `${e.start} (${e.usersValue} users, lowest ${e.lowest})`],
+            ['Other answers', `${e.points} of ${e.maxPoints} points, ${e.answerBand}`],
             ['Floors applied', e.floorsApplied.length ? e.floorsApplied.map(label).join(', ') : 'none'],
-            ['Groups', Object.entries(e.groupLevels).map(([g, l]) => `${g} ${l}`).join(', ')],
-            ['Unknown answers', `${e.unknownCount}${e.unknownsMatter ? ' (they change the band)' : ''}`],
+            ['Blank answers', `${e.unknownCount}${e.unknownsMatter ? ' (the user count is required)' : ', scored high'}`],
           ] },
           { title: 'Severity and evidence', rows: [
             ['Severity', d.severity],
-            ['Evidence', d.evidence],
-            ['Veracity floor', `${this.floor === 0 ? 'any evidence' : evidenceAtRank(this.floor)} at ${e.level} exposure for ${this.sev}`],
+            ['Evidence', d.veracity.acr ? `${d.evidence} (recorded ${review.evidence}; report defects ${d.veracity.acr.defects.length ? d.veracity.acr.defects.join(', ') + (d.veracity.acr.accepted ? ', accepted' : '') : 'none'}; age ${d.veracity.acr.age}, author ${d.veracity.acr.author}${d.veracity.acr.authorName ? `, ${d.veracity.acr.authorName}` : ''}, remarks ${d.veracity.acr.remarks}, spot check ${d.veracity.acr.spotCheck}${d.veracity.acr.spotCheckNote ? `, ${d.veracity.acr.spotCheckNote}` : ''})` : d.evidence],
+            ['Review date', d.reviewDate],
+            ['Veracity floor', e.unknownsMatter ? 'set once the Exposure level is known' : `${this.floor === 0 ? 'any evidence' : evidenceAtRank(this.floor)} at ${e.level} exposure`],
+            ['Floor binds', d.veracity.binds ? (d.exposure.level === 'high' ? 'yes, exposure is high' : 'yes, the risk grade rests on the vendor\'s Supports rows') : 'no, the risk grade rests on the barriers found at low or medium exposure'],
+            ['Supports rows confirmed', d.veracity.confirmed ? 'yes' : 'no'],
+            ['Raised by', !d.veracity.raise ? 'nothing needed, the evidence is at the floor'
+              : (d.veracity.binds || d.hold === 'severity_unknown') ? d.veracity.raise.label
+                : `not needed now, the grade rests on the barriers found; the first TAAP review re-rates on evidence at the floor (${d.veracity.raise.label})`],
+            ...(review.evidenceNote ? [['Evidence supplied by', review.evidenceNote]] : []),
             ['Fallback', d.fallback ? 'yes, the evidence cannot be raised' : 'no'],
             ['Accumulation', d.accumulation?.escalated
               ? `S2 counted as S3 (${d.accumulation.escalated}: ${d.accumulation.escalated === 'stacked' ? `${d.accumulation.stacked.length} function and group pair(s) with stacked S2` : `${d.accumulation.spreadPairs} function and group pairs`})` : 'none'],
@@ -461,7 +626,7 @@
         // How far this review gets through the table: Exposure still open (hold 2), the
         // evidence still open (holds 1 and 3), the risk grade alone (No alternate access required), or the remedy
         // step (Alternate access required). Columns past the stage reached are drawn as not considered.
-        const stage = d.bypass ? 'bypass' : d.hold === 'answers_unknown' ? 'exposure'
+        const stage = d.bypass ? 'bypass' : (d.hold === 'answers_unknown' || d.exposure.unknownsMatter) ? 'exposure'
           : (d.hold === 'severity_unknown' || d.hold === 'veracity_below_floor') ? 'evidence'
             : std ? 'remedy' : 'grade';
         const rowKnown = stage !== 'exposure' && stage !== 'bypass';
@@ -475,10 +640,11 @@
         // A TAAP cell is outlined only when its drawn value is this review's own outcome.
         const drawnMatches = (o) => o === d.outcome && (o !== 'on_hold' || d.hold === 'taap_needed');
         const ev = M.EVIDENCE.find((e) => e.id === d.evidence);
-        const floorRank = M.veracityFloor(d.exposure.level, sev);
+        const floorRank = M.veracityFloor(d.exposure.level);
         const floorNote = !rowKnown ? ''
           : d.fallback ? `${ev.id} on file, below; fallback`
-            : ev.rank >= floorRank ? `${ev.id} on file, at or above` : `${ev.id} on file, below`;
+            : ev.rank >= floorRank ? `${ev.id} on file, at or above`
+              : d.veracity.binds ? `${ev.id} on file, below` : `${ev.id} on file, below; not binding`;
         const rows = M.LEVELS.flatMap((lvl, xi) => [0, 1, 2].map((B) => {
           const P = xi + B;
           const k = T.required[P];
@@ -492,12 +658,12 @@
             // minimum is all six, any such plan is below it, so the column reads Deny.
             const [o, gap] = col === 'min' && k === FULL ? ['deny', 1] : decide(P, k, met);
             const hold = o === 'on_hold' ? ` (hold ${holdNo('taap_needed')})` : '';
-            return { text: `${M.OUTCOMES[o].label}${hold}`, sub: '', warn: o === 'deny' ? '' : `warning ${warnOf(P + gap)}`, tone: TONE[o],
+            return { text: `${M.OUTCOMES[o].label}${hold}`, sub: o === 'deny' ? `or hold ${holdNo('exception_claimed')} on a claim` : '', warn: o === 'deny' ? '' : `warning ${warnOf(P + gap)}`, tone: TONE[o],
               here: remedyReached && onRow && state === col && drawnMatches(o, col), dim: !remedyReached };
           };
           return {
             key: `${lvl}-${B}`, level: lvl, first: B === 0, band: B === 0 && xi > 0, B, P, onRow, onBand,
-            floor: { text: evidenceAtRank(M.EVIDENCE_LIMITS.floor[lvl]).replace('any evidence', 'any'), here: onBand, note: onBand ? floorNote : '' },
+            floor: { text: M.EVIDENCE_LIMITS.floor[lvl] === 0 ? 'any' : M.EVIDENCE_LIMITS.floor[lvl] === 3 ? 'E1+, taken at face value' : evidenceAtRank(M.EVIDENCE_LIMITS.floor[lvl]), here: onBand, note: onBand ? floorNote : '' },
             grades: [gradeCell('S0', ['S0', 'S1']), gradeCell('S2', ['S2']), gradeCell('S3', ['S3'])],
             k: { text: k === 6 ? 'all 6' : `${k} of 6`, here: remedyReached && onRow, dim: !remedyReached },
             taap: [taapCell('none', null), taapCell('below', k - 1), taapCell('min', k), taapCell('full', FULL)],
@@ -531,8 +697,8 @@
         if (stage === 'exposure') {
           const n = d.exposure.unknownCount;
           return { lead: 'This review has not reached the table.', summary: [
-            `${n} unknown ${n === 1 ? 'answer changes' : 'answers change'} the Exposure level, so the review is on ${holdName(d.hold)}.`,
-            'Until Exposure is settled, no row applies. The whole table is shown faded.',
+            `The Exposure level is unknown, because the user count is missing. The review is on ${holdName(d.hold)}.`,
+            'Until Exposure is known, no row applies. The whole table is shown faded.',
           ] };
         }
 
@@ -547,11 +713,13 @@
         }
         const floor = floorRank === 0 ? 'any evidence' : evidenceAtRank(floorRank);
         if (d.fallback) {
-          out.push(`The Veracity floor for ${sev} at ${lvl} exposure is ${floor}. The evidence on file is ${ev.id}, below the floor, and it cannot be raised, so the fallback applies.`);
+          out.push(`The Veracity floor at ${lvl} exposure is ${floor}. The evidence on file is ${ev.id}, below the floor, and it cannot be raised, so the fallback applies.`);
         } else if (ev.rank >= floorRank) {
-          out.push(`The Veracity floor for ${sev} at ${lvl} exposure is ${floor}. The evidence on file is ${ev.id}, at or above the floor.`);
+          out.push(`The Veracity floor at ${lvl} exposure is ${floor}. The evidence on file is ${ev.id}, at or above the floor.`);
+        } else if (!d.veracity.binds) {
+          out.push(`The Veracity floor at ${lvl} exposure is ${floor}. The evidence on file is ${ev.id}, below the floor, but the risk grade rests on the barriers found and not on the vendor's Supports rows, so the floor does not bind and the TAAP standard is provisional.`);
         } else {
-          out.push(`The Veracity floor for ${sev} at ${lvl} exposure is ${floor}. The evidence on file is ${ev.id}, below the floor, so the review is on ${holdName(d.hold)}.`);
+          out.push(`The Veracity floor at ${lvl} exposure is ${floor}. The evidence on file is ${ev.id}, below the floor, so the review is on ${holdName(d.hold)}.`);
         }
 
         // The risk grade.
@@ -654,17 +822,16 @@
     const term = (name, text) => `<strong>${name}.</strong> ${text}`;
     const ROLE_NAME = { public: 'members of the public' };
     const roles = M.ROLES.map((r) => ROLE_NAME[r] ?? r);
-    const GROUP_COVERS = {
-      reach: 'Number of users and organizational scope.',
-      stakes: 'Required use and criticality.',
-      spread: 'Content the product publishes.',
-      duration: 'Frequency of use and contract length.',
-    };
+    const tierRows = C.userTiers.map((t, i, all) => [
+      i === 0 ? `Up to ${t.upTo}` : t.upTo === Infinity ? `More than ${all[i - 1].upTo.toLocaleString('en-US')}` : `${(all[i - 1].upTo + 1).toLocaleString('en-US')} to ${t.upTo.toLocaleString('en-US')}`,
+      t.start, t.lowest]);
+    const weightRows = M.GROUPS.flatMap((g) => g.factors).filter((f) => !f.numeric)
+      .map((f) => [cap(label(f.id)), '0', String(C.answerWeights[f.id]), String(2 * C.answerWeights[f.id])]);
     const WHEN = {
       exception_claimed: `The TAAP falls below the standard, and the requesting unit claims that equally effective access would be an undue burden or a fundamental alteration (28 CFR 35.164, 35.204).`,
       severity_unknown: 'No ACR, demonstration or testing exists.',
-      answers_unknown: 'Unknown answers could change the exposure level.',
-      veracity_below_floor: 'The evidence is below the Veracity floor for this exposure and severity, and a demonstration or ATI testing can still raise it.',
+      answers_unknown: 'The user count is missing.',
+      veracity_below_floor: 'The evidence is below the Veracity floor for this exposure, the floor binds, because the exposure is high or the risk grade rests on the vendor\'s Supports rows, and the spot check, a demonstration or ATI testing can still raise it.',
       taap_needed: 'The risk grade is Alternate access required and no TAAP is on file.',
     };
     const RESUMES = {
@@ -701,21 +868,21 @@
         'Participate in or benefit from the same services, programs and activities as people without disabilities.',
       ])}<p><strong>Burden.</strong> The university must demonstrate that all four tests are met, so minimal impact rests on evidence, never on assumption.</p><p><strong>Standard.</strong> The tests come from the Title II web rule. The rubric applies them to non-web products as policy, since the Section 508 Standards have no minimal-impact clause.</p>`,
       '<h3>Finding</h3>',
-      `<p>A <strong>finding</strong> records one barrier in four fields.</p>${ul([
+      `<p>A <strong>finding</strong> records one WCAG failure, a barrier in the product, in four fields. The failure comes from a "Partially Supports" or "Does Not Support" row of the ACR, or from a demonstration, an audit or ATI testing. No finding means the evidence shows no barrier on any essential function, severity S0.</p>${ul([
         term('Role', `The users the barrier affects, among them ${roles.slice(0, -1).join(', ')} and ${roles[roles.length - 1]}.`),
         term('Disability group', 'The group the barrier affects.'),
         term('Essential function', 'The function the barrier blocks or slows.'),
         term('Severity', 'Impact of the barrier on the function, from S0 (no effect) to S3 (the user cannot perform the function alone).'),
       ])}`,
-      '<p>An <strong>ACR lead</strong> is a row marked "Partially Supports" or "Does Not Support" in the vendor\'s ACR (Accessibility Conformance Report). A lead becomes a finding once its remark names the affected feature and the reviewer places that feature on an essential function.</p>',
+      '<p>An <strong>ACR lead</strong> is a row marked "Partially Supports" or "Does Not Support" in the vendor\'s ACR (Accessibility Conformance Report). A lead becomes a finding once its remark names the affected feature and the reviewer places that feature on an essential function. A remark in the form of the GSA issue-level supplement, which names the feature, the disability groups affected and any workaround, gives the reviewer what the finding needs.</p>',
 
       '<h3>Exposure</h3>',
       '<p><strong>Exposure</strong> rates audience size and product reliance as low, medium or high.</p>',
       '<p>A single <strong>floor</strong> fact sets a minimum exposure regardless of the answers.</p>',
       table(['Floor', 'Minimum exposure'], M.FLOORS.map((f) => [f.fact, f.min])),
-      `<p>The requester's answers map uniquely across four distinct groups.</p>${ul(M.GROUPS.map((g) => term(g.id.charAt(0).toUpperCase() + g.id.slice(1), GROUP_COVERS[g.id] ?? '')))}`,
-      `<p>Each group level is the group's highest answer. The exposure level is the range containing the aggregate share of the maximum score, with cut points at ${pct(C.bands.medium)} and ${pct(C.bands.high)} partitioning the share range into low, medium and high, unless a floor sets a higher level.</p>`,
-      '<p>An unknown answer maps to its highest level. Where that mapping alters exposure, the review halts pending the requester\'s answers.</p>',
+      `<p>The user count is required, and the review halts until the requesting unit supplies it. It sets the starting level and the lowest level the other answers can reach.</p>${table(['User count', 'Start', 'Answers can lower it to'], tierRows)}`,
+      `<p>The other six answers are optional and score points. A blank answer scores as high, so an answer entered can only keep or lower the level.</p>${table(['Answer', 'Low', 'Medium', 'High or blank'], weightRows)}`,
+      `<p>Under ${C.answerBands.medium} points is low, from ${C.answerBands.medium} to under ${C.answerBands.high} is medium, and from ${C.answerBands.high} up is high. Exposure is the lower of the start and the points band, held at the lowest level for the user count. A floor fact then raises it.</p>`,
 
       '<h3>Severity</h3>',
       '<p>Severity is rated on an <strong>essential function</strong>, a function the product exists to provide, such as registering for a class, submitting homework or paying a bill. A function is essential when its removal would change the product\'s use or purpose, the WCAG-EM 2.0 test, and it covers its complete process from sign-in to final submission.</p>',
@@ -730,7 +897,7 @@
       ])}`,
       table(['Severity', 'Against the four tests', 'What the reviewer records'], [
         ['S0', 'Passes all four, with no effect at all', 'No finding'],
-        ['S1', 'Passes all four, with the impact shown to be minimal', 'Each test as met, on evidence at E2 or better (E2a, E2b or E3)'],
+        ['S1', 'Passes all four, with the impact shown to be minimal', 'Each test as met, on a remark or evidence that names the function and the impact'],
         ['S2', 'Fails at least one, since clearly unequal time or effort fails substantially equivalent ease of use', 'The function the barrier slows, and for whom'],
         ['S3', 'Fails outright, since the user cannot perform the function independently', 'The function the barrier blocks, and for whom'],
       ]),
@@ -748,12 +915,29 @@
       '<h3>Evidence (Veracity)</h3>',
       '<p><strong>Veracity</strong> rates the reliability of the evidence behind the findings, by evidence level.</p>',
       table(['Evidence', 'What it is'], M.EVIDENCE.map((e) => [e.id, e.holds])),
-      `<p>An ACR passes ${M.ACR_CHECKS.length} quality checks to rank E1. Any failed check drops it to E1-.</p>${ul(M.ACR_CHECKS.map((c) => c.text))}`,
-      '<p>A report marked Supports on every criterion fails the sixth check. A perfect result is as likely to mean the evaluation was not done as that no barrier exists, so the report earns E1 only when its remarks show the work.</p>',
-      `<p>Severity read from the evidence on file is a minimum. Every review needs evidence at the <strong>Veracity floor</strong> for its exposure and severity before Severity is confirmed.</p>${ul(M.LEVELS.map((l) => term(`${l.charAt(0).toUpperCase() + l.slice(1)} exposure`, `${evAt(l).charAt(0).toUpperCase() + evAt(l).slice(1)}.`)))}`,
-      '<p>An S1 finding always needs E2a, E2b or E3, because the reviewer must show the impact is minimal.</p>',
-      '<p>Below the floor, the review holds with the ATI review team, which raises the evidence with the requesting unit and the vendor, re-rates Severity and resumes. The need for Veracity rises with exposure and severity, and both parties share the interest in establishing the barriers. A demonstration or ATI testing ranks 4 or 5, which clears every floor, so one loop closes it.</p>',
-      '<p>When the evidence cannot be raised, the ATI review team records that and the review proceeds under the <strong>fallback</strong>. Severity is S3 (provisional) and the barriers found are a minimum. Unproven conformance is treated as hiding a blocking barrier, so the review requires an alternate access plan (TAAP, defined below). Deny stands on the evidence in hand, because weak evidence can hide barriers but not invent them.</p>',
+      '<p>A vendor ACR has two halves with different credibility. Its <strong>admissions</strong>, the "Partially Supports" and "Does Not Support" rows, are credible at any evidence level, because a vendor has no reason to invent a barrier. Its <strong>denials</strong>, the "Supports" rows, are the vendor grading itself, and the published audits of vendor reports found about one row in five wrong. The three E1 levels grade the denials.</p>',
+      `<p>${M.ACR_CHECKS.length === 8 ? 'Eight' : M.ACR_CHECKS.length} <strong>report checks</strong> rate the ACR as a document. A failed check is a <strong>report defect</strong>, and an ACR with one ranks E1-. An ACR with no report defect is <strong>clean</strong>. A barrier the product has is a finding, recorded in the Severity step and credible at any evidence level.</p>${ul(M.ACR_CHECKS.map((c) => c.text))}`,
+      '<p>The analyst may <strong>accept</strong> an ACR with a report defect when the defect does not bear on the purchase, such as a version line one patch release behind, and records why it does not matter here. An accepted ACR is rated like a clean one, by its qualifications and the spot check, and the determination prints the defect and the acceptance. Acceptance never cures a stale report, since the report\'s age is a fact, and never restores an ACR the spot check contradicted.</p>',
+      '<p>A report marked Supports on every criterion passes the sixth report check only when its remarks show the work, as a remark in the form of the GSA issue-level supplement does. A perfect result is as likely to mean the evaluation was not done as that no barrier exists, so a clean all-Supports report is the case the three qualifications and the spot check below exist for.</p>',
+      `<p>Three <strong>qualifications</strong> decide whether a clean ACR is <strong>taken at face value</strong> (E1+) or takes the spot check first (E1). The remarks decide. A finding in an ACR should read like a bug report, with the fields of the GSA issue-level supplement, since a report whose admissions are written that way shows the evaluation was done, which is the best evidence on paper for its Supports rows. The age and the author are read off the front page and lower the ACR only together. An ACR more than a year old by the vendor's own staff is not taken at face value even with good remarks. A date not recorded is unknown and neither raises nor lowers. The age reads the evaluation date in the ACR's methods section, or the report date when the methods name none. A major release changes the first version component or carries the vendor's own major label, and an unknown release date neither raises nor lowers. An <strong>outside firm</strong> is one the vendor does not own, is not affiliated with, and does not pay for remediation, and the firm's name and method print in the determination.</p>${table(['Qualification', 'Raised', 'Lowered', 'Report defect'], [
+        ['Age', M.ACR_QUALIFICATIONS.age.raised, M.ACR_QUALIFICATIONS.age.lowered, M.ACR_QUALIFICATIONS.age.out],
+        ['Author', M.ACR_QUALIFICATIONS.author.raised, M.ACR_QUALIFICATIONS.author.lowered, 'No method named (the methods report check)'],
+        ['Remarks', M.ACR_QUALIFICATIONS.remarks.raised, M.ACR_QUALIFICATIONS.remarks.lowered, 'A blank remark on an admission (the remarks report check), or a bare Supports on a complex criterion (the sixth report check)'],
+      ])}`,
+      `<p>ATI testing takes two forms. The <strong>spot check</strong> (E3a) is the analyst's own pass over the essential functions with a screen reader and the keyboard, done on top of a clean ACR. It is the cheapest independent look at the product, and it ranks with a demonstration or an audit, so it clears every floor. The <strong>full manual review</strong> (E3b) is the ATI coordinator's evaluation of the product by a named method, and it ranks highest. The spot check applies to a clean or accepted ACR, since a report defect is cured by the vendor or accepted by the analyst, not by a spot check, and the determination records the functions covered and the assistive technology used.</p>${ul([
+        term('Agrees', `${M.ACR_QUALIFICATIONS.spotCheck.agrees}.`),
+        term('Contradicts', `${M.ACR_QUALIFICATIONS.spotCheck.contradicts}, and the barriers found are recorded as findings.`),
+      ])}`,
+      `<p>Every risk grade that rests on the denials needs evidence at the <strong>Veracity floor</strong> for its exposure before the denials are confirmed. The floor binds every risk grade at high exposure, and at low and medium a No alternate access required grade, which rests on the vendor's claim of no barrier on an essential function.</p>${ul(M.LEVELS.map((l) => term(`${l.charAt(0).toUpperCase() + l.slice(1)} exposure`, `${evAt(l).charAt(0).toUpperCase() + evAt(l).slice(1)}.`)))}`,
+      '<p>Severity does not move the floor. An S1 rating rests on a remark or evidence that names the function and the impact, which a trusted ACR\'s bug-report remark does, because the reviewer must be able to show the impact is minimal.</p>',
+      '<p>At low and medium exposure an Alternate access required grade rests on the barriers found, which are credible at any level, so the review proceeds on them at any evidence level. Below the floor the barriers found are a minimum, the TAAP standard (defined below) is provisional, and the first TAAP review re-rates Severity on evidence at the floor. At high exposure the plan\'s scope rests on the denials too, since a barrier the vendor denies gets no alternative, so the review raises the evidence before the plan is written.</p>',
+      `<p>Below the floor where it binds, the review holds with the ATI review team, and the evidence in hand decides the step that raises it.</p>${ul([
+        term('A clean ACR not yet taken at face value', 'The analyst\'s spot check comes first. If it agrees, the evidence is E3a and the review proceeds.'),
+        term('A contradicted ACR', 'The spot check found a barrier the ACR denies, so its Supports rows are no longer trusted and a second spot check cannot restore them. The ATI coordinator\'s full manual review or a vendor demonstration re-rates the product.'),
+        term('An ACR with a report defect', 'A spot check cannot cure it. The vendor corrects the ACR, the analyst accepts it with the defect and the reason noted, or a full manual review or a demonstration supplies the evidence.'),
+        term('No ACR', 'The vendor supplies one, or a full manual review or a demonstration supplies the evidence.'),
+      ])}<p>The spot check, a demonstration, an audit and a full manual review rank 4 or 5, which clears every floor, so one loop closes it.</p>`,
+      '<p>When the evidence cannot be raised, the ATI review team records that and the review proceeds under the <strong>fallback</strong>. Severity is S3 (provisional) and the barriers found are a minimum. Unproven conformance is treated as hiding a blocking barrier, so the review requires an alternate access plan (TAAP, defined below). A medium exposure review of a clean vendor ACR with no findings, no spot check and no demonstration ends here, with a TAAP whose documentation states that the product could not be evaluated. Deny stands on the evidence in hand, because weak evidence can hide barriers but not invent them.</p>',
 
       '<h3>Breadth</h3>',
       '<p><strong>Breadth</strong> rates barrier reach across essential functions and disability groups, on a scale of 0 to 2.</p>',
@@ -784,7 +968,7 @@
         ['Full, all six', 'Approve with TAAP', 'From pressure alone, elevated from pressure 2 and high at pressure 4, so every high exposure carries one'],
       ]),
       '<p>A plan below the standard is denied at any severity and pressure, unless a written undue burden or fundamental alteration determination is on file. TAAP work costs staff time, so purchases with less at stake get a lower standard. The <strong>shortfall</strong>, the count of requirements the plan misses, is stated in the denial and in the hold, so the signers report what the plan does instead of ticking requirements it does not meet.</p>',
-      '<p>Under the fallback, the TAAP standard is provisional and may rise when evidence arrives, and the first TAAP review re-rates Severity on evidence at the Veracity floor.</p>',
+      '<p>Under the fallback, and whenever the vendor\'s denials are below the Veracity floor, the TAAP standard is provisional and may rise when evidence arrives, and the first TAAP review re-rates Severity on evidence at the floor.</p>',
 
       '<h3>Warning level</h3>',
       '<p>The <strong>warning level</strong>, the residual risk shown to the purchaser, derives from pressure plus the <strong>gap</strong>, the count of requirements the plan misses short of a full TAAP. The shortfall against the minimum decides a denial, and the gap against a full TAAP sets the warning. The level never moves the TAAP standard.</p>',
@@ -811,7 +995,7 @@
       ])}`,
 
       '<h3>Holds</h3>',
-      '<p>A <strong>hold</strong> pauses the review until a named party supplies what the review waits for. Holds 1 to 3 come before the risk grade, and the first that applies holds the review. Hold 3 resumes at the Severity step with the new findings, or the review proceeds under the fallback, defined under Evidence, when the evidence cannot be raised. Holds 4 and 5 arise in the remedy step.</p>',
+      '<p>A <strong>hold</strong> pauses the review until a named party supplies what the review waits for. Holds 1 to 3 come before the risk grade, and the first that applies holds the review. Hold 3 applies at high exposure, and at low and medium to a risk grade that rests on the vendor\'s Supports rows, and it resumes at the Severity step with the new findings, or the review proceeds under the fallback, defined under Evidence, when the evidence cannot be raised. Holds 4 and 5 arise in the remedy step.</p>',
       table(['Hold', 'Waits for', 'When it applies', 'Held by', 'Resumes at'], M.HOLDS.map((h, i) => [String(i + 1), cap(h.waits), WHEN[h.id] ?? h.text, cap(M.HOLDERS[h.holder].label), RESUMES[h.id]])),
     ].join('\n');
   }

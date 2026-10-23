@@ -5,6 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Accessibility review tester</title>
 <link rel="stylesheet" href="review-matrix-tester.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/plugins/monthSelect/style.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/plugins/monthSelect/index.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.9/dist/cdn.min.js"></script>
 </head>
 <body x-data="tester">
@@ -96,13 +100,8 @@
       <a class="def-link" href="#def-exposure" @click.prevent="showDefinition('def-exposure')">Definition</a>
     </div>
     <fieldset>
-      <legend class="label">Facts</legend>
-      <p class="help">One true floor fact sets a minimum Exposure on its own, whatever the answers below say. An accommodation purchase is approved at intake.</p>
-      <div id="floorChoices"></div>
-    </fieldset>
-    <fieldset>
       <legend class="label">The requester's answers</legend>
-      <p class="help">An answer left at Unknown counts as high. The review holds when unknown answers would change the level.</p>
+      <p class="help">The user count is required and sets the starting level. The other answers are optional. A blank counts as high, and each answer entered can lower the level.</p>
       <table class="answers">
         <thead>
           <tr>
@@ -120,6 +119,11 @@
           Hiding the column clears the overrides.<template x-if="overrideCount"><span> <span x-text="overrideCount"></span> in place.</span></template></span>
       </p>
     </fieldset>
+    <fieldset>
+      <legend class="label">Facts</legend>
+      <p class="help">One true floor fact sets a minimum Exposure on its own, whatever the answers above say. An accommodation purchase is approved at intake.</p>
+      <div id="floorChoices"></div>
+    </fieldset>
     <p class="step-status" x-text="exposureStatus" x-cloak></p>
   </section>
 
@@ -131,42 +135,122 @@
     </div>
     <label class="field" for="evidence"><span>Strongest evidence on file</span></label>
     <select id="evidence" x-model="form.evidence"></select>
-    <p class="help" x-text="evidence.holds" x-cloak></p>
+    <p class="help" x-show="!acrShown" x-text="evidence.holds" x-cloak></p>
+    <label class="field" x-show="evidenceIsDirect" x-cloak><span>Who supplied it, the method and the date</span><input type="text" autocomplete="off" x-model="form.evidenceNote" placeholder="Vendor demonstration by Example Learning, NVDA and keyboard, 2026-10"></label>
+    <p class="help" x-show="supersededAcr" x-text="supersededAcr" x-cloak></p>
 
-    <fieldset x-show="validationMatters" x-cloak>
-      <legend class="label">Raising the evidence</legend>
-      <p class="help">The evidence is below the Veracity floor. The ATI review team records whether a demonstration or its own testing can still raise it.</p>
-      <div class="choice">
-        <input type="radio" name="validation" id="validation_open" value="open" x-model="form.validation">
-        <label for="validation_open">Open: a demonstration or ATI testing can still be arranged</label>
+    <fieldset x-show="acrShown" x-cloak>
+      <legend class="label">The ACR</legend>
+      <p class="help">The analyst reads the date, the author and the remarks off the ACR. Remarks that read like a bug report show the evaluation was done, and the ACR is taken at face value (E1+) unless it is both more than a year old and by the vendor's own staff. Most ACRs are. Remarks that restate the criterion open the report checks, and a failed check ranks the ACR E1- until the vendor corrects the report or the analyst accepts the defect. A clean ACR not yet taken at face value (E1) takes the analyst's spot check first, under Raising the evidence.
+        <a href="#def-evidence-veracity" @click.prevent="showDefinition('def-evidence-veracity')">How the level is derived</a>.</p>
+      <div class="request-fields">
+        <label class="field"><span>Evaluation date (month), from the methods section, or the report date if none</span><input type="text" autocomplete="off" placeholder="Month and year" x-month="form.acr.issued"></label>
+        <label class="field"><span>Product's last major release (month, if known)</span><input type="text" autocomplete="off" placeholder="Month and year" x-month="form.acr.lastMajorRelease"></label>
       </div>
-      <div class="choice">
-        <input type="radio" name="validation" id="validation_unavailable" value="unavailable" x-model="form.validation">
-        <label for="validation_unavailable">Unavailable: no demonstration offered and no test access</label>
-        <span class="desc">The fallback applies. The review treats the product as S3 (provisional) with the barriers found as a minimum.</span>
-      </div>
+      <fieldset x-show="qualificationsShown">
+        <legend class="label">Author</legend>
+        <div class="choice">
+          <input type="radio" name="acrAuthor" id="acrAuthor_outside" value="outside" x-model="form.acr.author">
+          <label for="acrAuthor_outside">A named outside firm, with the method named</label>
+          <span class="desc">A firm the vendor does not own, is not affiliated with, and does not pay for remediation.</span>
+        </div>
+        <div class="choice">
+          <input type="radio" name="acrAuthor" id="acrAuthor_vendor" value="vendor" x-model="form.acr.author">
+          <label for="acrAuthor_vendor">The vendor's own staff, a firm tied to the vendor, or no author named</label>
+        </div>
+        <label class="field" x-show="form.acr.author === 'outside'"><span>Firm and method, as the ACR names them</span><input type="text" autocomplete="off" x-model="form.acr.authorName" placeholder="Example Audits LLC, manual testing with NVDA and JAWS"></label>
+      </fieldset>
+      <fieldset x-show="qualificationsShown">
+        <legend class="label">Remarks</legend>
+        <p class="help">Read the Remarks and Explanations column. A finding should read like a bug report, with the fields of the GSA issue-level supplement.</p>
+        <div class="choice">
+          <input type="radio" name="acrRemarks" id="acrRemarks_bug" value="bug_report" x-model="form.acr.remarks">
+          <label for="acrRemarks_bug">Read like a bug report</label>
+          <span class="desc">Each "Partially Supports" and "Does Not Support" row names the page, screen, component or workflow affected, how it falls short and who is affected. "Supports" rows on complex criteria give an example or the method.</span>
+        </div>
+        <div class="choice">
+          <input type="radio" name="acrRemarks" id="acrRemarks_criterion" value="criterion" x-model="form.acr.remarks">
+          <label for="acrRemarks_criterion">Restate the criterion, generalise, or leave the location out</label>
+          <span class="desc">A barrier cannot be placed on an essential function from the remark alone. Opens the report checks below.</span>
+        </div>
+      </fieldset>
+      <fieldset x-show="reportChecksShown">
+        <legend class="label">Report checks</legend>
+        <p class="help">Each check rates the report as a document. Tick each check the report fails. The stale check is read from the dates above.</p>
+        <template x-for="c in reportChecks" :key="c.id">
+          <div class="choice">
+            <input type="checkbox" :id="'defect_' + c.id" :value="c.id" x-model="form.acr.defects">
+            <label :for="'defect_' + c.id" x-text="c.text"></label>
+          </div>
+        </template>
+        <div class="choice">
+          <input type="checkbox" id="defect_stale" disabled :checked="isStale">
+          <label for="defect_stale" x-text="staleCheck.text + ' (read from the dates)'"></label>
+        </div>
+      </fieldset>
+      <fieldset x-show="acceptanceShown">
+        <legend class="label">Accepting the report defect</legend>
+        <p class="help">The vendor cures a report defect with a corrected report. The analyst may instead accept the ACR as it is when the defect does not bear on this purchase, such as a version line one patch release behind. A stale report is not accepted.</p>
+        <div class="choice">
+          <input type="checkbox" id="acrAccepted" x-model="form.acr.accepted">
+          <label for="acrAccepted">Accept the ACR despite the report defect</label>
+          <span class="desc">The ACR is then rated like a clean one, and the determination prints the defect and the acceptance.</span>
+        </div>
+        <label class="field" x-show="form.acr.accepted"><span>Why the defect does not matter for this purchase</span><input type="text" autocomplete="off" x-model="form.acr.acceptedNote" placeholder="the version line reads 4.2 and the product bought is 4.2.1, a patch release"></label>
+      </fieldset>
+      <p class="step-status" x-text="acrStatus" x-cloak></p>
     </fieldset>
-    <p class="step-status" x-text="evidenceStatus" x-cloak></p>
 
-    <fieldset style="margin-top: 14px;">
-      <legend class="label">Findings</legend>
-      <p class="help">One row per barrier, by role and disability group on one essential function. An essential function is a function the product exists to provide, such as registering for a class or submitting homework, and it counts as essential when its removal would change the product's use or purpose. No rows means no known barriers.
+    <fieldset x-show="raisingShown" x-cloak>
+      <legend class="label">Raising the evidence</legend>
+      <p class="help"><strong>What raises it.</strong> <span x-text="raiseNote"></span></p>
+      <fieldset x-show="spotCheckApplies">
+        <legend class="label">ATI spot check</legend>
+        <div class="choice">
+          <input type="radio" name="acrSpot" id="acrSpot_none" value="none" x-model="form.acr.spotCheck">
+          <label for="acrSpot_none">Not done</label>
+        </div>
+        <div class="choice">
+          <input type="radio" name="acrSpot" id="acrSpot_agrees" value="agrees" x-model="form.acr.spotCheck" :disabled="form.acr.spotCheck === 'contradicts'">
+          <label for="acrSpot_agrees">Agrees: an essential function exercised with a screen reader and the keyboard, nothing found that the ACR does not report</label>
+          <span class="desc" x-show="form.acr.spotCheck === 'contradicts'">A contradicted ACR takes a full manual review or a demonstration, recorded below. A second spot check cannot restore it.</span>
+        </div>
+        <div class="choice">
+          <input type="radio" name="acrSpot" id="acrSpot_contradicts" value="contradicts" x-model="form.acr.spotCheck">
+          <label for="acrSpot_contradicts">Contradicts: a barrier found that the ACR reports as Supports</label>
+          <span class="desc">Record the barriers the spot check found as findings below.</span>
+        </div>
+        <label class="field" x-show="form.acr.spotCheck !== 'none'"><span>Functions covered and assistive technology used</span><input type="text" autocomplete="off" x-model="form.acr.spotCheckNote" placeholder="Book a room and cancel a booking, NVDA and keyboard"></label>
+      </fieldset>
+      <label class="field" x-show="raiseBy" for="raiseResult"><span x-text="raiseBy === 'spot_check' ? 'Or record a stronger step' : 'Record the result'"></span></label>
+      <select id="raiseResult" x-show="raiseBy" x-model="raiseResult">
+        <template x-for="o in raiseOptions" :key="o.value"><option :value="o.value" x-text="o.label"></option></template>
+      </select>
+      <p class="desc" x-show="form.validation === 'unavailable'">The fallback applies. The review treats the product as S3 (provisional) with the barriers found as a minimum.</p>
+      <p class="help" x-show="raiseBy && raiseBy !== 'vendor_evidence'">Recording a demonstration, audit or review replaces the ACR as the strongest evidence on file. The ACR's details and the findings it gave stay on the record.</p>
+    </fieldset>
+    <p class="step-status" x-show="evidenceStatus" x-text="evidenceStatus" x-cloak></p>
+
+    <p class="step-status quiet" x-show="!findingsShown" x-text="findingsNote" x-cloak></p>
+    <fieldset style="margin-top: 14px;" x-show="findingsShown" x-cloak>
+      <legend class="label">WCAG failures</legend>
+      <p class="help">Record each WCAG failure the evidence shows. A failure is a "Partially Supports" or "Does Not Support" row of the ACR, or a barrier found in a demonstration, an audit or ATI testing. Each row is one finding. It places the failure on the essential function it affects, names the role and disability group it stops, and rates its severity. An essential function is a function the product exists to provide, such as registering for a class or submitting homework, and it counts as essential when its removal would change the product's use or purpose. An ACR taken at face value whose admitted failures are all minor needs no row.
         <a href="#def-finding" @click.prevent="showDefinition('def-finding')">What a finding records</a>.</p>
-      <ol class="findings" aria-label="Findings">
+      <ol class="findings" aria-label="WCAG failures">
         <template id="findingRow" x-for="(f, i) in form.findings" :key="f.key">
           <li class="finding">
             <label class="field"><span>Role</span><select x-model="f.role" data-opts="role"></select></label>
             <label class="field"><span>Disability group</span><select x-model="f.group" data-opts="group"></select></label>
             <label class="field"><span>Essential function</span><input type="text" x-model="f.essentialFunction" placeholder="Submit homework"></label>
             <label class="field"><span>Severity</span><select x-model="f.severity" data-opts="severity"></select></label>
-            <button type="button" class="btn quiet small" :aria-label="'Remove finding ' + (i + 1)" @click="removeFinding(f.key)">Remove</button>
+            <button type="button" class="btn quiet small" :aria-label="'Remove failure ' + (i + 1)" @click="removeFinding(f.key)">Remove</button>
           </li>
         </template>
       </ol>
-      <p class="empty" x-show="!form.findings.length" x-cloak>No findings recorded.</p>
-      <button type="button" class="btn" @click="addFinding()">Add a finding</button>
+      <p class="step-status flag" role="status" x-show="!form.findings.length" x-text="noFailuresFlag" x-cloak></p>
+      <button type="button" class="btn" @click="addFinding()">Add a WCAG failure</button>
     </fieldset>
-    <p class="step-status" x-text="severityStatus" x-cloak></p>
+    <p class="step-status" x-show="findingsShown" x-text="severityStatus" x-cloak></p>
   </section>
 
   <section class="card step" aria-labelledby="h-remedy">

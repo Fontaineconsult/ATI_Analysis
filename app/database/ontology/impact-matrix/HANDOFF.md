@@ -25,11 +25,11 @@ starting points. Everything since then refines that into version 2.
 
 Step 0 picks the standard by kind of technology (web and mobile: WCAG 2.1 AA under Title
 II; other software and hardware: Section 508 through Gov Code 7405). Step 1 rates
-**exposure** (renamed from impact): seven floors first, then four merged groups (reach,
-stakes, spread, duration) scored as a percent of the maximum; exposure sets review depth,
+**exposure** (renamed from impact): the user count sets a starting level, six optional
+answers score points that lower it, and seven floor facts raise it; exposure sets review depth,
 evidence, approver and term, never the outcome alone. Step 2 rates **severity** S0 to S3
 by the 28 CFR 35.205 tests, per role and disability group, with an evidence ladder E0 to
-E3 and eight ACR quality checks. Step 3 gives the outcome: approve, approve with barrier
+E3 and eight ACR report checks. Step 3 gives the outcome: approve, approve with barrier
 record, TAAP, deny, or manual review (a routing rule for uncertainty). S3 is never
 approve. TAAP or deny turns on whether the plan serves everyone from day one and whether
 a more accessible product exists. Approver and expiry scale with exposure.

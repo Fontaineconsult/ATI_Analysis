@@ -100,7 +100,7 @@ GROUNDING = {
     'Exposure': {
         'rules': [
             ('ADA Title II, Section 504 and CSU policy', 'No binding rule contains a user-count, criticality or exposure threshold. Exposure therefore sets how deep the review goes, how strong the evidence must be and who signs, and never whether access is owed.'),
-            ('CSU ATI Procurement Process', 'The depth of review depends on how the product will be used, which is why unknown answers hold the review.'),
+            ('CSU ATI Procurement Process', 'The depth of review depends on how the product will be used, which is why a missing user count holds the review.'),
             ('28 CFR 35.205 and Section 504 (34 CFR 104)', 'The transactions test and the duty across academic programs ground the floors for coursework and for the only route to a service.'),
             ('28 CFR 35.200', 'Content the university provides to the public falls under the web rule, which grounds the public floor.'),
             ('ADA Title I (29 CFR 1630) and FEHA', 'Employment and hiring carry their own duty, which grounds the job-duty floor.'),
@@ -109,13 +109,13 @@ GROUNDING = {
         'principles': [
             ('Exposure sets scrutiny, not entitlement (proposed)', 'How widely a product is used decides how closely it is reviewed and who signs. It does not decide whether people with disabilities are owed access.'),
             ('Prioritization by impact under finite resources', 'Campuses direct accessibility work at the barriers with the greatest impact rather than spreading it evenly.'),
-            ('Same facts, same answer (proposed)', 'Two reviewers given the same facts reach the same result. Each question maps to one group so no fact is counted twice.'),
+            ('Same facts, same answer (proposed)', 'Two reviewers given the same facts reach the same result. Each answer scores once, so no fact is counted twice.'),
         ],
-        'calibration': 'The user count cuts (25 and 250), the band cut points (0.25 and 0.55), the equal group weights and the assignment of each floor to medium or high are pilot calibration. No rule sets them.',
+        'calibration': 'The user count tiers (25, 250 and 2,500), the answer weights, the band cut points (2.5 and 5.5 of 10 points) and the assignment of each floor to medium or high are pilot calibration. No rule sets them.',
     },
     'Severity': {
         'rules': [
-            ('28 CFR 35.205', 'The four tests define S1. A barrier that makes an essential function clearly harder to perform fails the minimal-impact test, so S2 does not conform. The university must be able to show minimal impact, so S1 needs demonstration.'),
+            ('28 CFR 35.205', 'The four tests define S1. A barrier that makes an essential function clearly harder to perform fails the minimal-impact test, so S2 does not conform. The university must be able to show minimal impact, so an S1 rating rests on a remark or evidence that names the function and the impact.'),
             ('CSU TAAP Authoring Template, instructions', 'Barriers "severe enough to prevent users from performing essential functions" require a TAAP, which is the S3 line.'),
             ('Section 508 Standards, E202.7 (36 CFR 1194)', 'Section 508 has no minimal-impact exception, so for non-web technology an S1 or S2 product is acceptable only when no conforming product meets the need.'),
         ],
@@ -130,16 +130,16 @@ GROUNDING = {
         'rules': [
             ('CSU ATI Procurement Process, Step 2', 'The CSU asks for a current Accessibility Conformance Report for each interface before it buys, which is hold 1.'),
             ('CSU ATI success indicator 1.8-pro', 'Each campus has a process to validate vendors\' conformance claims, which is the loop under hold 3.'),
-            ('CSU ATI Procurement Process, Step 3', 'The ATI reviewer decides on the review findings, so the findings are confirmed before the decision is made.'),
-            ('28 CFR 35.205', 'The university must be able to show that a nonconformance has minimal impact, which is why S1 always needs a demonstration, an audit or ATI testing.'),
+            ('CSU ATI Procurement Process, Step 3', 'The ATI reviewer decides on the review findings. The matrix confirms the vendor\'s claim of no barrier before an approval rests on it, and confirms the barriers found at the first TAAP review.'),
+            ('28 CFR 35.205', 'The university must be able to show that a nonconformance has minimal impact, which is why an S1 rating rests on a remark or evidence that names the function and the impact.'),
             ('Section 508 Standards, E202.7.2 (36 CFR 1194); CSU TAAP Authoring Template', 'Where conforming technology is not available, access is provided by an alternative means planned in advance. The fallback applies that remedy when conformance cannot be shown.'),
         ],
         'principles': [
-            ('Vendor conformance claims require proportionate validation', 'A vendor\'s conformance report is an unverified claim. The institution checks it in proportion to the product\'s exposure, and a claim the product contradicts counts as no evidence.'),
+            ('Vendor conformance claims require proportionate validation', 'A vendor\'s conformance report is an unverified claim. The institution checks it in proportion to the product\'s exposure, and a claim the product contradicts ranks below a clean one.'),
             ('Report quality and product accessibility are separate measures', 'How far an ACR can be trusted and how accessible the product is are two measures, scored apart. A report with no reported failures is a warning sign.'),
             ('Program accessibility is a proactive, systemic duty', 'Access is planned before deployment, whether or not anyone has asked. Unproven conformance is treated as hiding a blocking barrier for that reason.'),
         ],
-        'calibration': 'The floor values (any evidence at low exposure, E1 at medium, E2 at high), the two-year ACR age and the eight ACR quality checks are calibration, drawn from CSU practice rather than a rule. The reasoning that a Deny stands on weak evidence is the matrix\'s own. Vendor self-reports understate barriers and do not invent them, so a standard computed from the findings on file is a minimum.',
+        'calibration': 'The floor values (any evidence at low exposure, and a clean ACR taken at face value at medium and high), the two-year ACR age, the eight ACR report checks, the one-year line of the age qualification, the author and remarks qualifications and the two forms of ATI testing, the analyst\'s spot check and the ATI coordinator\'s full manual review, are calibration, drawn from CSU practice and the published audits of vendor reports rather than a rule. The split between an ACR\'s admissions and its denials, and the reasoning that at low and medium exposure a Deny and an Alternate access required grade stand on the barriers found at any evidence level, while at high exposure every grade waits for evidence at the floor, are the matrix\'s own. Vendor self-reports understate barriers and do not invent them, so a standard computed from the findings on file is a minimum.',
     },
     'Breadth': {
         'rules': [
@@ -149,7 +149,7 @@ GROUNDING = {
         'principles': [
             ('Remedy proportionate to barrier severity', 'The weight of the remedy matches the severity of the barrier, and Breadth is the part of severity that measures reach.'),
         ],
-        'calibration': 'The blocked-pair steps (2 and 4), the S2 count (3) and the cap at 2 are the matrix\'s. The assumption of Breadth 2 under the fallback with no evidence at all mirrors how unknown exposure answers map to high.',
+        'calibration': 'The blocked-pair steps (2 and 4), the S2 count (3) and the cap at 2 are the matrix\'s. The assumption of Breadth 2 under the fallback with no evidence at all mirrors how a blank exposure answer maps to high.',
     },
     'TAAP': {
         'rules': [
@@ -744,13 +744,15 @@ def main():
     render(doc, overview_blocks(), 'Accessible Procurement Process Overview', level=2, cite=False)
     figure(doc, Path(tmp) / 'review-process-checks.png',
            'Figure 1. The shared checks, from requisition intake to the risk grade. An accommodation purchase is '
-           'approved at intake. Holds 1 to 3 pause the review, '
+           'approved at intake. The Veracity floor binds every grade at high exposure, and at low and medium a '
+           'grade that rests on the vendor\'s Supports rows; a grade on the barriers found at low or medium '
+           'proceeds at any evidence level. Holds 1 to 3 pause the review, '
            'and hold 3 resumes at the Severity step. With no evidence at all, the review falls back once the ATI '
            'review team records that none can be obtained.', width=Inches(6.0))
     figure(doc, Path(tmp) / 'review-process-remedy.png',
            'Figure 2. The remedy step, from an Alternate access required risk grade to Deny or Approve with TAAP. '
-           'Holds 4 and 5 pause the review. Under the fallback the minimum is provisional, and the first TAAP '
-           'review re-rates Severity on evidence at the Veracity floor.', width=Inches(5.8))
+           'Holds 4 and 5 pause the review. Under the fallback, and while the vendor\'s denials are below the floor, '
+           'the minimum is provisional, and the first TAAP review re-rates Severity on evidence at the Veracity floor.', width=Inches(5.8))
 
     # ---- The rubric table, on a landscape page.
     landscape(doc)

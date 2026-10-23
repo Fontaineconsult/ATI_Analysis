@@ -68,13 +68,15 @@ box(SX, Y.start, SW, 60, 'start', ['Requisition intake', 'exposure answers, find
 // The accommodation purchase ends the review at intake, before any check.
 box(SX - 400, Y.start, 330, 60, 'approve', ['Approve at intake', 'purchased as an accommodation for one named person;', 'limited to the accommodation; nothing rated'], { size: 11, stroke: COLOR.approve[1] });
 arrow([left(SX, SW, Y.start), [SX - 400 + 165, Y.start]], 'accommodation');
-diamond(SX, Y.d2, SW, DH, ['Accessibility evidence', 'on file?'], 13);
-box(SX, Y.p1, SW, 60, 'step', ['Rate Exposure', 'floors and answers; unknown answers map to high']);
-diamond(SX, Y.d3, SW, DH, ['Unknown answers raise', 'the Exposure level?'], 13);
+diamond(SX, Y.d2, SW, DH, ['Findings or accessibility', 'evidence on file?'], 13);
+box(SX, Y.p1, SW, 60, 'step', ['Rate Exposure', 'users start it; answers lower; floors raise']);
+diamond(SX, Y.d3, SW, DH, ['User count', 'missing?'], 13);
 box(SX, Y.p2, SW, 60, 'step', ['Severity from the findings, as a minimum', 'impact on the essential function, never the ACR label']);
-diamond(SX, Y.d4, SW, DH, ['Evidence at the Veracity floor', 'for this Exposure and Severity?', '(S1 always E2 or better)'], 12);
+diamond(SX, Y.d4, SW, DH, ['Vendor denials at the Veracity floor?', 'any at low; E1+, taken at face value, at medium and high;', 'binds every grade at high, and at low and medium', 'a grade on the barriers found proceeds'], 11);
 holdBox(RX, Y.d2, 'severity_unknown');
 holdBox(RX, Y.d3, 'answers_unknown');
+// No evidence can be obtained: the review re-enters at the Exposure step and falls back.
+arrow([[RX, Y.d2 + 28], [RX, Y.p1], [SX + SW / 2, Y.p1]], ['no evidence can be', 'obtained: the fallback follows']);
 
 arrow([[SX, Y.start + 30], [SX, Y.d2 - DH / 2]]);
 arrow([right(SX, SW, Y.d2), [RX - RW / 2, Y.d2]], 'no');
@@ -87,7 +89,7 @@ arrow([[SX, Y.p2 + 30], [SX, Y.d4 - DH / 2]]);
 // The Veracity loop. Below the floor, the ATI review team raises the evidence and the review
 // resumes at the Severity step; when the evidence cannot be raised, the fallback joins the S3 lane.
 const FX = COL_S3 = 1010;
-diamond(RX, Y.d4, SW, DH, ['Can the evidence be raised?', 'a demonstration, or ATI testing'], 12);
+diamond(RX, Y.d4, SW, DH, ['Can the evidence be raised?', 'a spot check of a clean ACR, a corrected or accepted ACR,', 'a demonstration or a full manual review;', 'the ATI review team records a no'], 11);
 arrow([right(SX, SW, Y.d4), [RX - SW / 2, Y.d4]], 'no');
 holdBox(RX, 540, 'veracity_below_floor');
 arrow([[RX, Y.d4 - DH / 2], [RX, 568]], 'yes');
@@ -139,7 +141,7 @@ text(875, R[2] - 62, ['medium or high:', 'Alternate access required'], { size: 1
 
 // The Alternate access required lane: S3 at every Exposure, and S2 from medium or high. The only lane that
 // can end in Deny.
-diamond(COL.S3, R[1], CW, CH, ['A more accessible product', 'meets the same need?']);
+diamond(COL.S3, R[1], CW, CH, ['A more accessible product', 'meets the same need?', 'incl. S3 provisional']);
 down(COL.S3, Y.state + 35, R[1] - CH / 2, 'Alternate access required');
 arrow([right(COL.S3, CW, R[1]), [1160, R[1]], [1160, YF - 60], [1060, YF - 60]], 'yes', { noHead: true });
 diamond(COL.S3, R[2], CW, CH, ['TAAP on file?']);

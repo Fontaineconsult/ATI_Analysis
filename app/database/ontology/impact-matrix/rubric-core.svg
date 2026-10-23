@@ -1,8 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1282 608" width="1282" height="608" role="img" aria-labelledby="t d" font-family="Segoe UI, system-ui, -apple-system, Helvetica, Arial, sans-serif">
-  <title id="t">SFBRN review rubric, version 2, decision table</title>
+  <title id="t">SFBRN review rubric, version 3, decision table</title>
   <desc id="d">Rows partition reviews by Exposure and Breadth. Columns give the Veracity floor, the risk grade by Severity, the TAAP standard, and the final decision and warning level for each TAAP state.</desc>
   <rect width="1282" height="608" fill="#fafaf8"/>
-  <text x="40" y="44" font-size="22" font-weight="700" fill="#1a1a1a">SFBRN review rubric, version 2</text>
+  <text x="40" y="44" font-size="22" font-weight="700" fill="#1a1a1a">SFBRN review rubric, version 3</text>
   <text x="40" y="68" font-size="13" fill="#444">The final decision as a function of Exposure, Breadth, Severity, Veracity and TAAP status. Generated from review-matrix.js.</text>
   <rect x="40" y="92" width="328" height="26" fill="#e6e4dc" stroke="#d6d4cc"/>
   <text x="204" y="110" text-anchor="middle" font-size="12" font-weight="700" fill="#1a1a1a">FACTORS</text>
@@ -56,7 +56,8 @@
   <rect x="738" y="188" width="104" height="17" rx="8.5" fill="#e3f4e8" stroke="#bdbab0"/>
   <text x="790" y="201" text-anchor="middle" font-size="11" font-weight="400" fill="#1a1a1a">warning low</text>
   <rect x="846" y="164" width="132" height="46" fill="#fbe3e4" stroke="#d6d4cc"/>
-  <text x="912" y="192" text-anchor="middle" font-size="13" font-weight="600" fill="#8c1d22">Deny</text>
+  <text x="912" y="184" text-anchor="middle" font-size="13" font-weight="600" fill="#8c1d22">Deny</text>
+  <text x="912" y="198" text-anchor="middle" font-size="11" font-weight="400" fill="#8c1d22">or hold 5 on a claim</text>
   <rect x="978" y="164" width="132" height="46" fill="#ddf1f3" stroke="#d6d4cc"/>
   <text x="1044" y="184" text-anchor="middle" font-size="13" font-weight="600" fill="#0a5660">Approve with TAAP</text>
   <rect x="992" y="188" width="104" height="17" rx="8.5" fill="#fdf0d5" stroke="#bdbab0"/>
@@ -76,7 +77,8 @@
   <rect x="738" y="234" width="104" height="17" rx="8.5" fill="#e3f4e8" stroke="#bdbab0"/>
   <text x="790" y="247" text-anchor="middle" font-size="11" font-weight="400" fill="#1a1a1a">warning low</text>
   <rect x="846" y="210" width="132" height="46" fill="#fbe3e4" stroke="#d6d4cc"/>
-  <text x="912" y="238" text-anchor="middle" font-size="13" font-weight="600" fill="#8c1d22">Deny</text>
+  <text x="912" y="230" text-anchor="middle" font-size="13" font-weight="600" fill="#8c1d22">Deny</text>
+  <text x="912" y="244" text-anchor="middle" font-size="11" font-weight="400" fill="#8c1d22">or hold 5 on a claim</text>
   <rect x="978" y="210" width="132" height="46" fill="#ddf1f3" stroke="#d6d4cc"/>
   <text x="1044" y="230" text-anchor="middle" font-size="13" font-weight="600" fill="#0a5660">Approve with TAAP</text>
   <rect x="992" y="234" width="104" height="17" rx="8.5" fill="#fbe3e4" stroke="#bdbab0"/>
@@ -96,7 +98,8 @@
   <rect x="738" y="280" width="104" height="17" rx="8.5" fill="#fdf0d5" stroke="#bdbab0"/>
   <text x="790" y="293" text-anchor="middle" font-size="11" font-weight="400" fill="#1a1a1a">warning elevated</text>
   <rect x="846" y="256" width="132" height="46" fill="#fbe3e4" stroke="#d6d4cc"/>
-  <text x="912" y="284" text-anchor="middle" font-size="13" font-weight="600" fill="#8c1d22">Deny</text>
+  <text x="912" y="276" text-anchor="middle" font-size="13" font-weight="600" fill="#8c1d22">Deny</text>
+  <text x="912" y="290" text-anchor="middle" font-size="11" font-weight="400" fill="#8c1d22">or hold 5 on a claim</text>
   <rect x="978" y="256" width="132" height="46" fill="#ddf1f3" stroke="#d6d4cc"/>
   <text x="1044" y="276" text-anchor="middle" font-size="13" font-weight="600" fill="#0a5660">Approve with TAAP</text>
   <rect x="992" y="280" width="104" height="17" rx="8.5" fill="#fbe3e4" stroke="#bdbab0"/>
@@ -108,7 +111,8 @@
   <rect x="40" y="302" width="84" height="138" fill="#ffffff" stroke="#d6d4cc"/>
   <text x="82" y="376" text-anchor="middle" font-size="13" font-weight="400" fill="#1a1a1a">medium</text>
   <rect x="252" y="302" width="116" height="138" fill="#ffffff" stroke="#d6d4cc"/>
-  <text x="310" y="376" text-anchor="middle" font-size="13" font-weight="400" fill="#1a1a1a">E1 or better</text>
+  <text x="310" y="368" text-anchor="middle" font-size="13" font-weight="400" fill="#1a1a1a">E1+, taken</text>
+  <text x="310" y="384" text-anchor="middle" font-size="13" font-weight="400" fill="#1a1a1a">at face value</text>
   <rect x="450" y="302" width="96" height="138" fill="#fdf0d5" stroke="#d6d4cc"/>
   <text x="498" y="368" text-anchor="middle" font-size="13" font-weight="600" fill="#7a4d00">Alternate access</text>
   <text x="498" y="384" text-anchor="middle" font-size="13" font-weight="600" fill="#7a4d00">required</text>
@@ -123,7 +127,8 @@
   <rect x="738" y="326" width="104" height="17" rx="8.5" fill="#e3f4e8" stroke="#bdbab0"/>
   <text x="790" y="339" text-anchor="middle" font-size="11" font-weight="400" fill="#1a1a1a">warning low</text>
   <rect x="846" y="302" width="132" height="46" fill="#fbe3e4" stroke="#d6d4cc"/>
-  <text x="912" y="330" text-anchor="middle" font-size="13" font-weight="600" fill="#8c1d22">Deny</text>
+  <text x="912" y="322" text-anchor="middle" font-size="13" font-weight="600" fill="#8c1d22">Deny</text>
+  <text x="912" y="336" text-anchor="middle" font-size="11" font-weight="400" fill="#8c1d22">or hold 5 on a claim</text>
   <rect x="978" y="302" width="132" height="46" fill="#ddf1f3" stroke="#d6d4cc"/>
   <text x="1044" y="322" text-anchor="middle" font-size="13" font-weight="600" fill="#0a5660">Approve with TAAP</text>
   <rect x="992" y="326" width="104" height="17" rx="8.5" fill="#fbe3e4" stroke="#bdbab0"/>
@@ -143,7 +148,8 @@
   <rect x="738" y="372" width="104" height="17" rx="8.5" fill="#fdf0d5" stroke="#bdbab0"/>
   <text x="790" y="385" text-anchor="middle" font-size="11" font-weight="400" fill="#1a1a1a">warning elevated</text>
   <rect x="846" y="348" width="132" height="46" fill="#fbe3e4" stroke="#d6d4cc"/>
-  <text x="912" y="376" text-anchor="middle" font-size="13" font-weight="600" fill="#8c1d22">Deny</text>
+  <text x="912" y="368" text-anchor="middle" font-size="13" font-weight="600" fill="#8c1d22">Deny</text>
+  <text x="912" y="382" text-anchor="middle" font-size="11" font-weight="400" fill="#8c1d22">or hold 5 on a claim</text>
   <rect x="978" y="348" width="132" height="46" fill="#ddf1f3" stroke="#d6d4cc"/>
   <text x="1044" y="368" text-anchor="middle" font-size="13" font-weight="600" fill="#0a5660">Approve with TAAP</text>
   <rect x="992" y="372" width="104" height="17" rx="8.5" fill="#fbe3e4" stroke="#bdbab0"/>
@@ -163,9 +169,11 @@
   <rect x="738" y="418" width="104" height="17" rx="8.5" fill="#fdf0d5" stroke="#bdbab0"/>
   <text x="790" y="431" text-anchor="middle" font-size="11" font-weight="400" fill="#1a1a1a">warning elevated</text>
   <rect x="846" y="394" width="132" height="46" fill="#fbe3e4" stroke="#d6d4cc"/>
-  <text x="912" y="422" text-anchor="middle" font-size="13" font-weight="600" fill="#8c1d22">Deny</text>
+  <text x="912" y="414" text-anchor="middle" font-size="13" font-weight="600" fill="#8c1d22">Deny</text>
+  <text x="912" y="428" text-anchor="middle" font-size="11" font-weight="400" fill="#8c1d22">or hold 5 on a claim</text>
   <rect x="978" y="394" width="132" height="46" fill="#fbe3e4" stroke="#d6d4cc"/>
-  <text x="1044" y="422" text-anchor="middle" font-size="13" font-weight="600" fill="#8c1d22">Deny</text>
+  <text x="1044" y="414" text-anchor="middle" font-size="13" font-weight="600" fill="#8c1d22">Deny</text>
+  <text x="1044" y="428" text-anchor="middle" font-size="11" font-weight="400" fill="#8c1d22">or hold 5 on a claim</text>
   <rect x="1110" y="394" width="132" height="46" fill="#ddf1f3" stroke="#d6d4cc"/>
   <text x="1176" y="414" text-anchor="middle" font-size="13" font-weight="600" fill="#0a5660">Approve with TAAP</text>
   <rect x="1124" y="418" width="104" height="17" rx="8.5" fill="#fdf0d5" stroke="#bdbab0"/>
@@ -173,7 +181,8 @@
   <rect x="40" y="440" width="84" height="138" fill="#ffffff" stroke="#d6d4cc"/>
   <text x="82" y="514" text-anchor="middle" font-size="13" font-weight="400" fill="#1a1a1a">high</text>
   <rect x="252" y="440" width="116" height="138" fill="#ffffff" stroke="#d6d4cc"/>
-  <text x="310" y="514" text-anchor="middle" font-size="13" font-weight="400" fill="#1a1a1a">E2 or better</text>
+  <text x="310" y="506" text-anchor="middle" font-size="13" font-weight="400" fill="#1a1a1a">E1+, taken</text>
+  <text x="310" y="522" text-anchor="middle" font-size="13" font-weight="400" fill="#1a1a1a">at face value</text>
   <rect x="450" y="440" width="96" height="138" fill="#fdf0d5" stroke="#d6d4cc"/>
   <text x="498" y="506" text-anchor="middle" font-size="13" font-weight="600" fill="#7a4d00">Alternate access</text>
   <text x="498" y="522" text-anchor="middle" font-size="13" font-weight="600" fill="#7a4d00">required</text>
@@ -188,7 +197,8 @@
   <rect x="738" y="464" width="104" height="17" rx="8.5" fill="#fdf0d5" stroke="#bdbab0"/>
   <text x="790" y="477" text-anchor="middle" font-size="11" font-weight="400" fill="#1a1a1a">warning elevated</text>
   <rect x="846" y="440" width="132" height="46" fill="#fbe3e4" stroke="#d6d4cc"/>
-  <text x="912" y="468" text-anchor="middle" font-size="13" font-weight="600" fill="#8c1d22">Deny</text>
+  <text x="912" y="460" text-anchor="middle" font-size="13" font-weight="600" fill="#8c1d22">Deny</text>
+  <text x="912" y="474" text-anchor="middle" font-size="11" font-weight="400" fill="#8c1d22">or hold 5 on a claim</text>
   <rect x="978" y="440" width="132" height="46" fill="#ddf1f3" stroke="#d6d4cc"/>
   <text x="1044" y="460" text-anchor="middle" font-size="13" font-weight="600" fill="#0a5660">Approve with TAAP</text>
   <rect x="992" y="464" width="104" height="17" rx="8.5" fill="#fbe3e4" stroke="#bdbab0"/>
@@ -208,9 +218,11 @@
   <rect x="738" y="510" width="104" height="17" rx="8.5" fill="#fdf0d5" stroke="#bdbab0"/>
   <text x="790" y="523" text-anchor="middle" font-size="11" font-weight="400" fill="#1a1a1a">warning elevated</text>
   <rect x="846" y="486" width="132" height="46" fill="#fbe3e4" stroke="#d6d4cc"/>
-  <text x="912" y="514" text-anchor="middle" font-size="13" font-weight="600" fill="#8c1d22">Deny</text>
+  <text x="912" y="506" text-anchor="middle" font-size="13" font-weight="600" fill="#8c1d22">Deny</text>
+  <text x="912" y="520" text-anchor="middle" font-size="11" font-weight="400" fill="#8c1d22">or hold 5 on a claim</text>
   <rect x="978" y="486" width="132" height="46" fill="#fbe3e4" stroke="#d6d4cc"/>
-  <text x="1044" y="514" text-anchor="middle" font-size="13" font-weight="600" fill="#8c1d22">Deny</text>
+  <text x="1044" y="506" text-anchor="middle" font-size="13" font-weight="600" fill="#8c1d22">Deny</text>
+  <text x="1044" y="520" text-anchor="middle" font-size="11" font-weight="400" fill="#8c1d22">or hold 5 on a claim</text>
   <rect x="1110" y="486" width="132" height="46" fill="#ddf1f3" stroke="#d6d4cc"/>
   <text x="1176" y="506" text-anchor="middle" font-size="13" font-weight="600" fill="#0a5660">Approve with TAAP</text>
   <rect x="1124" y="510" width="104" height="17" rx="8.5" fill="#fdf0d5" stroke="#bdbab0"/>
@@ -226,9 +238,11 @@
   <rect x="738" y="556" width="104" height="17" rx="8.5" fill="#fbe3e4" stroke="#bdbab0"/>
   <text x="790" y="569" text-anchor="middle" font-size="11" font-weight="400" fill="#1a1a1a">warning high</text>
   <rect x="846" y="532" width="132" height="46" fill="#fbe3e4" stroke="#d6d4cc"/>
-  <text x="912" y="560" text-anchor="middle" font-size="13" font-weight="600" fill="#8c1d22">Deny</text>
+  <text x="912" y="552" text-anchor="middle" font-size="13" font-weight="600" fill="#8c1d22">Deny</text>
+  <text x="912" y="566" text-anchor="middle" font-size="11" font-weight="400" fill="#8c1d22">or hold 5 on a claim</text>
   <rect x="978" y="532" width="132" height="46" fill="#fbe3e4" stroke="#d6d4cc"/>
-  <text x="1044" y="560" text-anchor="middle" font-size="13" font-weight="600" fill="#8c1d22">Deny</text>
+  <text x="1044" y="552" text-anchor="middle" font-size="13" font-weight="600" fill="#8c1d22">Deny</text>
+  <text x="1044" y="566" text-anchor="middle" font-size="11" font-weight="400" fill="#8c1d22">or hold 5 on a claim</text>
   <rect x="1110" y="532" width="132" height="46" fill="#ddf1f3" stroke="#d6d4cc"/>
   <text x="1176" y="552" text-anchor="middle" font-size="13" font-weight="600" fill="#0a5660">Approve with TAAP</text>
   <rect x="1124" y="556" width="104" height="17" rx="8.5" fill="#fbe3e4" stroke="#bdbab0"/>

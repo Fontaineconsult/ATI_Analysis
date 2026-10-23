@@ -65,6 +65,18 @@ Graph status: `ingest_2026_10_17_acr_interpretation_sources.cypher` carries the 
     on or off an essential function.
   - When the remark does not name the feature, the barrier is unknown, not minor. GSA Critical
     and Major match our S3 and S2.
+- **The remarks qualification.** A finding in an ACR should read like a bug report. The
+  sources that set the fields: ITI's instruction that a remark on a "Partially Supports" or
+  "Does Not Support" row identify "the functions or features with issues" and "how they do
+  not fully support"; the GSA issue-level supplement's fields (severity, the page, screen,
+  component or workflow affected, the user group, the workaround); Massachusetts' check for
+  "the location of the violation" and for examples on "Supports" rows; MN.IT, "most VPATs
+  should look like a bug list"; Michigan's scoring of a Supports row with a remark above one
+  without; WebAIM, remarks "cannot be empty"; Evans, remarks "identify the function or feature
+  with issues"; McNeilly and Bahram, remarks that restate the criterion are a red flag. The
+  matrix reads this as a third qualification, raised when the remarks carry those fields and
+  lowered when they restate the criterion, generalise or leave the location out. Calibration,
+  not a rule.
 - **A quick validation step.**
   - Several sources use a three-to-five-minute spot check: keyboard, headings, alt text, forms,
     contrast and bypass blocks.

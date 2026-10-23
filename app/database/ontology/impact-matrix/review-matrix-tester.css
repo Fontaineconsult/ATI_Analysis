@@ -122,6 +122,7 @@ code { font: 0.9em var(--mono); }
   font-size: 0.95rem;
 }
 .step-status.quiet { background: transparent; border-left-color: var(--line-strong); color: var(--text-2); }
+.step-status.flag { background: var(--hold-bg); border-left-color: var(--hold-line); color: var(--hold-fg); margin-bottom: 10px; }
 
 /* ---- controls ---- */
 fieldset { border: 0; padding: 0; margin: 0 0 12px; min-width: 0; }
@@ -226,9 +227,11 @@ th { font-weight: 600; color: var(--text-2); font-size: 0.85rem; }
 .tone-deny { background: var(--deny-bg); color: var(--deny-fg); border-color: var(--deny-line); }
 .tone-hold { background: var(--hold-bg); color: var(--hold-fg); border-color: var(--hold-line); }
 
-.path { display: flex; flex-wrap: wrap; gap: 4px; list-style: none; margin: 12px 0 0; padding: 0; font-size: 0.8rem; }
-.path li { padding: 3px 9px; border-radius: 999px; border: 1px solid currentColor; opacity: 0.55; }
-.path li.done { opacity: 0.85; }
+.path { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 0; list-style: none; margin: 12px 0 0; padding: 0; font-size: 0.74rem; }
+.path li { position: relative; padding: 2px 7px; margin-right: 15px; border-radius: 999px; border: 1px solid currentColor; opacity: 0.55; white-space: nowrap; }
+.path li:not(:last-child)::after { content: "\2192"; position: absolute; right: -13px; top: 50%; transform: translateY(-50%); font-size: 0.8rem; opacity: 0.7; }
+.path li:last-child { margin-right: 0; }
+.path li.done { opacity: 1; color: var(--approve-fg); background: var(--approve-bg); border-color: var(--approve-line); }
 .path li[aria-current] { opacity: 1; font-weight: 600; background: var(--here-wash); }
 
 .chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0 0; }
