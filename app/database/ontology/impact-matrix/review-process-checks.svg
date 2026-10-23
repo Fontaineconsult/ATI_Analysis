@@ -27,9 +27,9 @@
   <rect x="495" y="940" width="270" height="60" rx="6" fill="#ddf1f3" stroke="#0a5660" stroke-width="1.6"/>
   <text x="630" y="958" text-anchor="middle" font-size="12" fill="#0a5660"><tspan x="630" dy="0" font-weight="600">Alternate access required</tspan><tspan x="630" dy="16" font-weight="400">S2 at medium or high; S3; standard</tspan><tspan x="630" dy="16" font-weight="400">provisional below the floor. Figure 2</tspan></text>
   <rect x="495" y="212" width="270" height="56" rx="6" fill="#ecebf7" stroke="#bdbab0" stroke-width="1"/>
-  <text x="630" y="236" text-anchor="middle" font-size="12" fill="#3b3270"><tspan x="630" dy="0" font-weight="600">Hold 1, for accessibility evidence</tspan><tspan x="630" dy="16" font-weight="400">Held by the requesting unit</tspan></text>
+  <text x="630" y="236" text-anchor="middle" font-size="12" fill="#3b3270"><tspan x="630" dy="0" font-weight="600">Hold 1, for accessibility evidence</tspan><tspan x="630" dy="16" font-weight="400">Held by the requester</tspan></text>
   <rect x="495" y="407" width="270" height="56" rx="6" fill="#ecebf7" stroke="#bdbab0" stroke-width="1"/>
-  <text x="630" y="431" text-anchor="middle" font-size="12" fill="#3b3270"><tspan x="630" dy="0" font-weight="600">Hold 2, for exposure answers</tspan><tspan x="630" dy="16" font-weight="400">Held by the requesting unit</tspan></text>
+  <text x="630" y="431" text-anchor="middle" font-size="12" fill="#3b3270"><tspan x="630" dy="0" font-weight="600">Hold 2, for exposure answers</tspan><tspan x="630" dy="16" font-weight="400">Held by the requester</tspan></text>
   <rect x="495" y="507" width="270" height="56" rx="6" fill="#ecebf7" stroke="#bdbab0" stroke-width="1"/>
   <text x="630" y="531" text-anchor="middle" font-size="12" fill="#3b3270"><tspan x="630" dy="0" font-weight="600">Hold 3, for stronger evidence</tspan><tspan x="630" dy="16" font-weight="400">Held by the ATI review team</tspan></text>
   <polygon points="630,595 780,645 630,695 480,645" fill="#fdf7e3" stroke="#bdbab0"/>

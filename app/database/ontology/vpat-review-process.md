@@ -34,7 +34,9 @@ The CSU Accessible Procurement Process names four. This document concerns the se
 - **Purchase Requester** identifies requirements, researches the market, requests the ACR
   from the vendor, and completes the IT purchase review form.
 - **ATI Reviewer** reviews the documentation, determines impact, decides review tasks,
-  approves or denies, obtains the vendor roadmap, and writes the TAAP.
+  approves or denies, obtains the vendor roadmap, and drafts the TAAP with the requester.
+  TAAP authoring is collaborative between the SFBRN Procurement team and the requester's
+  team.
 - **Buyer** negotiates accessibility terms into the PO or contract and files the
   documentation with it.
 - **Administrative Support Staff** completes and submits the requisition.
@@ -93,7 +95,7 @@ decide whether SFBRN states one standard or records three. *Raised 2026-09-23. U
 4. Screen the ACR: the six heading checks, a conformance-term scan, and the critical criteria.
 5. Set review depth from impact and from what the screen found.
 6. Review to that depth.
-7. Decide the outcome, and write the TAAP where one is required.
+7. Decide the outcome, and draft the TAAP with the requester where one is required.
 
 **OPEN 3 - Vendor-maturity gate.** Decide whether a vendor-maturity assessment runs before
 step 4, so that a vendor who cannot build or maintain accessible products is caught before a

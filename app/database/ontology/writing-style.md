@@ -212,11 +212,29 @@ Right: "CIC 47 tells faculty to build Canvas courses that meet WCAG."
 
 ## Sentences
 
-**Name who acts.** Passive voice hides the actor, and in this project the actor is
-usually the finding. "The course is remediated" leaves out the student assistant
-who does the remediation. "Responsibility has been assigned" leaves out whether
-anyone signed anything. Put the actor in the subject. Passive is right only when
-nobody knows who acted, or when the actor genuinely does not matter.
+**Name who acts.** Do not use the passive voice. Passive voice hides the actor, and in
+this project the actor is usually the finding. "The course is remediated" leaves out the
+student assistant who does the remediation. "Responsibility has been assigned" leaves out
+whether anyone signed anything. Put the actor in the subject, and put it first. When
+nobody knows who acted, say that in the active voice.
+
+Wrong: "The TAAP is reviewed annually."
+Right: "The ATI review team reviews the TAAP annually."
+
+Wrong: "The course was remediated before the term started."
+Right: "Someone remediated the course before the term started, and the record does not
+say who."
+
+**Say who the actor is, not what box they sit in.** Use concrete human nouns. Team,
+person, analyst, manager, requester, dean. Organizational placeholders such as unit,
+entity, party, stakeholder and function name a slot, and the reader fills it. Where the
+record names a role, use the role. Where it names a person, use the person.
+
+Wrong: "The requesting unit obtains the vendor's documentation."
+Right: "The requester asks the supplier for the documentation."
+
+Wrong: "The responsible entity signs the plan."
+Right: "The department manager signs the plan."
 
 **Name the relation.** Gesture verbs (stands as, sits under, informs, reflects,
 represents, carries) leave the link between two things for the reader to guess.
@@ -270,6 +288,30 @@ missing" beats two sentences that leave the link implied.
 someone forgot to punctuate, and the reader can no longer tell which pairs matter.
 Join with "and" only when the second clause depends on the first. Otherwise use a
 full stop.
+
+**No ", and [verb] it" tail.** A sentence that states a condition and then hangs an
+action off it with ", and" buries the action and ends on a pronoun. Split it, or make the
+actor the subject of one sentence that carries both.
+
+Wrong: "The data is ready, and reviewing it reveals three gaps."
+Right: "The review of the data found three gaps."
+
+Wrong: "The user count is required, and the review holds until the requester supplies it."
+Right: "The review needs the user count and holds until the requester supplies the
+count."
+
+Wrong: "The plan is temporary, and it does not make the product compliant."
+Right: "The plan covers access for a set time and does not make the product compliant."
+
+**Keep sentences short.** One clause, two at most. A sentence that needs a third clause
+is two sentences.
+
+**No trailing filler.** Cut the clause after the claim that explains, softens or chats.
+"so the review can use it", "which is worth keeping in mind", "as you would expect" and
+"to be clear" add nothing the reader acts on. The sentence ends where the claim ends.
+
+Wrong: "Attach the report to the requisition, so we can move things along."
+Right: "Attach the report to the requisition."
 
 **State facts in the present tense, not framings.** "Attendance is not tracked per
 individual" beats "there is an opportunity to improve attendance tracking". "The

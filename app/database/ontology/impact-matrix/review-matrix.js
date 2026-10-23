@@ -181,7 +181,7 @@ const EVIDENCE = [
   { id: 'E0', rank: 0, holds: 'Nothing, or marketing statements', state: 'proposed' },
   // E1- is derived: from a report defect the analyst ticks (`acr.defects`), from a stale date,
   // or from a contradicting spot check. Older records that carry E1- as the base still evaluate.
-  { id: 'E1-', rank: 1, holds: 'Vendor ACR with a report defect that is not accepted, or contradicted by the ATI spot check', state: 'proposed', derived: true },
+  { id: 'E1-', rank: 1, holds: 'Vendor ACR with a report defect the analyst did not accept, or one the ATI spot check contradicted', state: 'proposed', derived: true },
   { id: 'E1', rank: 2, holds: 'Clean vendor ACR not yet taken at face value, because its remarks fall short of a bug report or it is both more than a year old and by the vendor\'s own staff', record: 'Vendor ACR', state: 'proposed' },
   { id: 'E1+', rank: 3, holds: 'Clean vendor ACR taken at face value, because its remarks read like a bug report and it is not both more than a year old and by the vendor\'s own staff', state: 'proposed', derived: true },
   { id: 'E2a', rank: 4, holds: 'Live vendor demonstration of essential functions with assistive technology', state: 'agreed' },
@@ -250,8 +250,8 @@ const ACR_QUALIFICATIONS = {
   // Below the floor the remarks lower, and the remarks checks open.
   remarks: {
     raised: 'The remarks read like a bug report. Each "Partially Supports" and "Does Not Support" row names the page, screen, component or workflow affected, how it falls short and who is affected, and the "Supports" rows on complex criteria give an example or the method',
-    named: 'The remarks name the feature or function with issues, but not where it is, how it falls short or who is affected. The ACR is not taken at face value, and the spot check is next',
-    lowered: 'The remarks are blank, restate the criterion, repeat the same text across rows or hedge with "some", "most" or "generally", so a barrier cannot be placed on an essential function',
+    named: 'The remarks name the feature or function with issues, but not where it is, how it falls short or who is affected. The analyst does not take the ACR at face value and runs the spot check next',
+    lowered: 'The remarks are blank, restate the criterion, repeat the same text across rows or hedge with "some", "most" or "generally", so the analyst cannot place a barrier on an essential function',
   },
   // The spot check applies to an ACR with no report defect, or one the analyst accepted. It
   // cannot cure a report defect on its own.
@@ -270,7 +270,7 @@ const ACR_QUALIFICATIONS = {
  */
 const RAISE = {
   spot_check: { label: 'the analyst\'s spot check',
-    text: 'The analyst exercises the essential functions with a screen reader and the keyboard. If the spot check agrees with the ACR, the evidence is E3a and the review proceeds. If it finds a barrier the ACR denies, the barrier is recorded as a finding, and the ATI coordinator\'s full manual review or a vendor demonstration re-rates the product.' },
+    text: 'The analyst exercises the essential functions with a screen reader and the keyboard. If the spot check agrees with the ACR, the evidence is E3a and the review proceeds. If it finds a barrier the ACR denies, the analyst records the barrier as a finding, and the ATI coordinator\'s full manual review or a vendor demonstration re-rates the product.' },
   review_contradicted: { label: 'a full manual review or a demonstration',
     text: 'The spot check found a barrier the ACR reports as Supports, so the ACR\'s Supports rows are no longer trusted and a second spot check cannot restore them. The ATI coordinator\'s full manual review, or a vendor demonstration of the essential functions with assistive technology, re-rates the product.' },
   review_failed_check: { label: 'a corrected or accepted ACR, a full manual review or a demonstration',
@@ -374,14 +374,16 @@ const OUTCOMES = {
 const HOLDERS = {
   president_or_designee: { label: 'the president or a designee with budget authority',
     holds: 'Makes the written determination. The remedy step resumes on receipt' },
-  request_evidence: { label: 'the requesting unit',
+  request_evidence: { label: 'the requester',
     holds: 'Obtains the vendor evidence. The review resumes on receipt' },
-  request_information: { label: 'the requesting unit',
+  request_information: { label: 'the requester',
     holds: 'Answers the open exposure questions. The review resumes on receipt' },
   manual_review: { label: 'the ATI review team',
-    holds: 'Raises the evidence, by the analyst\'s spot check of a clean ACR not yet taken at face value, with the requesting unit and the vendor through a demonstration, or by the ATI coordinator\'s full manual review, then re-rates Severity. The review resumes at the Severity step, or proceeds under the fallback when the evidence cannot be raised' },
-  request_taap: { label: 'the requesting unit',
-    holds: 'Writes the TAAP to the TAAP standard. The remedy step resumes on receipt' },
+    holds: 'Raises the evidence, by the analyst\'s spot check of a clean ACR not yet taken at face value, with the requester and the vendor through a demonstration, or by the ATI coordinator\'s full manual review, then re-rates Severity. The review resumes at the Severity step, or proceeds under the fallback when the evidence cannot be raised' },
+  // TAAP authoring is collaborative. The SFBRN Procurement team drafts the plan with the
+  // requester, because the requester's team provides the support the plan promises.
+  request_taap: { label: 'the SFBRN Procurement team with the requester',
+    holds: 'Drafts the TAAP together to the TAAP standard. The remedy step resumes when the signed plan is on file' },
 };
 
 /**
@@ -397,13 +399,13 @@ const HOLDS = [
   { id: 'answers_unknown', waits: 'exposure answers', holder: 'request_information', state: 'proposed',
     text: 'The user count is missing' },
   { id: 'veracity_below_floor', waits: 'stronger evidence', holder: 'manual_review', state: 'proposed',
-    text: 'The evidence is below the Veracity floor for the exposure level, the floor binds, because the exposure is high or the risk grade rests on the vendor\'s Supports rows, and the evidence can still be raised' },
+    text: 'The evidence is below the Veracity floor for the exposure level, the floor binds, because the exposure is high or the risk grade rests on the vendor\'s Supports rows, and the ATI review team can still raise the evidence' },
   { id: 'taap_needed', waits: 'a TAAP', holder: 'request_taap', state: 'proposed',
     text: 'The risk grade is Alternate access required and no TAAP is on file' },
   // The exception is a defence against one required action, here the TAAP standard. It is
   // claimed only where the plan falls below the standard, never at intake.
   { id: 'exception_claimed', waits: 'a written determination', holder: 'president_or_designee', state: 'required',
-    text: 'The TAAP falls below the standard, and the requesting unit claims that equally effective access would be an undue burden or a fundamental alteration (28 CFR 35.164, 35.204)',
+    text: 'The TAAP falls below the standard, and the requester claims that equally effective access would be an undue burden or a fundamental alteration (28 CFR 35.164, 35.204)',
     grounds: ['bounded-duty-burden-limits'] },
 ];
 
@@ -732,17 +734,17 @@ const WARNING_LEVELS = {
   low: {
     label: 'Low',
     means: 'A small or optional audience, and a plan that covers equally effective access. The residual risk is the ordinary risk of a temporary plan.',
-    action: 'The TAAP is reviewed annually.',
+    action: 'The ATI review team reviews the TAAP annually.',
   },
   elevated: {
     label: 'Elevated',
     means: 'Either the audience is large or required, or the plan leaves named requirements uncovered. The department carries support for those requirements until the vendor\'s roadmap closes the barriers.',
-    action: 'The Dean or Division Vice President signs knowing what the plan leaves to staff support and to the vendor\'s roadmap. The TAAP is reviewed at the first roadmap milestone or at 12 months, whichever comes first.',
+    action: 'The Dean or Division Vice President signs knowing what the plan leaves to staff support and to the vendor\'s roadmap. The ATI review team reviews the TAAP at the first roadmap milestone or at 12 months, whichever comes first.',
   },
   high: {
     label: 'High',
     means: 'A large or required audience depends on staff support for access the plan does not provide, or on a full plan at the highest exposure. The Title II duty continues and rests on the department\'s capacity and the vendor\'s remediation.',
-    action: 'Weigh the more accessible product before buying. The Dean or Division Vice President acknowledges the residual risk in the TAAP. The TAAP is reviewed at the first roadmap milestone.',
+    action: 'Weigh the more accessible product before buying. The Dean or Division Vice President acknowledges the residual risk in the TAAP. The ATI review team reviews the TAAP at the first roadmap milestone.',
   },
   state: 'proposed', grounds: ['residual-risk-stated-and-owned', 'time-bound-alternative-when-not-conformant'],
 };
@@ -787,7 +789,7 @@ const WARNING_LEVELS = {
  *           access; the review then proceeds under the fallback
  * @property {boolean} [moreAccessibleProductExists]
  * @property {string} [taap.exception]  'none', 'claimed' or 'determined': an undue burden or fundamental
- *           alteration claim by the requesting unit, or the written determination on file
+ *           alteration claim by the requester, or the written determination on file
  * @property {{exists: boolean, meets: Object<string, boolean>}} [taap]  the TAAP section;
  *           `meets` is keyed by TAAP_REQUIREMENTS id
  *
@@ -1092,7 +1094,7 @@ const NEEDS = {
   best_meets_record: 'A best-meets record with market research is on file (Section 508 E202.7).',
   exception_record: 'A written determination by the president or a designee is on file that equally effective access would be an undue burden or a fundamental alteration (28 CFR 35.164, 35.204), listing the support that remains for each missed requirement.',
   validation_at_review: 'The first TAAP review re-rates Severity on evidence at the Veracity floor, which the vendor demonstration under the roadmap terms supplies.',
-  accommodation_scope: 'The approval is limited to the accommodation it serves. Use of the product beyond the named person returns it to review.',
+  accommodation_scope: 'The approval covers the accommodation it serves only. Use of the product beyond the named person returns it to review.',
 };
 const plural = (n, one, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
 /**
@@ -1111,7 +1113,7 @@ function warningText(d, review) {
   const fns = [...new Set(worst.map((f) => f.essentialFunction).filter(Boolean))];
   const what = fns.length ? list(fns.map((f) => `"${f}"`)) : 'the essential functions';
   const audience = `${e.level} exposure${d.breadth.level ? `, with barriers that reach ${d.breadth.level === 2 ? 'widely' : 'several functions or groups'}` : ''}`;
-  if (d.fallback) lines.push(`The barriers are unproven and treated as blocking, so ${who} are taken to depend on the plan for ${what}, at ${audience}.`);
+  if (d.fallback) lines.push(`The review treats the unproven barriers as blocking, so it takes ${who} to depend on the plan for ${what}, at ${audience}.`);
   else if (sev === 'S3') lines.push(`${cap(who)} cannot perform ${what} without the plan's support, at ${audience}.`);
   else lines.push(`${cap(who)} can perform ${what} only with clearly more time or effort, so the plan carries equal access, at ${audience}.`);
   if (std.gap) lines.push(`Until the vendor's roadmap closes the barriers, the department carries the support for the ${plural(std.gap, 'requirement')} the plan leaves uncovered, and the duty of equally effective access continues.`);
@@ -1172,7 +1174,7 @@ function explain(review, d = evaluate(review), ctx = {}) {
   const ev = EVIDENCE.find((x) => x.id === d.evidence);
   const headline = d.hold ? HEADLINE[d.hold] : OUTCOMES[d.outcome].label;
   const sevLabel = d.severity.replace(' (', ', ').replace(')', '');   // "S3, provisional"
-  const grade = d.bypass ? 'Accommodation purchase | The four factors are not rated'
+  const grade = d.bypass ? 'Accommodation purchase | The review rates none of the four factors'
     : `Exposure ${e.unknownsMatter ? 'Unknown' : cap(e.level)} | ${sev === 'S?' ? 'Barriers unknown' : `${cap(SEVERITY_WORD[sev])} (${sevLabel})`} | Evidence ${ev.id}`;
   const finish = (how, why, next) => {
     const sections = [
@@ -1215,8 +1217,8 @@ function explain(review, d = evaluate(review), ctx = {}) {
     return finish(
       [`${product} is ${lower(b.fact)}.`,
         'The interactive process between that person and the campus settled what the person needs, and this purchase carries it out.',
-        'The review of the product for a general audience does not apply, so Exposure, Severity, Breadth and Veracity are not rated.'],
-      ['The purchase carries out an accommodation the campus has agreed to, so it is approved.'],
+        'The review of the product for a general audience does not apply, so the review rates none of Exposure, Severity, Breadth and Veracity.'],
+      ['The purchase carries out an accommodation the campus has agreed to, so the review approves it.'],
       [NEEDS.accommodation_scope,
         'The contract includes the CSU accessibility terms below.',
         ...CONTRACT_TERMS.filter((x) => d.contractTerms.includes(x.id)).map((t) => `${cap(t.text)}.`)]);
@@ -1238,8 +1240,8 @@ function explain(review, d = evaluate(review), ctx = {}) {
   const acc = d.accumulation;
   if (sev === 'S?') how.push('No accessibility evidence exists yet, so the barriers are unknown.');
   else if (d.fallback) how.push(d.breadth.assumed
-    ? 'No accessibility evidence can be obtained, so the review treats the product as S3 with wide barrier reach.'
-    : `The evidence cannot be raised to the Veracity floor for this exposure, so the review treats the product as S3, ${review.findings.length ? 'with the barriers found as a minimum' : 'because the ACR claim of no barriers is unverified'}.`);
+    ? 'The ATI review team cannot obtain accessibility evidence, so the review treats the product as S3 with wide barrier reach.'
+    : `The ATI review team cannot raise the evidence to the Veracity floor for this exposure, so the review treats the product as S3, ${review.findings.length ? 'with the barriers found as a minimum' : 'because no one has verified the ACR\'s claim of no barriers'}.`);
   else if (!review.findings.length) how.push('No barriers appear on any user path.');
   else if (d.severity.includes('accumulated')) {
     how.push('No single barrier stops a user, but the S2 barriers, which make essential functions clearly harder to perform, add up to a critical barrier (S3).');
@@ -1273,36 +1275,36 @@ function explain(review, d = evaluate(review), ctx = {}) {
       why.push('Please ask the vendor for a current Accessibility Conformance Report on the WCAG edition, or arrange a live demonstration of the essential functions with assistive technology.');
       break;
     case 'answers_unknown':
-      why.push('The user count sets the reach of the product, which sets the depth of review, and the review is not rated without it. The other answers are optional, and a blank counts as high.');
+      why.push('The user count sets the reach of the product, which sets the depth of review, so the review needs it before it rates anything. The other answers are optional, and a blank counts as high.');
       why.push(`Please tell us ${list(unknown.map((k) => ASK[k]))}.`);
       break;
     case 'veracity_below_floor': {
       why.push(`At ${e.level} exposure, ${sev === 'S0' ? 'the vendor\'s claim of no barriers' : `a finding of ${SEVERITY_WORD[sev]} (${sev})`} needs ${evidenceName(floor)} before the review proceeds, because a vendor's report is a claim about its own product.`);
       why.push(`The evidence on file is ${evidencePhrase(ev.id, d.veracity.acr)} (${ev.id}).`);
       why.push(d.veracity.raise.text);
-      why.push('If the evidence cannot be raised, the review treats the product as having a critical barrier (S3) and requires an alternate access plan (TAAP).');
+      why.push('If the ATI review team cannot raise the evidence, the review treats the product as having a critical barrier (S3) and requires an alternate access plan (TAAP).');
       break;
     }
     case 'taap_needed':
     case 'exception_claimed':
     default:
       if (d.outcome === 'approve' && sev === 'S0') {
-        why.push('No barriers appear on any user path, so the product is approved.');
+        why.push('No barriers appear on any user path, so the review approves the product.');
       } else if (d.outcome === 'approve' && sev === 'S1') {
         why.push('The barriers found make some essential functions harder to perform without preventing them.');
-        why.push('The CSU TAAP template requires an alternate access plan (TAAP) only for barriers that prevent essential functions. The product is approved without a TAAP.');
+        why.push('The CSU TAAP template requires an alternate access plan (TAAP) only for barriers that prevent essential functions. The review approves the product without a TAAP.');
       } else if (d.outcome === 'approve') {
         why.push('The barriers found make some essential functions clearly harder to perform without preventing them.');
-        why.push('At low exposure, the product is approved without an alternate access plan (TAAP).');
+        why.push('At low exposure, the review approves the product without an alternate access plan (TAAP).');
         why.push('The product still fails the standard, and the law excuses no barrier this serious.');
       } else if (pending || referred || d.outcome === 'approve_with_taap' || d.outcome === 'deny') {
         const std = d.taapStandard;
         const approved = d.outcome === 'approve_with_taap';
         if (sev === 'S2') {
           why.push('The barriers found make some essential functions clearly harder to perform without preventing them.');
-          why.push(`At ${e.level} exposure, the audience is too large for a minimal impact on access, so the product ${approved ? 'is approved with' : 'needs'} an alternate access plan (TAAP).`);
+          why.push(`At ${e.level} exposure, the audience is too large for a minimal impact on access, so ${approved ? 'the review approves the product with' : 'the product needs'} an alternate access plan (TAAP).`);
         } else {
-          why.push(`${d.severity.includes('accumulated') ? 'Together, the barriers stop' : 'A barrier stops'} some users from performing an essential function, so the product ${approved ? 'is approved only with' : 'cannot be approved without'} an alternate access plan (TAAP).`);
+          why.push(`${d.severity.includes('accumulated') ? 'Together, the barriers stop' : 'A barrier stops'} some users from performing an essential function, so the review ${approved ? 'approves the product only with' : 'cannot approve the product without'} an alternate access plan (TAAP).`);
         }
         const unmet = TAAP_REQUIREMENTS.filter((r) => d.taapUnmet.includes(r.id));
         const need = std ? (std.required === 6 ? 'all six' : `at least ${std.required} of the six`) : '';
@@ -1317,14 +1319,14 @@ function explain(review, d = evaluate(review), ctx = {}) {
           why.push(`For this product, ${scale}, a TAAP must meet ${need} CSU requirements for equally effective access.`);
           if (d.fallback) {
             why.push(d.breadth.assumed
-              ? 'No accessibility evidence can be obtained, so the review assumes wide barrier reach and the strictest standard.'
-              : 'The evidence cannot be raised to the Veracity floor, so the barriers found are a minimum and the standard may rise when evidence arrives.');
+              ? 'The ATI review team cannot obtain accessibility evidence, so the review assumes wide barrier reach and the strictest standard.'
+              : 'The ATI review team cannot raise the evidence to the Veracity floor, so the barriers found are a minimum and the standard may rise when evidence arrives.');
           } else if (std.provisional) {
             why.push('The vendor\'s claim of no barrier elsewhere is unconfirmed at this exposure, so the barriers found are a minimum and the standard may rise when evidence arrives.');
           }
           if (!d.taapOnFile) {
             why.push('No TAAP is on file yet.');
-            why.push('A TAAP below that standard leads to a denial, unless the president or a designee determines in writing that equally effective access would be an undue burden or a fundamental alteration. A TAAP that meets none of the six requirements is denied even then.');
+            why.push('A TAAP below that standard leads to a denial, unless the president or a designee determines in writing that equally effective access would be an undue burden or a fundamental alteration. The review denies a TAAP that meets none of the six requirements even then.');
           } else {
             why.push(std.shortfall
               ? `The TAAP on file meets ${std.met} of the six, ${plural(std.shortfall, 'requirement')} short of the standard.`
@@ -1332,19 +1334,19 @@ function explain(review, d = evaluate(review), ctx = {}) {
             if (unmet.length) why.push(`The plan falls short where ${list(unmet.map((r) => r.failed))}.`);
             if (d.denyReason === 'taap_below_standard') {
               why.push('Signer acceptance of a below-standard plan is not available at any exposure.');
-              why.push('The requesting unit may ask the president or a designee for a written determination that equally effective access would be an undue burden or a fundamental alteration (28 CFR 35.164 and 35.204). With that determination on file, the plan can be approved as a Non-Equal Alternative.');
+              why.push('The requester may ask the president or a designee for a written determination that equally effective access would be an undue burden or a fundamental alteration (28 CFR 35.164 and 35.204). With that determination on file, the review can approve the plan as a Non-Equal Alternative.');
             } else if (referred) {
-              why.push('Signer acceptance of a below-standard plan is not available, and the requesting unit claims that equally effective access would be an undue burden or a fundamental alteration.');
+              why.push('Signer acceptance of a below-standard plan is not available, and the requester claims that equally effective access would be an undue burden or a fundamental alteration.');
               why.push('That determination belongs to the president or a designee, in writing, after a review of all resources available to the program (28 CFR 35.164 and 35.204). High cost alone does not establish an undue burden.');
             } else if (d.exception) {
-              why.push('A written determination by the president or a designee is on file that equally effective access would be an undue burden or a fundamental alteration, so the plan is approved as a Non-Equal Alternative under 28 CFR 35.204.');
+              why.push('A written determination by the president or a designee is on file that equally effective access would be an undue burden or a fundamental alteration, so the review approves the plan as a Non-Equal Alternative under 28 CFR 35.204.');
               why.push('The university must still provide access to the maximum extent possible, through the named department support for each missed requirement.');
             } else if (unmet.length) {
               why.push('The plan is therefore a Non-Equal Alternative, with named department support required for each missed requirement.');
             }
           }
           if (d.outcome !== 'deny') why.push(warningText(d, review));
-          if (pending) why.push('The review holds with the requesting unit until a TAAP is on file.');
+          if (pending) why.push('The review holds until the SFBRN Procurement team and the requester have a signed TAAP on file.');
           if (referred) why.push('The review holds with the president or a designee until the written determination is on file.');
         }
         if (approved) why.push('The plan is temporary. It manages access during vendor remediation without making the product compliant.');
@@ -1362,23 +1364,23 @@ function explain(review, d = evaluate(review), ctx = {}) {
   const next = [];
   const std = d.taapStandard;
   if (pending && sev === 'S3' && std.warning !== 'low') {
-    next.push('First, check whether a more accessible product meets the same need. If one does, the request is denied without a TAAP, because the CSU buys the most accessible product that meets the need.');
+    next.push('First, check whether a more accessible product meets the same need. If one does, the review denies the request without a TAAP, because the CSU buys the most accessible product that meets the need.');
   }
   if (pending) {
-    next.push(`${sev === 'S3' && std.warning !== 'low' ? 'If none does, complete' : 'Next, complete'} a TAAP on the CSU TAAP template. It must meet ${std.required === 6 ? 'all six requirements below' : `at least ${std.required} of the six requirements below`}.`);
+    next.push(`${sev === 'S3' && std.warning !== 'low' ? 'If none does, the' : 'Next, the'} SFBRN Procurement team works with the requester to draft a TAAP on the CSU TAAP template. It must meet ${std.required === 6 ? 'all six requirements below' : `at least ${std.required} of the six requirements below`}.`);
     for (const r of TAAP_REQUIREMENTS) next.push(`${r.text}.`);
   }
   if (pending || d.outcome === 'approve_with_taap') {
     next.push('The TAAP names the responsible department, its support offering and the user contacts for problem reports. A problem report starts that support, with no accommodation request needed.');
     if (std && std.required < 6) next.push('For each missed requirement, the plan names the covering support, its provider and its response time.');
-    next.push(`The TAAP includes a product-specific accessibility statement, written by the campus, with ${list(TAAP_STATEMENT.includes)}. The statement is posted ${TAAP_STATEMENT.postedAt}. It is separate from the vendor's own accessibility statement.`);
+    next.push(`The TAAP includes a product-specific accessibility statement, written by the campus, with ${list(TAAP_STATEMENT.includes)}. The campus posts the statement ${TAAP_STATEMENT.postedAt}. It is separate from the vendor's own accessibility statement.`);
   }
   if (referred) next.push('The review resumes on receipt of the written determination. A determination that equally effective access would be an undue burden or a fundamental alteration lists the support that remains for each missed requirement.');
   if ((!d.hold || pending) && d.outcome !== 'deny') {
     for (const c of S2_CAVEATS.filter((x) => d.caveats.includes(x.id))) next.push(cap(c.text));
     for (const r of d.requires) next.push(r === 'validation_at_review' ? NEEDS[r] : `${pending ? 'The TAAP must also show that' : 'The approval requires that'} ${lower(NEEDS[r] ?? r)}`);
     if (d.roadmap) next.push('The vendor completes the CSU Vendor Accessibility Roadmap, with status, remediation timeline and workarounds for each barrier found.');
-    if (d.approver) next.push(`${pending ? 'The finished TAAP is signed' : 'The TAAP is signed'} by ${d.approver}.`);
+    if (d.approver) next.push(`${cap(d.approver)} sign the ${pending ? 'finished ' : ''}TAAP.`);
     if (d.taapReview) {
       next.push('The TAAP runs one year, or until contract renewal if renewal comes first.');
       const multiYear = d.taapReview.contract === 'medium' || d.taapReview.contract === 'high';
@@ -1414,11 +1416,11 @@ function rubricNotes() {
     `The warning level derives from W = P + gap, the gap being the requirements short of a full TAAP, elevated from ${T.warning.elevated} and high from ${T.warning.high}. A full TAAP at high Exposure still carries a warning, from pressure alone. Each level carries a fixed meaning and action, stated in the Warning level definition.`,
     `No TAAP on file maps to hold ${holdNo('taap_needed')}, on hold for a TAAP, which carries the TAAP standard and the warning.`,
     `Below the standard, a written undue burden or fundamental alteration determination maps to Approve with TAAP as a Non-Equal Alternative, and a claim maps to hold ${holdNo('exception_claimed')}, on hold for a written determination.`,
-    'A TAAP below the minimum is denied at any severity and pressure, with the shortfall stated in the denial, and a plan that meets none of the six is denied even under the exception. A plan at the minimum is approved under a warning; where the minimum is all six, only a full TAAP is at it.',
+    'The review denies a TAAP below the minimum at any severity and pressure, states the shortfall in the denial, and denies a plan that meets none of the six even under the exception. It approves a plan at the minimum under a warning; where the minimum is all six, only a full TAAP is at it.',
     `S2 escalates to S3 at ${acc.stack} S2 barriers stacked on one function for one user group, or at high Exposure with S2 barriers across ${acc.spreadPairs} function and group pairs.`,
     'At S3, a more accessible product that meets the same need maps to Deny.',
     `The Veracity floor column binds every risk grade at high Exposure, and at low and medium a No alternate access required grade, which rests on the vendor's Supports rows. At medium and high the floor is a clean ACR taken at face value (E1+), so most ACRs clear it. Evidence below the floor maps to hold ${holdNo('veracity_below_floor')}, where the ATI review team raises the evidence and re-rates Severity. At low and medium an Alternate access required grade rests on the barriers found and proceeds at any evidence level, with the TAAP standard provisional below the floor.`,
-    'When the evidence cannot be raised, the review proceeds at S3 (provisional) with the barriers found as a minimum, and Breadth 2 with no evidence at all.',
+    'When the ATI review team cannot raise the evidence, the review proceeds at S3 (provisional) with the barriers found as a minimum, and Breadth 2 with no evidence at all.',
   ];
 }
 

@@ -23,6 +23,11 @@
   --taap-bg: #fdf1cf;    --taap-fg: #6b4a00;    --taap-line: #e5c466;
   --deny-bg: #fbe1de;    --deny-fg: #8a1f17;    --deny-line: #e8a39c;
   --hold-bg: #e0e9f7;    --hold-fg: #243f73;    --hold-line: #9fb6e0;
+  /* Two notification tones. Warn carries the warning level, the residual risk a signer
+     accepts. Attention marks an input the review is missing, one that is already shaping
+     the result (no WCAG failure recorded, no user count, an ACR not yet rated). */
+  --warn-bg: #fde8d6;    --warn-fg: #7a3a00;    --warn-line: #e89a5a;
+  --attention-bg: #ece7f8; --attention-fg: #43307f; --attention-line: #a894dc;
   --here-wash: rgba(255, 255, 255, 0.6);
 }
 
@@ -45,6 +50,8 @@
     --taap-bg: #4a3a10;    --taap-fg: #f1d98a;    --taap-line: #8a6f1e;
     --deny-bg: #4d2320;    --deny-fg: #f4b5ae;    --deny-line: #8f3d35;
     --hold-bg: #1f2f4d;    --hold-fg: #b9cbf0;    --hold-line: #3f5a8f;
+    --warn-bg: #4a2d14;    --warn-fg: #f5c89b;    --warn-line: #9a5f2a;
+    --attention-bg: #2d2650; --attention-fg: #d2c6f3; --attention-line: #6c58ad;
     --here-wash: rgba(0, 0, 0, 0.25);
   }
 }
@@ -67,7 +74,7 @@ code { font: 0.9em var(--mono); }
 .skip:focus { left: 16px; z-index: 20; background: var(--surface); color: var(--text); padding: 8px 12px; border-radius: 6px; }
 
 /* ---- page frame ---- */
-.page-header, .tabs, .workbench, .definitions, .page-footer { max-width: 1400px; margin: 0 auto; padding-left: 24px; padding-right: 24px; }
+.page-header, .tabs, .workbench, .definitions { max-width: 1400px; margin: 0 auto; padding-left: 24px; padding-right: 24px; }
 
 /* ---- the page tabs ---- */
 .tabs { display: flex; gap: 4px; margin-bottom: 16px; }
@@ -113,6 +120,38 @@ code { font: 0.9em var(--mono); }
 .step-title h2 { font-size: 1.1rem; margin: 0; }
 .step-title .def-link { margin-left: auto; font-size: 0.85rem; }
 .help { color: var(--text-2); font-size: 0.9rem; margin: 4px 0 8px; max-width: 68ch; }
+/* A help block that fills its parent, one short paragraph per idea. */
+.help.wide { max-width: none; margin: 4px 0 12px; }
+.help.wide p { margin: 0 0 10px; max-width: none; line-height: 1.5; }
+.help.wide p:last-child { margin-bottom: 0; }
+
+/* An explanation. It informs and asks for nothing, so it reads quieter than every status
+   note: a grey dotted rule instead of the solid brand bar, no tint behind it, and a small
+   circled "i" where a status note carries its tag. */
+.help.explain {
+  position: relative;
+  padding: 2px 0 2px 30px;
+  border-left: 2px dotted var(--line-strong);
+  color: var(--text-2);
+  line-height: 1.5;
+}
+.help.explain::before {
+  content: "i";
+  position: absolute;
+  left: 8px;
+  top: 3px;
+  width: 15px;
+  height: 15px;
+  border: 1px solid var(--line-strong);
+  border-radius: 50%;
+  font-family: Georgia, "Times New Roman", serif;
+  font-style: italic;
+  font-size: 0.72rem;
+  line-height: 14px;
+  text-align: center;
+  color: var(--line-strong);
+}
+.help.explain a { color: var(--brand-deep); }
 .step-status {
   margin: 10px 0 0;
   padding: 8px 10px;
@@ -122,11 +161,21 @@ code { font: 0.9em var(--mono); }
   font-size: 0.95rem;
 }
 .step-status.quiet { background: transparent; border-left-color: var(--line-strong); color: var(--text-2); }
-.step-status.flag { background: var(--hold-bg); border-left-color: var(--hold-line); color: var(--hold-fg); margin-bottom: 10px; }
+/* The warning level: what residual risk the purchaser accepts. */
+.step-status.warn { background: var(--warn-bg); border-left-color: var(--warn-line); color: var(--warn-fg); }
+.step-status.warn strong { color: inherit; }
+/* An input the review is missing and is already grading without. */
+.step-status.attention { background: var(--attention-bg); border-left: 4px solid var(--attention-line); color: var(--attention-fg); margin-bottom: 10px; }
+.step-status.attention::before { content: "Needed"; display: inline-block; margin-right: 8px; padding: 0 6px; border-radius: 999px; border: 1px solid currentColor; font-size: 0.72rem; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; vertical-align: 1px; }
 
 /* ---- controls ---- */
 fieldset { border: 0; padding: 0; margin: 0 0 12px; min-width: 0; }
 legend, .label { font-weight: 600; padding: 0; margin: 0 0 4px; }
+/* A sub-heading inside a step. The h3 keeps the legend's size, so the heading outline gains a
+   level without the page gaining a type size. */
+.step h3.label { font-size: 1rem; font-weight: 600; margin: 0 0 4px; }
+legend h3.label { margin: 0; }
+.step h3.label label { cursor: pointer; }
 .field { display: grid; gap: 4px; margin: 0 0 10px; min-width: 0; }
 .field > span { font-weight: 600; }
 .field .hint { font-weight: 400; color: var(--text-2); font-size: 0.85rem; }
@@ -240,20 +289,50 @@ th { font-weight: 600; color: var(--text-2); font-size: 0.85rem; }
 .chips dd { margin: 0; font-weight: 600; font-variant-numeric: tabular-nums; }
 
 .panel { padding: 14px 18px; }
-details.panel > summary { font-weight: 600; cursor: pointer; }
-details.panel > summary::marker { color: var(--brand); }
-details.panel[open] > summary { margin-bottom: 8px; }
+.panel > h2 { font-size: 1rem; font-weight: 600; margin: 0 0 8px; }
 .panel h3 { font-size: 1rem; margin: 0 0 8px; }
+/* The result column's accordions. The heading stays a heading, open or closed, and holds the
+   button that shows the panel. The button carries the disclosure state in aria-expanded, and
+   its marker turns with it. */
+.acc-title { margin: 0; }
+.acc-btn {
+  display: flex; align-items: center; gap: 8px; width: 100%;
+  padding: 0; border: 0; background: none; text-align: left;
+  font: inherit; font-weight: 600; color: var(--text); cursor: pointer;
+}
+.acc-btn::before { content: ""; flex: none; width: 0; height: 0; border-left: 7px solid var(--brand); border-top: 5px solid transparent; border-bottom: 5px solid transparent; transition: transform 0.12s; }
+.acc-btn[aria-expanded="true"]::before { transform: rotate(90deg); }
+.acc-btn:hover { color: var(--brand-deep); }
+.panel.acc > .acc-title + .acc-body { margin-top: 8px; }
+.acc-inner { border-top: 1px solid var(--line); padding: 8px 0; }
+.acc-inner:last-of-type { padding-bottom: 0; }
+.acc-inner .acc-btn { font-size: 1rem; }
 .toolbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 0 0 8px; }
 .toolbar .status { color: var(--text-2); font-size: 0.9rem; }
 
-.reasoning details { border-top: 1px solid var(--line); padding: 8px 0; }
-.reasoning details:last-child { padding-bottom: 0; }
-.reasoning summary { cursor: pointer; font-weight: 600; }
-.reasoning summary::marker { color: var(--brand); }
 .reasoning p { margin: 6px 0; max-width: 68ch; }
-.reasoning ul { margin: 6px 0; padding: 0 0 0 20px; }
+.reasoning ul, .reasoning ol { margin: 6px 0; padding: 0 0 0 20px; }
 .reasoning li { margin: 0 0 4px; max-width: 68ch; }
+
+/* ---- the message picker and preview ---- */
+.email-pick { align-items: end; }
+.email-pick .field { margin: 0; }
+.email-pick select { flex: 1 1 18rem; min-width: 0; }
+.check { display: inline-flex; align-items: center; gap: 6px; min-height: 38px; color: var(--text); }
+.check input { width: 1rem; height: 1rem; margin: 0; accent-color: var(--brand); }
+.placeholders { color: var(--text-2); font-size: 0.9rem; margin: 0 0 8px; }
+.placeholders span { color: var(--text); font-family: ui-monospace, Consolas, monospace; font-size: 0.85rem; }
+.preview {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface-2);
+  padding: 10px 14px;
+  max-height: 60vh;
+  overflow: auto;
+}
+.preview .subject { padding-bottom: 6px; border-bottom: 1px solid var(--line); }
+.preview h3 { margin: 12px 0 4px; font-size: 0.95rem; font-weight: 600; }
+.preview blockquote { margin: 6px 0; padding: 0 0 0 12px; border-left: 3px solid var(--line-strong); color: var(--text-2); }
 .sources { color: var(--text-2); font-size: 0.9rem; margin: 10px 0 0; }
 
 .facts { display: grid; grid-template-columns: max-content 1fr; gap: 6px 14px; margin: 6px 0 12px; font-size: 0.95rem; }
@@ -321,11 +400,10 @@ pre { background: var(--surface-2); border: 1px solid var(--line); border-radius
 .defs-prose .def-entry { margin: 0 0 16px; padding: 2px 0 0 16px; border-left: 2px solid var(--line); }
 .defs-prose .def-entry > :last-child { margin-bottom: 0; }
 
-.page-footer { padding-bottom: 24px; color: var(--text-2); font-size: 0.9rem; }
 
 /* ---- narrow screens ---- */
 @media (max-width: 1000px) {
-  .page-header, .tabs, .workbench, .definitions, .page-footer { padding-left: 16px; padding-right: 16px; }
+  .page-header, .tabs, .workbench, .definitions { padding-left: 16px; padding-right: 16px; }
   .columns { grid-template-columns: 1fr; }
   .result { position: static; }
   .minibar {

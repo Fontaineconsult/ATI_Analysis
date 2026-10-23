@@ -22,9 +22,9 @@
   <polygon points="605,612 755,660 605,708 455,660" fill="#fdf7e3" stroke="#bdbab0"/>
   <text x="605" y="641.5" text-anchor="middle" font-size="11" fill="#1a1a1a"><tspan x="605" dy="0" font-weight="400">Vendor denials at the Veracity floor?</tspan><tspan x="605" dy="15" font-weight="400">any at low; E1+, taken at face value, at medium and high;</tspan><tspan x="605" dy="15" font-weight="400">binds every grade at high, and at low and medium</tspan><tspan x="605" dy="15" font-weight="400">a grade on the barriers found proceeds</tspan></text>
   <rect x="835" y="192" width="330" height="56" rx="6" fill="#ecebf7" stroke="#bdbab0" stroke-width="1"/>
-  <text x="1000" y="216" text-anchor="middle" font-size="12" fill="#3b3270"><tspan x="1000" dy="0" font-weight="600">Hold 1, for accessibility evidence</tspan><tspan x="1000" dy="16" font-weight="400">Held by the requesting unit</tspan></text>
+  <text x="1000" y="216" text-anchor="middle" font-size="12" fill="#3b3270"><tspan x="1000" dy="0" font-weight="600">Hold 1, for accessibility evidence</tspan><tspan x="1000" dy="16" font-weight="400">Held by the requester</tspan></text>
   <rect x="835" y="412" width="330" height="56" rx="6" fill="#ecebf7" stroke="#bdbab0" stroke-width="1"/>
-  <text x="1000" y="436" text-anchor="middle" font-size="12" fill="#3b3270"><tspan x="1000" dy="0" font-weight="600">Hold 2, for exposure answers</tspan><tspan x="1000" dy="16" font-weight="400">Held by the requesting unit</tspan></text>
+  <text x="1000" y="436" text-anchor="middle" font-size="12" fill="#3b3270"><tspan x="1000" dy="0" font-weight="600">Hold 2, for exposure answers</tspan><tspan x="1000" dy="16" font-weight="400">Held by the requester</tspan></text>
   <path d="M1000,248 L1000,330 L755,330" fill="none" stroke="#6b6b6b" stroke-width="1.4" marker-end="url(#head)"/>
   <text x="1008" y="256.5" text-anchor="start" font-size="11" fill="#444444"><tspan x="1008" dy="0" font-weight="400">no evidence can be</tspan><tspan x="1008" dy="15" font-weight="400">obtained: the fallback follows</tspan></text>
   <path d="M605,140 L605,172" fill="none" stroke="#6b6b6b" stroke-width="1.4" marker-end="url(#head)"/>
@@ -147,16 +147,16 @@
   <text x="867" y="2034" text-anchor="start" font-size="12" fill="#1a1a1a"><tspan x="867" dy="0" font-weight="400">Deny</tspan></text>
   <text x="40" y="2066" text-anchor="start" font-size="12" fill="#1a1a1a"><tspan x="40" dy="0" font-weight="600">Holds. Each is named by what the review waits for and released by a named party.</tspan></text>
   <text x="40" y="2086" text-anchor="start" font-size="12" fill="#1a1a1a"><tspan x="40" dy="0" font-weight="400">Hold 1, for accessibility evidence</tspan></text>
-  <text x="500" y="2086" text-anchor="start" font-size="12" fill="#1a1a1a"><tspan x="500" dy="0" font-weight="400">Held by the requesting unit</tspan></text>
+  <text x="500" y="2086" text-anchor="start" font-size="12" fill="#1a1a1a"><tspan x="500" dy="0" font-weight="400">Held by the requester</tspan></text>
   <text x="830" y="2086" text-anchor="start" font-size="12" fill="#1a1a1a"><tspan x="830" dy="0" font-weight="400">Resumes at the evidence check</tspan></text>
   <text x="40" y="2106" text-anchor="start" font-size="12" fill="#1a1a1a"><tspan x="40" dy="0" font-weight="400">Hold 2, for exposure answers</tspan></text>
-  <text x="500" y="2106" text-anchor="start" font-size="12" fill="#1a1a1a"><tspan x="500" dy="0" font-weight="400">Held by the requesting unit</tspan></text>
+  <text x="500" y="2106" text-anchor="start" font-size="12" fill="#1a1a1a"><tspan x="500" dy="0" font-weight="400">Held by the requester</tspan></text>
   <text x="830" y="2106" text-anchor="start" font-size="12" fill="#1a1a1a"><tspan x="830" dy="0" font-weight="400">Resumes at the Exposure check</tspan></text>
   <text x="40" y="2126" text-anchor="start" font-size="12" fill="#1a1a1a"><tspan x="40" dy="0" font-weight="400">Hold 3, for stronger evidence</tspan></text>
   <text x="500" y="2126" text-anchor="start" font-size="12" fill="#1a1a1a"><tspan x="500" dy="0" font-weight="400">Held by the ATI review team</tspan></text>
   <text x="830" y="2126" text-anchor="start" font-size="12" fill="#1a1a1a"><tspan x="830" dy="0" font-weight="400">Resumes at the Severity step, with the new findings</tspan></text>
   <text x="40" y="2146" text-anchor="start" font-size="12" fill="#1a1a1a"><tspan x="40" dy="0" font-weight="400">Hold 4, for a TAAP</tspan></text>
-  <text x="500" y="2146" text-anchor="start" font-size="12" fill="#1a1a1a"><tspan x="500" dy="0" font-weight="400">Held by the requesting unit</tspan></text>
+  <text x="500" y="2146" text-anchor="start" font-size="12" fill="#1a1a1a"><tspan x="500" dy="0" font-weight="400">Held by the SFBRN Procurement team with the requester</tspan></text>
   <text x="830" y="2146" text-anchor="start" font-size="12" fill="#1a1a1a"><tspan x="830" dy="0" font-weight="400">Resumes at the TAAP check</tspan></text>
   <text x="40" y="2166" text-anchor="start" font-size="12" fill="#1a1a1a"><tspan x="40" dy="0" font-weight="400">Hold 5, for a written determination</tspan></text>
   <text x="500" y="2166" text-anchor="start" font-size="12" fill="#1a1a1a"><tspan x="500" dy="0" font-weight="400">Held by the president or a designee with budget authority</tspan></text>
