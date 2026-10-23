@@ -29,7 +29,7 @@ II; other software and hardware: Section 508 through Gov Code 7405). Step 1 rate
 answers score points that lower it, and seven floor facts raise it; exposure sets review depth,
 evidence, approver and term, never the outcome alone. Step 2 rates **severity** S0 to S3
 by the 28 CFR 35.205 tests, per role and disability group, with an evidence ladder E0 to
-E3 and eight ACR report checks. Step 3 gives the outcome: approve, approve with barrier
+E3 and twelve ACR report checks. Step 3 gives the outcome: approve, approve with barrier
 record, TAAP, deny, or manual review (a routing rule for uncertainty). S3 is never
 approve. TAAP or deny turns on whether the plan serves everyone from day one and whether
 a more accessible product exists. Approver and expiry scale with exposure.

@@ -46,7 +46,7 @@ function reviewFor(s) {
     // The spec's E1- is a report defect the analyst ticked on a recorded vendor ACR.
     evidence: s.ev === 'E1-' ? 'E1' : s.ev,
     acr: { issued: ISSUED[s.age], defects: s.ev === 'E1-' ? ['no_methods'] : [], author: s.author === 'raised' ? 'outside' : 'vendor',
-      remarks: s.remarks === 'raised' ? 'bug_report' : 'criterion', spotCheck: s.spot, accepted: s.accepted === 'TRUE' },
+      remarks: s.remarks === 'raised' ? 'bug_report' : s.remarks === 'named' ? 'feature_named' : 'restated', spotCheck: s.spot, accepted: s.accepted === 'TRUE' },
     validation: s.validation,
     reviewDate: REVIEW_DATE,
     moreAccessibleProductExists: s.moreAcc === 'TRUE',

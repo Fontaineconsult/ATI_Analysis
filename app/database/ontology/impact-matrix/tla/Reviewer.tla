@@ -24,6 +24,7 @@ Recorded == {"E0", "E1-", "E1", "E2a", "E2b", "E3b"}
 Direct == {"E2a", "E2b", "E3b"}
 Ages == {"out", "unknown", "raised", "lowered"}
 Quals == {"raised", "lowered"}
+Remarks == {"raised", "named", "lowered"}
 Spots == {"none", "agrees", "contradicts"}
 Mets == {0, 2, 3, 4, 6}
 Exceptions == {"none", "claimed", "determined"}
@@ -131,7 +132,7 @@ Reveal(minSev) ==
 FreshAcr(e) ==
   /\ ev' = e
   /\ accepted' = FALSE
-  /\ IF e = "E1" THEN age' \in Ages /\ author' \in Quals /\ remarks' \in Quals /\ spot' = "none"
+  /\ IF e = "E1" THEN age' \in Ages /\ author' \in Quals /\ remarks' \in Remarks /\ spot' = "none"
      ELSE age' = "unknown" /\ author' = "lowered" /\ remarks' = "lowered" /\ spot' = "none"
 
 \* The vendor supplies an ACR where there was no evidence.
@@ -164,7 +165,7 @@ RecordSpotCheck(r) ==
 AcceptAcr ==
   /\ ev = "E1-" /\ ~accepted
   /\ accepted' = TRUE
-  /\ age' \in Ages /\ author' \in Quals /\ remarks' \in Quals /\ spot' = "none"
+  /\ age' \in Ages /\ author' \in Quals /\ remarks' \in Remarks /\ spot' = "none"
   /\ UNCHANGED <<level, answersOpen, findings, sev, breadth, ev, validation, taapOnFile, met, exception, moreAcc>>
   /\ Derive
 
@@ -225,7 +226,7 @@ Init ==
   /\ sev \in Sevs
   /\ breadth \in 0..2
   /\ ev \in Recorded
-  /\ age \in Ages /\ author \in Quals /\ remarks \in Quals /\ spot \in Spots /\ accepted \in BOOLEAN
+  /\ age \in Ages /\ author \in Quals /\ remarks \in Remarks /\ spot \in Spots /\ accepted \in BOOLEAN
   /\ validation \in {"open", "unavailable"}
   /\ taapOnFile \in BOOLEAN /\ met \in Mets /\ exception \in Exceptions /\ moreAcc \in BOOLEAN
   /\ Valid
@@ -252,7 +253,7 @@ Spec == Init /\ [][Next]_vars
 
 TypeOK ==
   /\ level \in Levels /\ answersOpen \in BOOLEAN /\ findings \in {"none", "some"} /\ sev \in Sevs
-  /\ breadth \in 0..2 /\ ev \in Recorded /\ age \in Ages /\ author \in Quals /\ remarks \in Quals
+  /\ breadth \in 0..2 /\ ev \in Recorded /\ age \in Ages /\ author \in Quals /\ remarks \in Remarks
   /\ spot \in Spots /\ accepted \in BOOLEAN /\ validation \in {"open", "unavailable"} /\ taapOnFile \in BOOLEAN
   /\ met \in Mets /\ exception \in Exceptions /\ moreAcc \in BOOLEAN
   /\ Valid

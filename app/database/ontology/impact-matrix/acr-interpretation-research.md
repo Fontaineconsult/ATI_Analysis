@@ -54,7 +54,8 @@ Graph status: `ingest_2026_10_17_acr_interpretation_sources.cypher` carries the 
 
 ## Implications for the matrix
 
-- **`ACR_CHECKS`.** The current list covers most red flags. The sources add four:
+- **`ACR_CHECKS`.** The list of 2026-10-17 covered most red flags. The sources added four,
+  folded in on 2026-10-22 as remarks and document checks:
   - remarks that contradict their own rating
   - hedge words ("some", "most", "generally")
   - scope carve-outs in the notes

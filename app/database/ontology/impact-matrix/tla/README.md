@@ -49,7 +49,7 @@ on Java 8. The current TLC needs Java 11 or later.
   and the exception claim. The kind of technology, bypasses and the approval conditions
   are left out, since they do not change an outcome.
 
-The state space is 174,080 states and about 5.7 million transitions.
+The state space is 256,000 states and about 9.5 million transitions.
 
 ## What is checked
 

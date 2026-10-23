@@ -317,6 +317,9 @@ pre { background: var(--surface-2); border: 1px solid var(--line); border-radius
 .defs-prose table { margin: 0 0 12px; }
 .defs-prose ul { margin: 0 0 10px; padding: 0 0 0 20px; }
 .defs-prose li { margin: 0 0 4px; }
+.defs-prose .def-lead { margin-top: 14px; }
+.defs-prose .def-entry { margin: 0 0 16px; padding: 2px 0 0 16px; border-left: 2px solid var(--line); }
+.defs-prose .def-entry > :last-child { margin-bottom: 0; }
 
 .page-footer { padding-bottom: 24px; color: var(--text-2); font-size: 0.9rem; }
 

@@ -152,7 +152,7 @@
       evidence: form.evidence,
       evidenceNote: form.evidenceNote.trim() || undefined,
       acr: { issued: form.acr.issued || undefined, lastMajorRelease: form.acr.lastMajorRelease || undefined,
-        defects: form.acr.remarks === 'criterion' ? [...form.acr.defects] : [],
+        defects: form.acr.defects.filter((id) => { const c = M.ACR_CHECKS.find((x) => x.id === id); return c && (c.scope === 'document' || form.acr.remarks === 'restated'); }),
         author: form.acr.author, authorName: form.acr.authorName.trim() || undefined, remarks: form.acr.remarks,
         spotCheck: form.acr.spotCheck, spotCheckNote: form.acr.spotCheckNote.trim() || undefined,
         accepted: form.acr.accepted, acceptedNote: form.acr.acceptedNote.trim() || undefined },
@@ -167,9 +167,9 @@
 
   // ACR records for the examples: dated relative to today, so the age qualification holds as written.
   const monthsAgo = (n) => { const d = new Date(); d.setMonth(d.getMonth() - n); return d.toISOString().slice(0, 7); };
-  const RECENT_VENDOR = { issued: monthsAgo(4), author: 'vendor', remarks: 'criterion' };
+  const RECENT_VENDOR = { issued: monthsAgo(4), author: 'vendor', remarks: 'restated' };
   const RECENT_OUTSIDE = { issued: monthsAgo(4), author: 'outside', authorName: 'Example Audits LLC, manual testing with NVDA and keyboard', remarks: 'bug_report' };
-  const OLD_VENDOR = { issued: monthsAgo(16), author: 'vendor', remarks: 'criterion' };
+  const OLD_VENDOR = { issued: monthsAgo(16), author: 'vendor', remarks: 'restated' };
   const PRESETS = {
     small: { product: 'FormBuilder', vendor: 'Example Forms Inc.', unit: 'Facilities', ictKind: 'web', floors: [], evidence: 'E1', acr: RECENT_VENDOR,
       req: { users: 10, scope: 'low', required_use: 'low', criticality: 'low', publishes: 'low', frequency: 'medium', contract_length: 'low' },
@@ -213,7 +213,7 @@
   PRESETS.trustedVendor = { ...PRESETS.homework, evidence: 'E1', acr: { ...RECENT_VENDOR, remarks: 'bug_report' },
     findings: [{ role: 'students', group: 'limited_vision', essentialFunction: 'Submit homework', severity: 'S1' }] };
   PRESETS.acceptedVendor = { ...PRESETS.homework, evidence: 'E1',
-    acr: { ...RECENT_OUTSIDE, remarks: 'criterion', defects: ['no_date_or_version'], accepted: true, acceptedNote: 'the version line reads 4.2 and the product bought is 4.2.1, a patch release', spotCheck: 'agrees', spotCheckNote: 'Submit homework, NVDA and keyboard' },
+    acr: { ...RECENT_OUTSIDE, remarks: 'restated', defects: ['no_date_or_version'], accepted: true, acceptedNote: 'the version line reads 4.2 and the product bought is 4.2.1, a patch release', spotCheck: 'agrees', spotCheckNote: 'Submit homework, NVDA and keyboard' },
     findings: [{ role: 'students', group: 'limited_vision', essentialFunction: 'Submit homework', severity: 'S1' }] };
   PRESETS.deptDefect = { ...PRESETS.deptClean, acr: { ...RECENT_VENDOR, defects: ['no_methods'] } };
   PRESETS.deptOutside = { ...PRESETS.deptClean, acr: RECENT_OUTSIDE };
@@ -353,13 +353,15 @@
       },
       /** Findings are entered once the ACR is rated, so the ACR is read before any barrier is recorded. */
       get findingsShown() { return this.form.findings.length > 0 || this.acrRated; },
-      /** The report checks, with the stale one read from the dates. */
-      get reportChecks() { return M.ACR_CHECKS.filter((c) => c.id !== 'stale'); },
+      /** The document checks, with the stale one read from the dates, and the remarks checks. */
+      get documentChecks() { return M.ACR_CHECKS.filter((c) => c.scope === 'document' && c.id !== 'stale'); },
+      get remarksChecks() { return M.ACR_CHECKS.filter((c) => c.scope === 'remarks'); },
       get staleCheck() { return M.ACR_CHECKS.find((c) => c.id === 'stale'); },
       get isStale() { return !!this.d?.veracity?.acr?.stale; },
       get hasDefect() { return !!this.d?.veracity?.acr?.defective; },
-      /** The report checks open under remarks that restate the criterion, and ticks apply only while they are open. */
-      get reportChecksShown() { return this.qualificationsShown && this.form.acr.remarks === 'criterion'; },
+      /** The document checks show for every ACR. The remarks checks open when the remarks fall short, and their ticks apply only while open. */
+      get reportChecksShown() { return this.qualificationsShown; },
+      get remarksChecksShown() { return this.qualificationsShown && this.form.acr.remarks === 'restated'; },
       /** Acceptance is offered for a ticked defect; a stale report is not accepted. */
       get acceptanceShown() { return this.reportChecksShown && this.hasDefect; },
       get findingsNote() { return 'WCAG failures are recorded once the ACR is rated.'; },
@@ -383,7 +385,7 @@
       /** An ACR record that the direct evidence supersedes, for the note under the select. */
       get supersededAcr() {
         const a = this.form.acr;
-        const recorded = a.issued || a.authorName || a.spotCheck !== 'none' || a.author === 'outside' || a.remarks === 'bug_report' || a.accepted || a.defects.length;
+        const recorded = a.issued || a.authorName || a.spotCheck !== 'none' || a.author === 'outside' || a.remarks === 'bug_report' || a.remarks === 'feature_named' || a.accepted || a.defects.length;
         if (!this.evidenceIsDirect || !recorded) return '';
         const who = a.author === 'outside' ? (a.authorName || 'an outside firm') : 'the vendor';
         return `The ACR on record (${a.issued ? `evaluated ${a.issued}, ` : ''}by ${who}${a.spotCheck !== 'none' ? `, spot check ${a.spotCheck}` : ''}) is superseded as the strongest evidence. Its details stay on the record, and the findings stay.`;
@@ -484,7 +486,9 @@
         const age = a.age === 'unknown' ? 'its date is not recorded' : `it is ${a.months} ${a.months === 1 ? 'month' : 'months'} old`;
         const author = a.author === 'raised' ? 'it is by an outside firm' : 'it is by the vendor\'s own staff';
         if (a.trusted) return `${pre}Taken at face value (E1+). Its remarks read like a bug report, ${age}, and ${author}. The review proceeds on it.`;
-        const reason = a.remarks === 'lowered' ? 'its remarks restate the criterion, generalise or leave the location out' : `${age} and ${author.replace('it is ', '')}`;
+        const reason = a.remarks === 'lowered' ? 'its remarks are blank, restate the criterion, repeat across rows or hedge'
+          : a.remarks === 'named' ? 'its remarks name the feature with issues but not where it is or how it falls short'
+          : `${age} and ${author.replace('it is ', '')}`;
         return `${pre}Not yet taken at face value (E1), because ${reason}. ${this.d.hold === 'veracity_below_floor' ? 'The analyst\'s spot check is next, under Raising the evidence.' : 'The review proceeds without the spot check at this exposure and grade, and one can still be recorded under Raising the evidence.'}`;
       },
       get evidenceStatus() {
@@ -916,13 +920,13 @@
       '<p><strong>Veracity</strong> rates the reliability of the evidence behind the findings, by evidence level.</p>',
       table(['Evidence', 'What it is'], M.EVIDENCE.map((e) => [e.id, e.holds])),
       '<p>A vendor ACR has two halves with different credibility. Its <strong>admissions</strong>, the "Partially Supports" and "Does Not Support" rows, are credible at any evidence level, because a vendor has no reason to invent a barrier. Its <strong>denials</strong>, the "Supports" rows, are the vendor grading itself, and the published audits of vendor reports found about one row in five wrong. The three E1 levels grade the denials.</p>',
-      `<p>${M.ACR_CHECKS.length === 8 ? 'Eight' : M.ACR_CHECKS.length} <strong>report checks</strong> rate the ACR as a document. A failed check is a <strong>report defect</strong>, and an ACR with one ranks E1-. An ACR with no report defect is <strong>clean</strong>. A barrier the product has is a finding, recorded in the Severity step and credible at any evidence level.</p>${ul(M.ACR_CHECKS.map((c) => c.text))}`,
+      `<p>${({ 8: 'Eight', 12: 'Twelve' })[M.ACR_CHECKS.length] ?? M.ACR_CHECKS.length} <strong>report checks</strong> rate the ACR. A failed check is a <strong>report defect</strong>, and an ACR with one ranks E1-. An ACR with no report defect is <strong>clean</strong>. A barrier the product has is a finding, recorded in the Severity step and credible at any evidence level.</p><p>The document checks rate the report's front matter and scope and apply to every ACR.</p>${ul(M.ACR_CHECKS.filter((c) => c.scope === 'document').map((c) => c.text))}<p>The remarks checks rate the Remarks column and open when the remarks fall short of a bug report.</p>${ul(M.ACR_CHECKS.filter((c) => c.scope === 'remarks').map((c) => c.text))}`,
       '<p>The analyst may <strong>accept</strong> an ACR with a report defect when the defect does not bear on the purchase, such as a version line one patch release behind, and records why it does not matter here. An accepted ACR is rated like a clean one, by its qualifications and the spot check, and the determination prints the defect and the acceptance. Acceptance never cures a stale report, since the report\'s age is a fact, and never restores an ACR the spot check contradicted.</p>',
-      '<p>A report marked Supports on every criterion passes the sixth report check only when its remarks show the work, as a remark in the form of the GSA issue-level supplement does. A perfect result is as likely to mean the evaluation was not done as that no barrier exists, so a clean all-Supports report is the case the three qualifications and the spot check below exist for.</p>',
-      `<p>Three <strong>qualifications</strong> decide whether a clean ACR is <strong>taken at face value</strong> (E1+) or takes the spot check first (E1). The remarks decide. A finding in an ACR should read like a bug report, with the fields of the GSA issue-level supplement, since a report whose admissions are written that way shows the evaluation was done, which is the best evidence on paper for its Supports rows. The age and the author are read off the front page and lower the ACR only together. An ACR more than a year old by the vendor's own staff is not taken at face value even with good remarks. A date not recorded is unknown and neither raises nor lowers. The age reads the evaluation date in the ACR's methods section, or the report date when the methods name none. A major release changes the first version component or carries the vendor's own major label, and an unknown release date neither raises nor lowers. An <strong>outside firm</strong> is one the vendor does not own, is not affiliated with, and does not pay for remediation, and the firm's name and method print in the determination.</p>${table(['Qualification', 'Raised', 'Lowered', 'Report defect'], [
+      '<p>A report marked Supports on every criterion passes the bare-Supports check only when its remarks show the work, as a remark in the form of the GSA issue-level supplement does. A perfect result is as likely to mean the evaluation was not done as that no barrier exists, so a clean all-Supports report is the case the three qualifications and the spot check below exist for.</p>',
+      `<p>Three <strong>qualifications</strong> decide whether a clean ACR is <strong>taken at face value</strong> (E1+) or takes the spot check first (E1). The remarks decide. A finding in an ACR should read like a bug report, with the fields of the GSA issue-level supplement, since a report whose admissions are written that way shows the evaluation was done, which is the best evidence on paper for its Supports rows. Remarks that name the feature with issues but not where it is, how it falls short or who is affected meet the floor the VPAT instructions set. They neither raise nor lower, and the ACR takes the spot check first. Remarks that are blank, restate the criterion, repeat across rows or hedge lower the ACR and open the remarks checks. The age and the author are read off the front page and lower the ACR only together. An ACR more than a year old by the vendor's own staff is not taken at face value even with good remarks. A date not recorded is unknown and neither raises nor lowers. The age reads the evaluation date in the ACR's methods section, or the report date when the methods name none. A major release changes the first version component or carries the vendor's own major label, and an unknown release date neither raises nor lowers. An <strong>outside firm</strong> is one the vendor does not own, is not affiliated with, and does not pay for remediation, and the firm's name and method print in the determination.</p>${table(['Qualification', 'Raised', 'Lowered', 'Report defect'], [
         ['Age', M.ACR_QUALIFICATIONS.age.raised, M.ACR_QUALIFICATIONS.age.lowered, M.ACR_QUALIFICATIONS.age.out],
         ['Author', M.ACR_QUALIFICATIONS.author.raised, M.ACR_QUALIFICATIONS.author.lowered, 'No method named (the methods report check)'],
-        ['Remarks', M.ACR_QUALIFICATIONS.remarks.raised, M.ACR_QUALIFICATIONS.remarks.lowered, 'A blank remark on an admission (the remarks report check), or a bare Supports on a complex criterion (the sixth report check)'],
+        ['Remarks', M.ACR_QUALIFICATIONS.remarks.raised, `${M.ACR_QUALIFICATIONS.remarks.lowered}. ${M.ACR_QUALIFICATIONS.remarks.named}`, 'A blank remark on an admission, a bare Supports on a complex criterion, a remark that contradicts its rating, or hedged remarks (the remarks checks)'],
       ])}`,
       `<p>ATI testing takes two forms. The <strong>spot check</strong> (E3a) is the analyst's own pass over the essential functions with a screen reader and the keyboard, done on top of a clean ACR. It is the cheapest independent look at the product, and it ranks with a demonstration or an audit, so it clears every floor. The <strong>full manual review</strong> (E3b) is the ATI coordinator's evaluation of the product by a named method, and it ranks highest. The spot check applies to a clean or accepted ACR, since a report defect is cured by the vendor or accepted by the analyst, not by a spot check, and the determination records the functions covered and the assistive technology used.</p>${ul([
         term('Agrees', `${M.ACR_QUALIFICATIONS.spotCheck.agrees}.`),
@@ -938,6 +942,101 @@
         term('No ACR', 'The vendor supplies one, or a full manual review or a demonstration supplies the evidence.'),
       ])}<p>The spot check, a demonstration, an audit and a full manual review rank 4 or 5, which clears every floor, so one loop closes it.</p>`,
       '<p>When the evidence cannot be raised, the ATI review team records that and the review proceeds under the <strong>fallback</strong>. Severity is S3 (provisional) and the barriers found are a minimum. Unproven conformance is treated as hiding a blocking barrier, so the review requires an alternate access plan (TAAP, defined below). A medium exposure review of a clean vendor ACR with no findings, no spot check and no demonstration ends here, with a TAAP whose documentation states that the product could not be evaluated. Deny stands on the evidence in hand, because weak evidence can hide barriers but not invent them.</p>',
+
+      '<h3>Reading an ACR</h3>',
+      '<p>An <strong>ACR</strong> is the vendor\'s completed VPAT, the Voluntary Product Accessibility Template published by the Information Technology Industry Council (ITI). The template is a set of tables with one row per success criterion, and the vendor fills each row with a conformance level and a remark. Nobody certifies the result.</p>',
+      `<p>The vendor\'s own staff write most ACRs, often from knowledge of the product rather than a fresh test. The published audits found the reports wrong often enough that the matrix reads an ACR as a claim to grade, not as a result to copy.</p>${ul([
+        'About one row in five was wrong when seventeen library vendors\' reports were scanned.',
+        'Only 10 of 227 library databases matched their reports in full under manual testing.',
+        'Every vendor spot-checked in a third audit had issues its report did not mention.',
+      ])}`,
+      '<p>Two parts of the report feed two parts of the review. The document checks rate the front matter, which says what the vendor evaluated, when, by whom and how. The remarks qualification and the findings rate the conformance tables, which say what the vendor admits and what the vendor denies.</p>',
+
+      `<p class="def-lead">${term('Edition', 'ITI publishes the template in four editions, and the edition prints on the first page.')}</p><div class="def-entry">${ul([
+        'The 508 edition reports against the Revised Section 508 Standards, which incorporate WCAG 2.0, so it has no rows for the 2.1 and 2.2 criteria.',
+        'The EU edition reports against EN 301 549.',
+        'The WCAG edition includes the WCAG 2.1 and 2.2 criteria.',
+        'The international edition combines all three standards.',
+      ])}<p><strong>The matrix.</strong> A web or mobile product reported on the 508 edition fails the edition check, because the review standard for those products is WCAG 2.1 AA and the report cannot speak to the 2.1 criteria at all. Desktop software and hardware reported on the 508 edition are on the right edition, since their review standard is the Section 508 Standards.</p><p>A report on a VPAT 1.x template predates the 2017 refresh of Section 508, so nobody has revised the report since then, and the Date entry applies.</p></div>`,
+
+      `<p class="def-lead">${term('Product and version', 'The "Name of Product/Version" line on the first page names what the vendor evaluated.')}</p><div class="def-entry"><p><strong>The sources.</strong> A report describes one version of one product at one time, and the audits found platforms changing while the reviewers worked. Vendors also reuse one report across a product line.</p><p><strong>The matrix.</strong> The product named must be the product on the requisition, and the version must be the version the campus will run. A report on a different version fails the date and version check.</p>${ul([
+        'A version one patch release behind is the usual case for accepting the defect, because a patch rarely changes the interface.',
+        'A report older than the product\'s last major release is stale, under the Date entry, because a redesign makes every row unverified.',
+      ])}</div>`,
+
+      `<p class="def-lead">${term('Date', 'The first page carries a "Report Date", and the "Evaluation Methods Used" section often carries a second date, the date of the testing the report describes.')}</p><div class="def-entry"><p>The two can be years apart when a vendor reissues an old evaluation on a new template. The matrix reads the age from the evaluation date, or from the report date when the methods name no date.</p><p><strong>The sources.</strong> The sources accept an ACR for between twelve and twenty-four months. The matrix takes the shorter figure for the qualification and the longer one for the defect.</p><p><strong>The matrix.</strong></p>${ul([
+        'An evaluation more than a year old lowers the ACR when the vendor\'s own staff wrote the report, since a self-assessment loses what credibility it had as releases accumulate.',
+        'A report more than two years old, or older than the product\'s last major release, is stale. Stale is the one report defect acceptance never cures, because the report then describes a product that no longer exists.',
+        'A report with no date is of unknown age, which neither raises nor lowers, and no date at all fails the date and version check.',
+      ])}</div>`,
+
+      `<p class="def-lead">${term('Author and methods', 'The template has no author field, so the analyst reads the author from the cover page, the "Evaluation Methods Used" section or a firm named in the notes.')}</p><div class="def-entry"><p>When none of those names anyone, the author is the vendor. The author matters because an ACR is a self-assessment unless an outside firm did the work. The matrix defines an <strong>outside firm</strong> as one the vendor does not own, is not affiliated with and does not pay for remediation.</p><p><strong>The sources.</strong> The practitioner sources trace most ACR errors to lack of expertise rather than dishonesty, so a vendor\'s product team can misrate a row in good faith. An outside firm names itself and its method because its name is its credential.</p><p>The methods section says how the vendor tested. The VPAT instructions accept "knowledge of general product functionality" as a method, which means nobody tested anything, and it is the weakest method the instructions allow. A thorough evaluation names the browsers, the screen readers and the versions used.</p><p><strong>The matrix.</strong></p>${ul([
+        'A report that names no method fails the methods check.',
+        'A method that names one browser and one screen reader fails the single-browser check, because screen readers disagree with each other on the same markup and one pairing misses how the product behaves on every other browser and assistive technology.',
+      ])}</div>`,
+
+      `<p class="def-lead">${term('Scope and notes', 'The "Notes" and "Applicable Standards/Guidelines" sections on the first page say what the vendor evaluated and against which standards.')}</p><div class="def-entry"><p>A product is often several products, such as a web app for students and a mobile app, and a report covers one of them unless it says otherwise. Vendors also narrow the scope in the notes. A sentence such as "the reporting module was not evaluated" or "third-party components are out of scope" removes part of the product from every row below it, and the Supports claims then say nothing about the excluded part.</p><p><strong>The sources.</strong> A description of the product that is vague or inaccurate suggests the author does not know the product, and the notes are where that shows first.</p><p><strong>The matrix.</strong></p>${ul([
+        'Each platform the campus buys needs its own report or its own set of tables, since a mobile app shares no interface with the web app. A report that misses one fails the missing-interface check.',
+        'A note that excludes part of the product fails the carve-out check.',
+      ])}</div>`,
+
+      `<p class="def-lead">${term('The conformance tables', 'The body of the report is the conformance tables, one per standard, with one row per success criterion. Each row holds a conformance level and a remark.')}</p><div class="def-entry"><p>The template defines four levels, and allows a fifth on the AAA table. The levels do not carry severity.</p>${ul([
+        '"Supports" requires one method that meets the criterion, so a product with one accessible path and three inaccessible ones can claim it.',
+        '"Partially Supports" means some functionality does not meet the criterion. GSA reads it as non-conformance, and so does the matrix.',
+        '"Does Not Support" means most of the functionality fails under ITI\'s definition, while other authors decide it by user impact or by the share of pages that fail, so the same product earns different levels from different authors.',
+        '"Not Applicable" means the criterion has nothing in the product to apply to.',
+        '"Not Evaluated" is allowed on the AAA table only.',
+      ])}<p><strong>The matrix.</strong> The matrix reads the rows in two halves.</p>${ul([
+        'The "Partially Supports" and "Does Not Support" rows are the vendor\'s <strong>admissions</strong>. The matrix credits them at any evidence level, because a vendor has no reason to invent a barrier.',
+        'The "Supports" rows are the vendor\'s <strong>denials</strong>. The matrix grades them by the three qualifications, the report checks and the spot check, because the audits found the denials wrong about one row in five.',
+      ])}</div>`,
+
+      `<p class="def-lead">${term('The remarks', 'The Remarks column is where a report shows its work, and it is the column the sources weigh most.')}</p><div class="def-entry"><p>ITI\'s instructions tell the author to say, on every "Partially Supports" and "Does Not Support" row, which functions or features have issues and how they fall short. The best reports go further and read like a bug list.</p><p><strong>The sources.</strong> The General Services Administration (GSA) publishes an issue-level supplement for ACRs, and a remark with its fields is a bug report. The fields are</p>${ul([
+        'the severity',
+        'the page, screen, component or workflow affected',
+        'the user group',
+        'the workaround',
+      ])}<p>A vendor that writes its admissions that way has done the evaluation, which is the best evidence on paper that its Supports rows were tested too. "Some images do not include alternative text" is the opposite case, since it does not say whether the login button is one of them.</p><p><strong>The matrix.</strong> The analyst reads the remarks on the admission rows first and picks the remarks answer in Step 2 that describes the pattern most of them follow.</p>${ul([
+        'A remark with the fields above raises the ACR.',
+        'A remark that names the feature with issues and stops there meets the floor the instructions set. The report takes the spot check before the matrix trusts it.',
+        'A blank remark, a remark that restates the criterion, one sentence repeated across rows, or a remark hedged with "some", "most" or "generally" falls below that floor and lowers the ACR.',
+      ])}<p>The analyst then reads the "Supports" rows on the complex criteria, such as 1.3.1 Info and Relationships and 4.1.2 Name, Role, Value, where a product of any size has work to show.</p>${ul([
+        'A bare "Supports" there fails the bare-Supports check.',
+        'A remark that describes a failure under a "Supports" rating contradicts the rating, and the matrix believes the remark.',
+      ])}</div>`,
+
+      `<p class="def-lead">${term('Not Applicable and Not Evaluated', 'Both levels take a row out of the evaluation, and vendors use both to shrink the number of rows they have to defend.')}</p><div class="def-entry"><p>A report with many of them covers less of the product than its page count suggests.</p><p><strong>The sources.</strong> "Not Applicable" needs a remark that says what is absent. "No prerecorded video" is a reason on 1.2.1 Audio-only and Video-only. A bare "Not Applicable" on 1.1.1 Non-text Content is not a reason, since every product with an image meets or fails 1.1.1, and the sources treat an unexplained "Not Applicable" as a denial in disguise.</p><p>"Not Evaluated" says the author did not look. The VPAT instructions allow it on the AAA table only, and GSA says it gives no assurance.</p><p><strong>The matrix.</strong></p>${ul([
+        'The matrix reads "Not Evaluated" on any table but AAA as "Does Not Support".',
+        'A "Not Applicable" without a reason, or a "Not Evaluated" outside the AAA table, fails the not-evaluated check.',
+      ])}</div>`,
+
+      `<p class="def-lead">${term('All Supports', 'A report with "Supports" on every row is a warning sign rather than a good result.')}</p><div class="def-entry"><p><strong>The sources.</strong> A thorough evaluation takes about a hundred hours and finds at least one failure in a product of any size. In one audit the vendor that claimed full compliance performed worst, and one university tells its buyers that a flawless ACR raises the question of whether the author understands accessibility.</p><p><strong>The matrix.</strong></p>${ul([
+        'A report with "Supports" on every row and no remark that shows the work fails the bare-Supports check, because such a report is as likely to mean the vendor did not evaluate as that no barrier exists.',
+        'A report with "Supports" everywhere and remarks that show the work on the complex criteria passes the check and is rated like any other ACR.',
+      ])}</div>`,
+
+      `<p class="def-lead">${term('The spot check', 'An ACR is a claim, and the spot check is the cheapest test of the claim.')}</p><div class="def-entry"><p>The analyst spends three to five minutes on one essential function with a screen reader and the keyboard.</p>${ul([
+        'Tab through the function.',
+        'Read its headings and form labels.',
+        'Try the controls the ACR marks "Supports".',
+      ])}<p><strong>The sources.</strong> The sources draw the same test from 65 Big Ten Academic Alliance reports. They name a keyboard failure as the strongest single sign of deeper problems, since a control the keyboard cannot reach fails for every assistive technology at once.</p><p><strong>The matrix.</strong> The check tests the denials, not the admissions, so the analyst picks a function the ACR marks "Supports" rather than one the ACR already admits is broken.</p>${ul([
+        'A spot check that agrees with the ACR raises the evidence to E3a.',
+        'A barrier the ACR denies drops the ACR to E1-, because one wrong denial means the rest were not tested either. A second spot check cannot restore the Supports rows.',
+        'The spot check applies to a clean or accepted ACR only, since a report defect is a fact about the document that no test of the product cures.',
+      ])}</div>`,
+
+      `<p class="def-lead">${term('From rows to findings', 'A row of the ACR is a lead, not a grade.')}</p><div class="def-entry"><p><strong>The sources.</strong> Severity is judged per barrier, against a user group and a task, because nothing in the row predicts it.</p>${ul([
+        'The conformance level says nothing about how badly a barrier hurts.',
+        'The criterion\'s level, A or AA, does not predict severity.',
+        'Only half of blind users\' problems were covered by any success criterion at all.',
+        'Two experienced reviewers agree on a conformance call about three times in four.',
+      ])}<p>The GSA supplement rates each issue on a three-point scale.</p>${ul([
+        '<strong>Critical</strong> prevents people with disabilities from completing core functionality.',
+        '<strong>Major</strong> substantially impairs access to important functionality.',
+        '<strong>Minor</strong> is a partial barrier.',
+      ])}<p><strong>The matrix.</strong> The analyst records a finding once the remark names the feature and the analyst can place that feature on an essential function, with the role and disability group the barrier stops. Critical and Major map to S3 and S2.</p><p>A remark that does not name the feature leaves the barrier unknown, not minor, so the review raises the evidence rather than rating the barrier minor. The disagreement figure is why the Severity entry fixes each level by the task effect on a named group rather than leaving the call to the reviewer\'s sense of the barrier.</p></div>`,
+
+      '<p>The audit figures come from DeLancey (2015), Willis and O\'Reilly (2020) and Zavala and Reidsma (2020). The agreement figure comes from Brajnik, Yesilada and Harper (2010 and 2012), and the coverage figure from Power, Freire, Petrie and Swallow (2012). The readings come from the VPAT 2.5 instructions, the GSA issue-level supplement, the Section508.gov guidance on ACRs, the Minnesota, University of Michigan and University of Washington Libraries scoring rubrics, WebAIM\'s article on procurement, and the practitioner guides by McNeilly, Bahram, Roselli and Groves. The file acr-interpretation-research.md collects them with their findings. None of them binds the CSU. They guide the reading of a report, not the standard the review holds the product to.</p>',
 
       '<h3>Breadth</h3>',
       '<p><strong>Breadth</strong> rates barrier reach across essential functions and disability groups, on a scale of 0 to 2.</p>',

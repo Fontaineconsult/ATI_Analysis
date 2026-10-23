@@ -182,7 +182,7 @@ const EVIDENCE = [
   // E1- is derived: from a report defect the analyst ticks (`acr.defects`), from a stale date,
   // or from a contradicting spot check. Older records that carry E1- as the base still evaluate.
   { id: 'E1-', rank: 1, holds: 'Vendor ACR with a report defect that is not accepted, or contradicted by the ATI spot check', state: 'proposed', derived: true },
-  { id: 'E1', rank: 2, holds: 'Clean vendor ACR not yet taken at face value, because its remarks restate the criteria or it is both more than a year old and by the vendor\'s own staff', record: 'Vendor ACR', state: 'proposed' },
+  { id: 'E1', rank: 2, holds: 'Clean vendor ACR not yet taken at face value, because its remarks fall short of a bug report or it is both more than a year old and by the vendor\'s own staff', record: 'Vendor ACR', state: 'proposed' },
   { id: 'E1+', rank: 3, holds: 'Clean vendor ACR taken at face value, because its remarks read like a bug report and it is not both more than a year old and by the vendor\'s own staff', state: 'proposed', derived: true },
   { id: 'E2a', rank: 4, holds: 'Live vendor demonstration of essential functions with assistive technology', state: 'agreed' },
   { id: 'E2b', rank: 4, holds: 'Third-party audit with a named method', state: 'proposed' },
@@ -194,19 +194,25 @@ const ACR_LEVELS = ['E1-', 'E1', 'E1+'];
 const LEGACY_EVIDENCE = { E3: 'E3b' };
 
 /**
- * The report checks rate the ACR as a document. A failed check is a report defect and drops
- * the ACR to E1-, unless the analyst accepts the ACR with the defect noted. The stale check is
- * read from the dates, and the analyst ticks the others. A barrier the product has is a finding.
+ * The report checks rate the ACR. A failed check is a report defect and drops the ACR to E1-,
+ * unless the analyst accepts the ACR with the defect noted. The document checks rate the
+ * report's front matter and scope and apply to every ACR. The remarks checks rate the Remarks
+ * column and apply when the remarks fall short of a bug report. The stale check is read from
+ * the dates, and the analyst ticks the others. A barrier the product has is a finding.
  */
 const ACR_CHECKS = [
-  { id: 'wrong_edition', text: 'Reports WCAG 2.0 only (508 edition) for a web or mobile product' },
-  { id: 'no_date_or_version', text: 'No month and year, no product version, or a different version' },
-  { id: 'stale', text: `Older than ${CALIBRATION.acrMaxAgeMonths} months or the last major release` },
-  { id: 'no_methods', text: 'No evaluation methods named' },
-  { id: 'no_remarks', text: '"Partially Supports" or "Does Not Support" without remarks' },
-  { id: 'bare_supports', text: '"Supports" on complex criteria without remarks that show the work' },
-  { id: 'not_evaluated', text: '"Not Evaluated" outside the AAA table' },
-  { id: 'missing_interface', text: 'Does not cover every interface or platform being bought' },
+  { id: 'wrong_edition', scope: 'document', text: 'Reports WCAG 2.0 only (508 edition) for a web or mobile product' },
+  { id: 'no_date_or_version', scope: 'document', text: 'No month and year, no product version, or a different version' },
+  { id: 'stale', scope: 'document', text: `Older than ${CALIBRATION.acrMaxAgeMonths} months or the last major release` },
+  { id: 'no_methods', scope: 'document', text: 'No evaluation methods named' },
+  { id: 'single_browser_at', scope: 'document', text: 'Tested on one browser and one screen reader only' },
+  { id: 'not_evaluated', scope: 'document', text: '"Not Evaluated" outside the AAA table, or "Not Applicable" without a reason' },
+  { id: 'missing_interface', scope: 'document', text: 'Does not cover every interface or platform being bought' },
+  { id: 'carve_outs', scope: 'document', text: 'Scope carve-outs in the notes that exclude part of the product' },
+  { id: 'no_remarks', scope: 'remarks', text: '"Partially Supports" or "Does Not Support" without remarks' },
+  { id: 'bare_supports', scope: 'remarks', text: '"Supports" on complex criteria without remarks that show the work' },
+  { id: 'contradicts_rating', scope: 'remarks', text: 'A remark describes a failure under a "Supports" rating' },
+  { id: 'hedge_words', scope: 'remarks', text: 'Remarks hedge with "some", "most" or "generally"' },
 ].map((c) => ({ ...c, state: 'proposed' }));
 
 /**
@@ -237,13 +243,15 @@ const ACR_QUALIFICATIONS = {
     raised: 'A named outside firm, with the method named',
     lowered: 'The vendor\'s own staff, a firm the vendor owns, is affiliated with or pays for remediation, or no author named',
   },
-  // Remarks are read off the conformance tables. The fields are the GSA issue-level
-  // supplement's (area of the product, user group, workaround) and the ITI instruction that a
-  // remark identify the functions or features with issues and how they fall short. A blank
-  // remark on an admission is check 5, and a bare Supports on a complex criterion is check 6.
+  // Remarks are read off the conformance tables, and the qualification has three values. The
+  // full form is the GSA issue-level supplement's (the page, screen, component or workflow,
+  // the user group, the workaround), which raises. The floor is the VPAT 2.5 instruction that
+  // a remark identify the functions or features with issues, which neither raises nor lowers.
+  // Below the floor the remarks lower, and the remarks checks open.
   remarks: {
     raised: 'The remarks read like a bug report. Each "Partially Supports" and "Does Not Support" row names the page, screen, component or workflow affected, how it falls short and who is affected, and the "Supports" rows on complex criteria give an example or the method',
-    lowered: 'The remarks restate the criterion, generalise, or leave the location out, so a barrier cannot be placed on an essential function',
+    named: 'The remarks name the feature or function with issues, but not where it is, how it falls short or who is affected. The ACR is not taken at face value, and the spot check is next',
+    lowered: 'The remarks are blank, restate the criterion, repeat the same text across rows or hedge with "some", "most" or "generally", so a barrier cannot be placed on an essential function',
   },
   // The spot check applies to an ACR with no report defect, or one the analyst accepted. It
   // cannot cure a report defect on its own.
@@ -287,7 +295,7 @@ const monthsBetween = (from, to) => {
 /**
  * The ACR's level from its base, its three qualifications and the spot check. `acr` is the
  * review's ACR record: issued (the evaluation date) and lastMajorRelease as YYYY-MM, author
- * 'outside' or 'vendor', remarks 'bug_report' or 'criterion', spotCheck 'none', 'agrees' or
+ * 'outside' or 'vendor', remarks 'bug_report', 'feature_named' or 'restated', spotCheck 'none', 'agrees' or
  * 'contradicts'. `today` is the review
  * date. `defects` lists the report checks the analyst ticked, by `ACR_CHECKS` id. The
  * qualifications and the spot check apply to a clean ACR only: one with no report defect, or
@@ -306,7 +314,7 @@ function acrLevel(base, acr = {}, today = new Date().toISOString().slice(0, 7)) 
   const stale = beforeRelease || (months != null && months > CALIBRATION.acrMaxAgeMonths);
   const age = stale ? 'out' : months == null ? 'unknown' : months <= CALIBRATION.acrRecentMonths ? 'raised' : 'lowered';
   const author = acr.author === 'outside' ? 'raised' : 'lowered';
-  const remarks = acr.remarks === 'bug_report' ? 'raised' : 'lowered';
+  const remarks = acr.remarks === 'bug_report' ? 'raised' : acr.remarks === 'feature_named' ? 'named' : 'lowered';
   const ticked = (acr.defects || []).filter((id) => id !== 'stale' && ACR_CHECKS.some((c) => c.id === id));
   const defects = stale ? ['stale', ...ticked] : ticked;
   const defective = base === 'E1-' || ticked.length > 0;
@@ -769,7 +777,7 @@ const WARNING_LEVELS = {
  * @property {string} evidence     id from EVIDENCE, as recorded: E0, E1-, E1, E2a, E2b or E3b. E1+ and
  *           E3a are derived by `acrLevel` from the ACR record and never recorded. E3 from an earlier record reads as E3b
  * @property {{issued?: string, lastMajorRelease?: string, author?: 'outside'|'vendor', authorName?: string,
- *             remarks?: 'bug_report'|'criterion', spotCheck?: 'none'|'agrees'|'contradicts', spotCheckNote?: string,
+ *             remarks?: 'bug_report'|'feature_named'|'restated', spotCheck?: 'none'|'agrees'|'contradicts', spotCheckNote?: string,
  *             defects?: string[], accepted?: boolean, acceptedNote?: string}} [acr]
  *           the ACR's front page and the spot check, read when evidence is E1 or E1-. `issued` is the
  *           evaluation date, YYYY-MM. `spotCheckNote` records the functions covered and the assistive technology used
@@ -1131,7 +1139,7 @@ const evidenceName = (floor) => (floor >= 4
 const QUALIFICATION_PHRASE = {
   age: { raised: 'evaluated within the last year and after the last major release', lowered: 'evaluated more than a year ago', unknown: 'of unrecorded date', out: 'too old to count' },
   author: { raised: 'written by a named outside firm', lowered: 'written by the vendor, by a firm tied to the vendor, or by no named author' },
-  remarks: { raised: 'its remarks read like a bug report, naming where each barrier is and who it affects', lowered: 'its remarks restate the criteria or leave out where each barrier is' },
+  remarks: { raised: 'its remarks read like a bug report, naming where each barrier is and who it affects', named: 'its remarks name the feature with issues but not where it is or how it falls short', lowered: 'its remarks are blank, restate the criteria, repeat across rows or hedge' },
 };
 /** The ticked report checks, named in lower case, for the requester. */
 const defectList = (acr) => list((acr.defects || []).map((id) => ACR_CHECKS.find((c) => c.id === id)).filter(Boolean).map((c) => lower(c.text)));

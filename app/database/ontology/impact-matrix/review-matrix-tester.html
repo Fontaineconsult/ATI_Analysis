@@ -141,8 +141,9 @@
 
     <fieldset x-show="acrShown" x-cloak>
       <legend class="label">The ACR</legend>
-      <p class="help">The analyst reads the date, the author and the remarks off the ACR. Remarks that read like a bug report show the evaluation was done, and the ACR is taken at face value (E1+) unless it is both more than a year old and by the vendor's own staff. Most ACRs are. Remarks that restate the criterion open the report checks, and a failed check ranks the ACR E1- until the vendor corrects the report or the analyst accepts the defect. A clean ACR not yet taken at face value (E1) takes the analyst's spot check first, under Raising the evidence.
-        <a href="#def-evidence-veracity" @click.prevent="showDefinition('def-evidence-veracity')">How the level is derived</a>.</p>
+      <p class="help">The analyst reads the date, the author and the remarks off the ACR. Remarks that read like a bug report show the evaluation was done, and the ACR is taken at face value (E1+) unless it is both more than a year old and by the vendor's own staff. Remarks that name the feature but not where or how leave the ACR at E1, and the analyst's spot check is next, under Raising the evidence. Remarks that are blank, restate the criterion, repeat across rows or hedge lower the ACR and open the remarks checks. The document checks apply to every ACR, and a failed check ranks the ACR E1- until the vendor corrects the report or the analyst accepts the defect.
+        <a href="#def-evidence-veracity" @click.prevent="showDefinition('def-evidence-veracity')">How the level is derived</a>.
+        <a href="#def-reading-an-acr" @click.prevent="showDefinition('def-reading-an-acr')">How to read an ACR</a>.</p>
       <div class="request-fields">
         <label class="field"><span>Evaluation date (month), from the methods section, or the report date if none</span><input type="text" autocomplete="off" placeholder="Month and year" x-month="form.acr.issued"></label>
         <label class="field"><span>Product's last major release (month, if known)</span><input type="text" autocomplete="off" placeholder="Month and year" x-month="form.acr.lastMajorRelease"></label>
@@ -162,22 +163,27 @@
       </fieldset>
       <fieldset x-show="qualificationsShown">
         <legend class="label">Remarks</legend>
-        <p class="help">Read the Remarks and Explanations column. A finding should read like a bug report, with the fields of the GSA issue-level supplement.</p>
+        <p class="help">Read the Remarks and Explanations column on the "Partially Supports" and "Does Not Support" rows. Pick the description that fits most of them.</p>
         <div class="choice">
           <input type="radio" name="acrRemarks" id="acrRemarks_bug" value="bug_report" x-model="form.acr.remarks">
           <label for="acrRemarks_bug">Read like a bug report</label>
-          <span class="desc">Each "Partially Supports" and "Does Not Support" row names the page, screen, component or workflow affected, how it falls short and who is affected. "Supports" rows on complex criteria give an example or the method.</span>
+          <span class="desc">Each row names the page, screen, component or workflow affected, how it falls short and who is affected, the fields of the GSA issue-level supplement. "Supports" rows on complex criteria give an example or the method. The ACR is taken at face value.</span>
         </div>
         <div class="choice">
-          <input type="radio" name="acrRemarks" id="acrRemarks_criterion" value="criterion" x-model="form.acr.remarks">
-          <label for="acrRemarks_criterion">Restate the criterion, generalise, or leave the location out</label>
-          <span class="desc">A barrier cannot be placed on an essential function from the remark alone. Opens the report checks below.</span>
+          <input type="radio" name="acrRemarks" id="acrRemarks_named" value="feature_named" x-model="form.acr.remarks">
+          <label for="acrRemarks_named">Name the feature, but not where or how</label>
+          <span class="desc">Each row says which function or feature has issues, the floor the VPAT instructions set, and stops there. The ACR is not taken at face value, and the spot check is next.</span>
+        </div>
+        <div class="choice">
+          <input type="radio" name="acrRemarks" id="acrRemarks_restated" value="restated" x-model="form.acr.remarks">
+          <label for="acrRemarks_restated">Blank, restate the criterion, repeat across rows, or hedge</label>
+          <span class="desc">The same sentence on every row, the criterion's own words, or "some", "most" and "generally". A barrier cannot be placed on an essential function from the remark alone. Opens the remarks checks below.</span>
         </div>
       </fieldset>
       <fieldset x-show="reportChecksShown">
         <legend class="label">Report checks</legend>
-        <p class="help">Each check rates the report as a document. Tick each check the report fails. The stale check is read from the dates above.</p>
-        <template x-for="c in reportChecks" :key="c.id">
+        <p class="help">The document checks rate the report's front matter and scope, and they apply to every ACR. Tick each check the report fails. The stale check is read from the dates above.</p>
+        <template x-for="c in documentChecks" :key="c.id">
           <div class="choice">
             <input type="checkbox" :id="'defect_' + c.id" :value="c.id" x-model="form.acr.defects">
             <label :for="'defect_' + c.id" x-text="c.text"></label>
@@ -186,6 +192,15 @@
         <div class="choice">
           <input type="checkbox" id="defect_stale" disabled :checked="isStale">
           <label for="defect_stale" x-text="staleCheck.text + ' (read from the dates)'"></label>
+        </div>
+        <div x-show="remarksChecksShown" x-cloak>
+          <p class="help">The remarks checks rate the Remarks column. They open when the remarks fall short of a bug report, and a tick applies only while they are open.</p>
+          <template x-for="c in remarksChecks" :key="c.id">
+            <div class="choice">
+              <input type="checkbox" :id="'defect_' + c.id" :value="c.id" x-model="form.acr.defects">
+              <label :for="'defect_' + c.id" x-text="c.text"></label>
+            </div>
+          </template>
         </div>
       </fieldset>
       <fieldset x-show="acceptanceShown">

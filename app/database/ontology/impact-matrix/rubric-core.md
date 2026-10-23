@@ -292,7 +292,7 @@ The rubric maps nine inputs to the four factors and two derived values.
 | `a_f` | The answer to each exposure question `f` | low, medium, high or unknown, and a count for the number of users |
 | `D` | The findings | each finding names a role, a functional group `g`, an essential function `fn` and a severity `s` |
 | `E` | The strongest evidence on file, as recorded | E0, E1-, E1, E2a, E2b or E3b, from section 5; E1+ and E3a are derived from `Q` |
-| `Q` | The ACR record, read when `E` is E1 or E1- | the month evaluated, the month of the product's last major release if known, the author (an outside firm or the vendor), the remarks (a bug report or a restated criterion) and the spot check result (none, agrees or contradicts) |
+| `Q` | The ACR record, read when `E` is E1 or E1- | the month evaluated, the month of the product's last major release if known, the author (an outside firm or the vendor), the remarks (a bug report, the feature named, or a restated criterion) and the spot check result (none, agrees or contradicts) |
 | `U` | The evidence cannot be raised, recorded by the ATI review team | true or false |
 | `M` | A more accessible product meets the same need | true or false |
 | `T` | TAAP status, the TAAP template requirements met, and the exception claim or determination | `T.exists`, `T.meets[1..6]`, `T.exception` in {none, claimed, determined} |
@@ -483,19 +483,30 @@ any rating, because a vendor has no reason to invent a barrier. Its **denials**,
 found about one row in five wrong. The three E1 levels grade the denials, and the Veracity
 floor binds the denials alone.
 
-Eight **report checks** rate the ACR as a document. A failed check is a **report defect**,
-and an ACR with one ranks E1- unless the analyst accepts the ACR as set out below. An ACR
-with no report defect is **clean**. A barrier the product has is a finding, recorded in the
-Severity step and credible at any evidence level.
+Twelve **report checks** rate the ACR. A failed check is a **report defect**, and an ACR
+with one ranks E1- unless the analyst accepts the ACR as set out below. An ACR with no report
+defect is **clean**. A barrier the product has is a finding, recorded in the Severity step
+and credible at any evidence level.
+
+Eight **document checks** rate the report's front matter and scope, and they apply to every
+ACR.
 
 - Reports WCAG 2.0 only (the Section 508 edition) for a web or mobile product.
 - No month and year, no product version, or a different version from the one being bought.
 - Older than the ACR maximum age in section 10, or older than the last major release.
 - No evaluation methods named.
+- Tested on one browser and one screen reader only.
+- "Not Evaluated" outside the AAA table, or "Not Applicable" without a reason.
+- Does not cover every interface or platform being bought.
+- Scope carve-outs in the notes that exclude part of the product.
+
+Four **remarks checks** rate the Remarks column, and they apply when the remarks fall short
+of a bug report.
+
 - "Partially Supports" or "Does Not Support" without remarks.
 - "Supports" on complex criteria without remarks that show the work.
-- "Not Evaluated" outside the AAA table.
-- Does not cover every interface or platform being bought.
+- A remark describes a failure under a "Supports" rating.
+- Remarks hedge with "some", "most" or "generally".
 
 The analyst may **accept** an ACR with a report defect when the defect does not bear on the
 purchase, such as a version line one patch release behind, and records why it does not
@@ -504,7 +515,7 @@ check, and the determination prints the defect and the acceptance. Acceptance ne
 stale report, since the report's age is a fact, and never restores an ACR the
 spot check contradicted.
 
-A report marked Supports on every criterion passes the sixth report check only when its
+A report marked Supports on every criterion passes the bare-Supports check only when its
 remarks show the work. A perfect result is as likely to mean the evaluation was not done as that no
 barrier exists, so a clean all-Supports report is the case the qualifications and the spot
 check exist for.
@@ -513,8 +524,11 @@ Three **qualifications** decide whether a clean ACR is **taken at face value** (
 takes the spot check first (E1). The remarks decide. A finding in an ACR should read like a
 bug report, with the fields of the GSA issue-level supplement, since a report whose
 admissions are written that way shows the evaluation was done, which is the best evidence on
-paper for its Supports rows. The age and the author are read off the front page and lower
-the ACR only together. An ACR more than a year old by the vendor's own staff is not taken at
+paper for its Supports rows. Remarks that name the feature with issues but not where it is,
+how it falls short or who is affected meet the floor the VPAT instructions set. They neither
+raise nor lower, and the ACR takes the spot check first. Remarks that are blank, restate the
+criterion, repeat across rows or hedge lower the ACR and open the remarks checks. The age and
+the author are read off the front page and lower the ACR only together. An ACR more than a year old by the vendor's own staff is not taken at
 face value even with good remarks. A date not recorded is unknown and neither raises nor
 lowers. The age
 reads the evaluation date in the ACR's methods section, or the report date when the methods
@@ -527,7 +541,7 @@ the firm's name and method print in the determination.
 |---|---|---|---|
 | Age | Evaluated within the ACR recent age in section 10, and after the product's last major release where that release is known | Evaluated more than the recent age ago | Older than the maximum age, or before the last major release (the stale report check) |
 | Author | A named outside firm, with the method named | The vendor's own staff, a firm tied to the vendor, or no author named | No method named (the methods report check) |
-| Remarks | Read like a bug report. Each "Partially Supports" and "Does Not Support" row names the page, screen, component or workflow affected, how it falls short and who is affected, and the "Supports" rows on complex criteria give an example or the method | Restate the criterion, generalise, or leave the location out, so a barrier cannot be placed on an essential function | A blank remark on an admission (the remarks report check), or a bare Supports on a complex criterion (the sixth report check) |
+| Remarks | Read like a bug report. Each "Partially Supports" and "Does Not Support" row names the page, screen, component or workflow affected, how it falls short and who is affected, and the "Supports" rows on complex criteria give an example or the method | Blank, restate the criterion, repeat the same text across rows or hedge with "some", "most" or "generally", so a barrier cannot be placed on an essential function. Remarks that name the feature but not where it is, how it falls short or who is affected neither raise nor lower, and the ACR takes the spot check first | A blank remark on an admission, a bare Supports on a complex criterion, a remark that contradicts its rating, or hedged remarks (the remarks checks) |
 
 ATI testing takes two forms. The **spot check** (E3a) is the analyst's own pass over the
 essential functions with a screen reader and the keyboard, done on top of a clean ACR, the
@@ -548,7 +562,7 @@ records the functions covered and the assistive technology used.
 |---|---|---|
 | E0 | Nothing, or marketing statements | 0 |
 | E1- | Vendor ACR with a report defect that is not accepted, or contradicted by the spot check | 1 |
-| E1 | Clean vendor ACR not yet taken at face value, because its remarks restate the criteria or it is both more than a year old and by the vendor's own staff | 2 |
+| E1 | Clean vendor ACR not yet taken at face value, because its remarks fall short of a bug report or it is both more than a year old and by the vendor's own staff | 2 |
 | E1+ | Clean vendor ACR taken at face value, because its remarks read like a bug report and it is not both more than a year old and by the vendor's own staff | 3 |
 | E2a | Live vendor demonstration of essential functions with assistive technology | 4 |
 | E2b | Third-party audit with a named method | 4 |
@@ -563,7 +577,8 @@ age     = out      if months > 24  ∨  evaluated < last major release    the st
 author  = raised   if a named outside firm with the method named
           lowered  otherwise
 remarks = raised   if the findings read like a bug report
-          lowered  otherwise
+          named    if they name the feature but not where or how
+          lowered  otherwise, and the remarks checks apply
 defect  = any report check failed
 clean   = ( ¬defect ∨ accepted ) ∧ age ≠ out
 trusted = clean ∧ remarks = raised ∧ ¬( age = lowered ∧ author = lowered )
