@@ -363,7 +363,8 @@ X     = max( A, max( min_f : f ∈ F ) )               low when F is empty
 ```
 
 The answers' level `A` is the lower of the start and the points band, held at the lowest
-level for the user count. Exposure is the higher of `A` and the highest applicable **floor**,
+level for the user count. Research use by one group, lab or project rates low for scope and
+for criticality. Exposure is the higher of `A` and the highest applicable **floor**,
 a single-fact Exposure minimum independent of the answers.
 
 | Floor fact | Minimum Exposure |
@@ -538,13 +539,12 @@ lowers. The age
 reads the evaluation date in the ACR's methods section, or the report date when the methods
 name none. A major release changes the first version component or carries the vendor's own
 major label, and an unknown release date neither raises nor lowers. An **outside firm** is
-one the vendor does not own, is not affiliated with, and does not pay for remediation, and
-the firm's name and method print in the determination.
+any firm other than the vendor, and its name and method print in the determination.
 
 | Qualification | Raised | Lowered | Report defect |
 |---|---|---|---|
 | Age | Evaluated within the ACR recent age in section 10, and after the product's last major release where that release is known | Evaluated more than the recent age ago | Older than the maximum age, or before the last major release (the stale report check) |
-| Author | A named outside firm, with the method named | The vendor's own staff, a firm tied to the vendor, or no author named | No method named (the methods report check) |
+| Author | A named outside firm, with the method named | The vendor's own staff, or no author named | No method named (the methods report check) |
 | Remarks | Read like a bug report. Each "Partially Supports" and "Does Not Support" row names the page, screen, component or workflow affected, how it falls short and who is affected, and the "Supports" rows on complex criteria give an example or the method | Blank, restate the criterion, repeat the same text across rows or hedge with "some", "most" or "generally", so a barrier cannot be placed on an essential function. Remarks that name the feature but not where it is, how it falls short or who is affected neither raise nor lower, and the ACR takes the spot check first | A blank remark on an admission, a bare Supports on a complex criterion, a remark that contradicts its rating, or hedged remarks (the remarks checks) |
 
 ATI testing takes two forms. The **spot check** (E3a) is the analyst's own pass over the

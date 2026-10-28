@@ -135,11 +135,11 @@ const BYPASSES = [
 const GROUPS = [
   { id: 'reach', factors: [
     { id: 'users', numeric: true, levels: { low: 'Up to 25', medium: '26 to 250', high: 'More than 250' } },
-    { id: 'scope', levels: { low: 'One department, organization or course', medium: 'Several, or a planned expansion', high: 'Campus-wide' } },
+    { id: 'scope', levels: { low: 'One research group, lab, department, organization or course', medium: 'Several, or a planned expansion', high: 'Campus-wide' } },
   ] },
   { id: 'stakes', factors: [
     { id: 'required_use', levels: { low: 'Optional', medium: 'Required for a few identified people for a limited task', high: 'Required for coursework, a job duty or a university service' } },
-    { id: 'criticality', levels: { low: 'Optional program or service', medium: 'Important, not critical', high: 'Critical, or a core academic or business function' } },
+    { id: 'criticality', levels: { low: 'Optional program or service, or research use by one group', medium: 'Important, not critical', high: 'Critical, or a core academic or business function' } },
   ] },
   { id: 'spread', factors: [
     { id: 'publishes', levels: { low: 'None', medium: 'For specific, limited audiences', high: 'For the public or a large or required audience' } },
@@ -237,11 +237,11 @@ const ACR_QUALIFICATIONS = {
     lowered: `Evaluated more than ${CALIBRATION.acrRecentMonths} months ago`,
     out: `Older than ${CALIBRATION.acrMaxAgeMonths} months or before the last major release (the stale check)`,
   },
-  // An outside firm is one the vendor does not own, is not affiliated with, and does not pay
-  // for remediation. The firm's name and method print in the determination.
+  // An outside firm is any firm other than the vendor. Its name and method print in the
+  // determination.
   author: {
     raised: 'A named outside firm, with the method named',
-    lowered: 'The vendor\'s own staff, a firm the vendor owns, is affiliated with or pays for remediation, or no author named',
+    lowered: 'The vendor\'s own staff, or no author named',
   },
   // Remarks are read off the conformance tables, and the qualification has three values. The
   // full form is the GSA issue-level supplement's (the page, screen, component or workflow,
@@ -1140,7 +1140,7 @@ const evidenceName = (floor) => (floor >= 4
     : 'a vendor ACR with no report defect (E1 or better)');
 const QUALIFICATION_PHRASE = {
   age: { raised: 'evaluated within the last year and after the last major release', lowered: 'evaluated more than a year ago', unknown: 'of unrecorded date', out: 'too old to count' },
-  author: { raised: 'written by a named outside firm', lowered: 'written by the vendor, by a firm tied to the vendor, or by no named author' },
+  author: { raised: 'written by a named outside firm', lowered: 'written by the vendor or by no named author' },
   remarks: { raised: 'its remarks read like a bug report, naming where each barrier is and who it affects', named: 'its remarks name the feature with issues but not where it is or how it falls short', lowered: 'its remarks are blank, restate the criteria, repeat across rows or hedge' },
 };
 /** The ticked report checks, named in lower case, for the requester. */

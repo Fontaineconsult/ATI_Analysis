@@ -185,11 +185,11 @@
         <div class="choice">
           <input type="radio" name="acrAuthor" id="acrAuthor_outside" value="outside" x-model="form.acr.author">
           <label for="acrAuthor_outside">A named outside firm, with the method named</label>
-          <span class="desc">A firm the vendor does not own, is not affiliated with, and does not pay for remediation.</span>
+          <span class="desc">Any firm other than the vendor.</span>
         </div>
         <div class="choice">
           <input type="radio" name="acrAuthor" id="acrAuthor_vendor" value="vendor" x-model="form.acr.author">
-          <label for="acrAuthor_vendor">The vendor's own staff, a firm tied to the vendor, or no author named</label>
+          <label for="acrAuthor_vendor">The vendor's own staff, or no author named</label>
         </div>
         <label class="field" x-show="form.acr.author === 'outside'"><span>Firm and method, as the ACR names them</span><input type="text" autocomplete="off" x-model="form.acr.authorName" placeholder="Example Audits LLC, manual testing with NVDA and JAWS"></label>
       </fieldset>
