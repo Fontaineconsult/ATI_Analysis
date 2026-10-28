@@ -18,6 +18,11 @@ jest.mock('../../functional_components/ViewReportButton', () => ({
     __esModule: true,
     default: () => <button type="button">View</button>,
 }));
+// The copy button reads SettingsContext; its builder is unit-tested on its own.
+jest.mock('./CopyReadyForReviewButton', () => ({
+    __esModule: true,
+    default: ({ name, slug }) => <button type="button" data-slug={slug}>Copy ready for review: {name}</button>,
+}));
 
 import React from 'react';
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
@@ -85,6 +90,13 @@ describe('SuccessIndicatorReportTables review flow', () => {
     beforeEach(() => {
         setReadyForReview.mockReset();
         loadSingleWorkingGroupData.mockReset();
+    });
+
+    it('offers a ready-for-review copy button at each working group heading', () => {
+        renderTables();
+        const btn = screen.getByRole('button', { name: 'Copy ready for review: Web' });
+        expect(btn).toHaveAttribute('data-slug', 'web');
+        expect(screen.getByRole('heading', { level: 3, name: 'Web' }).parentElement).toContainElement(btn);
     });
 
     it('washes rows by review state', () => {

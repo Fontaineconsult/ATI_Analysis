@@ -38,7 +38,7 @@ const TEXT = '#2D3748';
 const MUTED = '#718096';
 const FONT = 'font-family:Arial,Helvetica,sans-serif;';
 
-const esc = (s) => String(s ?? '')
+export const esc = (s) => String(s ?? '')
     .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
 // Stored booleans are sometimes the legacy string "True".
@@ -65,7 +65,7 @@ const STATUS_BADGE = {
     'optimizing':  { bg: '#68D391', fg: '#1C4532' }, // green.300
 };
 
-function statusBadgeHtml(status) {
+export function statusBadgeHtml(status) {
     const c = STATUS_BADGE[String(status || '').toLowerCase()] || { bg: '#E2E8F0', fg: '#4A5568' };
     return `<span style="display:inline-block;background-color:${c.bg};color:${c.fg};`
         + `font-weight:bold;font-size:11px;padding:2px 8px;border-radius:3px;${FONT}">${esc(status)}</span>`;

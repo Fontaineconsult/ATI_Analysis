@@ -31,6 +31,7 @@ import { CODE_TO_SLUG, WORKING_GROUP_LIST, getWorkingGroupIdentity } from '../..
 import { DataContext } from '../../../context/DataContext';
 import { setReadyForReview } from '../../../services/api/put';
 import { reviewWashClass } from '../../../styles/reviewWash';
+import CopyReadyForReviewButton from './CopyReadyForReviewButton';
 
 /*
  * The "ATI Success Indicators Report" tables — the per-working-group goal tables that make
@@ -538,8 +539,9 @@ const SuccessIndicatorReportTables = ({ data, campus, navigate, openApprovalModa
         );
     };
 
-    // All goals for one working group.
-    const renderWorkingGroup = (workingGroupData, workingGroupName) => {
+    // All goals for one working group. `wg` is the WORKING_GROUP_LIST entry (dataKey, slug)
+    // the ready-for-review copy button needs.
+    const renderWorkingGroup = (workingGroupData, workingGroupName, wg) => {
         const getAnchorId = (name) => {
             // slug-based section anchor, from the SSOT; the fallback slugifies an unknown name
             // to exactly the same shape the old idMap produced.
@@ -560,9 +562,14 @@ const SuccessIndicatorReportTables = ({ data, campus, navigate, openApprovalModa
 
         return (
             <Box key={workingGroupName} mb={8} id={getAnchorId(workingGroupName)}>
-                <Heading as="h3" size="md" color="teal.700" mb={4}>
-                    {workingGroupData.workingGroup}
-                </Heading>
+                <HStack justify="space-between" align="center" mb={4} wrap="wrap" spacing={3}>
+                    <Heading as="h3" size="md" color="teal.700">
+                        {workingGroupData.workingGroup}
+                    </Heading>
+                    {wg && (
+                        <CopyReadyForReviewButton dataKey={wg.dataKey} slug={wg.slug} name={wg.name} />
+                    )}
+                </HStack>
                 <VStack align="stretch" spacing={4}>
                     {workingGroupData.goals
                         .sort((a, b) => (a.goal?.properties?.goal_number || 0) - (b.goal?.properties?.goal_number || 0))
@@ -604,7 +611,7 @@ const SuccessIndicatorReportTables = ({ data, campus, navigate, openApprovalModa
             {presentGroups.map((w, i) => (
                 <React.Fragment key={w.dataKey}>
                     {i > 0 && <Divider my={6} borderColor="gray.200" />}
-                    {renderWorkingGroup(data[w.dataKey], w.name)}
+                    {renderWorkingGroup(data[w.dataKey], w.name, w)}
                 </React.Fragment>
             ))}
         </Box>
