@@ -15,6 +15,7 @@ import { SCALE_STEPS } from './presentScale';
 function PresentBar({
     campusName, year, workingGroups = [], wgFilter, onWgFilter,
     notatingAs, scale, onScaleStep, onFullscreen, onExit,
+    modeLabel = 'Meeting mode', shortcuts = PRESENT_KEYS, allowAllGroups = true,
 }) {
     return (
         <HStack as="header" h="40px" px={3} bg="teal.800" color="white" spacing={3} flexShrink={0}>
@@ -26,7 +27,7 @@ function PresentBar({
                 value={wgFilter}
                 onChange={(e) => onWgFilter(e.target.value)}
             >
-                <option value="all">All working groups</option>
+                {allowAllGroups && <option value="all">All working groups</option>}
                 {workingGroups.map((w) => <option key={w.slug} value={w.slug}>{w.name}</option>)}
             </Select>
 
@@ -34,7 +35,7 @@ function PresentBar({
 
             <Text fontSize="xs" fontWeight="bold" textTransform="uppercase" letterSpacing="wide"
                   bg="whiteAlpha.300" px={2} py={0.5} borderRadius="sm" whiteSpace="nowrap">
-                Meeting mode
+                {modeLabel}
             </Text>
             <Text fontSize="xs" color="teal.50" whiteSpace="nowrap" noOfLines={1}>
                 Notating as <Text as="span" color="white" fontWeight="semibold">{notatingAs || 'nobody'}</Text>
@@ -66,7 +67,7 @@ function PresentBar({
                     <PopoverBody>
                         <Table size="sm" variant="unstyled">
                             <Tbody>
-                                {PRESENT_KEYS.map((k) => (
+                                {shortcuts.map((k) => (
                                     <Tr key={k.keys}>
                                         <Td py={1} px={2} fontFamily="mono" fontSize="xs" fontWeight="semibold">{k.keys}</Td>
                                         <Td py={1} px={2} fontSize="xs">{k.what}</Td>
@@ -79,7 +80,7 @@ function PresentBar({
             </Popover>
 
             <Button size="xs" bg="white" color="teal.800" fontWeight="bold" _hover={{ bg: 'teal.50' }}
-                    onClick={onExit} title="Exit meeting mode (Esc)">
+                    onClick={onExit} title={`Exit ${modeLabel.toLowerCase()} (Esc)`}>
                 Exit
             </Button>
         </HStack>

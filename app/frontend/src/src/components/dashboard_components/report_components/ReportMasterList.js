@@ -1,7 +1,8 @@
 import React, { useContext, useMemo } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import {
     Box,
+    Button,
     ButtonGroup,
     Flex,
     Heading,
@@ -44,6 +45,12 @@ const ReportMasterList = () => {
     // Approval is a page, not a modal: it carries the bar coverage, the review comments
     // and the sign-off, and it has to be linkable so someone can be sent to the thing
     // awaiting them.
+    const [searchParams, setSearchParams] = useSearchParams();
+    const openMeetingMode = () => {
+        const next = new URLSearchParams(searchParams);
+        next.set('view', 'meeting');
+        setSearchParams(next);
+    };
     const openApprovalModal = (workingGroup, goalNumber, indicatorNumber) => {
         navigate(`/${campus}/dashboard/reports/approve/${workingGroup}/${goalNumber}/${indicatorNumber}`);
     };
@@ -144,6 +151,11 @@ const ReportMasterList = () => {
                     {/* Copy a compact, email-ready (Outlook-safe) status report — one
                         working group at a time — for the active campus */}
                     <Flex justify="flex-end" align="center" gap={3} mb={3} wrap="wrap">
+                        {/* Same page, drawn for a shared screen: one indicator at a time,
+                            the report beside its editor. Keeps any filters in the URL. */}
+                        <Button size="sm" colorScheme="teal" onClick={openMeetingMode} mr="auto">
+                            Meeting mode
+                        </Button>
                         <Text fontSize="xs" color="gray.600" fontWeight="medium">Copy status report for email:</Text>
                         <ButtonGroup size="sm" spacing={2}>
                             {STATUS_REPORT_WORKING_GROUPS
