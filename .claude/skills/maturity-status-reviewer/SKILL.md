@@ -12,16 +12,24 @@ moves only through the dashboard's admin-review workflow (same rule as
 ontology-ingest); on explicit request the recommendation can be filed as admin
 reviewer feedback, which is an annotation, not a status write.
 
-## Before anything: load the principles
+## Before anything: load both standards
 
-Run this once at the start of the session, before recon or any other query, and keep
-the result in context:
+Two files govern this skill, and both load once at the start of the session, before
+recon or any other query. Keep both in context. The principles decide what counts as
+evidence. The writing style decides how every word of the output reads, and this skill
+writes two pieces of prose a stakeholder sees, so loading it after drafting is loading
+it too late.
 
 ```bash
 python -m app.database.cypher_runner.run_query --query principles_context
 ```
 
-It returns every Principle node: the framework's commitments, with the law, policy and
+Then read `app/database/ontology/writing-style.md` in full. The summary in this file's
+Prose style section names four of its rules and is not a substitute for the file. Read
+it even when the session has already produced prose, and even when the request is only
+to grade.
+
+The query returns every Principle node: the framework's commitments, with the law, policy and
 scholarship that ground or contest each one. They are the standard every call in this
 skill is made against. Grade with them in hand: maturity is graded capability, not pass or fail, a covering plan is not conformance, and deference to a unit's claim is earned through a documented process.
 
@@ -503,4 +511,7 @@ no item at all, because the report renders it as coverage.
 
 ## Prose style
 
-**All prose here follows `app/database/ontology/writing-style.md`** (the project writing style): no marketing vocabulary, no em dashes, one claim per sentence, name the relation instead of gesturing at it, no throat-clearing. Quoted material and success-indicator text are exempt and go in verbatim.
+**All prose here follows `app/database/ontology/writing-style.md`** (the project writing style), loaded with the principles in the first step. Four rules it is easiest to break here: no marketing vocabulary, no em dashes, one claim per sentence, name the relation instead of gesturing at it. The file governs; these four are a reminder, not the rule set. Quoted material and success-indicator text are exempt and go in verbatim.
+
+The executive register the Evidence Summary needs is in the guide's own Register
+section, so read that section against Step 5 before drafting the summary.
