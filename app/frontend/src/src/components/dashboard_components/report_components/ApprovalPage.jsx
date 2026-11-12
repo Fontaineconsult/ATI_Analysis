@@ -1,5 +1,5 @@
 import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
-import { Link as RouterLink, useNavigate, useParams } from 'react-router-dom';
+import { Link as RouterLink, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import {
     Accordion,
     AlertDialog,
@@ -77,6 +77,11 @@ const ApprovalPage = () => {
     const { user } = useContext(UserContext);
     const navigate = useNavigate();
     const toast = useToast();
+    // ?focus=review arrives from the ready-for-review email: it outlines the Review notes
+    // section and labels the approve button, so a reviewer coming from the email sees
+    // where to write and where to sign off.
+    const [searchParams] = useSearchParams();
+    const focusReview = searchParams.get('focus') === 'review';
 
     const [report, setReport] = useState(null);
     const [reportLoading, setReportLoading] = useState(false);
@@ -315,7 +320,12 @@ const ApprovalPage = () => {
             </ReportSection>
 
             <ReportSection banded mb={3} id="ap-review-notes" title="Review notes"
-                subtitle="Executive and working group notes.">
+                subtitle="Executive and working group notes."
+                {...(focusReview && {
+                    borderWidth: '2px',
+                    borderColor: 'orange.400',
+                    boxShadow: '0 0 0 4px var(--chakra-colors-orange-100)',
+                })}>
                 <AdminFeedbackForm
                     yearIdentifier={year_identifier}
                     adminReviewNotes={evidenceData.adminReviewNotes || []}
@@ -533,6 +543,9 @@ const ApprovalPage = () => {
                         {isApproved ? '✓ Approved' : ready_for_admin_review ? 'Awaiting approval' : 'Not ready'}
                     </Badge>
                     <HStack spacing={3}>
+                        {focusReview && !isApproved && (
+                            <Text fontSize="xs" color="gray.700">Click to approve this indicator</Text>
+                        )}
                         {acting && <Spinner size="sm" color="teal.500" />}
                         {isApproved && canApprove && (
                             <Button variant="outline" colorScheme="red" size="sm" isDisabled={acting}

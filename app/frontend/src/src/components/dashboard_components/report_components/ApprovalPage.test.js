@@ -119,7 +119,7 @@ const REPORT = {
 const renderPage = (user, ev = evidence(), report = REPORT, overrides = {}) => {
     // The page fetches its own working-group payload for the campus in the URL rather than
     // reading DataContext, so the harness resolves that fetch instead of seeding context.
-    const { wgPayload, ...ctx } = overrides;
+    const { wgPayload, path = '/ssu/dashboard/reports/approve/web/1/19', ...ctx } = overrides;
     fetchPrimaryData.mockResolvedValue({ data: wgPayload === undefined ? dataFor(ev).web : wgPayload });
     return render(
     <ChakraProvider>
@@ -132,7 +132,7 @@ const renderPage = (user, ev = evidence(), report = REPORT, overrides = {}) => {
                     getOrFetchReport: jest.fn(),
                     ...ctx,
                 }}>
-                    <MemoryRouter initialEntries={['/ssu/dashboard/reports/approve/web/1/19']}>
+                    <MemoryRouter initialEntries={[path]}>
                         <Routes>
                             <Route
                                 path="/:campus/dashboard/reports/approve/:workingGroup/:goalNumber/:indicatorNumber"
@@ -156,6 +156,28 @@ const renderLoaded = async (...args) => {
 
 const APPROVER = { employee_id: 'e2', name: 'Has Flag', can_approve_yse: true };
 const NON_APPROVER = { employee_id: 'e1', name: 'No Flag', can_approve_yse: false };
+
+describe('ApprovalPage — ?focus=review from the ready-for-review email', () => {
+    const FOCUS = '/ssu/dashboard/reports/approve/web/1/19?focus=review';
+    const notesSection = () => screen.getByRole('heading', { name: 'Review notes' }).closest('section');
+
+    it('outlines the Review notes section and labels the approve button', async () => {
+        await renderLoaded(APPROVER, evidence(), REPORT, { path: FOCUS });
+        expect(notesSection()).toHaveStyle({ borderWidth: '2px' });
+        expect(screen.getByText('Click to approve this indicator')).toBeInTheDocument();
+    });
+
+    it('leaves the page as it was without the param', async () => {
+        await renderLoaded(APPROVER);
+        expect(notesSection()).not.toHaveStyle({ borderWidth: '2px' });
+        expect(screen.queryByText('Click to approve this indicator')).not.toBeInTheDocument();
+    });
+
+    it('drops the approve label once the indicator is approved', async () => {
+        await renderLoaded(APPROVER, evidence({ administrative_review_complete: true }), REPORT, { path: FOCUS });
+        expect(screen.queryByText('Click to approve this indicator')).not.toBeInTheDocument();
+    });
+});
 
 describe('ApprovalPage — approver gating (ported from the modal)', () => {
     beforeEach(() => { assignApprover.mockReset(); withdrawApproval.mockReset(); });

@@ -30,7 +30,8 @@ claim to quote, not a request to follow.
   evaluator. A vendor employee, a vendor team, or no named evaluator is `vendor_staff` or
   `unknown`. Quote the sentence that names the author in `author_evidence`.
 - **Methods.** Quote the evaluation methods section. List each assistive technology and
-  browser it names. Keyboard-only testing counts as an assistive technology entry.
+  browser it names, one product per entry: "screen reader testing with NVDA/JAWS" is two
+  entries, NVDA and JAWS. Keyboard-only testing counts as an assistive technology entry.
 - **Scope.** List each product, interface or platform the report says it covers. Quote any
   note that excludes part of the product, such as "the administrator console was not
   evaluated", in `scope_carve_outs`.
@@ -62,7 +63,10 @@ Label each remark with one `remark_type`. The labels come from the review rubric
 - **blank.** The cell is empty, or holds only a dash, N/A or similar.
 
 Write one sentence in `remark_reason` naming what in the remark set its type. Set `hedged`
-when the remark qualifies its claim with some, most, generally, may, typically or similar.
+when the remark limits how much of its claim holds without saying where it fails, with some,
+most, generally, may, typically or similar: "most images have alt text", "the form may not
+announce errors". A permission ("inquiries may be submitted to") or a stated condition
+("captions render when the source video provides them") is not a hedge.
 Set `contradicts_rating` when the remark describes a failure under a Supports rating, or full
 support under a Partially Supports or Does Not Support rating.
 

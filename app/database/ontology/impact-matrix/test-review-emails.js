@@ -26,6 +26,7 @@ const CASES = {
   hold5_referral: [base({ answers: answers(BIG), evidence: 'E1', acr: trusted, findings: S3, taap: { exists: true, meets: meets(2), exception: 'claimed' } }), ['determination_referral']],
   approve_s0: [base({ evidence: 'E1', acr: trusted }), ['approval_notice']],
   approve_low_s2: [base({ evidence: 'E1', acr: trusted, findings: S2 }), ['approval_notice']],
+  approve_accepted: [base({ evidence: 'E1', acr: { ...trusted, defects: ['no_date_or_version'], accepted: true, acceptedNote: 'The product is SaaS with one live version.' } }), ['approval_notice']],
   approve_with_taap: [base({ answers: answers(BIG), evidence: 'E1', acr: trusted, findings: S3, taap: { exists: true, meets: meets(6), exception: 'none' } }), ['taap_approval']],
   deny_below_standard: [base({ answers: answers(BIG), evidence: 'E1', acr: trusted, findings: S3, taap: { exists: true, meets: meets(2), exception: 'none' } }), ['denial_notice']],
   deny_more_accessible: [base({ answers: answers(BIG), evidence: 'E1', acr: trusted, findings: S3, moreAccessibleProductExists: true }), ['denial_notice']],

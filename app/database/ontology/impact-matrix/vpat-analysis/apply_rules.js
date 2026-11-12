@@ -16,6 +16,7 @@
 const fs = require('fs');
 const path = require('path');
 const M = require('../review-matrix.js');
+const { checkExpectations } = require('./expectations.js');
 
 /**
  * Rules the rubric states in words only. Each is a proposal for the pilot to calibrate, and
@@ -65,8 +66,8 @@ function analyse(ex, opts) {
   const set = (id, result, why, evidence = []) => { checks[id] = { result, why, evidence }; };
 
   // ---- the document checks
-  if (!opts.kind) set('wrong_edition', 'analyst', 'The kind of technology was not given, so the edition the report needs is unknown.');
-  else if (opts.kind === 'nonweb') set('wrong_edition', 'pass', 'A non-web product is reviewed against the Section 508 Standards, which any edition covers.');
+  if (!opts.kind) set('wrong_edition', 'analyst', 'Kind of technology not given.');
+  else if (opts.kind === 'nonweb') set('wrong_edition', 'pass', 'Non-web product. Every edition covers Section 508.');
   else {
     const current = rep.standards_reported.some((s) => s === 'WCAG 2.1' || s === 'WCAG 2.2');
     set('wrong_edition', current ? 'pass' : 'fail', current
@@ -80,7 +81,7 @@ function analyse(ex, opts) {
     set('no_date_or_version', 'fail', `The report evaluated version ${rep.product_version}, and the purchase is version ${opts.version}.`);
   } else set('no_date_or_version', 'pass', `The report is dated ${issued} for version ${rep.product_version}.`);
 
-  if (!issued) set('stale', 'analyst', 'The report gives no date, so its age is unknown. The date check above already fails.');
+  if (!issued) set('stale', 'analyst', 'No date. The date check already fails.');
   else {
     const months = monthsBetween(issued, today);
     const beforeRelease = opts.release && issued < opts.release;
@@ -90,7 +91,7 @@ function analyse(ex, opts) {
       const age = months < 1 ? 'less than a month old' : `${months} ${months === 1 ? 'month' : 'months'} old`;
       set('stale', opts.release ? 'pass' : 'analyst', opts.release
         ? `The evaluation is ${age} and follows the last major release.`
-        : `The evaluation is ${age}. The month of the last major release was not given, so the analyst checks it.`);
+        : `The evaluation is ${age}. Last major release not given.`);
     }
   }
 
@@ -114,7 +115,7 @@ function analyse(ex, opts) {
     [...notEvaluated, ...bareNA].map(cite));
 
   if (!opts.interfaces.length) {
-    set('missing_interface', 'analyst', `The interfaces being bought were not given. The report covers ${list(rep.interfaces_covered) || 'no named interface'}.`);
+    set('missing_interface', 'analyst', `Interfaces being bought not given. The report covers ${list(rep.interfaces_covered) || 'no named interface'}.`);
   } else {
     const missing = opts.interfaces.filter((i) => !covers(rep.interfaces_covered, i));
     set('missing_interface', missing.length ? 'fail' : 'pass', missing.length
@@ -159,7 +160,7 @@ function analyse(ex, opts) {
   const open = remarks === 'lowered';
   const remarkCheck = (id, failing, failWhy, passWhy) => set(id,
     failing.length ? (open ? 'fail' : 'closed') : 'pass',
-    failing.length ? `${failWhy(failing.length)}${open ? '' : ' The check does not count, because the remarks read at or above the floor.'}` : passWhy,
+    failing.length ? `${failWhy(failing.length)}${open ? '' : ' Not counted: the remarks meet the floor.'}` : passWhy,
     failing.map(cite));
   remarkCheck('no_remarks', admissions.filter((r) => r.remark_type === 'blank'),
     (n) => `${n} ${n === 1 ? 'admission has' : 'admissions have'} no remark.`, 'Every admission has a remark.');
@@ -204,20 +205,23 @@ function analyse(ex, opts) {
   // ---- the SFBRN process flags the matrix has no check for
   const flags = [];
   const tv = parseFloat((rep.template_version || '').replace(/[^0-9.]/g, ''));
-  if (!rep.template_version) flags.push('The report names no VPAT template version. The SFBRN process rejects templates older than VPAT 2.5.');
-  else if (tv < CONFIG.minTemplate) flags.push(`The report uses VPAT ${rep.template_version}. The SFBRN process rejects templates older than VPAT 2.5.`);
-  if (rep.nonstandard_terms.length) flags.push(`The report uses conformance terms outside the template's five: ${list(rep.nonstandard_terms.map((t) => `"${t}"`))}.`);
-  if (rep.design_intent_language.length) flags.push(`The report claims intent rather than behaviour in ${rep.design_intent_language.length} ${rep.design_intent_language.length === 1 ? 'place' : 'places'}, such as "${rep.design_intent_language[0].quote}".`);
+  if (!rep.template_version) flags.push('No VPAT template version. SFBRN rejects templates before VPAT 2.5.');
+  else if (tv < CONFIG.minTemplate) flags.push(`VPAT ${rep.template_version}. SFBRN rejects templates before VPAT 2.5.`);
+  if (rep.nonstandard_terms.length) flags.push(`Non-template ratings: ${list(rep.nonstandard_terms.map((t) => `"${t}"`))}.`);
+  if (rep.design_intent_language.length) flags.push(`${rep.design_intent_language.length} ${rep.design_intent_language.length === 1 ? 'claim' : 'claims'} of intent, not behaviour, such as "${rep.design_intent_language[0].quote}".`);
   const wcagRows = rows.filter(isWcagAorAA);
   const wcagRated = wcagRows.filter((r) => r.conformance !== 'Not Applicable');
-  if (wcagRated.length && wcagRated.every((r) => r.conformance === 'Supports')) flags.push('The report rates every applicable Level A and AA criterion Supports. A clean report is the case the spot check exists for.');
-  if (!rep.browsers.length) flags.push('The report names no browser. The SFBRN heading checks look for named browsers and operating systems.');
+  if (wcagRated.length && wcagRated.every((r) => r.conformance === 'Supports')) flags.push('Every applicable Level A and AA criterion is rated Supports.');
+  if (!rep.browsers.length) flags.push('No browser named.');
   const na = wcagRows.filter((r) => r.conformance === 'Not Applicable');
-  if (na.length >= CONFIG.manyNotApplicable) flags.push(`The report rates ${na.length} Level A and AA criteria Not Applicable. Check each against features the product has.`);
-  if (wcagRows.length && wcagRows.length < 50) flags.push(`The extraction found ${wcagRows.length} WCAG Level A and AA rows. WCAG 2.1 has 50, so the analyst checks for rows the report or the extraction missed.`);
+  if (na.length >= CONFIG.manyNotApplicable) flags.push(`${na.length} Level A and AA criteria rated Not Applicable.`);
+
+  // ---- the expectations: is the extraction complete enough to grade? A blocking one holds the level.
+  const expectations = checkExpectations(ex);
 
   return {
     matrixVersion: M.MATRIX_VERSION, today, kind: opts.kind || null, source: ex._source || null,
+    status: expectations.met ? 'graded' : 'held', expectations,
     product: { name: rep.product_name, version: rep.product_version },
     record, evidence: 'E1', level,
     checks, qualifications: {
@@ -233,10 +237,10 @@ function analyse(ex, opts) {
 // The report the analyst reads.
 // ---------------------------------------------------------------------------------------
 const LEVEL_WORDS = {
-  'E1-': 'below face value, because of a report defect',
-  E1: 'clean, but not yet taken at face value, so the analyst runs the spot check next',
-  'E1+': 'clean and taken at face value',
-  E3a: 'confirmed by the analyst\'s spot check',
+  'E1-': 'report defect not accepted',
+  E1: 'clean, spot check next',
+  'E1+': 'clean, taken at face value',
+  E3a: 'confirmed by spot check',
 };
 const RESULT_WORD = { fail: 'Fails', pass: 'Passes', analyst: 'Analyst decides', closed: 'Does not count' };
 
@@ -244,11 +248,28 @@ function report(a) {
   const q = (e) => `> ${e.quote.replace(/\n+/g, ' ')}${e.page ? ` (page ${e.page})` : ''}${e.criterion ? ` [${e.criterion}]` : ''}`;
   const lines = [];
   lines.push(`# ACR analysis: ${a.product.name || 'unnamed product'}${a.product.version ? ` ${a.product.version}` : ''}`, '');
-  lines.push(`The rubric rates this ACR ${a.level.level}, ${LEVEL_WORDS[a.level.level]}. The analyst confirms each call below before the rating goes into the review.`, '');
+  const ex = a.expectations;
+  if (ex && !ex.met) {
+    lines.push(`**Rating held.** ${ex.blocking.length === 1 ? 'One blocking expectation is' : `${ex.blocking.length} blocking expectations are`} not met. Provisional level ${a.level.level}.`, '');
+    for (const e of ex.items.filter((x) => ex.blocking.includes(x.id))) lines.push(`- **${e.text}.** ${e.why}`);
+    lines.push('');
+  } else {
+    lines.push(`Evidence ${a.level.level}, ${LEVEL_WORDS[a.level.level]}.`, '');
+  }
   const analyst = Object.entries(a.checks).filter(([, c]) => c.result === 'analyst');
   if (analyst.length) {
-    lines.push(`The extraction cannot settle ${analyst.length === 1 ? 'one check, which the analyst decides' : `${analyst.length} checks, which the analyst decides`}.`, '');
+    lines.push(`The analyst decides ${analyst.length === 1 ? 'one check' : `${analyst.length} checks`}.`, '');
     for (const [id, c] of analyst) lines.push(`- ${M.ACR_CHECKS.find((x) => x.id === id).text}. ${c.why}`);
+    lines.push('');
+  }
+
+  if (ex) {
+    const RESULT = { met: 'Met', unmet: 'Not met', unknown: 'Unknown' };
+    lines.push('## Expectations', '');
+    for (const e of ex.items) {
+      lines.push(`- **${RESULT[e.result]}${e.effect === 'blocks' ? ', blocks' : ''}. ${e.text}.** ${e.why}`);
+      for (const v of (e.evidence || []).slice(0, 5)) lines.push(`  ${q(v)}`);
+    }
     lines.push('');
   }
 
@@ -273,23 +294,23 @@ function report(a) {
   lines.push(`- **Remarks: ${qa.remarks.value}.** ${qa.remarks.why}`, '');
 
   lines.push('## Leads', '');
-  if (!a.leads.length) lines.push('The report admits no failure. The analyst places no lead.', '');
+  if (!a.leads.length) lines.push('No admitted failures.', '');
   else {
-    lines.push(`The report admits ${a.leads.length} ${a.leads.length === 1 ? 'failure' : 'failures'}. Each becomes a finding once the analyst places it on an essential function and rates its severity. The rating in the report does not set severity.`, '');
+    lines.push(`${a.leads.length} admitted ${a.leads.length === 1 ? 'failure' : 'failures'}.`, '');
     for (const l of a.leads) {
-      lines.push(`- **${l.criterion} ${l.name}, ${l.conformance}.** ${l.placeable ? `Names ${list(l.features.map((f) => `"${f}"`))}.` : 'Names no feature, so the analyst cannot place this lead from the remark.'}${l.suggestedGroups.length ? ` Affects users ${list(l.suggestedGroups.map((g) => M.WHO[g]))}.` : ''}`);
+      lines.push(`- **${l.criterion} ${l.name}, ${l.conformance}.** ${l.placeable ? `Names ${list(l.features.map((f) => `"${f}"`))}.` : 'No feature named.'}${l.suggestedGroups.length ? ` Affects users ${list(l.suggestedGroups.map((g) => M.WHO[g]))}.` : ''}`);
       lines.push(`  > ${(l.remarks || '(blank)').replace(/\n+/g, ' ')}${l.page ? ` (page ${l.page})` : ''}`);
     }
     lines.push('');
   }
 
   if (a.flags.length) {
-    lines.push('## SFBRN process flags', '', 'The SFBRN VPAT Review Process raises these. The matrix has no check for them, so they do not move the rating.', '');
+    lines.push('## SFBRN process flags', '');
     for (const f of a.flags) lines.push(`- ${f}`);
     lines.push('');
   }
   if (a.readingNotes.length) {
-    lines.push('## What the extraction could not read', '');
+    lines.push('## Reading notes', '');
     for (const n of a.readingNotes) lines.push(`- ${n}`);
     lines.push('');
   }
@@ -298,7 +319,7 @@ function report(a) {
   lines.push(`- A remark repeated on ${a.config.repeatAt} or more rated rows counts as repeated. Not Applicable and Level AAA rows do not count.`);
   lines.push('- A Supports remark on a complex criterion shows the work when it names where it was checked or the method. A blank, restated or generic remark does not.');
   lines.push('- Remarks rate raised when every admission reads like a bug report, lowered when any admission is blank, restated, generic, hedged or repeated, and named otherwise.');
-  lines.push(`- These rules are proposals for the pilot to calibrate. Matrix version ${a.matrixVersion}, run on ${a.today}${a.source ? `, extraction by ${a.source.model}` : ''}.`);
+  lines.push(`- Matrix version ${a.matrixVersion}, run ${a.today}${a.source ? `, extraction by ${a.source.model}` : ''}.`);
   return lines.join('\n') + '\n';
 }
 
@@ -328,7 +349,7 @@ if (require.main === module) {
     const base = file.replace(/\.extraction\.json$/, '');
     fs.writeFileSync(`${base}.review.json`, JSON.stringify(a, null, 2));
     fs.writeFileSync(`${base}.review.md`, report(a));
-    console.log(`${path.basename(base)}: ${a.level.level}, ${a.record.defects.length} report ${a.record.defects.length === 1 ? 'defect' : 'defects'}, ${a.leads.length} ${a.leads.length === 1 ? 'lead' : 'leads'}`);
+    console.log(`${path.basename(base)}: ${a.status === 'held' ? `HELD (${a.expectations.blocking.join(', ')}), would be ` : ''}${a.level.level}, ${a.record.defects.length} report ${a.record.defects.length === 1 ? 'defect' : 'defects'}, ${a.leads.length} ${a.leads.length === 1 ? 'lead' : 'leads'}`);
   }
 }
 

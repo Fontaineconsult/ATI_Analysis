@@ -1,7 +1,8 @@
 // Build an Outlook-safe HTML + plain-text list of the success indicators in ONE working
 // group that are marked ready for administrative review and not yet approved, to paste
 // into an email asking a reviewer to work through them. One row per indicator: the
-// indicator (composite key + text), its status, and a link to its review page.
+// indicator (composite key + text), its Evidence Summary, its status, and a link to its
+// review page.
 //
 // "Ready for review" is the same test the report rows use: getIndicatorSummary's
 // readyForReview and not approved. Outlook constraints are the same as
@@ -21,6 +22,15 @@ const FONT = 'font-family:Arial,Helvetica,sans-serif;';
 // "6.9-ins" -> [6, 9], for goal-then-indicator ordering.
 const keyOrder = (ck) => String(ck || '').split('-')[0].split('.').map((n) => parseInt(n, 10) || 0);
 
+const escNl = (s) => esc(s).replace(/\n/g, '<br/>');
+
+// The YSE's admin_review_description, shown as the Evidence Summary. The approval page
+// seeds an unset one with the literal 'No Review', so that counts as no summary.
+const evidenceSummaryOf = (wrapper) => {
+    const text = (wrapper?.evidences?.[0]?.evidence?.properties?.admin_review_description || '').trim();
+    return text && text !== 'No Review' ? text : '';
+};
+
 /**
  * @param {object} workingGroupData  one DataContext working-group tree ({ workingGroup, goals })
  * @param {{campus:string, slug:string, name?:string, year?:string, origin?:string}} opts
@@ -29,8 +39,10 @@ const keyOrder = (ck) => String(ck || '').split('-')[0].split('.').map((n) => pa
  */
 export function buildReadyForReviewReport(workingGroupData, { campus, slug, name, year, origin = '' } = {}) {
     const groupName = name || workingGroupData?.workingGroup || 'Working group';
+    // ?focus=review makes the approval page outline the Review notes section and label
+    // the approve button for a reviewer arriving from this email.
     const reviewUrl = (goalNum, indNum) =>
-        `${origin}/ati/${campus}/dashboard/reports/approve/${slug}/${goalNum}/${indNum}`;
+        `${origin}/ati/${campus}/dashboard/reports/approve/${slug}/${goalNum}/${indNum}?focus=review`;
 
     const rows = [];
     for (const goal of (workingGroupData?.goals || [])) {
@@ -41,6 +53,7 @@ export function buildReadyForReviewReport(workingGroupData, { campus, slug, name
             rows.push({
                 ck: s.compositeKey,
                 description: s.description || '',
+                summary: evidenceSummaryOf(wrapper),
                 status: s.statusLevel || 'No status',
                 url: reviewUrl(goalNum, indNum),
             });
@@ -62,19 +75,25 @@ export function buildReadyForReviewReport(workingGroupData, { campus, slug, name
     let html = `<div style="${FONT}font-size:13px;color:${TEXT};">`;
     html += `<h3 style="${FONT}color:${NAVY};font-size:15px;margin:0 0 6px 0;">${esc(title)} <span style="color:${MUTED};font-weight:normal;font-size:12px;">(${rows.length})</span></h3>`;
     html += `<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse;width:100%;${FONT}">`;
-    html += `<tr bgcolor="${HEAD_BG}"><th style="${th('62%')}">Indicator</th><th style="${th('16%')}">Status</th><th style="${th('22%')}">Review</th></tr>`;
+    html += `<tr bgcolor="${HEAD_BG}"><th style="${th('28%')}">Indicator</th><th style="${th('46%')}">Evidence Summary</th><th style="${th('12%')}">Status</th><th style="${th('14%')}">Review</th></tr>`;
     for (const r of rows) {
+        const summary = r.summary
+            ? escNl(r.summary)
+            : `<span style="color:${MUTED};font-style:italic;">No summary yet</span>`;
         html += `<tr>`
-            + `<td style="${cell('62%')}"><b>${esc(r.ck)}</b> ${esc(r.description)}</td>`
-            + `<td style="${cell('16%')}">${statusBadgeHtml(r.status)}</td>`
-            + `<td style="${cell('22%')}"><a href="${esc(r.url)}" style="color:${LINK};text-decoration:none;">Review ${esc(r.ck)}</a></td>`
+            + `<td style="${cell('28%')}"><b>${esc(r.ck)}</b> ${esc(r.description)}</td>`
+            + `<td style="${cell('46%')}">${summary}</td>`
+            + `<td style="${cell('12%')}">${statusBadgeHtml(r.status)}</td>`
+            + `<td style="${cell('14%')}"><a href="${esc(r.url)}" style="color:${LINK};text-decoration:none;">Review ${esc(r.ck)}</a></td>`
             + `</tr>`;
     }
     html += `</table></div>`;
 
     let plainText = `${title} (${rows.length})\n`;
     for (const r of rows) {
-        plainText += `\n${r.ck} ${r.description}\n  Status: ${r.status}\n  Review: ${r.url}\n`;
+        plainText += `\n${r.ck} ${r.description}\n  Status: ${r.status}\n`
+            + `  Evidence Summary: ${r.summary ? r.summary.replace(/\n+/g, ' ') : 'No summary yet'}\n`
+            + `  Review: ${r.url}\n`;
     }
 
     return { html, plainText, rowCount: rows.length };

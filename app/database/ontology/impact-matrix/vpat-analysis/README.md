@@ -7,11 +7,22 @@ Claude and grades it by the rules of the SFBRN review rubric in `../rubric-core.
 
 Claude reads. The matrix decides. The analyst confirms.
 
-- **Claude extracts facts.** `extract_acr.py` sends the ACR to Claude and gets back the front
-  page (dates, version, author, edition, methods, scope) and every criterion row (rating,
-  verbatim remark, page). Claude also labels each remark by the rubric's remark types. Every
-  label carries the quote it rests on. Claude rates no check, no qualification, no evidence
-  level and no severity.
+- **Claude extracts facts, in two passes.** Haiku copies the ACR into plain data: the front
+  matter and every WCAG and Section 508 row (rating and remark verbatim, page), eight PDF
+  pages per call, the calls in parallel over the cached document. Code maps each rating to a
+  template term, keeping the worst part of a rating split by product part, and labels the Not
+  Applicable, Not Evaluated and Level AAA rows by rule. Sonnet then reads the plain data and
+  returns the front-page facts (dates, version, author, edition, methods, scope) and a remark
+  label for each remaining row, by row id. Every label carries the quote it rests on. Claude
+  rates no check, no qualification, no evidence level and no severity. A run costs $0.05 to
+  $0.20; `--mode single` runs the one-call Opus extraction instead, at about ten times that.
+- **Code checks the extraction is complete.** `expectations.js` states what an ACR on the VPAT
+  template holds (a WCAG A and AA table, every criterion of the version it names, Section 508
+  Chapters 3, 5 and 6 when it names Section 508, ratings in the five terms) and tests the
+  extraction against it. It also checks the transcription against the criterion numbers in
+  the document's own text layer, which tells a row the report left out from a row the
+  transcription dropped. An unmet blocking expectation holds the rating (`status: "held"`)
+  until the analyst resolves it; the others are findings.
 - **Code applies the rubric.** `apply_rules.js` runs the extracted facts through the twelve
   report checks and the three qualifications in `ACR_CHECKS` and `ACR_QUALIFICATIONS`, then
   calls `acrLevel` in `../review-matrix.js`. The evidence level comes from the function the
@@ -26,8 +37,8 @@ analyst can see it. A wrong grade would not, which is why the model does not gra
 ## Run
 
 ```bash
-# 1. Extract. Needs ANTHROPIC_API_KEY (or an `ant auth login` profile).
-.venv/Scripts/python app/database/ontology/impact-matrix/vpat-analysis/extract_acr.py <acr.pdf|.docx|.html|.txt>
+# 1. Extract. Needs ANTHROPIC_API_KEY, an `ant auth login` profile, or ../.claude-env.
+.venv314/Scripts/python app/database/ontology/impact-matrix/vpat-analysis/extract_acr.py <acr.pdf|.docx|.html|.txt>
 
 # 2. Apply the rubric to the extraction.
 node app/database/ontology/impact-matrix/vpat-analysis/apply_rules.js <acr>.extraction.json \
@@ -49,6 +60,13 @@ Without them, those checks come back as needing the analyst.
 | `extract_acr.py` | Reads a PDF, Word, HTML or text ACR and calls Claude with the extraction schema |
 | `extraction-schema.json` | The structure Claude returns, enforced by structured outputs |
 | `extraction-prompt.md` | The instructions Claude follows, with the rubric's remark definitions |
+| `parse-prompt.md` | The instructions Haiku follows to transcribe the ACR |
+| `label-prompt.md` | What changes for Sonnet in two-pass mode, appended to `extraction-prompt.md` |
+| `expectations.js` | What a complete ACR holds, checked before the rubric is applied |
+| `product_context.py` | Optional. Researches the product on the vendor's own pages (web search and fetch) and writes `<acr>.context.json`: purpose, users, workflows, candidate essential functions, and what each feature in the admissions is, every statement with a checked source. Context for placing barriers, never evidence |
+| `context-prompt.md` | The instructions the research call follows |
+| `render_review.js` | Writes `<acr>.review.html` for each review, with the product context when it exists, and an index comparing them |
+| `acr-examples/` | Vendor ACRs used to refine the extraction and the expectations |
 | `apply_rules.js` | The report checks, the qualifications and the evidence level |
 | `test-apply-rules.js` | Runs the fixtures through `apply_rules.js` and checks every call |
 | `fixtures/` | Hand-written extractions that exercise each check |

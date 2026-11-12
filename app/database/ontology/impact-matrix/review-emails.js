@@ -130,6 +130,39 @@
     if (acr.age === 'lowered' && acr.author === 'lowered') reasons.push(`${QUALIFICATION_REASON.age.lowered} and ${QUALIFICATION_REASON.author.lowered}`);
     return reasons.length ? list(reasons) : 'its qualifications leave it short of face value';
   }
+  /** The documentation the review rested on, with the ACR's date and author when an ACR carried it. */
+  function documentationLine(review, d, f) {
+    const acr = review.acr || {};
+    if (!['E1-', 'E1', 'E1+', 'E3a'].includes(d.evidence)) return cap(f.evidence);
+    const author = acr.authorName?.trim() || (acr.author === 'outside' ? 'an outside firm' : acr.author === 'vendor' ? 'the supplier\'s staff' : null);
+    return ['VPAT or ACR from the supplier', acr.issued ? `evaluated ${acr.issued}` : 'no evaluation date',
+      author ? `written by ${author}` : null, d.evidence === 'E3a' ? 'confirmed by our own check of the product' : null].filter(Boolean).join(', ');
+  }
+  /**
+   * The facts the procurement record keeps: accessibility only, one fact per line, with the
+   * report defects the analyst accepted and the barriers on the review form.
+   */
+  function recordBlocks(review, d, f) {
+    const acr = d.veracity.acr;
+    const lines = [
+      `Product: ${f.product}`,
+      `Review date: ${f.date}`,
+      'Result: Approved',
+      `ICT Impact Level: ${f.level}${f.users != null ? ` (${plural(count(f.users), 'user')})` : ''}`,
+      `Documentation: ${documentationLine(review, d, f)}`,
+      `Standard: ${f.standard}`,
+    ];
+    // One defect fits its line; several read as a list, like the barriers.
+    const defects = acr?.accepted ? defectLines(acr) : [];
+    const accepted = !defects.length ? []
+      : defects.length === 1 ? [{ type: 'ps', lines: [`Report defect accepted: ${defects[0]}`] }]
+        : [h('Report defects accepted'), ul(defects)];
+    const reason = defects.length ? [`Reason accepted: ${acr.acceptedNote?.trim() || '[reason the defect does not matter]'}`] : [];
+    return [h('Review on file'), { type: 'ps', lines }, ...accepted,
+      ...(review.findings.length
+        ? [...(reason.length ? [{ type: 'ps', lines: reason }] : []), h('Barriers'), ul(f.findingLines)]
+        : [{ type: 'ps', lines: [...reason, 'Barriers: none reported'] }])];
+  }
   /** What the ICT Impact Level rests on, in the requester's words. */
   function impactBecause(f) {
     const who = f.users != null ? `${count(f.users)} people will use the product` : 'the requisition does not say how many people will use the product';
@@ -298,7 +331,7 @@
     },
     {
       id: 'approval_notice', label: 'ICT accessibility review completed', to: 'unit',
-      purpose: 'Tells the requester the review is complete and no further review is needed, with the ICT Impact Level, the VPAT Summary Report of barriers to plan workarounds for, the users covered and the contract terms.',
+      purpose: 'Tells the requester the review is complete and no further review is needed, with the ICT Impact Level, the VPAT Summary Report of barriers to plan workarounds for, the contract terms and the review on file.',
       when: (d) => !d.hold && d.outcome === 'approve',
       build: (review, d, ex, f) => ({
         subject: `ICT Accessibility Review Completed for ${f.product}`,
@@ -315,7 +348,6 @@
               ul(f.findingLines),
               p('Please review the report with the faculty and staff who will use the product, and plan a workaround for each barrier before rollout. The workaround your team will offer is [workaround].'),
             ] : []),
-            p(`The approval covers ${f.users != null ? plural(count(f.users), 'user') : '[number] users'}. Growth beyond that number returns the product to review, as does renewal. A user who cannot use the product contacts [support contact].${f.contact ? ` The supplier also takes accessibility problems at ${f.contact}.` : ''}`),
           ]),
           p(NOT_A_PO),
           ...roadmapBlock(d, f),
@@ -326,6 +358,7 @@
             `The ICT Impact Level is ${f.level} because ${impactBecause(f)}.`,
             `The review rested on ${f.evidence}. ${cap(barriersPhrase(f, d))}${f.sev === 'S2' ? ', and at Low impact the CSU does not require an alternate access plan' : ''}, so we approve the purchase.`,
           ]),
+          ...(d.bypass ? [] : recordBlocks(review, d, f)),
           p(QUESTIONS_CLOSE),
         ],
         footer: true,

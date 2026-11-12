@@ -863,6 +863,31 @@
            claimed_by
     ORDER BY er.level, er.seq
 
+- name: campus_bar_coverage
+  category: evidence
+  description: Discovery view for the companion bar across one campus, year and working group. One row per YSE - whether its indicator has a bar (requirement nodes), how many requirements exist, how many any live link claims via is_evidence_for.satisfies, how many live links there are and how many of them claim anything. A bar with zero claims means the coverage view reports every requirement bare whatever the evidence holds, so those entries need a claim pass before a maturity review can grade against the bar. Entries with has_bar=false fall back to the generic Status Level rubric. params - campus_abbreviation e.g. sfsu, academic_year e.g. 2025-2026, working_group_code e.g. ins.
+  mode: read
+  params: [campus_abbreviation, academic_year, working_group_code]
+  cypher: |
+    MATCH (y:YearSuccessEvidence)-[:tracks]->(si:SuccessIndicator)
+    WHERE y.year_identifier STARTS WITH $academic_year + '-'
+      AND y.year_identifier ENDS WITH '-' + $working_group_code + '-' + $campus_abbreviation
+    OPTIONAL MATCH (y)-[:status_is]->(s:StatusLevel)
+    OPTIONAL MATCH (si)-[:has_evidence_requirement]->(er:EvidenceRequirement)
+    WITH y, si, s, collect(er.handle) AS reqs
+    OPTIONAL MATCH (impl)-[r:is_evidence_for]->(y)
+      WHERE NOT coalesce(impl.retired, false)
+    WITH y, si, s, reqs, collect(r) AS links
+    RETURN si.composite_key AS composite_key,
+           s.status_level AS status,
+           size(reqs) > 0 AS has_bar,
+           size(reqs) AS requirements,
+           size([h IN reqs WHERE any(r IN links WHERE h IN coalesce(r.satisfies, []))]) AS claimed,
+           size(links) AS live_links,
+           size([r IN links WHERE size(coalesce(r.satisfies, [])) > 0]) AS links_claiming
+    ORDER BY toInteger(split(split(composite_key, '-')[0], '.')[0]),
+             toInteger(split(split(composite_key, '-')[0], '.')[1])
+
 - name: stewarded_ict_for_yse
   category: evidence
   description: The derived ICT footprint behind one YSE's internally-controlled evidence - internal is_evidence_for links (unset control counts as internal) -> the implementations' owners/participants -> their employing Department/College -> every Asset those units/people steward under §508 (procured/developed/maintained/used). Answers "what ICT does the responsible unit answer for" even without remediates/uses_tool wiring. param year_identifier.
