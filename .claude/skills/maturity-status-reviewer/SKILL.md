@@ -32,6 +32,17 @@ material to fit; the principle may be the thing that is wrong. Do not re-run the
 in the same session unless a principle has been edited. If it fails, say so before
 continuing.
 
+## Before anything: load the writing style
+
+Read `app/database/ontology/writing-style.md` in full at the start of every session, in
+the same step as the principles, and keep it in context. Every artifact this skill
+produces is prose a person reads: the recommendation block, Notes, link rationales,
+and the public Evidence Summary. Re-read it before writing any of them if the session
+has run long. Before presenting prose, audit it sentence by sentence against the guide.
+The common misses are "unit" for a named office, gesture verbs ("sits at"), pronouns
+at the end of a clause, compound sentences joining independent claims, and colons.
+Fix them before the user sees the draft.
+
 ## Step 0 — Resolve the target (read-only throughout)
 
 The unit of review is one YSE: `<year>-<composite_key>-<campus>` (e.g.
@@ -40,6 +51,33 @@ default, not the latest rolled year) unless the user names one; campus is
 required — never grade a cross-campus blend. Verify the node exists before
 grading; a missing YSE ends the review ("no evidence exists for this
 indicator/year/campus"), it is never invented.
+
+### Step 0b — Discover how the bar is wired at this campus
+
+Before the first entry, and whenever the review covers more than one entry, run the
+campus-wide coverage view once:
+
+```
+python -m app.database.cypher_runner.run_query --query campus_bar_coverage \
+  --param campus_abbreviation=<campus> --param academic_year=<year> --param working_group_code=<ins|web|pro> --table
+```
+
+One row per entry: `has_bar`, `requirements`, `claimed`, `live_links`,
+`links_claiming`. Read it for three conditions, because each changes what the
+review has to do:
+
+- **`has_bar=false`**: no companion bar. Grade against the generic rubric and say so.
+  There is no claim pass, and the review never invents a bar.
+- **`has_bar=true` with `claimed=0`**: the bar exists but nothing claims it, so the
+  coverage view reports every requirement bare whatever the evidence holds. This is
+  missing wiring until shown otherwise. Run the claim pass (Step 2c) before grading.
+- **`has_bar=true` with `live_links=0`**: there is nothing to claim with. Run a
+  rectify search for candidate work first (`/implementation-rectify`, YSE mode), then
+  the claim pass.
+
+A campus where `links_claiming` is zero on every row has never used claims at all
+(SF State instruction, 2026-10-29). Say so in the report, because it means every
+earlier review there graded the bar by reading rather than against recorded claims.
 
 ## Step 1 — Load the ontology FIRST, then the evidence (registry, one shot each)
 
@@ -137,6 +175,55 @@ Grade Position and Budget from that evidence instead, and say so plainly rather
 than reading the claim as coverage. If nothing in the graph speaks to them,
 they are unevidenced — which is a normal, honest finding, not a defect in the
 work.
+
+## Step 2c — The claim pass, when the bar has no claims
+
+Step 0b flags an entry whose bar has requirements and no claims. Its coverage view
+is empty, and an empty coverage view is not a finding about the campus. The review
+does the curator's step first, then grades. Walk the requirements against the live
+links and give each requirement one verdict:
+
+| Verdict | Condition | What gets written |
+|---|---|---|
+| **Met** | a live link plainly delivers it | that link claims the handle |
+| **Met (non-implementation)** | a Position or Budget requirement answered by a role holding with `in_position_description=true` or a recorded allocation | no claim; the review names what answers it |
+| **Partial** | something delivers part of it | no claim; the review names the missing part |
+| **Bare** | nothing delivers it | no claim; a named gap, quoted from the bar |
+
+Claim only what the work plainly delivers, and cite what in the graph shows it. A
+claim recorded now is the assertion the next review tests, so a generous claim
+today becomes an Overclaimed finding next cycle. Partial never claims, because the
+coverage view has no partial state and would report the requirement closed.
+
+Check each link's `rationale` against its new claims. Prose that argues one element
+and ticks another is a finding (see 3a-ii). A link with no rationale gets one
+written in the same pass, per the writing style.
+
+**Where the claims go.** One batch file per run,
+`app/database/batch/auto-assignments/curate_<YYYY_MM_DD>_<campus>_<wg>_bar_claims.cypher`,
+presented for approval and run with `run_file --execute`. Each statement sets
+`r.satisfies` on one existing link, guarded so it writes only when every handle
+belongs to the indicator the entry tracks. That guard matches the check in
+`set_evidence_satisfies`. The write replaces the full list, the same way
+`set_evidence_satisfies` does, so the file states each link's complete set:
+
+```cypher
+MATCH (i {unique_id: "<uid>"})-[r:is_evidence_for]->(y:YearSuccessEvidence {year_identifier: "<yid>"})-[:tracks]->(si)
+WITH r, si, ["<handle>", "<handle>"] AS hs
+WHERE all(h IN hs WHERE EXISTS { (si)-[:has_evidence_requirement]->(:EvidenceRequirement {handle: h}) })
+SET r.satisfies = hs;
+```
+
+New evidence links found by the rectify search go in the same file, rated, with
+`control` and `rationale`, in the pattern `/implementation-rectify` uses. Grading
+(Step 3) then runs on the claimed coverage. When the user asks for the review on
+record, the claim file runs first, so the coverage view the report shows matches
+the grade.
+
+Across a whole campus, split the claim pass into groups of about five entries.
+Read-only agents can handle the reading in parallel, each returning per-requirement
+verdicts, claims and a regrade as structured output. The lead writes the single
+batch file, which keeps one reviewable record of what changed.
 
 ## Step 3 — Grade each dimension, conservatively
 
@@ -400,11 +487,55 @@ whether eight sentences read as a briefing or as a catalogue:
 - **Stop compounding.** Sentence after sentence of "X, and Y" joins everything at
   the same strength, and the reader loses which pairs matter.
 - **Keep list items the same shape**, or drop the list and write the sentence.
-- **Definitions before uses.** An executive does not know what UDOIT is. One
-  clause of gloss where it first appears costs less than losing them.
+- **Gloss only what the reader lacks.** Readers are CSU accessibility and academic
+  leaders. Canvas, VPATs and WCAG need no gloss. A campus-specific name (BuyIT,
+  JEDI PIE) gets one clause where it first appears.
 
 The failure mode is a flat middle: six facts of similar length and construction,
 each true, adding to nothing.
+
+Do not hedge. State what the record shows, and state an absence as an absence ("No
+review record supports that report"). Hedging words ("appears to", "likely",
+"generally") make the reader do the verification the reviewer skipped.
+
+### Verify every claim before writing it (calibration: 8.13-ins-sfsu, 2026-10-29)
+
+The summary is public, so every sentence is a claim the campus will be held to. The
+first 8.13 draft said Academic Technology "installs no Canvas tool until the tool passes
+an accessibility review." That rested on one sentence spoken at a check-in, and no record
+in the graph supported it. The same draft cited a UDOIT figure from October 2026 on the
+2025-2026 entry. Both read as facts and both were wrong. Run this pass on every draft:
+
+1. **Inventory the claims.** List each factual claim in the draft, one per row.
+2. **Source each claim to a record.** Use an item description, a note, a document or
+   page's saved text, a Metric, or a meeting record. Read the full content of every
+   MeetingMinutes node for the campus and subject, and the full raw transcript in
+   `app/database/ontology/raw_transcripts/` where one exists. A grep hit is a pointer,
+   not a reading. The sentence after the hit often reverses the sentence that matched.
+3. **Separate testimony from record.** A claim that rests only on what someone said in
+   a meeting is attributed by name and month ("Cristian Alvarado reported in October
+   2026 that…"). The next sentence names the record that is missing (review log,
+   inventory, procedure, attendance list). Never state testimony as a practice.
+4. **Test the year.** An academic year runs from July to the following summer. Work
+   described for fall of the next year belongs to the next entry, even when the meeting
+   that reported it was held to close out this one. Check `measured_on` and the term
+   inside a Metric's `value_dict`. Check whether an item's description is still in the
+   future tense ("will begin in spring 2026") and whether any record shows the work
+   happened.
+5. **Search for contradictions.** Read every note, Concern and meeting record on the
+   subject across the campus's entries, not just this indicator. An undated note saying
+   "there should be a policy that pushes publisher tools into BuyIT" contradicts a
+   summary saying every tool is reviewed. A contradiction that the records cannot settle
+   stays out of the summary and goes to the user as a question.
+6. **Check the sibling summaries.** Read the other summaries in the same goal for the
+   same campus and year. Two public paragraphs that describe one practice differently
+   are a contradiction the report prints twice.
+7. **Re-test the status.** When the pass removes out-of-year or unsupported claims, say
+   whether the remaining evidence still holds the level. Report a weaker case to the
+   user. Never change `status_is` from this skill.
+
+Present the claim table (claim, source, verdict) with the draft, so the user can see
+what each sentence rests on.
 
 ### Worked example (2025-2026-4.3-ins-csueb, 2026-09-09)
 

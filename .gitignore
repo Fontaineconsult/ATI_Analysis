@@ -54,3 +54,4 @@ app/database/tools/report_export/out/
 
 # Word lock files
 ~$*
+/app/database/ontology/impact-matrix/.claude-env
