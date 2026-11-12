@@ -16,7 +16,7 @@ import {
     VisuallyHidden
 } from '@chakra-ui/react';
 import { ChevronDownIcon } from '@chakra-ui/icons';
-import { Routes, Route, NavLink as RouterNavLink, Navigate, useParams, useNavigate, useLocation, useMatch } from 'react-router-dom';
+import { Routes, Route, NavLink as RouterNavLink, Navigate, useParams, useNavigate, useLocation, useMatch, useSearchParams } from 'react-router-dom';
 import { useData } from './hooks/useData';
 import useRouteAnnouncer from './hooks/useRouteAnnouncer';
 import { UserContext } from './context/UserContext';
@@ -25,6 +25,8 @@ import AtiExplorer from './components/AtiExplorer';
 import Dashboard from './components/Dashboard';
 import About from './components/About';
 import PresentShell from './components/present/PresentShell';
+import EvidenceMeetingView from './components/present/EvidenceMeetingView';
+import { SLUG_TO_CODE } from './styles/workingGroupIdentity';
 import SubNavbar from './components/SubNavbar';
 import GlobalActivityIndicator from './components/functional_components/GlobalActivityIndicator';
 import YseAvailabilityBanner from './components/functional_components/YseAvailabilityBanner';
@@ -94,6 +96,29 @@ function AppContent() {
     // Meeting mode is its own shell: no header, no sub nav, no page container.
     // Everything above (contexts, campus sync, the announcer) still applies.
     const presenting = useMatch('/:campus/present/*');
+    // The reports page in meeting mode is the same URL with ?view=meeting, drawn
+    // in the meeting shell instead of the dashboard chrome.
+    const onReports = useMatch('/:campus/dashboard/reports');
+    const onIndicatorReport = useMatch('/:campus/dashboard/reports/:workingGroup/:goalNumber/:indicatorNumber');
+    const [searchParams] = useSearchParams();
+    const meetingRequested = searchParams.get('view') === 'meeting';
+    // A single indicator's report with ?view=meeting opens meeting mode on that indicator.
+    if (onIndicatorReport && meetingRequested) {
+        const { campus: c, workingGroup: wg, goalNumber: g, indicatorNumber: i } = onIndicatorReport.params;
+        const code = SLUG_TO_CODE[wg];
+        const target = code
+            ? `/${c}/dashboard/reports?view=meeting&wg=${wg}&si=${encodeURIComponent(`${g}.${i}-${code}`)}`
+            : `/${c}/dashboard/reports?view=meeting`;
+        return <Navigate to={target} replace />;
+    }
+    if (onReports && meetingRequested) {
+        return (
+            <>
+                <VisuallyHidden aria-live="polite" role="status">{routeAnnouncement}</VisuallyHidden>
+                <EvidenceMeetingView />
+            </>
+        );
+    }
     if (presenting) {
         return (
             <>

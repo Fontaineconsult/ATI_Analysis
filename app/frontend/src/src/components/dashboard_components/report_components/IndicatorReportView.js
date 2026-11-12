@@ -11,7 +11,7 @@ import {
     StackDivider,
     useToast,
 } from '@chakra-ui/react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 
 import { getImplementationURL, navigateToIndicator } from '../../../services/utils/tools';
 import { CODE_TO_SLUG } from '../../../styles/workingGroupIdentity';
@@ -146,6 +146,7 @@ const EvidenceCoverage = ({ coverage }) => {
 const IndicatorReportView = ({ report }) => {
     const navigate = useNavigate();
     const { campus } = useParams();
+    const [searchParams] = useSearchParams();
     const toast = useToast();
 
     if (!report) return null;
@@ -180,6 +181,17 @@ const IndicatorReportView = ({ report }) => {
             ? `/${campus}/dashboard/reports/approve/${slug}/${goalNum}/${indicatorNum}`
             : null;
     })();
+
+    // The reports page in meeting mode, opened on this indicator. Hidden when the
+    // report is already drawn inside meeting mode.
+    const meetingUrl = (() => {
+        const code = (indicator.composite_key || '').split('-')[1];
+        const slug = CODE_TO_SLUG[code];
+        return slug && campus
+            ? `/${campus}/dashboard/reports?view=meeting&wg=${slug}&si=${encodeURIComponent(indicator.composite_key)}`
+            : null;
+    })();
+    const inMeeting = searchParams.get('view') === 'meeting';
 
     const campusName = report.campus?.name || campus;
     const reviewComplete = yse?.administrative_review_complete;
@@ -241,6 +253,11 @@ const IndicatorReportView = ({ report }) => {
                                 </Button>
                                 <Button size="sm" colorScheme="teal" onClick={() => window.print()}>Print report</Button>
                                 <Button size="sm" variant="outline" colorScheme="teal" onClick={openEdit}>Edit</Button>
+                                {meetingUrl && !inMeeting && (
+                                    <Button size="sm" colorScheme="teal" onClick={() => navigate(meetingUrl)}>
+                                        Meeting mode
+                                    </Button>
+                                )}
                             </HStack>
                     }
                 />

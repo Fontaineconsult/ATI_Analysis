@@ -1,23 +1,12 @@
 import React from 'react';
 import { Box, VStack, HStack, Text, Badge, Icon, Tooltip } from '@chakra-ui/react';
-import { FaUser, FaListUl, FaRegComment, FaCheckCircle } from 'react-icons/fa';
+import { FaCheckCircle } from 'react-icons/fa';
 import { getIndicatorSummary, getStatusColor } from './indicatorHelpers';
+import { IndicatorMetaRow, IndicatorWarningFlags } from './IndicatorFlags';
 import { strengthConfig } from '../implementation/implementationConfig';
 import { reviewWashClass } from '../../../styles/reviewWash';
 import StatusLevelLadder from '../../functional_components/StatusLevelLadder';
 import useListboxNavigation from '../../../hooks/useListboxNavigation';
-
-// Compact count chip (icon + number) used in each row. aria-hidden because the
-// row's own aria-label carries the screen-reader summary; the chips are a sighted
-// at-a-glance overview.
-const CountChip = ({ icon, count, label, zeroColor = 'gray.300' }) => (
-    <Tooltip label={`${count} ${label}`} openDelay={400}>
-        <HStack spacing={1} color={count > 0 ? 'gray.600' : zeroColor} aria-hidden="true">
-            <Icon as={icon} boxSize={2.5} />
-            <Text fontSize="2xs" fontWeight="medium">{count}</Text>
-        </HStack>
-    </Tooltip>
-);
 
 /**
  * Left column of the goal view: one row per success indicator, with the overview badges
@@ -107,105 +96,9 @@ function SuccessIndicatorList({ indicators = [], selectedKey, onSelect }) {
                             <Text fontSize="xs" color="gray.600" noOfLines={2} mb={2}>{s.description}</Text>
                         )}
 
-                        {(s.flagMissingImplementation || s.noActiveDocs || s.allImplsRetired || s.undocumentedImplCount > 0) && (
-                            <HStack spacing={1.5} mb={2} flexWrap="wrap">
-                                {s.flagMissingImplementation && (
-                                    <Badge
-                                        colorScheme="red"
-                                        variant="solid"
-                                        fontSize="2xs"
-                                        borderRadius="full"
-                                        px={2}
-                                        title="No implementations are linked to this indicator"
-                                    >
-                                        ⚠ No implementations
-                                    </Badge>
-                                )}
-                                {s.allImplsRetired && (
-                                    <Badge
-                                        colorScheme="orange"
-                                        variant="solid"
-                                        fontSize="2xs"
-                                        borderRadius="full"
-                                        px={2}
-                                        title="Every implementation linked to this indicator is retired — no active work addresses it"
-                                    >
-                                        ⚠ Imps retired
-                                    </Badge>
-                                )}
-                                {s.undocumentedImplCount > 0 && (
-                                    <Badge
-                                        colorScheme="orange"
-                                        variant="outline"
-                                        fontSize="2xs"
-                                        borderRadius="full"
-                                        px={2}
-                                        title={`${s.undocumentedImplCount} implementation${s.undocumentedImplCount === 1 ? ' has' : 's have'} no documents or webpages attached at all`}
-                                    >
-                                        ⚠ Undocumented ×{s.undocumentedImplCount}
-                                    </Badge>
-                                )}
-                                {s.noActiveDocs && (
-                                    <Badge
-                                        colorScheme="orange"
-                                        variant="solid"
-                                        fontSize="2xs"
-                                        borderRadius="full"
-                                        px={2}
-                                        title="Every document on this indicator's implementations is depreciated — no active documentation"
-                                    >
-                                        ⚠ Docs deprecated
-                                    </Badge>
-                                )}
-                            </HStack>
-                        )}
+                        <IndicatorWarningFlags s={s} mb={2} />
 
-                        <HStack justify="space-between" align="center">
-                            <HStack spacing={3}>
-                                <CountChip icon={FaUser} count={s.personCount} label="responsible persons" zeroColor="red.500" />
-                                <CountChip icon={FaListUl} count={s.implCount} label="implementations" zeroColor={s.flagMissingImplementation ? 'red.500' : 'gray.300'} />
-                                <CountChip icon={FaRegComment} count={s.annotationCount} label="annotations" />
-                                {/* Evidence-strength quality: the strongest rated link.
-                                    aria-hidden like the chips — the row label carries it. */}
-                                {s.implCount > 0 && (
-                                    strengthConfig(s.maxStrength) ? (
-                                        <Tooltip label={`Strongest evidence link: ${strengthConfig(s.maxStrength).description}`} openDelay={400}>
-                                            <Badge
-                                                colorScheme={strengthConfig(s.maxStrength).colorScheme}
-                                                variant="subtle"
-                                                fontSize="2xs"
-                                                borderRadius="full"
-                                                px={2}
-                                                aria-hidden="true"
-                                            >
-                                                {strengthConfig(s.maxStrength).label}
-                                            </Badge>
-                                        </Tooltip>
-                                    ) : (
-                                        <Tooltip label="No evidence link has a strength rating yet — rate them in the evidence table below" openDelay={400}>
-                                            <Badge colorScheme="gray" variant="outline" fontSize="2xs" borderRadius="full" px={2} aria-hidden="true">
-                                                Unrated
-                                            </Badge>
-                                        </Tooltip>
-                                    )
-                                )}
-                            </HStack>
-                            <HStack spacing={1}>
-                                {s.readyForReview && !s.approved && (
-                                    <Badge colorScheme="yellow" variant="subtle" fontSize="2xs">Ready</Badge>
-                                )}
-                                {s.workedThisYear && (
-                                    <Tooltip label="Worked on this year" openDelay={400}>
-                                        <Badge colorScheme="teal" variant="subtle" fontSize="2xs">This yr</Badge>
-                                    </Tooltip>
-                                )}
-                                {s.nextYear && (
-                                    <Tooltip label="Planned for next year" openDelay={400}>
-                                        <Badge colorScheme="blue" variant="subtle" fontSize="2xs">Next yr</Badge>
-                                    </Tooltip>
-                                )}
-                            </HStack>
-                        </HStack>
+                        <IndicatorMetaRow s={s} />
                     </Box>
                 );
             })}
