@@ -40,7 +40,33 @@ annotations). For anything the registry lacks, run the Cypher with
 graph from a terminal: no Python that opens a driver, no scratch script, no
 `cypher-shell`. The project hook refuses those and points back here.
 
-### 0. PULL THE ONTOLOGY FIRST — mandatory, before anything else
+### Where the source lives — the graph holds it, look there first
+
+**A meeting named without a file attached is already in the graph.** Minutes are
+loaded as a `MeetingMinutes` node carrying the full text in `content`, and
+`ontology_ingested = false` marks the ones waiting for this skill. That node is the
+source: read it before looking anywhere else.
+
+```cypher
+MATCH (m:MeetingMinutes)
+RETURN m.unique_id, m.title, toString(m.meeting_date), m.ontology_ingested,
+       size(coalesce(m.content, '')) AS chars
+ORDER BY coalesce(m.date_created, date('1900-01-01')) DESC LIMIT 15
+```
+
+**Match on the title, never on a date comparison.** `meeting_date` is not one type
+across the node set, so `WHERE m.meeting_date >= date(...)` silently drops the nodes
+holding it as a string and returns a short list that looks complete. "Procurement
+Working Group 11/12" is the title verbatim; filter with `CONTAINS` on a fragment of it.
+
+The other two places a source can be: `app/database/ontology/raw_transcripts/` for a
+transcript dropped into the repo, and the user's own message when they paste it.
+**That is the whole list.** When none of the three has it, ask. Do not search the
+user's home directory, Downloads, Documents, Desktop or OneDrive for it — a named
+meeting is not licence to go looking through personal folders, and the file you find
+there is not the record the graph will be graded against.
+
+### 0. PULL THE ONTOLOGY FIRST — mandatory, before routing anything
 
 The graph describes itself. `UniversalDescriptor` nodes define every node type,
 field, field value and relationship type, and they are the authority on what
@@ -55,6 +81,10 @@ RETURN d.descriptor_kind AS kind, d.descriptor_handle AS handle,
        d.description_short AS meaning
 ORDER BY kind, handle
 ```
+
+Pass `--max-rows 0`. The CLI caps output at 100 rows by default and says so in a
+warning that is easy to scroll past, and the descriptor set is larger than that, so
+the cap drops real field names off the end of the map you are about to trust.
 
 ```cypher
 // or scoped to the labels this ingest will touch
@@ -169,7 +199,7 @@ degraded version of the same node.
 | **Query** | S3 | A decision someone must make, WITH a decider. Awaiting authority = `resource_request`; method choice = `technical_clarification`; a document someone OFFERED and has not sent = `artifact_request`. Already decided → Note or Plan. **Set `answerable_by` whenever the source names who can settle it.** |
 | **Concern** | S1–S3 | A problem with NO path to resolution — no owner, no decider, no agreed change. Anchors to a YSE (`has_concern`). Converting to a Recommendation or Plan later is a first-class outcome; the `became_*` edge keeps provenance. |
 | **Recommendation** | S2–S3 | A stated improvement — the path IS "make this change". If nobody said what should change, it is a Concern. |
-| **Note** | S1–S4 | Default sink: history, background, status colour, tooling gaps, metrics-in-passing, action items. |
+| **Note** | S1–S4 | Default sink: history, background, status colour, tooling gaps, metrics-in-passing, action items. Then decide WHERE it attaches, per "Where a Note attaches" below — the implementation it describes, not the indicator, whenever there is one. |
 | **MeetingMinutes** | per meeting | One per meeting. CHECK FOR AN EXISTING NODE first; enrich via `has_note`, don't duplicate. |
 | **Person** | resolved | See above. |
 | **Tool** | S1 use | An instrument the work USES. Named-but-unused stays in Note prose unless a Plan commits to adoption. |
@@ -195,6 +225,69 @@ Calibration: *"there's no 504/ADA Coordinator on campus"* = Concern. *"we should
 reinstate the syllabus statement as required"* = Recommendation. *"I'm pushing the
 provost to reissue the policy"* = Plan. Never upgrade a Concern by inventing the fix
 yourself — the empty resolution path is the fact being recorded.
+
+### Where a Note attaches — the implementation, not just the indicator
+
+Routing a fact to Note is half the decision. The other half is what it hangs off, and
+the default is wrong. A note attached only to a YearSuccessEvidence floats at indicator
+level, where it reads as generic commentary; the same note attached to the implementation
+it describes is operational detail about a named thing, and it reaches the evidence tree
+a status review walks. Most notes worth keeping describe how something operates, so most
+notes belong on an implementation.
+
+**The test.** Does this fact say how a named, existing thing works, fails, or is bounded?
+Then it documents that thing. Is it a rule, a position or a state of affairs that no
+implementation yet carries? Then it is indicator-only, and say so rather than forcing it.
+
+| The fact | Where it goes |
+|---|---|
+| How a review closes, what a tool cannot rate, who performs a step, what a form receives | the implementation, plus its indicator |
+| Counts that change what an implementation's own figures mean | the implementation whose content is those figures |
+| A drafting or decision rule that binds the next instance | the process that authors instances, not the one instance |
+| A rule agreed in the room that no procedure states yet | the indicator alone |
+| Campus structure, a gap with no owner, history | the indicator alone |
+
+**The wiring, all three edges.** An implementation note carries the documentation edge
+AND the indicator edge AND the minutes edge. The documentation edge is year-curated, and
+excluding the reporting year is what stops the note rendering twice: once under its
+indicator, once under the implementation's documentation list.
+
+```cypher
+MERGE (y)-[:has_note]->(n)
+MERGE (m)-[:has_note]->(n)
+MERGE (n)-[:created_by]->(author)
+MERGE (impl)-[d:is_documented_by]->(n)
+ON CREATE SET d.added_date = date('<today>'), d.modified_date = date('<today>'),
+              d.included_in_years = [], d.excluded_from_years = ['<reporting year>']
+```
+
+**Three traps.**
+
+- **Do not attach a rule to published guidance that does not state it.** A note on a
+  Guidance node reads as though that page says it. When the rule is days old and lives
+  in no document, indicator-only is the honest placement. (Calibration, 2026-11-12: the
+  signage second-channel rule. `SSU Accessible Procurement Guidance` covers signage in
+  scope and says nothing about the rule, so the note stayed on 4.6-pro-ssu alone.)
+- **The implementation does not have to evidence the note's indicator.** Sometimes the
+  crossing IS the finding. (Calibration: the CSUEB barrier report form evidences
+  1.19-web-csueb; the note about library barriers went on the form and on
+  7.11-ins-csueb, because routing library barriers through that form is the proposal.)
+- **A mismatch can be a missing evidence link, so report it.** When an implementation
+  plainly answers an indicator it does not evidence, say so in the gate and the report.
+  Do not add `is_evidence_for` in the same breath; that edge asserts far more than a
+  note, and it is the user's call. (Calibration: the CSUEB LTI gate holds the review
+  authority 1.11-pro asks about and does not evidence 1.11-pro-csueb.)
+
+Find the candidates by pulling what already evidences the target indicator, and by
+searching implementation titles and descriptions for the subject:
+
+```cypher
+MATCH (i)-[:is_evidence_for]->(y:YearSuccessEvidence {year_identifier: $yid})
+RETURN labels(i), i.title, i.unique_id, i.retired
+```
+
+Check the candidate's own description before writing, so the note adds detail instead of
+repeating what the node already says.
 
 ### Writing Recommendation and Concern detail
 
@@ -364,7 +457,9 @@ reviewing judgment, not syntax — lead with WHY. Omit empty sections except whe
                          rather than a Recommendation or Plan — i.e. what the source
                          does NOT say about resolving it
 ## Guide coverage        per bar element: converted / probed-but-empty / not reached
-## Notes                 name, what it captures, which YSE + minutes
+## Notes                 name, what it captures, which YSE + minutes, and WHICH
+                         IMPLEMENTATION it documents — or, for each one with none, the
+                         candidate considered and why it was rejected
 ## Tools / Assets        new vs existing, S1-use evidence for each new Tool
 ## Down-routed, omitted  what was heard but routed weaker or dropped, one line each
 ```
@@ -384,8 +479,14 @@ validation or a late finding → stop and re-present the delta first.
   (`Person.active/can_approve_yse`, `Person.ati_involvement` = `"contact"` unless the source
   shows ATI work, `Note.include_in_report`,
   `Plan.is_key_plan/is_campus_plan/abandoned`, `Query.status`, `Concern.status`).
-- Note naming `<slug>-<mon>-<year>-yse:<year_identifier>-<8hex>`; attach `has_note` to
-  BOTH the YSE and the MeetingMinutes; `created_by` → the ingesting user.
+- Note naming `<slug>-<mon>-<year>-yse:<year_identifier>-<8hex>`, with a LITERAL hex
+  suffix, because a generated one gives the note a new name and duplicates it on re-run.
+  Attach `has_note` to BOTH the YSE and the MeetingMinutes, `created_by` → the ingesting
+  user, and `is_documented_by` from the implementation it describes, year-curated. See
+  "Where a Note attaches".
+- `Plan` MERGEs on **`description`**, which is the enforced unique constraint. `name`
+  carries none, so merging on it can create a second node that then violates the
+  description constraint and fails the file.
 - Dates as `date('YYYY-MM-DD')`. Prose double-quoted (apostrophe-safe); statements end
   `;` at end-of-line only (the validator splits on that).
 - File → `app/database/batch/auto-assignments/ingest_<date>_<topic>.cypher`, nowhere
